@@ -58,8 +58,6 @@ Il sito aziendale, servito da GitHub Pages su [g-g-technologies-srl.github.io](h
 - **Accessibile** — contrasti WCAG AA verificati, navigazione da tastiera, skip-link, `prefers-reduced-motion`
 - **SEO completa** — Open Graph, Twitter card, JSON-LD (Organization + WebSite), sitemap e robots
 
-Sviluppo locale: nessun tooling richiesto, apri `index.html` nel browser — oppure `python3 -m http.server` per servirlo in locale.
-
 <div align="center">
   <img src="assets/og-card.png" width="680" alt="G&G Technologies — Software, robotica e AI che fanno crescere le imprese">
 </div>
