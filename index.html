@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>G&amp;G Technologies — Consulenza tecnologica: wearable medicali, robotica e AI</title>
+  <meta name="description" content="G&G Technologies Srl: oltre 30 anni di consulenza tecnologica. Soluzioni wearable per il medicale, robotica, automazione e intelligenza artificiale. Sviluppiamo Podz.AI.">
+  <meta name="author" content="G&G Technologies Srl">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#06080f">
+  <link rel="canonical" href="https://ggtechnologies.github.io/">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="G&amp;G Technologies">
+  <meta property="og:title" content="G&amp;G Technologies — Consulenza tecnologica: wearable medicali, robotica e AI">
+  <meta property="og:description" content="Oltre 30 anni di consulenza tecnologica: wearable medicali, robotica, automazione e intelligenza artificiale. Sviluppiamo Podz.AI, la workstation AI personale.">
+  <meta property="og:url" content="https://ggtechnologies.github.io/">
+  <meta property="og:locale" content="it_IT">
+  <meta property="og:locale:alternate" content="en_US">
+  <meta name="twitter:card" content="summary">
+  <!-- Favicon (inline SVG) -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%234f8cff'/%3E%3Cstop offset='1' stop-color='%237c5cff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='%2306080f'/%3E%3Crect x='3' y='3' width='58' height='58' rx='12' fill='none' stroke='url(%23g)' stroke-width='2'/%3E%3Ctext x='32' y='42' font-family='Arial,sans-serif' font-size='26' font-weight='bold' fill='url(%23g)' text-anchor='middle'%3EG%26G%3C/text%3E%3C/svg%3E">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "G&G Technologies Srl",
+    "url": "https://ggtechnologies.github.io/",
+    "email": "info@ggtechnologies.sm",
+    "telephone": "+378 0549 900824",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Via Tre Settembre, 99",
+      "postalCode": "47891",
+      "addressLocality": "Dogana",
+      "addressCountry": "SM"
+    },
+    "sameAs": ["https://www.linkedin.com/company/gg-technologies-srl"]
+  }
+  </script>
+
+  <style>
+    /* ===============================================================================================================
+       Design tokens
+       =============================================================================================================== */
+    :root {
+      --bg: #06080f;
+      --bg-soft: #0a0e18;
+      --panel: #0d1220;
+      --panel-2: #111830;
+      --border: rgba(255, 255, 255, 0.09);
+      --border-strong: rgba(255, 255, 255, 0.16);
+      --text: #e9edf5;
+      --muted: #9aa4b8;
+      --faint: #6b7488;
+      --accent-1: #4f8cff;
+      --accent-2: #7c5cff;
+      --accent-3: #2dd4bf;
+      --gradient: linear-gradient(100deg, var(--accent-1), var(--accent-2) 55%, var(--accent-3));
+      --radius: 16px;
+      --radius-lg: 24px;
+      --maxw: 1120px;
+      --nav-h: 68px;
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    /* ===============================================================================================================
+       Base
+       =============================================================================================================== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; scroll-padding-top: calc(var(--nav-h) + 16px); }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* Language visibility: html[lang] decides which localized nodes are shown */
+    html[lang="it"] .en { display: none !important; }
+    html[lang="en"] .it { display: none !important; }
+
+    ::selection { background: rgba(124, 92, 255, 0.35); }
+
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+    ul { list-style: none; }
+
+    .container { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+
+    section { padding: 96px 0; position: relative; }
+
+    .kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent-3);
+      margin-bottom: 16px;
+    }
+    .kicker::before {
+      content: "";
+      width: 22px; height: 2px;
+      background: var(--gradient);
+      border-radius: 2px;
+    }
+
+    h1, h2, h3 { line-height: 1.15; letter-spacing: -0.02em; }
+    h2 { font-size: clamp(1.7rem, 3.4vw, 2.5rem); font-weight: 800; margin-bottom: 16px; }
+    .section-intro { color: var(--muted); max-width: 640px; font-size: 1.05rem; }
+
+    .grad-text {
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    /* Reveal-on-scroll animation */
+    .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.7s ease, transform 0.7s ease; }
+    .reveal.visible { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .reveal { opacity: 1; transform: none; transition: none; }
+    }
+
+    /* ===============================================================================================================
+       Buttons
+       =============================================================================================================== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px 26px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: var(--gradient);
+      color: #fff;
+      box-shadow: 0 8px 28px rgba(93, 108, 255, 0.35);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 34px rgba(93, 108, 255, 0.5); }
+    .btn-ghost {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: var(--border-strong);
+      color: var(--text);
+    }
+    .btn-ghost:hover { background: rgba(255, 255, 255, 0.09); transform: translateY(-2px); }
+
+    /* ===============================================================================================================
+       Header / nav
+       =============================================================================================================== */
+    .site-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      height: var(--nav-h);
+      display: flex;
+      align-items: center;
+      background: rgba(6, 8, 15, 0.78);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav {
+      width: 100%;
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+    .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.05rem; letter-spacing: -0.01em; }
+    .brand-mark {
+      width: 34px; height: 34px;
+      border-radius: 9px;
+      background: var(--bg);
+      border: 1.5px solid transparent;
+      background-image: linear-gradient(var(--bg), var(--bg)), var(--gradient);
+      background-origin: border-box;
+      background-clip: padding-box, border-box;
+      display: grid; place-items: center;
+      font-size: 0.72rem; font-weight: 800;
+    }
+    .brand-mark span { background: var(--gradient); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+    .nav-links { display: flex; align-items: center; gap: 26px; margin-left: auto; }
+    .nav-links a {
+      font-size: 0.92rem;
+      font-weight: 500;
+      color: var(--muted);
+      transition: color 0.18s ease;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--text); }
+
+    .nav-actions { display: flex; align-items: center; gap: 14px; }
+
+    .lang-switch {
+      display: inline-flex;
+      border: 1px solid var(--border-strong);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .lang-switch button {
+      background: transparent;
+      border: none;
+      color: var(--faint);
+      font: 600 0.78rem var(--font);
+      padding: 7px 12px;
+      cursor: pointer;
+      transition: background 0.18s ease, color 0.18s ease;
+    }
+    .lang-switch button.active { background: rgba(255, 255, 255, 0.1); color: var(--text); }
+
+    .nav-cta { padding: 9px 20px; font-size: 0.88rem; }
+
+    /* Mobile menu toggle */
+    .menu-toggle {
+      display: none;
+      background: transparent;
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      width: 40px; height: 40px;
+      cursor: pointer;
+      position: relative;
+    }
+    .menu-toggle span, .menu-toggle span::before, .menu-toggle span::after {
+      content: "";
+      position: absolute;
+      left: 10px;
+      width: 18px; height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: transform 0.25s ease, opacity 0.25s ease;
+    }
+    .menu-toggle span { top: 19px; }
+    .menu-toggle span::before { left: 0; top: -6px; }
+    .menu-toggle span::after { left: 0; top: 6px; }
+    .menu-toggle.open span { background: transparent; }
+    .menu-toggle.open span::before { transform: translateY(6px) rotate(45deg); }
+    .menu-toggle.open span::after { transform: translateY(-6px) rotate(-45deg); }
+
+    @media (max-width: 900px) {
+      .nav-links {
+        position: fixed;
+        top: var(--nav-h); left: 0; right: 0;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        background: rgba(8, 11, 20, 0.98);
+        border-bottom: 1px solid var(--border);
+        padding: 12px 24px 20px;
+        display: none;
+      }
+      .nav-links.open { display: flex; }
+      .nav-links a { padding: 10px 0; font-size: 1.05rem; width: 100%; }
+      .menu-toggle { display: block; margin-left: auto; }
+      .nav-cta { display: none; }
+    }
+
+    /* ===============================================================================================================
+       Hero
+       =============================================================================================================== */
+    .hero {
+      min-height: 100svh;
+      display: flex;
+      align-items: center;
+      padding: calc(var(--nav-h) + 72px) 0 80px;
+      position: relative;
+    }
+    .hero-bg {
+      position: absolute; inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .hero-bg::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: radial-gradient(ellipse 90% 70% at 50% 20%, black 30%, transparent 75%);
+      -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 20%, black 30%, transparent 75%);
+    }
+    .glow {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: 0.5;
+    }
+    .glow-1 { width: 480px; height: 480px; background: rgba(79, 140, 255, 0.28); top: -140px; right: -80px; }
+    .glow-2 { width: 420px; height: 420px; background: rgba(124, 92, 255, 0.22); bottom: -160px; left: -120px; }
+    .glow-3 { width: 300px; height: 300px; background: rgba(45, 212, 191, 0.14); top: 40%; left: 42%; }
+
+    .hero-inner { position: relative; display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 56px; align-items: center; }
+
+    .hero h1 { font-size: clamp(2.3rem, 5vw, 3.7rem); font-weight: 800; margin-bottom: 22px; }
+    .hero-sub { color: var(--muted); font-size: 1.13rem; max-width: 560px; margin-bottom: 34px; }
+    .hero-ctas { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 52px; }
+
+    .hero-stats { display: flex; flex-wrap: wrap; gap: 40px; }
+    .stat .num {
+      font-size: 1.9rem; font-weight: 800;
+      background: var(--gradient);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .stat .label { color: var(--faint); font-size: 0.86rem; margin-top: 2px; }
+
+    /* Hero visual: orbit diagram of the three practice areas */
+    .hero-visual { position: relative; display: grid; place-items: center; min-height: 380px; }
+    .orbit-core {
+      width: 132px; height: 132px;
+      border-radius: 32px;
+      background: linear-gradient(160deg, var(--panel-2), var(--panel));
+      border: 1px solid var(--border-strong);
+      box-shadow: var(--shadow), 0 0 60px rgba(93, 108, 255, 0.25);
+      display: grid; place-items: center;
+      text-align: center;
+      z-index: 2;
+    }
+    .orbit-core strong { font-size: 1.05rem; background: var(--gradient); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .orbit-core small { color: var(--faint); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; }
+    .orbit-ring {
+      position: absolute;
+      border: 1px dashed rgba(255, 255, 255, 0.12);
+      border-radius: 50%;
+    }
+    .ring-1 { width: 270px; height: 270px; }
+    .ring-2 { width: 400px; height: 400px; }
+    .orbit-chip {
+      position: absolute;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(13, 18, 32, 0.92);
+      border: 1px solid var(--border-strong);
+      border-radius: 999px;
+      padding: 9px 16px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.4);
+      animation: float 6s ease-in-out infinite;
+    }
+    .orbit-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .chip-1 { top: 8%; left: 50%; transform: translateX(-50%); animation-delay: 0s; }
+    .chip-1 .dot { background: var(--accent-1); }
+    .chip-2 { bottom: 16%; left: 2%; animation-delay: 1.5s; }
+    .chip-2 .dot { background: var(--accent-2); }
+    .chip-3 { bottom: 16%; right: 2%; animation-delay: 3s; }
+    .chip-3 .dot { background: var(--accent-3); }
+    @keyframes float {
+      0%, 100% { margin-top: 0; }
+      50% { margin-top: -10px; }
+    }
+    @media (prefers-reduced-motion: reduce) { .orbit-chip { animation: none; } }
+
+    @media (max-width: 900px) {
+      .hero { min-height: auto; }
+      .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+      .hero-visual { min-height: 340px; transform: scale(0.88); }
+      .hero-stats { gap: 26px; }
+    }
+
+    /* ===============================================================================================================
+       Services
+       =============================================================================================================== */
+    .cards-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 48px; }
+    .card {
+      background: linear-gradient(170deg, var(--panel-2), var(--panel) 60%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 30px 28px;
+      transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--gradient);
+      opacity: 0;
+      transition: opacity 0.22s ease;
+    }
+    .card:hover { transform: translateY(-5px); border-color: var(--border-strong); box-shadow: var(--shadow); }
+    .card:hover::before { opacity: 1; }
+
+    .card-icon {
+      width: 50px; height: 50px;
+      border-radius: 14px;
+      display: grid; place-items: center;
+      margin-bottom: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+    }
+    .card-icon svg { width: 25px; height: 25px; }
+    .card h3 { font-size: 1.18rem; font-weight: 700; margin-bottom: 10px; }
+    .card p { color: var(--muted); font-size: 0.94rem; }
+    .card ul { margin-top: 16px; display: grid; gap: 8px; }
+    .card ul li {
+      color: var(--muted);
+      font-size: 0.88rem;
+      padding-left: 20px;
+      position: relative;
+    }
+    .card ul li::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 8px;
+      width: 9px; height: 9px;
+      border-radius: 3px;
+      background: var(--gradient);
+      opacity: 0.85;
+    }
+
+    @media (max-width: 900px) { .cards-3 { grid-template-columns: 1fr; } }
+
+    /* ===============================================================================================================
+       Why us
+       =============================================================================================================== */
+    #why { background: var(--bg-soft); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .pillars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 48px; }
+    .pillar {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 26px 22px;
+      background: rgba(255, 255, 255, 0.02);
+      transition: border-color 0.22s ease, background 0.22s ease;
+    }
+    .pillar:hover { border-color: var(--border-strong); background: rgba(255, 255, 255, 0.04); }
+    .pillar .n {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--accent-3);
+      letter-spacing: 0.1em;
+    }
+    .pillar h3 { font-size: 1.05rem; margin: 10px 0 8px; }
+    .pillar p { color: var(--muted); font-size: 0.88rem; }
+    @media (max-width: 900px) { .pillars { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 560px) { .pillars { grid-template-columns: 1fr; } }
+
+    /* ===============================================================================================================
+       Podz.AI spotlight
+       =============================================================================================================== */
+    .podz-panel {
+      margin-top: 48px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-strong);
+      background:
+        radial-gradient(ellipse 80% 90% at 85% 10%, rgba(124, 92, 255, 0.16), transparent 60%),
+        radial-gradient(ellipse 60% 80% at 10% 90%, rgba(45, 212, 191, 0.10), transparent 60%),
+        linear-gradient(170deg, var(--panel-2), var(--panel) 70%);
+      padding: 56px;
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 52px;
+      align-items: center;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+    .podz-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent-3);
+      border: 1px solid rgba(45, 212, 191, 0.35);
+      background: rgba(45, 212, 191, 0.08);
+      border-radius: 999px;
+      padding: 6px 14px;
+      margin-bottom: 20px;
+    }
+    .podz-panel h3 { font-size: clamp(1.5rem, 2.8vw, 2.1rem); font-weight: 800; margin-bottom: 14px; }
+    .podz-panel > div > p { color: var(--muted); font-size: 1.02rem; margin-bottom: 26px; }
+    .podz-ctas { display: flex; flex-wrap: wrap; gap: 14px; }
+    .podz-note { margin-top: 18px; color: var(--faint); font-size: 0.82rem; }
+
+    .podz-features { display: grid; gap: 14px; }
+    .podz-feature {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      border: 1px solid var(--border);
+      background: rgba(6, 8, 15, 0.55);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+    }
+    .podz-feature .f-icon {
+      flex: 0 0 auto;
+      width: 38px; height: 38px;
+      border-radius: 11px;
+      display: grid; place-items: center;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+    }
+    .podz-feature .f-icon svg { width: 19px; height: 19px; }
+    .podz-feature h4 { font-size: 0.98rem; margin-bottom: 3px; }
+    .podz-feature p { color: var(--muted); font-size: 0.86rem; }
+
+    @media (max-width: 900px) {
+      .podz-panel { grid-template-columns: 1fr; padding: 36px 26px; gap: 36px; }
+    }
+
+    /* ===============================================================================================================
+       About
+       =============================================================================================================== */
+    #about { background: var(--bg-soft); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .about-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 56px; align-items: start; margin-top: 8px; }
+    .about-text p { color: var(--muted); margin-bottom: 18px; font-size: 1.02rem; }
+    .about-text p strong { color: var(--text); }
+    .about-facts { display: grid; gap: 14px; }
+    .fact {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.02);
+      padding: 16px 20px;
+    }
+    .fact .f-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--gradient); flex: 0 0 auto; }
+    .fact h4 { font-size: 0.95rem; }
+    .fact p { color: var(--muted); font-size: 0.85rem; }
+    @media (max-width: 900px) { .about-grid { grid-template-columns: 1fr; gap: 36px; } }
+
+    /* ===============================================================================================================
+       Contact
+       =============================================================================================================== */
+    .contact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 48px; }
+    .contact-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      background: linear-gradient(170deg, var(--panel-2), var(--panel) 60%);
+      padding: 28px 26px;
+      transition: transform 0.22s ease, border-color 0.22s ease;
+    }
+    .contact-card:hover { transform: translateY(-4px); border-color: var(--border-strong); }
+    .contact-card h3 { font-size: 1rem; color: var(--faint); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.78rem; margin-bottom: 12px; }
+    .contact-card .big { font-size: 1.12rem; font-weight: 700; word-break: break-word; }
+    .contact-card .big a:hover { background: var(--gradient); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .contact-card p { color: var(--muted); font-size: 0.9rem; margin-top: 6px; }
+    @media (max-width: 900px) { .contact-grid { grid-template-columns: 1fr; } }
+
+    /* ===============================================================================================================
+       Footer
+       =============================================================================================================== */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      padding: 48px 0 40px;
+      background: var(--bg-soft);
+    }
+    .footer-inner { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; justify-content: space-between; }
+    .footer-brand p { color: var(--faint); font-size: 0.86rem; max-width: 380px; margin-top: 12px; }
+    .footer-col h4 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--faint); margin-bottom: 14px; }
+    .footer-col ul { display: grid; gap: 8px; }
+    .footer-col a { color: var(--muted); font-size: 0.9rem; transition: color 0.18s ease; }
+    .footer-col a:hover { color: var(--text); }
+    .footer-legal {
+      margin-top: 40px;
+      padding-top: 22px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+      color: var(--faint);
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- =================================================================================================================
+       Header
+       ================================================================================================================== -->
+  <header class="site-header">
+    <nav class="nav" aria-label="Main navigation">
+      <a href="#home" class="brand">
+        <span class="brand-mark"><span>G&amp;G</span></span>
+        G&amp;G Technologies
+      </a>
+
+      <div class="nav-links" id="navLinks">
+        <a href="#services"><span class="it">Servizi</span><span class="en">Services</span></a>
+        <a href="#why"><span class="it">Perché noi</span><span class="en">Why us</span></a>
+        <a href="#podz">Podz.AI</a>
+        <a href="#about"><span class="it">Chi siamo</span><span class="en">About</span></a>
+        <a href="#contact"><span class="it">Contatti</span><span class="en">Contact</span></a>
+      </div>
+
+      <div class="nav-actions">
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button type="button" data-lang="it">IT</button>
+          <button type="button" data-lang="en">EN</button>
+        </div>
+        <a class="btn btn-primary nav-cta" href="mailto:info@ggtechnologies.sm?subject=Richiesta%20informazioni">
+          <span class="it">Parla con noi</span><span class="en">Talk to us</span>
+        </a>
+        <button class="menu-toggle" id="menuToggle" aria-label="Menu" aria-expanded="false"><span></span></button>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <!-- ===============================================================================================================
+         Hero
+         ================================================================================================================ -->
+    <section class="hero" id="home">
+      <div class="hero-bg" aria-hidden="true">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+        <div class="glow glow-3"></div>
+      </div>
+
+      <div class="container hero-inner">
+        <div>
+          <div class="kicker">
+            <span class="it">Consulenza tecnologica · San Marino</span>
+            <span class="en">Technology consulting · San Marino</span>
+          </div>
+
+          <h1 class="it">Diamo forma alla tecnologia che fa <span class="grad-text">crescere le imprese</span>.</h1>
+          <h1 class="en">We shape the technology that <span class="grad-text">makes businesses grow</span>.</h1>
+
+          <p class="hero-sub it">
+            Da oltre 30 anni progettiamo e realizziamo soluzioni software: wearable per il medicale,
+            robotica e automazione, intelligenza artificiale. E sviluppiamo Podz.AI, la workstation AI personale.
+          </p>
+          <p class="hero-sub en">
+            For over 30 years we have been designing and building software solutions: medical wearables,
+            robotics and automation, artificial intelligence. We also build Podz.AI, the personal AI workstation.
+          </p>
+
+          <div class="hero-ctas">
+            <a class="btn btn-primary" href="mailto:info@ggtechnologies.sm?subject=Richiesta%20informazioni">
+              <span class="it">Parla con noi</span><span class="en">Talk to us</span>
+            </a>
+            <a class="btn btn-ghost" href="#podz">
+              <span class="it">Scopri Podz.AI</span><span class="en">Discover Podz.AI</span>
+            </a>
+          </div>
+
+          <div class="hero-stats">
+            <div class="stat">
+              <div class="num">30+</div>
+              <div class="label"><span class="it">anni di esperienza</span><span class="en">years of experience</span></div>
+            </div>
+            <div class="stat">
+              <div class="num">3</div>
+              <div class="label"><span class="it">aree di specializzazione</span><span class="en">areas of expertise</span></div>
+            </div>
+            <div class="stat">
+              <div class="num">1</div>
+              <div class="label"><span class="it">prodotto proprietario: Podz.AI</span><span class="en">proprietary product: Podz.AI</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-visual" aria-hidden="true">
+          <div class="orbit-ring ring-1"></div>
+          <div class="orbit-ring ring-2"></div>
+          <div class="orbit-core">
+            <div>
+              <strong>G&amp;G</strong><br>
+              <small>Technologies</small>
+            </div>
+          </div>
+          <div class="orbit-chip chip-1"><span class="dot"></span><span class="it">Wearable medicali</span><span class="en">Medical wearables</span></div>
+          <div class="orbit-chip chip-2"><span class="dot"></span><span class="it">Robotica</span><span class="en">Robotics</span></div>
+          <div class="orbit-chip chip-3"><span class="dot"></span><span class="it">Intelligenza Artificiale</span><span class="en">Artificial Intelligence</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===============================================================================================================
+         Services
+         ================================================================================================================ -->
+    <section id="services">
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">
+            <span class="it">Cosa facciamo</span>
+            <span class="en">What we do</span>
+          </div>
+          <h2 class="it">Tre competenze, un unico obiettivo:<br>tecnologia che <span class="grad-text">funziona davvero</span>.</h2>
+          <h2 class="en">Three practices, one goal:<br>technology that <span class="grad-text">actually works</span>.</h2>
+          <p class="section-intro it">
+            Affianchiamo le imprese dall'idea al prodotto: analisi, progettazione, sviluppo e messa in produzione.
+          </p>
+          <p class="section-intro en">
+            We support businesses from idea to product: analysis, design, development and production rollout.
+          </p>
+        </div>
+
+        <div class="cards-3">
+          <article class="card reveal">
+            <div class="card-icon">
+              <!-- Heart-pulse icon -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <defs>
+                  <linearGradient id="icoGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#4f8cff"/><stop offset="1" stop-color="#2dd4bf"/>
+                  </linearGradient>
+                </defs>
+                <path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3.4.9-4.5 2.3A5.7 5.7 0 0 0 7.5 3 5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7Z"/>
+                <path d="M3.5 12h5l2-3 2 5 2-3h5"/>
+              </svg>
+            </div>
+            <h3 class="it">Wearable &amp; Medicale</h3>
+            <h3 class="en">Wearable &amp; Medical</h3>
+            <p class="it">
+              Soluzioni indossabili per il monitoraggio biovitale di atleti, pazienti e anziani:
+              dall'elettronica custom alla piattaforma dati.
+            </p>
+            <p class="en">
+              Wearable solutions for biovital monitoring of athletes, patients and the elderly:
+              from custom electronics to the data platform.
+            </p>
+            <ul>
+              <li><span class="it">Elettronica custom e firmware</span><span class="en">Custom electronics and firmware</span></li>
+              <li><span class="it">Piattaforme di telemonitoraggio</span><span class="en">Remote-monitoring platforms</span></li>
+              <li><span class="it">Elaborazione di big data biovitali</span><span class="en">Biovital big-data processing</span></li>
+            </ul>
+          </article>
+
+          <article class="card reveal">
+            <div class="card-icon">
+              <!-- Robot/automation icon -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="8" width="16" height="12" rx="3"/>
+                <path d="M12 8V4M8 4h8"/>
+                <circle cx="9" cy="13" r="1.2" fill="url(#icoGrad)" stroke="none"/>
+                <circle cx="15" cy="13" r="1.2" fill="url(#icoGrad)" stroke="none"/>
+                <path d="M9 17h6"/>
+              </svg>
+            </div>
+            <h3 class="it">Robotica &amp; Automazione</h3>
+            <h3 class="en">Robotics &amp; Automation</h3>
+            <p class="it">
+              Decine di fabbriche automatizzate e processi manuali robotizzati:
+              vi accompagniamo verso l'Industria 5.0.
+            </p>
+            <p class="en">
+              Dozens of automated factories and robotized manual processes:
+              we guide you towards Industry 5.0.
+            </p>
+            <ul>
+              <li><span class="it">Automazione bordo macchina</span><span class="en">Edge and machine-side automation</span></li>
+              <li><span class="it">Integrazione con sistemi embedded</span><span class="en">Embedded-systems integration</span></li>
+              <li><span class="it">Efficientamento dei processi</span><span class="en">Process-efficiency programs</span></li>
+            </ul>
+          </article>
+
+          <article class="card reveal">
+            <div class="card-icon">
+              <!-- AI/sparkles icon -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/>
+                <circle cx="12" cy="12" r="3.4"/>
+              </svg>
+            </div>
+            <h3 class="it">Intelligenza Artificiale</h3>
+            <h3 class="en">Artificial Intelligence</h3>
+            <p class="it">
+              AI applicata al lavoro reale: reti neurali, agenti e modelli linguistici
+              integrati nei processi aziendali, in cloud o in locale.
+            </p>
+            <p class="en">
+              AI applied to real work: neural networks, agents and language models
+              integrated into business processes, in the cloud or on-premise.
+            </p>
+            <ul>
+              <li><span class="it">Agenti AI e specialisti verticali</span><span class="en">AI agents and vertical specialists</span></li>
+              <li><span class="it">AI locale e privacy by design</span><span class="en">Local AI and privacy by design</span></li>
+              <li><span class="it">Analisi e trasformazione dati</span><span class="en">Data analysis and transformation</span></li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===============================================================================================================
+         Why us
+         ================================================================================================================ -->
+    <section id="why">
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">
+            <span class="it">Perché noi</span>
+            <span class="en">Why us</span>
+          </div>
+          <h2 class="it">I quattro pilastri del <span class="grad-text">successo dei nostri clienti</span>.</h2>
+          <h2 class="en">The four pillars behind <span class="grad-text">our clients' success</span>.</h2>
+        </div>
+
+        <div class="pillars">
+          <div class="pillar reveal">
+            <div class="n">01</div>
+            <h3 class="it">Esperienza</h3>
+            <h3 class="en">Experience</h3>
+            <p class="it">Oltre 30 anni sul campo dell'innovazione e della realizzazione di software a sostegno delle imprese.</p>
+            <p class="en">Over 30 years in the field, innovating and building software that supports businesses.</p>
+          </div>
+          <div class="pillar reveal">
+            <div class="n">02</div>
+            <h3 class="it">Tecnologia</h3>
+            <h3 class="en">Technology</h3>
+            <p class="it">Piattaforme proprietarie costruite in casa: dal progetto DigiSense è nato Podz.AI.</p>
+            <p class="en">Proprietary platforms built in-house: the DigiSense project gave birth to Podz.AI.</p>
+          </div>
+          <div class="pillar reveal">
+            <div class="n">03</div>
+            <h3 class="it">Automazione</h3>
+            <h3 class="en">Automation</h3>
+            <p class="it">Il nostro chiodo fisso: ogni processo ha margini di miglioramento che il digitale può concretizzare.</p>
+            <p class="en">Our obsession: every process has room for improvement that digital tools can unlock.</p>
+          </div>
+          <div class="pillar reveal">
+            <div class="n">04</div>
+            <h3 class="it">Rete di partner</h3>
+            <h3 class="en">Partner network</h3>
+            <p class="it">Una rete di partner e collaboratori che ci aiuta a garantire sempre il massimo della qualità.</p>
+            <p class="en">A network of partners and collaborators that helps us always deliver top quality.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===============================================================================================================
+         Podz.AI spotlight
+         ================================================================================================================ -->
+    <section id="podz">
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">
+            <span class="it">Il nostro prodotto</span>
+            <span class="en">Our product</span>
+          </div>
+          <h2 class="it">Podz.AI — La tua AI. Sul tuo computer.<br><span class="grad-text">Con i tuoi dati al sicuro.</span></h2>
+          <h2 class="en">Podz.AI — Your AI. On your computer.<br><span class="grad-text">With your data kept safe.</span></h2>
+        </div>
+
+        <div class="podz-panel reveal">
+          <div>
+            <div class="podz-badge">
+              <span class="it">Made in EU · dal progetto DigiSense</span>
+              <span class="en">Made in EU · from the DigiSense project</span>
+            </div>
+            <h3 class="it">La workstation AI personale per chi lavora con dati riservati.</h3>
+            <h3 class="en">The personal AI workstation for people who work with confidential data.</h3>
+            <p class="it">
+              Un'unica applicazione che installi sul tuo computer e che lavora con i tuoi documenti,
+              senza mandare i dati a nessuno. Il cloud è una scelta, non il default: modelli locali privati
+              e specialisti — legale, ricerca web, screening CV — che si installano con un clic.
+            </p>
+            <p class="en">
+              A single application you install on your computer that works with your documents,
+              without sending your data to anyone. The cloud is a choice, not the default: private local models
+              and specialists — legal, web research, CV screening — installed with one click.
+            </p>
+            <div class="podz-ctas">
+              <a class="btn btn-primary" href="https://g-g-technologies-srl.github.io/digisense-releases/download.html" target="_blank" rel="noopener">
+                <span class="it">Scarica Podz.AI</span><span class="en">Download Podz.AI</span>
+              </a>
+              <a class="btn btn-ghost" href="https://g-g-technologies-srl.github.io/digisense-releases/" target="_blank" rel="noopener">
+                <span class="it">Visita il sito di Podz.AI ↗</span><span class="en">Visit the Podz.AI website ↗</span>
+              </a>
+            </div>
+            <p class="podz-note">
+              <span class="it">Prova gratuita di 30 giorni al primo avvio · Windows, macOS e Linux</span>
+              <span class="en">30-day free trial on first launch · Windows, macOS and Linux</span>
+            </p>
+          </div>
+
+          <div class="podz-features">
+            <div class="podz-feature">
+              <div class="f-icon">
+                <!-- Shield icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 3l8 3v6c0 4.5-3.2 7.6-8 9-4.8-1.4-8-4.5-8-9V6l8-3Z"/>
+                  <path d="M9 12l2 2 4-4"/>
+                </svg>
+              </div>
+              <div>
+                <h4 class="it">Local-first e privacy</h4>
+                <h4 class="en">Local-first and private</h4>
+                <p class="it">Conversazioni e documenti restano sulla tua macchina, in un database cifrato.</p>
+                <p class="en">Conversations and documents stay on your machine, in an encrypted database.</p>
+              </div>
+            </div>
+            <div class="podz-feature">
+              <div class="f-icon">
+                <!-- Mask icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="#7c5cff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="9"/>
+                  <path d="M8 10h.01M16 10h.01M8.5 15a4.5 4.5 0 0 0 7 0"/>
+                </svg>
+              </div>
+              <div>
+                <h4 class="it">Anonimizzatore integrato</h4>
+                <h4 class="en">Built-in anonymizer</h4>
+                <p class="it">Se un lavoro passa dal cloud, i dati personali possono essere mascherati prima dell'invio.</p>
+                <p class="en">If a job goes through the cloud, personal data can be masked before it is sent.</p>
+              </div>
+            </div>
+            <div class="podz-feature">
+              <div class="f-icon">
+                <!-- Grid/specialists icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="#4f8cff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="7" rx="2"/>
+                  <rect x="14" y="3" width="7" height="7" rx="2"/>
+                  <rect x="3" y="14" width="7" height="7" rx="2"/>
+                  <path d="M17.5 14v7M14 17.5h7"/>
+                </svg>
+              </div>
+              <div>
+                <h4 class="it">Specialisti con un clic</h4>
+                <h4 class="en">One-click specialists</h4>
+                <p class="it">Assistente Legale, Ricercatore Web, Screening CV: competenze pronte, come le app.</p>
+                <p class="en">Legal Assistant, Web Researcher, CV Screening: ready-made expertise, like apps.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===============================================================================================================
+         About
+         ================================================================================================================ -->
+    <section id="about">
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">
+            <span class="it">Chi siamo</span>
+            <span class="en">About us</span>
+          </div>
+          <h2 class="it">Un team che unisce <span class="grad-text">software, elettronica e AI</span>.</h2>
+          <h2 class="en">A team that brings together <span class="grad-text">software, electronics and AI</span>.</h2>
+        </div>
+
+        <div class="about-grid">
+          <div class="about-text reveal">
+            <p class="it">
+              <strong>G&amp;G Technologies Srl</strong> è una società di consulenza tecnologica con sede nella
+              Repubblica di San Marino. Il team unisce programmatori esperti, architetti software e sistemisti,
+              con oltre 30 anni di attività nel mondo dell'informatica e dell'innovazione.
+            </p>
+            <p class="en">
+              <strong>G&amp;G Technologies Srl</strong> is a technology consulting company based in the
+              Republic of San Marino. The team brings together senior developers, software architects and
+              system engineers, with over 30 years of activity in IT and innovation.
+            </p>
+            <p class="it">
+              Abbiamo digitalizzato processi di vendita, automatizzato decine di fabbriche e progettato
+              soluzioni wearable per il monitoraggio biovitale in ambito medicale e sportivo. Dal nostro
+              percorso di ricerca — il progetto <strong>DigiSense</strong> — è nato <strong>Podz.AI</strong>,
+              la workstation AI personale che porta l'intelligenza artificiale sul computer di chi lavora
+              con dati riservati.
+            </p>
+            <p class="en">
+              We have digitalized sales processes, automated dozens of factories and designed wearable
+              solutions for biovital monitoring in healthcare and sport. Our research journey — the
+              <strong>DigiSense</strong> project — led to <strong>Podz.AI</strong>, the personal AI
+              workstation that brings artificial intelligence to the computers of people who work with
+              confidential data.
+            </p>
+            <p class="it">
+              Lavoriamo al fianco di imprenditori e professionisti: prima capiamo il processo,
+              poi scegliamo la tecnologia. Mai il contrario.
+            </p>
+            <p class="en">
+              We work side by side with entrepreneurs and professionals: first we understand the process,
+              then we choose the technology. Never the other way around.
+            </p>
+          </div>
+
+          <div class="about-facts reveal">
+            <div class="fact">
+              <span class="f-dot"></span>
+              <div>
+                <h4 class="it">Sede a San Marino</h4>
+                <h4 class="en">Based in San Marino</h4>
+                <p class="it">Via Tre Settembre 99, 47891 Dogana (RSM)</p>
+                <p class="en">Via Tre Settembre 99, 47891 Dogana (RSM)</p>
+              </div>
+            </div>
+            <div class="fact">
+              <span class="f-dot"></span>
+              <div>
+                <h4 class="it">30+ anni di esperienza</h4>
+                <h4 class="en">30+ years of experience</h4>
+                <p class="it">Innovazione, software e automazione industriale</p>
+                <p class="en">Innovation, software and industrial automation</p>
+              </div>
+            </div>
+            <div class="fact">
+              <span class="f-dot"></span>
+              <div>
+                <h4 class="it">Prodotto proprietario</h4>
+                <h4 class="en">Proprietary product</h4>
+                <p class="it">Podz.AI, nato dal progetto DigiSense®</p>
+                <p class="en">Podz.AI, born from the DigiSense® project</p>
+              </div>
+            </div>
+            <div class="fact">
+              <span class="f-dot"></span>
+              <div>
+                <h4 class="it">Software europeo</h4>
+                <h4 class="en">European software</h4>
+                <p class="it">Progettato e sviluppato interamente in Europa</p>
+                <p class="en">Designed and developed entirely in Europe</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===============================================================================================================
+         Contact
+         ================================================================================================================ -->
+    <section id="contact">
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">
+            <span class="it">Contatti</span>
+            <span class="en">Contact</span>
+          </div>
+          <h2 class="it">Parliamo del tuo <span class="grad-text">prossimo progetto</span>.</h2>
+          <h2 class="en">Let's talk about your <span class="grad-text">next project</span>.</h2>
+          <p class="section-intro it">Scrivici: risponde una persona del team, non un form.</p>
+          <p class="section-intro en">Write to us: a person from the team answers, not a form.</p>
+        </div>
+
+        <div class="contact-grid">
+          <div class="contact-card reveal">
+            <h3>Email</h3>
+            <div class="big"><a href="mailto:info@ggtechnologies.sm">info@ggtechnologies.sm</a></div>
+            <p class="it">Per progetti, consulenze e informazioni su Podz.AI</p>
+            <p class="en">For projects, consulting and Podz.AI inquiries</p>
+          </div>
+          <div class="contact-card reveal">
+            <h3><span class="it">Telefono</span><span class="en">Phone</span></h3>
+            <div class="big"><a href="tel:+3780549900824">+378 0549 900824</a></div>
+            <p class="it">Dal lunedì al venerdì, orario d'ufficio</p>
+            <p class="en">Monday to Friday, office hours</p>
+          </div>
+          <div class="contact-card reveal">
+            <h3><span class="it">Sede</span><span class="en">Office</span></h3>
+            <div class="big">Via Tre Settembre, 99</div>
+            <p>47891 Dogana — Repubblica di San Marino</p>
+            <p><a href="https://www.linkedin.com/company/gg-technologies-srl" target="_blank" rel="noopener" style="color: var(--accent-1); font-weight: 600;">LinkedIn ↗</a></p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- =================================================================================================================
+       Footer
+       ================================================================================================================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a href="#home" class="brand">
+            <span class="brand-mark"><span>G&amp;G</span></span>
+            G&amp;G Technologies
+          </a>
+          <p class="it">
+            Consulenza tecnologica e sviluppo software: wearable medicali, robotica e intelligenza artificiale.
+            Sviluppatori di Podz.AI.
+          </p>
+          <p class="en">
+            Technology consulting and software development: medical wearables, robotics and artificial intelligence.
+            Makers of Podz.AI.
+          </p>
+        </div>
+
+        <div class="footer-col">
+          <h4><span class="it">Sito</span><span class="en">Site</span></h4>
+          <ul>
+            <li><a href="#services"><span class="it">Servizi</span><span class="en">Services</span></a></li>
+            <li><a href="#why"><span class="it">Perché noi</span><span class="en">Why us</span></a></li>
+            <li><a href="#about"><span class="it">Chi siamo</span><span class="en">About</span></a></li>
+            <li><a href="#contact"><span class="it">Contatti</span><span class="en">Contact</span></a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Podz.AI</h4>
+          <ul>
+            <li><a href="https://g-g-technologies-srl.github.io/digisense-releases/" target="_blank" rel="noopener"><span class="it">Sito ufficiale</span><span class="en">Official website</span></a></li>
+            <li><a href="https://g-g-technologies-srl.github.io/digisense-releases/download.html" target="_blank" rel="noopener">Download</a></li>
+            <li><a href="https://github.com/G-G-Technologies-Srl/digisense-releases/releases" target="_blank" rel="noopener">Release</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4><span class="it">Contatti</span><span class="en">Contact</span></h4>
+          <ul>
+            <li><a href="mailto:info@ggtechnologies.sm">info@ggtechnologies.sm</a></li>
+            <li><a href="tel:+3780549900824">+378 0549 900824</a></li>
+            <li><a href="https://www.linkedin.com/company/gg-technologies-srl" target="_blank" rel="noopener">LinkedIn</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-legal">
+        <span>© <span id="year">2026</span> G&amp;G Technologies Srl · Via Tre Settembre 99, 47891 Dogana (RSM) · C.O.E. 29141</span>
+        <span class="it">DigiSense® è un marchio registrato. Questo sito non usa cookie né tracker.</span>
+        <span class="en">DigiSense® is a registered trademark. This site uses no cookies or trackers.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // ---------------------------------------------------------------------------------------------------------------
+      //  c o n s t
+      // ---------------------------------------------------------------------------------------------------------------
+
+      const STORAGE_KEY = 'gg-lang';
+      const TITLES = {
+        it: 'G&G Technologies — Consulenza tecnologica: wearable medicali, robotica e AI',
+        en: 'G&G Technologies — Technology consulting: medical wearables, robotics and AI'
+      };
+      const DESCRIPTIONS = {
+        it: 'G&G Technologies Srl: oltre 30 anni di consulenza tecnologica. Soluzioni wearable per il medicale, robotica, automazione e intelligenza artificiale. Sviluppiamo Podz.AI.',
+        en: 'G&G Technologies Srl: over 30 years of technology consulting. Wearable solutions for healthcare, robotics, automation and artificial intelligence. Makers of Podz.AI.'
+      };
+
+      // ---------------------------------------------------------------------------------------------------------------
+      //  i n i t
+      // ---------------------------------------------------------------------------------------------------------------
+
+      document.addEventListener('DOMContentLoaded', function () {
+        _initLanguage();
+        _initMobileMenu();
+        _initActiveNav();
+        _initReveal();
+        _initYear();
+      });
+
+      // ---------------------------------------------------------------------------------------------------------------
+      //  p r i v a t e
+      // ---------------------------------------------------------------------------------------------------------------
+
+      // Resolve the initial language: stored choice first, then browser language, then Italian.
+      function _detectLanguage() {
+        try {
+          const stored = localStorage.getItem(STORAGE_KEY);
+          if (stored === 'it' || stored === 'en') return stored;
+        } catch (ignored) { /* storage may be unavailable */ }
+        const nav = (navigator.language || 'it').toLowerCase();
+        return nav.startsWith('it') ? 'it' : 'en';
+      }
+
+      // Apply a language to the whole document and persist the choice.
+      function _setLanguage(lang) {
+        document.documentElement.lang = lang;
+        document.title = TITLES[lang];
+        const meta = document.querySelector('meta[name="description"]');
+        if (meta) meta.setAttribute('content', DESCRIPTIONS[lang]);
+        document.querySelectorAll('.lang-switch button').forEach(function (btn) {
+          btn.classList.toggle('active', btn.dataset.lang === lang);
+        });
+        try { localStorage.setItem(STORAGE_KEY, lang); } catch (ignored) { /* ignore */ }
+      }
+
+      function _initLanguage() {
+        _setLanguage(_detectLanguage());
+        document.querySelectorAll('.lang-switch button').forEach(function (btn) {
+          btn.addEventListener('click', function () { _setLanguage(btn.dataset.lang); });
+        });
+      }
+
+      // Hamburger menu for small screens.
+      function _initMobileMenu() {
+        const toggle = document.getElementById('menuToggle');
+        const links = document.getElementById('navLinks');
+        if (!toggle || !links) return;
+        toggle.addEventListener('click', function () {
+          const open = links.classList.toggle('open');
+          toggle.classList.toggle('open', open);
+          toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+        // Close the menu when a link is chosen
+        links.querySelectorAll('a').forEach(function (a) {
+          a.addEventListener('click', function () {
+            links.classList.remove('open');
+            toggle.classList.remove('open');
+            toggle.setAttribute('aria-expanded', 'false');
+          });
+        });
+      }
+
+      // Highlight the nav link of the section currently in view.
+      function _initActiveNav() {
+        const links = document.querySelectorAll('.nav-links a[href^="#"]');
+        const map = {};
+        links.forEach(function (a) { map[a.getAttribute('href').slice(1)] = a; });
+        const observer = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
+            links.forEach(function (a) { a.classList.remove('active'); });
+            const link = map[entry.target.id];
+            if (link) link.classList.add('active');
+          });
+        }, { rootMargin: '-40% 0px -55% 0px' });
+        Object.keys(map).forEach(function (id) {
+          const el = document.getElementById(id);
+          if (el) observer.observe(el);
+        });
+      }
+
+      // Reveal-on-scroll animation for elements with the .reveal class.
+      function _initReveal() {
+        const items = document.querySelectorAll('.reveal');
+        if (!('IntersectionObserver' in window)) {
+          items.forEach(function (el) { el.classList.add('visible'); });
+          return;
+        }
+        const observer = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+              observer.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.12 });
+        items.forEach(function (el) { observer.observe(el); });
+      }
+
+      // Keep the copyright year current.
+      function _initYear() {
+        const el = document.getElementById('year');
+        if (el) el.textContent = String(new Date().getFullYear());
+      }
+    })();
+  </script>
+</body>
+</html>
