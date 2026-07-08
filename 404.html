@@ -5,14 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pagina non trovata — G&amp;G Technologies</title>
   <meta name="robots" content="noindex">
-  <meta name="theme-color" content="#06080f">
+  <meta name="theme-color" content="#1f1e1d">
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
   <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #1f1e1d;
+      --text: #f0eee7;
+      --muted: #b3b0a7;
+      --accent: #d97757;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #faf9f5;
+        --text: #1f1e1d;
+        --muted: #5e5d59;
+        --accent: #c15f3c;
+      }
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      background: #06080f;
-      color: #e9edf5;
+      background: var(--bg);
+      color: var(--text);
       min-height: 100vh;
       display: grid;
       place-items: center;
@@ -20,21 +35,24 @@
       padding: 24px;
     }
     .code {
+      font-family: ui-serif, Georgia, 'Times New Roman', Times, serif;
       font-size: 6rem;
-      font-weight: 800;
-      background: linear-gradient(100deg, #4f8cff, #7c5cff 55%, #2dd4bf);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
+      font-weight: 700;
+      color: var(--accent);
       line-height: 1;
     }
-    h1 { font-size: 1.4rem; margin: 18px 0 8px; }
-    p { color: #9aa4b8; margin-bottom: 28px; }
+    h1 {
+      font-family: ui-serif, Georgia, 'Times New Roman', Times, serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 18px 0 8px;
+    }
+    p { color: var(--muted); margin-bottom: 28px; }
     a {
       display: inline-block;
       padding: 13px 28px;
       border-radius: 999px;
-      background: linear-gradient(100deg, #4f8cff, #7c5cff 55%, #2dd4bf);
+      background: var(--accent);
       color: #fff;
       text-decoration: none;
       font-weight: 600;
