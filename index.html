@@ -7,7 +7,7 @@
   <meta name="description" content="Consulenza tecnologica a San Marino: 30+ anni di esperienza in wearable medicali, robotica e AI. Sviluppatori di Podz.AI, la workstation AI personale.">
   <meta name="author" content="G&G Technologies Srl">
   <meta name="robots" content="index, follow">
-  <meta name="theme-color" content="#06080f">
+  <meta name="theme-color" content="#1f1e1d">
   <link rel="canonical" href="https://g-g-technologies-srl.github.io/">
   <!-- Open Graph -->
   <meta property="og:type" content="website">
@@ -30,20 +30,26 @@
   <meta name="twitter:image" content="https://g-g-technologies-srl.github.io/assets/og-card.png">
   <meta name="twitter:image:alt" content="G&amp;G Technologies — Software, robotica e AI che fanno crescere le imprese.">
   <!-- Favicon (inline SVG) -->
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%234f8cff'/%3E%3Cstop offset='1' stop-color='%237c5cff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='%2306080f'/%3E%3Crect x='3' y='3' width='58' height='58' rx='12' fill='none' stroke='url(%23g)' stroke-width='2'/%3E%3Ctext x='32' y='42' font-family='Arial,sans-serif' font-size='26' font-weight='bold' fill='url(%23g)' text-anchor='middle'%3EG%26G%3C/text%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231f1e1d'/%3E%3Crect x='3' y='3' width='58' height='58' rx='12' fill='none' stroke='%23d97757' stroke-width='2'/%3E%3Ctext x='32' y='42' font-family='Arial,sans-serif' font-size='26' font-weight='bold' fill='%23d97757' text-anchor='middle'%3EG%26G%3C/text%3E%3C/svg%3E">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
-  <!-- Pre-paint bootstrap: set language and mark JS availability (avoids i18n flash and no-JS hidden content) -->
+  <!-- Pre-paint bootstrap: set language and theme before first render (avoids i18n/theme flash and no-JS hidden content) -->
   <script>
     (function () {
-      var lang = 'it';
-      try {
-        var stored = localStorage.getItem('gg-lang');
-        if (stored === 'it' || stored === 'en') lang = stored;
-        else if ((navigator.language || 'it').toLowerCase().indexOf('it') !== 0) lang = 'en';
-      } catch (ignored) { /* storage may be unavailable */ }
       var root = document.documentElement;
+      var lang = 'it';
+      var theme = '';
+      try {
+        var storedLang = localStorage.getItem('gg-lang');
+        if (storedLang === 'it' || storedLang === 'en') lang = storedLang;
+        else if ((navigator.language || 'it').toLowerCase().indexOf('it') !== 0) lang = 'en';
+        theme = localStorage.getItem('gg-theme') || '';
+      } catch (ignored) { /* storage may be unavailable */ }
+      if (theme !== 'light' && theme !== 'dark') {
+        theme = (window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+      }
       root.lang = lang;
+      root.setAttribute('data-theme', theme);
       root.classList.add('js');
     })();
   </script>
@@ -98,27 +104,112 @@
     /* ===============================================================================================================
        Design tokens
        =============================================================================================================== */
+    /* Structural tokens (theme-independent) */
     :root {
-      --bg: #06080f;
-      --bg-soft: #0a0e18;
-      --panel: #0d1220;
-      --panel-2: #111830;
-      --border: rgba(255, 255, 255, 0.09);
-      --border-strong: rgba(255, 255, 255, 0.16);
-      --text: #e9edf5;
-      --muted: #9aa4b8;
-      --faint: #7a8399; /* >= 4.5:1 on both bg and panel (WCAG AA) */
-      --accent-1: #4f8cff;
-      --accent-2: #7c5cff;
-      --accent-3: #2dd4bf;
-      --gradient: linear-gradient(100deg, var(--accent-1), var(--accent-2) 55%, var(--accent-3));
       --radius: 16px;
       --radius-lg: 24px;
       --maxw: 1120px;
       --nav-h: 68px;
-      --shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
-      /* System font stack: no external font requests (privacy-coherent with the no-tracker claim) */
+      /* System font stacks: no external font requests (privacy-coherent with the no-tracker claim) */
       --font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      --font-display: ui-serif, Georgia, 'Times New Roman', Times, serif;
+    }
+
+    /* Dark theme (default) — warm charcoal, Claude-style */
+    :root {
+      color-scheme: dark;
+      --bg: #1f1e1d;
+      --bg-soft: #262624;
+      --panel: #2b2a28;
+      --panel-2: #33312e;
+      --border: rgba(255, 255, 255, 0.09);
+      --border-strong: rgba(255, 255, 255, 0.17);
+      --text: #f0eee7;
+      --muted: #b3b0a7;
+      --faint: #969389;          /* >= 4.5:1 on bg and panel (WCAG AA) */
+      --accent: #d97757;         /* terracotta */
+      --accent-strong: #c15f3c;
+      --accent-text: #d97757;    /* readable accent for text on dark */
+      --accent-1: #d97757;
+      --accent-2: #c15f3c;
+      --accent-3: #d4a27f;
+      --gradient: linear-gradient(100deg, #e08d6d, #d97757 45%, #c15f3c);
+      --header-bg: rgba(31, 30, 29, 0.82);
+      --menu-bg: rgba(38, 38, 36, 0.98);
+      --chip-bg: rgba(43, 42, 40, 0.94);
+      --ring: rgba(255, 255, 255, 0.14);
+      --tint-1: rgba(217, 119, 87, 0.12);
+      --tint-2: rgba(212, 162, 127, 0.08);
+      --glow-a: rgba(217, 119, 87, 0.16);
+      --glow-b: rgba(212, 162, 127, 0.10);
+      --btn-shadow: rgba(217, 119, 87, 0.28);
+      --btn-shadow-hover: rgba(217, 119, 87, 0.42);
+      --feature-bg: rgba(31, 30, 29, 0.55);
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+    }
+
+    /* Light theme tokens — warm ivory, Claude-style */
+    html[data-theme="light"] {
+      color-scheme: light;
+      --bg: #faf9f5;
+      --bg-soft: #f0eee6;
+      --panel: #ffffff;
+      --panel-2: #f5f3ec;
+      --border: rgba(31, 30, 29, 0.10);
+      --border-strong: rgba(31, 30, 29, 0.18);
+      --text: #1f1e1d;
+      --muted: #5e5d59;
+      --faint: #67665f;          /* >= 4.5:1 on bg and bg-soft (WCAG AA) */
+      --accent: #d97757;
+      --accent-strong: #c15f3c;
+      --accent-text: #ad4f2b;    /* darker terracotta, readable on ivory */
+      --accent-1: #d97757;
+      --accent-2: #c15f3c;
+      --accent-3: #c99a72;
+      --gradient: linear-gradient(100deg, #c9683f, #ad4f2b);
+      --header-bg: rgba(250, 249, 245, 0.85);
+      --menu-bg: rgba(250, 249, 245, 0.98);
+      --chip-bg: rgba(255, 255, 255, 0.94);
+      --ring: rgba(31, 30, 29, 0.16);
+      --tint-1: rgba(217, 119, 87, 0.09);
+      --tint-2: rgba(212, 162, 127, 0.10);
+      --glow-a: rgba(217, 119, 87, 0.12);
+      --glow-b: rgba(212, 162, 127, 0.12);
+      --btn-shadow: rgba(193, 95, 60, 0.25);
+      --btn-shadow-hover: rgba(193, 95, 60, 0.38);
+      --feature-bg: rgba(255, 255, 255, 0.78);
+      --shadow: 0 18px 45px rgba(31, 30, 29, 0.10);
+    }
+
+    /* OS preference fallback when JS has not set a theme (e.g. no-JS visitors) */
+    @media (prefers-color-scheme: light) {
+      html:not([data-theme]) {
+        color-scheme: light;
+        --bg: #faf9f5;
+        --bg-soft: #f0eee6;
+        --panel: #ffffff;
+        --panel-2: #f5f3ec;
+        --border: rgba(31, 30, 29, 0.10);
+        --border-strong: rgba(31, 30, 29, 0.18);
+        --text: #1f1e1d;
+        --muted: #5e5d59;
+        --faint: #67665f;
+        --accent-text: #ad4f2b;
+        --accent-3: #c99a72;
+        --gradient: linear-gradient(100deg, #c9683f, #ad4f2b);
+        --header-bg: rgba(250, 249, 245, 0.85);
+        --menu-bg: rgba(250, 249, 245, 0.98);
+        --chip-bg: rgba(255, 255, 255, 0.94);
+        --ring: rgba(31, 30, 29, 0.16);
+        --tint-1: rgba(217, 119, 87, 0.09);
+        --tint-2: rgba(212, 162, 127, 0.10);
+        --glow-a: rgba(217, 119, 87, 0.12);
+        --glow-b: rgba(212, 162, 127, 0.12);
+        --btn-shadow: rgba(193, 95, 60, 0.25);
+        --btn-shadow-hover: rgba(193, 95, 60, 0.38);
+        --feature-bg: rgba(255, 255, 255, 0.78);
+        --shadow: 0 18px 45px rgba(31, 30, 29, 0.10);
+      }
     }
 
     /* ===============================================================================================================
@@ -135,13 +226,14 @@
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
+      transition: background 0.25s ease, color 0.25s ease;
     }
 
     /* Language visibility: html[lang] decides which localized nodes are shown */
     html[lang="it"] .en { display: none !important; }
     html[lang="en"] .it { display: none !important; }
 
-    ::selection { background: rgba(124, 92, 255, 0.35); }
+    ::selection { background: rgba(217, 119, 87, 0.35); }
 
     a { color: inherit; text-decoration: none; }
     img { max-width: 100%; display: block; }
@@ -159,7 +251,7 @@
       font-weight: 600;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: var(--accent-3);
+      color: var(--accent-text);
       margin-bottom: 16px;
     }
     .kicker::before {
@@ -170,7 +262,9 @@
     }
 
     h1, h2, h3 { line-height: 1.15; letter-spacing: -0.02em; }
-    h2 { font-size: clamp(1.7rem, 3.4vw, 2.5rem); font-weight: 800; margin-bottom: 16px; }
+    /* Display headings in serif, Claude-style */
+    h1, h2 { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.01em; }
+    h2 { font-size: clamp(1.7rem, 3.4vw, 2.5rem); margin-bottom: 16px; }
     .section-intro { color: var(--muted); max-width: 640px; font-size: 1.05rem; }
 
     .grad-text {
@@ -190,7 +284,7 @@
 
     /* Keyboard focus */
     a:focus-visible, button:focus-visible {
-      outline: 2px solid var(--accent-1);
+      outline: 2px solid var(--accent);
       outline-offset: 3px;
       border-radius: 6px;
     }
@@ -230,15 +324,15 @@
     .btn-primary {
       background: var(--gradient);
       color: #fff;
-      box-shadow: 0 8px 28px rgba(93, 108, 255, 0.35);
+      box-shadow: 0 8px 28px var(--btn-shadow);
     }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 34px rgba(93, 108, 255, 0.5); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 34px var(--btn-shadow-hover); }
     .btn-ghost {
-      background: rgba(255, 255, 255, 0.04);
+      background: transparent;
       border-color: var(--border-strong);
       color: var(--text);
     }
-    .btn-ghost:hover { background: rgba(255, 255, 255, 0.09); transform: translateY(-2px); }
+    .btn-ghost:hover { background: rgba(127, 127, 127, 0.12); transform: translateY(-2px); }
 
     /* ===============================================================================================================
        Header / nav
@@ -250,10 +344,11 @@
       height: var(--nav-h);
       display: flex;
       align-items: center;
-      background: rgba(6, 8, 15, 0.78);
+      background: var(--header-bg);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
+      transition: background 0.25s ease;
     }
     .nav {
       width: 100%;
@@ -304,7 +399,26 @@
       cursor: pointer;
       transition: background 0.18s ease, color 0.18s ease;
     }
-    .lang-switch button.active { background: rgba(255, 255, 255, 0.1); color: var(--text); }
+    .lang-switch button.active { background: rgba(127, 127, 127, 0.16); color: var(--text); }
+
+    /* Theme toggle (sun shown in dark -> switches to light, moon shown in light) */
+    .theme-toggle {
+      background: transparent;
+      border: 1px solid var(--border-strong);
+      border-radius: 999px;
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      color: var(--muted);
+      transition: color 0.18s ease, background 0.18s ease;
+    }
+    .theme-toggle:hover { color: var(--text); background: rgba(127, 127, 127, 0.12); }
+    .theme-toggle svg { width: 18px; height: 18px; }
+    html[data-theme="light"] .icon-sun { display: none; }
+    html:not([data-theme="light"]) .icon-moon { display: none; }
+    html:not(.js) .theme-toggle { display: none; }
 
     .nav-cta { padding: 9px 20px; font-size: 0.88rem; }
 
@@ -344,7 +458,7 @@
         flex-direction: column;
         align-items: flex-start;
         gap: 4px;
-        background: rgba(8, 11, 20, 0.98);
+        background: var(--menu-bg);
         border-bottom: 1px solid var(--border);
         padding: 12px 24px 20px;
         display: none;
@@ -371,26 +485,15 @@
       overflow: hidden;
       pointer-events: none;
     }
-    .hero-bg::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-      background-size: 56px 56px;
-      mask-image: radial-gradient(ellipse 90% 70% at 50% 20%, black 30%, transparent 75%);
-      -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 20%, black 30%, transparent 75%);
-    }
     .glow {
       position: absolute;
       border-radius: 50%;
       filter: blur(90px);
-      opacity: 0.5;
+      opacity: 0.65;
     }
-    .glow-1 { width: 480px; height: 480px; background: rgba(79, 140, 255, 0.28); top: -140px; right: -80px; }
-    .glow-2 { width: 420px; height: 420px; background: rgba(124, 92, 255, 0.22); bottom: -160px; left: -120px; }
-    .glow-3 { width: 300px; height: 300px; background: rgba(45, 212, 191, 0.14); top: 40%; left: 42%; }
+    .glow-1 { width: 500px; height: 500px; background: var(--glow-a); top: -160px; right: -100px; }
+    .glow-2 { width: 440px; height: 440px; background: var(--glow-b); bottom: -180px; left: -140px; }
+    .glow-3 { width: 300px; height: 300px; background: var(--glow-b); top: 42%; left: 44%; opacity: 0.4; }
 
     .hero-inner { position: relative; display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 56px; align-items: center; }
 
@@ -422,7 +525,7 @@
       border-radius: 32px;
       background: linear-gradient(160deg, var(--panel-2), var(--panel));
       border: 1px solid var(--border-strong);
-      box-shadow: var(--shadow), 0 0 60px rgba(93, 108, 255, 0.25);
+      box-shadow: var(--shadow), 0 0 60px var(--glow-a);
       display: grid; place-items: center;
       text-align: center;
       z-index: 2;
@@ -431,7 +534,7 @@
     .orbit-core small { color: var(--faint); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; }
     .orbit-ring {
       position: absolute;
-      border: 1px dashed rgba(255, 255, 255, 0.12);
+      border: 1px dashed var(--ring);
       border-radius: 50%;
     }
     .ring-1 { width: 270px; height: 270px; }
@@ -441,7 +544,7 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(13, 18, 32, 0.92);
+      background: var(--chip-bg);
       border: 1px solid var(--border-strong);
       border-radius: 999px;
       padding: 9px 16px;
@@ -508,7 +611,7 @@
       border-radius: 14px;
       display: grid; place-items: center;
       margin-bottom: 20px;
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(217, 119, 87, 0.09);
       border: 1px solid var(--border);
     }
     .card-icon svg { width: 25px; height: 25px; }
@@ -551,7 +654,7 @@
     .pillar .n {
       font-size: 0.8rem;
       font-weight: 700;
-      color: var(--accent-3);
+      color: var(--accent-text);
       letter-spacing: 0.1em;
     }
     .pillar h3 { font-size: 1.05rem; margin: 10px 0 8px; }
@@ -567,8 +670,8 @@
       border-radius: var(--radius-lg);
       border: 1px solid var(--border-strong);
       background:
-        radial-gradient(ellipse 80% 90% at 85% 10%, rgba(124, 92, 255, 0.16), transparent 60%),
-        radial-gradient(ellipse 60% 80% at 10% 90%, rgba(45, 212, 191, 0.10), transparent 60%),
+        radial-gradient(ellipse 80% 90% at 85% 10%, var(--tint-1), transparent 60%),
+        radial-gradient(ellipse 60% 80% at 10% 90%, var(--tint-2), transparent 60%),
         linear-gradient(170deg, var(--panel-2), var(--panel) 70%);
       padding: 56px;
       display: grid;
@@ -587,14 +690,14 @@
       font-weight: 700;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: var(--accent-3);
-      border: 1px solid rgba(45, 212, 191, 0.35);
-      background: rgba(45, 212, 191, 0.08);
+      color: var(--accent-text);
+      border: 1px solid rgba(217, 119, 87, 0.4);
+      background: rgba(217, 119, 87, 0.09);
       border-radius: 999px;
       padding: 6px 14px;
       margin-bottom: 20px;
     }
-    .podz-panel h3 { font-size: clamp(1.5rem, 2.8vw, 2.1rem); font-weight: 800; margin-bottom: 14px; }
+    .podz-panel h3 { font-family: var(--font-display); font-size: clamp(1.5rem, 2.8vw, 2.1rem); font-weight: 600; margin-bottom: 14px; }
     .podz-panel > div > p { color: var(--muted); font-size: 1.02rem; margin-bottom: 26px; }
     .podz-ctas { display: flex; flex-wrap: wrap; gap: 14px; }
     .podz-note { margin-top: 18px; color: var(--faint); font-size: 0.82rem; }
@@ -605,7 +708,7 @@
       gap: 16px;
       align-items: flex-start;
       border: 1px solid var(--border);
-      background: rgba(6, 8, 15, 0.55);
+      background: var(--feature-bg);
       border-radius: var(--radius);
       padding: 18px 20px;
     }
@@ -614,7 +717,7 @@
       width: 38px; height: 38px;
       border-radius: 11px;
       display: grid; place-items: center;
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(217, 119, 87, 0.09);
       border: 1px solid var(--border);
     }
     .podz-feature .f-icon svg { width: 19px; height: 19px; }
@@ -716,6 +819,17 @@
       </div>
 
       <div class="nav-actions">
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Tema chiaro/scuro · Light/dark theme">
+          <!-- Sun icon (visible in dark mode) -->
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2"/>
+            <path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/>
+          </svg>
+          <!-- Moon icon (visible in light mode) -->
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.2 14.5A8.3 8.3 0 0 1 9.5 3.8a8.3 8.3 0 1 0 10.7 10.7Z"/>
+          </svg>
+        </button>
         <div class="lang-switch" role="group" aria-label="Language">
           <button type="button" data-lang="it">IT</button>
           <button type="button" data-lang="en">EN</button>
@@ -831,7 +945,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <defs>
                   <linearGradient id="icoGrad" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0" stop-color="#4f8cff"/><stop offset="1" stop-color="#2dd4bf"/>
+                    <stop offset="0" stop-color="#d97757"/><stop offset="1" stop-color="#c15f3c"/>
                   </linearGradient>
                 </defs>
                 <path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3.4.9-4.5 2.3A5.7 5.7 0 0 0 7.5 3 5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7Z"/>
@@ -1013,7 +1127,7 @@
             <div class="podz-feature">
               <div class="f-icon" aria-hidden="true">
                 <!-- Shield icon -->
-                <svg viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#d97757" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M12 3l8 3v6c0 4.5-3.2 7.6-8 9-4.8-1.4-8-4.5-8-9V6l8-3Z"/>
                   <path d="M9 12l2 2 4-4"/>
                 </svg>
@@ -1028,7 +1142,7 @@
             <div class="podz-feature">
               <div class="f-icon" aria-hidden="true">
                 <!-- Mask icon -->
-                <svg viewBox="0 0 24 24" fill="none" stroke="#7c5cff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#c15f3c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="9"/>
                   <path d="M8 10h.01M16 10h.01M8.5 15a4.5 4.5 0 0 0 7 0"/>
                 </svg>
@@ -1043,7 +1157,7 @@
             <div class="podz-feature">
               <div class="f-icon" aria-hidden="true">
                 <!-- Grid/specialists icon -->
-                <svg viewBox="0 0 24 24" fill="none" stroke="#4f8cff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#d4a27f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="3" width="7" height="7" rx="2"/>
                   <rect x="14" y="3" width="7" height="7" rx="2"/>
                   <rect x="3" y="14" width="7" height="7" rx="2"/>
@@ -1187,7 +1301,7 @@
             <h3><span class="it">Sede</span><span class="en">Office</span></h3>
             <div class="big">Via Marino Moretti, 23</div>
             <p>47899 Serravalle — Repubblica di San Marino</p>
-            <p><a href="https://www.linkedin.com/company/gg-technologies-srl" target="_blank" rel="noopener" style="color: var(--accent-1); font-weight: 600;">LinkedIn ↗</a></p>
+            <p><a href="https://www.linkedin.com/company/gg-technologies-srl" target="_blank" rel="noopener" style="color: var(--accent-text); font-weight: 600;">LinkedIn ↗</a></p>
           </div>
         </div>
       </div>
@@ -1261,6 +1375,8 @@
       // ---------------------------------------------------------------------------------------------------------------
 
       const STORAGE_KEY = 'gg-lang';
+      const THEME_KEY = 'gg-theme';
+      const THEME_META_COLORS = { dark: '#1f1e1d', light: '#faf9f5' };
       const TITLES = {
         it: 'Consulenza tecnologica: wearable medicali, robotica e AI — G&G Technologies',
         en: 'Technology consulting: medical wearables, robotics and AI — G&G Technologies'
@@ -1276,6 +1392,7 @@
 
       document.addEventListener('DOMContentLoaded', function () {
         _initLanguage();
+        _initTheme();
         _initMobileMenu();
         _initActiveNav();
         _initReveal();
@@ -1313,6 +1430,39 @@
         document.querySelectorAll('.lang-switch button').forEach(function (btn) {
           btn.addEventListener('click', function () { _setLanguage(btn.dataset.lang); });
         });
+      }
+
+      // Apply a theme to the document, sync the browser chrome color and persist the choice.
+      function _applyTheme(theme, persist) {
+        document.documentElement.setAttribute('data-theme', theme);
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', THEME_META_COLORS[theme]);
+        if (persist) {
+          try { localStorage.setItem(THEME_KEY, theme); } catch (ignored) { /* ignore */ }
+        }
+      }
+
+      function _initTheme() {
+        // The pre-paint bootstrap already set data-theme; sync the meta color to it
+        const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+        _applyTheme(current, false);
+
+        const toggle = document.getElementById('themeToggle');
+        if (toggle) {
+          toggle.addEventListener('click', function () {
+            const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            _applyTheme(next, true);
+          });
+        }
+
+        // Follow OS changes only while the visitor has not made an explicit choice
+        if (window.matchMedia) {
+          matchMedia('(prefers-color-scheme: light)').addEventListener('change', function (e) {
+            let stored = null;
+            try { stored = localStorage.getItem(THEME_KEY); } catch (ignored) { /* ignore */ }
+            if (stored !== 'light' && stored !== 'dark') _applyTheme(e.matches ? 'light' : 'dark', false);
+          });
+        }
       }
 
       // Hamburger menu for small screens.
