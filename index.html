@@ -371,7 +371,20 @@
       display: grid; place-items: center;
     }
     .brand-mark svg { width: 22px; height: 22px; display: block; }
-    .brand-mark svg circle { fill: var(--text); }
+    /* Pulsing "on" LED: the center dot breathes a soft emerald glow */
+    .brand-mark svg circle {
+      fill: var(--text);
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: gg-pulse 2.6s ease-in-out infinite;
+    }
+    @keyframes gg-pulse {
+      0%, 100% { filter: drop-shadow(0 0 0 rgba(52, 211, 153, 0)); transform: scale(1); }
+      50%      { filter: drop-shadow(0 0 3.5px rgba(52, 211, 153, 0.95)); transform: scale(1.08); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .brand-mark svg circle { animation: none; }
+    }
 
     .nav-links { display: flex; align-items: center; gap: 26px; margin-left: auto; }
     .nav-links a {
