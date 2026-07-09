@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 100 100" role="img" aria-label="G&amp;G Technologies">
+  <rect width="100" height="100" fill="#0d1220"/>
+  <path d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="#34d399" stroke-width="13" stroke-linecap="round"/>
+  <circle cx="50" cy="50" r="9" fill="#ffffff"/>
+</svg>
