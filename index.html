@@ -386,27 +386,27 @@
     .brand-mark svg circle.click {
       fill: none;
       stroke: #34d399;
-      stroke-width: 2;
+      stroke-width: 3;
       opacity: 0;
       animation: gg-click 5.6s ease-out infinite;
     }
     @keyframes gg-draw {
       0%, 7%    { stroke-dashoffset: 205; }
-      26%, 87%  { stroke-dashoffset: 0; }
+      26%, 88%  { stroke-dashoffset: 0; }
       96%, 100% { stroke-dashoffset: 205; }
     }
     @keyframes gg-led {
       0%, 24%   { fill: #ef4444; filter: drop-shadow(0 0 0 rgba(52,211,153,0)); transform: scale(1); }
       31%       { fill: var(--text); filter: drop-shadow(0 0 8px rgba(52,211,153,1)) drop-shadow(0 0 17px rgba(52,211,153,0.6)); transform: scale(1.22); }
       38%, 82%  { fill: var(--text); filter: drop-shadow(0 0 4px rgba(52,211,153,0.85)); transform: scale(1); }
-      87%       { fill: var(--text); filter: drop-shadow(0 0 7px rgba(52,211,153,1)); transform: scale(0.7); }
-      91%       { fill: #ef4444; filter: drop-shadow(0 0 0 rgba(52,211,153,0)); transform: scale(1); }
-      93%, 100% { fill: #ef4444; filter: drop-shadow(0 0 0 rgba(52,211,153,0)); transform: scale(1); }
+      85%       { fill: var(--text); filter: drop-shadow(0 0 11px rgba(52,211,153,1)); transform: scale(0.46); }
+      89%       { fill: #ef4444; filter: drop-shadow(0 0 0 rgba(52,211,153,0)); transform: scale(1.12); }
+      92%, 100% { fill: #ef4444; filter: drop-shadow(0 0 0 rgba(52,211,153,0)); transform: scale(1); }
     }
     @keyframes gg-click {
-      0%, 83%   { opacity: 0; r: 9px; }
-      86%       { opacity: 0.9; r: 10px; }
-      93%, 100% { opacity: 0; r: 30px; }
+      0%, 82%   { opacity: 0; r: 8px; }
+      85%       { opacity: 1; r: 11px; }
+      93%, 100% { opacity: 0; r: 34px; }
     }
     @media (prefers-reduced-motion: reduce) {
       .brand-mark svg path.lit { stroke-dashoffset: 0; animation: none; }
