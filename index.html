@@ -7,7 +7,7 @@
   <meta name="description" content="Consulenza tecnologica a San Marino: 30+ anni di esperienza in wearable medicali, robotica e AI. Sviluppatori di Podz.AI, la workstation AI personale.">
   <meta name="author" content="G&G Technologies Srl">
   <meta name="robots" content="index, follow">
-  <meta name="theme-color" content="#1f1e1d">
+  <meta name="theme-color" content="#0d1220">
   <link rel="canonical" href="https://g-g-technologies-srl.github.io/">
   <!-- Open Graph -->
   <meta property="og:type" content="website">
@@ -30,7 +30,7 @@
   <meta name="twitter:image" content="https://g-g-technologies-srl.github.io/assets/og-card.png">
   <meta name="twitter:image:alt" content="G&amp;G Technologies — Software, robotica e AI che fanno crescere le imprese.">
   <!-- Favicon (inline SVG) -->
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231f1e1d'/%3E%3Crect x='3' y='3' width='58' height='58' rx='12' fill='none' stroke='%23d97757' stroke-width='2'/%3E%3Ctext x='32' y='42' font-family='Arial,sans-serif' font-size='26' font-weight='bold' fill='%23d97757' text-anchor='middle'%3EG%26G%3C/text%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d1220'/%3E%3Crect x='3' y='3' width='58' height='58' rx='12' fill='none' stroke='%2334d399' stroke-width='2'/%3E%3Ctext x='32' y='42' font-family='Arial,sans-serif' font-size='26' font-weight='bold' fill='%2334d399' text-anchor='middle'%3EG%26G%3C/text%3E%3C/svg%3E">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <!-- Pre-paint bootstrap: set language and theme before first render (avoids i18n/theme flash and no-JS hidden content) -->
@@ -115,100 +115,103 @@
       --font-display: ui-serif, Georgia, 'Times New Roman', Times, serif;
     }
 
-    /* Dark theme (default) — warm charcoal, Claude-style */
+    /* Dark theme (default) — cool slate, G&G signature emerald */
     :root {
       color-scheme: dark;
-      --bg: #1f1e1d;
-      --bg-soft: #262624;
-      --panel: #2b2a28;
-      --panel-2: #33312e;
+      --bg: #0d1220;
+      --bg-soft: #121a2b;
+      --panel: #172136;
+      --panel-2: #1e2a43;
       --border: rgba(255, 255, 255, 0.09);
       --border-strong: rgba(255, 255, 255, 0.17);
-      --text: #f0eee7;
-      --muted: #b3b0a7;
-      --faint: #969389;          /* >= 4.5:1 on bg and panel (WCAG AA) */
-      --accent: #d97757;         /* terracotta */
-      --accent-strong: #c15f3c;
-      --accent-text: #d97757;    /* readable accent for text on dark */
-      --accent-1: #d97757;
-      --accent-2: #c15f3c;
-      --accent-3: #d4a27f;
-      --gradient: linear-gradient(100deg, #e08d6d, #d97757 45%, #c15f3c);
-      --header-bg: rgba(31, 30, 29, 0.82);
-      --menu-bg: rgba(38, 38, 36, 0.98);
-      --chip-bg: rgba(43, 42, 40, 0.94);
+      --text: #eef1f8;
+      --muted: #aab3c9;
+      --faint: #8f98ad;          /* >= 4.5:1 on bg and panel (WCAG AA) */
+      --accent: #34d399;         /* emerald — G&G signature */
+      --accent-strong: #10b981;
+      --accent-text: #6ee7b7;    /* readable accent for text on dark */
+      --accent-1: #34d399;
+      --accent-2: #22c3a6;
+      --accent-3: #38bdf8;       /* cyan — Podz.AI bridge note */
+      --gradient: linear-gradient(100deg, #5eecab, #34d399 45%, #10b981);
+      --header-bg: rgba(13, 18, 32, 0.82);
+      --menu-bg: rgba(18, 26, 43, 0.98);
+      --chip-bg: rgba(23, 33, 54, 0.94);
       --ring: rgba(255, 255, 255, 0.14);
-      --tint-1: rgba(217, 119, 87, 0.12);
-      --tint-2: rgba(212, 162, 127, 0.08);
-      --glow-a: rgba(217, 119, 87, 0.16);
-      --glow-b: rgba(212, 162, 127, 0.10);
-      --btn-shadow: rgba(217, 119, 87, 0.28);
-      --btn-shadow-hover: rgba(217, 119, 87, 0.42);
-      --feature-bg: rgba(31, 30, 29, 0.55);
-      --shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+      --tint-1: rgba(52, 211, 153, 0.12);
+      --tint-2: rgba(56, 189, 248, 0.09);
+      --glow-a: rgba(52, 211, 153, 0.18);
+      --glow-b: rgba(56, 189, 248, 0.12);
+      --btn-shadow: rgba(52, 211, 153, 0.30);
+      --btn-shadow-hover: rgba(52, 211, 153, 0.45);
+      --btn-text: #05221a;
+      --feature-bg: rgba(13, 18, 32, 0.55);
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
     }
 
-    /* Light theme tokens — warm ivory, Claude-style */
+    /* Light theme tokens — cool off-white, G&G signature emerald */
     html[data-theme="light"] {
       color-scheme: light;
-      --bg: #faf9f5;
-      --bg-soft: #f0eee6;
+      --bg: #f6f8fc;
+      --bg-soft: #eaeef7;
       --panel: #ffffff;
-      --panel-2: #f5f3ec;
-      --border: rgba(31, 30, 29, 0.10);
-      --border-strong: rgba(31, 30, 29, 0.18);
-      --text: #1f1e1d;
-      --muted: #5e5d59;
-      --faint: #67665f;          /* >= 4.5:1 on bg and bg-soft (WCAG AA) */
-      --accent: #d97757;
-      --accent-strong: #c15f3c;
-      --accent-text: #ad4f2b;    /* darker terracotta, readable on ivory */
-      --accent-1: #d97757;
-      --accent-2: #c15f3c;
-      --accent-3: #c99a72;
-      --gradient: linear-gradient(100deg, #c9683f, #ad4f2b);
-      --header-bg: rgba(250, 249, 245, 0.85);
-      --menu-bg: rgba(250, 249, 245, 0.98);
+      --panel-2: #eef2fa;
+      --border: rgba(13, 18, 32, 0.10);
+      --border-strong: rgba(13, 18, 32, 0.18);
+      --text: #0d1220;
+      --muted: #4a5266;
+      --faint: #5b6377;          /* >= 4.5:1 on bg and bg-soft (WCAG AA) */
+      --accent: #059669;
+      --accent-strong: #047857;
+      --accent-text: #047857;    /* deep emerald, readable on off-white */
+      --accent-1: #059669;
+      --accent-2: #0891a6;
+      --accent-3: #0ea5c4;
+      --gradient: linear-gradient(100deg, #059669, #047857);
+      --header-bg: rgba(246, 248, 252, 0.85);
+      --menu-bg: rgba(246, 248, 252, 0.98);
       --chip-bg: rgba(255, 255, 255, 0.94);
-      --ring: rgba(31, 30, 29, 0.16);
-      --tint-1: rgba(217, 119, 87, 0.09);
-      --tint-2: rgba(212, 162, 127, 0.10);
-      --glow-a: rgba(217, 119, 87, 0.12);
-      --glow-b: rgba(212, 162, 127, 0.12);
-      --btn-shadow: rgba(193, 95, 60, 0.25);
-      --btn-shadow-hover: rgba(193, 95, 60, 0.38);
+      --ring: rgba(13, 18, 32, 0.16);
+      --tint-1: rgba(5, 150, 105, 0.09);
+      --tint-2: rgba(14, 165, 196, 0.10);
+      --glow-a: rgba(5, 150, 105, 0.12);
+      --glow-b: rgba(14, 165, 196, 0.12);
+      --btn-shadow: rgba(5, 150, 105, 0.25);
+      --btn-shadow-hover: rgba(5, 150, 105, 0.38);
+      --btn-text: #ffffff;
       --feature-bg: rgba(255, 255, 255, 0.78);
-      --shadow: 0 18px 45px rgba(31, 30, 29, 0.10);
+      --shadow: 0 18px 45px rgba(13, 18, 32, 0.10);
     }
 
     /* OS preference fallback when JS has not set a theme (e.g. no-JS visitors) */
     @media (prefers-color-scheme: light) {
       html:not([data-theme]) {
         color-scheme: light;
-        --bg: #faf9f5;
-        --bg-soft: #f0eee6;
+        --bg: #f6f8fc;
+        --bg-soft: #eaeef7;
         --panel: #ffffff;
-        --panel-2: #f5f3ec;
-        --border: rgba(31, 30, 29, 0.10);
-        --border-strong: rgba(31, 30, 29, 0.18);
-        --text: #1f1e1d;
-        --muted: #5e5d59;
-        --faint: #67665f;
-        --accent-text: #ad4f2b;
-        --accent-3: #c99a72;
-        --gradient: linear-gradient(100deg, #c9683f, #ad4f2b);
-        --header-bg: rgba(250, 249, 245, 0.85);
-        --menu-bg: rgba(250, 249, 245, 0.98);
+        --panel-2: #eef2fa;
+        --border: rgba(13, 18, 32, 0.10);
+        --border-strong: rgba(13, 18, 32, 0.18);
+        --text: #0d1220;
+        --muted: #4a5266;
+        --faint: #5b6377;
+        --accent-text: #047857;
+        --accent-3: #0ea5c4;
+        --gradient: linear-gradient(100deg, #059669, #047857);
+        --header-bg: rgba(246, 248, 252, 0.85);
+        --menu-bg: rgba(246, 248, 252, 0.98);
         --chip-bg: rgba(255, 255, 255, 0.94);
-        --ring: rgba(31, 30, 29, 0.16);
-        --tint-1: rgba(217, 119, 87, 0.09);
-        --tint-2: rgba(212, 162, 127, 0.10);
-        --glow-a: rgba(217, 119, 87, 0.12);
-        --glow-b: rgba(212, 162, 127, 0.12);
-        --btn-shadow: rgba(193, 95, 60, 0.25);
-        --btn-shadow-hover: rgba(193, 95, 60, 0.38);
+        --ring: rgba(13, 18, 32, 0.16);
+        --tint-1: rgba(5, 150, 105, 0.09);
+        --tint-2: rgba(14, 165, 196, 0.10);
+        --glow-a: rgba(5, 150, 105, 0.12);
+        --glow-b: rgba(14, 165, 196, 0.12);
+        --btn-shadow: rgba(5, 150, 105, 0.25);
+        --btn-shadow-hover: rgba(5, 150, 105, 0.38);
+        --btn-text: #ffffff;
         --feature-bg: rgba(255, 255, 255, 0.78);
-        --shadow: 0 18px 45px rgba(31, 30, 29, 0.10);
+        --shadow: 0 18px 45px rgba(13, 18, 32, 0.10);
       }
     }
 
@@ -233,7 +236,7 @@
     html[lang="it"] .en { display: none !important; }
     html[lang="en"] .it { display: none !important; }
 
-    ::selection { background: rgba(217, 119, 87, 0.35); }
+    ::selection { background: rgba(52, 211, 153, 0.35); }
 
     a { color: inherit; text-decoration: none; }
     img { max-width: 100%; display: block; }
@@ -323,7 +326,7 @@
     }
     .btn-primary {
       background: var(--gradient);
-      color: #fff;
+      color: var(--btn-text);
       box-shadow: 0 8px 28px var(--btn-shadow);
     }
     .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 34px var(--btn-shadow-hover); }
@@ -611,7 +614,7 @@
       border-radius: 14px;
       display: grid; place-items: center;
       margin-bottom: 20px;
-      background: rgba(217, 119, 87, 0.09);
+      background: rgba(52, 211, 153, 0.10);
       border: 1px solid var(--border);
     }
     .card-icon svg { width: 25px; height: 25px; }
@@ -691,8 +694,8 @@
       letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--accent-text);
-      border: 1px solid rgba(217, 119, 87, 0.4);
-      background: rgba(217, 119, 87, 0.09);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      background: rgba(56, 189, 248, 0.10);
       border-radius: 999px;
       padding: 6px 14px;
       margin-bottom: 20px;
@@ -717,7 +720,7 @@
       width: 38px; height: 38px;
       border-radius: 11px;
       display: grid; place-items: center;
-      background: rgba(217, 119, 87, 0.09);
+      background: rgba(56, 189, 248, 0.10);
       border: 1px solid var(--border);
     }
     .podz-feature .f-icon svg { width: 19px; height: 19px; }
@@ -856,8 +859,8 @@
       <div class="container hero-inner">
         <div>
           <div class="kicker">
-            <span class="it">Consulenza tecnologica · San Marino</span>
-            <span class="en">Technology consulting · San Marino</span>
+            <span class="it">Tecnologia e innovazione · modellata con ❤️ a San Marino</span>
+            <span class="en">Technology &amp; innovation · crafted with ❤️ in San Marino</span>
           </div>
 
           <h1 class="it">Software, robotica e AI che fanno <span class="grad-text">crescere le imprese</span>.</h1>
@@ -945,7 +948,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <defs>
                   <linearGradient id="icoGrad" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0" stop-color="#d97757"/><stop offset="1" stop-color="#c15f3c"/>
+                    <stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#10b981"/>
                   </linearGradient>
                 </defs>
                 <path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3.4.9-4.5 2.3A5.7 5.7 0 0 0 7.5 3 5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7Z"/>
@@ -1127,7 +1130,7 @@
             <div class="podz-feature">
               <div class="f-icon" aria-hidden="true">
                 <!-- Shield icon -->
-                <svg viewBox="0 0 24 24" fill="none" stroke="#d97757" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M12 3l8 3v6c0 4.5-3.2 7.6-8 9-4.8-1.4-8-4.5-8-9V6l8-3Z"/>
                   <path d="M9 12l2 2 4-4"/>
                 </svg>
@@ -1142,7 +1145,7 @@
             <div class="podz-feature">
               <div class="f-icon" aria-hidden="true">
                 <!-- Mask icon -->
-                <svg viewBox="0 0 24 24" fill="none" stroke="#c15f3c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="9"/>
                   <path d="M8 10h.01M16 10h.01M8.5 15a4.5 4.5 0 0 0 7 0"/>
                 </svg>
@@ -1157,7 +1160,7 @@
             <div class="podz-feature">
               <div class="f-icon" aria-hidden="true">
                 <!-- Grid/specialists icon -->
-                <svg viewBox="0 0 24 24" fill="none" stroke="#d4a27f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="3" width="7" height="7" rx="2"/>
                   <rect x="14" y="3" width="7" height="7" rx="2"/>
                   <rect x="3" y="14" width="7" height="7" rx="2"/>
@@ -1376,7 +1379,7 @@
 
       const STORAGE_KEY = 'gg-lang';
       const THEME_KEY = 'gg-theme';
-      const THEME_META_COLORS = { dark: '#1f1e1d', light: '#faf9f5' };
+      const THEME_META_COLORS = { dark: '#0d1220', light: '#f6f8fc' };
       const TITLES = {
         it: 'Consulenza tecnologica: wearable medicali, robotica e AI — G&G Technologies',
         en: 'Technology consulting: medical wearables, robotics and AI — G&G Technologies'
