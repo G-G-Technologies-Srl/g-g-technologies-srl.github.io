@@ -371,42 +371,42 @@
     .brand-text { display: inline-flex; flex-direction: column; line-height: 1.08; }
     .brand-name { font-weight: 800; font-size: 1.05rem; letter-spacing: -0.01em; }
     .brand-payoff { font-size: 0.58rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent-text); margin-top: 2px; }
-    /* Power-on: a thin wireframe G that fills in solid and lights the LED, holding "on" longer */
+    /* Power-on plays once on load; then the lit LED breathes. No off/on loop. */
     .brand-mark svg path.lit {
       stroke-dasharray: 200 300;
       stroke-linecap: butt;
-      animation: gg-draw 5.6s ease-in-out infinite;
+      animation: gg-draw 1.9s ease-in-out forwards;
     }
     .brand-mark svg circle.led {
       fill: #ef4444;
       transform-box: fill-box;
       transform-origin: center;
-      animation: gg-led 5.6s ease-in-out infinite;
+      animation: gg-power 1.9s ease-out forwards, gg-breath 2s ease-in-out 1.9s infinite;
     }
     .brand-mark svg circle.click {
       fill: none;
       stroke: #34d399;
       stroke-width: 3;
       opacity: 0;
-      animation: gg-click 5.6s ease-out infinite;
     }
+    /* Click feedback: a ripple radiates from the LED on hover */
+    .brand:hover .brand-mark svg circle.click { animation: gg-click 0.65s ease-out; }
     @keyframes gg-draw {
-      0%, 7%    { stroke-dashoffset: 205; }
-      26%, 88%  { stroke-dashoffset: 0; }
-      96%, 100% { stroke-dashoffset: 205; }
+      0%, 12%   { stroke-dashoffset: 205; }
+      60%, 100% { stroke-dashoffset: 0; }
     }
-    @keyframes gg-led {
-      0%, 24%   { fill: #ef4444; filter: drop-shadow(0 0 0 rgba(52,211,153,0)); transform: scale(1); }
-      31%       { fill: var(--text); filter: drop-shadow(0 0 8px rgba(52,211,153,1)) drop-shadow(0 0 17px rgba(52,211,153,0.6)); transform: scale(1.22); }
-      38%, 82%  { fill: var(--text); filter: drop-shadow(0 0 4px rgba(52,211,153,0.85)); transform: scale(1); }
-      85%       { fill: var(--text); filter: drop-shadow(0 0 11px rgba(52,211,153,1)); transform: scale(0.46); }
-      89%       { fill: #ef4444; filter: drop-shadow(0 0 0 rgba(52,211,153,0)); transform: scale(1.12); }
-      92%, 100% { fill: #ef4444; filter: drop-shadow(0 0 0 rgba(52,211,153,0)); transform: scale(1); }
+    @keyframes gg-power {
+      0%, 45%   { fill: #ef4444; filter: drop-shadow(0 0 0 rgba(52,211,153,0)); transform: scale(1); }
+      60%       { fill: var(--text); filter: drop-shadow(0 0 12px rgba(52,211,153,1)) drop-shadow(0 0 20px rgba(52,211,153,0.6)); transform: scale(1.28); }
+      100%      { fill: var(--text); filter: drop-shadow(0 0 5px rgba(52,211,153,0.75)); transform: scale(1); }
+    }
+    @keyframes gg-breath {
+      0%, 100%  { filter: drop-shadow(0 0 5px rgba(52,211,153,0.75)); transform: scale(1); }
+      50%       { filter: drop-shadow(0 0 15px rgba(52,211,153,1)) drop-shadow(0 0 24px rgba(52,211,153,0.55)); transform: scale(1.22); }
     }
     @keyframes gg-click {
-      0%, 82%   { opacity: 0; r: 8px; }
-      85%       { opacity: 1; r: 11px; }
-      93%, 100% { opacity: 0; r: 34px; }
+      0%   { opacity: 0.95; r: 9px; }
+      100% { opacity: 0; r: 32px; }
     }
     @media (prefers-reduced-motion: reduce) {
       .brand-mark svg path.lit { stroke-dashoffset: 0; animation: none; }
