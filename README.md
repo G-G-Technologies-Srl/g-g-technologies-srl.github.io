@@ -10,10 +10,10 @@
 **Software, robotica e AI che fanno crescere le imprese.**
 *Software, robotics and AI that make businesses grow.*
 
-[![Sito web](https://img.shields.io/badge/Sito_web-g--g--technologies--srl.github.io-D97757?style=flat-square)](https://g-g-technologies-srl.github.io/)
-[![Podz.AI](https://img.shields.io/badge/Podz.AI-download-1F1E1D?style=flat-square)](https://g-g-technologies-srl.github.io/digisense-releases/download.html)
+[![Sito web](https://img.shields.io/badge/Sito_web-g--g--technologies--srl.github.io-10B981?style=flat-square)](https://g-g-technologies-srl.github.io/)
+[![Podz.AI](https://img.shields.io/badge/Podz.AI-download-0D1220?style=flat-square)](https://g-g-technologies-srl.github.io/digisense-releases/download.html)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-G%26G_Technologies-0A66C2?style=flat-square&logo=linkedin&logoColor=white)](https://www.linkedin.com/company/gg-technologies-srl)
-[![Email](https://img.shields.io/badge/Email-info@ggtechnologies.sm-C15F3C?style=flat-square)](mailto:info@ggtechnologies.sm)
+[![Email](https://img.shields.io/badge/Email-info@ggtechnologies.sm-059669?style=flat-square)](mailto:info@ggtechnologies.sm)
 
 </div>
 
