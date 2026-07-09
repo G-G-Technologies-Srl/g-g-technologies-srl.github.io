@@ -364,37 +364,38 @@
     }
     .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.05rem; letter-spacing: -0.01em; }
     .brand-mark {
-      width: 34px; height: 34px;
-      border-radius: 9px;
-      background: var(--bg);
-      border: 1px solid var(--border-strong);
       display: grid; place-items: center;
     }
-    .brand-mark svg { width: 22px; height: 22px; display: block; }
-    /* Power-on: the G draws in, then the LED flips from red (off) to green (on) with a glow */
-    .brand-mark svg path {
-      stroke-dasharray: 200;
-      animation: gg-draw 4.5s ease-in-out infinite;
+    .brand-mark svg { width: 30px; height: 30px; display: block; }
+    .brand-mark svg path.wire { fill: none; stroke: var(--faint); opacity: 0.7; }
+    .brand-text { display: inline-flex; flex-direction: column; line-height: 1.08; }
+    .brand-name { font-weight: 800; font-size: 1.05rem; letter-spacing: -0.01em; }
+    .brand-payoff { font-size: 0.58rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent-text); margin-top: 2px; }
+    /* Power-on: a thin wireframe G that fills in solid and lights the LED, holding "on" longer */
+    .brand-mark svg path.lit {
+      stroke-dasharray: 195;
+      stroke-linecap: butt;
+      animation: gg-draw 5.6s ease-in-out infinite;
     }
     .brand-mark svg circle {
       fill: #ef4444;
       transform-box: fill-box;
       transform-origin: center;
-      animation: gg-led 4.5s ease-in-out infinite;
+      animation: gg-led 5.6s ease-in-out infinite;
     }
     @keyframes gg-draw {
-      0%, 6%    { stroke-dashoffset: 200; }
-      30%, 82%  { stroke-dashoffset: 0; }
-      92%, 100% { stroke-dashoffset: 200; }
+      0%, 7%    { stroke-dashoffset: 195; }
+      26%, 88%  { stroke-dashoffset: 0; }
+      95%, 100% { stroke-dashoffset: 195; }
     }
     @keyframes gg-led {
-      0%, 30%   { fill: #ef4444; filter: drop-shadow(0 0 0 rgba(52,211,153,0)); transform: scale(1); }
-      38%       { fill: var(--text); filter: drop-shadow(0 0 8px rgba(52,211,153,1)) drop-shadow(0 0 17px rgba(52,211,153,0.6)); transform: scale(1.22); }
-      46%, 80%  { fill: var(--text); filter: drop-shadow(0 0 4px rgba(52,211,153,0.85)); transform: scale(1); }
-      90%, 100% { fill: #ef4444; filter: drop-shadow(0 0 0 rgba(52,211,153,0)); transform: scale(1); }
+      0%, 24%   { fill: #ef4444; filter: drop-shadow(0 0 0 rgba(52,211,153,0)); transform: scale(1); }
+      31%       { fill: var(--text); filter: drop-shadow(0 0 8px rgba(52,211,153,1)) drop-shadow(0 0 17px rgba(52,211,153,0.6)); transform: scale(1.22); }
+      38%, 86%  { fill: var(--text); filter: drop-shadow(0 0 4px rgba(52,211,153,0.85)); transform: scale(1); }
+      93%, 100% { fill: #ef4444; filter: drop-shadow(0 0 0 rgba(52,211,153,0)); transform: scale(1); }
     }
     @media (prefers-reduced-motion: reduce) {
-      .brand-mark svg path { stroke-dashoffset: 0; animation: none; }
+      .brand-mark svg path.lit { stroke-dashoffset: 0; animation: none; }
       .brand-mark svg circle { fill: var(--text); filter: none; animation: none; }
     }
 
@@ -831,8 +832,11 @@
   <header class="site-header">
     <nav class="nav" aria-label="Main navigation">
       <a href="#home" class="brand">
-        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><defs><linearGradient id="ggMark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5eecab"/><stop offset="1" stop-color="#10b981"/></linearGradient></defs><path d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="url(#ggMark)" stroke-width="13" stroke-linecap="round"/><circle cx="50" cy="50" r="9"/></svg></span>
-        G&amp;G Technologies
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><defs><linearGradient id="ggMark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5eecab"/><stop offset="1" stop-color="#10b981"/></linearGradient></defs><path class="wire" d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke-width="2" stroke-linecap="round"/><path class="lit" d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="url(#ggMark)" stroke-width="13" stroke-linecap="round"/><circle cx="50" cy="50" r="9"/></svg></span>
+        <span class="brand-text">
+          <span class="brand-name">G&amp;G Technologies</span>
+          <span class="brand-payoff"><span class="it">Accendiamo l'innovazione</span><span class="en">Powering on innovation</span></span>
+        </span>
       </a>
 
       <div class="nav-links" id="navLinks">
@@ -1341,7 +1345,7 @@
       <div class="footer-inner">
         <div class="footer-brand">
           <a href="#home" class="brand">
-            <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><path d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="url(#ggMark)" stroke-width="13" stroke-linecap="round"/><circle cx="50" cy="50" r="9"/></svg></span>
+            <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><path class="wire" d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke-width="2" stroke-linecap="round"/><path class="lit" d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="url(#ggMark)" stroke-width="13" stroke-linecap="round"/><circle cx="50" cy="50" r="9"/></svg></span>
             G&amp;G Technologies
           </a>
           <p class="it">
