@@ -375,7 +375,7 @@
     .brand-mark svg path.lit {
       stroke-dasharray: 200 300;
       stroke-linecap: butt;
-      animation: gg-draw 1.9s ease-in-out 3s both;
+      animation: gg-draw 1.9s ease-in-out 3s both, gg-gbreath 2s ease-in-out 4.9s infinite;
     }
     .brand-mark svg circle.led {
       fill: #ef4444;
@@ -407,13 +407,17 @@
       0%, 100%  { filter: drop-shadow(0 0 5px rgba(52,211,153,0.75)); transform: scale(1); }
       50%       { filter: drop-shadow(0 0 15px rgba(52,211,153,1)) drop-shadow(0 0 24px rgba(52,211,153,0.55)); transform: scale(1.22); }
     }
+    @keyframes gg-gbreath {
+      0%, 100%  { filter: drop-shadow(0 0 0.5px rgba(52,211,153,0.25)); }
+      50%       { filter: drop-shadow(0 0 4px rgba(52,211,153,0.7)); }
+    }
     @keyframes gg-click {
       0%   { opacity: 0; r: 9px; }
       22%  { opacity: 0.95; r: 11px; }
       100% { opacity: 0; r: 32px; }
     }
     @media (prefers-reduced-motion: reduce) {
-      .brand-mark svg path.lit { stroke-dashoffset: 0; animation: none; }
+      .brand-mark svg path.lit { stroke-dashoffset: 0; animation: none; filter: none; }
       .brand-mark svg circle.led { fill: var(--text); filter: none; animation: none; }
       .brand-mark svg circle.click { display: none; }
     }
