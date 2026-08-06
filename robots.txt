@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://g-g-technologies-srl.github.io/sitemap.xml
+Sitemap: https://ggtechnologies.sm/sitemap.xml
