@@ -10,8 +10,8 @@
 **Software, robotica e AI che fanno crescere le imprese.**
 *Software, robotics and AI that make businesses grow.*
 
-[![Sito web](https://img.shields.io/badge/Sito_web-g--g--technologies--srl.github.io-10B981?style=flat-square)](https://g-g-technologies-srl.github.io/)
-[![Podz.AI](https://img.shields.io/badge/Podz.AI-download-0D1220?style=flat-square)](https://g-g-technologies-srl.github.io/digisense-releases/download.html)
+[![Sito web](https://img.shields.io/badge/Sito_web-ggtechnologies.sm-10B981?style=flat-square)](https://ggtechnologies.sm/)
+[![Podz.AI](https://img.shields.io/badge/Podz.AI-download-0D1220?style=flat-square)](https://ggtechnologies.sm/digisense-releases/download.html)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-G%26G_Technologies-0A66C2?style=flat-square&logo=linkedin&logoColor=white)](https://www.linkedin.com/company/gg-technologies-srl)
 [![Email](https://img.shields.io/badge/Email-info@ggtechnologies.sm-059669?style=flat-square)](mailto:info@ggtechnologies.sm)
 
@@ -23,7 +23,7 @@
 
 **G&G Technologies Srl** è una società di consulenza tecnologica con sede nella Repubblica di San Marino. Il team unisce programmatori esperti, architetti software e sistemisti, con oltre 30 anni di attività nel mondo dell'informatica e dell'innovazione: processi di vendita digitalizzati, decine di fabbriche automatizzate e soluzioni wearable per il monitoraggio biovitale in ambito medicale e sportivo.
 
-Dal nostro percorso di ricerca — il progetto **DigiSense** — è nato [**Podz.AI**](https://g-g-technologies-srl.github.io/digisense-releases/), la workstation AI personale.
+Dal nostro percorso di ricerca — il progetto **DigiSense** — è nato [**Podz.AI**](https://ggtechnologies.sm/digisense-releases/), la workstation AI personale.
 
 Lavoriamo al fianco di imprenditori e professionisti: prima capiamo il processo, poi scegliamo la tecnologia. Mai il contrario.
 
@@ -45,11 +45,11 @@ Un'unica applicazione che installi sul tuo computer e che lavora con i tuoi docu
 
 Prova gratuita di 30 giorni al primo avvio · Windows, macOS e Linux · Made in EU
 
-**[Scarica Podz.AI](https://g-g-technologies-srl.github.io/digisense-releases/download.html)** · [Sito ufficiale](https://g-g-technologies-srl.github.io/digisense-releases/) · [Release](https://github.com/G-G-Technologies-Srl/digisense-releases/releases)
+**[Scarica Podz.AI](https://ggtechnologies.sm/digisense-releases/download.html)** · [Sito ufficiale](https://ggtechnologies.sm/digisense-releases/) · [Release](https://github.com/G-G-Technologies-Srl/digisense-releases/releases)
 
 ## Questo repository
 
-Il sito aziendale, servito da GitHub Pages su [g-g-technologies-srl.github.io](https://g-g-technologies-srl.github.io/). Una single-page application costruita come scriviamo il software per i nostri clienti: essenziale, misurabile, rispettosa di chi la usa.
+Il sito aziendale, servito da GitHub Pages su [ggtechnologies.sm](https://ggtechnologies.sm/). Una single-page application costruita come scriviamo il software per i nostri clienti: essenziale, misurabile, rispettosa di chi la usa.
 
 - **Un solo file HTML** — niente framework, niente build, niente dipendenze
 - **Zero cookie, zero tracker, zero richieste a terze parti** — anche i font sono di sistema
@@ -67,7 +67,7 @@ Il sito aziendale, servito da GitHub Pages su [g-g-technologies-srl.github.io](h
 
 <br>
 
-**G&G Technologies Srl** is a technology consulting company based in the Republic of San Marino: over 30 years in software and innovation, dozens of automated factories, and wearable solutions for biovital monitoring in healthcare and sport. Our research journey — the **DigiSense** project — led to [**Podz.AI**](https://g-g-technologies-srl.github.io/digisense-releases/), the personal AI workstation: a single application that works with your documents on your computer, without sending your data to anyone.
+**G&G Technologies Srl** is a technology consulting company based in the Republic of San Marino: over 30 years in software and innovation, dozens of automated factories, and wearable solutions for biovital monitoring in healthcare and sport. Our research journey — the **DigiSense** project — led to [**Podz.AI**](https://ggtechnologies.sm/digisense-releases/), the personal AI workstation: a single application that works with your documents on your computer, without sending your data to anyone.
 
 We work in three areas: **medical wearables** (custom electronics, firmware, remote-monitoring platforms), **robotics & automation** (edge integration, Industry 5.0), and **artificial intelligence** (AI agents, local AI, privacy by design).
 
