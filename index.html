@@ -578,6 +578,21 @@
       display: grid; place-items: center;
       text-align: center;
       z-index: 2;
+      /* Button reset: the core is clickable and radiates energy to the three chips */
+      font-family: inherit;
+      color: inherit;
+      padding: 0;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+      transition: scale 0.2s ease, border-color 0.2s ease;
+      /* Slow breathing halo — starts in sync with the logo power-on */
+      animation: core-breath 4.6s ease-in-out 3.4s infinite;
+    }
+    .orbit-core:hover { border-color: var(--accent-1); scale: 1.03; }
+    @keyframes core-breath {
+      0%, 100% { box-shadow: var(--shadow), 0 0 60px var(--glow-a); }
+      50%      { box-shadow: var(--shadow), 0 0 100px var(--glow-a), 0 0 46px var(--glow-a); }
     }
     .orbit-core strong { font-size: 1.05rem; background: var(--gradient); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .orbit-core small { color: var(--faint); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; }
@@ -651,12 +666,37 @@
       18%  { transform: translate(calc(var(--dx) * 0.18), calc(var(--dy) * 0.18)) scale(1); opacity: 1; }
       100% { transform: translate(var(--dx), var(--dy)) scale(0.5); opacity: 0; }
     }
-    /* The core lights up when the pulse reaches it */
+    /* The core lights up when a pulse reaches it, and flares when it emits its own */
     .orbit-core.energized { animation: core-energize 0.7s ease-out; }
+    .orbit-core.emitting { animation: core-emit 0.9s ease-out; }
     @keyframes core-energize {
       0%   { box-shadow: var(--shadow), 0 0 60px var(--glow-a); border-color: var(--border-strong); }
       30%  { box-shadow: var(--shadow), 0 0 90px rgba(52, 211, 153, 0.75); border-color: var(--accent-1); }
       100% { box-shadow: var(--shadow), 0 0 60px var(--glow-a); border-color: var(--border-strong); }
+    }
+    @keyframes core-emit {
+      0%   { box-shadow: var(--shadow), 0 0 60px var(--glow-a); border-color: var(--border-strong); scale: 1; }
+      14%  { box-shadow: var(--shadow), 0 0 30px rgba(52, 211, 153, 0.9); border-color: var(--accent-1); scale: 0.95; }
+      34%  { box-shadow: var(--shadow), 0 0 110px rgba(52, 211, 153, 0.9), 0 0 40px rgba(52, 211, 153, 0.7); border-color: var(--accent-1); scale: 1.06; }
+      100% { box-shadow: var(--shadow), 0 0 60px var(--glow-a); border-color: var(--border-strong); scale: 1; }
+    }
+    /* Shockwave ring expanding from the core on click */
+    .core-wave {
+      position: absolute;
+      width: 132px; height: 132px;
+      left: 50%; top: 50%;
+      margin: -66px 0 0 -66px;
+      border-radius: 32px;
+      border: 1px solid var(--accent-1);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 1;
+      animation: core-wave 0.9s ease-out forwards;
+    }
+    @keyframes core-wave {
+      0%   { opacity: 0; transform: scale(1); }
+      18%  { opacity: 0.75; transform: scale(1.05); }
+      100% { opacity: 0; transform: scale(2.6); }
     }
     /* Target service card acknowledges the jump */
     .card.flash { border-color: var(--accent-1); box-shadow: var(--shadow), 0 0 0 1px var(--accent-1); }
@@ -676,8 +716,12 @@
       .orbit-chip.activated { scale: 1; }
       .orbit-chip.activated::after,
       .orbit-chip.activated .dot,
-      .orbit-core.energized { animation: none; }
-      .orbit-spark { display: none; }
+      .orbit-core,
+      .orbit-core.energized,
+      .orbit-core.emitting { animation: none; }
+      .orbit-core { transition: none; }
+      .orbit-core:hover { scale: 1; }
+      .orbit-spark, .core-wave { display: none; }
     }
 
     @media (max-width: 900px) {
@@ -1022,12 +1066,12 @@
         <div class="hero-visual">
           <div class="orbit-ring ring-1" aria-hidden="true"></div>
           <div class="orbit-ring ring-2" aria-hidden="true"></div>
-          <div class="orbit-core" aria-hidden="true">
-            <div>
+          <button class="orbit-core" type="button" data-target="services">
+            <span>
               <strong>G&amp;G</strong><br>
               <small>Technologies</small>
-            </div>
-          </div>
+            </span>
+          </button>
           <button class="orbit-chip chip-1" type="button" data-target="svc-wearable"><span class="dot" aria-hidden="true"></span><span class="it">Wearable medicali</span><span class="en">Medical wearables</span></button>
           <button class="orbit-chip chip-2" type="button" data-target="svc-robotics"><span class="dot" aria-hidden="true"></span><span class="it">Robotica</span><span class="en">Robotics</span></button>
           <button class="orbit-chip chip-3" type="button" data-target="svc-ai"><span class="dot" aria-hidden="true"></span><span class="it">Intelligenza Artificiale</span><span class="en">Artificial Intelligence</span></button>
@@ -1652,6 +1696,12 @@
             _activateChip(chip, visual, core, reduced);
           });
         });
+
+        if (core) {
+          core.addEventListener('click', function () {
+            _activateCore(core, visual, reduced);
+          });
+        }
       }
 
       // Runs the whole click sequence for a single chip.
@@ -1664,48 +1714,88 @@
         }
 
         // 1. The chip lights up and a ripple radiates from its border
-        chip.classList.remove('activated');
-        void chip.offsetWidth; // force reflow so the animation restarts on rapid clicks
-        chip.classList.add('activated');
-        window.setTimeout(function () { chip.classList.remove('activated'); }, 700);
+        _restartAnimation(chip, 'activated', 700);
 
         // 2. A spark travels from the chip to the core
-        _emitSpark(chip, visual);
+        const centre = { x: visual.clientWidth / 2, y: visual.clientHeight / 2 };
+        _emitSpark(visual, _centreOf(visual, chip), centre, 0);
 
         // 3. The core answers, then the page moves to the matching card
         if (core) {
-          window.setTimeout(function () {
-            core.classList.remove('energized');
-            void core.offsetWidth;
-            core.classList.add('energized');
-            window.setTimeout(function () { core.classList.remove('energized'); }, 700);
-          }, 420);
+          window.setTimeout(function () { _restartAnimation(core, 'energized', 700); }, 420);
         }
         window.setTimeout(function () { _revealTarget(target); }, 520);
       }
 
-      // Creates the travelling light pulse between a chip and the centre of the orbit.
-      function _emitSpark(chip, visual) {
-        const box = visual.getBoundingClientRect();
-        const rect = chip.getBoundingClientRect();
-        const startX = rect.left - box.left + rect.width / 2;
-        const startY = rect.top - box.top + rect.height / 2;
+      // Runs the click sequence for the core: it flares and feeds the three chips in turn.
+      function _activateCore(core, visual, reduced) {
+        const target = document.getElementById(core.getAttribute('data-target'));
+        const chips = visual.querySelectorAll('.orbit-chip');
 
+        if (reduced) {
+          _revealTarget(target);
+          return;
+        }
+
+        // 1. The core pulses and pushes out a shockwave
+        _restartAnimation(core, 'emitting', 900);
+        _emitWave(visual);
+
+        // 2. One spark per chip, staggered so the energy looks like it spreads outwards
+        const centre = { x: visual.clientWidth / 2, y: visual.clientHeight / 2 };
+        chips.forEach(function (chip, index) {
+          const delay = index * 110;
+          _emitSpark(visual, centre, _centreOf(visual, chip), delay);
+          window.setTimeout(function () { _restartAnimation(chip, 'activated', 700); }, delay + 380);
+        });
+
+        // 3. Once the last chip is lit, move to the services section
+        window.setTimeout(function () { _revealTarget(target); }, 700);
+      }
+
+      // Centre of an element in the layout coordinates of the orbit container.
+      // offsetLeft/offsetTop are used instead of getBoundingClientRect because the container
+      // is scaled down on small screens and rect values would be scaled twice.
+      function _centreOf(visual, el) {
+        return { x: el.offsetLeft + el.offsetWidth / 2, y: el.offsetTop + el.offsetHeight / 2 };
+      }
+
+      // Creates a travelling light pulse between two points of the orbit.
+      function _emitSpark(visual, from, to, delay) {
         const spark = document.createElement('span');
         spark.className = 'orbit-spark';
-        spark.style.left = startX + 'px';
-        spark.style.top = startY + 'px';
-        spark.style.setProperty('--dx', (box.width / 2 - startX) + 'px');
-        spark.style.setProperty('--dy', (box.height / 2 - startY) + 'px');
+        spark.style.left = from.x + 'px';
+        spark.style.top = from.y + 'px';
+        spark.style.setProperty('--dx', (to.x - from.x) + 'px');
+        spark.style.setProperty('--dy', (to.y - from.y) + 'px');
+        if (delay) spark.style.animationDelay = delay + 'ms';
         spark.addEventListener('animationend', function () { spark.remove(); });
         visual.appendChild(spark);
       }
 
-      // Scrolls to the service card and highlights it briefly.
+      // Creates the shockwave ring that expands from the core.
+      function _emitWave(visual) {
+        const wave = document.createElement('span');
+        wave.className = 'core-wave';
+        wave.addEventListener('animationend', function () { wave.remove(); });
+        visual.appendChild(wave);
+      }
+
+      // Re-applies a class so its animation restarts even on rapid repeated clicks.
+      function _restartAnimation(el, className, duration) {
+        el.classList.remove(className);
+        void el.offsetWidth; // force reflow
+        el.classList.add(className);
+        window.setTimeout(function () { el.classList.remove(className); }, duration);
+      }
+
+      // Scrolls to the target and highlights it briefly.
       function _revealTarget(target) {
         if (!target) return;
+        const isCard = target.classList.contains('card');
         target.classList.add('visible'); // in case the reveal observer has not fired yet
-        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.scrollIntoView({ behavior: 'smooth', block: isCard ? 'center' : 'start' });
+        if (!isCard) return;
         target.classList.add('flash');
         window.setTimeout(function () { target.classList.remove('flash'); }, 1400);
       }
