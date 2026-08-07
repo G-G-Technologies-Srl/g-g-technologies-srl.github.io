@@ -601,8 +601,66 @@
       font-weight: 600;
       box-shadow: 0 10px 26px rgba(0, 0, 0, 0.4);
       animation: float 6s ease-in-out infinite;
+      /* Button reset: the chips are interactive and jump to the matching service card */
+      font-family: inherit;
+      color: inherit;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+      transition: scale 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
     }
+    .orbit-chip:hover { border-color: var(--accent-1); }
     .orbit-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+    /* Ripple radiating from the chip border, same language as the logo LED */
+    .orbit-chip::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      border: 1px solid var(--accent-1);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .orbit-chip.activated { scale: 1.06; border-color: var(--accent-1); box-shadow: 0 10px 26px rgba(0, 0, 0, 0.4), 0 0 22px var(--glow-a); }
+    .orbit-chip.activated::after { animation: chip-ripple 0.7s ease-out; }
+    .orbit-chip.activated .dot { animation: chip-dot 0.7s ease-out; }
+    @keyframes chip-ripple {
+      0%   { opacity: 0; transform: scale(1); }
+      20%  { opacity: 0.9; transform: scale(1.05); }
+      100% { opacity: 0; transform: scale(1.55); }
+    }
+    @keyframes chip-dot {
+      0%   { box-shadow: 0 0 0 rgba(52, 211, 153, 0); }
+      25%  { box-shadow: 0 0 12px rgba(52, 211, 153, 1), 0 0 22px rgba(52, 211, 153, 0.6); }
+      100% { box-shadow: 0 0 0 rgba(52, 211, 153, 0); }
+    }
+    /* Light pulse travelling from the clicked chip to the core; --dx/--dy are set by JS */
+    .orbit-spark {
+      position: absolute;
+      width: 10px; height: 10px;
+      margin: -5px 0 0 -5px;
+      border-radius: 50%;
+      background: var(--accent-1);
+      box-shadow: 0 0 12px rgba(52, 211, 153, 0.95), 0 0 24px rgba(52, 211, 153, 0.5);
+      pointer-events: none;
+      z-index: 3;
+      animation: orbit-spark 0.55s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    @keyframes orbit-spark {
+      0%   { transform: translate(0, 0) scale(0.4); opacity: 0; }
+      18%  { transform: translate(calc(var(--dx) * 0.18), calc(var(--dy) * 0.18)) scale(1); opacity: 1; }
+      100% { transform: translate(var(--dx), var(--dy)) scale(0.5); opacity: 0; }
+    }
+    /* The core lights up when the pulse reaches it */
+    .orbit-core.energized { animation: core-energize 0.7s ease-out; }
+    @keyframes core-energize {
+      0%   { box-shadow: var(--shadow), 0 0 60px var(--glow-a); border-color: var(--border-strong); }
+      30%  { box-shadow: var(--shadow), 0 0 90px rgba(52, 211, 153, 0.75); border-color: var(--accent-1); }
+      100% { box-shadow: var(--shadow), 0 0 60px var(--glow-a); border-color: var(--border-strong); }
+    }
+    /* Target service card acknowledges the jump */
+    .card.flash { border-color: var(--accent-1); box-shadow: var(--shadow), 0 0 0 1px var(--accent-1); }
+    .card.flash::before { opacity: 1; }
     .chip-1 { top: 8%; left: 50%; transform: translateX(-50%); animation-delay: 0s; }
     .chip-1 .dot { background: var(--accent-1); }
     .chip-2 { bottom: 16%; left: 2%; animation-delay: 1.5s; }
@@ -613,7 +671,14 @@
       0%, 100% { margin-top: 0; }
       50% { margin-top: -10px; }
     }
-    @media (prefers-reduced-motion: reduce) { .orbit-chip { animation: none; } }
+    @media (prefers-reduced-motion: reduce) {
+      .orbit-chip { animation: none; transition: none; }
+      .orbit-chip.activated { scale: 1; }
+      .orbit-chip.activated::after,
+      .orbit-chip.activated .dot,
+      .orbit-core.energized { animation: none; }
+      .orbit-spark { display: none; }
+    }
 
     @media (max-width: 900px) {
       .hero { min-height: auto; }
@@ -954,18 +1019,18 @@
           </div>
         </div>
 
-        <div class="hero-visual" aria-hidden="true">
-          <div class="orbit-ring ring-1"></div>
-          <div class="orbit-ring ring-2"></div>
-          <div class="orbit-core">
+        <div class="hero-visual">
+          <div class="orbit-ring ring-1" aria-hidden="true"></div>
+          <div class="orbit-ring ring-2" aria-hidden="true"></div>
+          <div class="orbit-core" aria-hidden="true">
             <div>
               <strong>G&amp;G</strong><br>
               <small>Technologies</small>
             </div>
           </div>
-          <div class="orbit-chip chip-1"><span class="dot"></span><span class="it">Wearable medicali</span><span class="en">Medical wearables</span></div>
-          <div class="orbit-chip chip-2"><span class="dot"></span><span class="it">Robotica</span><span class="en">Robotics</span></div>
-          <div class="orbit-chip chip-3"><span class="dot"></span><span class="it">Intelligenza Artificiale</span><span class="en">Artificial Intelligence</span></div>
+          <button class="orbit-chip chip-1" type="button" data-target="svc-wearable"><span class="dot" aria-hidden="true"></span><span class="it">Wearable medicali</span><span class="en">Medical wearables</span></button>
+          <button class="orbit-chip chip-2" type="button" data-target="svc-robotics"><span class="dot" aria-hidden="true"></span><span class="it">Robotica</span><span class="en">Robotics</span></button>
+          <button class="orbit-chip chip-3" type="button" data-target="svc-ai"><span class="dot" aria-hidden="true"></span><span class="it">Intelligenza Artificiale</span><span class="en">Artificial Intelligence</span></button>
         </div>
       </div>
     </section>
@@ -991,7 +1056,7 @@
         </div>
 
         <div class="cards-3">
-          <article class="card reveal">
+          <article class="card reveal" id="svc-wearable">
             <div class="card-icon" aria-hidden="true">
               <!-- Heart-pulse icon -->
               <svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -1021,7 +1086,7 @@
             </ul>
           </article>
 
-          <article class="card reveal">
+          <article class="card reveal" id="svc-robotics">
             <div class="card-icon" aria-hidden="true">
               <!-- Robot/automation icon -->
               <svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -1049,7 +1114,7 @@
             </ul>
           </article>
 
-          <article class="card reveal">
+          <article class="card reveal" id="svc-ai">
             <div class="card-icon" aria-hidden="true">
               <!-- AI/sparkles icon -->
               <svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -1448,6 +1513,7 @@
         _initMobileMenu();
         _initActiveNav();
         _initReveal();
+        _initOrbitChips();
         _initYear();
       });
 
@@ -1572,6 +1638,76 @@
           });
         }, { threshold: 0.12 });
         items.forEach(function (el) { observer.observe(el); });
+      }
+
+      // Hero orbit chips: power-on feedback, light pulse towards the core, then jump to the service card.
+      function _initOrbitChips() {
+        const visual = document.querySelector('.hero-visual');
+        const core = document.querySelector('.orbit-core');
+        if (!visual) return;
+        const reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        visual.querySelectorAll('.orbit-chip').forEach(function (chip) {
+          chip.addEventListener('click', function () {
+            _activateChip(chip, visual, core, reduced);
+          });
+        });
+      }
+
+      // Runs the whole click sequence for a single chip.
+      function _activateChip(chip, visual, core, reduced) {
+        const target = document.getElementById(chip.getAttribute('data-target'));
+
+        if (reduced) {
+          _revealTarget(target);
+          return;
+        }
+
+        // 1. The chip lights up and a ripple radiates from its border
+        chip.classList.remove('activated');
+        void chip.offsetWidth; // force reflow so the animation restarts on rapid clicks
+        chip.classList.add('activated');
+        window.setTimeout(function () { chip.classList.remove('activated'); }, 700);
+
+        // 2. A spark travels from the chip to the core
+        _emitSpark(chip, visual);
+
+        // 3. The core answers, then the page moves to the matching card
+        if (core) {
+          window.setTimeout(function () {
+            core.classList.remove('energized');
+            void core.offsetWidth;
+            core.classList.add('energized');
+            window.setTimeout(function () { core.classList.remove('energized'); }, 700);
+          }, 420);
+        }
+        window.setTimeout(function () { _revealTarget(target); }, 520);
+      }
+
+      // Creates the travelling light pulse between a chip and the centre of the orbit.
+      function _emitSpark(chip, visual) {
+        const box = visual.getBoundingClientRect();
+        const rect = chip.getBoundingClientRect();
+        const startX = rect.left - box.left + rect.width / 2;
+        const startY = rect.top - box.top + rect.height / 2;
+
+        const spark = document.createElement('span');
+        spark.className = 'orbit-spark';
+        spark.style.left = startX + 'px';
+        spark.style.top = startY + 'px';
+        spark.style.setProperty('--dx', (box.width / 2 - startX) + 'px');
+        spark.style.setProperty('--dy', (box.height / 2 - startY) + 'px');
+        spark.addEventListener('animationend', function () { spark.remove(); });
+        visual.appendChild(spark);
+      }
+
+      // Scrolls to the service card and highlights it briefly.
+      function _revealTarget(target) {
+        if (!target) return;
+        target.classList.add('visible'); // in case the reveal observer has not fired yet
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.classList.add('flash');
+        window.setTimeout(function () { target.classList.remove('flash'); }, 1400);
       }
 
       // Keep the copyright year current.
