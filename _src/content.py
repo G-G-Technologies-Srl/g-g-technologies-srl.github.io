@@ -20,8 +20,8 @@ CHROME = {
         "payoff": "Accendiamo il futuro",
         "nav": [
             ("Servizi", "/#services"),
+            ("Perché noi", "/#why"),
             ("Podz.AI", "/podz-ai/"),
-            ("AI on-premise", "/ai-on-premise/"),
             ("Chi siamo", "/#about"),
             ("Contatti", "/#contact"),
         ],
@@ -69,8 +69,8 @@ CHROME = {
         # The homepage is a single bilingual URL: English navigation points at it too.
         "nav": [
             ("Services", "/#services"),
+            ("Why us", "/#why"),
             ("Podz.AI", "/en/podz-ai/"),
-            ("On-premise AI", "/en/on-premise-ai/"),
             ("About", "/#about"),
             ("Contact", "/#contact"),
         ],

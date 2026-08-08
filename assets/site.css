@@ -869,6 +869,8 @@
 .page-hero .hero-note { margin-bottom: 0; }
 .page-hero .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
 
+/* Core and chips are anchors, not buttons: neutralise the link defaults. */
+.page-hero .orbit-core, .page-hero .orbit-chip { text-decoration: none; color: var(--text); }
 .page-hero .orbit-chip { text-align: center; }
 
 .breadcrumb { font-size: 0.8rem; color: var(--faint); margin-bottom: 18px; }

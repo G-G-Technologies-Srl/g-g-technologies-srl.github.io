@@ -85,6 +85,8 @@ EXTRA_CSS = """
 .page-hero .hero-note { margin-bottom: 0; }
 .page-hero .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
 
+/* Core and chips are anchors, not buttons: neutralise the link defaults. */
+.page-hero .orbit-core, .page-hero .orbit-chip { text-decoration: none; color: var(--text); }
 .page-hero .orbit-chip { text-align: center; }
 
 .breadcrumb { font-size: 0.8rem; color: var(--faint); margin-bottom: 18px; }
@@ -297,6 +299,20 @@ SITE_JS = """/* Inner pages: theme toggle, mobile menu, reveal on scroll, footer
     });
   }
 
+  // True when the browser should handle the click itself: new tab, new window, download, save.
+  function _isModifiedClick(event) {
+    return event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0;
+  }
+
+  // Plays the animation, then follows the link. The link still works with JS off or motion reduced.
+  function _animateThenFollow(element, event, play) {
+    if (_isModifiedClick(event)) return;
+    event.preventDefault();
+    play();
+    var href = element.getAttribute('href');
+    window.setTimeout(function () { window.location.href = href; }, 520);
+  }
+
   function _initOrbit() {
     var visual = document.querySelector('.hero-visual');
     if (!visual) return;
@@ -304,9 +320,15 @@ SITE_JS = """/* Inner pages: theme toggle, mobile menu, reveal on scroll, footer
 
     var core = visual.querySelector('.orbit-core');
     visual.querySelectorAll('.orbit-chip').forEach(function (chip) {
-      chip.addEventListener('click', function () { _activateChip(chip, visual, core); });
+      chip.addEventListener('click', function (event) {
+        _animateThenFollow(chip, event, function () { _activateChip(chip, visual, core); });
+      });
     });
-    if (core) core.addEventListener('click', function () { _activateCore(core, visual); });
+    if (core) {
+      core.addEventListener('click', function (event) {
+        _animateThenFollow(core, event, function () { _activateCore(core, visual); });
+      });
+    }
   }
 
   // ---------------------------------------------------------------------------------------------------------------
@@ -595,21 +617,22 @@ def _closing_ctas(lang, data):
 
 
 def _orbit_html(lang, data):
-    """The homepage orbit visual, reused on inner pages. Core and chips are buttons, not links:
-    clicking plays the spark sequence and nothing else — no navigation."""
+    """The homepage orbit visual, reused on inner pages. Core and chips are links: the click plays
+    the spark sequence and then follows the link, so the visual is also real internal navigation."""
     chips = []
     for index, key in enumerate(data["related"][:3], start=1):
         target = _page_by_key(key)[lang]
         chips.append(
-            f'<button class="orbit-chip chip-{index}" type="button">'
-            f'<span class="dot" aria-hidden="true"></span>{_esc(target["short"])}</button>'
+            f'<a class="orbit-chip chip-{index}" href="/{target["slug"]}/">'
+            f'<span class="dot" aria-hidden="true"></span>{_esc(target["short"])}</a>'
         )
+    home_label = "Vai alla home" if lang == "it" else "Go to the home page"
     return f"""      <div class="hero-visual">
         <div class="orbit-ring ring-1" aria-hidden="true"></div>
         <div class="orbit-ring ring-2" aria-hidden="true"></div>
-        <button class="orbit-core" type="button">
+        <a class="orbit-core" href="/" aria-label="{home_label}">
           <span><strong>G&amp;G</strong><br><small>Technologies</small></span>
-        </button>
+        </a>
 {chr(10).join('        ' + c for c in chips)}
       </div>"""
 

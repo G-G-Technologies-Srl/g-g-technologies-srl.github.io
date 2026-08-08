@@ -125,6 +125,20 @@
     });
   }
 
+  // True when the browser should handle the click itself: new tab, new window, download, save.
+  function _isModifiedClick(event) {
+    return event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0;
+  }
+
+  // Plays the animation, then follows the link. The link still works with JS off or motion reduced.
+  function _animateThenFollow(element, event, play) {
+    if (_isModifiedClick(event)) return;
+    event.preventDefault();
+    play();
+    var href = element.getAttribute('href');
+    window.setTimeout(function () { window.location.href = href; }, 520);
+  }
+
   function _initOrbit() {
     var visual = document.querySelector('.hero-visual');
     if (!visual) return;
@@ -132,9 +146,15 @@
 
     var core = visual.querySelector('.orbit-core');
     visual.querySelectorAll('.orbit-chip').forEach(function (chip) {
-      chip.addEventListener('click', function () { _activateChip(chip, visual, core); });
+      chip.addEventListener('click', function (event) {
+        _animateThenFollow(chip, event, function () { _activateChip(chip, visual, core); });
+      });
     });
-    if (core) core.addEventListener('click', function () { _activateCore(core, visual); });
+    if (core) {
+      core.addEventListener('click', function (event) {
+        _animateThenFollow(core, event, function () { _activateCore(core, visual); });
+      });
+    }
   }
 
   // ---------------------------------------------------------------------------------------------------------------
