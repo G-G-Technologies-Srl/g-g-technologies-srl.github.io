@@ -511,6 +511,11 @@ def _breadcrumb_html(lang, page, data):
     return f'<nav class="breadcrumb" aria-label="{label}"><ol>{items}</ol></nav>'
 
 
+def _note_html(data, key):
+    """An optional paragraph under a section heading, for pages that need a pointer elsewhere."""
+    return f'\n          <p class="section-intro">{data[key]}</p>' if data.get(key) else ""
+
+
 def _cards_html(data):
     cards = []
     for icon, title, text, bullets in data["cards"]:
@@ -760,7 +765,7 @@ def _render_page(lang, page):
       <div class="container">
         <div class="reveal">
           <div class="kicker">{data['cards_title']}</div>
-          <h2>{data['cards_intro']}</h2>
+          <h2>{data['cards_intro']}</h2>{_note_html(data, 'cards_note')}
         </div>
 {_cards_html(data)}
       </div>
@@ -915,6 +920,8 @@ def _check_parity():
             if len(card_it[3]) != len(card_en[3]):
                 problems.append(f'{page["key"]}: elenchi di lunghezza diversa nella card "{card_it[1]}"')
         for field in ("lead", "blurb", "intro_h2", "cards_intro", "steps_intro", "cta_title", "cta_text"):
+            if field not in it or field not in en:
+                continue
             if abs(len(it[field]) - len(en[field])) > 28:
                 problems.append(f'{page["key"]}.{field}: IT e EN divergono, probabile modifica dimenticata')
         for lang in LANGS:

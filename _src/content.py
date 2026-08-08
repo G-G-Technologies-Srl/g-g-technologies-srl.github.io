@@ -523,8 +523,9 @@ PAGES = [
                 "l'azienda.",
             ],
             "cards_title": "Cosa costruiamo",
-            "cards_intro": "Quattro modi in cui l'AI entra in azienda partendo da quello che c'è già. Se i "
-                           "documenti non possono uscire, il capitolo è un altro: <a href=\"/ai-on-premise/\">AI on-premise</a>.",
+            "cards_intro": "Quattro modi in cui l'AI entra in azienda partendo da quello che c'è già.",
+            "cards_note": "Se i documenti non possono uscire dall'azienda, il capitolo è un altro: "
+                          "<a href=\"/ai-on-premise/\">come funziona l'AI on-premise</a>.",
             "cards": [
                 ("spark", "Agenti AI e specialisti verticali",
                  "Assistenti costruiti su un compito preciso, con accesso ai dati e agli strumenti "
@@ -547,7 +548,7 @@ PAGES = [
                  "L'AI si innesta sui gestionali e sui flussi già in uso, senza rifare tutto da capo.",
                  ["Integrazione con ERP e gestionali in uso",
                   "Automazione dei passaggi ripetitivi",
-                  "Un indicatore concordato prima di partire, misurato dopo"]),
+                  "Nessuna migrazione: i dati restano dove sono"]),
             ],
             "steps_title": "Come lavoriamo",
             "steps_intro": "Prima capiamo il processo, poi scegliamo la tecnologia. Mai il contrario.",
@@ -609,8 +610,9 @@ PAGES = [
                 "confidential — keep it inside the company.",
             ],
             "cards_title": "What we build",
-            "cards_intro": "Four ways AI enters a company starting from what is already there. If documents "
-                           "cannot leave, that is a separate story: <a href=\"/en/on-premise-ai/\">on-premise AI</a>.",
+            "cards_intro": "Four ways AI enters a company starting from what is already there.",
+            "cards_note": "If documents cannot leave the company, that is a separate story: "
+                          "<a href=\"/en/on-premise-ai/\">how on-premise AI works</a>.",
             "cards": [
                 ("spark", "AI agents built for one job",
                  "Assistants built around one precise task, with access to company data and tools.",
@@ -632,7 +634,7 @@ PAGES = [
                  "AI plugs into the ERP and the flows you already run. Nothing gets rebuilt.",
                  ["Plugs into your ERP and the systems you already run",
                   "Automating repetitive steps",
-                  "Measuring the outcome, not the technology"]),
+                  "No migration: the data stays where it is"]),
             ],
             "steps_title": "How we work",
             "steps_intro": "First we understand the process, then we choose the technology.",
