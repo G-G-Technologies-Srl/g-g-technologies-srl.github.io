@@ -115,4 +115,22 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+  <url>
+    <loc>https://ggtechnologies.sm/progetti/robot-assistenza-domiciliare/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/progetti/robot-assistenza-domiciliare/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/projects/home-care-robot/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/progetti/robot-assistenza-domiciliare/"/>
+    <lastmod>2026-08-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/en/projects/home-care-robot/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/progetti/robot-assistenza-domiciliare/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/projects/home-care-robot/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/progetti/robot-assistenza-domiciliare/"/>
+    <lastmod>2026-08-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>

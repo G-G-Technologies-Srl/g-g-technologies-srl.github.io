@@ -916,6 +916,13 @@ section.tinted {
 .faq-item[open] summary::after { transform: translateY(-30%) rotate(-135deg); }
 .faq-item p { color: var(--muted); padding: 0 0 20px; margin: 0; max-width: 68ch; }
 
+.photo { margin: 40px 0 0; }
+.photo img { width: 100%; height: auto; display: block; border-radius: var(--radius-lg); border: 1px solid var(--border); }
+.photo figcaption, .diagram figcaption { color: var(--faint); font-size: 0.82rem; margin-top: 12px; }
+
+.diagram { margin: 40px 0 8px; }
+.diagram svg { width: 100%; height: auto; display: block; }
+
 .related-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
 .related-card {
   display: block;

@@ -133,6 +133,13 @@ section.tinted {
 .faq-item[open] summary::after { transform: translateY(-30%) rotate(-135deg); }
 .faq-item p { color: var(--muted); padding: 0 0 20px; margin: 0; max-width: 68ch; }
 
+.photo { margin: 40px 0 0; }
+.photo img { width: 100%; height: auto; display: block; border-radius: var(--radius-lg); border: 1px solid var(--border); }
+.photo figcaption, .diagram figcaption { color: var(--faint); font-size: 0.82rem; margin-top: 12px; }
+
+.diagram { margin: 40px 0 8px; }
+.diagram svg { width: 100%; height: auto; display: block; }
+
 .related-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
 .related-card {
   display: block;
@@ -431,8 +438,13 @@ def _strip_tags(text):
 
 
 def _esc(text):
-    """Plain text for HTML attributes and text nodes: a bare & is invalid there."""
-    return html.escape(_strip_tags(text), quote=True)
+    """Plain text for HTML attributes and text nodes: a bare & is invalid there.
+
+    Apostrophes are left alone on purpose. Every attribute here is double-quoted, so ' needs no
+    escaping, and html.escape would turn every Italian apostrophe into &#x27; for nothing.
+    """
+    clean = _strip_tags(text)
+    return clean.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
 
 
 # -----------------------------------------------------------------------------------------------------------------
@@ -532,6 +544,114 @@ def _breadcrumb_html(lang, page, data):
     items += f"<li aria-current=\"page\">{_esc(data['short'])}</li>"
     label = "Percorso" if lang == "it" else "Breadcrumb"
     return f'<nav class="breadcrumb" aria-label="{label}"><ol>{items}</ol></nav>'
+
+
+DIAGRAM_WORDS = {
+    "it": {
+        "title": "Dove passano i dati del robot",
+        "desc": "Telecamera, microfono, temperatura e umidità entrano nel robot. Il modello gira a "
+                "bordo e risponde a voce. Audio e video non escono di casa.",
+        "house": "In casa",
+        "sensors": ["Telecamera", "Microfono", "Temperatura", "Umidità"],
+        "robot": "Reachy Mini",
+        "robot_sub": "LLM a bordo",
+        "out": "Risposta a voce",
+        "cloud": "Cloud",
+        "never": "audio e video non escono",
+    },
+    "en": {
+        "title": "Where the robot's data goes",
+        "desc": "Camera, microphone, temperature and humidity feed the robot. The model runs on board "
+                "and answers by voice. Audio and video never leave the house.",
+        "house": "In the house",
+        "sensors": ["Camera", "Microphone", "Temperature", "Humidity"],
+        "robot": "Reachy Mini",
+        "robot_sub": "LLM on board",
+        "out": "Spoken answer",
+        "cloud": "Cloud",
+        "never": "audio and video never leave",
+    },
+}
+
+
+def _diagram_html(lang):
+    """The page's argument, drawn: everything the robot senses is processed on board.
+
+    Inlined rather than linked so it inherits the page's CSS variables and follows the light and
+    dark theme, which an <img> to an external SVG could not do.
+
+    Boxes are sized for the longest label of both languages, and every text node sits on one line:
+    a newline inside <text> becomes leading whitespace and shifts centred labels off centre.
+    """
+    w = DIAGRAM_WORDS[lang]
+    chips = "".join(
+        f'<rect x="44" y="{104 + i * 44}" width="150" height="34" rx="8" fill="var(--panel-2)" '
+        f'stroke="var(--border)"/>'
+        f'<text x="119" y="{126 + i * 44}" text-anchor="middle" font-size="13" fill="var(--muted)">{label}</text>'
+        for i, label in enumerate(w["sensors"])
+    )
+    return f"""        <figure class="diagram reveal">
+          <svg viewBox="0 0 800 330" role="img" aria-labelledby="dgT dgD">
+            <title id="dgT">{w['title']}</title>
+            <desc id="dgD">{w['desc']}</desc>
+            <defs>
+              <marker id="dgArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+                      orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/>
+              </marker>
+            </defs>
+
+            <rect x="20" y="70" width="520" height="240" rx="18" fill="none" stroke="var(--border-strong)"
+                  stroke-dasharray="7 6"/>
+            <text x="40" y="94" font-size="11.5" letter-spacing="1.6" fill="var(--faint)">{w['house'].upper()}</text>
+
+            {chips}
+
+            <path d="M204 187 H250" stroke="var(--accent)" stroke-width="2" fill="none"
+                  marker-end="url(#dgArrow)"/>
+
+            <rect x="262" y="150" width="240" height="74" rx="14" fill="var(--panel)"
+                  stroke="var(--border-strong)"/>
+            <text x="382" y="181" text-anchor="middle" font-size="15" font-weight="600" fill="var(--text)">{w['robot']}</text>
+            <text x="382" y="203" text-anchor="middle" font-size="12.5" fill="var(--accent-text)">{w['robot_sub']}</text>
+
+            <path d="M382 228 V248" stroke="var(--accent)" stroke-width="2" fill="none"
+                  marker-end="url(#dgArrow)"/>
+            <rect x="302" y="252" width="160" height="44" rx="12" fill="var(--panel-2)" stroke="var(--border)"/>
+            <text x="382" y="279" text-anchor="middle" font-size="12.5" fill="var(--muted)">{w['out']}</text>
+
+            <rect x="600" y="122" width="150" height="54" rx="12" fill="none" stroke="var(--border)"
+                  stroke-dasharray="4 5"/>
+            <text x="675" y="154" text-anchor="middle" font-size="13" fill="var(--faint)">{w['cloud']}</text>
+
+            <path d="M506 178 L592 156" stroke="var(--faint)" stroke-width="2" fill="none"
+                  stroke-dasharray="5 5" opacity="0.65"/>
+            <g stroke="var(--faint)" stroke-width="2.4" stroke-linecap="round">
+              <path d="M540 156 L558 178"/><path d="M558 156 L540 178"/>
+            </g>
+            <text x="675" y="200" text-anchor="middle" font-size="11.5" fill="var(--faint)">{w['never']}</text>
+          </svg>
+        </figure>"""
+
+
+def _photo_html(data):
+    """An illustrative image, always captioned as such.
+
+    The product site already labels its mock-ups ("Esempio illustrativo — dati di fantasia"). The
+    same rule applies harder here: this page is about frail people and a prototype that does not
+    exist in anyone's home yet, so a photorealistic scene must say what it is.
+    """
+    photo = data.get("photo")
+    if not photo:
+        return ""
+    return f"""        <figure class="photo reveal">
+          <img src="/assets/{photo['file']}-1800.jpg"
+               srcset="/assets/{photo['file']}-900.jpg 900w, /assets/{photo['file']}-1800.jpg 1800w"
+               sizes="(max-width: 900px) 100vw, 1080px"
+               width="1800" height="1012" loading="lazy" decoding="async"
+               alt="{_esc(photo['alt'])}">
+          <figcaption>{photo['caption']}</figcaption>
+        </figure>"""
 
 
 def _note_html(data, key):
@@ -673,7 +793,19 @@ def _json_ld(lang, page, data, url):
         }
     ]
 
-    if page["schema"] == "SoftwareApplication":
+    if page["schema"] == "ResearchProject":
+        # Not a Service and not a Product: nothing here is for sale, and saying otherwise in the
+        # structured data would be the same overclaim the page text is careful to avoid.
+        blocks.append({
+            "@context": "https://schema.org",
+            "@type": "ResearchProject",
+            "name": _strip_tags(data["short"]),
+            "url": url,
+            "description": data["description"],
+            "inLanguage": lang,
+            "parentOrganization": {"@id": org_id},
+        })
+    elif page["schema"] == "SoftwareApplication":
         blocks.append({
             "@context": "https://schema.org",
             "@type": "SoftwareApplication",
@@ -792,6 +924,7 @@ def _render_page(lang, page):
           </div>
 {_facts_html(data)}
         </div>
+{_photo_html(data)}
       </div>
     </section>""",
         # capabilities
@@ -801,6 +934,7 @@ def _render_page(lang, page):
           <div class="kicker">{data['cards_title']}</div>
           <h2>{data['cards_intro']}</h2>{_note_html(data, 'cards_note')}
         </div>
+{_diagram_html(lang) if data.get('figure') else ''}
 {_cards_html(data)}
       </div>
     </section>""",
@@ -865,7 +999,7 @@ def _render_page(lang, page):
   <meta property="og:title" content="{_esc(title)}">
   <meta property="og:description" content="{_esc(description)}">
   <meta property="og:url" content="{url}">
-  <meta property="og:image" content="{SITE}/assets/og-card.png">
+  <meta property="og:image" content="{SITE}/assets/{data.get('og_image', 'og-card.png')}">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:locale" content="{LOCALE[lang]}">
@@ -874,7 +1008,7 @@ def _render_page(lang, page):
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{_esc(title)}">
   <meta name="twitter:description" content="{_esc(description)}">
-  <meta name="twitter:image" content="{SITE}/assets/og-card.png">
+  <meta name="twitter:image" content="{SITE}/assets/{data.get('og_image', 'og-card.png')}">
   <!-- Favicon -->
   <link rel="apple-touch-icon" sizes="180x180" href="{prefix}assets/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="{prefix}assets/favicon-32.png">

@@ -68,9 +68,10 @@ CHROME = {
                 ("Intelligenza Artificiale", "/servizi/intelligenza-artificiale/"),
                 ("AI on-premise", "/ai-on-premise/"),
             ]),
-            ("Prodotti", [
+            ("Prodotti e ricerca", [
                 ("Podz.AI", "/podz-ai/"),
                 ("DigiSense®", "/digisense/"),
+                ("Robot per l'assistenza domiciliare", "/progetti/robot-assistenza-domiciliare/"),
                 ("Scarica Podz.AI", PODZ_SITE + "/download.html"),
                 ("Release", "https://github.com/G-G-Technologies-Srl/digisense-releases/releases"),
             ]),
@@ -117,9 +118,10 @@ CHROME = {
                 ("Artificial Intelligence", "/en/services/artificial-intelligence/"),
                 ("On-premise AI", "/en/on-premise-ai/"),
             ]),
-            ("Products", [
+            ("Products and research", [
                 ("Podz.AI", "/en/podz-ai/"),
                 ("DigiSense®", "/en/digisense/"),
+                ("Home care robot", "/en/projects/home-care-robot/"),
                 ("Download Podz.AI", PODZ_SITE + "/download.html"),
                 ("Releases", "https://github.com/G-G-Technologies-Srl/digisense-releases/releases"),
             ]),
@@ -1258,6 +1260,214 @@ PAGES = [
             "cta_text": "Describe the task and the kind of data. From there we can tell whether you need "
                         "fully local or a hybrid architecture.",
             "related": ["ai", "podz", "digisense"],
+        },
+    },
+    # -------------------------------------------------------------------------------------------------------------
+    #  7 — robot per l'assistenza domiciliare (progetto, non servizio)
+    # -------------------------------------------------------------------------------------------------------------
+    {
+        "key": "homecare",
+        "schema": "ResearchProject",
+        "service_type": "Assistive home robotics research",
+        "in_services": False,
+        "it": {
+            "slug": "progetti/robot-assistenza-domiciliare",
+            "short": "Robot per l'assistenza domiciliare",
+            "blurb": "Un robot che assiste in casa, con l'AI a bordo. Prototipo in sviluppo.",
+            "title": "Robot per l'assistenza domiciliare — G&G Technologies",
+            "description": "Prototipo di robot che assiste anziani e persone fragili in casa: voce, "
+                           "telecamera e sensori, con l'intelligenza artificiale che gira a bordo.",
+            "kicker": "Progetto in sviluppo",
+            "h1": "Un robot che <span class=\"grad-text\">sta in casa</span>, non in fabbrica.",
+            "lead": "Prototipo in sviluppo: assistenza a persone anziane e fragili, comandato a voce, con "
+                    "l'AI che gira a bordo e i dati che non escono di casa.",
+            "intro_title": "Perché ci lavoriamo",
+            "intro_h2": "La telecamera in casa è il <span class=\"grad-text\">problema</span>, non la soluzione.",
+            "intro": [
+                "Chi assiste un genitore anziano vorrebbe sapere se è caduto, se ha mangiato, se in casa fa "
+                "troppo freddo. Gli strumenti che lo permettono — telecamere, microfoni, sensori — sono anche "
+                "quelli che nessuno vuole in salotto, perché mandano tutto sul server di qualcun altro.",
+                "Stiamo costruendo un prototipo che affronta la contraddizione dal lato tecnico: il robot vede "
+                "e sente, ma il modello gira a bordo e quello che riconosce resta in casa. È "
+                "<strong>DigiSense®</strong> applicato al caso più delicato che conosciamo. Oggi è un "
+                "<strong>prototipo in sviluppo</strong>, non un prodotto che si può comprare.",
+            ],
+            "photo": {
+                "file": "robot-assistenza-domiciliare",
+                "alt": "Una donna anziana seduta in salotto guarda un piccolo robot bianco con due "
+                       "antenne, appoggiato al tavolino davanti a lei.",
+                "caption": "Immagine illustrativa generata con AI. Il prototipo è in sviluppo: la scena "
+                           "non rappresenta un'installazione reale.",
+            },
+            "og_image": "og-robot-assistenza-domiciliare.jpg",
+            "figure": True,
+            "cards_title": "Com'è fatto",
+            "cards_intro": "Un robot open source, la voce e un modello che gira a bordo.",
+            "cards": [
+                ("robot", "Base open source",
+                 "Partiamo da <a href=\"https://pollen-robotics.com/reachy-mini/\">Reachy Mini</a>, la "
+                 "piattaforma robotica open source di Pollen Robotics, invece di costruire la meccanica "
+                 "da zero: il lavoro va sulle capacità.",
+                 ["Piattaforma robotica open source",
+                  "Modifiche hardware documentate",
+                  "Nessun vincolo a un fornitore unico"]),
+                ("spark", "Voce e modello a bordo",
+                 "Modulo vocale e LLM interno: si parla al robot con parole normali e la risposta si forma "
+                 "sulla macchina, senza chiedere niente a internet.",
+                 ["Interazione vocale, senza schermi",
+                  "LLM in esecuzione locale",
+                  "Funziona anche con la rete assente"]),
+                ("pulse", "Percezione dell'ambiente",
+                 "Telecamera, temperatura, umidità e microfono. Il microfono viene addestrato a riconoscere "
+                 "rumori che possono indicare una caduta o una richiesta d'aiuto.",
+                 ["Telecamera e sensori ambientali",
+                  "Riconoscimento di suoni anomali",
+                  "Elaborazione a bordo, non in cloud"]),
+            ],
+            "steps_title": "A che punto siamo",
+            "steps_intro": "Cosa c'è oggi, cosa stiamo aggiungendo, cosa è previsto.",
+            "steps": [
+                ("Oggi", "Prototipo funzionante su Reachy Mini, con modulo vocale, LLM a bordo e i sensori "
+                         "di ambiente."),
+                ("In sviluppo", "Riconoscimento dei suoni che possono indicare una caduta o una richiesta "
+                                "d'aiuto, e affinamento dell'interazione vocale."),
+                ("Previsto", "Un hub domotico che colleghi il robot ai dispositivi indossabili già in casa, "
+                             "per leggerne i dati biovitali."),
+                ("Da studiare", "Riconoscere la persona dalla firma elettrocardiografica. È un dato "
+                                "biometrico: prima della tecnica va risolto come trattarlo."),
+            ],
+            "facts_title": "In sintesi",
+            "facts": [
+                ("Stato", "Prototipo in sviluppo. Non è un prodotto in vendita e non è un dispositivo "
+                          "medico."),
+                ("Elaborazione", "A bordo del robot, sul framework <a href=\"/digisense/\">DigiSense®</a>: "
+                                 "audio e video non escono di casa."),
+                ("Base", "Reachy Mini, piattaforma open source di Pollen Robotics (gruppo Hugging Face)."),
+            ],
+            "faq_title": "Domande frequenti",
+            "faq": [
+                ("Si può comprare?",
+                 "No. È un prototipo su cui stiamo lavorando, non un prodotto a catalogo. Se ti interessa "
+                 "seguirne lo sviluppo o ospitare una prova sul campo, scrivici."),
+                ("Rileva le cadute?",
+                 "Non lo diciamo, ed è una distinzione che conta. Stiamo addestrando il microfono a "
+                 "riconoscere rumori che possono indicare una caduta o una richiesta d'aiuto: è un aiuto, "
+                 "non un sistema di sicurezza su cui fare affidamento. Un dispositivo che promette di "
+                 "rilevare le cadute è un'altra cosa, con altri obblighi."),
+                ("Le immagini e l'audio dove finiscono?",
+                 "In casa. Il modello gira a bordo del robot e il riconoscimento avviene lì: non c'è un "
+                 "server che riceve il flusso della telecamera o del microfono. È il motivo per cui abbiamo "
+                 "scelto questa architettura invece di una più semplice in cloud."),
+                ("Cosa vuol dire riconoscere una persona dall'elettrocardiogramma?",
+                 "Che il tracciato cardiaco è abbastanza caratteristico da distinguere una persona da "
+                 "un'altra, quindi un dispositivo indossabile potrebbe dire al robot chi ha davanti senza "
+                 "usare la telecamera. È una possibilità futura, non una funzione: è un dato biometrico e "
+                 "prima della tecnica va deciso come trattarlo."),
+            ],
+            "cta_title": "Vi interessa seguirlo, o ospitare una prova?",
+            "cta_text": "Cerchiamo strutture, cooperative e famiglie disposte a provarlo sul campo. Scrivici "
+                        "e ti raccontiamo a che punto siamo davvero.",
+            "related": ["digisense", "wearable", "onprem"],
+        },
+        "en": {
+            "slug": "en/projects/home-care-robot",
+            "short": "Home care robot",
+            "blurb": "A robot that helps at home, with the AI on board. Prototype in development.",
+            "title": "Home care robot — G&G Technologies",
+            "description": "A prototype robot that helps elderly and frail people at home: voice, camera "
+                           "and sensors, with the artificial intelligence running on board.",
+            "kicker": "Project in development",
+            "h1": "A robot that lives in a <span class=\"grad-text\">home</span>, not in a plant.",
+            "lead": "A prototype in development: helping elderly and frail people, driven by voice, with the "
+                    "AI running on board and the data staying in the house.",
+            "intro_title": "Why we work on it",
+            "intro_h2": "The camera in the room is the <span class=\"grad-text\">problem</span>, not the answer.",
+            "intro": [
+                "Anyone caring for an elderly parent would like to know whether they have fallen, whether "
+                "they have eaten, whether the house is too cold. The tools that make that possible — "
+                "cameras, microphones, sensors — are also the ones nobody wants in the living room, because "
+                "they send everything to somebody else's server.",
+                "We are building a prototype that tackles the contradiction on the technical side: the robot "
+                "sees and hears, but the model runs on board and what it recognises stays in the house. It "
+                "is <strong>DigiSense®</strong> applied to the most delicate case we know. Today it is a "
+                "<strong>prototype in development</strong>, not a product you can buy.",
+            ],
+            "photo": {
+                "file": "robot-assistenza-domiciliare",
+                "alt": "An elderly woman sitting in a living room looks at a small white robot with two "
+                       "antennas, resting on the table in front of her.",
+                "caption": "Illustrative image generated with AI. The prototype is in development: the "
+                           "scene does not depict a real installation.",
+            },
+            "og_image": "og-robot-assistenza-domiciliare.jpg",
+            "figure": True,
+            "cards_title": "How it is built",
+            "cards_intro": "An open-source robot, a voice, and a model that runs on board.",
+            "cards": [
+                ("robot", "Open-source base",
+                 "We start from <a href=\"https://pollen-robotics.com/reachy-mini/\">Reachy Mini</a>, the "
+                 "open-source robotic platform by Pollen Robotics, rather than building the mechanics "
+                 "from scratch: the work goes into the capabilities.",
+                 ["Open-source robotic platform",
+                  "Hardware changes documented",
+                  "No lock-in to a single supplier"]),
+                ("spark", "Voice and model on board",
+                 "A voice module and an internal LLM: you talk to the robot in plain words and the answer is "
+                 "formed on the machine, without asking the internet for anything.",
+                 ["Voice interaction, no screens",
+                  "LLM running locally",
+                  "Works with the network down"]),
+                ("pulse", "Sensing the room",
+                 "Camera, temperature, humidity and microphone. The microphone is being trained to recognise "
+                 "sounds that may indicate a fall or a call for help.",
+                 ["Camera and ambient sensors",
+                  "Recognition of unusual sounds",
+                  "Processing on board, not in the cloud"]),
+            ],
+            "steps_title": "Where we are",
+            "steps_intro": "What exists today, what we are adding, what is planned.",
+            "steps": [
+                ("Today", "A working prototype on Reachy Mini, with the voice module, the on-board LLM and "
+                          "the ambient sensors."),
+                ("In development", "Recognition of sounds that may indicate a fall or a call for help, and "
+                                   "refinement of the voice interaction."),
+                ("Planned", "A home-automation hub connecting the robot to the wearables already in the "
+                            "house, to read their vital-signs data."),
+                ("To be studied", "Recognising a person from their electrocardiographic signature. That is "
+                                  "biometric data: before the engineering, we have to settle how to handle it."),
+            ],
+            "facts_title": "In short",
+            "facts": [
+                ("Status", "A prototype in development. It is not a product for sale and it is not a medical "
+                           "device."),
+                ("Processing", "On board the robot, on the <a href=\"/en/digisense/\">DigiSense®</a> "
+                               "framework: audio and video never leave the house."),
+                ("Base", "Reachy Mini, the open-source platform by Pollen Robotics (Hugging Face group)."),
+            ],
+            "faq_title": "Frequently asked questions",
+            "faq": [
+                ("Can I buy it?",
+                 "No. It is a prototype we are working on, not a catalogue product. If you would like to "
+                 "follow its development or host a field trial, write to us."),
+                ("Does it detect falls?",
+                 "We do not say that, and the distinction matters. We are training the microphone to "
+                 "recognise sounds that may indicate a fall or a call for help: it is an aid, not a safety "
+                 "system to rely on. A device that promises to detect falls is a different thing, with "
+                 "different obligations."),
+                ("Where do the images and the audio end up?",
+                 "In the house. The model runs on board the robot and the recognition happens there: no "
+                 "server receives the camera or microphone stream. That is why we chose this architecture "
+                 "instead of a simpler one in the cloud."),
+                ("What does recognising a person from an electrocardiogram mean?",
+                 "That a heart trace is distinctive enough to tell one person from another, so a wearable "
+                 "could tell the robot who is in front of it without using the camera. It is a future "
+                 "possibility, not a feature: it is biometric data, and how to handle it has to be settled "
+                 "before the engineering."),
+            ],
+            "cta_title": "Want to follow it, or host a trial?",
+            "cta_text": "We are looking for care homes, cooperatives and families willing to try it in the "
+                        "field. Write to us and we will tell you where we really are.",
+            "related": ["digisense", "wearable", "onprem"],
         },
     },
 ]
