@@ -231,12 +231,12 @@ PAGES = [
             "lead": "Wearable devices and ambient sensors that follow frail and elderly patients. From "
                     "custom electronics to the platform that reads the data.",
             "intro": [
-                "A medical wearable is not an electronics product: it is a chain that starts at the sensor "
-                "and ends in a clinical or athletic decision. If one link is weak — battery life, signal "
-                "quality, the way data reaches the person who has to read it — the device does not get used.",
+                "The chain starts at the sensor and ends when a doctor or a coach acts on the reading. If "
+                "one link is weak — battery life, signal quality, the way the data reaches the person "
+                "who has to read it — the device ends up in a drawer.",
                 "We design the whole chain. Electronics and firmware on one side, the platform that collects "
-                "and processes the data on the other. We have built wearable solutions for biovital "
-                "monitoring in both medical and sports settings.",
+                "and processes the data on the other. We have built wearable solutions for vital-signs "
+                "monitoring in both healthcare and sport.",
             ],
             "cards_title": "What we build",
             "cards_intro": "From the sensor to the dashboard, one project. Worn or in the room.",
@@ -269,8 +269,8 @@ PAGES = [
             "steps_title": "How we work",
             "steps_intro": "The parameter comes first. The technology comes last.",
             "steps": [
-                ("Define the parameter", "Which parameter is actually needed, how often, and in whose hands. Half the "
-                               "project is decided here."),
+                ("Define the parameter", "Which reading you actually need, how often, and who reads it. Get this "
+                                         "wrong and it cannot be fixed later without redoing the board."),
                 ("Design the device", "Sensor, power budget, form factor and data platform are chosen together: they "
                            "constrain each other."),
                 ("Prototype and field-test", "Prototype, firmware, platform and field trials with the people who will use the "
@@ -300,9 +300,9 @@ PAGES = [
                  "data usable, or the firmware needs reworking to cut power draw. We start from what is "
                  "already there."),
                 ("Where does patient data end up?",
-                 "Wherever the client decides. We also build architectures where processing stays on the "
-                 "client's own servers and data never leaves their infrastructure — the same principle "
-                 "Podz.AI is built on."),
+                 "Wherever you decide. We also build architectures where processing stays on your own "
+                 "servers and the data never leaves your infrastructure — the same principle Podz.AI is "
+                 "built on."),
             ],
             "cta_title": "Have a device to design, or one that should work better?",
             "cta_text": "Tell us which parameter you need to measure and who has to read it. A person from "
@@ -418,8 +418,7 @@ PAGES = [
             "lead": "More than ten plants automated and manual processes handed to robots. We start from "
                     "the bottleneck, not from the robot catalogue.",
             "intro": [
-                "Automation almost always fails for the same reason: the machine gets bought before the "
-                "process is understood. The result is an island that works beautifully on its own and does "
+                "You see the result six months later: an island that works beautifully on its own and does "
                 "not talk to the rest of the plant.",
                 "We start from the other end. We look at where time is lost, where mistakes happen, and "
                 "where a piece of data already exists but nobody reads it. Then we decide what to automate "
@@ -432,7 +431,7 @@ PAGES = [
                  "Handing repetitive manual operations to robots, and managing the flow around the machine.",
                  ["Machine tending and handling",
                   "Control and safety logic",
-                  "Operator interfaces people can read"]),
+                  "Operator panel in plain language, with alarms spelled out"]),
                 ("chip", "Integration with embedded systems",
                  "The machine does not stay isolated: it talks to line systems and to management software.",
                  ["Machine-to-line communication",
@@ -463,7 +462,7 @@ PAGES = [
             ],
             "facts_title": "In short",
             "facts": [
-                ("Experience", "Over 30 years in the field of innovation and business software."),
+                ("Experience", "Thirty years of software and automation for manufacturers."),
                 ("Manufacturing", "More than ten plants automated and manual processes handed to robots."),
                 ("Technology", "Machine control and data collection sit on our "
                                "<a href=\"/en/digisense/\">DigiSense®</a> framework."),
@@ -605,9 +604,9 @@ PAGES = [
                 "Demos always work. AI projects stall afterwards, when the model meets the company's real "
                 "data: incomplete, badly written, scattered across five different systems.",
                 "So we start from the process: where time is lost, where mistakes happen, where a piece of "
-                "data already exists but nobody reads it. Then we build agents and vertical specialists, "
-                "integrate language models into the systems you already run and — when the data is "
-                "confidential — keep it inside the company.",
+                "data already exists but nobody reads it. Then we build agents that do one defined job, "
+                "integrate language models (LLMs) into the systems you already run and — when the data "
+                "is confidential — keep it inside the company.",
             ],
             "cards_title": "What we build",
             "cards_intro": "Four ways AI enters a company starting from what is already there.",
@@ -619,7 +618,7 @@ PAGES = [
                  ["One defined task, not a generic chatbot",
                   "Controlled access to company data",
                   "Verifiable answers, with sources"]),
-                ("gauge", "Measurement",
+                ("gauge", "Measuring the result",
                  "Before we write code we agree how we will know it worked: hours saved, errors "
                  "avoided, response times.",
                  ["One agreed indicator, set before we start",
@@ -644,7 +643,7 @@ PAGES = [
                            "data is confidential."),
                 ("Build and test", "Development, integration into systems in use, and testing with the people who "
                           "will use it."),
-                ("Measure", "Measuring the outcome, correcting and evolving over time."),
+                ("Measure", "Measuring against the indicator agreed at the start, then correcting."),
             ],
             "facts_title": "Our own technology",
             "facts": [
@@ -796,8 +795,8 @@ PAGES = [
             "cards_intro": "Local by default. Masked before it leaves. Specialists you install.",
             "cards": [
                 ("shield", "Local-first and private",
-                 "Conversations and documents stay on the user's machine, in an encrypted database, in a "
-                 "folder that remains theirs.",
+                 "Conversations and documents stay on your machine, in an encrypted database, in a folder "
+                 "that remains yours.",
                  ["No mandatory account",
                   "Encrypted local database",
                   "Works offline with the local engine"]),
@@ -818,7 +817,8 @@ PAGES = [
             "steps": [
                 ("Law and professional firms", "Contracts, deeds and opinions never leave the firm. "
                                                "Privilege and client confidentiality stay intact."),
-                ("HR and recruiting", "Blind CV screening, with candidate data handled locally."),
+                ("HR and recruiting", "Anonymous CV screening, with candidate data handled on the "
+                                      "recruiter's own computer."),
                 ("SMEs with sensitive data", "Quotations, bookkeeping, customer and supplier records: the "
                                              "AI works where the data already lives."),
                 ("Consultants", "Research with sources you can check, and summaries you can send. Client "
@@ -982,8 +982,8 @@ PAGES = [
                   "Signal cleaning and normalisation",
                   "Time-series storage"]),
                 ("shield", "AI that runs where the data is",
-                 "Models running on the machine or server of whoever commissions the project, with personal "
-                 "data masked when the cloud is needed.",
+                 "Models run on your own machine or server. When the cloud is needed, personal data is "
+                 "masked first.",
                  ["Open models running on-premise",
                   "Masking of personal data",
                   "Your documents never train a model of ours"]),
@@ -1145,9 +1145,9 @@ PAGES = [
                 "Many companies stop short of AI for one reason: the data they would need to use it on is "
                 "exactly the data that cannot leave. Medical records, contracts, designs, customer and "
                 "supplier data.",
-                "The technical answer exists and is less exotic than it sounds: run the models inside your "
-                "own infrastructure. It is the principle Podz.AI is built on, and the same one we "
-                "apply in tailored projects.",
+                "The fix is less exotic than it sounds: the model runs inside your own infrastructure and "
+                "the documents never leave it. It is the principle Podz.AI is built on, and the same one "
+                "we apply in tailored projects.",
             ],
             "cards_title": "How it works in practice",
             "cards_intro": "Three configurations, depending on where the data must stay and how much power "
@@ -1159,8 +1159,8 @@ PAGES = [
                   "Open, self-hosted models, no third-party keys",
                   "The limit is the GPU you have available"]),
                 ("mask", "Hybrid with anonymisation",
-                 "The bulk stays in-house; when cloud power is needed, personal data is masked before "
-                 "sending and restored afterwards.",
+                 "The processing stays on-premise. When cloud power is needed, personal data is masked "
+                 "before it is sent and restored in the answer.",
                  ["Masking of names, dates and addresses",
                   "Masked fields are replaced before the request leaves your machine",
                   "What may leave is decided case by case"]),
@@ -1178,13 +1178,13 @@ PAGES = [
                 ("Classify the data", "Which data is involved, who may see it, and which task has to be done."),
                 ("Draw the boundary", "Where the model runs, what it sees and what it must never see. This is where "
                            "the architecture is decided."),
-                ("Install on-premise", "Installation inside the client's infrastructure, integration and testing with "
-                          "the people who will use it."),
+                ("Install on-premise", "Installation inside your own infrastructure, integration and testing "
+                                       "with the people who will use it."),
                 ("Maintain", "Maintenance, model updates and evolution over time."),
             ],
             "facts_title": "Who we are",
             "facts": [
-                ("Based in", "Serravalle, Republic of San Marino — Via Marino Moretti 23."),
+                ("Based in", "Via Marino Moretti 23, 47899 Serravalle, Republic of San Marino."),
                 ("Development", "Software designed and developed entirely in Europe."),
                 ("Product", "Podz.AI, the personal AI workstation, built on the DigiSense® framework."),
             ],
@@ -1202,9 +1202,9 @@ PAGES = [
                  "Yes, that is the most common setup. You start fully in-house and open to the cloud only "
                  "for the steps that need it, with personal data masked before sending."),
                 ("Is anonymisation enough for compliance?",
-                 "It is strong protection, not a legal guarantee: the compliance assessment remains with "
-                 "the data controller. What we can guarantee is the mechanism — what leaves, what does "
-                 "not, and how you verify it."),
+                 "No, and nobody can answer that for you: for GDPR purposes the compliance assessment "
+                 "remains with the data controller. What we document is the mechanism — which fields "
+                 "are masked, what actually leaves, and how you verify it."),
             ],
             "cta_title": "Do you have data that cannot leave and work AI could do?",
             "cta_text": "Describe the task and the kind of data. From there we can tell whether you need "

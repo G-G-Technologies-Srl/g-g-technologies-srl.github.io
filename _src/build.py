@@ -924,6 +924,54 @@ def _sitemap(lastmod):
 #  m a i n
 # -----------------------------------------------------------------------------------------------------------------
 
+# Phrasings the copy review rejected. They must not come back: a build that reintroduces one fails.
+# Left column is the offending text, right column says why, so whoever trips it knows what to write.
+BANNED = {
+    "it": [
+        ("metà del progetto", "numero non dimostrabile"),
+        ("il committente", "freddo, e rompe il tu"),
+        ("chi commissiona il progetto", "perifrasi da capitolato: usa il tu"),
+        ("alla cieca", "in italiano vuol dire anche «a casaccio»"),
+        ("società di consulenza", "progettiamo e realizziamo tecnologia, non solo consulenza"),
+        ("progetto di ricerca DigiSense", "DigiSense® è il framework, non un progetto concluso"),
+        ("sul campo dell'innovazione", "non significa niente"),
+        ("leader", "superlativo vietato"),
+        ("all'avanguardia", "superlativo vietato"),
+        ("soluzione unica", "superlativo vietato"),
+    ],
+    "en": [
+        ("biovital", "calco dall'italiano, nessuno lo cerca: usa vital signs"),
+        ("grafts onto", "calco di «si innesta»: usa plugs into / sits on top of"),
+        ("vertical specialist", "calco di «specialista verticale»"),
+        ("professional secrecy", "calco: usa client confidentiality o privilege"),
+        ("build to order", "in inglese significa altro: usa custom systems"),
+        ("robotis", "«robotise» non è uso corrente: usa automate"),
+        ("machine-side", "non è un termine inglese del settore"),
+        ("the client's", "terza persona: il lettore è il cliente, dagli del you"),
+        ("the user's", "terza persona: usa your"),
+        ("whoever commissions", "perifrasi: usa your"),
+        ("half the project", "numero non dimostrabile"),
+        ("never sees the real data", "garanzia assoluta non dimostrabile"),
+        ("catalog ", "ortografia americana: il resto del testo è britannico"),
+        ("leader", "superlativo vietato"),
+        ("cutting-edge", "superlativo vietato"),
+        ("unique solution", "superlativo vietato"),
+    ],
+}
+
+
+def _walk_text(value, path=""):
+    """Every string in a page, wherever it is nested."""
+    if isinstance(value, str):
+        yield path, value
+    elif isinstance(value, dict):
+        for key, item in value.items():
+            yield from _walk_text(item, f"{path}.{key}")
+    elif isinstance(value, (list, tuple)):
+        for index, item in enumerate(value):
+            yield from _walk_text(item, f"{path}[{index}]")
+
+
 def _check_parity():
     """Fail loudly when the two languages drift apart.
 
@@ -942,11 +990,25 @@ def _check_parity():
         for card_it, card_en in zip(it["cards"], en["cards"]):
             if len(card_it[3]) != len(card_en[3]):
                 problems.append(f'{page["key"]}: elenchi di lunghezza diversa nella card "{card_it[1]}"')
-        for field in ("lead", "blurb", "intro_h2", "cards_intro", "steps_intro", "cta_title", "cta_text"):
-            if field not in it or field not in en:
+        # Compare every string, not just the headlines: a fix applied to one language only is the
+        # mistake this project keeps making.
+        it_text, en_text = dict(_walk_text(it)), dict(_walk_text(en))
+        for path, italian in it_text.items():
+            english = en_text.get(path)
+            if not english or not italian:
                 continue
-            if abs(len(it[field]) - len(en[field])) > 28:
-                problems.append(f'{page["key"]}.{field}: IT e EN divergono, probabile modifica dimenticata')
+            # Short labels swing wildly between the two languages by nature: only compare sentences.
+            if len(italian) < 40 and len(english) < 40:
+                continue
+            ratio = len(italian) / len(english)
+            if ratio < 0.6 or ratio > 1.65:
+                problems.append(f'{page["key"]}{path}: IT e EN divergono troppo, probabile modifica '
+                                f'applicata a una lingua sola')
+        for lang in LANGS:
+            for path, text in _walk_text(page[lang]):
+                for phrase, reason in BANNED[lang]:
+                    if phrase.lower() in text.lower():
+                        problems.append(f'{page["key"]}.{lang}{path}: «{phrase}» — {reason}')
         for lang in LANGS:
             if len(page[lang]["title"]) > 65:
                 problems.append(f'{page["key"]}.{lang}: title di {len(page[lang]["title"])} caratteri')
