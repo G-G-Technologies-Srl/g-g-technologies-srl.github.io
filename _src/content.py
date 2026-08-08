@@ -1292,6 +1292,13 @@ PAGES = [
                 "<strong>DigiSense®</strong> applicato al caso più delicato che conosciamo. Oggi è un "
                 "<strong>prototipo in sviluppo</strong>, non un prodotto che si può comprare.",
             ],
+            # The company figures talk to a factory buyer. Here the reader is a family or a care
+            # cooperative: automated factories mean nothing to them.
+            "stats": [
+                ("4", "sensori a bordo"),
+                ("0", "dati inviati al cloud"),
+                ("EU", "progettato in Europa"),
+            ],
             "photo": {
                 "file": "robot-assistenza-domiciliare",
                 "alt": "Una donna anziana seduta in salotto guarda un piccolo robot bianco con due "
@@ -1391,6 +1398,11 @@ PAGES = [
                 "sees and hears, but the model runs on board and what it recognises stays in the house. It "
                 "is <strong>DigiSense®</strong> applied to the most delicate case we know. Today it is a "
                 "<strong>prototype in development</strong>, not a product you can buy.",
+            ],
+            "stats": [
+                ("4", "sensors on board"),
+                ("0", "data sent to the cloud"),
+                ("EU", "designed in Europe"),
             ],
             "photo": {
                 "file": "robot-assistenza-domiciliare",

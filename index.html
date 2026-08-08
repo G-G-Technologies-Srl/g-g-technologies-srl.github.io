@@ -963,6 +963,16 @@
       color: var(--accent-text); text-decoration: none;
     }
     .card-link:hover { text-decoration: underline; }
+
+    /* Home: teaser del progetto in sviluppo */
+    #project { border-top: 1px solid var(--border); }
+    .home-photo { margin: 0; }
+    .home-photo img {
+      width: 100%; height: auto; display: block;
+      border-radius: var(--radius-lg); border: 1px solid var(--border);
+    }
+    .home-photo figcaption { color: var(--faint); font-size: 0.8rem; margin-top: 10px; }
+    .project-cta { margin-top: 26px; }
   </style>
 </head>
 <body>
@@ -1351,6 +1361,63 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===============================================================================================================
+         Project — prototipo in sviluppo, dichiarato come tale
+         ================================================================================================================ -->
+    <section id="project">
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">
+            <span class="it">Progetto in sviluppo</span>
+            <span class="en">Project in development</span>
+          </div>
+          <h2 class="it">Stiamo costruendo un robot per l'<span class="grad-text">assistenza domiciliare</span>.</h2>
+          <h2 class="en">We are building a robot for <span class="grad-text">home care</span>.</h2>
+        </div>
+
+        <div class="about-grid">
+          <div class="about-text reveal">
+            <p class="it">
+              Su base <strong>Reachy Mini</strong>, con la voce e un modello che gira a bordo: il robot vede
+              e sente, ma quello che riconosce resta in casa. Telecamera, microfono, temperatura e umidità,
+              senza un server che riceva i flussi.
+            </p>
+            <p class="en">
+              On a <strong>Reachy Mini</strong> base, with voice and a model running on board: the robot sees
+              and hears, but what it recognises stays in the house. Camera, microphone, temperature and
+              humidity, with no server receiving the streams.
+            </p>
+            <p class="it">
+              È <strong>DigiSense®</strong> applicato al caso più delicato che conosciamo. Oggi è un
+              <strong>prototipo in sviluppo</strong>, non un prodotto in vendita: cerchiamo strutture,
+              cooperative e famiglie disposte a provarlo sul campo.
+            </p>
+            <p class="en">
+              It is <strong>DigiSense®</strong> applied to the most delicate case we know. Today it is a
+              <strong>prototype in development</strong>, not a product for sale: we are looking for care
+              homes, cooperatives and families willing to try it in the field.
+            </p>
+            <p class="project-cta">
+              <a class="btn btn-ghost it" href="/progetti/robot-assistenza-domiciliare/">Vedi il progetto &rarr;</a>
+              <a class="btn btn-ghost en" href="/en/projects/home-care-robot/">See the project &rarr;</a>
+            </p>
+          </div>
+
+          <figure class="home-photo reveal">
+            <img src="assets/robot-assistenza-domiciliare-900.jpg"
+                 srcset="assets/robot-assistenza-domiciliare-900.jpg 900w, assets/robot-assistenza-domiciliare-1800.jpg 1800w"
+                 sizes="(max-width: 900px) 100vw, 460px"
+                 width="900" height="506" loading="lazy" decoding="async"
+                 alt="Una donna anziana seduta in salotto guarda un piccolo robot bianco con due antenne, appoggiato al tavolino davanti a lei.">
+            <figcaption>
+              <span class="it">Immagine illustrativa generata con AI. Il prototipo è in sviluppo.</span>
+              <span class="en">Illustrative image generated with AI. The prototype is in development.</span>
+            </figcaption>
+          </figure>
         </div>
       </div>
     </section>

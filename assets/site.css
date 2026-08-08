@@ -857,6 +857,16 @@
       color: var(--accent-text); text-decoration: none;
     }
     .card-link:hover { text-decoration: underline; }
+
+    /* Home: teaser del progetto in sviluppo */
+    #project { border-top: 1px solid var(--border); }
+    .home-photo { margin: 0; }
+    .home-photo img {
+      width: 100%; height: auto; display: block;
+      border-radius: var(--radius-lg); border: 1px solid var(--border);
+    }
+    .home-photo figcaption { color: var(--faint); font-size: 0.8rem; margin-top: 10px; }
+    .project-cta { margin-top: 26px; }
   
 /* ===============================================================================================================
    Inner pages — rules that do not exist on the homepage

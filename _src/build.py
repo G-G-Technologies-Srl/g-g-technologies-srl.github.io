@@ -710,10 +710,14 @@ def _faq_html(data):
     return '        <div class="faq-list">\n' + "\n".join(items) + "\n        </div>"
 
 
-def _stats_html(lang):
-    """The three company figures the homepage hero carries, under the call to action."""
+def _stats_html(lang, data):
+    """The three figures under the call to action.
+
+    Default to the company ones the homepage carries; a page may override them when its reader is
+    a different person.
+    """
     items = []
-    for number, label in CHROME[lang]["stats"]:
+    for number, label in data.get("stats") or CHROME[lang]["stats"]:
         items.append(f"""            <div class="stat">
               <div class="num">{number}</div>
               <div class="label">{label}</div>
@@ -904,7 +908,7 @@ def _render_page(lang, page):
           <p class="hero-sub">{data['lead']}</p>
           <div class="hero-ctas">{''.join(ctas)}</div>
           <p class="hero-note">{'Oppure scrivici: ' if lang == 'it' else 'Or write to us: '}<a href="mailto:info@ggtechnologies.sm">info@ggtechnologies.sm</a></p>
-{_stats_html(lang)}
+{_stats_html(lang, data)}
         </div>
 
 {_orbit_html(lang, data)}
