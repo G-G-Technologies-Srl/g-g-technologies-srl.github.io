@@ -12,12 +12,13 @@ Usage:  python3 _src/build.py
 
 import html
 import json
+import os
 import re
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from content import CHROME, PAGES, SITE  # noqa: E402
+from content import CHROME, PAGES, PODZ_SITE, PRICING, SITE  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 INDEX = ROOT / "index.html"
@@ -684,6 +685,16 @@ def _json_ld(lang, page, data, url):
             "inLanguage": lang,
             "publisher": {"@id": org_id},
             "author": {"@id": org_id},
+            # Perpetual licence, list price for a single seat. Values come from PRICING so the
+            # structured data can never disagree with the page text.
+            "offers": {
+                "@type": "Offer",
+                "price": str(PRICING["licence"]),
+                "priceCurrency": PRICING["currency"],
+                "url": PRICING["source"],
+                "availability": "https://schema.org/InStock",
+                "priceValidUntil": PRICING["valid_until"],
+            },
         })
     else:
         blocks.append({
@@ -972,6 +983,68 @@ def _walk_text(value, path=""):
             yield from _walk_text(item, f"{path}[{index}]")
 
 
+def _check_pricing():
+    """Prices live in three places: this site's copy, its JSON-LD, and the product site. Keep them
+    equal or say so loudly — a price the structured data contradicts is worse than no price at all.
+
+    Two checks. First, every euro amount written anywhere in the content must be a value declared in
+    PRICING: a hard-coded figure that drifted is caught here. Second, if the product-site repository
+    is checked out next to this one, its pricing page must quote the same figures.
+    """
+    problems = []
+    known = {PRICING["licence"], PRICING["renewal"]}
+
+    amounts = re.compile(r"(?:€\s?([\d.,]+)|([\d.,]+)\s?€)")
+    for page in PAGES:
+        for lang in LANGS:
+            for path, text in _walk_text(page[lang]):
+                for before, after in amounts.findall(text):
+                    raw = (before or after).rstrip(".,")
+                    value = int(raw.replace(".", "").replace(",", ""))
+                    if value not in known:
+                        problems.append(f'{page["key"]}.{lang}{path}: {raw} non è un prezzo di PRICING '
+                                        f'— aggiorna PRICING invece di scriverlo a mano')
+
+    product_page = _find_product_pricing()
+    if product_page:
+        # Compare against the headline prices only. Matching a bare number anywhere in the page
+        # would pass on any figure that happens to appear in the volume-discount table.
+        published = product_page.read_text(encoding="utf-8")
+        quoted = {
+            int(raw.replace(".", "").replace(",", ""))
+            for raw in re.findall(r'class="amount">\s*([\d.,]+)\s*€', published)
+        }
+        if not quoted:
+            problems.append(f'{product_page}: nessun prezzo con class="amount", il confronto del '
+                            f'listino non è più affidabile — controlla il markup')
+        else:
+            for label in ("licence", "renewal"):
+                if PRICING[label] not in quoted:
+                    listed = ", ".join(f"{v:,.0f}".replace(",", ".") + " €" for v in sorted(quoted))
+                    problems.append(f'PRICING["{label}"] = {PRICING[label]} non è fra i prezzi del '
+                                    f'listino pubblicato ({listed}) in {product_page}')
+    else:
+        print("nota: pricing.html del sito di prodotto non trovato, salto il confronto del listino.\n"
+              "      Indica il percorso con PODZ_DOCS=/percorso/di/digisense-releases/docs")
+
+    return problems
+
+
+def _find_product_pricing():
+    """The product site is a separate repository, so its location is a guess plus an override."""
+    override = os.environ.get("PODZ_DOCS")
+    candidates = [Path(override) / "pricing.html"] if override else []
+    candidates += [
+        ROOT.parent / "digisense-releases" / "docs" / "pricing.html",
+        ROOT.parent / "docs" / "pricing.html",
+        ROOT.parent.parent / "digisense-releases" / "docs" / "pricing.html",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return None
+
+
 def _check_parity():
     """Fail loudly when the two languages drift apart.
 
@@ -1014,6 +1087,7 @@ def _check_parity():
                 problems.append(f'{page["key"]}.{lang}: title di {len(page[lang]["title"])} caratteri')
             if not 110 <= len(page[lang]["description"]) <= 165:
                 problems.append(f'{page["key"]}.{lang}: description di {len(page[lang]["description"])} caratteri')
+    problems += _check_pricing()
     if problems:
         raise SystemExit("content.py:\n  " + "\n  ".join(problems))
 

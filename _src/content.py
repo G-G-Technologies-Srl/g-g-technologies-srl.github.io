@@ -11,6 +11,38 @@ SITE = "https://ggtechnologies.sm"
 PODZ_SITE = "https://ggtechnologies.sm/digisense-releases"
 
 # -----------------------------------------------------------------------------------------------------------------
+#  p r i c i n g
+# -----------------------------------------------------------------------------------------------------------------
+
+# The single source of truth for every price on this site. The listino lives on the product site
+# (see "source"); these values mirror it and the build refuses to run when they drift apart.
+# Change a price here and it updates the page text, the FAQ and the JSON-LD Offer at once.
+PRICING = {
+    "licence": 2400,            # euro, one-off, per seat, VAT excluded
+    "renewal": 900,             # euro a year, optional, per seat
+    "updates_months": 12,       # months of updates included with the licence
+    "trial_days": 30,           # days of free trial on first launch
+    "discount_from_seats": 3,   # volume discounts start at this many seats
+    "currency": "EUR",
+    "valid_until": "2027-12-31",
+    "source": PODZ_SITE + "/pricing.html",
+}
+
+
+def _eur_it(amount):
+    """2400 -> '2.400 €'"""
+    return f"{amount:,.0f} \u20ac".replace(",", ".")
+
+
+def _eur_en(amount):
+    """2400 -> '\u20ac2,400'"""
+    return f"\u20ac{amount:,.0f}"
+
+
+IT_LICENCE, IT_RENEWAL = _eur_it(PRICING["licence"]), _eur_it(PRICING["renewal"])
+EN_LICENCE, EN_RENEWAL = _eur_en(PRICING["licence"]), _eur_en(PRICING["renewal"])
+
+# -----------------------------------------------------------------------------------------------------------------
 #  s h a r e d   c h r o m e
 # -----------------------------------------------------------------------------------------------------------------
 
@@ -744,6 +776,8 @@ PAGES = [
             "facts": [
                 ("Piattaforme", "Windows, macOS e Linux, con build firmate."),
                 ("Prova", "30 giorni gratuiti al primo avvio, con tutte le funzionalità."),
+                ("Prezzo", f"Licenza perpetua: {IT_LICENCE} una tantum per postazione, IVA esclusa. "
+                           f"Sconti da {PRICING['discount_from_seats']} postazioni."),
                 ("Origine", "Sviluppato in Europa da G&amp;G Technologies, sul framework DigiSense®."),
             ],
             "faq_title": "Domande frequenti",
@@ -752,9 +786,15 @@ PAGES = [
                  "G&amp;G Technologies S.r.l., che progetta e realizza tecnologia dalla Repubblica di San "
                  "Marino. Podz.AI è costruito sul nostro framework DigiSense® ed è progettato e "
                  "sviluppato in Europa."),
-                ("Dove trovo download, prezzi e documentazione?",
-                 "Sul sito di prodotto: download per Windows, macOS e Linux, prezzi, pagina privacy e "
-                 "storico delle release. Da lì si scarica anche la prova gratuita di 30 giorni."),
+                ("Quanto costa?",
+                 f"La licenza è perpetua: {IT_LICENCE} una tantum per postazione, IVA esclusa, con "
+                 f"{PRICING['updates_months']} mesi di aggiornamenti inclusi. Dopo, il rinnovo è "
+                 f"facoltativo — {IT_RENEWAL} l'anno per "
+                 "continuare a ricevere le nuove versioni; se non rinnovi, la versione che hai resta "
+                 f"tua. Sconti a volume da {PRICING['discount_from_seats']} postazioni: " + "<a href=\"" + PODZ_SITE + "/pricing.html\">prezzi e condizioni</a>."),
+                ("Dove trovo download e documentazione?",
+                 "Sul sito di prodotto: build per Windows, macOS e Linux, pagina privacy e storico "
+                 "delle release. Da lì si scarica anche la prova gratuita di 30 giorni."),
                 ("Che rapporto c'è fra Podz.AI e DigiSense®?",
                  "DigiSense® è il nostro framework, marchio registrato di G&amp;G Technologies, e sta "
                  "sotto ogni nostra implementazione con AI, sensori o robot. Podz.AI è il prodotto "
@@ -828,6 +868,8 @@ PAGES = [
             "facts": [
                 ("Platforms", "Windows, macOS and Linux, with signed builds."),
                 ("Trial", "30 days free on first launch, with every feature."),
+                ("Price", f"Perpetual licence: {EN_LICENCE} one-time per seat, VAT excluded. Discounts "
+                          f"from {PRICING['discount_from_seats']} seats."),
                 ("Origin", "Built in Europe by G&amp;G Technologies, on the DigiSense® framework."),
             ],
             "faq_title": "Frequently asked questions",
@@ -836,9 +878,15 @@ PAGES = [
                  "G&amp;G Technologies S.r.l., which designs and builds technology from the Republic of San "
                  "Marino. Podz.AI is built on our DigiSense® framework and is designed and "
                  "developed in Europe."),
-                ("Where do I find downloads, pricing and documentation?",
-                 "On the product site: downloads for Windows, macOS and Linux, pricing, the privacy page "
-                 "and the release history. The 30-day free trial is downloaded from there too."),
+                ("How much does it cost?",
+                 f"The licence is perpetual: {EN_LICENCE} one-time per seat, VAT excluded, with "
+                 f"{PRICING['updates_months']} months of updates included. After that, renewal is "
+                 f"optional — {EN_RENEWAL} a year to keep receiving new "
+                 "versions; if you do not renew, the version you have stays yours. Volume discounts "
+                 f"from {PRICING['discount_from_seats']} seats: " + "<a href=\"" + PODZ_SITE + "/pricing.html\">prices and terms</a>."),
+                ("Where do I find downloads and documentation?",
+                 "On the product site: builds for Windows, macOS and Linux, the privacy page and the "
+                 "release history. The 30-day free trial is downloaded from there too."),
                 ("How are Podz.AI and DigiSense® related?",
                  "DigiSense® is our framework, a registered trademark of G&amp;G Technologies, and it sits "
                  "under every implementation we build with AI, sensors or robots. Podz.AI is the "
