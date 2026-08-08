@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://ggtechnologies.sm/sitemap.xml
-
+Sitemap: https://ggtechnologies.sm/digisense-releases/sitemap.xml
