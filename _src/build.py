@@ -1,0 +1,957 @@
+# -*- coding: utf-8 -*-
+"""Build the static inner pages of ggtechnologies.sm from content.py.
+
+One URL per language (no CSS language toggle on inner pages), reciprocal hreflang, self canonical,
+JSON-LD (Organization reference, BreadcrumbList, Service or SoftwareApplication, FAQPage).
+
+The shared stylesheet is extracted from index.html at build time, so the homepage stays the single
+source of truth for the design system: change a token there and the inner pages follow.
+
+Usage:  python3 _src/build.py
+"""
+
+import html
+import json
+import re
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+from content import CHROME, PAGES, SITE  # noqa: E402
+
+ROOT = Path(__file__).resolve().parent.parent
+INDEX = ROOT / "index.html"
+ASSETS = ROOT / "assets"
+
+LANGS = ("it", "en")
+LOCALE = {"it": "it_IT", "en": "en_GB"}
+
+# Brand mark. The full version carries the gradient and mask definitions and appears once per page,
+# in the header; the footer reuses those definitions by id, exactly as the homepage does. Emitting
+# the full version twice would duplicate the "ggMark" and "ggWire" ids in the same document.
+BRAND_SVG = (
+    '<svg viewBox="0 0 100 100"><defs><linearGradient id="ggMark" x1="0" y1="0" x2="1" y2="1">'
+    '<stop offset="0" stop-color="#5eecab"/><stop offset="1" stop-color="#10b981"/></linearGradient>'
+    '<mask id="ggWire"><path d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="#fff" stroke-width="13"/>'
+    '<path d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="#000" stroke-width="10"/></mask></defs>'
+    '<rect class="wire" width="100" height="100" mask="url(#ggWire)"/>'
+    '<path class="lit" d="M66 50 H86 A36 36 0 1 1 50 14" fill="none" stroke="url(#ggMark)" stroke-width="13" '
+    'stroke-linecap="round"/><circle class="click" cx="50" cy="50" r="9" fill="none" stroke="#34d399" '
+    'stroke-width="2"/><circle class="led" cx="50" cy="50" r="9"/></svg>'
+)
+
+BRAND_SVG_REF = (
+    '<svg viewBox="0 0 100 100"><rect class="wire" width="100" height="100" mask="url(#ggWire)"/>'
+    '<path class="lit" d="M66 50 H86 A36 36 0 1 1 50 14" fill="none" stroke="url(#ggMark)" stroke-width="13" '
+    'stroke-linecap="round"/><circle class="click" cx="50" cy="50" r="9" fill="none" stroke="#34d399" '
+    'stroke-width="2"/><circle class="led" cx="50" cy="50" r="9"/></svg>'
+)
+
+ICONS = {
+    "chip": '<rect x="7" y="7" width="10" height="10" rx="2"/><path d="M4 10h3M4 14h3M17 10h3M17 14h3'
+            'M10 4v3M14 4v3M10 17v3M14 17v3"/>',
+    "pulse": '<path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3.4.9-4.5 2.3A5.7 5.7 0 0 0 '
+             '7.5 3 5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7Z"/><path d="M3.5 12h5l2-3 2 5 2-3h5"/>',
+    "data": '<ellipse cx="12" cy="5.5" rx="7.5" ry="3"/><path d="M4.5 5.5v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/>'
+            '<path d="M4.5 11.5v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/>',
+    "robot": '<rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4.5M9.5 13h.01M14.5 13h.01'
+             'M9 16.5h6M2.5 12v3M21.5 12v3"/><circle cx="12" cy="3.5" r="1.2"/>',
+    "gauge": '<path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4.5-4.5"/><circle cx="12" cy="16" r="1.4"/>'
+             '<path d="M4 19.5h16"/>',
+    "spark": '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8'
+             'M8.4 15.6l-2.8 2.8"/><circle cx="12" cy="12" r="3"/>',
+    "shield": '<path d="M12 3l7.5 3v5.5c0 4.4-3.1 8.3-7.5 9.5-4.4-1.2-7.5-5.1-7.5-9.5V6Z"/>'
+              '<path d="M9.2 12.2l2 2 3.6-4"/>',
+    "mask": '<path d="M3 8.5h7M14 8.5h7M3 15.5h4M11 15.5h10"/><rect x="9.5" y="6" width="3.5" height="5" rx="1"/>'
+            '<rect x="6.5" y="13" width="3.5" height="5" rx="1"/>',
+    "plug": '<path d="M9 3v5M15 3v5"/><path d="M6 8h12v3a6 6 0 0 1-6 6 6 6 0 0 1-6-6Z"/><path d="M12 17v4"/>',
+}
+
+
+# -----------------------------------------------------------------------------------------------------------------
+#  s h a r e d   a s s e t s
+# -----------------------------------------------------------------------------------------------------------------
+
+# Rules the homepage does not need: they only exist on inner pages.
+EXTRA_CSS = """
+/* ===============================================================================================================
+   Inner pages — rules that do not exist on the homepage
+   =============================================================================================================== */
+/* Inner hero: the homepage hero without the full-viewport height, since here the content
+   below the fold is the point of the page. */
+.page-hero { min-height: auto; padding: calc(var(--nav-h) + 56px) 0 72px; }
+.page-hero h1 { font-size: clamp(1.9rem, 4vw, 2.9rem); margin-bottom: 20px; }
+.page-hero .hero-sub { margin-bottom: 30px; }
+.page-hero .hero-note { margin-bottom: 0; }
+.page-hero .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+
+.page-hero .orbit-chip { text-align: center; }
+
+.breadcrumb { font-size: 0.8rem; color: var(--faint); margin-bottom: 18px; }
+.breadcrumb ol { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 0; }
+.breadcrumb li + li::before { content: "/"; margin-right: 8px; color: var(--border-strong); }
+.breadcrumb a { color: var(--faint); text-decoration: none; }
+.breadcrumb a:hover { color: var(--accent-text); }
+
+/* Same treatment the homepage gives #why and #about: tint plus a hairline top and bottom. */
+section.tinted {
+  background: var(--bg-soft);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+/* The facts sit in the narrow column of the about grid, stacked, exactly as on the homepage. */
+.page-facts { align-content: start; }
+
+.faq-list { margin-top: 40px; max-width: 820px; }
+.faq-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 4px 22px;
+  margin-bottom: 12px;
+}
+.faq-item summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 18px 34px 18px 0;
+  font-weight: 600;
+  position: relative;
+}
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::after {
+  content: "";
+  position: absolute; right: 4px; top: 50%;
+  width: 9px; height: 9px;
+  border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent);
+  transform: translateY(-70%) rotate(45deg);
+  transition: transform 0.2s ease;
+}
+.faq-item[open] summary::after { transform: translateY(-30%) rotate(-135deg); }
+.faq-item p { color: var(--muted); padding: 0 0 20px; margin: 0; max-width: 68ch; }
+
+.related-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
+.related-card {
+  display: block;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 22px 24px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.related-card:hover { transform: translateY(-3px); border-color: var(--border-strong); }
+.related-card h3 { font-size: 1.05rem; margin: 0 0 8px; }
+.related-card p { color: var(--faint); font-size: 0.9rem; margin: 0; }
+
+/* The closing band sits on the page background, like the homepage contact section, with a hairline
+   to separate it from the related pages above. */
+.cta-band { border-top: 1px solid var(--border); }
+.cta-band h2 { max-width: 20ch; }
+.cta-band .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+
+/* Sizing, font and padding come from the widened homepage rules. Only what a <span> and an <a>
+   do not inherit from a <button> is restated here. */
+.lang-switch { flex: 0 0 auto; }
+.lang-switch a, .lang-switch .current {
+  display: inline-flex; align-items: center; justify-content: center;
+  line-height: 1; white-space: nowrap; text-decoration: none;
+}
+.lang-switch a:hover { color: var(--text); }
+
+/* Four-capability pages (AI) lay out 2x2 instead of leaving an orphan card. */
+.cards-3.cards-4 { grid-template-columns: repeat(2, 1fr); }
+
+@media (max-width: 900px) {
+  .related-grid { grid-template-columns: 1fr; }
+  .cards-3.cards-4 { grid-template-columns: 1fr; }
+  .page-hero h1 { max-width: none; }
+}
+"""
+
+SITE_JS = """/* Inner pages: theme toggle, mobile menu, reveal on scroll, footer year. */
+(function () {
+  'use strict';
+
+  var THEME_KEY = 'gg-theme';
+
+  // ---------------------------------------------------------------------------------------------------------------
+  //  t h e m e
+  // ---------------------------------------------------------------------------------------------------------------
+
+  function _applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', theme === 'light' ? '#f6f8fc' : '#0d1220');
+    try { localStorage.setItem(THEME_KEY, theme); } catch (ignored) { /* storage may be unavailable */ }
+  }
+
+  function _initTheme() {
+    var btn = document.getElementById('themeToggle');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+      _applyTheme(current === 'light' ? 'dark' : 'light');
+    });
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------
+  //  m e n u
+  // ---------------------------------------------------------------------------------------------------------------
+
+  function _initMenu() {
+    var toggle = document.getElementById('menuToggle');
+    var links = document.getElementById('navLinks');
+    if (!toggle || !links) return;
+    toggle.addEventListener('click', function () {
+      var open = links.classList.toggle('open');
+      toggle.classList.toggle('open', open);
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    links.addEventListener('click', function (event) {
+      if (event.target.closest('a')) {
+        links.classList.remove('open');
+        toggle.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------
+  //  r e v e a l
+  // ---------------------------------------------------------------------------------------------------------------
+
+  function _initReveal() {
+    var items = document.querySelectorAll('.reveal');
+    if (!('IntersectionObserver' in window)) {
+      items.forEach(function (el) { el.classList.add('visible'); });
+      return;
+    }
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+    items.forEach(function (el) { observer.observe(el); });
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------
+  //  o r b i t
+  // ---------------------------------------------------------------------------------------------------------------
+
+  // Returns the centre of an element relative to the orbit, in layout coordinates: the visual is
+  // scaled down on small screens and getBoundingClientRect values would be scaled twice.
+  function _centreOf(el) {
+    return { x: el.offsetLeft + el.offsetWidth / 2, y: el.offsetTop + el.offsetHeight / 2 };
+  }
+
+  // Creates a travelling light pulse between two points of the orbit.
+  function _emitSpark(visual, from, to, delay) {
+    var spark = document.createElement('span');
+    spark.className = 'orbit-spark';
+    spark.style.left = from.x + 'px';
+    spark.style.top = from.y + 'px';
+    spark.style.setProperty('--dx', (to.x - from.x) + 'px');
+    spark.style.setProperty('--dy', (to.y - from.y) + 'px');
+    if (delay) spark.style.animationDelay = delay + 'ms';
+    spark.addEventListener('animationend', function () { spark.remove(); });
+    visual.appendChild(spark);
+  }
+
+  // Creates the shockwave ring that expands from the core.
+  function _emitWave(visual) {
+    var wave = document.createElement('span');
+    wave.className = 'core-wave';
+    wave.addEventListener('animationend', function () { wave.remove(); });
+    visual.appendChild(wave);
+  }
+
+  // Re-applies a class so its animation restarts even on rapid repeated clicks.
+  function _restartAnimation(el, className, duration) {
+    el.classList.remove(className);
+    void el.offsetWidth; // force reflow
+    el.classList.add(className);
+    window.setTimeout(function () { el.classList.remove(className); }, duration);
+  }
+
+  // A chip lights up, sends a spark to the core, and the core answers.
+  function _activateChip(chip, visual, core) {
+    _restartAnimation(chip, 'activated', 700);
+    _emitSpark(visual, _centreOf(chip), { x: visual.clientWidth / 2, y: visual.clientHeight / 2 }, 0);
+    if (core) window.setTimeout(function () { _restartAnimation(core, 'energized', 700); }, 420);
+  }
+
+  // The core flares, pushes out a shockwave and feeds the three chips in turn.
+  function _activateCore(core, visual) {
+    _restartAnimation(core, 'emitting', 900);
+    _emitWave(visual);
+    var centre = { x: visual.clientWidth / 2, y: visual.clientHeight / 2 };
+    visual.querySelectorAll('.orbit-chip').forEach(function (chip, index) {
+      var delay = index * 110;
+      _emitSpark(visual, centre, _centreOf(chip), delay);
+      window.setTimeout(function () { _restartAnimation(chip, 'activated', 700); }, delay + 380);
+    });
+  }
+
+  function _initOrbit() {
+    var visual = document.querySelector('.hero-visual');
+    if (!visual) return;
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    var core = visual.querySelector('.orbit-core');
+    visual.querySelectorAll('.orbit-chip').forEach(function (chip) {
+      chip.addEventListener('click', function () { _activateChip(chip, visual, core); });
+    });
+    if (core) core.addEventListener('click', function () { _activateCore(core, visual); });
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------
+  //  i n i t
+  // ---------------------------------------------------------------------------------------------------------------
+
+  function _init() {
+    _initTheme();
+    _initMenu();
+    _initReveal();
+    _initOrbit();
+    var year = document.getElementById('year');
+    if (year) year.textContent = String(new Date().getFullYear());
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _init);
+  else _init();
+})();
+"""
+
+# Theme is resolved before first paint to avoid a flash. Language is static on inner pages.
+BOOTSTRAP_JS = """(function () {
+      var theme = '';
+      try { theme = localStorage.getItem('gg-theme') || ''; } catch (ignored) { /* unavailable */ }
+      if (theme !== 'light' && theme !== 'dark') {
+        theme = (window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+      }
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.classList.add('js');
+    })();"""
+
+
+# -----------------------------------------------------------------------------------------------------------------
+#  h e l p e r s
+# -----------------------------------------------------------------------------------------------------------------
+
+def _extract_homepage_css():
+    """Return the homepage <style> block, so inner pages share one design system.
+
+    The homepage language switch is two <button> elements toggled by JS. Inner pages have one URL
+    per language, so the switch is a <span> for the current language plus an <a> to the other one.
+    Rather than restating the button rules, widen the homepage selectors to cover all three
+    elements: padding, font and the responsive override then stay identical by construction.
+    """
+    html = INDEX.read_text(encoding="utf-8")
+    match = re.search(r"<style>(.*?)</style>", html, re.S)
+    if not match:
+        raise SystemExit("index.html: <style> block not found — the shared stylesheet cannot be built.")
+    css = match.group(1)
+
+    active = ".lang-switch button.active"
+    if active not in css:
+        raise SystemExit("index.html: '.lang-switch button.active' not found — check the language switch.")
+    css = css.replace(active, active + ", .lang-switch .current")
+
+    css, count = re.subn(
+        r"\.lang-switch button(?=\s*\{)",
+        ".lang-switch button, .lang-switch a, .lang-switch .current",
+        css,
+    )
+    if count == 0:
+        raise SystemExit("index.html: '.lang-switch button' rules not found — check the language switch.")
+    return css
+
+
+def _url(slug):
+    return f"{SITE}/{slug}/"
+
+
+def _page_by_key(key):
+    for page in PAGES:
+        if page["key"] == key:
+            return page
+    raise KeyError(key)
+
+
+def _icon(name):
+    body = ICONS.get(name, ICONS["spark"])
+    return (
+        '<svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" '
+        f'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{body}</svg>'
+    )
+
+
+def _icon_gradient():
+    """A single gradient definition per page, referenced by every card icon."""
+    return (
+        '<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs>'
+        '<linearGradient id="icoGrad" x1="0" y1="0" x2="1" y2="1">'
+        '<stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#10b981"/>'
+        '</linearGradient></defs></svg>'
+    )
+
+
+def _strip_tags(text):
+    """Plain text for JSON-LD, where JSON escaping applies and HTML entities must not."""
+    clean = re.sub(r"<[^>]+>", "", text)
+    return clean.replace("&amp;", "&").replace("&nbsp;", " ").strip()
+
+
+def _esc(text):
+    """Plain text for HTML attributes and text nodes: a bare & is invalid there."""
+    return html.escape(_strip_tags(text), quote=True)
+
+
+# -----------------------------------------------------------------------------------------------------------------
+#  m a r k u p
+# -----------------------------------------------------------------------------------------------------------------
+
+def _header(lang, other_url):
+    chrome = CHROME[lang]
+    home = "/"  # the homepage is a single bilingual URL for both languages
+    links = "\n        ".join(
+        f'<a href="{href}">{html.escape(label)}</a>' for label, href in chrome["nav"]
+    )
+    other_lang = "en" if lang == "it" else "it"
+    return f"""  <a class="skip-link" href="#main">{chrome['skip']}</a>
+
+  <header class="site-header">
+    <nav class="nav" aria-label="{'Navigazione principale' if lang == 'it' else 'Main navigation'}">
+      <a href="{home}" class="brand">
+        <span class="brand-mark" aria-hidden="true">{BRAND_SVG}</span>
+        <span class="brand-text">
+          <span class="brand-name">G&amp;G Technologies</span>
+          <span class="brand-payoff">{chrome['payoff']}</span>
+        </span>
+      </a>
+
+      <div class="nav-links" id="navLinks">
+        {links}
+      </div>
+
+      <div class="nav-actions">
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Tema chiaro/scuro · Light/dark theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2"/>
+            <path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.2 14.5A8.3 8.3 0 0 1 9.5 3.8a8.3 8.3 0 1 0 10.7 10.7Z"/>
+          </svg>
+        </button>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <span class="current">{lang.upper()}</span>
+          <a href="{other_url}" hreflang="{other_lang}" lang="{other_lang}">{chrome['other_lang_label']}</a>
+        </div>
+        <a class="btn btn-primary nav-cta" href="{chrome['mailto']}">{chrome['nav_cta']}</a>
+        <button class="menu-toggle" id="menuToggle" aria-label="Menu" aria-expanded="false" aria-controls="navLinks"><span></span></button>
+      </div>
+    </nav>
+  </header>"""
+
+
+def _footer(lang):
+    chrome = CHROME[lang]
+    home = "/"  # the homepage is a single bilingual URL for both languages
+    cols = []
+    for title, items in chrome["footer_cols"]:
+        entries = "\n            ".join(
+            f'<li><a href="{href}"'
+            + (' target="_blank" rel="noopener"' if href.startswith("http") else "")
+            + f">{html.escape(label)}</a></li>"
+            for label, href in items
+        )
+        cols.append(f"""        <div class="footer-col">
+          <h4>{html.escape(title)}</h4>
+          <ul>
+            {entries}
+          </ul>
+        </div>""")
+    return f"""  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a href="{home}" class="brand">
+            <span class="brand-mark" aria-hidden="true">{BRAND_SVG_REF}</span>
+            G&amp;G Technologies
+          </a>
+          <p>{chrome['footer_blurb']}</p>
+        </div>
+
+{chr(10).join(cols)}
+      </div>
+
+      <div class="footer-legal">
+        <span>© <span id="year">2026</span> {chrome['footer_legal']}</span>
+        <span>{chrome['footer_note']}</span>
+      </div>
+    </div>
+  </footer>"""
+
+
+def _breadcrumb_html(lang, page, data):
+    chrome = CHROME[lang]
+    home = "/"  # the homepage is a single bilingual URL for both languages
+    crumbs = [(chrome["breadcrumb_home"], home)]
+    if page.get("in_services"):
+        crumbs.append((chrome["breadcrumb_services"], home + "#services"))
+    items = "".join(f'<li><a href="{href}">{label}</a></li>' for label, href in crumbs)
+    items += f"<li aria-current=\"page\">{_esc(data['short'])}</li>"
+    label = "Percorso" if lang == "it" else "Breadcrumb"
+    return f'<nav class="breadcrumb" aria-label="{label}"><ol>{items}</ol></nav>'
+
+
+def _cards_html(data):
+    cards = []
+    for icon, title, text, bullets in data["cards"]:
+        items = "".join(f"<li>{b}</li>" for b in bullets)
+        cards.append(f"""          <article class="card reveal">
+            <div class="card-icon" aria-hidden="true">{_icon(icon)}</div>
+            <h3>{title}</h3>
+            <p>{text}</p>
+            <ul>{items}</ul>
+          </article>""")
+    grid = "cards-3" if len(cards) <= 3 else "cards-3 cards-4"
+    return f'        <div class="{grid}">\n' + "\n".join(cards) + "\n        </div>"
+
+
+def _steps_html(page, data):
+    """Numbered like the homepage pillars, unless the items are a list rather than a sequence:
+    numbering an audience list would imply an order that is not there."""
+    numbered = page.get("steps_numbered", True)
+    steps = []
+    for index, (title, text) in enumerate(data["steps"], start=1):
+        number = f'\n            <div class="n">{index:02d}</div>' if numbered else ""
+        steps.append(f"""          <div class="pillar reveal">{number}
+            <h3>{title}</h3>
+            <p>{text}</p>
+          </div>""")
+    return '        <div class="pillars">\n' + "\n".join(steps) + "\n        </div>"
+
+
+def _facts_html(data):
+    facts = []
+    for title, text in data["facts"]:
+        facts.append(f"""          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>{title}</h4>
+              <p>{text}</p>
+            </div>
+          </div>""")
+    return '        <div class="about-facts page-facts reveal">\n' + "\n".join(facts) + "\n        </div>"
+
+
+def _faq_html(data):
+    items = []
+    for question, answer in data["faq"]:
+        items.append(f"""          <details class="faq-item reveal">
+            <summary>{question}</summary>
+            <p>{answer}</p>
+          </details>""")
+    return '        <div class="faq-list">\n' + "\n".join(items) + "\n        </div>"
+
+
+def _stats_html(lang):
+    """The three company figures the homepage hero carries, under the call to action."""
+    items = []
+    for number, label in CHROME[lang]["stats"]:
+        items.append(f"""            <div class="stat">
+              <div class="num">{number}</div>
+              <div class="label">{label}</div>
+            </div>""")
+    return '          <div class="hero-stats">\n' + "\n".join(items) + "\n          </div>"
+
+
+def _closing_ctas(lang, data):
+    """The closing band leads with the page's own action, then the fallbacks."""
+    buttons = []
+    if data.get("cta_primary"):
+        label, href = data["cta_primary"]
+        buttons.append(f'<a class="btn btn-primary" href="{href}">{label}</a>')
+        buttons.append(f'<a class="btn btn-ghost" href="{CHROME[lang]["mailto"]}">'
+                       f'{"Scrivici" if lang == "it" else "Email us"}</a>')
+    else:
+        buttons.append(f'<a class="btn btn-primary" href="{CHROME[lang]["mailto"]}">'
+                       f'{"Scrivici" if lang == "it" else "Email us"}</a>')
+        buttons.append(f'<a class="btn btn-ghost" href="tel:+3780549900824">'
+                       f'{"Chiamaci" if lang == "it" else "Call us"}</a>')
+    return "\n".join("          " + b for b in buttons)
+
+
+def _orbit_html(lang, data):
+    """The homepage orbit visual, reused on inner pages. Core and chips are buttons, not links:
+    clicking plays the spark sequence and nothing else — no navigation."""
+    chips = []
+    for index, key in enumerate(data["related"][:3], start=1):
+        target = _page_by_key(key)[lang]
+        chips.append(
+            f'<button class="orbit-chip chip-{index}" type="button">'
+            f'<span class="dot" aria-hidden="true"></span>{_esc(target["short"])}</button>'
+        )
+    return f"""      <div class="hero-visual">
+        <div class="orbit-ring ring-1" aria-hidden="true"></div>
+        <div class="orbit-ring ring-2" aria-hidden="true"></div>
+        <button class="orbit-core" type="button">
+          <span><strong>G&amp;G</strong><br><small>Technologies</small></span>
+        </button>
+{chr(10).join('        ' + c for c in chips)}
+      </div>"""
+
+
+def _related_html(lang, data):
+    cards = []
+    for key in data["related"]:
+        target = _page_by_key(key)[lang]
+        cards.append(f"""          <a class="related-card reveal" href="/{target['slug']}/">
+            <h3>{_esc(target['short'])}</h3>
+            <p>{target['blurb']}</p>
+          </a>""")
+    return '        <div class="related-grid">\n' + "\n".join(cards) + "\n        </div>"
+
+
+# -----------------------------------------------------------------------------------------------------------------
+#  s t r u c t u r e d   d a t a
+# -----------------------------------------------------------------------------------------------------------------
+
+def _json_ld(lang, page, data, url):
+    chrome = CHROME[lang]
+    home = SITE + "/"
+    org_id = f"{SITE}/#organization"
+
+    crumbs = [{"@type": "ListItem", "position": 1, "name": chrome["breadcrumb_home"], "item": home}]
+    if page.get("in_services"):
+        crumbs.append({"@type": "ListItem", "position": 2, "name": chrome["breadcrumb_services"],
+                       "item": home + "#services"})
+    crumbs.append({"@type": "ListItem", "position": len(crumbs) + 1,
+                   "name": _strip_tags(data["short"]), "item": url})
+
+    blocks = [
+        {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": crumbs,
+        }
+    ]
+
+    if page["schema"] == "SoftwareApplication":
+        blocks.append({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "Podz.AI",
+            "url": url,
+            "applicationCategory": "BusinessApplication",
+            "operatingSystem": "Windows, macOS, Linux",
+            "description": data["description"],
+            "inLanguage": lang,
+            "publisher": {"@id": org_id},
+            "author": {"@id": org_id},
+        })
+    else:
+        blocks.append({
+            "@context": "https://schema.org",
+            "@type": "Service",
+            "name": _strip_tags(data["short"]),
+            "serviceType": page["service_type"],
+            "url": url,
+            "description": data["description"],
+            "inLanguage": lang,
+            "provider": {"@id": org_id},
+            "areaServed": [
+                {"@type": "Country", "name": "San Marino"},
+                {"@type": "Country", "name": "Italy"},
+                {"@type": "Place", "name": "Europe"},
+            ],
+        })
+
+    blocks.append({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "inLanguage": lang,
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": _strip_tags(question),
+                "acceptedAnswer": {"@type": "Answer", "text": _strip_tags(answer)},
+            }
+            for question, answer in data["faq"]
+        ],
+    })
+
+    return json.dumps(blocks, ensure_ascii=False, indent=2)
+
+
+# -----------------------------------------------------------------------------------------------------------------
+#  p a g e
+# -----------------------------------------------------------------------------------------------------------------
+
+def _render_page(lang, page):
+    data = page[lang]
+    other_lang = "en" if lang == "it" else "it"
+    url = _url(data["slug"])
+    other_url = _url(page[other_lang]["slug"])
+    it_url = _url(page["it"]["slug"])
+    chrome = CHROME[lang]
+
+    # Assets are referenced relatively so a page also renders when opened straight from disk
+    # (file://), where an absolute "/assets/..." would resolve to the filesystem root.
+    prefix = "../" * (data["slug"].count("/") + 1)
+    title = data["title"]
+    description = data["description"]
+
+    if data.get("product_cta"):
+        label, href = data["product_cta"]
+        ctas = [f'<a class="btn btn-primary" href="{href}">{label}</a>',
+                f'<a class="btn btn-ghost" href="{chrome["mailto"]}">{chrome["nav_cta"]}</a>']
+    else:
+        ctas = [f'<a class="btn btn-primary" href="{chrome["mailto"]}">{chrome["nav_cta"]}</a>']
+
+    sections = [
+        # hero — same structure and classes as the homepage, so layout and motion match
+        f"""    <section class="hero page-hero">
+      <div class="hero-bg" aria-hidden="true">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+        <div class="glow glow-3"></div>
+      </div>
+
+      <div class="container hero-inner">
+        <div>
+          {_breadcrumb_html(lang, page, data)}
+          <div class="kicker">{data['kicker']}</div>
+          <h1>{data['h1']}</h1>
+          <p class="hero-sub">{data['lead']}</p>
+          <div class="hero-ctas">{''.join(ctas)}</div>
+          <p class="hero-note">{'Oppure scrivici: ' if lang == 'it' else 'Or write to us: '}<a href="mailto:info@ggtechnologies.sm">info@ggtechnologies.sm</a></p>
+{_stats_html(lang)}
+        </div>
+
+{_orbit_html(lang, data)}
+      </div>
+    </section>""",
+        # intro — same shape as the homepage "about" section: kicker, headline, then text next
+        # to the summary facts
+        f"""    <section>
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">{data['intro_title']}</div>
+          <h2>{data['intro_h2']}</h2>
+        </div>
+        <div class="about-grid">
+          <div class="about-text reveal">
+            {''.join(f'<p>{p}</p>' for p in data['intro'])}
+          </div>
+{_facts_html(data)}
+        </div>
+      </div>
+    </section>""",
+        # capabilities
+        f"""    <section class="tinted">
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">{data['cards_title']}</div>
+          <h2>{data['cards_intro']}</h2>
+        </div>
+{_cards_html(data)}
+      </div>
+    </section>""",
+        # process
+        f"""    <section>
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">{data['steps_title']}</div>
+          <h2>{data['steps_intro']}</h2>
+        </div>
+{_steps_html(page, data)}
+      </div>
+    </section>""",
+        # faq
+        f"""    <section class="tinted">
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">FAQ</div>
+          <h2>{data['faq_title']}</h2>
+        </div>
+{_faq_html(data)}
+      </div>
+    </section>""",
+        # related
+        f"""    <section>
+      <div class="container">
+        <div class="reveal">
+          <h2>{chrome['related_title']}</h2>
+        </div>
+{_related_html(lang, data)}
+      </div>
+    </section>""",
+        # closing cta
+        f"""    <section class="cta-band">
+      <div class="container reveal">
+        <h2>{data['cta_title']}</h2>
+        <p class="section-intro">{data['cta_text']}</p>
+        <div class="hero-ctas">
+{_closing_ctas(lang, data)}
+        </div>
+      </div>
+    </section>""",
+    ]
+
+    return f"""<!DOCTYPE html>
+<html lang="{lang}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{_esc(title)}</title>
+  <meta name="description" content="{_esc(description)}">
+  <meta name="author" content="G&amp;G Technologies Srl">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="theme-color" content="#0d1220">
+  <link rel="canonical" href="{url}">
+  <link rel="alternate" hreflang="it" href="{it_url}">
+  <link rel="alternate" hreflang="en" href="{_url(page['en']['slug'])}">
+  <link rel="alternate" hreflang="x-default" href="{it_url}">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="G&amp;G Technologies">
+  <meta property="og:title" content="{_esc(title)}">
+  <meta property="og:description" content="{_esc(description)}">
+  <meta property="og:url" content="{url}">
+  <meta property="og:image" content="{SITE}/assets/og-card.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="{LOCALE[lang]}">
+  <meta property="og:locale:alternate" content="{LOCALE[other_lang]}">
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{_esc(title)}">
+  <meta name="twitter:description" content="{_esc(description)}">
+  <meta name="twitter:image" content="{SITE}/assets/og-card.png">
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="{prefix}assets/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="{prefix}assets/favicon-32.png">
+  <!-- Pre-paint bootstrap: resolve the theme before first render -->
+  <script>
+    {BOOTSTRAP_JS}
+  </script>
+  <link rel="stylesheet" href="{prefix}assets/site.css">
+  <script type="application/ld+json">
+{_json_ld(lang, page, data, url)}
+  </script>
+</head>
+<body>
+{_icon_gradient()}
+{_header(lang, other_url)}
+
+  <main id="main">
+{chr(10).join(sections)}
+  </main>
+
+{_footer(lang)}
+
+  <script src="{prefix}assets/site.js" defer></script>
+</body>
+</html>
+"""
+
+
+# -----------------------------------------------------------------------------------------------------------------
+#  s i t e m a p
+# -----------------------------------------------------------------------------------------------------------------
+
+def _sitemap(lastmod):
+    entries = [(SITE + "/", None, None)]
+    for page in PAGES:
+        for lang in LANGS:
+            entries.append((_url(page[lang]["slug"]), _url(page["it"]["slug"]), _url(page["en"]["slug"])))
+
+    lines = ['<?xml version="1.0" encoding="UTF-8"?>',
+             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"',
+             '        xmlns:xhtml="http://www.w3.org/1999/xhtml">']
+    for url, it_url, en_url in entries:
+        lines.append("  <url>")
+        lines.append(f"    <loc>{url}</loc>")
+        if it_url:
+            lines.append(f'    <xhtml:link rel="alternate" hreflang="it" href="{it_url}"/>')
+            lines.append(f'    <xhtml:link rel="alternate" hreflang="en" href="{en_url}"/>')
+            lines.append(f'    <xhtml:link rel="alternate" hreflang="x-default" href="{it_url}"/>')
+        lines.append(f"    <lastmod>{lastmod}</lastmod>")
+        lines.append("    <changefreq>monthly</changefreq>")
+        lines.append(f"    <priority>{'1.0' if it_url is None else '0.8'}</priority>")
+        lines.append("  </url>")
+    lines.append("</urlset>")
+    return "\n".join(lines) + "\n"
+
+
+# -----------------------------------------------------------------------------------------------------------------
+#  m a i n
+# -----------------------------------------------------------------------------------------------------------------
+
+def _check_parity():
+    """Fail loudly when the two languages drift apart.
+
+    Structural parity is checkable: same fields, same number of items. A leftover English string
+    is not, so also flag any text field where one language is left holding a sentence the other
+    no longer has anything like — a length gap that wide is always a forgotten edit.
+    """
+    problems = []
+    for page in PAGES:
+        it, en = page["it"], page["en"]
+        if set(it) != set(en):
+            problems.append(f'{page["key"]}: campi diversi fra IT ed EN: {set(it) ^ set(en)}')
+        for field in ("intro", "cards", "steps", "facts", "faq", "related"):
+            if len(it[field]) != len(en[field]):
+                problems.append(f'{page["key"]}.{field}: {len(it[field])} voci IT, {len(en[field])} EN')
+        for card_it, card_en in zip(it["cards"], en["cards"]):
+            if len(card_it[3]) != len(card_en[3]):
+                problems.append(f'{page["key"]}: elenchi di lunghezza diversa nella card "{card_it[1]}"')
+        for field in ("lead", "blurb", "intro_h2", "cards_intro", "steps_intro", "cta_title", "cta_text"):
+            if abs(len(it[field]) - len(en[field])) > 28:
+                problems.append(f'{page["key"]}.{field}: IT e EN divergono, probabile modifica dimenticata')
+        for lang in LANGS:
+            if len(page[lang]["title"]) > 65:
+                problems.append(f'{page["key"]}.{lang}: title di {len(page[lang]["title"])} caratteri')
+            if not 110 <= len(page[lang]["description"]) <= 165:
+                problems.append(f'{page["key"]}.{lang}: description di {len(page[lang]["description"])} caratteri')
+    if problems:
+        raise SystemExit("content.py:\n  " + "\n  ".join(problems))
+
+
+def main():
+    from datetime import date
+
+    _check_parity()
+
+    ASSETS.mkdir(exist_ok=True)
+    (ASSETS / "site.css").write_text(_extract_homepage_css() + EXTRA_CSS, encoding="utf-8")
+    (ASSETS / "site.js").write_text(SITE_JS, encoding="utf-8")
+
+    written = []
+    for page in PAGES:
+        for lang in LANGS:
+            slug = page[lang]["slug"]
+            target = ROOT / slug
+            target.mkdir(parents=True, exist_ok=True)
+            (target / "index.html").write_text(_render_page(lang, page), encoding="utf-8")
+            written.append(slug + "/")
+
+    (ROOT / "sitemap.xml").write_text(_sitemap(date.today().isoformat()), encoding="utf-8")
+
+    print(f"assets/site.css  ({(ASSETS / 'site.css').stat().st_size // 1024} KB)")
+    print("assets/site.js")
+    for slug in written:
+        print(slug)
+    print(f"sitemap.xml      ({len(written) + 1} URL)")
+
+
+if __name__ == "__main__":
+    main()

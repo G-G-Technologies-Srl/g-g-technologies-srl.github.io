@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consulenza AI per aziende: agenti e processi — G&amp;G Technologies</title>
+  <meta name="description" content="Agenti AI e LLM integrati nei processi: ricerca semantica (RAG) sui tuoi documenti e integrazione con ERP e gestionali già in uso.">
+  <meta name="author" content="G&amp;G Technologies Srl">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="theme-color" content="#0d1220">
+  <link rel="canonical" href="https://ggtechnologies.sm/servizi/intelligenza-artificiale/">
+  <link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/servizi/intelligenza-artificiale/">
+  <link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/services/artificial-intelligence/">
+  <link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/servizi/intelligenza-artificiale/">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="G&amp;G Technologies">
+  <meta property="og:title" content="Consulenza AI per aziende: agenti e processi — G&amp;G Technologies">
+  <meta property="og:description" content="Agenti AI e LLM integrati nei processi: ricerca semantica (RAG) sui tuoi documenti e integrazione con ERP e gestionali già in uso.">
+  <meta property="og:url" content="https://ggtechnologies.sm/servizi/intelligenza-artificiale/">
+  <meta property="og:image" content="https://ggtechnologies.sm/assets/og-card.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="it_IT">
+  <meta property="og:locale:alternate" content="en_GB">
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Consulenza AI per aziende: agenti e processi — G&amp;G Technologies">
+  <meta name="twitter:description" content="Agenti AI e LLM integrati nei processi: ricerca semantica (RAG) sui tuoi documenti e integrazione con ERP e gestionali già in uso.">
+  <meta name="twitter:image" content="https://ggtechnologies.sm/assets/og-card.png">
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../../assets/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../../assets/favicon-32.png">
+  <!-- Pre-paint bootstrap: resolve the theme before first render -->
+  <script>
+    (function () {
+      var theme = '';
+      try { theme = localStorage.getItem('gg-theme') || ''; } catch (ignored) { /* unavailable */ }
+      if (theme !== 'light' && theme !== 'dark') {
+        theme = (window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+      }
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.classList.add('js');
+    })();
+  </script>
+  <link rel="stylesheet" href="../../assets/site.css">
+  <script type="application/ld+json">
+[
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://ggtechnologies.sm/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Servizi",
+        "item": "https://ggtechnologies.sm/#services"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Intelligenza Artificiale",
+        "item": "https://ggtechnologies.sm/servizi/intelligenza-artificiale/"
+      }
+    ]
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "Intelligenza Artificiale",
+    "serviceType": "Artificial intelligence design and development",
+    "url": "https://ggtechnologies.sm/servizi/intelligenza-artificiale/",
+    "description": "Agenti AI e LLM integrati nei processi: ricerca semantica (RAG) sui tuoi documenti e integrazione con ERP e gestionali già in uso.",
+    "inLanguage": "it",
+    "provider": {
+      "@id": "https://ggtechnologies.sm/#organization"
+    },
+    "areaServed": [
+      {
+        "@type": "Country",
+        "name": "San Marino"
+      },
+      {
+        "@type": "Country",
+        "name": "Italy"
+      },
+      {
+        "@type": "Place",
+        "name": "Europe"
+      }
+    ]
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "inLanguage": "it",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Dobbiamo avere i dati in ordine prima di chiamarvi?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No, ed è raro che lo siano. Rendere leggibili i dati che oggi stanno in documenti, archivi e log è parte del lavoro. Quello che serve è sapere quale decisione quei dati devono supportare."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "I nostri documenti finiscono in un modello di terze parti?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Solo se lo decidi tu. Realizziamo architetture in cui i modelli girano sul tuo server e i documenti non escono. Quando serve la potenza del cloud, i dati personali possono essere mascherati prima dell'invio."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Che differenza c'è fra un agente AI e un chatbot?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Il chatbot risponde. L'agente esegue un compito: legge un documento, interroga un sistema, produce un risultato verificabile. La differenza pratica è che di un agente si può misurare l'esito."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Come si capisce se un progetto AI conviene?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Si sceglie prima cosa si misura: ore risparmiate, errori evitati, tempi di risposta. Se non si riesce a definire la misura prima di partire, di solito il progetto non era maturo."
+        }
+      }
+    ]
+  }
+]
+  </script>
+</head>
+<body>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs><linearGradient id="icoGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#10b981"/></linearGradient></defs></svg>
+  <a class="skip-link" href="#main">Vai al contenuto</a>
+
+  <header class="site-header">
+    <nav class="nav" aria-label="Navigazione principale">
+      <a href="/" class="brand">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><defs><linearGradient id="ggMark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5eecab"/><stop offset="1" stop-color="#10b981"/></linearGradient><mask id="ggWire"><path d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="#fff" stroke-width="13"/><path d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="#000" stroke-width="10"/></mask></defs><rect class="wire" width="100" height="100" mask="url(#ggWire)"/><path class="lit" d="M66 50 H86 A36 36 0 1 1 50 14" fill="none" stroke="url(#ggMark)" stroke-width="13" stroke-linecap="round"/><circle class="click" cx="50" cy="50" r="9" fill="none" stroke="#34d399" stroke-width="2"/><circle class="led" cx="50" cy="50" r="9"/></svg></span>
+        <span class="brand-text">
+          <span class="brand-name">G&amp;G Technologies</span>
+          <span class="brand-payoff">Accendiamo il futuro</span>
+        </span>
+      </a>
+
+      <div class="nav-links" id="navLinks">
+        <a href="/#services">Servizi</a>
+        <a href="/podz-ai/">Podz.AI</a>
+        <a href="/ai-on-premise/">AI on-premise</a>
+        <a href="/#about">Chi siamo</a>
+        <a href="/#contact">Contatti</a>
+      </div>
+
+      <div class="nav-actions">
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Tema chiaro/scuro · Light/dark theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2"/>
+            <path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.2 14.5A8.3 8.3 0 0 1 9.5 3.8a8.3 8.3 0 1 0 10.7 10.7Z"/>
+          </svg>
+        </button>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <span class="current">IT</span>
+          <a href="https://ggtechnologies.sm/en/services/artificial-intelligence/" hreflang="en" lang="en">EN</a>
+        </div>
+        <a class="btn btn-primary nav-cta" href="mailto:info@ggtechnologies.sm?subject=Richiesta%20informazioni">Parla con noi</a>
+        <button class="menu-toggle" id="menuToggle" aria-label="Menu" aria-expanded="false" aria-controls="navLinks"><span></span></button>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero page-hero">
+      <div class="hero-bg" aria-hidden="true">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+        <div class="glow glow-3"></div>
+      </div>
+
+      <div class="container hero-inner">
+        <div>
+          <nav class="breadcrumb" aria-label="Percorso"><ol><li><a href="/">Home</a></li><li><a href="/#services">Servizi</a></li><li aria-current="page">Intelligenza Artificiale</li></ol></nav>
+          <div class="kicker">Intelligenza Artificiale</div>
+          <h1>AI applicata al <span class="grad-text">lavoro reale</span>, non alle demo.</h1>
+          <p class="hero-sub">L'intelligenza artificiale entra in azienda quando risolve un problema che qualcuno ha davvero.</p>
+          <div class="hero-ctas"><a class="btn btn-primary" href="mailto:info@ggtechnologies.sm?subject=Richiesta%20informazioni">Parla con noi</a></div>
+          <p class="hero-note">Oppure scrivici: <a href="mailto:info@ggtechnologies.sm">info@ggtechnologies.sm</a></p>
+          <div class="hero-stats">
+            <div class="stat">
+              <div class="num">30+</div>
+              <div class="label">anni di esperienza</div>
+            </div>
+            <div class="stat">
+              <div class="num">10+</div>
+              <div class="label">fabbriche automatizzate</div>
+            </div>
+            <div class="stat">
+              <div class="num">100%</div>
+              <div class="label">sviluppo in Europa</div>
+            </div>
+          </div>
+        </div>
+
+      <div class="hero-visual">
+        <div class="orbit-ring ring-1" aria-hidden="true"></div>
+        <div class="orbit-ring ring-2" aria-hidden="true"></div>
+        <button class="orbit-core" type="button">
+          <span><strong>G&amp;G</strong><br><small>Technologies</small></span>
+        </button>
+        <button class="orbit-chip chip-1" type="button"><span class="dot" aria-hidden="true"></span>AI on-premise</button>
+        <button class="orbit-chip chip-2" type="button"><span class="dot" aria-hidden="true"></span>Podz.AI</button>
+        <button class="orbit-chip chip-3" type="button"><span class="dot" aria-hidden="true"></span>Robotica &amp; Automazione</button>
+      </div>
+      </div>
+    </section>
+    <section>
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">Il punto di partenza</div>
+          <h2>Le demo funzionano sempre. I progetti si <span class="grad-text">fermano dopo</span>.</h2>
+        </div>
+        <div class="about-grid">
+          <div class="about-text reveal">
+            <p>Il modello della demo lavora su dati puliti. I tuoi sono incompleti, scritti male e sparsi in cinque sistemi diversi: è lì che il progetto si ferma.</p><p>Per questo partiamo dal processo: dove si perde tempo, dove si sbaglia, dove un dato esiste già ma nessuno lo legge. Poi costruiamo agenti e specialisti verticali, integriamo modelli linguistici (LLM) nei sistemi esistenti e — quando i dati sono riservati — li teniamo dentro l'azienda.</p>
+          </div>
+        <div class="about-facts page-facts reveal">
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>DigiSense®</h4>
+              <p>Il <a href="/digisense/">framework registrato</a> su cui costruiamo ogni implementazione di AI.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Podz.AI</h4>
+              <p>La workstation AI personale per chi lavora con dati riservati.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Software europeo</h4>
+              <p>Progettato e sviluppato interamente in Europa.</p>
+            </div>
+          </div>
+        </div>
+        </div>
+      </div>
+    </section>
+    <section class="tinted">
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">Cosa costruiamo</div>
+          <h2>Quattro modi in cui l'AI entra in azienda partendo da quello che c'è già. Se i documenti non possono uscire, il capitolo è un altro: <a href="/ai-on-premise/">AI on-premise</a>.</h2>
+        </div>
+        <div class="cards-3 cards-4">
+          <article class="card reveal">
+            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/><circle cx="12" cy="12" r="3"/></svg></div>
+            <h3>Agenti AI e specialisti verticali</h3>
+            <p>Assistenti costruiti su un compito preciso, con accesso ai dati e agli strumenti dell'azienda.</p>
+            <ul><li>Un compito definito, non un chatbot generico</li><li>Accesso controllato ai dati aziendali</li><li>Ogni risposta cita i documenti da cui viene</li></ul>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4.5-4.5"/><circle cx="12" cy="16" r="1.4"/><path d="M4 19.5h16"/></svg></div>
+            <h3>Misura del risultato</h3>
+            <p>Prima di scrivere codice decidiamo come sapremo se ha funzionato: ore risparmiate, errori evitati, tempi di risposta.</p>
+            <ul><li>Un indicatore concordato prima di partire</li><li>Confronto con come si lavora oggi</li><li>Correzioni sulla base della misura, non delle impressioni</li></ul>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="7.5" ry="3"/><path d="M4.5 5.5v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/><path d="M4.5 11.5v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/></svg></div>
+            <h3>Analisi e trasformazione dati</h3>
+            <p>Estrazione, normalizzazione e lettura di dati non strutturati: documenti, log, archivi.</p>
+            <ul><li>Lettura di documenti e archivi storici</li><li>Normalizzazione di dati sparsi</li><li>Ricerca semantica sui documenti (RAG)</li></ul>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3v5M15 3v5"/><path d="M6 8h12v3a6 6 0 0 1-6 6 6 6 0 0 1-6-6Z"/><path d="M12 17v4"/></svg></div>
+            <h3>Integrazione nei processi esistenti</h3>
+            <p>L'AI si innesta sui gestionali e sui flussi già in uso, senza rifare tutto da capo.</p>
+            <ul><li>Integrazione con ERP e gestionali in uso</li><li>Automazione dei passaggi ripetitivi</li><li>Un indicatore concordato prima di partire, misurato dopo</li></ul>
+          </article>
+        </div>
+      </div>
+    </section>
+    <section>
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">Come lavoriamo</div>
+          <h2>Prima capiamo il processo, poi scegliamo la tecnologia. Mai il contrario.</h2>
+        </div>
+        <div class="pillars">
+          <div class="pillar reveal">
+            <div class="n">01</div>
+            <h3>Scegliere il compito</h3>
+            <p>Qual è il compito da delegare, e come lo si fa oggi a mano.</p>
+          </div>
+          <div class="pillar reveal">
+            <div class="n">02</div>
+            <h3>Decidere dove gira</h3>
+            <p>Quale modello, dove gira, quali dati vede. La scelta cambia molto se i dati sono riservati.</p>
+          </div>
+          <div class="pillar reveal">
+            <div class="n">03</div>
+            <h3>Costruire e provare</h3>
+            <p>Sviluppo, integrazione nei sistemi in uso e prova con chi userà lo strumento.</p>
+          </div>
+          <div class="pillar reveal">
+            <div class="n">04</div>
+            <h3>Misurare</h3>
+            <p>Misura del risultato, correzioni ed evoluzione nel tempo.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="tinted">
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">FAQ</div>
+          <h2>Domande frequenti</h2>
+        </div>
+        <div class="faq-list">
+          <details class="faq-item reveal">
+            <summary>Dobbiamo avere i dati in ordine prima di chiamarvi?</summary>
+            <p>No, ed è raro che lo siano. Rendere leggibili i dati che oggi stanno in documenti, archivi e log è parte del lavoro. Quello che serve è sapere quale decisione quei dati devono supportare.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>I nostri documenti finiscono in un modello di terze parti?</summary>
+            <p>Solo se lo decidi tu. Realizziamo architetture in cui i modelli girano sul tuo server e i documenti non escono. Quando serve la potenza del cloud, i dati personali possono essere mascherati prima dell'invio.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>Che differenza c'è fra un agente AI e un chatbot?</summary>
+            <p>Il chatbot risponde. L'agente esegue un compito: legge un documento, interroga un sistema, produce un risultato verificabile. La differenza pratica è che di un agente si può misurare l'esito.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>Come si capisce se un progetto AI conviene?</summary>
+            <p>Si sceglie prima cosa si misura: ore risparmiate, errori evitati, tempi di risposta. Se non si riesce a definire la misura prima di partire, di solito il progetto non era maturo.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+    <section>
+      <div class="container">
+        <div class="reveal">
+          <h2>Continua da qui</h2>
+        </div>
+        <div class="related-grid">
+          <a class="related-card reveal" href="/ai-on-premise/">
+            <h3>AI on-premise</h3>
+            <p>Come si sceglie fra tutto in locale, ibrido e cloud, a partire dai tuoi dati.</p>
+          </a>
+          <a class="related-card reveal" href="/podz-ai/">
+            <h3>Podz.AI</h3>
+            <p>Il prodotto già pronto: lo installi, legge i tuoi file, 30 giorni di prova.</p>
+          </a>
+          <a class="related-card reveal" href="/servizi/robotica-automazione/">
+            <h3>Robotica &amp; Automazione</h3>
+            <p>Bordo macchina, integrazione con i gestionali, misura di fermi e scarti.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+    <section class="cta-band">
+      <div class="container reveal">
+        <h2>C'è un compito che vorresti delegare all'AI?</h2>
+        <p class="section-intro">Raccontaci come lo fai oggi a mano. È da lì che si capisce se l'AI serve davvero.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-primary" href="mailto:info@ggtechnologies.sm?subject=Richiesta%20informazioni">Scrivici</a>
+          <a class="btn btn-ghost" href="tel:+3780549900824">Chiamaci</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a href="/" class="brand">
+            <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><rect class="wire" width="100" height="100" mask="url(#ggWire)"/><path class="lit" d="M66 50 H86 A36 36 0 1 1 50 14" fill="none" stroke="url(#ggMark)" stroke-width="13" stroke-linecap="round"/><circle class="click" cx="50" cy="50" r="9" fill="none" stroke="#34d399" stroke-width="2"/><circle class="led" cx="50" cy="50" r="9"/></svg></span>
+            G&amp;G Technologies
+          </a>
+          <p>Progettiamo e realizziamo tecnologia: wearable medicali, robotica e intelligenza artificiale. Sul nostro framework DigiSense® nasce Podz.AI.</p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Servizi</h4>
+          <ul>
+            <li><a href="/servizi/wearable-medicale/">Wearable &amp; Medicale</a></li>
+            <li><a href="/servizi/robotica-automazione/">Robotica &amp; Automazione</a></li>
+            <li><a href="/servizi/intelligenza-artificiale/">Intelligenza Artificiale</a></li>
+            <li><a href="/ai-on-premise/">AI on-premise</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Prodotti</h4>
+          <ul>
+            <li><a href="/podz-ai/">Podz.AI</a></li>
+            <li><a href="/digisense/">DigiSense®</a></li>
+            <li><a href="https://ggtechnologies.sm/digisense-releases/download.html" target="_blank" rel="noopener">Scarica Podz.AI</a></li>
+            <li><a href="https://github.com/G-G-Technologies-Srl/digisense-releases/releases" target="_blank" rel="noopener">Release</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Azienda</h4>
+          <ul>
+            <li><a href="/#about">Chi siamo</a></li>
+            <li><a href="/#why">Perché noi</a></li>
+            <li><a href="/#contact">Contatti</a></li>
+            <li><a href="https://www.linkedin.com/company/gg-technologies-srl" target="_blank" rel="noopener">LinkedIn</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-legal">
+        <span>© <span id="year">2026</span> G&amp;G Technologies Srl · Via Marino Moretti 23, 47899 Serravalle (RSM) · C.O.E./VAT SM29141</span>
+        <span>DigiSense® è un marchio registrato. Questo sito non usa cookie né tracker.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../../assets/site.js" defer></script>
+</body>
+</html>

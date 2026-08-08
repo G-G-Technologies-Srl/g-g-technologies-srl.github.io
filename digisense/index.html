@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DigiSense® — il framework di G&amp;G Technologies</title>
+  <meta name="description" content="DigiSense® è il framework registrato di G&amp;G Technologies: la base tecnologica di ogni nostra implementazione con AI, sensori e robot.">
+  <meta name="author" content="G&amp;G Technologies Srl">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="theme-color" content="#0d1220">
+  <link rel="canonical" href="https://ggtechnologies.sm/digisense/">
+  <link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/digisense/">
+  <link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/digisense/">
+  <link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/digisense/">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="G&amp;G Technologies">
+  <meta property="og:title" content="DigiSense® — il framework di G&amp;G Technologies">
+  <meta property="og:description" content="DigiSense® è il framework registrato di G&amp;G Technologies: la base tecnologica di ogni nostra implementazione con AI, sensori e robot.">
+  <meta property="og:url" content="https://ggtechnologies.sm/digisense/">
+  <meta property="og:image" content="https://ggtechnologies.sm/assets/og-card.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="it_IT">
+  <meta property="og:locale:alternate" content="en_GB">
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="DigiSense® — il framework di G&amp;G Technologies">
+  <meta name="twitter:description" content="DigiSense® è il framework registrato di G&amp;G Technologies: la base tecnologica di ogni nostra implementazione con AI, sensori e robot.">
+  <meta name="twitter:image" content="https://ggtechnologies.sm/assets/og-card.png">
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+  <!-- Pre-paint bootstrap: resolve the theme before first render -->
+  <script>
+    (function () {
+      var theme = '';
+      try { theme = localStorage.getItem('gg-theme') || ''; } catch (ignored) { /* unavailable */ }
+      if (theme !== 'light' && theme !== 'dark') {
+        theme = (window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+      }
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.classList.add('js');
+    })();
+  </script>
+  <link rel="stylesheet" href="../assets/site.css">
+  <script type="application/ld+json">
+[
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://ggtechnologies.sm/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "DigiSense®",
+        "item": "https://ggtechnologies.sm/digisense/"
+      }
+    ]
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "DigiSense®",
+    "serviceType": "Proprietary technology framework for sensors, artificial intelligence and automation",
+    "url": "https://ggtechnologies.sm/digisense/",
+    "description": "DigiSense® è il framework registrato di G&G Technologies: la base tecnologica di ogni nostra implementazione con AI, sensori e robot.",
+    "inLanguage": "it",
+    "provider": {
+      "@id": "https://ggtechnologies.sm/#organization"
+    },
+    "areaServed": [
+      {
+        "@type": "Country",
+        "name": "San Marino"
+      },
+      {
+        "@type": "Country",
+        "name": "Italy"
+      },
+      {
+        "@type": "Place",
+        "name": "Europe"
+      }
+    ]
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "inLanguage": "it",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "DigiSense® è un prodotto che posso comprare?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. DigiSense® è il framework con cui costruiamo, non un pacchetto a scaffale. Il prodotto costruito su DigiSense® è Podz.AI, e quello si scarica dal sito di prodotto."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Che vantaggio ha per chi ci commissiona un progetto?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Che non si parte da zero. Acquisizione dei dati, esecuzione dei modelli e controllo macchina sono già risolti e collaudati: il lavoro si concentra sul problema specifico, non sull'impalcatura sotto."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Perché un framework vostro invece di soluzioni di mercato?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Perché nei nostri settori i tre strati — sensori, dati, modelli — devono parlarsi. Tenerli in casa ci permette di intervenire su tutta la catena, invece di fermarci al confine di un prodotto di qualcun altro."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Si può costruire qualcosa insieme su DigiSense®?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sì. Se il tuo problema tocca sensori, dati e automazione, scrivici: la prima conversazione serve a capire se siamo le persone giuste."
+        }
+      }
+    ]
+  }
+]
+  </script>
+</head>
+<body>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs><linearGradient id="icoGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#10b981"/></linearGradient></defs></svg>
+  <a class="skip-link" href="#main">Vai al contenuto</a>
+
+  <header class="site-header">
+    <nav class="nav" aria-label="Navigazione principale">
+      <a href="/" class="brand">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><defs><linearGradient id="ggMark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5eecab"/><stop offset="1" stop-color="#10b981"/></linearGradient><mask id="ggWire"><path d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="#fff" stroke-width="13"/><path d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="#000" stroke-width="10"/></mask></defs><rect class="wire" width="100" height="100" mask="url(#ggWire)"/><path class="lit" d="M66 50 H86 A36 36 0 1 1 50 14" fill="none" stroke="url(#ggMark)" stroke-width="13" stroke-linecap="round"/><circle class="click" cx="50" cy="50" r="9" fill="none" stroke="#34d399" stroke-width="2"/><circle class="led" cx="50" cy="50" r="9"/></svg></span>
+        <span class="brand-text">
+          <span class="brand-name">G&amp;G Technologies</span>
+          <span class="brand-payoff">Accendiamo il futuro</span>
+        </span>
+      </a>
+
+      <div class="nav-links" id="navLinks">
+        <a href="/#services">Servizi</a>
+        <a href="/podz-ai/">Podz.AI</a>
+        <a href="/ai-on-premise/">AI on-premise</a>
+        <a href="/#about">Chi siamo</a>
+        <a href="/#contact">Contatti</a>
+      </div>
+
+      <div class="nav-actions">
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Tema chiaro/scuro · Light/dark theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2"/>
+            <path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.2 14.5A8.3 8.3 0 0 1 9.5 3.8a8.3 8.3 0 1 0 10.7 10.7Z"/>
+          </svg>
+        </button>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <span class="current">IT</span>
+          <a href="https://ggtechnologies.sm/en/digisense/" hreflang="en" lang="en">EN</a>
+        </div>
+        <a class="btn btn-primary nav-cta" href="mailto:info@ggtechnologies.sm?subject=Richiesta%20informazioni">Parla con noi</a>
+        <button class="menu-toggle" id="menuToggle" aria-label="Menu" aria-expanded="false" aria-controls="navLinks"><span></span></button>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero page-hero">
+      <div class="hero-bg" aria-hidden="true">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+        <div class="glow glow-3"></div>
+      </div>
+
+      <div class="container hero-inner">
+        <div>
+          <nav class="breadcrumb" aria-label="Percorso"><ol><li><a href="/">Home</a></li><li aria-current="page">DigiSense®</li></ol></nav>
+          <div class="kicker">DigiSense®</div>
+          <h1>DigiSense® — la base su cui <span class="grad-text">costruiamo tutto</span>.</h1>
+          <p class="hero-sub">Il framework registrato che sta sotto ogni nostra implementazione con AI, sensori e robot. È anche quello su cui è costruito Podz.AI.</p>
+          <div class="hero-ctas"><a class="btn btn-primary" href="mailto:info@ggtechnologies.sm?subject=Richiesta%20informazioni">Parla con noi</a></div>
+          <p class="hero-note">Oppure scrivici: <a href="mailto:info@ggtechnologies.sm">info@ggtechnologies.sm</a></p>
+          <div class="hero-stats">
+            <div class="stat">
+              <div class="num">30+</div>
+              <div class="label">anni di esperienza</div>
+            </div>
+            <div class="stat">
+              <div class="num">10+</div>
+              <div class="label">fabbriche automatizzate</div>
+            </div>
+            <div class="stat">
+              <div class="num">100%</div>
+              <div class="label">sviluppo in Europa</div>
+            </div>
+          </div>
+        </div>
+
+      <div class="hero-visual">
+        <div class="orbit-ring ring-1" aria-hidden="true"></div>
+        <div class="orbit-ring ring-2" aria-hidden="true"></div>
+        <button class="orbit-core" type="button">
+          <span><strong>G&amp;G</strong><br><small>Technologies</small></span>
+        </button>
+        <button class="orbit-chip chip-1" type="button"><span class="dot" aria-hidden="true"></span>Podz.AI</button>
+        <button class="orbit-chip chip-2" type="button"><span class="dot" aria-hidden="true"></span>Intelligenza Artificiale</button>
+        <button class="orbit-chip chip-3" type="button"><span class="dot" aria-hidden="true"></span>Wearable &amp; Medicale</button>
+      </div>
+      </div>
+    </section>
+    <section>
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">Perché esiste</div>
+          <h2>Gli stessi problemi tornavano in <span class="grad-text">settori diversi</span>.</h2>
+        </div>
+        <div class="about-grid">
+          <div class="about-text reveal">
+            <p>Ogni cosa che consegniamo — un wearable medicale, una cella robotizzata, un'AI che legge documenti — poggia sullo stesso strato di tecnologia. Quello strato ha un nome: <strong>DigiSense®</strong>, il nostro framework, marchio registrato di G&amp;G Technologies S.r.l.</p><p>Non lo vendiamo a scaffale: lo usiamo per costruire il tuo progetto. È nato perché gli stessi problemi tornavano in settori diversi: prendere un dato da un sensore, ripulirlo, farlo leggere a un modello, far agire una macchina. Risolti una volta e bene, si riusano ovunque.</p>
+          </div>
+        <div class="about-facts page-facts reveal">
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Marchio</h4>
+              <p>DigiSense® è un marchio registrato di G&amp;G Technologies S.r.l.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Ruolo</h4>
+              <p>Base tecnologica comune a wearable, robotica e intelligenza artificiale.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Sviluppo</h4>
+              <p>Progettato e sviluppato interamente in Europa.</p>
+            </div>
+          </div>
+        </div>
+        </div>
+      </div>
+    </section>
+    <section class="tinted">
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">Cosa c'è dentro</div>
+          <h2>Tre strati che tornano in ogni progetto, dal sensore alla decisione.</h2>
+        </div>
+        <div class="cards-3">
+          <article class="card reveal">
+            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="7.5" ry="3"/><path d="M4.5 5.5v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/><path d="M4.5 11.5v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/></svg></div>
+            <h3>Acquisizione ed elaborazione dati</h3>
+            <p>Segnali da sensori e dispositivi: raccolta continua, pulizia, normalizzazione e archiviazione interrogabile.</p>
+            <ul><li>Integrazione dei sensori</li><li>Pulizia e normalizzazione del segnale</li><li>Archiviazione di serie temporali</li></ul>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7.5 3v5.5c0 4.4-3.1 8.3-7.5 9.5-4.4-1.2-7.5-5.1-7.5-9.5V6Z"/><path d="M9.2 12.2l2 2 3.6-4"/></svg></div>
+            <h3>AI che gira dove stanno i dati</h3>
+            <p>Modelli che girano sulla tua macchina o sul tuo server. Quando serve il cloud, i dati personali vengono mascherati prima.</p>
+            <ul><li>Modelli aperti in esecuzione on-premise</li><li>Mascheramento dei dati personali</li><li>Nessun documento usato per addestrare modelli</li></ul>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4.5M9.5 13h.01M14.5 13h.01M9 16.5h6M2.5 12v3M21.5 12v3"/><circle cx="12" cy="3.5" r="1.2"/></svg></div>
+            <h3>Controllo di macchine e robot</h3>
+            <p>Lo stesso strato che legge i dati comanda l'automazione: logiche di controllo, sicurezza e dialogo con la linea.</p>
+            <ul><li>Logiche di controllo e sicurezza</li><li>Dialogo fra macchina e linea</li><li>Raccolta dei dati di produzione</li></ul>
+          </article>
+        </div>
+      </div>
+    </section>
+    <section>
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">Dove lo trovi</div>
+          <h2>Un solo framework, quattro modi di usarlo.</h2>
+        </div>
+        <div class="pillars">
+          <div class="pillar reveal">
+            <h3>Wearable e medicale</h3>
+            <p>Acquisizione dei parametri biovitali e piattaforma che li rende leggibili a medico, allenatore o caregiver.</p>
+          </div>
+          <div class="pillar reveal">
+            <h3>Robotica e automazione</h3>
+            <p>Controllo di macchina e raccolta dei dati di produzione sulla stessa base tecnologica.</p>
+          </div>
+          <div class="pillar reveal">
+            <h3>Intelligenza artificiale</h3>
+            <p>Agenti e specialisti verticali costruiti sullo strato dati di DigiSense®.</p>
+          </div>
+          <div class="pillar reveal">
+            <h3>Podz.AI</h3>
+            <p>Il nostro prodotto: la workstation AI personale, costruita interamente su DigiSense®.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="tinted">
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">FAQ</div>
+          <h2>Domande frequenti</h2>
+        </div>
+        <div class="faq-list">
+          <details class="faq-item reveal">
+            <summary>DigiSense® è un prodotto che posso comprare?</summary>
+            <p>No. DigiSense® è il framework con cui costruiamo, non un pacchetto a scaffale. Il prodotto costruito su DigiSense® è Podz.AI, e quello si scarica dal sito di prodotto.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>Che vantaggio ha per chi ci commissiona un progetto?</summary>
+            <p>Che non si parte da zero. Acquisizione dei dati, esecuzione dei modelli e controllo macchina sono già risolti e collaudati: il lavoro si concentra sul problema specifico, non sull'impalcatura sotto.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>Perché un framework vostro invece di soluzioni di mercato?</summary>
+            <p>Perché nei nostri settori i tre strati — sensori, dati, modelli — devono parlarsi. Tenerli in casa ci permette di intervenire su tutta la catena, invece di fermarci al confine di un prodotto di qualcun altro.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>Si può costruire qualcosa insieme su DigiSense®?</summary>
+            <p>Sì. Se il tuo problema tocca sensori, dati e automazione, scrivici: la prima conversazione serve a capire se siamo le persone giuste.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+    <section>
+      <div class="container">
+        <div class="reveal">
+          <h2>Continua da qui</h2>
+        </div>
+        <div class="related-grid">
+          <a class="related-card reveal" href="/podz-ai/">
+            <h3>Podz.AI</h3>
+            <p>Il prodotto già pronto: lo installi, legge i tuoi file, 30 giorni di prova.</p>
+          </a>
+          <a class="related-card reveal" href="/servizi/intelligenza-artificiale/">
+            <h3>Intelligenza Artificiale</h3>
+            <p>Agenti che leggono documenti e interrogano i tuoi sistemi, con la misura decisa prima.</p>
+          </a>
+          <a class="related-card reveal" href="/servizi/wearable-medicale/">
+            <h3>Wearable &amp; Medicale</h3>
+            <p>Scheda, firmware e piattaforma di telemonitoraggio, in un progetto solo.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+    <section class="cta-band">
+      <div class="container reveal">
+        <h2>Hai un progetto che tocca sensori, dati o automazione?</h2>
+        <p class="section-intro">Scrivici. La prima conversazione serve a capire cosa c'è già e cosa va costruito.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-primary" href="mailto:info@ggtechnologies.sm?subject=Richiesta%20informazioni">Scrivici</a>
+          <a class="btn btn-ghost" href="tel:+3780549900824">Chiamaci</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a href="/" class="brand">
+            <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><rect class="wire" width="100" height="100" mask="url(#ggWire)"/><path class="lit" d="M66 50 H86 A36 36 0 1 1 50 14" fill="none" stroke="url(#ggMark)" stroke-width="13" stroke-linecap="round"/><circle class="click" cx="50" cy="50" r="9" fill="none" stroke="#34d399" stroke-width="2"/><circle class="led" cx="50" cy="50" r="9"/></svg></span>
+            G&amp;G Technologies
+          </a>
+          <p>Progettiamo e realizziamo tecnologia: wearable medicali, robotica e intelligenza artificiale. Sul nostro framework DigiSense® nasce Podz.AI.</p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Servizi</h4>
+          <ul>
+            <li><a href="/servizi/wearable-medicale/">Wearable &amp; Medicale</a></li>
+            <li><a href="/servizi/robotica-automazione/">Robotica &amp; Automazione</a></li>
+            <li><a href="/servizi/intelligenza-artificiale/">Intelligenza Artificiale</a></li>
+            <li><a href="/ai-on-premise/">AI on-premise</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Prodotti</h4>
+          <ul>
+            <li><a href="/podz-ai/">Podz.AI</a></li>
+            <li><a href="/digisense/">DigiSense®</a></li>
+            <li><a href="https://ggtechnologies.sm/digisense-releases/download.html" target="_blank" rel="noopener">Scarica Podz.AI</a></li>
+            <li><a href="https://github.com/G-G-Technologies-Srl/digisense-releases/releases" target="_blank" rel="noopener">Release</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Azienda</h4>
+          <ul>
+            <li><a href="/#about">Chi siamo</a></li>
+            <li><a href="/#why">Perché noi</a></li>
+            <li><a href="/#contact">Contatti</a></li>
+            <li><a href="https://www.linkedin.com/company/gg-technologies-srl" target="_blank" rel="noopener">LinkedIn</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-legal">
+        <span>© <span id="year">2026</span> G&amp;G Technologies Srl · Via Marino Moretti 23, 47899 Serravalle (RSM) · C.O.E./VAT SM29141</span>
+        <span>DigiSense® è un marchio registrato. Questo sito non usa cookie né tracker.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/site.js" defer></script>
+</body>
+</html>

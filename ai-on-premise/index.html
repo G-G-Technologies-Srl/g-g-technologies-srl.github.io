@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI on-premise: modelli sui tuoi server — G&amp;G Technologies</title>
+  <meta name="description" content="AI on-premise e LLM self-hosted: i modelli girano sui tuoi server e i documenti non lasciano l&#x27;infrastruttura. Progettazione europea, da San Marino.">
+  <meta name="author" content="G&amp;G Technologies Srl">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="theme-color" content="#0d1220">
+  <link rel="canonical" href="https://ggtechnologies.sm/ai-on-premise/">
+  <link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/ai-on-premise/">
+  <link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/on-premise-ai/">
+  <link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/ai-on-premise/">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="G&amp;G Technologies">
+  <meta property="og:title" content="AI on-premise: modelli sui tuoi server — G&amp;G Technologies">
+  <meta property="og:description" content="AI on-premise e LLM self-hosted: i modelli girano sui tuoi server e i documenti non lasciano l&#x27;infrastruttura. Progettazione europea, da San Marino.">
+  <meta property="og:url" content="https://ggtechnologies.sm/ai-on-premise/">
+  <meta property="og:image" content="https://ggtechnologies.sm/assets/og-card.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="it_IT">
+  <meta property="og:locale:alternate" content="en_GB">
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AI on-premise: modelli sui tuoi server — G&amp;G Technologies">
+  <meta name="twitter:description" content="AI on-premise e LLM self-hosted: i modelli girano sui tuoi server e i documenti non lasciano l&#x27;infrastruttura. Progettazione europea, da San Marino.">
+  <meta name="twitter:image" content="https://ggtechnologies.sm/assets/og-card.png">
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+  <!-- Pre-paint bootstrap: resolve the theme before first render -->
+  <script>
+    (function () {
+      var theme = '';
+      try { theme = localStorage.getItem('gg-theme') || ''; } catch (ignored) { /* unavailable */ }
+      if (theme !== 'light' && theme !== 'dark') {
+        theme = (window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+      }
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.classList.add('js');
+    })();
+  </script>
+  <link rel="stylesheet" href="../assets/site.css">
+  <script type="application/ld+json">
+[
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://ggtechnologies.sm/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "AI on-premise",
+        "item": "https://ggtechnologies.sm/ai-on-premise/"
+      }
+    ]
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "AI on-premise",
+    "serviceType": "On-premise artificial intelligence deployment",
+    "url": "https://ggtechnologies.sm/ai-on-premise/",
+    "description": "AI on-premise e LLM self-hosted: i modelli girano sui tuoi server e i documenti non lasciano l'infrastruttura. Progettazione europea, da San Marino.",
+    "inLanguage": "it",
+    "provider": {
+      "@id": "https://ggtechnologies.sm/#organization"
+    },
+    "areaServed": [
+      {
+        "@type": "Country",
+        "name": "San Marino"
+      },
+      {
+        "@type": "Country",
+        "name": "Italy"
+      },
+      {
+        "@type": "Place",
+        "name": "Europe"
+      }
+    ]
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "inLanguage": "it",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Che macchina ci serve per far girare l'AI on-premise?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Dipende dalla dimensione del modello e dal carico, e in pratica dipende dalla memoria della GPU. Per un uso personale bastano un Mac con chip Apple Silicon o un PC con GPU dedicata; per un uso aziendale continuo serve un server con GPU. Il dimensionamento esatto lo facciamo insieme, prima del preventivo."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "L'AI locale è meno capace di quella in cloud?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Su compiti generici, i modelli di frontiera in cloud restano più potenti. Su un compito definito — leggere un tipo di documento, estrarre certi campi — la differenza si assottiglia molto, e il vantaggio della riservatezza pesa di più."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Possiamo partire on-premise e aprire al cloud dopo?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sì, è la configurazione più comune. Si parte con tutto on-premise e si apre al cloud solo per i passaggi che lo richiedono, con i dati personali mascherati prima dell'invio."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "L'anonimizzazione è sufficiente per la conformità?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No, e nessuno può dirlo al posto tuo: ai fini del GDPR la valutazione di conformità resta del titolare del trattamento. Quello che documentiamo è il meccanismo — quali campi vengono mascherati, cosa esce davvero e come lo verifichi."
+        }
+      }
+    ]
+  }
+]
+  </script>
+</head>
+<body>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs><linearGradient id="icoGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#10b981"/></linearGradient></defs></svg>
+  <a class="skip-link" href="#main">Vai al contenuto</a>
+
+  <header class="site-header">
+    <nav class="nav" aria-label="Navigazione principale">
+      <a href="/" class="brand">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><defs><linearGradient id="ggMark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5eecab"/><stop offset="1" stop-color="#10b981"/></linearGradient><mask id="ggWire"><path d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="#fff" stroke-width="13"/><path d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="#000" stroke-width="10"/></mask></defs><rect class="wire" width="100" height="100" mask="url(#ggWire)"/><path class="lit" d="M66 50 H86 A36 36 0 1 1 50 14" fill="none" stroke="url(#ggMark)" stroke-width="13" stroke-linecap="round"/><circle class="click" cx="50" cy="50" r="9" fill="none" stroke="#34d399" stroke-width="2"/><circle class="led" cx="50" cy="50" r="9"/></svg></span>
+        <span class="brand-text">
+          <span class="brand-name">G&amp;G Technologies</span>
+          <span class="brand-payoff">Accendiamo il futuro</span>
+        </span>
+      </a>
+
+      <div class="nav-links" id="navLinks">
+        <a href="/#services">Servizi</a>
+        <a href="/podz-ai/">Podz.AI</a>
+        <a href="/ai-on-premise/">AI on-premise</a>
+        <a href="/#about">Chi siamo</a>
+        <a href="/#contact">Contatti</a>
+      </div>
+
+      <div class="nav-actions">
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Tema chiaro/scuro · Light/dark theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2"/>
+            <path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.2 14.5A8.3 8.3 0 0 1 9.5 3.8a8.3 8.3 0 1 0 10.7 10.7Z"/>
+          </svg>
+        </button>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <span class="current">IT</span>
+          <a href="https://ggtechnologies.sm/en/on-premise-ai/" hreflang="en" lang="en">EN</a>
+        </div>
+        <a class="btn btn-primary nav-cta" href="mailto:info@ggtechnologies.sm?subject=Richiesta%20informazioni">Parla con noi</a>
+        <button class="menu-toggle" id="menuToggle" aria-label="Menu" aria-expanded="false" aria-controls="navLinks"><span></span></button>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero page-hero">
+      <div class="hero-bg" aria-hidden="true">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+        <div class="glow glow-3"></div>
+      </div>
+
+      <div class="container hero-inner">
+        <div>
+          <nav class="breadcrumb" aria-label="Percorso"><ol><li><a href="/">Home</a></li><li aria-current="page">AI on-premise</li></ol></nav>
+          <div class="kicker">AI on-premise</div>
+          <h1>L'AI può lavorare <span class="grad-text">senza portare via i dati</span>.</h1>
+          <p class="hero-sub">Modelli che girano sulla tua macchina o sul tuo server. I documenti restano dove sono già.</p>
+          <div class="hero-ctas"><a class="btn btn-primary" href="mailto:info@ggtechnologies.sm?subject=Richiesta%20informazioni">Parla con noi</a></div>
+          <p class="hero-note">Oppure scrivici: <a href="mailto:info@ggtechnologies.sm">info@ggtechnologies.sm</a></p>
+          <div class="hero-stats">
+            <div class="stat">
+              <div class="num">30+</div>
+              <div class="label">anni di esperienza</div>
+            </div>
+            <div class="stat">
+              <div class="num">10+</div>
+              <div class="label">fabbriche automatizzate</div>
+            </div>
+            <div class="stat">
+              <div class="num">100%</div>
+              <div class="label">sviluppo in Europa</div>
+            </div>
+          </div>
+        </div>
+
+      <div class="hero-visual">
+        <div class="orbit-ring ring-1" aria-hidden="true"></div>
+        <div class="orbit-ring ring-2" aria-hidden="true"></div>
+        <button class="orbit-core" type="button">
+          <span><strong>G&amp;G</strong><br><small>Technologies</small></span>
+        </button>
+        <button class="orbit-chip chip-1" type="button"><span class="dot" aria-hidden="true"></span>Intelligenza Artificiale</button>
+        <button class="orbit-chip chip-2" type="button"><span class="dot" aria-hidden="true"></span>Podz.AI</button>
+        <button class="orbit-chip chip-3" type="button"><span class="dot" aria-hidden="true"></span>DigiSense®</button>
+      </div>
+      </div>
+    </section>
+    <section>
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">Il punto di partenza</div>
+          <h2>I dati su cui servirebbe l'AI sono quelli che <span class="grad-text">non possono uscire</span>.</h2>
+        </div>
+        <div class="about-grid">
+          <div class="about-text reveal">
+            <p>Molte aziende si fermano davanti all'AI per un motivo solo: i dati su cui servirebbe usarla sono proprio quelli che non possono uscire. Cartelle cliniche, contratti, progetti, dati di clienti e fornitori.</p><p>La soluzione è meno esotica di quanto sembri: il modello gira dentro la tua infrastruttura e i documenti non la lasciano mai. È il principio su cui abbiamo costruito Podz.AI, ed è lo stesso che applichiamo nei progetti su misura.</p>
+          </div>
+        <div class="about-facts page-facts reveal">
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Sede</h4>
+              <p>Via Marino Moretti 23, 47899 Serravalle, Repubblica di San Marino.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Sviluppo</h4>
+              <p>Software progettato e sviluppato interamente in Europa.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Prodotto</h4>
+              <p>Podz.AI, la workstation AI personale, costruita sul framework DigiSense®.</p>
+            </div>
+          </div>
+        </div>
+        </div>
+      </div>
+    </section>
+    <section class="tinted">
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">Come si fa, in concreto</div>
+          <h2>Tre configurazioni, a seconda di dove devono restare i dati e di quanta potenza serve.</h2>
+        </div>
+        <div class="cards-3">
+          <article class="card reveal">
+            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7.5 3v5.5c0 4.4-3.1 8.3-7.5 9.5-4.4-1.2-7.5-5.1-7.5-9.5V6Z"/><path d="M9.2 12.2l2 2 3.6-4"/></svg></div>
+            <h3>Tutto on-premise</h3>
+            <p>Modelli e dati sulla stessa macchina o sullo stesso server. Nessuna connessione necessaria per l'elaborazione.</p>
+            <ul><li>Nessun dato lascia l'infrastruttura</li><li>Modelli aperti, self-hosted, senza chiavi verso terzi</li><li>Il limite è la GPU che hai a disposizione</li></ul>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5h7M14 8.5h7M3 15.5h4M11 15.5h10"/><rect x="9.5" y="6" width="3.5" height="5" rx="1"/><rect x="6.5" y="13" width="3.5" height="5" rx="1"/></svg></div>
+            <h3>Ibrido: anonimizzazione prima del cloud</h3>
+            <p>L'elaborazione resta on-premise. Quando serve la potenza del cloud, i dati personali vengono mascherati prima dell'invio e ripristinati nella risposta.</p>
+            <ul><li>Mascheramento di nomi, date e indirizzi</li><li>I campi mascherati sono sostituiti prima di uscire dalla macchina</li><li>Si decide caso per caso cosa può uscire</li></ul>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3v5M15 3v5"/><path d="M6 8h12v3a6 6 0 0 1-6 6 6 6 0 0 1-6-6Z"/><path d="M12 17v4"/></svg></div>
+            <h3>Integrazione con i sistemi in uso</h3>
+            <p>L'AI legge i documenti e i gestionali dove stanno già, senza copiarli in una piattaforma esterna.</p>
+            <ul><li>Accesso controllato agli archivi</li><li>Nessuna migrazione di dati verso terzi</li><li>Tracciabilità di chi ha chiesto cosa</li></ul>
+          </article>
+        </div>
+      </div>
+    </section>
+    <section>
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">Come lavoriamo</div>
+          <h2>La scelta fra locale, ibrido e cloud si fa a partire dai dati, non dalla tecnologia.</h2>
+        </div>
+        <div class="pillars">
+          <div class="pillar reveal">
+            <div class="n">01</div>
+            <h3>Classificare i dati</h3>
+            <p>Quali dati sono in gioco, chi li può vedere e quale compito deve essere svolto.</p>
+          </div>
+          <div class="pillar reveal">
+            <div class="n">02</div>
+            <h3>Tracciare il confine</h3>
+            <p>Dove gira il modello, cosa vede e cosa non deve vedere mai. È qui che si decide l'architettura.</p>
+          </div>
+          <div class="pillar reveal">
+            <div class="n">03</div>
+            <h3>Installare on-premise</h3>
+            <p>Installazione nell'infrastruttura del cliente, integrazione e prova con chi userà lo strumento.</p>
+          </div>
+          <div class="pillar reveal">
+            <div class="n">04</div>
+            <h3>Mantenere</h3>
+            <p>Manutenzione, aggiornamento dei modelli ed evoluzione nel tempo.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="tinted">
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">FAQ</div>
+          <h2>Domande frequenti</h2>
+        </div>
+        <div class="faq-list">
+          <details class="faq-item reveal">
+            <summary>Che macchina ci serve per far girare l'AI on-premise?</summary>
+            <p>Dipende dalla dimensione del modello e dal carico, e in pratica dipende dalla memoria della GPU. Per un uso personale bastano un Mac con chip Apple Silicon o un PC con GPU dedicata; per un uso aziendale continuo serve un server con GPU. Il dimensionamento esatto lo facciamo insieme, prima del preventivo.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>L'AI locale è meno capace di quella in cloud?</summary>
+            <p>Su compiti generici, i modelli di frontiera in cloud restano più potenti. Su un compito definito — leggere un tipo di documento, estrarre certi campi — la differenza si assottiglia molto, e il vantaggio della riservatezza pesa di più.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>Possiamo partire on-premise e aprire al cloud dopo?</summary>
+            <p>Sì, è la configurazione più comune. Si parte con tutto on-premise e si apre al cloud solo per i passaggi che lo richiedono, con i dati personali mascherati prima dell'invio.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>L'anonimizzazione è sufficiente per la conformità?</summary>
+            <p>No, e nessuno può dirlo al posto tuo: ai fini del GDPR la valutazione di conformità resta del titolare del trattamento. Quello che documentiamo è il meccanismo — quali campi vengono mascherati, cosa esce davvero e come lo verifichi.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+    <section>
+      <div class="container">
+        <div class="reveal">
+          <h2>Continua da qui</h2>
+        </div>
+        <div class="related-grid">
+          <a class="related-card reveal" href="/servizi/intelligenza-artificiale/">
+            <h3>Intelligenza Artificiale</h3>
+            <p>Agenti che leggono documenti e interrogano i tuoi sistemi, con la misura decisa prima.</p>
+          </a>
+          <a class="related-card reveal" href="/podz-ai/">
+            <h3>Podz.AI</h3>
+            <p>Il prodotto già pronto: lo installi, legge i tuoi file, 30 giorni di prova.</p>
+          </a>
+          <a class="related-card reveal" href="/digisense/">
+            <h3>DigiSense®</h3>
+            <p>Cosa c'è sotto, e perché il tuo progetto non parte da zero.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+    <section class="cta-band">
+      <div class="container reveal">
+        <h2>Hai dati che non possono uscire e un lavoro che l'AI potrebbe fare?</h2>
+        <p class="section-intro">Descrivici il compito e il tipo di dati. Da lì si capisce se serve tutto in locale o un'architettura ibrida.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-primary" href="mailto:info@ggtechnologies.sm?subject=Richiesta%20informazioni">Scrivici</a>
+          <a class="btn btn-ghost" href="tel:+3780549900824">Chiamaci</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a href="/" class="brand">
+            <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><rect class="wire" width="100" height="100" mask="url(#ggWire)"/><path class="lit" d="M66 50 H86 A36 36 0 1 1 50 14" fill="none" stroke="url(#ggMark)" stroke-width="13" stroke-linecap="round"/><circle class="click" cx="50" cy="50" r="9" fill="none" stroke="#34d399" stroke-width="2"/><circle class="led" cx="50" cy="50" r="9"/></svg></span>
+            G&amp;G Technologies
+          </a>
+          <p>Progettiamo e realizziamo tecnologia: wearable medicali, robotica e intelligenza artificiale. Sul nostro framework DigiSense® nasce Podz.AI.</p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Servizi</h4>
+          <ul>
+            <li><a href="/servizi/wearable-medicale/">Wearable &amp; Medicale</a></li>
+            <li><a href="/servizi/robotica-automazione/">Robotica &amp; Automazione</a></li>
+            <li><a href="/servizi/intelligenza-artificiale/">Intelligenza Artificiale</a></li>
+            <li><a href="/ai-on-premise/">AI on-premise</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Prodotti</h4>
+          <ul>
+            <li><a href="/podz-ai/">Podz.AI</a></li>
+            <li><a href="/digisense/">DigiSense®</a></li>
+            <li><a href="https://ggtechnologies.sm/digisense-releases/download.html" target="_blank" rel="noopener">Scarica Podz.AI</a></li>
+            <li><a href="https://github.com/G-G-Technologies-Srl/digisense-releases/releases" target="_blank" rel="noopener">Release</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Azienda</h4>
+          <ul>
+            <li><a href="/#about">Chi siamo</a></li>
+            <li><a href="/#why">Perché noi</a></li>
+            <li><a href="/#contact">Contatti</a></li>
+            <li><a href="https://www.linkedin.com/company/gg-technologies-srl" target="_blank" rel="noopener">LinkedIn</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-legal">
+        <span>© <span id="year">2026</span> G&amp;G Technologies Srl · Via Marino Moretti 23, 47899 Serravalle (RSM) · C.O.E./VAT SM29141</span>
+        <span>DigiSense® è un marchio registrato. Questo sito non usa cookie né tracker.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/site.js" defer></script>
+</body>
+</html>
