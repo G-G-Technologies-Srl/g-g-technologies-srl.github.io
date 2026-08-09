@@ -63,7 +63,7 @@ CHROME = {
                         "intelligenza artificiale. Sul nostro framework DigiSense® nasce Podz.AI.",
         "footer_cols": [
             ("Servizi", [
-                ("Wearable & Medicale", "/servizi/wearable-medicale/"),
+                ("Wearable medicali", "/servizi/wearable-medicale/"),
                 ("Robotica & Automazione", "/servizi/robotica-automazione/"),
                 ("Intelligenza Artificiale", "/servizi/intelligenza-artificiale/"),
                 ("AI on-premise", "/servizi/ai-on-premise/"),
@@ -200,13 +200,13 @@ PAGES = [
             "slug": "servizi/wearable-medicale",
             "og_image": "og-wearable-it.jpg",
             "blurb": "Scheda, firmware e piattaforma di telemonitoraggio, in un progetto solo.",
-            "short": "Wearable & Medicale",
+            "short": "Wearable medicali",
             "intro_title": "Il punto di partenza",
             "intro_h2": "Un wearable è una <span class=\"grad-text\">catena</span>, non un dispositivo.",
             "title": "Wearable medicali e telemonitoraggio — G&G Technologies",
             "description": "Progettiamo dispositivi medici indossabili e sistemi di telemonitoraggio per "
                            "pazienti e anziani: elettronica custom, firmware e piattaforma dati.",
-            "kicker": "Wearable &amp; Medicale",
+            "kicker": "Wearable medicali",
             "h1": "Dispositivi indossabili e <span class=\"grad-text\">telemonitoraggio</span> dei pazienti.",
             "lead": "Dispositivi indossabili e sensori ambientali per seguire pazienti fragili e anziani. "
                     "Dall'elettronica su misura alla piattaforma che legge i dati.",
