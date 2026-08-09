@@ -66,7 +66,7 @@ CHROME = {
                 ("Wearable & Medicale", "/servizi/wearable-medicale/"),
                 ("Robotica & Automazione", "/servizi/robotica-automazione/"),
                 ("Intelligenza Artificiale", "/servizi/intelligenza-artificiale/"),
-                ("AI on-premise", "/ai-on-premise/"),
+                ("AI on-premise", "/servizi/ai-on-premise/"),
             ]),
             ("Prodotti e ricerca", [
                 ("Podz.AI", "/podz-ai/"),
@@ -101,11 +101,11 @@ CHROME = {
         "payoff": "Powering the future",
         # The homepage is a single bilingual URL: English navigation points at it too.
         "nav": [
-            ("Services", "/#services"),
-            ("Why us", "/#why"),
+            ("Services", "/en/#services"),
+            ("Why us", "/en/#why"),
             ("Podz.AI", "/en/podz-ai/"),
-            ("About", "/#about"),
-            ("Contact", "/#contact"),
+            ("About", "/en/#about"),
+            ("Contact", "/en/#contact"),
         ],
         "nav_cta": "Talk to us",
         "mailto": "mailto:info@ggtechnologies.sm?subject=Information%20request",
@@ -116,7 +116,7 @@ CHROME = {
                 ("Wearable & Medical", "/en/services/medical-wearables/"),
                 ("Robotics & Automation", "/en/services/robotics-automation/"),
                 ("Artificial Intelligence", "/en/services/artificial-intelligence/"),
-                ("On-premise AI", "/en/on-premise-ai/"),
+                ("On-premise AI", "/en/services/on-premise-ai/"),
             ]),
             ("Products and research", [
                 ("Podz.AI", "/en/podz-ai/"),
@@ -126,9 +126,9 @@ CHROME = {
                 ("Releases", "https://github.com/G-G-Technologies-Srl/digisense-releases/releases"),
             ]),
             ("Company", [
-                ("About", "/#about"),
-                ("Why us", "/#why"),
-                ("Contact", "/#contact"),
+                ("About", "/en/#about"),
+                ("Why us", "/en/#why"),
+                ("Contact", "/en/#contact"),
                 ("LinkedIn", "https://www.linkedin.com/company/gg-technologies-srl"),
             ]),
         ],
@@ -162,15 +162,16 @@ PAGES = [
         "in_services": True,
         "it": {
             "slug": "servizi/wearable-medicale",
+            "og_image": "og-wearable-it.jpg",
             "blurb": "Scheda, firmware e piattaforma di telemonitoraggio, in un progetto solo.",
             "short": "Wearable & Medicale",
             "intro_title": "Il punto di partenza",
             "intro_h2": "Un wearable è una <span class=\"grad-text\">catena</span>, non un dispositivo.",
-            "title": "Wearable medicali e monitoraggio biovitale — G&G Technologies",
-            "description": "Dispositivi indossabili per il monitoraggio biovitale di atleti, pazienti "
-                           "e anziani: elettronica custom, firmware e piattaforme di telemonitoraggio.",
+            "title": "Wearable medicali e telemonitoraggio — G&G Technologies",
+            "description": "Progettiamo dispositivi medici indossabili e sistemi di telemonitoraggio per "
+                           "pazienti e anziani: elettronica custom, firmware e piattaforma dati.",
             "kicker": "Wearable &amp; Medicale",
-            "h1": "Dispositivi indossabili per il <span class=\"grad-text\">monitoraggio biovitale</span>.",
+            "h1": "Dispositivi indossabili e <span class=\"grad-text\">telemonitoraggio</span> dei pazienti.",
             "lead": "Dispositivi indossabili e sensori ambientali per seguire pazienti fragili e anziani. "
                     "Dall'elettronica su misura alla piattaforma che legge i dati.",
             "intro": [
@@ -253,8 +254,9 @@ PAGES = [
         },
         "en": {
             "slug": "en/services/medical-wearables",
+            "og_image": "og-wearable-en.jpg",
             "blurb": "Board, firmware and remote-monitoring platform, in a single project.",
-            "short": "Wearable & Medical",
+            "short": "Medical wearables",
             "intro_title": "Where we start",
             "intro_h2": "A wearable is a <span class=\"grad-text\">chain</span>, not a device.",
             "title": "Wearable medical device development — G&G Technologies",
@@ -355,6 +357,7 @@ PAGES = [
         "in_services": True,
         "it": {
             "slug": "servizi/robotica-automazione",
+            "og_image": "og-robotics-it.jpg",
             "blurb": "Bordo macchina, integrazione con i gestionali, misura di fermi e scarti.",
             "short": "Robotica & Automazione",
             "intro_title": "Il punto di partenza",
@@ -440,6 +443,7 @@ PAGES = [
         },
         "en": {
             "slug": "en/services/robotics-automation",
+            "og_image": "og-robotics-en.jpg",
             "blurb": "Automation at the machine, integration with your systems, downtime measured.",
             "short": "Robotics & Automation",
             "intro_title": "Where we start",
@@ -536,6 +540,7 @@ PAGES = [
         "in_services": True,
         "it": {
             "slug": "servizi/intelligenza-artificiale",
+            "og_image": "og-ai-it.jpg",
             "blurb": "Agenti che leggono documenti e interrogano i tuoi sistemi, con la misura decisa prima.",
             "short": "Intelligenza Artificiale",
             "intro_title": "Il punto di partenza",
@@ -545,8 +550,8 @@ PAGES = [
                            "documenti e integrazione con ERP e gestionali già in uso.",
             "kicker": "Intelligenza Artificiale",
             "h1": "AI applicata al <span class=\"grad-text\">lavoro reale</span>, non alle demo.",
-            "lead": "L'intelligenza artificiale entra in azienda quando risolve un problema che qualcuno ha "
-                    "davvero.",
+            "lead": "Agenti che leggono i tuoi documenti e interrogano i tuoi sistemi. L'AI fa il lavoro "
+                    "pesante, la decisione resta a chi ne risponde.",
             "intro": [
                 "Il modello della demo lavora su dati puliti. I tuoi sono incompleti, scritti male e sparsi "
                 "in cinque sistemi diversi: è lì che il progetto si ferma.",
@@ -558,7 +563,7 @@ PAGES = [
             "cards_title": "Cosa costruiamo",
             "cards_intro": "Quattro modi in cui l'AI entra in azienda partendo da quello che c'è già.",
             "cards_note": "Se i documenti non possono uscire dall'azienda, il capitolo è un altro: "
-                          "<a href=\"/ai-on-premise/\">come funziona l'AI on-premise</a>.",
+                          "<a href=\"/servizi/ai-on-premise/\">come funziona l'AI on-premise</a>.",
             "cards": [
                 ("spark", "Agenti AI e specialisti verticali",
                  "Assistenti costruiti su un compito preciso, con accesso ai dati e agli strumenti "
@@ -566,12 +571,12 @@ PAGES = [
                  ["Un compito definito, non un chatbot generico",
                   "Accesso controllato ai dati aziendali",
                   "Ogni risposta cita i documenti da cui viene"]),
-                ("gauge", "Misura del risultato",
-                 "Prima di scrivere codice decidiamo come sapremo se ha funzionato: ore risparmiate, "
-                 "errori evitati, tempi di risposta.",
-                 ["Un indicatore concordato prima di partire",
-                  "Confronto con come si lavora oggi",
-                  "Correzioni sulla base della misura, non delle impressioni"]),
+                ("shield", "La persona che valida",
+                 "L'AI legge, propone, prepara. Chi ne risponde controlla e firma: lo progettiamo "
+                 "così dall'inizio, non lo aggiungiamo alla fine.",
+                 ["Ogni proposta arriva con le fonti da controllare",
+                  "Chi decide vede su cosa sta decidendo",
+                  "Un indicatore concordato prima di partire, misurato dopo"]),
                 ("data", "Analisi e trasformazione dati",
                  "Estrazione, normalizzazione e lettura di dati non strutturati: documenti, log, archivi.",
                  ["Lettura di documenti e archivi storici",
@@ -624,6 +629,7 @@ PAGES = [
         },
         "en": {
             "slug": "en/services/artificial-intelligence",
+            "og_image": "og-ai-en.jpg",
             "blurb": "Agents that read documents and query your systems, with the measure agreed first.",
             "short": "Artificial Intelligence",
             "intro_title": "Where we start",
@@ -633,7 +639,8 @@ PAGES = [
                            "generation (RAG) over your documents and integration with your ERP.",
             "kicker": "Artificial Intelligence",
             "h1": "AI applied to <span class=\"grad-text\">real work</span>, not to demos.",
-            "lead": "Artificial intelligence enters a company when it solves a problem someone actually has.",
+            "lead": "Agents that read your documents and query your systems. AI does the heavy lifting, "
+                    "the decision stays with whoever answers for it.",
             "intro": [
                 "Demos always work. AI projects stall afterwards, when the model meets the company's real "
                 "data: incomplete, badly written, scattered across five different systems.",
@@ -645,19 +652,19 @@ PAGES = [
             "cards_title": "What we build",
             "cards_intro": "Four ways AI enters a company starting from what is already there.",
             "cards_note": "If documents cannot leave the company, that is a separate story: "
-                          "<a href=\"/en/on-premise-ai/\">how on-premise AI works</a>.",
+                          "<a href=\"/en/services/on-premise-ai/\">how on-premise AI works</a>.",
             "cards": [
                 ("spark", "AI agents built for one job",
                  "Assistants built around one precise task, with access to company data and tools.",
                  ["One defined task, not a generic chatbot",
                   "Controlled access to company data",
                   "Verifiable answers, with sources"]),
-                ("gauge", "Measuring the result",
-                 "Before we write code we agree how we will know it worked: hours saved, errors "
-                 "avoided, response times.",
-                 ["One agreed indicator, set before we start",
-                  "Measured against how the work is done today",
-                  "Corrections driven by the measure, not by impressions"]),
+                ("shield", "The person who validates",
+                 "AI reads, proposes, prepares. Whoever answers for the decision checks it and signs "
+                 "it off: we design it that way from the start, we do not bolt it on at the end.",
+                 ["Every proposal comes with the sources to check",
+                  "The person deciding sees what they are deciding on",
+                  "One agreed indicator, set before we start and measured after"]),
                 ("data", "Data analysis and transformation",
                  "Extraction, normalisation and reading of unstructured data: documents, logs, archives.",
                  ["Reading documents and historical archives",
@@ -722,6 +729,7 @@ PAGES = [
         "in_services": False,
         "it": {
             "slug": "podz-ai",
+            "og_image": "og-podz-it.jpg",
             "blurb": "Il prodotto già pronto: lo installi, legge i tuoi file, 30 giorni di prova.",
             "short": "Podz.AI",
             "intro_title": "Il prodotto",
@@ -731,8 +739,8 @@ PAGES = [
                            "sul computer di chi ha dati riservati. Costruita sul framework DigiSense®.",
             "kicker": "Podz.AI",
             "h1": "Podz.AI — l'AI che resta <span class=\"grad-text\">sul tuo computer</span>.",
-            "lead": "La workstation AI personale per chi lavora con dati riservati. Costruita sul nostro "
-                    "framework DigiSense®, sviluppata in Europa.",
+            "lead": "La workstation AI personale per chi lavora con dati riservati: legge i tuoi documenti, "
+                    "prepara il lavoro, e lascia a te la firma. Costruita sul framework DigiSense®.",
             "intro": [
                 "Podz.AI è un'unica applicazione che si installa sul computer e lavora con i documenti di chi "
                 "la usa, senza mandarli a nessuno. Il cloud è una scelta, non il default.",
@@ -815,6 +823,7 @@ PAGES = [
         },
         "en": {
             "slug": "en/podz-ai",
+            "og_image": "og-podz-en.jpg",
             "blurb": "The product, ready to install: it reads your files, 30 days to try it.",
             "short": "Podz.AI",
             "intro_title": "The product",
@@ -824,8 +833,8 @@ PAGES = [
                            "the computer of people with confidential data. Built on the DigiSense® framework.",
             "kicker": "Podz.AI",
             "h1": "Podz.AI — AI that stays <span class=\"grad-text\">on your computer</span>.",
-            "lead": "The personal AI workstation for people who work with confidential data. Built on our "
-                    "DigiSense® framework, developed in Europe.",
+            "lead": "The personal AI workstation for people who work with confidential data: it reads your "
+                    "documents, prepares the work, and leaves the sign-off to you. Built on DigiSense®.",
             "intro": [
                 "Podz.AI is a single application you install on your computer that works with your documents "
                 "without sending them to anyone. The cloud is a choice, not the default.",
@@ -918,6 +927,7 @@ PAGES = [
         "steps_numbered": False,
         "it": {
             "slug": "digisense",
+            "og_image": "og-digisense-it.jpg",
             "blurb": "Cosa c'è sotto, e perché il tuo progetto non parte da zero.",
             "short": "DigiSense\u00ae",
             "intro_title": "Perché esiste",
@@ -1003,6 +1013,7 @@ PAGES = [
         },
         "en": {
             "slug": "en/digisense",
+            "og_image": "og-digisense-en.jpg",
             "blurb": "What sits underneath, and why your project does not start from scratch.",
             "short": "DigiSense\u00ae",
             "intro_title": "Why it exists",
@@ -1093,9 +1104,13 @@ PAGES = [
         "key": "onprem",
         "schema": "Service",
         "service_type": "On-premise artificial intelligence deployment",
-        "in_services": False,
+        # Lives under /servizi/ like the other three: the footer already listed it there.
+        "in_services": True,
+        # Old URL, kept alive as a redirect stub because GitHub Pages cannot issue a 301.
+        "moved_from": {"it": "ai-on-premise", "en": "en/on-premise-ai"},
         "it": {
-            "slug": "ai-on-premise",
+            "slug": "servizi/ai-on-premise",
+            "og_image": "og-onprem-it.jpg",
             "blurb": "Come si sceglie fra tutto in locale, ibrido e cloud, a partire dai tuoi dati.",
             "short": "AI on-premise",
             "intro_title": "Il punto di partenza",
@@ -1105,8 +1120,8 @@ PAGES = [
                            "non lasciano l'infrastruttura. Progettazione europea, da San Marino.",
             "kicker": "AI on-premise",
             "h1": "L'AI può lavorare <span class=\"grad-text\">senza portare via i dati</span>.",
-            "lead": "Modelli che girano sulla tua macchina o sul tuo server. I documenti restano dove "
-                    "sono già.",
+            "lead": "Modelli che girano sulla tua macchina o sul tuo server. I documenti restano dove sono "
+                    "già, e chi decide resti chi decideva prima.",
             "intro": [
                 "Molte aziende si fermano davanti all'AI per un motivo solo: i dati su cui servirebbe usarla "
                 "sono proprio quelli che non possono uscire. Cartelle cliniche, contratti, progetti, dati di "
@@ -1180,7 +1195,8 @@ PAGES = [
             "related": ["ai", "podz", "digisense"],
         },
         "en": {
-            "slug": "en/on-premise-ai",
+            "slug": "en/services/on-premise-ai",
+            "og_image": "og-onprem-en.jpg",
             "blurb": "How to choose between fully local, hybrid and cloud, starting from your data.",
             "short": "On-premise AI",
             "intro_title": "Where we start",
@@ -1190,7 +1206,8 @@ PAGES = [
                            "documents never leave your infrastructure. Built in Europe, from San Marino.",
             "kicker": "On-premise AI",
             "h1": "On-premise AI: the work gets done, <span class=\"grad-text\">the data never leaves</span>.",
-            "lead": "Models that run on your machine or on your server. Documents stay where they already are.",
+            "lead": "Models that run on your machine or on your server. The documents stay where they "
+                    "already are, and the person deciding stays the person who decided before.",
             "intro": [
                 "Many companies stop short of AI for one reason: the data they would need to use it on is "
                 "exactly the data that cannot leave. Medical records, contracts, designs, customer and "
@@ -1274,11 +1291,11 @@ PAGES = [
             "slug": "progetti/robot-assistenza-domiciliare",
             "short": "Robot per l'assistenza domiciliare",
             "blurb": "Un robot che assiste in casa, con l'AI a bordo. Prototipo in sviluppo.",
-            "title": "Robot per l'assistenza domiciliare — G&G Technologies",
+            "title": "Robot per l'assistenza agli anziani in casa — G&G Technologies",
             "description": "Prototipo di robot che assiste anziani e persone fragili in casa: voce, "
                            "telecamera e sensori, con l'intelligenza artificiale che gira a bordo.",
             "kicker": "Progetto in sviluppo",
-            "h1": "Un robot che <span class=\"grad-text\">sta in casa</span>, non in fabbrica.",
+            "h1": "Un robot per gli anziani che <span class=\"grad-text\">sta in casa</span>, non in fabbrica.",
             "lead": "Prototipo in sviluppo: assistenza a persone anziane e fragili, comandato a voce, con "
                     "l'AI che gira a bordo e i dati che non escono di casa.",
             "intro_title": "Perché ci lavoriamo",
@@ -1295,8 +1312,8 @@ PAGES = [
             # The company figures talk to a factory buyer. Here the reader is a family or a care
             # cooperative: automated factories mean nothing to them.
             "stats": [
-                ("4", "sensori a bordo"),
-                ("0", "dati inviati al cloud"),
+                ("0", "flussi audio o video che escono di casa"),
+                ("100%", "elaborazione a bordo del robot"),
                 ("EU", "progettato in Europa"),
             ],
             "photo": {
@@ -1325,10 +1342,11 @@ PAGES = [
                   "LLM in esecuzione locale",
                   "Funziona anche con la rete assente"]),
                 ("pulse", "Percezione dell'ambiente",
-                 "Telecamera, temperatura, umidità e microfono. Il microfono viene addestrato a riconoscere "
-                 "rumori che possono indicare una caduta o una richiesta d'aiuto.",
+                 "Telecamera, temperatura, umidità e microfono, letti a bordo. Sul microfono stiamo "
+                 "lavorando al riconoscimento di rumori che possono indicare una caduta o una richiesta "
+                 "d'aiuto: è in sviluppo, non è una funzione.",
                  ["Telecamera e sensori ambientali",
-                  "Riconoscimento di suoni anomali",
+                  "Riconoscimento di suoni anomali — in sviluppo",
                   "Elaborazione a bordo, non in cloud"]),
             ],
             "steps_title": "A che punto siamo",
@@ -1349,6 +1367,8 @@ PAGES = [
                           "medico."),
                 ("Elaborazione", "A bordo del robot, sul framework <a href=\"/digisense/\">DigiSense®</a>: "
                                  "audio e video non escono di casa."),
+                ("Cosa esce di casa", "È la domanda aperta del progetto, e la decidiamo con chi ci vive: "
+                                      "un avviso a chi assiste, mai il flusso della telecamera o del microfono."),
                 ("Base", "Reachy Mini, piattaforma open source di Pollen Robotics (gruppo Hugging Face)."),
             ],
             "faq_title": "Domande frequenti",
@@ -1356,6 +1376,10 @@ PAGES = [
                 ("Si può comprare?",
                  "No. È un prototipo su cui stiamo lavorando, non un prodotto a catalogo. Se ti interessa "
                  "seguirne lo sviluppo o ospitare una prova sul campo, scrivici."),
+                ("Chi decide cosa il robot può vedere e sentire?",
+                 "La persona che vive in casa. Prima di installare qualcosa si decide con lei cosa il "
+                 "robot può ascoltare e guardare, e chi riceve gli avvisi. È il primo punto di ogni prova "
+                 "sul campo, prima della tecnica."),
                 ("Rileva le cadute?",
                  "Non lo diciamo, ed è una distinzione che conta. Stiamo addestrando il microfono a "
                  "riconoscere rumori che possono indicare una caduta o una richiesta d'aiuto: è un aiuto, "
@@ -1371,7 +1395,7 @@ PAGES = [
                  "usare la telecamera. È una possibilità futura, non una funzione: è un dato biometrico e "
                  "prima della tecnica va deciso come trattarlo."),
             ],
-            "cta_title": "Vi interessa seguirlo, o ospitare una prova?",
+            "cta_title": "Ti interessa seguirlo, o ospitare una prova?",
             "cta_text": "Cerchiamo strutture, cooperative e famiglie disposte a provarlo sul campo. Scrivici "
                         "e ti raccontiamo a che punto siamo davvero.",
             "related": ["digisense", "wearable", "onprem"],
@@ -1380,11 +1404,11 @@ PAGES = [
             "slug": "en/projects/home-care-robot",
             "short": "Home care robot",
             "blurb": "A robot that helps at home, with the AI on board. Prototype in development.",
-            "title": "Home care robot — G&G Technologies",
+            "title": "Robot for elderly care at home — G&G Technologies",
             "description": "A prototype robot that helps elderly and frail people at home: voice, camera "
                            "and sensors, with the artificial intelligence running on board.",
             "kicker": "Project in development",
-            "h1": "A robot that lives in a <span class=\"grad-text\">home</span>, not in a plant.",
+            "h1": "A robot for elderly care that lives in a <span class=\"grad-text\">home</span>, not a factory.",
             "lead": "A prototype in development: helping elderly and frail people, driven by voice, with the "
                     "AI running on board and the data staying in the house.",
             "intro_title": "Why we work on it",
@@ -1400,8 +1424,8 @@ PAGES = [
                 "<strong>prototype in development</strong>, not a product you can buy.",
             ],
             "stats": [
-                ("4", "sensors on board"),
-                ("0", "data sent to the cloud"),
+                ("0", "audio or video streams leaving the house"),
+                ("100%", "processing on board the robot"),
                 ("EU", "designed in Europe"),
             ],
             "photo": {
@@ -1428,12 +1452,13 @@ PAGES = [
                  "formed on the machine, without asking the internet for anything.",
                  ["Voice interaction, no screens",
                   "LLM running locally",
-                  "Works with the network down"]),
-                ("pulse", "Sensing the room",
-                 "Camera, temperature, humidity and microphone. The microphone is being trained to recognise "
-                 "sounds that may indicate a fall or a call for help.",
+                  "Works even with the network down"]),
+                ("pulse", "Sensing the environment",
+                 "Camera, temperature, humidity and microphone, all read on board. On the microphone we "
+                 "are working on recognising sounds that may indicate a fall or a call for help: it is "
+                 "in development, not a feature.",
                  ["Camera and ambient sensors",
-                  "Recognition of unusual sounds",
+                  "Recognition of unusual sounds — in development",
                   "Processing on board, not in the cloud"]),
             ],
             "steps_title": "Where we are",
@@ -1454,6 +1479,9 @@ PAGES = [
                            "device."),
                 ("Processing", "On board the robot, on the <a href=\"/en/digisense/\">DigiSense®</a> "
                                "framework: audio and video never leave the house."),
+                ("What leaves the house", "It is the project's open question, and we settle it with the "
+                                          "people who live there: an alert to the carer, never the camera or "
+                                          "microphone stream."),
                 ("Base", "Reachy Mini, the open-source platform by Pollen Robotics (Hugging Face group)."),
             ],
             "faq_title": "Frequently asked questions",
@@ -1461,6 +1489,10 @@ PAGES = [
                 ("Can I buy it?",
                  "No. It is a prototype we are working on, not a catalogue product. If you would like to "
                  "follow its development or host a field trial, write to us."),
+                ("Who decides what the robot may see and hear?",
+                 "The person who lives in the house. Before anything is installed we agree with them "
+                 "what the robot may listen to and look at, and who receives the alerts. It is the first "
+                 "point of every field trial, before any engineering."),
                 ("Does it detect falls?",
                  "We do not say that, and the distinction matters. We are training the microphone to "
                  "recognise sounds that may indicate a fall or a call for help: it is an aid, not a safety "

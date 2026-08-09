@@ -21,7 +21,10 @@ sys.path.insert(0, str(Path(__file__).parent))
 from content import CHROME, PAGES, PODZ_SITE, PRICING, SITE  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
-INDEX = ROOT / "index.html"
+SRC = Path(__file__).resolve().parent
+# The homepage is now generated too: _src/home.html is the bilingual source of both languages
+# and of the shared stylesheet.
+INDEX = SRC / "home.html"
 ASSETS = ROOT / "assets"
 
 LANGS = ("it", "en")
@@ -453,7 +456,7 @@ def _esc(text):
 
 def _header(lang, other_url):
     chrome = CHROME[lang]
-    home = "/"  # the homepage is a single bilingual URL for both languages
+    home = "/" if lang == "it" else "/en/"
     links = "\n        ".join(
         f'<a href="{href}">{html.escape(label)}</a>' for label, href in chrome["nav"]
     )
@@ -497,7 +500,7 @@ def _header(lang, other_url):
 
 def _footer(lang):
     chrome = CHROME[lang]
-    home = "/"  # the homepage is a single bilingual URL for both languages
+    home = "/" if lang == "it" else "/en/"
     cols = []
     for title, items in chrome["footer_cols"]:
         entries = "\n            ".join(
@@ -536,7 +539,7 @@ def _footer(lang):
 
 def _breadcrumb_html(lang, page, data):
     chrome = CHROME[lang]
-    home = "/"  # the homepage is a single bilingual URL for both languages
+    home = "/" if lang == "it" else "/en/"
     crumbs = [(chrome["breadcrumb_home"], home)]
     if page.get("in_services"):
         crumbs.append((chrome["breadcrumb_services"], home + "#services"))
@@ -779,7 +782,7 @@ def _related_html(lang, data):
 
 def _json_ld(lang, page, data, url):
     chrome = CHROME[lang]
-    home = SITE + "/"
+    home = SITE + ("/" if lang == "it" else "/en/")
     org_id = f"{SITE}/#organization"
 
     crumbs = [{"@type": "ListItem", "position": 1, "name": chrome["breadcrumb_home"], "item": home}]
@@ -1045,8 +1048,163 @@ def _render_page(lang, page):
 #  s i t e m a p
 # -----------------------------------------------------------------------------------------------------------------
 
+def _drop_other_language(markup, other):
+    """Remove every element whose class marks it as the other language.
+
+    A regex cannot do this: the elements wrap content and nest, so the closing tag has to be found
+    by counting depth. Anything left behind would show both languages at once.
+    """
+    pattern = re.compile(r'<(\w+)([^>]*\bclass="[^"]*\b' + other + r'\b[^"]*"[^>]*)>')
+    while True:
+        match = pattern.search(markup)
+        if not match:
+            return markup
+        tag = match.group(1)
+        depth, index = 1, match.end()
+        opening = re.compile(rf"<{tag}\b", re.I)
+        closing = re.compile(rf"</{tag}\s*>", re.I)
+        while depth and index < len(markup):
+            nxt_open = opening.search(markup, index)
+            nxt_close = closing.search(markup, index)
+            if not nxt_close:
+                raise SystemExit(f"_src/home.html: <{tag}> con class «{other}» non è chiuso")
+            if nxt_open and nxt_open.start() < nxt_close.start():
+                depth += 1
+                index = nxt_open.end()
+            else:
+                depth -= 1
+                index = nxt_close.end()
+        markup = markup[:match.start()] + markup[index:]
+
+
+def _render_home(lang):
+    """The two single-language homepages, derived from the one bilingual source."""
+    source = SRC / "home.html"
+    if not source.exists():
+        raise SystemExit(f"{source} non trovato: è la sorgente bilingue della homepage.")
+    s = source.read_text(encoding="utf-8")
+
+    other = "en" if lang == "it" else "it"
+    s = _drop_other_language(s, other)
+
+    titles = dict(re.findall(r"(it|en): '([^']*—[^']*)'", s))
+    descriptions = dict(re.findall(r"(it|en): '(Progettiamo[^']*|We design[^']*)'", s))
+    if len(titles) != 2 or len(descriptions) != 2:
+        raise SystemExit("_src/home.html: TITLES o DESCRIPTIONS non leggibili, controlla il blocco JS.")
+    title, description = titles[lang], descriptions[lang]
+
+    it_url, en_url = SITE + "/", SITE + "/en/"
+    url = it_url if lang == "it" else en_url
+
+    s = s.replace('<html lang="it">', f'<html lang="{lang}">', 1)
+    s = re.sub(r"<title>.*?</title>", f"<title>{_esc(title)}</title>", s, count=1, flags=re.S)
+    s = re.sub(r'<meta name="description" content="[^"]*">',
+               f'<meta name="description" content="{_esc(description)}">', s, count=1)
+    for prop, value in (("og:title", title), ("og:description", description),
+                        ("twitter:title", title), ("twitter:description", description)):
+        attr = "property" if prop.startswith("og:") else "name"
+        s = re.sub(rf'<meta {attr}="{prop}" content="[^"]*">',
+                   f'<meta {attr}="{prop}" content="{_esc(value)}">', s, count=1)
+    s = s.replace('<meta property="og:url" content="https://ggtechnologies.sm/">',
+                  f'<meta property="og:url" content="{url}">', 1)
+    s = s.replace('<meta property="og:locale" content="it_IT">',
+                  f'<meta property="og:locale" content="{LOCALE[lang]}">', 1)
+    s = s.replace('<meta property="og:locale:alternate" content="en_US">',
+                  f'<meta property="og:locale:alternate" content="{LOCALE[other]}">', 1)
+
+    s = re.sub(r'<link rel="canonical" href="[^"]*">\s*'
+               r'(?:<link rel="alternate" hreflang="[^"]*" href="[^"]*">\s*)*',
+               f'<link rel="canonical" href="{url}">\n'
+               f'  <link rel="alternate" hreflang="it" href="{it_url}">\n'
+               f'  <link rel="alternate" hreflang="en" href="{en_url}">\n'
+               f'  <link rel="alternate" hreflang="x-default" href="{it_url}">\n  ',
+               s, count=1)
+
+    s = s.replace("og-home-LANG.jpg", f"og-home-{lang}.jpg")
+
+    # Nodes that exist once and carry text: image alt, structured data, mail subjects. They are not
+    # duplicated with .it/.en classes, so the English page would otherwise ship Italian — which is
+    # what a screen reader reads out and what Google feeds into the Knowledge Panel.
+    if lang == "en":
+        for italian, english in (
+            ("subject=Richiesta%20informazioni", "subject=Information%20request"),
+            ("Una donna anziana seduta in salotto guarda un piccolo robot bianco con due antenne, "
+             "appoggiato al tavolino davanti a lei.",
+             "An elderly woman sitting in a living room looks at a small white robot with two "
+             "antennas, resting on the table in front of her."),
+            ("Progettiamo e realizziamo tecnologia a San Marino: wearable medicali, robotica, "
+             "automazione e intelligenza artificiale. Nostri il framework DigiSense® e Podz.AI.",
+             "We design and build technology in San Marino: medical wearables, robotics, automation "
+             "and artificial intelligence. DigiSense® and Podz.AI are ours."),
+            ('"Wearable medicali"', '"Medical wearables"'),
+            ('"Monitoraggio biovitale"', '"Vital-signs monitoring"'),
+            ('"Robotica e automazione industriale"', '"Industrial robotics and automation"'),
+            ('"Intelligenza artificiale"', '"Artificial intelligence"'),
+            ('"Sviluppo software"', '"Software development"'),
+            ('"DigiSense, framework proprietario per sensori, AI e automazione"',
+             '"DigiSense, our own framework for sensors, AI and automation"'),
+        ):
+            s = s.replace(italian, english)
+        s = re.sub(r'(og:image:alt|twitter:image:alt)" content="[^"]*"',
+                   r'\1" content="G&amp;G Technologies — medical wearables, robotics and '
+                   r'artificial intelligence, designed and built in San Marino."', s)
+    else:
+        s = re.sub(r'(og:image:alt|twitter:image:alt)" content="[^"]*"',
+                   r'\1" content="G&amp;G Technologies — wearable medicali, robotica e '
+                   r'intelligenza artificiale, progettati e realizzati a San Marino."', s)
+
+    switch = (f'<span class="current">{lang.upper()}</span>\n'
+              f'          <a href="{en_url if lang == "it" else it_url}" '
+              f'hreflang="{other}" lang="{other}">{other.upper()}</a>')
+    s = s.replace("<!--LANG-SWITCH-->", switch, 1)
+
+    # the toggle no longer exists, so neither do the functions that drove it
+    for block in ("_detectLanguage", "_setLanguage", "_initLanguage"):
+        s = re.sub(rf"\n      // [^\n]*\n      function {block}\(\)[^\n]*\n(?:.*?\n)*?      \}}\n",
+                   "\n", s, count=1)
+    s = re.sub(r"\n      const TITLES = \{(?:.*?\n)*?      \};\n", "\n", s, count=1)
+    s = re.sub(r"\n      const DESCRIPTIONS = \{(?:.*?\n)*?      \};\n", "\n", s, count=1)
+    s = re.sub(r"\n      const STORAGE_KEY = '[^']*';", "", s, count=1)
+    return s
+
+
+def _redirect_page(lang, old_slug, new_url, label):
+    """A stub at a retired URL.
+
+    GitHub Pages serves static files only: there is no 301. The canonical link is what search
+    engines actually act on; the meta refresh and the visible link are for people who arrive from
+    an old bookmark. noindex would hide the canonical, so it is deliberately absent.
+    """
+    wording = {
+        "it": ("Pagina spostata", "Questa pagina si trova ora a un nuovo indirizzo.", "Vai a"),
+        "en": ("Page moved", "This page now lives at a new address.", "Go to"),
+    }[lang]
+    return f"""<!DOCTYPE html>
+<html lang="{lang}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{wording[0]} — G&amp;G Technologies</title>
+  <link rel="canonical" href="{new_url}">
+  <meta http-equiv="refresh" content="0; url={new_url}">
+  <meta name="robots" content="noarchive">
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <main id="main" style="min-height:60vh;display:grid;place-items:center;text-align:center;padding:40px">
+    <div>
+      <h1 style="font-size:1.4rem;margin-bottom:12px">{wording[0]}</h1>
+      <p style="color:var(--muted);margin-bottom:20px">{wording[1]}</p>
+      <p><a class="btn btn-primary" href="{new_url}">{wording[2]} {_esc(label)}</a></p>
+    </div>
+  </main>
+</body>
+</html>
+"""
+
+
 def _sitemap(lastmod):
-    entries = [(SITE + "/", None, None)]
+    entries = [(SITE + "/", SITE + "/", SITE + "/en/"), (SITE + "/en/", SITE + "/", SITE + "/en/")]
     for page in PAGES:
         for lang in LANGS:
             entries.append((_url(page[lang]["slug"]), _url(page["it"]["slug"]), _url(page["en"]["slug"])))
@@ -1063,7 +1221,7 @@ def _sitemap(lastmod):
             lines.append(f'    <xhtml:link rel="alternate" hreflang="x-default" href="{it_url}"/>')
         lines.append(f"    <lastmod>{lastmod}</lastmod>")
         lines.append("    <changefreq>monthly</changefreq>")
-        lines.append(f"    <priority>{'1.0' if it_url is None else '0.8'}</priority>")
+        lines.append(f"    <priority>{'1.0' if url in (SITE + '/', SITE + '/en/') else '0.8'}</priority>")
         lines.append("  </url>")
     lines.append("</urlset>")
     return "\n".join(lines) + "\n"
@@ -1237,6 +1395,10 @@ def main():
 
     ASSETS.mkdir(exist_ok=True)
     (ASSETS / "site.css").write_text(_extract_homepage_css() + EXTRA_CSS, encoding="utf-8")
+
+    (ROOT / "index.html").write_text(_render_home("it"), encoding="utf-8")
+    (ROOT / "en").mkdir(exist_ok=True)
+    (ROOT / "en" / "index.html").write_text(_render_home("en"), encoding="utf-8")
     (ASSETS / "site.js").write_text(SITE_JS, encoding="utf-8")
 
     written = []
@@ -1248,13 +1410,25 @@ def main():
             (target / "index.html").write_text(_render_page(lang, page), encoding="utf-8")
             written.append(slug + "/")
 
+            # a retired URL keeps a stub pointing at the new one
+            old_slug = page.get("moved_from", {}).get(lang)
+            if old_slug:
+                stub = ROOT / old_slug
+                stub.mkdir(parents=True, exist_ok=True)
+                (stub / "index.html").write_text(
+                    _redirect_page(lang, old_slug, _url(slug), page[lang]["short"]), encoding="utf-8")
+                written.append(f"{old_slug}/  ->  {slug}/")
+
     (ROOT / "sitemap.xml").write_text(_sitemap(date.today().isoformat()), encoding="utf-8")
 
+    print("index.html       (it)")
+    print("en/index.html    (en)")
     print(f"assets/site.css  ({(ASSETS / 'site.css').stat().st_size // 1024} KB)")
     print("assets/site.js")
     for slug in written:
         print(slug)
-    print(f"sitemap.xml      ({len(written) + 1} URL)")
+    urls = len(LANGS) + sum(len(LANGS) for _ in PAGES)   # two homepages plus one URL per page per language
+    print(f"sitemap.xml      ({urls} URL, gli stub di reindirizzamento restano fuori)")
 
 
 if __name__ == "__main__":
