@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from content import CHROME, PAGES, PODZ_SITE, PRICING, SITE  # noqa: E402
+from content import BANNED, CHROME, PAGES, PODZ_SITE, PRICING, SITE  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = Path(__file__).resolve().parent
@@ -1231,40 +1231,6 @@ def _sitemap(lastmod):
 #  m a i n
 # -----------------------------------------------------------------------------------------------------------------
 
-# Phrasings the copy review rejected. They must not come back: a build that reintroduces one fails.
-# Left column is the offending text, right column says why, so whoever trips it knows what to write.
-BANNED = {
-    "it": [
-        ("metà del progetto", "numero non dimostrabile"),
-        ("il committente", "freddo, e rompe il tu"),
-        ("chi commissiona il progetto", "perifrasi da capitolato: usa il tu"),
-        ("alla cieca", "in italiano vuol dire anche «a casaccio»"),
-        ("società di consulenza", "progettiamo e realizziamo tecnologia, non solo consulenza"),
-        ("progetto di ricerca DigiSense", "DigiSense® è il framework, non un progetto concluso"),
-        ("sul campo dell'innovazione", "non significa niente"),
-        ("leader", "superlativo vietato"),
-        ("all'avanguardia", "superlativo vietato"),
-        ("soluzione unica", "superlativo vietato"),
-    ],
-    "en": [
-        ("biovital", "calco dall'italiano, nessuno lo cerca: usa vital signs"),
-        ("grafts onto", "calco di «si innesta»: usa plugs into / sits on top of"),
-        ("vertical specialist", "calco di «specialista verticale»"),
-        ("professional secrecy", "calco: usa client confidentiality o privilege"),
-        ("build to order", "in inglese significa altro: usa custom systems"),
-        ("robotis", "«robotise» non è uso corrente: usa automate"),
-        ("machine-side", "non è un termine inglese del settore"),
-        ("the client's", "terza persona: il lettore è il cliente, dagli del you"),
-        ("the user's", "terza persona: usa your"),
-        ("whoever commissions", "perifrasi: usa your"),
-        ("half the project", "numero non dimostrabile"),
-        ("never sees the real data", "garanzia assoluta non dimostrabile"),
-        ("catalog ", "ortografia americana: il resto del testo è britannico"),
-        ("leader", "superlativo vietato"),
-        ("cutting-edge", "superlativo vietato"),
-        ("unique solution", "superlativo vietato"),
-    ],
-}
 
 
 def _walk_text(value, path=""):

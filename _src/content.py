@@ -113,7 +113,7 @@ CHROME = {
                         "intelligence. Podz.AI is built on our DigiSense® framework.",
         "footer_cols": [
             ("Services", [
-                ("Wearable & Medical", "/en/services/medical-wearables/"),
+                ("Medical wearables", "/en/services/medical-wearables/"),
                 ("Robotics & Automation", "/en/services/robotics-automation/"),
                 ("Artificial Intelligence", "/en/services/artificial-intelligence/"),
                 ("On-premise AI", "/en/services/on-premise-ai/"),
@@ -146,6 +146,42 @@ CHROME = {
         "related_title": "Where to go next",
     },
 }
+
+# Phrasings the copy review rejected. They must not come back: a build that reintroduces one fails.
+# Left column is the offending text, right column says why, so whoever trips it knows what to write.
+BANNED = {
+    "it": [
+        ("metà del progetto", "numero non dimostrabile"),
+        ("il committente", "freddo, e rompe il tu"),
+        ("chi commissiona il progetto", "perifrasi da capitolato: usa il tu"),
+        ("alla cieca", "in italiano vuol dire anche «a casaccio»"),
+        ("società di consulenza", "progettiamo e realizziamo tecnologia, non solo consulenza"),
+        ("progetto di ricerca DigiSense", "DigiSense® è il framework, non un progetto concluso"),
+        ("sul campo dell'innovazione", "non significa niente"),
+        ("leader", "superlativo vietato"),
+        ("all'avanguardia", "superlativo vietato"),
+        ("soluzione unica", "superlativo vietato"),
+    ],
+    "en": [
+        ("biovital", "calco dall'italiano, nessuno lo cerca: usa vital signs"),
+        ("grafts onto", "calco di «si innesta»: usa plugs into / sits on top of"),
+        ("vertical specialist", "calco di «specialista verticale»"),
+        ("professional secrecy", "calco: usa client confidentiality o privilege"),
+        ("build to order", "in inglese significa altro: usa custom systems"),
+        ("robotis", "«robotise» non è uso corrente: usa automate"),
+        ("machine-side", "non è un termine inglese del settore"),
+        ("the client's", "terza persona: il lettore è il cliente, dagli del you"),
+        ("the user's", "terza persona: usa your"),
+        ("whoever commissions", "perifrasi: usa your"),
+        ("half the project", "numero non dimostrabile"),
+        ("never sees the real data", "garanzia assoluta non dimostrabile"),
+        ("catalog ", "ortografia americana: il resto del testo è britannico"),
+        ("leader", "superlativo vietato"),
+        ("cutting-edge", "superlativo vietato"),
+        ("unique solution", "superlativo vietato"),
+    ],
+}
+
 
 # -----------------------------------------------------------------------------------------------------------------
 #  p a g e s
@@ -180,7 +216,7 @@ PAGES = [
                 "dati arrivano a chi li deve leggere — il dispositivo finisce nel cassetto.",
                 "Progettiamo l'intera catena. L'elettronica e il firmware da una parte, la piattaforma che "
                 "raccoglie ed elabora i dati dall'altra. Abbiamo realizzato soluzioni wearable per il "
-                "monitoraggio biovitale in ambito medicale e sportivo.",
+                "monitoraggio dei parametri vitali in ambito medicale e sportivo.",
             ],
             "cards_title": "Cosa costruiamo",
             "cards_intro": "Dal sensore al cruscotto, un progetto solo. Addosso o in casa.",
@@ -224,7 +260,7 @@ PAGES = [
             "facts_title": "Dove abbiamo lavorato finora",
             "facts": [
                 ("Sanità", "Monitoraggio di pazienti e anziani, con i dati leggibili da chi assiste."),
-                ("Sport", "Parametri biovitali di atleti, raccolti in continuo durante l'attività."),
+                ("Sport", "Parametri vitali di atleti, raccolti in continuo durante l'attività."),
                 ("Tecnologia", "Il nostro framework <a href=\"/digisense/\">DigiSense®</a> è la base "
                                 "dell'acquisizione e dell'elaborazione dei dati."),
             ],
@@ -262,7 +298,7 @@ PAGES = [
             "title": "Wearable medical device development — G&G Technologies",
             "description": "Wearable devices for remote vital-signs monitoring in healthcare and sport: "
                            "custom electronics, firmware and remote patient monitoring platforms.",
-            "kicker": "Wearable &amp; Medical",
+            "kicker": "Medical wearables",
             "h1": "Wearable devices for <span class=\"grad-text\">remote vital-signs monitoring</span>.",
             "lead": "Wearable devices and ambient sensors that follow frail and elderly patients. From "
                     "custom electronics to the platform that reads the data.",
@@ -481,7 +517,7 @@ PAGES = [
                   "Batch and part traceability",
                   "Production dashboards people can read"]),
                 ("pulse", "Service robots and home care",
-                 "Robots that live in a house, not in a plant: designed to assist frail and elderly "
+                 "Robots that live in a house, not in a factory: designed to assist frail and elderly "
                  "people, and driven by voice rather than by a control panel.",
                  ["Voice interaction, no screens or controls",
                   "Integration with the home's ambient sensors",
@@ -556,7 +592,7 @@ PAGES = [
                 "Il modello della demo lavora su dati puliti. I tuoi sono incompleti, scritti male e sparsi "
                 "in cinque sistemi diversi: è lì che il progetto si ferma.",
                 "Per questo partiamo dal processo: dove si perde tempo, dove si sbaglia, dove un dato esiste "
-                "già ma nessuno lo legge. Poi costruiamo agenti e specialisti verticali, integriamo modelli "
+                "già ma nessuno lo legge. Poi costruiamo agenti che fanno un compito preciso, integriamo modelli "
                 "linguistici (LLM) nei sistemi esistenti e — quando i dati sono riservati — li teniamo dentro "
                 "l'azienda.",
             ],
@@ -565,7 +601,7 @@ PAGES = [
             "cards_note": "Se i documenti non possono uscire dall'azienda, il capitolo è un altro: "
                           "<a href=\"/servizi/ai-on-premise/\">come funziona l'AI on-premise</a>.",
             "cards": [
-                ("spark", "Agenti AI e specialisti verticali",
+                ("spark", "Agenti costruiti su un compito preciso",
                  "Assistenti costruiti su un compito preciso, con accesso ai dati e agli strumenti "
                  "dell'azienda.",
                  ["Un compito definito, non un chatbot generico",
@@ -973,11 +1009,11 @@ PAGES = [
             "steps_title": "Dove lo trovi",
             "steps_intro": "Un solo framework, quattro modi di usarlo.",
             "steps": [
-                ("Wearable e medicale", "Acquisizione dei parametri biovitali e piattaforma che li rende "
+                ("Wearable e medicale", "Acquisizione dei parametri vitali e piattaforma che li rende "
                                         "leggibili a medico, allenatore o caregiver."),
                 ("Robotica e automazione", "Controllo di macchina e raccolta dei dati di produzione sulla "
                                            "stessa base tecnologica."),
-                ("Intelligenza artificiale", "Agenti e specialisti verticali costruiti sullo strato dati "
+                ("Intelligenza artificiale", "Agenti costruiti su un compito preciso, sullo strato dati "
                                              "di DigiSense\u00ae."),
                 ("Podz.AI", "Il nostro prodotto: la workstation AI personale, costruita interamente su "
                             "DigiSense\u00ae."),
@@ -1357,7 +1393,7 @@ PAGES = [
                 ("In sviluppo", "Riconoscimento dei suoni che possono indicare una caduta o una richiesta "
                                 "d'aiuto, e affinamento dell'interazione vocale."),
                 ("Previsto", "Un hub domotico che colleghi il robot ai dispositivi indossabili già in casa, "
-                             "per leggerne i dati biovitali."),
+                             "per leggerne i parametri vitali."),
                 ("Da studiare", "Riconoscere la persona dalla firma elettrocardiografica. È un dato "
                                 "biometrico: prima della tecnica va risolto come trattarlo."),
             ],

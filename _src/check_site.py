@@ -14,6 +14,9 @@ import sys
 from html.parser import HTMLParser
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from content import BANNED  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
 SITE = "https://ggtechnologies.sm"
 VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param",
@@ -168,6 +171,22 @@ def _check_redirects(problems):
             problems.append(f"{f}: noindex nasconde il canonical, togli il noindex")
 
 
+def _check_banned(problems):
+    """The phrasings the copy reviews rejected, checked on the finished pages.
+
+    build.py already checks them in content.py, but the homepage comes from _src/home.html and was
+    invisible to that check — which is exactly how «biovital», «neural networks» and «vertical
+    specialists» survived on the most read page of the site. Checking the output catches both.
+    """
+    for f, t in _pages():
+        lang = "en" if f == "en/index.html" or f.startswith("en/") else "it"
+        body = re.sub(r"<script.*?</script>|<style.*?</style>", "", t, flags=re.S)
+        body = re.sub(r"<[^>]+>", " ", body).lower()
+        for phrase, reason in BANNED[lang]:
+            if phrase.lower() in body:
+                problems.append(f"{f}: «{phrase}» — {reason}")
+
+
 def _check_sitemap(problems, canonical):
     sitemap = ROOT / "sitemap.xml"
     listed = set(re.findall(r"<loc>([^<]+)</loc>", sitemap.read_text(encoding="utf-8")))
@@ -189,6 +208,7 @@ def main():
     _check_language(problems)
     canonical = _check_indexing(problems)
     _check_links_and_images(problems)
+    _check_banned(problems)
     _check_redirects(problems)
     urls = _check_sitemap(problems, canonical)
 
@@ -197,7 +217,7 @@ def main():
         raise SystemExit(f"\n{len(problems)} problemi.")
     print(f"OK — {len(canonical)} pagine, {urls} URL nella sitemap.\n"
           "     HTML, id, h1, & codificati, lingue separate, canonical, hreflang, JSON-LD,\n"
-          "     link, immagini con alt, card social, stub di reindirizzamento, sitemap.")
+          "     link, immagini con alt, frasi vietate, card social, stub, sitemap.")
 
 
 if __name__ == "__main__":
