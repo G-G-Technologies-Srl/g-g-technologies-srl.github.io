@@ -955,12 +955,14 @@ section.tinted {
 }
 .research .kicker { margin-bottom: 12px; }
 /* Headings that follow a kicker are serif everywhere else on this site: match them. */
+/* 36ch, measured in the browser and not guessed: below it the Italian heading breaks into three
+   lines and splits the highlighted phrase across two of them. Both languages fit in two lines here. */
 .research h3 {
   font-family: var(--font-display);
   font-weight: 600;
   font-size: clamp(1.25rem, 2.4vw, 1.6rem);
   margin: 0 0 18px;
-  max-width: 24ch;
+  max-width: 36ch;
 }
 .research p { color: var(--muted); font-size: 0.94rem; margin: 0 0 14px; max-width: 68ch; }
 .research-cite {

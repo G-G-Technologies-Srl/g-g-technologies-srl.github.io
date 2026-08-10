@@ -122,7 +122,7 @@ ARTICLES = [
         "key": "ai-act-dati-clienti",
         "date": "2026-08-07",
         # bozza | pronto — only "pronto" is indexed and listed in the sitemap.
-        "stato": "bozza",
+        "stato": "pronto",
         "author": "Gian Angelo Geminiani",
         "it": {
             "slug": "insights/ai-act-dati-clienti",

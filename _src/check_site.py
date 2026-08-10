@@ -15,7 +15,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from content import BANNED  # noqa: E402
+from content import BANNED, CHROME  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 SITE = "https://ggtechnologies.sm"
@@ -187,6 +187,83 @@ def _check_banned(problems):
                 problems.append(f"{f}: «{phrase}» — {reason}")
 
 
+def _check_footers_agree(problems):
+    """I due footer devono elencare le stesse pagine interne.
+
+    Questo sito ha **due** footer: quello delle pagine interne viene da `footer_cols` in
+    content.py, quello delle due home è scritto a mano in _src/home.html. Aggiungere una voce a
+    uno solo dei due è invisibile a ogni altro controllo — sitemap, canonical e hreflang restano
+    perfetti — e la pagina nuova sparisce dalla home. È già successo con /insights.
+
+    Confronta solo i link che risolvono a una pagina generata: ancore e link esterni fra i due
+    footer differiscono per scelta, e non sono il problema.
+    """
+    for lang, home in (("it", "index.html"), ("en", "en/index.html")):
+        path = ROOT / home
+        if not path.exists():
+            continue
+        text = path.read_text(encoding="utf-8")
+        if "<footer" not in text:
+            problems.append(f"{home}: footer assente")
+            continue
+        footer = text[text.index("<footer"):]
+
+        def _internal(hrefs):
+            out = set()
+            for href in hrefs:
+                target = href.strip("/")
+                candidate = (target + "/index.html") if target else "index.html"
+                if (ROOT / candidate).exists():
+                    out.add(href)
+            return out
+
+        in_home = _internal(re.findall(r'href="(/[^"#]*)"', footer))
+        in_pages = _internal(href for _, items in CHROME[lang]["footer_cols"]
+                             for _, href in items if href.startswith("/") and "#" not in href)
+
+        for href in sorted(in_pages - in_home):
+            problems.append(f"{home}: {href} è nel footer delle pagine interne ma non in quello "
+                            f"della home — aggiungilo a _src/home.html")
+        for href in sorted(in_home - in_pages):
+            problems.append(f"{home}: {href} è nel footer della home ma non in quello delle pagine "
+                            f"interne — aggiungilo a footer_cols in content.py")
+
+
+def _check_reachable(problems):
+    """Ogni pagina deve essere raggiungibile dalla home della sua lingua, seguendo i link.
+
+    Rete di sicurezza contro la pagina orfana: generata, in sitemap, e senza un solo link che ci
+    porti. Nota che è un controllo debole — trova un percorso qualsiasi, anche lungo tre salti —
+    quindi non sostituisce `_check_footers_agree`, che è quello che coglie i due footer divergenti.
+    """
+    graph = {}
+    for f, t in _pages():
+        body = re.sub(r"<script.*?</script>", "", t, flags=re.S)
+        targets = set()
+        for href in re.findall(r'href="(/[^"#]*)"', body):
+            path = href.strip("/")
+            candidate = (path + "/index.html") if path else "index.html"
+            if (ROOT / candidate).exists():
+                targets.add(candidate)
+        graph[f] = targets
+
+    for start in ("index.html", "en/index.html"):
+        if start not in graph:
+            continue
+        seen, queue = {start}, [start]
+        while queue:
+            for target in graph.get(queue.pop(), ()):
+                if target not in seen:
+                    seen.add(target)
+                    queue.append(target)
+        lang = "en" if start.startswith("en/") else "it"
+        for f in graph:
+            same_language = f.startswith("en/") if lang == "en" else not f.startswith("en/")
+            if same_language and f not in seen:
+                problems.append(f"{f}: nessun percorso di link dalla home {lang} — la pagina esiste "
+                                f"ma non ci si arriva navigando")
+
+
 def _check_sitemap(problems, canonical):
     """Every indexable page must be listed, and every noindex page must not be.
 
@@ -223,6 +300,8 @@ def main():
     _check_language(problems)
     canonical = _check_indexing(problems)
     _check_links_and_images(problems)
+    _check_footers_agree(problems)
+    _check_reachable(problems)
     _check_banned(problems)
     _check_redirects(problems)
     urls = _check_sitemap(problems, canonical)
@@ -232,7 +311,8 @@ def main():
         raise SystemExit(f"\n{len(problems)} problemi.")
     print(f"OK — {len(canonical)} pagine, {urls} URL nella sitemap.\n"
           "     HTML, id, h1, & codificati, lingue separate, canonical, hreflang, JSON-LD,\n"
-          "     link, immagini con alt, frasi vietate, card social, stub, sitemap.")
+          "     link, immagini con alt, footer allineati, raggiungibilità dalla home,\n"
+          "     frasi vietate, card social, stub, sitemap.")
 
 
 if __name__ == "__main__":
