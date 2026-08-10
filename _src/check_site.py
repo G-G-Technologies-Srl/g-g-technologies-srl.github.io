@@ -187,6 +187,39 @@ def _check_banned(problems):
                 problems.append(f"{f}: «{phrase}» — {reason}")
 
 
+def _check_lang_switch_styled(problems):
+    """Lo switch di lingua deve risultare stilizzato su ogni pagina, home compresa.
+
+    La home porta il suo <style> inline, le pagine interne caricano assets/site.css: una regola
+    scritta per un selettore che non esiste — è successo con `.lang-switch button` dopo che i
+    <button> erano diventati uno <span> più un <a> — lascia il controllo nudo sulla sola home.
+    Non basta cercare il selettore: compare anche dentro regole combinate. Qui si controlla che
+    esista davvero una dichiarazione di padding applicabile ai due elementi dello switch.
+    """
+    shared = (ROOT / "assets" / "site.css")
+    shared_css = shared.read_text(encoding="utf-8") if shared.exists() else ""
+
+    for f, t in _pages():
+        found = re.search(r'<div class="lang-switch"[^>]*>(.*?)</div>', t, re.S)
+        if not found:
+            problems.append(f"{f}: switch di lingua assente")
+            continue
+        inline = "".join(re.findall(r"<style[^>]*>(.*?)</style>", t, re.S))
+        css = (inline or shared_css)
+
+        for element, needle in (("<span class=\"current\">", ".lang-switch .current"),
+                                ("<a>", ".lang-switch a")):
+            padded = False
+            for selector, body in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
+                parts = [s.strip() for s in selector.split(",")]
+                if needle in parts and "padding" in body:
+                    padded = True
+                    break
+            if not padded:
+                problems.append(f"{f}: nessuna regola con padding per «{needle}» — lo switch di "
+                                f"lingua è senza stile su questa pagina")
+
+
 def _check_footers_agree(problems):
     """I due footer devono elencare le stesse pagine interne.
 
@@ -300,6 +333,7 @@ def main():
     _check_language(problems)
     canonical = _check_indexing(problems)
     _check_links_and_images(problems)
+    _check_lang_switch_styled(problems)
     _check_footers_agree(problems)
     _check_reachable(problems)
     _check_banned(problems)
@@ -311,8 +345,8 @@ def main():
         raise SystemExit(f"\n{len(problems)} problemi.")
     print(f"OK — {len(canonical)} pagine, {urls} URL nella sitemap.\n"
           "     HTML, id, h1, & codificati, lingue separate, canonical, hreflang, JSON-LD,\n"
-          "     link, immagini con alt, footer allineati, raggiungibilità dalla home,\n"
-          "     frasi vietate, card social, stub, sitemap.")
+          "     link, immagini con alt, switch di lingua stilizzato, footer allineati,\n"
+          "     raggiungibilità dalla home, frasi vietate, card social, stub, sitemap.")
 
 
 if __name__ == "__main__":

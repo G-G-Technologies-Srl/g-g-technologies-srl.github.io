@@ -314,14 +314,8 @@ section.tinted {
 .cta-band h2 { max-width: 20ch; }
 .cta-band .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
 
-/* Sizing, font and padding come from the widened homepage rules. Only what a <span> and an <a>
-   do not inherit from a <button> is restated here. */
-.lang-switch { flex: 0 0 auto; }
-.lang-switch a, .lang-switch .current {
-  display: inline-flex; align-items: center; justify-content: center;
-  line-height: 1; white-space: nowrap; text-decoration: none;
-}
-.lang-switch a:hover { color: var(--text); }
+/* Lo switch di lingua non compare qui: le sue regole stanno in _src/home.html e valgono per
+   tutte le pagine, home compresa. Restare in un posto solo è il punto. */
 
 /* Four-capability pages (AI) lay out 2x2 instead of leaving an orphan card. */
 .cards-3.cards-4 { grid-template-columns: repeat(2, 1fr); }
@@ -527,31 +521,27 @@ BOOTSTRAP_JS = """(function () {
 # -----------------------------------------------------------------------------------------------------------------
 
 def _extract_homepage_css():
-    """Return the homepage <style> block, so inner pages share one design system.
+    """Return the homepage <style> block verbatim, so inner pages share one design system.
 
-    The homepage language switch is two <button> elements toggled by JS. Inner pages have one URL
-    per language, so the switch is a <span> for the current language plus an <a> to the other one.
-    Rather than restating the button rules, widen the homepage selectors to cover all three
-    elements: padding, font and the responsive override then stay identical by construction.
+    This used to rewrite the language-switch selectors on the way out, because the homepage styled
+    <button> elements while the inner pages use a <span> plus an <a>. The rewrite only touched
+    assets/site.css — and the homepage keeps its own inline <style> — so the two drifted the moment
+    the homepage lost its buttons: the switch went unstyled on the home page and nowhere else, and
+    no check could see it.
+
+    Now home.html styles the elements that actually exist, and this function copies the block
+    untouched. Nothing to keep in sync means nothing that can drift.
     """
     html = INDEX.read_text(encoding="utf-8")
     match = re.search(r"<style>(.*?)</style>", html, re.S)
     if not match:
-        raise SystemExit("index.html: <style> block not found — the shared stylesheet cannot be built.")
+        raise SystemExit("_src/home.html: blocco <style> non trovato — il CSS condiviso non si può costruire.")
     css = match.group(1)
 
-    active = ".lang-switch button.active"
-    if active not in css:
-        raise SystemExit("index.html: '.lang-switch button.active' not found — check the language switch.")
-    css = css.replace(active, active + ", .lang-switch .current")
-
-    css, count = re.subn(
-        r"\.lang-switch button(?=\s*\{)",
-        ".lang-switch button, .lang-switch a, .lang-switch .current",
-        css,
-    )
-    if count == 0:
-        raise SystemExit("index.html: '.lang-switch button' rules not found — check the language switch.")
+    if ".lang-switch button" in css:
+        raise SystemExit("_src/home.html: il CSS stilizza ancora '.lang-switch button', ma lo switch di "
+                         "lingua non ha più <button>: la regola non si applica a niente e sulla home il "
+                         "pulsante resta nudo. Usa '.lang-switch a, .lang-switch .current'.")
     return css
 
 

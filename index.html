@@ -432,22 +432,35 @@
 
     .nav-actions { display: flex; align-items: center; gap: 14px; }
 
+    /* Lo switch è uno <span class="current"> più un <a>, in tutte le pagine: la home ha un URL
+       per lingua come le altre, e i <button> con il toggle in JS non esistono più. Le regole
+       stanno qui una volta sola e valgono ovunque — se le scrivi per un selettore che non c'è,
+       il difetto si vede solo sulla home, che è l'unica pagina a usare questo blocco così com'è. */
     .lang-switch {
       display: inline-flex;
+      flex: 0 0 auto;
       border: 1px solid var(--border-strong);
       border-radius: 999px;
       overflow: hidden;
     }
-    .lang-switch button {
+    .lang-switch a, .lang-switch .current {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 38px;
       background: transparent;
       border: none;
       color: var(--faint);
       font: 600 0.78rem var(--font);
       padding: 7px 12px;
+      line-height: 1;
+      white-space: nowrap;
+      text-decoration: none;
       cursor: pointer;
       transition: background 0.18s ease, color 0.18s ease;
     }
-    .lang-switch button.active { background: rgba(127, 127, 127, 0.16); color: var(--text); }
+    .lang-switch .current { background: rgba(127, 127, 127, 0.16); color: var(--text); }
+    .lang-switch a:hover { color: var(--text); }
 
     /* Theme toggle (sun shown in dark -> switches to light, moon shown in light) */
     .theme-toggle {
@@ -499,7 +512,7 @@
     @media (max-width: 900px) {
       .nav { gap: 12px; }
       .brand { font-size: 0.95rem; white-space: nowrap; }
-      .lang-switch button { padding: 6px 10px; }
+      .lang-switch a, .lang-switch .current { min-width: 34px; padding: 6px 10px; }
       .nav-links {
         position: fixed;
         top: var(--nav-h); left: 0; right: 0;
