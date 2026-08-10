@@ -829,6 +829,8 @@
     }
     .pillar h3 { font-size: 1.05rem; margin: 10px 0 8px; }
     .pillar p { color: var(--muted); font-size: 0.88rem; }
+    /* Tre voci invece di quattro: il percorso del team ha tre periodi, non quattro. */
+    .pillars.pillars-3 { grid-template-columns: repeat(3, 1fr); }
     @media (max-width: 900px) { .pillars { grid-template-columns: 1fr 1fr; } }
     @media (max-width: 560px) { .pillars { grid-template-columns: 1fr; } }
 
@@ -1554,6 +1556,45 @@
                 <p class="en">Our chief executive, on the Italian ministry register since 2020</p>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- Il percorso, con le date. La società è del 2022: il lavoro precedente è del team, e va
+             attribuito al team. Scriverlo al plurale aziendale sarebbe rivendicare come lavoro
+             della società cose fatte quando la società non esisteva. -->
+        <div class="reveal" style="margin-top: 72px;">
+          <div class="kicker">
+            <span class="it">Da dove veniamo</span>
+            <span class="en">Where we come from</span>
+          </div>
+          <h2 class="it">Il mestiere non è nato <span class="grad-text">nel 2022</span>.</h2>
+          <h2 class="en">The craft did not start <span class="grad-text">in 2022</span>.</h2>
+        </div>
+
+        <div class="pillars pillars-3">
+          <div class="pillar reveal">
+            <div class="n">2007 – 2008</div>
+            <h3 class="it">Ricerca all'Università di Bologna</h3>
+            <h3 class="en">Research at the University of Bologna</h3>
+            <p class="it">Il nostro amministratore delegato ha lavorato come ricercatore al Dipartimento di Scienze degli Alimenti, su una piattaforma di tracciabilità per l'ortofrutta di quarta gamma: un algoritmo modulare che risale la filiera partendo da qualunque documento, e mostra a ciascuno — consumatore, autorità di controllo, produttore — solo quello che gli compete.</p>
+            <p class="en">Our chief executive worked as a researcher at the Department of Food Science, on a traceability platform for fresh-cut fruit and vegetables: a modular algorithm that walks back up the supply chain from any document, and shows each party — consumer, control authority, producer — only what concerns them.</p>
+          </div>
+          <div class="pillar reveal">
+            <div class="n">2009 – 2020</div>
+            <h3 class="it">Undici anni in Gruppo Fontanot</h3>
+            <h3 class="en">Eleven years at Gruppo Fontanot</h3>
+            <p class="it">Prima come responsabile dello sviluppo software, poi come manager dell'innovazione digitale: processi produttivi, logistica, gestione della rete vendita e configuratori di prodotto. Fra le cose progettate, sistemi di machine learning applicati al controllo qualità.</p>
+            <p class="en">First as head of software development, then as digital innovation manager: production processes, logistics, sales network management and product configurators. Among the things designed, machine learning systems applied to quality control.</p>
+          </div>
+          <div class="pillar reveal">
+            <div class="n">
+              <span class="it">dal 2022</span>
+              <span class="en">from 2022</span>
+            </div>
+            <h3 class="it">G&amp;G Technologies</h3>
+            <h3 class="en">G&amp;G Technologies</h3>
+            <p class="it">La società nasce nel 2022 e porta quel mestiere su <strong>DigiSense®</strong>, il framework registrato che sta sotto ogni implementazione con AI, sensori o robot, e su <strong>Podz.AI</strong>.</p>
+            <p class="en">The company was founded in 2022 and brings that craft onto <strong>DigiSense®</strong>, the registered framework under every implementation with AI, sensors or robots, and onto <strong>Podz.AI</strong>.</p>
           </div>
         </div>
       </div>

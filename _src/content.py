@@ -580,6 +580,32 @@ PAGES = [
                 "Noi partiamo dall'altra parte. Guardiamo dove si perde tempo, dove si sbaglia e dove un "
                 "dato esiste già ma nessuno lo legge. Poi scegliamo cosa automatizzare — e cosa no.",
             ],
+            # Il primo cliente nominato del sito. Niente cifre: non ce ne sono di dimostrabili, e
+            # una descrizione onesta vale più di un numero che nessuno può controllare.
+            "case": {
+                "kicker": "Un caso · Brighi Infissi",
+                "heading": "Il preventivo con la <span class=\"grad-text\">trasmittanza dentro</span>, "
+                           "in pochi click.",
+                "body": [
+                    "Vendere un infisso vuol dire tenere insieme due linguaggi. Quello tecnico — "
+                    "trasmittanza termica, stratigrafia, prestazioni — e quello commerciale, il prezzo. "
+                    "Chi sta davanti al cliente deve rispondere su tutti e due, e spesso deve chiamare "
+                    "l'ufficio tecnico e richiamare il giorno dopo.",
+                    "Per <strong>Brighi Infissi</strong> abbiamo costruito un configuratore di prodotto "
+                    "per la rete vendita — prima che G&amp;G Technologies esistesse, quando eravamo lo "
+                    "stesso gruppo di persone senza ancora questa insegna. Si scelgono le caratteristiche "
+                    "del serramento e ne esce un preventivo grafico: il disegno dell'infisso, i dati "
+                    "tecnici e le condizioni commerciali, insieme. In pochi click, davanti al cliente.",
+                ],
+                "quote": "Il Sig. Geminiani lo conosco da diversi anni; è prima di tutto una splendida "
+                         "persona; grandissimo conoscitore del mondo informatico e un vero artigiano nel "
+                         "suo campo. Geniale e visionario […]. Ogni conversazione con lui ti lascia sempre "
+                         "con qualcosa in più e per questo, e per la sua umanità, lo consiglio e lo stimo.",
+                "author": "Davide Brighi",
+                "role": "Titolare e Direttore Commerciale, Brighi Infissi",
+                "note": "Referenza pubblicata su LinkedIn e riportata con il consenso dell'autore. Il "
+                        "passaggio omesso non riguarda il progetto.",
+            },
             "cards_title": "Cosa facciamo in fabbrica",
             "cards_intro": "Dal bordo macchina in fabbrica al robot di servizio in casa.",
             "cards": [
@@ -667,6 +693,30 @@ PAGES = [
                 "where a piece of data already exists but nobody reads it. Then we decide what to automate "
                 "— and what to leave alone.",
             ],
+            "case": {
+                "kicker": "A case · Brighi Infissi",
+                "heading": "The quote with the <span class=\"grad-text\">thermal figures in it</span>, "
+                           "in a few clicks.",
+                "body": [
+                    "Selling a window means holding two languages together. The technical one — thermal "
+                    "transmittance, layers, performance — and the commercial one, the price. Whoever is "
+                    "sitting in front of the customer has to answer on both, and often has to call the "
+                    "technical office and come back the next day.",
+                    "For <strong>Brighi Infissi</strong> we built a product configurator for the sales "
+                    "network — before G&amp;G Technologies existed, when we were the same group of people "
+                    "without this name on the door. You pick the features of the window and out comes a "
+                    "graphical quote: the drawing, the technical figures and the commercial terms, "
+                    "together. In a few clicks, in front of the customer.",
+                ],
+                "quote": "I have known Mr Geminiani for several years; above all he is a wonderful person; "
+                         "someone who knows the world of IT inside out and a true craftsman in his field. "
+                         "Brilliant and visionary […]. Every conversation with him leaves you with "
+                         "something more, and for that, and for his humanity, I recommend and respect him.",
+                "author": "Davide Brighi",
+                "role": "Owner and Sales Director, Brighi Infissi",
+                "note": "Reference published on LinkedIn and quoted with the author's consent, translated "
+                        "from Italian. The omitted passage does not concern the project.",
+            },
             "cards_title": "What we do on the shop floor",
             "cards_intro": "From the machine on the shop floor to the service robot in the home.",
             "cards": [

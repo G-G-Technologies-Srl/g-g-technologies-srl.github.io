@@ -728,6 +728,8 @@
     }
     .pillar h3 { font-size: 1.05rem; margin: 10px 0 8px; }
     .pillar p { color: var(--muted); font-size: 0.88rem; }
+    /* Tre voci invece di quattro: il percorso del team ha tre periodi, non quattro. */
+    .pillars.pillars-3 { grid-template-columns: repeat(3, 1fr); }
     @media (max-width: 900px) { .pillars { grid-template-columns: 1fr 1fr; } }
     @media (max-width: 560px) { .pillars { grid-template-columns: 1fr; } }
 
@@ -989,6 +991,27 @@ section.tinted {
 .research-link a { color: var(--accent-text); text-decoration: none; font-weight: 600; }
 .research-link a:hover { text-decoration: underline; }
 .research-note { color: var(--faint); font-size: 0.8rem; margin: 0; }
+
+/* Il caso cliente riusa il pannello della ricerca — stessa scatola, stesso filo in alto — e
+   aggiunge solo la citazione. Un cliente che parla e uno studio citato sono la stessa cosa per
+   il lettore: prova che qualcuno di esterno conferma. Vale che si somiglino. */
+.case-quote {
+  margin: 22px 0 10px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.case-quote blockquote { margin: 0; }
+.case-quote blockquote p {
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 1.9vw, 1.15rem);
+  line-height: 1.55;
+  color: var(--text);
+  margin: 0 0 16px;
+}
+.case-quote figcaption { display: flex; flex-direction: column; gap: 2px; }
+.case-author { color: var(--accent-text); font-weight: 600; font-size: 0.9rem; }
+.case-role { color: var(--faint); font-size: 0.82rem; }
+.case-note { color: var(--faint); font-size: 0.78rem; margin: 16px 0 0; }
 
 @media (max-width: 640px) { .research { padding: 26px 22px; } }
 

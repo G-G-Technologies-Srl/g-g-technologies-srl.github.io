@@ -188,6 +188,27 @@ section.tinted {
 .research-link a:hover { text-decoration: underline; }
 .research-note { color: var(--faint); font-size: 0.8rem; margin: 0; }
 
+/* Il caso cliente riusa il pannello della ricerca — stessa scatola, stesso filo in alto — e
+   aggiunge solo la citazione. Un cliente che parla e uno studio citato sono la stessa cosa per
+   il lettore: prova che qualcuno di esterno conferma. Vale che si somiglino. */
+.case-quote {
+  margin: 22px 0 10px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.case-quote blockquote { margin: 0; }
+.case-quote blockquote p {
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 1.9vw, 1.15rem);
+  line-height: 1.55;
+  color: var(--text);
+  margin: 0 0 16px;
+}
+.case-quote figcaption { display: flex; flex-direction: column; gap: 2px; }
+.case-author { color: var(--accent-text); font-weight: 600; font-size: 0.9rem; }
+.case-role { color: var(--faint); font-size: 0.82rem; }
+.case-note { color: var(--faint); font-size: 0.78rem; margin: 16px 0 0; }
+
 @media (max-width: 640px) { .research { padding: 26px 22px; } }
 
 /* ---------------------------------------------------------------------------------------------------------------
@@ -826,6 +847,37 @@ def _research_html(data):
         </aside>"""
 
 
+def _case_html(data):
+    """A named client, what was built, and — when there is one — a quote from the person who
+    signed it off.
+
+    The rule this component exists to serve: the site describes a method on sixteen pages and for
+    a long time named nobody. A case says who, so a reader can check. It follows that nothing here
+    may be softened into an anonymous "a leading manufacturer": either the client agreed to be
+    named, or the case does not go up.
+    """
+    case = data.get("case")
+    if not case:
+        return ""
+    paragraphs = "".join(f"<p>{p}</p>" for p in case["body"])
+    quote = ""
+    if case.get("quote"):
+        quote = f"""
+          <figure class="case-quote">
+            <blockquote><p>{case['quote']}</p></blockquote>
+            <figcaption>
+              <span class="case-author">{_esc(case['author'])}</span>
+              <span class="case-role">{_esc(case['role'])}</span>
+            </figcaption>
+          </figure>
+          <p class="case-note">{case['note']}</p>"""
+    return f"""        <aside class="research case reveal">
+          <div class="kicker">{case['kicker']}</div>
+          <h3>{case['heading']}</h3>
+          {paragraphs}{quote}
+        </aside>"""
+
+
 def _cards_html(data):
     cards = []
     for icon, title, text, bullets in data["cards"]:
@@ -1215,7 +1267,7 @@ def _render_page(lang, page):
           </div>
 {_facts_html(data)}
         </div>
-{_photo_html(data)}{_research_html(data)}
+{_photo_html(data)}{_research_html(data)}{_case_html(data)}
       </div>
     </section>""",
         # capabilities
