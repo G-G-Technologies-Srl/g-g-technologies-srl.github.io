@@ -829,8 +829,10 @@
     }
     .pillar h3 { font-size: 1.05rem; margin: 10px 0 8px; }
     .pillar p { color: var(--muted); font-size: 0.88rem; }
-    /* Tre voci invece di quattro: il percorso del team ha tre periodi, non quattro. */
-    .pillars.pillars-3 { grid-template-columns: repeat(3, 1fr); }
+    /* Il percorso è una successione di periodi, non un insieme di pari grado: incolonnarlo lo
+       rende leggibile in ordine e regge qualunque numero di voci, che una griglia a quattro no. */
+    .pillars.pillars-stack { grid-template-columns: 1fr; gap: 14px; }
+    .pillars.pillars-stack .pillar p { max-width: 78ch; }
     @media (max-width: 900px) { .pillars { grid-template-columns: 1fr 1fr; } }
     @media (max-width: 560px) { .pillars { grid-template-columns: 1fr; } }
 
@@ -1567,24 +1569,40 @@
             <span class="it">Da dove veniamo</span>
             <span class="en">Where we come from</span>
           </div>
-          <h2 class="it">Il mestiere non è nato <span class="grad-text">nel 2022</span>.</h2>
-          <h2 class="en">The craft did not start <span class="grad-text">in 2022</span>.</h2>
+          <h2 class="it">La competenza non è nata <span class="grad-text">nel 2022</span>.</h2>
+          <h2 class="en">The expertise did not start <span class="grad-text">in 2022</span>.</h2>
+          <p class="section-intro it">Cinque percorsi, in ordine. Sono quelli che spiegano cosa sappiamo fare oggi: gli altri incarichi restano sul profilo di chi li ha ricoperti.</p>
+          <p class="section-intro en">Five paths, in order. These are the ones that explain what we can do today: the other roles stay on the profile of whoever held them.</p>
         </div>
 
-        <div class="pillars pillars-3">
+        <div class="pillars pillars-stack">
           <div class="pillar reveal">
-            <div class="n">2007 – 2008</div>
-            <h3 class="it">Ricerca all'Università di Bologna</h3>
-            <h3 class="en">Research at the University of Bologna</h3>
-            <p class="it">Il nostro amministratore delegato ha lavorato come ricercatore al Dipartimento di Scienze degli Alimenti, su una piattaforma di tracciabilità per l'ortofrutta di quarta gamma: un algoritmo modulare che risale la filiera partendo da qualunque documento, e mostra a ciascuno — consumatore, autorità di controllo, produttore — solo quello che gli compete.</p>
-            <p class="en">Our chief executive worked as a researcher at the Department of Food Science, on a traceability platform for fresh-cut fruit and vegetables: a modular algorithm that walks back up the supply chain from any document, and shows each party — consumer, control authority, producer — only what concerns them.</p>
+            <div class="n">2002 – 2020</div>
+            <h3 class="it">Diciotto anni in casa Fontanot</h3>
+            <h3 class="en">Eighteen years at Fontanot</h3>
+            <p class="it">Dal 2002 project manager e architetto software in Albini &amp; Fontanot Informatica, poi CIO, poi responsabile dello sviluppo e manager dell'innovazione digitale del gruppo. Processi produttivi, logistica, gestione della rete vendita, configuratori di prodotto. Fra le cose progettate, sistemi di machine learning applicati al controllo qualità.</p>
+            <p class="en">From 2002 project manager and software architect at Albini &amp; Fontanot Informatica, then CIO, then head of development and digital innovation manager for the group. Production processes, logistics, sales network management, product configurators. Among the things designed, machine learning systems applied to quality control.</p>
           </div>
           <div class="pillar reveal">
-            <div class="n">2009 – 2020</div>
-            <h3 class="it">Undici anni in Gruppo Fontanot</h3>
-            <h3 class="en">Eleven years at Gruppo Fontanot</h3>
-            <p class="it">Prima come responsabile dello sviluppo software, poi come manager dell'innovazione digitale: processi produttivi, logistica, gestione della rete vendita e configuratori di prodotto. Fra le cose progettate, sistemi di machine learning applicati al controllo qualità.</p>
-            <p class="en">First as head of software development, then as digital innovation manager: production processes, logistics, sales network management and product configurators. Among the things designed, machine learning systems applied to quality control.</p>
+            <div class="n">2007 – 2008</div>
+            <h3 class="it">Ricerca a Scienze degli Alimenti, Università di Bologna</h3>
+            <h3 class="en">Research at Food Science, University of Bologna</h3>
+            <p class="it">Una piattaforma di tracciabilità per l'ortofrutta di quarta gamma: un algoritmo modulare che risale la filiera partendo da qualunque documento, e mostra a ciascuno — consumatore, autorità di controllo, produttore — solo quello che gli compete.</p>
+            <p class="en">A traceability platform for fresh-cut fruit and vegetables: a modular algorithm that walks back up the supply chain from any document, and shows each party — consumer, control authority, producer — only what concerns them.</p>
+          </div>
+          <div class="pillar reveal">
+            <div class="n">2015 – 2024</div>
+            <h3 class="it">Botika, intelligenza artificiale applicata</h3>
+            <h3 class="en">Botika, applied artificial intelligence</h3>
+            <p class="it">Il nostro amministratore delegato ha co-fondato e guidato Botika — nata come FunnyGain — azienda che porta gli algoritmi dentro i processi industriali. Nel 2019 Confindustria Romagna l'ha scelta come primo partner tecnologico sammarinese del team SmartTech.</p>
+            <p class="en">Our chief executive co-founded and led Botika — which started as FunnyGain — a company that brings algorithms into industrial processes. In 2019 Confindustria Romagna picked it as the first San Marino technology partner in its SmartTech team.</p>
+          </div>
+          <div class="pillar reveal">
+            <div class="n">2020 – 2024</div>
+            <h3 class="it">Direzione tecnica in AccYouRate Group</h3>
+            <h3 class="en">Chief technology officer at AccYouRate Group</h3>
+            <p class="it">Quasi cinque anni da CTO di un'azienda che progetta, brevetta e produce dispositivi indossabili per il monitoraggio dei parametri vitali. È una delle affiliazioni dello <a href="/servizi/wearable-medicale/">studio pubblicato su «Sensors»</a>.</p>
+            <p class="en">Almost five years as CTO of a company that designs, patents and manufactures wearable devices for vital-signs monitoring. It is one of the affiliations on the <a href="/en/services/medical-wearables/">study published in “Sensors”</a>.</p>
           </div>
           <div class="pillar reveal">
             <div class="n">
@@ -1593,8 +1611,8 @@
             </div>
             <h3 class="it">G&amp;G Technologies</h3>
             <h3 class="en">G&amp;G Technologies</h3>
-            <p class="it">La società nasce nel 2022 e porta quel mestiere su <strong>DigiSense®</strong>, il framework registrato che sta sotto ogni implementazione con AI, sensori o robot, e su <strong>Podz.AI</strong>.</p>
-            <p class="en">The company was founded in 2022 and brings that craft onto <strong>DigiSense®</strong>, the registered framework under every implementation with AI, sensors or robots, and onto <strong>Podz.AI</strong>.</p>
+            <p class="it">La società nasce nel 2022 e porta quella competenza su <strong>DigiSense®</strong>, il framework registrato che sta sotto ogni implementazione con AI, sensori o robot, e su <strong>Podz.AI</strong>.</p>
+            <p class="en">The company was founded in 2022 and brings that expertise onto <strong>DigiSense®</strong>, the registered framework under every implementation with AI, sensors or robots, and onto <strong>Podz.AI</strong>.</p>
           </div>
         </div>
       </div>

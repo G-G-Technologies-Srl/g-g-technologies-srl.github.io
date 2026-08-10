@@ -360,6 +360,10 @@ PAGES = [
                     "G&amp;G Technologies è una delle affiliazioni dello studio, insieme al CNR, "
                     "all'Università di Bologna, alla Johns Hopkins University e all'Università Politecnica "
                     "delle Marche. Il nostro amministratore delegato ne è il secondo autore.",
+                    "Un'altra affiliazione è AccYouRate Group, che progetta, brevetta e produce i "
+                    "dispositivi indossabili: lì il nostro amministratore delegato è stato direttore "
+                    "tecnico per quasi cinque anni, dal 2020 al 2024. La competenza su questa pagina "
+                    "viene da lì prima che da qualsiasi altra parte.",
                 ],
                 "citation": "Orro A., <strong>Geminiani G.A.</strong>, Sicurello F., Modica M., Pegreffi F., "
                             "Neri L., Augello A., Botteghi M., <em>A Cloud Infrastructure for Health "
@@ -472,6 +476,10 @@ PAGES = [
                     "G&amp;G Technologies is one of the affiliations on the study, alongside the Italian "
                     "National Research Council, the University of Bologna, Johns Hopkins University and "
                     "Università Politecnica delle Marche. Our chief executive is its second author.",
+                    "Another affiliation is AccYouRate Group, which designs, patents and manufactures the "
+                    "wearable devices themselves: our chief executive was its chief technology officer "
+                    "for almost five years, from 2020 to 2024. The expertise on this page comes from "
+                    "there before it comes from anywhere else.",
                 ],
                 "citation": "Orro A., <strong>Geminiani G.A.</strong>, Sicurello F., Modica M., Pegreffi F., "
                             "Neri L., Augello A., Botteghi M., <em>A Cloud Infrastructure for Health "

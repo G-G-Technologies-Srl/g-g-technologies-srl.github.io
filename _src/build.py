@@ -197,11 +197,14 @@ section.tinted {
   border-top: 1px solid var(--border);
 }
 .case-quote blockquote { margin: 0; }
+/* 58ch, misurati: la citazione è in serif e più grande del corpo, quindi 68ch le darebbero una
+   riga fisicamente più lunga dei paragrafi sopra e il bordo destro si vedrebbe sfalsato. */
 .case-quote blockquote p {
   font-family: var(--font-display);
   font-size: clamp(1rem, 1.9vw, 1.15rem);
   line-height: 1.55;
   color: var(--text);
+  max-width: 58ch;
   margin: 0 0 16px;
 }
 .case-quote figcaption { display: flex; flex-direction: column; gap: 2px; }
