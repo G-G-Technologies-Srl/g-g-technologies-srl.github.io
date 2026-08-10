@@ -18,7 +18,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from content import BANNED, CHROME, PAGES, PODZ_SITE, PRICING, SITE  # noqa: E402
+from content import (ARTICLES, BANNED, CHROME, INSIGHTS_INDEX, PAGES,  # noqa: E402
+                     PODZ_SITE, PRICING, SITE, STUDY)
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = Path(__file__).resolve().parent
@@ -142,6 +143,153 @@ section.tinted {
 
 .diagram { margin: 40px 0 8px; }
 .diagram svg { width: 100%; height: auto; display: block; }
+
+/* The research panel. Built from the card recipe on purpose — same gradient fill, same large
+   radius, same top hairline — so it reads as part of this site and not as something pasted in.
+   The one difference: the hairline is always on, because the panel is not a hover target. */
+.research {
+  position: relative;
+  overflow: hidden;
+  margin: 48px 0 0;
+  max-width: 820px;
+  background: linear-gradient(170deg, var(--panel-2), var(--panel) 60%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px 30px;
+}
+.research::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--gradient);
+}
+.research .kicker { margin-bottom: 12px; }
+/* Headings that follow a kicker are serif everywhere else on this site: match them. */
+.research h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.25rem, 2.4vw, 1.6rem);
+  margin: 0 0 18px;
+  max-width: 24ch;
+}
+.research p { color: var(--muted); font-size: 0.94rem; margin: 0 0 14px; max-width: 68ch; }
+.research-cite {
+  font-size: 0.85rem;
+  line-height: 1.7;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+.research-cite strong { color: var(--text); }
+.research-link { margin: 0 0 6px; }
+.research-link a { color: var(--accent-text); text-decoration: none; font-weight: 600; }
+.research-link a:hover { text-decoration: underline; }
+.research-note { color: var(--faint); font-size: 0.8rem; margin: 0; }
+
+@media (max-width: 640px) { .research { padding: 26px 22px; } }
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Insights — long-form prose. One measure, one rhythm, nothing decorative: these pages are read
+   top to bottom, not scanned like the service pages.
+   --------------------------------------------------------------------------------------------------------------- */
+.prose { max-width: 720px; margin: 0 auto; }
+.prose h2 {
+  font-size: clamp(1.3rem, 2.6vw, 1.75rem);
+  margin: 56px 0 18px;
+  max-width: 26ch;
+  scroll-margin-top: calc(var(--nav-h) + 20px);
+}
+.prose > h2:first-child { margin-top: 0; }
+.prose p { color: var(--muted); margin: 0 0 20px; line-height: 1.75; }
+.prose strong { color: var(--text); }
+.prose a { color: var(--accent-text); }
+.prose ul, .prose ol { color: var(--muted); margin: 0 0 22px; padding-left: 22px; line-height: 1.75; }
+.prose li { margin-bottom: 10px; }
+.prose li::marker { color: var(--accent); }
+.prose blockquote.pull {
+  position: relative;
+  overflow: hidden;
+  margin: 0 0 26px;
+  padding: 24px 26px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(170deg, var(--panel-2), var(--panel) 60%);
+}
+.prose blockquote.pull::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--gradient);
+}
+.prose blockquote.pull p:last-child { margin-bottom: 0; }
+.prose .table-wrap { overflow-x: auto; margin: 0 0 26px; }
+.prose table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.prose th, .prose td {
+  text-align: left;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.prose th { color: var(--text); font-weight: 600; border-bottom-color: var(--border-strong); }
+.prose td { color: var(--muted); }
+
+.article-meta {
+  max-width: 720px; margin: 0 auto 40px;
+  padding-bottom: 22px; border-bottom: 1px solid var(--border);
+  color: var(--faint); font-size: 0.88rem;
+}
+.article-meta strong { color: var(--text); font-weight: 600; }
+/* Both notices borrow the .fact treatment: hairline, soft fill, small text. Nothing new invented. */
+.article-disclaimer, .article-draft {
+  max-width: 720px;
+  padding: 18px 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--faint);
+  font-size: 0.85rem;
+}
+.article-disclaimer { margin: 48px auto 0; }
+.article-draft { margin: 0 auto 32px; border-color: var(--border-strong); color: var(--muted); }
+
+/* Same recipe as .card, minus the icon: the index has to look like the rest of the site. */
+.insight-list { display: grid; gap: 20px; margin-top: 48px; max-width: 820px; }
+.insight-card {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(170deg, var(--panel-2), var(--panel) 60%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 30px 28px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+.insight-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--gradient);
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+.insight-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow);
+}
+.insight-card:hover::before { opacity: 1; }
+.insight-card .kicker { margin-bottom: 10px; }
+.insight-card h3 { font-size: 1.18rem; font-weight: 700; margin: 0 0 10px; }
+.insight-card p { color: var(--muted); font-size: 0.94rem; margin: 0; }
+
+@media (max-width: 640px) {
+  .prose h2 { margin-top: 42px; }
+  .article-disclaimer, .article-draft { padding: 16px 18px; }
+}
 
 .related-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
 .related-card {
@@ -662,6 +810,30 @@ def _note_html(data, key):
     return f'\n          <p class="section-intro">{data[key]}</p>' if data.get(key) else ""
 
 
+def _research_html(data):
+    """The one thing on this site an outsider can verify: a peer-reviewed paper with a DOI.
+
+    Sixteen pages describe a method and none of them used to carry a measured result. This panel
+    exists to close part of that gap, so it is deliberately plain: the citation, the identifier and
+    the link. Identifiers come from STUDY, never from the copy, so the text and the structured data
+    cannot drift apart.
+    """
+    research = data.get("research")
+    if not research:
+        return ""
+    paragraphs = "".join(f"<p>{p}</p>" for p in research["body"])
+    return f"""        <aside class="research reveal">
+          <div class="kicker">{research['kicker']}</div>
+          <h3>{research['heading']}</h3>
+          {paragraphs}
+          <p class="research-cite">{research['citation']}</p>
+          <p class="research-link">
+            <a href="{STUDY['url']}" rel="noopener">{research['link']} — DOI {STUDY['doi']} &rarr;</a>
+          </p>
+          <p class="research-note">{research['note']}</p>
+        </aside>"""
+
+
 def _cards_html(data):
     cards = []
     for icon, title, text, bullets in data["cards"]:
@@ -777,6 +949,91 @@ def _related_html(lang, data):
 
 
 # -----------------------------------------------------------------------------------------------------------------
+#  m a r k d o w n
+# -----------------------------------------------------------------------------------------------------------------
+
+# Articles are written in Markdown under _src/insights/, one file per language, because prose that
+# long is unreadable as Python strings. Only the subset the articles actually use is supported: a
+# general Markdown library would be a dependency this project does not have and does not want.
+# Anything unsupported should fail loudly rather than silently render as literal characters.
+
+_ORDERED = re.compile(r"^\d+\. ")
+
+_MD_INLINE = (
+    (re.compile(r"\*\*(.+?)\*\*"), r"<strong>\1</strong>"),
+    (re.compile(r"(?<![\w*])\*([^*\n]+?)\*(?![\w*])"), r"<em>\1</em>"),
+    (re.compile(r"\[([^\]]+)\]\((https?://[^)\s]+)\)"), r'<a href="\2" rel="noopener">\1</a>'),
+)
+
+
+def _md_inline(text):
+    """Bold, italic and links. Ampersands are encoded first, so the copy can write "G&G" plainly."""
+    out = text.strip()
+    out = re.sub(r"&(?!amp;|lt;|gt;|quot;|#|nbsp;|rarr;|reg;)", "&amp;", out)
+    for pattern, replacement in _MD_INLINE:
+        out = pattern.sub(replacement, out)
+    return out
+
+
+def _md_table(rows):
+    """A pipe table. The second row is the alignment separator and carries no content."""
+    header = [_md_inline(c) for c in rows[0].strip("|").split("|")]
+    body = []
+    for row in rows[2:]:
+        body.append([_md_inline(c) for c in row.strip("|").split("|")])
+    head = "".join(f"<th>{c}</th>" for c in header)
+    cells = "\n".join("            <tr>" + "".join(f"<td>{c}</td>" for c in r) + "</tr>" for r in body)
+    return ('          <div class="table-wrap">\n            <table>\n'
+            f"            <thead><tr>{head}</tr></thead>\n"
+            f"            <tbody>\n{cells}\n            </tbody>\n"
+            "            </table>\n          </div>")
+
+
+def _markdown_html(source, path):
+    """Render an article body. Supported: ## headings, paragraphs, - and 1. lists, > quotes,
+    | tables |. Everything else raises, so a new construct cannot slip through half-rendered."""
+    blocks, out = [], []
+    for raw in source.split("\n\n"):
+        if raw.strip():
+            blocks.append(raw.strip("\n"))
+
+    for block in blocks:
+        lines = [ln for ln in block.split("\n") if ln.strip()]
+        first = lines[0]
+
+        if first.startswith("## "):
+            if len(lines) > 1:
+                raise SystemExit(f"{path}: un titolo deve stare da solo nel suo blocco — «{first}»")
+            out.append(f"          <h2>{_md_inline(first[3:])}</h2>")
+        elif first.startswith("#"):
+            raise SystemExit(f"{path}: usa solo «##». L'h1 della pagina viene da content.py — «{first}»")
+        elif first.startswith("|"):
+            if len(lines) < 3:
+                raise SystemExit(f"{path}: tabella senza intestazione o senza righe — «{first}»")
+            out.append(_md_table(lines))
+        elif first.startswith("> "):
+            quoted = "".join(f"<p>{_md_inline(ln[2:])}</p>" for ln in lines if ln.startswith("> "))
+            out.append(f'          <blockquote class="pull">{quoted}</blockquote>')
+        elif first.startswith("- "):
+            items = "".join(f"<li>{_md_inline(ln[2:])}</li>" for ln in lines)
+            out.append(f"          <ul>{items}</ul>")
+        elif _ORDERED.match(first):
+            items = "".join(f"<li>{_md_inline(_ORDERED.sub('', ln))}</li>" for ln in lines)
+            out.append(f"          <ol>{items}</ol>")
+        else:
+            out.append(f"          <p>{_md_inline(' '.join(lines))}</p>")
+
+    return "\n".join(out)
+
+
+def _article_body(key, lang):
+    path = SRC / "insights" / f"{key}.{lang}.md"
+    if not path.exists():
+        raise SystemExit(f"manca il testo dell'articolo: {path}")
+    return _markdown_html(path.read_text(encoding="utf-8"), path.name)
+
+
+# -----------------------------------------------------------------------------------------------------------------
 #  s t r u c t u r e d   d a t a
 # -----------------------------------------------------------------------------------------------------------------
 
@@ -850,6 +1107,41 @@ def _json_ld(lang, page, data, url):
                 {"@type": "Country", "name": "Italy"},
                 {"@type": "Place", "name": "Europe"},
             ],
+        })
+
+    if data.get("research"):
+        # The paper is the one claim on this site with an external identifier, so it gets its own
+        # node keyed on the DOI rather than on our URL. Values come from STUDY: if the citation in
+        # the copy and this block ever disagree, the reader who checks the DOI catches us.
+        blocks.append({
+            "@context": "https://schema.org",
+            "@type": "ScholarlyArticle",
+            "@id": STUDY["url"],
+            "headline": STUDY["headline"],
+            "name": STUDY["headline"],
+            "url": STUDY["url"],
+            "inLanguage": "en",
+            "datePublished": STUDY["published"],
+            "author": [{"@type": "Person", "name": name} for name in STUDY["authors"]],
+            "identifier": [
+                {"@type": "PropertyValue", "propertyID": "DOI", "value": STUDY["doi"]},
+            ],
+            "isPartOf": {
+                "@type": "PublicationIssue",
+                "issueNumber": STUDY["issue"],
+                "isPartOf": {
+                    "@type": "PublicationVolume",
+                    "volumeNumber": STUDY["volume"],
+                    "isPartOf": {
+                        "@type": "Periodical",
+                        "name": STUDY["journal"],
+                        "publisher": {"@type": "Organization", "name": STUDY["publisher"]},
+                    },
+                },
+            },
+            "pagination": STUDY["pages"],
+            "isAccessibleForFree": True,
+            "sourceOrganization": {"@id": org_id},
         })
 
     blocks.append({
@@ -931,7 +1223,7 @@ def _render_page(lang, page):
           </div>
 {_facts_html(data)}
         </div>
-{_photo_html(data)}
+{_photo_html(data)}{_research_html(data)}
       </div>
     </section>""",
         # capabilities
@@ -1034,6 +1326,316 @@ def _render_page(lang, page):
 
   <main id="main">
 {chr(10).join(sections)}
+  </main>
+
+{_footer(lang)}
+
+  <script src="{prefix}assets/site.js" defer></script>
+</body>
+</html>
+"""
+
+
+# -----------------------------------------------------------------------------------------------------------------
+#  i n s i g h t s
+# -----------------------------------------------------------------------------------------------------------------
+
+DRAFT_NOTE = {
+    "it": "Bozza. Questo articolo non è ancora stato licenziato per la pubblicazione: non è indicizzato "
+          "e non compare nella sitemap.",
+    "en": "Draft. This article has not been signed off for publication: it is not indexed and does not "
+          "appear in the sitemap.",
+}
+
+MONTHS = {
+    "it": ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno",
+           "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"],
+    "en": ["January", "February", "March", "April", "May", "June",
+           "July", "August", "September", "October", "November", "December"],
+}
+
+
+def _long_date(lang, iso):
+    year, month, day = (int(part) for part in iso.split("-"))
+    name = MONTHS[lang][month - 1]
+    return f"{day} {name} {year}" if lang == "it" else f"{day} {name} {year}"
+
+
+def _reading_minutes(key, lang):
+    """Rounded up, at 200 words a minute. Approximate by nature, so it is never presented as a
+    measurement — the index says "minuti di lettura", not a promise."""
+    words = len((SRC / "insights" / f"{key}.{lang}.md").read_text(encoding="utf-8").split())
+    return max(1, round(words / 200))
+
+
+def _article_crumbs(lang, data):
+    chrome = CHROME[lang]
+    home = "/" if lang == "it" else "/en/"
+    index = "/" + INSIGHTS_INDEX[lang]["slug"] + "/"
+    items = (f'<li><a href="{home}">{chrome["breadcrumb_home"]}</a></li>'
+             f'<li><a href="{index}">{INSIGHTS_INDEX[lang]["short"]}</a></li>'
+             f'<li aria-current="page">{_esc(data["short"])}</li>')
+    label = "Percorso" if lang == "it" else "Breadcrumb"
+    return f'<nav class="breadcrumb" aria-label="{label}"><ol>{items}</ol></nav>'
+
+
+def _article_json_ld(lang, article, data, url):
+    chrome = CHROME[lang]
+    home = SITE + ("/" if lang == "it" else "/en/")
+    org_id = f"{SITE}/#organization"
+    index_url = _url(INSIGHTS_INDEX[lang]["slug"])
+
+    return json.dumps([
+        {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {"@type": "ListItem", "position": 1, "name": chrome["breadcrumb_home"], "item": home},
+                {"@type": "ListItem", "position": 2, "name": INSIGHTS_INDEX[lang]["short"],
+                 "item": index_url},
+                {"@type": "ListItem", "position": 3, "name": _strip_tags(data["short"]), "item": url},
+            ],
+        },
+        {
+            "@context": "https://schema.org",
+            "@type": "Article",
+            "headline": _strip_tags(data["h1"]),
+            "name": _strip_tags(data["short"]),
+            "url": url,
+            "description": data["description"],
+            "inLanguage": lang,
+            "datePublished": article["date"],
+            "author": {"@type": "Person", "name": article["author"]},
+            "publisher": {"@id": org_id},
+            "mainEntityOfPage": {"@type": "WebPage", "@id": url},
+        },
+    ], ensure_ascii=False, indent=2)
+
+
+def _render_article(lang, article):
+    data = article[lang]
+    other_lang = "en" if lang == "it" else "it"
+    url = _url(data["slug"])
+    other_url = _url(article[other_lang]["slug"])
+    it_url = _url(article["it"]["slug"])
+    chrome = CHROME[lang]
+    prefix = "../" * (data["slug"].count("/") + 1)
+    draft = article["stato"] != "pronto"
+
+    banner = (f'      <p class="article-draft">{DRAFT_NOTE[lang]}</p>\n' if draft else "")
+    minutes = _reading_minutes(article["key"], lang)
+
+    return f"""<!DOCTYPE html>
+<html lang="{lang}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{_esc(data['title'])}</title>
+  <meta name="description" content="{_esc(data['description'])}">
+  <meta name="author" content="{_esc(article['author'])}">
+  <meta name="robots" content="{'noindex, nofollow' if draft else 'index, follow, max-image-preview:large'}">
+  <meta name="theme-color" content="#0d1220">
+  <link rel="canonical" href="{url}">
+  <link rel="alternate" hreflang="it" href="{it_url}">
+  <link rel="alternate" hreflang="en" href="{_url(article['en']['slug'])}">
+  <link rel="alternate" hreflang="x-default" href="{it_url}">
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="G&amp;G Technologies">
+  <meta property="og:title" content="{_esc(data['title'])}">
+  <meta property="og:description" content="{_esc(data['description'])}">
+  <meta property="og:url" content="{url}">
+  <meta property="og:image" content="{SITE}/assets/{data.get('og_image', 'og-card.png')}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="{LOCALE[lang]}">
+  <meta property="og:locale:alternate" content="{LOCALE[other_lang]}">
+  <meta property="article:published_time" content="{article['date']}">
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{_esc(data['title'])}">
+  <meta name="twitter:description" content="{_esc(data['description'])}">
+  <meta name="twitter:image" content="{SITE}/assets/{data.get('og_image', 'og-card.png')}">
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="{prefix}assets/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="{prefix}assets/favicon-32.png">
+  <script>
+    {BOOTSTRAP_JS}
+  </script>
+  <link rel="stylesheet" href="{prefix}assets/site.css">
+  <script type="application/ld+json">
+{_article_json_ld(lang, article, data, url)}
+  </script>
+</head>
+<body>
+{_icon_gradient()}
+{_header(lang, other_url)}
+
+  <main id="main">
+    <section class="hero page-hero">
+      <div class="hero-bg" aria-hidden="true">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+      </div>
+
+      <div class="container">
+        <div class="prose">
+          {_article_crumbs(lang, data)}
+          <div class="kicker">{data['kicker']}</div>
+          <h1>{data['h1']}</h1>
+          <p class="hero-sub">{data['lead']}</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+{banner}        <p class="article-meta">
+          <strong>{_esc(article['author'])}</strong> · {_long_date(lang, article['date'])} ·
+          {minutes} {INSIGHTS_INDEX[lang]['reading']}<br>
+          {data['role']}
+        </p>
+        <div class="prose reveal">
+{_article_body(article['key'], lang)}
+        </div>
+        <p class="article-disclaimer">{data['disclaimer']}</p>
+      </div>
+    </section>
+
+    <section class="tinted">
+      <div class="container">
+        <div class="reveal">
+          <h2>{chrome['related_title']}</h2>
+        </div>
+{_related_html(lang, data)}
+      </div>
+    </section>
+
+    <section class="cta-band">
+      <div class="container reveal">
+        <h2>{data['cta_title']}</h2>
+        <p class="section-intro">{data['cta_text']}</p>
+        <div class="hero-ctas">
+          <a class="btn btn-primary" href="{chrome['mailto']}">{chrome['nav_cta']}</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+{_footer(lang)}
+
+  <script src="{prefix}assets/site.js" defer></script>
+</body>
+</html>
+"""
+
+
+def _render_insights_index(lang):
+    data = INSIGHTS_INDEX[lang]
+    other_lang = "en" if lang == "it" else "it"
+    url = _url(data["slug"])
+    other_url = _url(INSIGHTS_INDEX[other_lang]["slug"])
+    it_url = _url(INSIGHTS_INDEX["it"]["slug"])
+    chrome = CHROME[lang]
+    prefix = "../" * (data["slug"].count("/") + 1)
+    home = "/" if lang == "it" else "/en/"
+
+    # Drafts are listed too, so the index is useful while working locally, but they say so.
+    cards = []
+    for article in ARTICLES:
+        entry = article[lang]
+        mark = "" if article["stato"] == "pronto" else (
+            " · bozza" if lang == "it" else " · draft")
+        cards.append(f"""          <a class="insight-card reveal" href="/{entry['slug']}/">
+            <div class="kicker">{entry['kicker']}{mark}</div>
+            <h3>{_esc(entry['short'])}</h3>
+            <p>{entry['description']}</p>
+          </a>""")
+    listing = ('        <div class="insight-list">\n' + "\n".join(cards) + "\n        </div>"
+               if cards else f'        <p class="section-intro">{data["empty"]}</p>')
+
+    crumbs = (f'<li><a href="{home}">{chrome["breadcrumb_home"]}</a></li>'
+              f'<li aria-current="page">{_esc(data["short"])}</li>')
+    label = "Percorso" if lang == "it" else "Breadcrumb"
+
+    json_ld = json.dumps([{
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": _strip_tags(data["short"]),
+        "url": url,
+        "description": data["description"],
+        "inLanguage": lang,
+        "isPartOf": {"@id": f"{SITE}/#organization"},
+    }], ensure_ascii=False, indent=2)
+
+    return f"""<!DOCTYPE html>
+<html lang="{lang}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{_esc(data['title'])}</title>
+  <meta name="description" content="{_esc(data['description'])}">
+  <meta name="author" content="G&amp;G Technologies Srl">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="theme-color" content="#0d1220">
+  <link rel="canonical" href="{url}">
+  <link rel="alternate" hreflang="it" href="{it_url}">
+  <link rel="alternate" hreflang="en" href="{_url(INSIGHTS_INDEX['en']['slug'])}">
+  <link rel="alternate" hreflang="x-default" href="{it_url}">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="G&amp;G Technologies">
+  <meta property="og:title" content="{_esc(data['title'])}">
+  <meta property="og:description" content="{_esc(data['description'])}">
+  <meta property="og:url" content="{url}">
+  <meta property="og:image" content="{SITE}/assets/og-card.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="{LOCALE[lang]}">
+  <meta property="og:locale:alternate" content="{LOCALE[other_lang]}">
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{_esc(data['title'])}">
+  <meta name="twitter:description" content="{_esc(data['description'])}">
+  <meta name="twitter:image" content="{SITE}/assets/og-card.png">
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="{prefix}assets/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="{prefix}assets/favicon-32.png">
+  <script>
+    {BOOTSTRAP_JS}
+  </script>
+  <link rel="stylesheet" href="{prefix}assets/site.css">
+  <script type="application/ld+json">
+{json_ld}
+  </script>
+</head>
+<body>
+{_icon_gradient()}
+{_header(lang, other_url)}
+
+  <main id="main">
+    <section class="hero page-hero">
+      <div class="hero-bg" aria-hidden="true">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+      </div>
+
+      <div class="container">
+        <div>
+          <nav class="breadcrumb" aria-label="{label}"><ol>{crumbs}</ol></nav>
+          <div class="kicker">{data['kicker']}</div>
+          <h1>{data['h1']}</h1>
+          <p class="hero-sub">{data['lead']}</p>
+          <p class="hero-note">{data['sources_note']}</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+{listing}
+      </div>
+    </section>
   </main>
 
 {_footer(lang)}
@@ -1208,6 +1810,16 @@ def _sitemap(lastmod):
     for page in PAGES:
         for lang in LANGS:
             entries.append((_url(page[lang]["slug"]), _url(page["it"]["slug"]), _url(page["en"]["slug"])))
+    for lang in LANGS:
+        entries.append((_url(INSIGHTS_INDEX[lang]["slug"]),
+                        _url(INSIGHTS_INDEX["it"]["slug"]), _url(INSIGHTS_INDEX["en"]["slug"])))
+    # Drafts carry noindex, so listing them here would tell Google two opposite things.
+    for article in ARTICLES:
+        if article["stato"] != "pronto":
+            continue
+        for lang in LANGS:
+            entries.append((_url(article[lang]["slug"]),
+                            _url(article["it"]["slug"]), _url(article["en"]["slug"])))
 
     lines = ['<?xml version="1.0" encoding="UTF-8"?>',
              '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"',
@@ -1350,8 +1962,84 @@ def _check_parity():
             if not 110 <= len(page[lang]["description"]) <= 165:
                 problems.append(f'{page["key"]}.{lang}: description di {len(page[lang]["description"])} caratteri')
     problems += _check_pricing()
+    problems += _check_insights()
     if problems:
         raise SystemExit("content.py:\n  " + "\n  ".join(problems))
+
+
+def _check_insights():
+    """The same parity rule as the pages, applied to the articles — plus the markdown bodies.
+
+    An article is three thousand words in two files: a correction applied to one language only is
+    even easier to miss here than on the pages. Comparing the structure (headings, lists, tables,
+    links) catches a whole paragraph added on one side, which the word count alone would not.
+    """
+    problems = []
+
+    for lang in LANGS:
+        index = INSIGHTS_INDEX[lang]
+        if not 110 <= len(index["description"]) <= 165:
+            problems.append(f'INSIGHTS_INDEX.{lang}: description di {len(index["description"])} caratteri')
+    if set(INSIGHTS_INDEX["it"]) != set(INSIGHTS_INDEX["en"]):
+        problems.append("INSIGHTS_INDEX: campi diversi fra IT ed EN: "
+                        f'{set(INSIGHTS_INDEX["it"]) ^ set(INSIGHTS_INDEX["en"])}')
+
+    slugs = set()
+    for article in ARTICLES:
+        key = article["key"]
+        if article["stato"] not in ("bozza", "pronto"):
+            problems.append(f'{key}: stato «{article["stato"]}» sconosciuto, usa bozza o pronto')
+        if set(article["it"]) != set(article["en"]):
+            problems.append(f'{key}: campi diversi fra IT ed EN: {set(article["it"]) ^ set(article["en"])}')
+
+        for lang in LANGS:
+            data = article[lang]
+            if data["slug"] in slugs:
+                problems.append(f'{key}.{lang}: slug duplicato «{data["slug"]}»')
+            slugs.add(data["slug"])
+            if len(data["title"]) > 65:
+                problems.append(f'{key}.{lang}: title di {len(data["title"])} caratteri')
+            if not 110 <= len(data["description"]) <= 165:
+                problems.append(f'{key}.{lang}: description di {len(data["description"])} caratteri')
+            for path, text in _walk_text(data):
+                for phrase, reason in BANNED[lang]:
+                    if phrase.lower() in text.lower():
+                        problems.append(f"{key}.{lang}{path}: «{phrase}» — {reason}")
+
+        bodies = {}
+        for lang in LANGS:
+            path = SRC / "insights" / f"{key}.{lang}.md"
+            if not path.exists():
+                problems.append(f"{key}: manca {path.name}")
+                continue
+            bodies[lang] = path.read_text(encoding="utf-8")
+            for phrase, reason in BANNED[lang]:
+                if phrase.lower() in bodies[lang].lower():
+                    problems.append(f"{path.name}: «{phrase}» — {reason}")
+
+        if len(bodies) == 2:
+            shapes = {}
+            for lang, body in bodies.items():
+                lines = body.split("\n")
+                shapes[lang] = {
+                    "titoli": len([ln for ln in lines if ln.startswith("## ")]),
+                    "voci di elenco": len([ln for ln in lines if ln.startswith("- ")]),
+                    "voci numerate": len([ln for ln in lines if _ORDERED.match(ln)]),
+                    "righe di tabella": len([ln for ln in lines if ln.startswith("|")]),
+                    "citazioni": len([ln for ln in lines if ln.startswith("> ")]),
+                    "link": len(re.findall(r"\]\(https?://", body)),
+                }
+            for field, italian in shapes["it"].items():
+                english = shapes["en"][field]
+                if italian != english:
+                    problems.append(f"{key}: {italian} {field} in italiano, {english} in inglese — "
+                                    f"probabile modifica applicata a una lingua sola")
+            ratio = len(bodies["it"].split()) / len(bodies["en"].split())
+            if ratio < 0.85 or ratio > 1.25:
+                problems.append(f"{key}: i due testi divergono troppo in lunghezza "
+                                f"({len(bodies['it'].split())} parole IT, {len(bodies['en'].split())} EN)")
+
+    return problems
 
 
 def main():
@@ -1385,6 +2073,21 @@ def main():
                     _redirect_page(lang, old_slug, _url(slug), page[lang]["short"]), encoding="utf-8")
                 written.append(f"{old_slug}/  ->  {slug}/")
 
+    for lang in LANGS:
+        target = ROOT / INSIGHTS_INDEX[lang]["slug"]
+        target.mkdir(parents=True, exist_ok=True)
+        (target / "index.html").write_text(_render_insights_index(lang), encoding="utf-8")
+        written.append(INSIGHTS_INDEX[lang]["slug"] + "/")
+
+    for article in ARTICLES:
+        for lang in LANGS:
+            slug = article[lang]["slug"]
+            target = ROOT / slug
+            target.mkdir(parents=True, exist_ok=True)
+            (target / "index.html").write_text(_render_article(lang, article), encoding="utf-8")
+            state = "" if article["stato"] == "pronto" else f"  ({article['stato']}, noindex)"
+            written.append(f"{slug}/{state}")
+
     (ROOT / "sitemap.xml").write_text(_sitemap(date.today().isoformat()), encoding="utf-8")
 
     print("index.html       (it)")
@@ -1393,7 +2096,7 @@ def main():
     print("assets/site.js")
     for slug in written:
         print(slug)
-    urls = len(LANGS) + sum(len(LANGS) for _ in PAGES)   # two homepages plus one URL per page per language
+    urls = len(re.findall(r"<loc>", (ROOT / "sitemap.xml").read_text(encoding="utf-8")))
     print(f"sitemap.xml      ({urls} URL, gli stub di reindirizzamento restano fuori)")
 
 

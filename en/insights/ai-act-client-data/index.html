@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The AI Act and client data — G&amp;G Technologies</title>
+  <meta name="description" content="What a firm using AI on client data actually risks, between the AI Act, the GDPR and Italian Law 132/2025, and what to do from Monday morning.">
+  <meta name="author" content="Gian Angelo Geminiani">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0d1220">
+  <link rel="canonical" href="https://ggtechnologies.sm/en/insights/ai-act-client-data/">
+  <link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/ai-act-dati-clienti/">
+  <link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/ai-act-client-data/">
+  <link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/ai-act-dati-clienti/">
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="G&amp;G Technologies">
+  <meta property="og:title" content="The AI Act and client data — G&amp;G Technologies">
+  <meta property="og:description" content="What a firm using AI on client data actually risks, between the AI Act, the GDPR and Italian Law 132/2025, and what to do from Monday morning.">
+  <meta property="og:url" content="https://ggtechnologies.sm/en/insights/ai-act-client-data/">
+  <meta property="og:image" content="https://ggtechnologies.sm/assets/og-card.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="en_GB">
+  <meta property="og:locale:alternate" content="it_IT">
+  <meta property="article:published_time" content="2026-08-07">
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="The AI Act and client data — G&amp;G Technologies">
+  <meta name="twitter:description" content="What a firm using AI on client data actually risks, between the AI Act, the GDPR and Italian Law 132/2025, and what to do from Monday morning.">
+  <meta name="twitter:image" content="https://ggtechnologies.sm/assets/og-card.png">
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../../../assets/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../../../assets/favicon-32.png">
+  <script>
+    (function () {
+      var theme = '';
+      try { theme = localStorage.getItem('gg-theme') || ''; } catch (ignored) { /* unavailable */ }
+      if (theme !== 'light' && theme !== 'dark') {
+        theme = (window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+      }
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.classList.add('js');
+    })();
+  </script>
+  <link rel="stylesheet" href="../../../assets/site.css">
+  <script type="application/ld+json">
+[
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://ggtechnologies.sm/en/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Insights",
+        "item": "https://ggtechnologies.sm/en/insights/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "The AI Act and client data",
+        "item": "https://ggtechnologies.sm/en/insights/ai-act-client-data/"
+      }
+    ]
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "What you really risk using AI without a shield on your data.",
+    "name": "The AI Act and client data",
+    "url": "https://ggtechnologies.sm/en/insights/ai-act-client-data/",
+    "description": "What a firm using AI on client data actually risks, between the AI Act, the GDPR and Italian Law 132/2025, and what to do from Monday morning.",
+    "inLanguage": "en",
+    "datePublished": "2026-08-07",
+    "author": {
+      "@type": "Person",
+      "name": "Gian Angelo Geminiani"
+    },
+    "publisher": {
+      "@id": "https://ggtechnologies.sm/#organization"
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://ggtechnologies.sm/en/insights/ai-act-client-data/"
+    }
+  }
+]
+  </script>
+</head>
+<body>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs><linearGradient id="icoGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#10b981"/></linearGradient></defs></svg>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <nav class="nav" aria-label="Main navigation">
+      <a href="/en/" class="brand">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><defs><linearGradient id="ggMark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5eecab"/><stop offset="1" stop-color="#10b981"/></linearGradient><mask id="ggWire"><path d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="#fff" stroke-width="13"/><path d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="#000" stroke-width="10"/></mask></defs><rect class="wire" width="100" height="100" mask="url(#ggWire)"/><path class="lit" d="M66 50 H86 A36 36 0 1 1 50 14" fill="none" stroke="url(#ggMark)" stroke-width="13" stroke-linecap="round"/><circle class="click" cx="50" cy="50" r="9" fill="none" stroke="#34d399" stroke-width="2"/><circle class="led" cx="50" cy="50" r="9"/></svg></span>
+        <span class="brand-text">
+          <span class="brand-name">G&amp;G Technologies</span>
+          <span class="brand-payoff">Powering the future</span>
+        </span>
+      </a>
+
+      <div class="nav-links" id="navLinks">
+        <a href="/en/#services">Services</a>
+        <a href="/en/#why">Why us</a>
+        <a href="/en/podz-ai/">Podz.AI</a>
+        <a href="/en/#about">About</a>
+        <a href="/en/#contact">Contact</a>
+      </div>
+
+      <div class="nav-actions">
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Tema chiaro/scuro · Light/dark theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2"/>
+            <path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.2 14.5A8.3 8.3 0 0 1 9.5 3.8a8.3 8.3 0 1 0 10.7 10.7Z"/>
+          </svg>
+        </button>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <span class="current">EN</span>
+          <a href="https://ggtechnologies.sm/insights/ai-act-dati-clienti/" hreflang="it" lang="it">IT</a>
+        </div>
+        <a class="btn btn-primary nav-cta" href="mailto:info@ggtechnologies.sm?subject=Information%20request">Talk to us</a>
+        <button class="menu-toggle" id="menuToggle" aria-label="Menu" aria-expanded="false" aria-controls="navLinks"><span></span></button>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero page-hero">
+      <div class="hero-bg" aria-hidden="true">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+      </div>
+
+      <div class="container">
+        <div class="prose">
+          <nav class="breadcrumb" aria-label="Breadcrumb"><ol><li><a href="/en/">Home</a></li><li><a href="/en/insights/">Insights</a></li><li aria-current="page">The AI Act and client data</li></ol></nav>
+          <div class="kicker">AI Act · 7 August 2026</div>
+          <h1>What you really risk using AI <span class="grad-text">without a shield</span> on your data.</h1>
+          <p class="hero-sub">The AI Act deadlines, the penalties that are already in force and the three regimes stacking up. Then seven concrete things to do, in order.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+      <p class="article-draft">Draft. This article has not been signed off for publication: it is not indexed and does not appear in the sitemap.</p>
+        <p class="article-meta">
+          <strong>Gian Angelo Geminiani</strong> · 7 August 2026 ·
+          13 minute read<br>
+          For law firms, accountants and companies handling confidential data.
+        </p>
+        <div class="prose reveal">
+          <p>2 August 2026 came and went, and in most firms nothing happened.</p>
+          <p>That is not good news. It means a deadline was read as a formality, when in fact it changes how you answer a very concrete question: <em>where did my client's data go?</em></p>
+          <p>The facts are worth laying out, because there has been a lot of confusion lately — in both directions. Some say anyone who opens ChatGPT faces a €35 million fine. Others concluded that since the high-risk rules were postponed, everything can wait until 2027.</p>
+          <p>Neither reading holds.</p>
+          <h2>What changed, and what didn't</h2>
+          <p>The AI Act — Regulation (EU) 2024/1689 — entered into force as a whole on 1 August 2024, but it <strong>applies</strong> in stages.</p>
+          <p>Already applicable:</p>
+          <ul><li>Since <strong>2 February 2025</strong>: the prohibitions on banned practices (Art. 5) and the <strong>AI literacy</strong> obligation (Art. 4). The latter applies to anyone using AI systems in their organisation, regardless of risk level. Yes: including the three-person firm using a generative assistant to draft.</li><li>Since <strong>2 August 2025</strong>: obligations for general-purpose AI models (GPAI), national governance and — this is the point — the <strong>penalty regime under Article 99</strong>.</li></ul>
+          <p>New a few weeks ago: on 27 July 2026 <strong>Regulation (EU) 2026/1744</strong>, the <em>AI Omnibus</em>, entered into force, simplifying and in several places rewriting the AI Act. It pushed back the high-risk rules: Annex III systems now apply from <strong>2 December 2027</strong>, high-risk systems embedded in regulated products from <strong>2 August 2028</strong>.</p>
+          <p>That is where the misunderstanding comes from. The delay made headlines, and many read it as "the AI Act has been postponed".</p>
+          <p>It hasn't, for three reasons.</p>
+          <p>First: the delay concerns one specific category of systems. The <strong>transparency obligations still apply from 2 August 2026</strong> — informing people when they interact with an AI system, flagging artificially generated or manipulated content. The only concession is technical: for generative systems already on the EU market before 2 August 2026, machine-readable marking of outputs shifts to 2 December 2026.</p>
+          <p>Second: the Omnibus did not only postpone, it also <strong>added</strong>. From 2 December 2026 Article 5 will contain two new prohibitions — the generation of non-consensual intimate images and of child sexual abuse material — which fall into the highest penalty tier.</p>
+          <p>Third: the Article 99 penalties had already been operative for a year.</p>
+          <h2>The penalties, in numbers</h2>
+          <p>Article 99 of the AI Act sets three tiers.</p>
+          <div class="table-wrap">
+            <table>
+            <thead><tr><th>Breach</th><th>Maximum</th></tr></thead>
+            <tbody>
+            <tr><td>Prohibited AI practices (Art. 5)</td><td><strong>€35 million</strong> or <strong>7%</strong> of total worldwide annual turnover</td></tr>
+            <tr><td>Other obligations under the Regulation (providers, deployers, importers, distributors)</td><td><strong>€15 million</strong> or <strong>3%</strong></td></tr>
+            <tr><td>Incorrect, incomplete or misleading information to authorities</td><td><strong>€7.5 million</strong> or <strong>1%</strong></td></tr>
+            </tbody>
+            </table>
+          </div>
+          <p>The higher of the two applies. For SMEs and startups the opposite criterion applies: the <strong>lower</strong> of the fixed amount and the percentage. That is genuine proportionality, but it is not a free pass — 3% of a partnership's or an SME's turnover is still a number nobody wants on their books.</p>
+          <p>Providers of general-purpose AI models face a separate channel: the European Commission can fine up to <strong>€15 million or 3%</strong> (Art. 101). Unlike the rest, that power only became exercisable on 2 August 2026: Article 113 had expressly carved it out of the 2025 deadline.</p>
+          <h2>The real risk isn't the AI Act on its own</h2>
+          <p>Here is the point most articles miss, and the one that actually matters.</p>
+          <p><strong>Uploading a client's contract to a chatbot is not, in itself, an AI Act breach.</strong> The AI Act regulates AI systems: how they are built, how they must be declared, who has to know what. It is not the law governing the processing of personal data.</p>
+          <p>That is the <strong>GDPR</strong>. And that is where the serious problems start.</p>
+          <p>When you paste a client's name, a medical report, unfiled accounts or a candidate's CV into a non-EU cloud service, you are processing personal data. You therefore need:</p>
+          <ul><li>a <strong>legal basis</strong> (Art. 6, and for health or criminal data also Arts. 9–10);</li><li>a <strong>data processing agreement</strong> covering that provider (Art. 28);</li><li><strong>adequate security measures</strong> (Art. 32);</li><li>a valid mechanism for <strong>transfers outside the EU</strong> (Arts. 44–49);</li><li>an updated privacy notice and a consistent record of processing activities.</li></ul>
+          <p>GDPR fines reach <strong>€20 million or 4%</strong> of worldwide turnover.</p>
+          <p>And this is not theory — though the most-cited case teaches something different from how it gets retold.</p>
+          <p>By decision no. 755 of 2 November 2024, made public on 20 December, the Italian Data Protection Authority fined OpenAI <strong>€15 million</strong> in relation to ChatGPT. In a judgment filed on <strong>18 March 2026</strong> the Court of Rome <strong>annulled</strong> the decision. Not on the merits: on jurisdiction. Since February 2024 OpenAI has had a single establishment in the Union, in Ireland, and cross-border breaches are decided by the Irish lead authority through the one-stop-shop mechanism. The allegations — no legal basis for training, insufficient transparency, no age verification — were never examined by any court: the investigation continues in Ireland. In May 2025, by contrast, a <strong>€5 million</strong> fine went to Luka Inc. for Replika, on similar grounds.</p>
+          <p>Two things follow, both useful.</p>
+          <p>First: the question is open, not settled in anyone's favour. Second, and more relevant to you: <strong>those decisions concern providers</strong>. Anyone using those services with their own clients' data answers for themselves, before their own national authority, with no one-stop-shop to shelter behind.</p>
+          <p>The third layer, for Italian professionals, is <strong>Law no. 132 of 23 September 2025</strong>, in force since 10 October 2025. Article 13 sets out two things:</p>
+          <ol><li>AI may only be a <strong>support tool</strong>. It does not replace the intellectual work, the critical judgment or the direct responsibility of the professional.</li><li>Information about the AI systems used must be <strong>communicated to the client in clear, simple and exhaustive language</strong>, to protect the relationship of trust.</li></ol>
+          <p>The law prescribes no particular form. Professional bodies, however, consistently recommend giving it <strong>in writing and before the engagement</strong>, as an addition to the engagement letter, specifying the type of tool and whether it operates in a closed system or online. Not because the law requires it, but because in a dispute it is the only version you can actually prove.</p>
+          <p>On top of all this, for members of a professional body, come client confidentiality and ethical rules. Those have no turnover threshold: they have disciplinary proceedings.</p>
+          <p><strong>Three regimes stacking up.</strong> None of them accepts "I didn't know the data was leaving" as a defence.</p>
+          <h2>What actually happens inside firms</h2>
+          <p>It is almost never a deliberate decision. It is a habit that forms over three months.</p>
+          <p>An associate is in a hurry. They paste a draft into the chatbot to tidy up the wording. It works, it saves forty minutes, and next time they paste the whole contract — names, addresses, amounts. Nobody told them in writing not to. Nobody explained it.</p>
+          <p>Six months later the firm no longer knows which documents left, when, to which provider, under which account — often a personal one.</p>
+          <p>That is the fragile point: not the fine itself, but the <strong>inability to reconstruct what happened</strong>. When an access request, a complaint or an inspection arrives, the question is always the same: show us what you did and why it was lawful. A firm that cannot answer has already lost, before anyone discusses amounts.</p>
+          <h2>What you can share — and what you can't</h2>
+          <p>There is one practical rule: <strong>before hitting send, ask whether that text allows anyone to identify a person.</strong></p>
+          <p>Must not leave unshielded:</p>
+          <ul><li>names, tax codes, addresses, contact details of individuals;</li><li>health, criminal, biometric, trade-union data, or data on minors;</li><li>client correspondence covered by privilege;</li><li>contracts, deeds and expert reports with the parties identified;</li><li>unfiled accounts, financial data traceable to a specific subject;</li><li>CVs, appraisals and data on employees or candidates;</li><li>third-party data the client entrusted to you — their employees, counterparties, suppliers.</li></ul>
+          <p>Safe to share:</p>
+          <ul><li>legislation, published case law, official guidance;</li><li>template clauses and standard forms, without the parties;</li><li>method questions — <em>how do you structure an indemnity clause</em>, <em>what line items make up a statement</em>;</li><li>genuinely anonymised documents, meaning stripped of anything enabling re-identification;</li><li>aggregated data that cannot be traced back to an individual;</li><li>already public information: filed accounts, company records, registered deeds.</li></ul>
+          <p>Watch out for a common trap: <strong>removing the name is not enough</strong>. "The minority shareholder of the Serravalle transport cooperative who challenged the March resolution" identifies a person just as effectively as a tax code. Anonymisation is either systematic, or it is an illusion.</p>
+          <h2>Seven things to do, in order</h2>
+          <ol><li><strong>Take stock of what is already in use.</strong> Don't ask "do we use AI?". Ask each person which tools they open, under which account, and for which documents. The answers are almost always surprising.</li><li><strong>Write a one-page policy.</strong> Permitted tools, forbidden data, who authorises exceptions. One page that gets read beats twenty that get filed.</li><li><strong>Support your people's AI literacy.</strong> This is not best practice: it is Article 4 of the AI Act, applicable since February 2025 and rewritten by the Omnibus. In the version now in force it requires providers and deployers to <em>take measures to support</em> the AI literacy of anyone operating the systems on their behalf, calibrated to skills, context of use and the people involved. It no longer requires guaranteeing a specific level — but it remains an obligation, and what you don't document, you can't demonstrate.</li><li><strong>Update the client notice.</strong> Article 13 of Law 132/2025: clear, simple, exhaustive. In writing and before the engagement, as professional bodies recommend.</li><li><strong>Fix the contracts upstream.</strong> Processor appointment, safeguards for non-EU transfers, confirmation that the provider does not use your inputs to train its models.</li><li><strong>Update your records and assessments.</strong> The record of processing activities must include AI use. Where processing is risky, you need a DPIA.</li><li><strong>Keep a trail.</strong> Who used what, on which data, with what outcome. Compliance is not a state: it is evidence you must be able to produce.</li></ol>
+          <p>None of these seven requires a meaningful budget. It requires a decision.</p>
+          <h2>The technical problem behind the legal one</h2>
+          <p>So much for the law. But there is a technical reason these obligations are so hard to meet, and it should be said plainly.</p>
+          <p>The most capable AI tools are cloud services. To use them, the text has to leave your computer. From that moment, compliance depends on contracts, notices and clauses — that is, on paper describing a behaviour, rather than a mechanism preventing it.</p>
+          <p>The choice the market has offered so far was binary: <strong>powerful models with your data outside</strong>, or <strong>your data safe with less capable models</strong>. Most professionals chose power and stopped asking the question.</p>
+          <p>That is not a moral failing. It is that nobody put the shield in the right place — <strong>before</strong> the data leaves, not afterwards, in a contract.</p>
+          <h2>Podz.AI: the cloud, without your client's data</h2>
+          <p>That is exactly the problem we set out to solve with <strong>Podz.AI</strong>, the personal AI workstation built on our DigiSense® framework.</p>
+          <p>Podz is a single application you install on your computer — Windows, macOS, Linux. Conversations and documents stay there, in a folder you own, with an encrypted database. The cloud is not the default behaviour: it is a choice, every time.</p>
+          <p>You work with a local, private engine that runs even offline. When you need more capability, you switch on the <strong>Cloud engine</strong> with frontier models like <strong>Claude</strong> or <strong>GPT</strong>, using your own key: G&amp;G does not resell the service and does not sit between you and the provider.</p>
+          <p>And this is where the <strong>Anonymizer</strong> comes in — the heart of the matter.</p>
+          <p>Before the text leaves your computer, personal data is masked:</p>
+          <blockquote class="pull"><p><strong>On your computer:</strong> <em>Mr Mario Rossi, born in Rimini on 3 April 1980, residing at 12 Garibaldi St., declares that…</em></p><p><strong>What the cloud provider sees:</strong> <em>Mr [NAME-1], born in [CITY-1] on [DATE-1], residing at [ADDRESS-1], declares that…</em></p></blockquote>
+          <p>In the answer you read, the real data is restored automatically. The cloud provider never saw it.</p>
+          <p>Around this sit specialists you install with one click, like apps: <strong>Legal Assistant</strong> (reads contracts, flags risky clauses, anonymises), <strong>Web Researcher</strong> (answers while always citing its sources, also available fully local), <strong>CV Screening</strong> (masks identifying data before review, so applications are judged on merit — which also helps against bias).</p>
+          <p>You only ever talk to Podz. It brings in the right specialist and shows you, in the chat, who worked and what was protected.</p>
+          <p><strong>One clarification we insist on, because it is the same one we put on the product site.</strong> Anonymisation is strong protection, not a legal guarantee. No software makes you automatically compliant with the AI Act, the GDPR or Law 132/2025: the compliance assessment remains yours, and it has to be done.</p>
+          <p>What changes is the substance. Personal data that never leaves your computer is not a transfer to justify, not a risk to mitigate by contract, not a line you will have to defend before an authority. <strong>It is a problem that never arose.</strong></p>
+          <p>Documents are not used to train any model. They sit in a folder you own: copy it and you have a backup, move it and you take everything with you. Podz is built in Europe. The trial is 30 days, full features, from first launch.</p>
+          <h2>A closing thought</h2>
+          <p>The question I hear most often is: <em>can we use AI with client data?</em></p>
+          <p>It is the wrong question. The right one is: <strong>where does the data end up when we do?</strong></p>
+          <p>If the answer is "I don't know", the problem is not the AI Act. The AI Act merely put a price on something that was already risky.</p>
+          <p>The high-risk deadlines have moved to 2027 and 2028. There is time to get organised. But it is time to act, not to wait — because the AI literacy obligations, the transparency obligations, the rules on processing and the duty to inform the client are all already in force today.</p>
+          <p>People who work with confidential data don't need less artificial intelligence. They need artificial intelligence that doesn't expose them.</p>
+          <h2>Sources</h2>
+          <ul><li>Regulation (EU) 2024/1689 (AI Act) — Arts. 4, 5, 50, 99, 101, 113</li><li>Regulation (EU) 2026/1744 (<em>Digital Omnibus on AI</em>), in force since 27 July 2026 — <a href="https://eur-lex.europa.eu/eli/reg/2026/1744/oj/eng" rel="noopener">EUR-Lex</a></li><li>High-risk postponement (Annex III → 2 Dec 2027; regulated products → 2 Aug 2028) — <a href="https://iusletter.com/dalla-redazione/intelligenza-artificiale/ai-act-il-digital-omnibus-ridisegna-il-calendario-degli-obblighi/" rel="noopener">Iusletter</a></li><li>Obligations from 2 August 2026, the rewriting of Art. 4, new prohibitions and the start date of Art. 101 — <a href="https://www.altalex.com/documents/2026/07/31/act-cambia-davvero-2-agosto-2026-imprese-professionisti" rel="noopener">Altalex</a></li><li>Art. 26 AI Act, deployer obligations — <a href="https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-26" rel="noopener">AI Act Service Desk, European Commission</a></li><li>Article 50 transparency and the marking deadline of 2 December 2026 — <a href="https://digital-strategy.ec.europa.eu/en/faqs/transparency-obligations-under-article-50-ai-act" rel="noopener">European Commission, Shaping Europe's digital future</a></li><li>Law no. 132 of 23 September 2025, Art. 13 — <a href="https://www.doctrine.it/norms/laws/itatextks0w8oah02nn2t/articles/itaartebirxq25ahocm8" rel="noopener">text of the article</a>; commentary in <a href="https://www.altalex.com/documents/2025/10/29/professionisti-uso-ai-tanti-dubbi-poche-certezze-luce-art-13-legge-132-2025" rel="noopener">Altalex</a></li><li>Garante fine against OpenAI (decision no. 755 of 2 November 2024, €15m) — <a href="https://www.garanteprivacy.it/home/docweb/-/docweb-display/docweb/10085432" rel="noopener">Garante per la protezione dei dati personali</a>; annulled by judgment of the Court of Rome filed on 18 March 2026 — <a href="https://www.altalex.com/documents/news/2026/03/27/openai-tribunale-roma-annulla-sanzione-garante-privacy" rel="noopener">Altalex</a>, <a href="https://ntplusdiritto.ilsole24ore.com/art/chatgpt-tribunale-roma-annulla-sanzione-15-milioni-garante-decide-l-autorita-capofila-AI88UIRD" rel="noopener">Il Sole 24 Ore</a></li><li>Garante fine against Luka Inc. for Replika (€5m, 19 May 2025) — <a href="https://www.garanteprivacy.it/home/docweb/-/docweb-display/docweb/10132048" rel="noopener">Garante per la protezione dei dati personali</a></li><li>Podz.AI — features, Anonymizer, specialists, FAQ — <a href="https://ggtechnologies.sm/digisense-releases/" rel="noopener">product site</a></li></ul>
+        </div>
+        <p class="article-disclaimer">This article is for information purposes only and does not constitute legal advice. For your specific situation, consult a qualified professional or your professional body.</p>
+      </div>
+    </section>
+
+    <section class="tinted">
+      <div class="container">
+        <div class="reveal">
+          <h2>Where to go next</h2>
+        </div>
+        <div class="related-grid">
+          <a class="related-card reveal" href="/en/services/on-premise-ai/">
+            <h3>On-premise AI</h3>
+            <p>How to choose between fully local, hybrid and cloud, starting from your data.</p>
+          </a>
+          <a class="related-card reveal" href="/en/podz-ai/">
+            <h3>Podz.AI</h3>
+            <p>The product, ready to install: it reads your files, 30 days to try it.</p>
+          </a>
+          <a class="related-card reveal" href="/en/services/artificial-intelligence/">
+            <h3>Artificial Intelligence</h3>
+            <p>Agents that read documents and query your systems, with the measure agreed first.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-band">
+      <div class="container reveal">
+        <h2>Want to know where your firm's data ends up?</h2>
+        <p class="section-intro">Tell us how you work today and which tools you use. A person from the team answers, not a form.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-primary" href="mailto:info@ggtechnologies.sm?subject=Information%20request">Talk to us</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a href="/en/" class="brand">
+            <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><rect class="wire" width="100" height="100" mask="url(#ggWire)"/><path class="lit" d="M66 50 H86 A36 36 0 1 1 50 14" fill="none" stroke="url(#ggMark)" stroke-width="13" stroke-linecap="round"/><circle class="click" cx="50" cy="50" r="9" fill="none" stroke="#34d399" stroke-width="2"/><circle class="led" cx="50" cy="50" r="9"/></svg></span>
+            G&amp;G Technologies
+          </a>
+          <p>We design and build technology: medical wearables, robotics and artificial intelligence. Podz.AI is built on our DigiSense® framework.</p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Services</h4>
+          <ul>
+            <li><a href="/en/services/medical-wearables/">Medical wearables</a></li>
+            <li><a href="/en/services/robotics-automation/">Robotics &amp; Automation</a></li>
+            <li><a href="/en/services/artificial-intelligence/">Artificial Intelligence</a></li>
+            <li><a href="/en/services/on-premise-ai/">On-premise AI</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Products and research</h4>
+          <ul>
+            <li><a href="/en/podz-ai/">Podz.AI</a></li>
+            <li><a href="/en/digisense/">DigiSense®</a></li>
+            <li><a href="/en/projects/home-care-robot/">Home care robot</a></li>
+            <li><a href="https://ggtechnologies.sm/digisense-releases/download.html" target="_blank" rel="noopener">Download Podz.AI</a></li>
+            <li><a href="https://github.com/G-G-Technologies-Srl/digisense-releases/releases" target="_blank" rel="noopener">Releases</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="/en/#about">About</a></li>
+            <li><a href="/en/#why">Why us</a></li>
+            <li><a href="/en/insights/">Insights</a></li>
+            <li><a href="/en/#contact">Contact</a></li>
+            <li><a href="https://www.linkedin.com/company/gg-technologies-srl" target="_blank" rel="noopener">LinkedIn</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-legal">
+        <span>© <span id="year">2026</span> G&amp;G Technologies Srl · Via Marino Moretti 23, 47899 Serravalle (RSM) · C.O.E./VAT SM29141</span>
+        <span>DigiSense® is a registered trademark. This site uses no cookies or trackers.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../../../assets/site.js" defer></script>
+</body>
+</html>

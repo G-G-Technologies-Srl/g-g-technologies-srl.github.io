@@ -188,13 +188,28 @@ def _check_banned(problems):
 
 
 def _check_sitemap(problems, canonical):
+    """Every indexable page must be listed, and every noindex page must not be.
+
+    Drafts under /insights/ carry noindex on purpose: listing them would ask Google to index a
+    page that tells it not to. The two signals have to agree, so this checks both directions.
+    """
     sitemap = ROOT / "sitemap.xml"
     listed = set(re.findall(r"<loc>([^<]+)</loc>", sitemap.read_text(encoding="utf-8")))
-    expected = set(canonical.values())
+
+    noindex = set()
+    for f, t in _pages():
+        if re.search(r'<meta name="robots" content="[^"]*noindex', t):
+            noindex.add(canonical.get(f))
+
+    expected = set(canonical.values()) - noindex
     for url in expected - listed:
         problems.append(f"sitemap.xml: manca {url}")
     for url in listed - expected:
-        problems.append(f"sitemap.xml: {url} è elencato ma non è una pagina canonica")
+        if url in noindex:
+            problems.append(f"sitemap.xml: {url} è noindex ma è elencato — i due segnali si "
+                            f"contraddicono")
+        else:
+            problems.append(f"sitemap.xml: {url} è elencato ma non è una pagina canonica")
     return len(listed)
 
 

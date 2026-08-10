@@ -43,6 +43,131 @@ IT_LICENCE, IT_RENEWAL = _eur_it(PRICING["licence"]), _eur_it(PRICING["renewal"]
 EN_LICENCE, EN_RENEWAL = _eur_en(PRICING["licence"]), _eur_en(PRICING["renewal"])
 
 # -----------------------------------------------------------------------------------------------------------------
+#  r e s e a r c h
+# -----------------------------------------------------------------------------------------------------------------
+
+# The peer-reviewed study a page may point at. Same reasoning as PRICING: the visible citation, the
+# link and the JSON-LD all read from here, so they cannot quote different identifiers.
+#
+# G&G Technologies Srl is affiliation 2 on the paper and the CEO is its second author. That is the
+# only claim on this site backed by an external, permanent identifier — do not soften it and do not
+# stretch it: the study belongs to eight authors across ten institutions, not to us alone.
+STUDY = {
+    "doi": "10.3390/s24216992",
+    "url": "https://doi.org/10.3390/s24216992",
+    "headline": "A Cloud Infrastructure for Health Monitoring in Emergency Response Scenarios",
+    "journal": "Sensors",
+    "volume": "24",
+    "issue": "21",
+    "pages": "6992",
+    "published": "2024-10-30",
+    "publisher": "MDPI",
+    "authors": [
+        "Alessandro Orro",
+        "Gian Angelo Geminiani",
+        "Francesco Sicurello",
+        "Marcello Modica",
+        "Francesco Pegreffi",
+        "Luca Neri",
+        "Antonio Augello",
+        "Matteo Botteghi",
+    ],
+}
+
+# -----------------------------------------------------------------------------------------------------------------
+#  i n s i g h t s
+# -----------------------------------------------------------------------------------------------------------------
+
+# Articles. Only the metadata lives here; the prose is in _src/insights/<key>.<lang>.md, because
+# three thousand words do not belong in a Python string. Same rule as everywhere else on this site:
+# both languages change together, and every figure must trace back to a source the article lists.
+#
+# "stato" mirrors the field the LinkedIn sources use. Anything not "pronto" is built locally but
+# kept out of the sitemap and marked noindex: this repository is public the moment it is pushed.
+INSIGHTS_INDEX = {
+    "it": {
+        "slug": "insights",
+        "title": "Insights — G&G Technologies",
+        "description": "Articoli su intelligenza artificiale, dati e regole, scritti per chi deve "
+                       "decidere: cosa cambia davvero e cosa si può fare la settimana prossima.",
+        "kicker": "Insights",
+        "h1": "Quello che abbiamo <span class=\"grad-text\">capito</span>, scritto per intero.",
+        "lead": "Pochi articoli, lunghi, con le fonti in fondo. Li scriviamo quando abbiamo qualcosa "
+                "da dire che non sta in un post.",
+        "short": "Insights",
+        "empty": "Non c'è ancora niente di pubblico in questa sezione.",
+        "read_more": "Leggi l'articolo",
+        "reading": "minuti di lettura",
+        "sources_note": "Le fonti di ogni articolo sono elencate in fondo alla pagina.",
+    },
+    "en": {
+        "slug": "en/insights",
+        "title": "Insights — G&G Technologies",
+        "description": "Articles on artificial intelligence, data and regulation, written for people "
+                       "who have to decide: what actually changed and what you can do next week.",
+        "kicker": "Insights",
+        "h1": "What we have <span class=\"grad-text\">worked out</span>, written in full.",
+        "lead": "A few long articles, with the sources at the bottom. We write one when we have "
+                "something to say that does not fit in a post.",
+        "short": "Insights",
+        "empty": "Nothing is public in this section yet.",
+        "read_more": "Read the article",
+        "reading": "minute read",
+        "sources_note": "The sources for each article are listed at the foot of its page.",
+    },
+}
+
+ARTICLES = [
+    {
+        "key": "ai-act-dati-clienti",
+        "date": "2026-08-07",
+        # bozza | pronto — only "pronto" is indexed and listed in the sitemap.
+        "stato": "bozza",
+        "author": "Gian Angelo Geminiani",
+        "it": {
+            "slug": "insights/ai-act-dati-clienti",
+            "short": "AI Act e dati dei clienti",
+            "title": "AI Act e dati dei clienti — G&G Technologies",
+            "description": "Cosa rischia davvero uno studio che usa l'AI sui dati dei clienti, fra AI "
+                           "Act, GDPR e legge 132/2025, e cosa può fare da lunedì mattina.",
+            "kicker": "AI Act · 7 agosto 2026",
+            "h1": "Cosa rischi davvero se usi l'AI <span class=\"grad-text\">senza uno scudo</span> "
+                  "sui dati.",
+            "lead": "Le scadenze dell'AI Act, le sanzioni che sono già operative e i tre regimi che si "
+                    "sommano. Poi sette cose concrete da fare, in ordine.",
+            "role": "Per studi legali, commercialisti e aziende che trattano dati riservati.",
+            "disclaimer": "Questo articolo ha finalità informative e non costituisce parere legale. "
+                          "Per la valutazione del tuo caso specifico, rivolgiti a un professionista "
+                          "qualificato o al tuo ordine professionale.",
+            "cta_title": "Vuoi capire dove finiscono i dati del tuo studio?",
+            "cta_text": "Raccontaci come lavorate oggi e quali strumenti usate. Risponde una persona "
+                        "del team, non un form.",
+            "related": ["onprem", "podz", "ai"],
+        },
+        "en": {
+            "slug": "en/insights/ai-act-client-data",
+            "short": "The AI Act and client data",
+            "title": "The AI Act and client data — G&G Technologies",
+            "description": "What a firm using AI on client data actually risks, between the AI Act, the "
+                           "GDPR and Italian Law 132/2025, and what to do from Monday morning.",
+            "kicker": "AI Act · 7 August 2026",
+            "h1": "What you really risk using AI <span class=\"grad-text\">without a shield</span> on "
+                  "your data.",
+            "lead": "The AI Act deadlines, the penalties that are already in force and the three "
+                    "regimes stacking up. Then seven concrete things to do, in order.",
+            "role": "For law firms, accountants and companies handling confidential data.",
+            "disclaimer": "This article is for information purposes only and does not constitute legal "
+                          "advice. For your specific situation, consult a qualified professional or "
+                          "your professional body.",
+            "cta_title": "Want to know where your firm's data ends up?",
+            "cta_text": "Tell us how you work today and which tools you use. A person from the team "
+                        "answers, not a form.",
+            "related": ["onprem", "podz", "ai"],
+        },
+    },
+]
+
+# -----------------------------------------------------------------------------------------------------------------
 #  s h a r e d   c h r o m e
 # -----------------------------------------------------------------------------------------------------------------
 
@@ -78,6 +203,7 @@ CHROME = {
             ("Azienda", [
                 ("Chi siamo", "/#about"),
                 ("Perché noi", "/#why"),
+                ("Insights", "/insights/"),
                 ("Contatti", "/#contact"),
                 ("LinkedIn", "https://www.linkedin.com/company/gg-technologies-srl"),
             ]),
@@ -128,6 +254,7 @@ CHROME = {
             ("Company", [
                 ("About", "/en/#about"),
                 ("Why us", "/en/#why"),
+                ("Insights", "/en/insights/"),
                 ("Contact", "/en/#contact"),
                 ("LinkedIn", "https://www.linkedin.com/company/gg-technologies-srl"),
             ]),
@@ -218,6 +345,28 @@ PAGES = [
                 "raccoglie ed elabora i dati dall'altra. Abbiamo realizzato soluzioni wearable per il "
                 "monitoraggio dei parametri vitali in ambito medicale e sportivo.",
             ],
+            # The one page on the site that can point at a measured result instead of a method.
+            # Everything here is checkable against the DOI: authors, journal, sample, duration.
+            "research": {
+                "kicker": "La ricerca dietro",
+                "heading": "Novecento operatori dell'emergenza, <span class=\"grad-text\">dodici mesi</span> "
+                           "di misure.",
+                "body": [
+                    "Questa pagina descrive un metodo. Il metodo è stato messo alla prova in uno studio "
+                    "pubblicato su «Sensors», rivista con revisione paritaria: un'architettura cloud che "
+                    "segue in continuo l'elettrocardiogramma e il respiro di paramedici e operatori sanitari "
+                    "mentre lavorano, e porta gli allarmi a una centrale in tempo reale.",
+                    "Sono stati seguiti 900 fra paramedici e operatori dell'emergenza, per dodici mesi. "
+                    "G&amp;G Technologies è una delle affiliazioni dello studio, insieme al CNR, "
+                    "all'Università di Bologna, alla Johns Hopkins University e all'Università Politecnica "
+                    "delle Marche. Il nostro amministratore delegato ne è il secondo autore.",
+                ],
+                "citation": "Orro A., <strong>Geminiani G.A.</strong>, Sicurello F., Modica M., Pegreffi F., "
+                            "Neri L., Augello A., Botteghi M., <em>A Cloud Infrastructure for Health "
+                            "Monitoring in Emergency Response Scenarios</em>, «Sensors», 2024, 24(21), 6992.",
+                "link": "Leggi l'articolo",
+                "note": "Accesso aperto, licenza CC BY.",
+            },
             "cards_title": "Cosa costruiamo",
             "cards_intro": "Dal sensore al cruscotto, un progetto solo. Addosso o in casa.",
             "cards": [
@@ -310,6 +459,26 @@ PAGES = [
                 "and processes the data on the other. We have built wearable solutions for vital-signs "
                 "monitoring in both healthcare and sport.",
             ],
+            "research": {
+                "kicker": "The research behind it",
+                "heading": "Nine hundred emergency workers, <span class=\"grad-text\">twelve months</span> "
+                           "of measurements.",
+                "body": [
+                    "This page describes a method. That method was tested in a study published in "
+                    "“Sensors”, a peer-reviewed journal: a cloud architecture that continuously follows the "
+                    "electrocardiogram and breathing of paramedics and medical workers while they work, and "
+                    "raises alarm events to a control centre in real time.",
+                    "900 paramedics and emergency workers were followed for twelve months. "
+                    "G&amp;G Technologies is one of the affiliations on the study, alongside the Italian "
+                    "National Research Council, the University of Bologna, Johns Hopkins University and "
+                    "Università Politecnica delle Marche. Our chief executive is its second author.",
+                ],
+                "citation": "Orro A., <strong>Geminiani G.A.</strong>, Sicurello F., Modica M., Pegreffi F., "
+                            "Neri L., Augello A., Botteghi M., <em>A Cloud Infrastructure for Health "
+                            "Monitoring in Emergency Response Scenarios</em>, “Sensors”, 2024, 24(21), 6992.",
+                "link": "Read the article",
+                "note": "Open access, CC BY licence.",
+            },
             "cards_title": "What we build",
             "cards_intro": "From the sensor to the dashboard, one project. Worn or in the room.",
             "cards": [
