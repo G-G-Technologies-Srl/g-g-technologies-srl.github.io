@@ -591,7 +591,7 @@ PAGES = [
             # Il primo cliente nominato del sito. Niente cifre: non ce ne sono di dimostrabili, e
             # una descrizione onesta vale più di un numero che nessuno può controllare.
             "case": {
-                "kicker": "Un caso · Brighi Infissi",
+                "kicker": "Un caso · Brighi Infissi, 2010",
                 "heading": "Il preventivo con la <span class=\"grad-text\">trasmittanza dentro</span>, "
                            "in pochi click.",
                 "body": [
@@ -600,8 +600,8 @@ PAGES = [
                     "Chi sta davanti al cliente deve rispondere su tutti e due, e spesso deve chiamare "
                     "l'ufficio tecnico e richiamare il giorno dopo.",
                     "Per <strong>Brighi Infissi</strong> abbiamo costruito un configuratore di prodotto "
-                    "per la rete vendita — prima che G&amp;G Technologies esistesse, quando eravamo lo "
-                    "stesso gruppo di persone senza ancora questa insegna. Si scelgono le caratteristiche "
+                    "per la rete vendita. Era il 2010, dodici anni prima che G&amp;G Technologies "
+                    "esistesse: lo stesso gruppo di persone, senza ancora questa insegna. Si scelgono le caratteristiche "
                     "del serramento e ne esce un preventivo grafico: il disegno dell'infisso, i dati "
                     "tecnici e le condizioni commerciali, insieme. In pochi click, davanti al cliente.",
                 ],
@@ -702,7 +702,7 @@ PAGES = [
                 "— and what to leave alone.",
             ],
             "case": {
-                "kicker": "A case · Brighi Infissi",
+                "kicker": "A case · Brighi Infissi, 2010",
                 "heading": "The quote with the <span class=\"grad-text\">thermal figures in it</span>, "
                            "in a few clicks.",
                 "body": [
@@ -711,8 +711,8 @@ PAGES = [
                     "sitting in front of the customer has to answer on both, and often has to call the "
                     "technical office and come back the next day.",
                     "For <strong>Brighi Infissi</strong> we built a product configurator for the sales "
-                    "network — before G&amp;G Technologies existed, when we were the same group of people "
-                    "without this name on the door. You pick the features of the window and out comes a "
+                    "network. That was 2010, twelve years before G&amp;G Technologies existed: the same "
+                    "group of people, without this name on the door. You pick the features of the window and out comes a "
                     "graphical quote: the drawing, the technical figures and the commercial terms, "
                     "together. In a few clicks, in front of the customer.",
                 ],
