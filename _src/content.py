@@ -275,7 +275,7 @@ ARTICLES = [
         "tags": ["robotica", "automazione"],
         "it": {
             "slug": "insights/telefono-come-sensore",
-            "short": "Il telefono che hai già è un nodo sensore",
+            "short": "Il telefono che hai già è il tuo primo sensore",
             "title": "Il telefono che hai già è il tuo primo sensore — G&G Technologies",
             "description": "Prima di comprare hardware per un pilota: cosa un telefono dismesso "
                            "misura già, e i cinque confini oltre i quali smette di bastare.",
@@ -301,7 +301,7 @@ ARTICLES = [
         },
         "en": {
             "slug": "en/insights/phone-as-a-sensor",
-            "short": "The phone you already own is a sensor node",
+            "short": "The phone you already own is your first sensor",
             "title": "The phone you already own is your first sensor — G&G Technologies",
             "description": "Before buying hardware for a pilot: what a retired phone already "
                            "measures, and the five boundaries where it stops being enough.",
