@@ -1069,7 +1069,12 @@ section.tinted {
 .prose td { color: var(--muted); }
 
 /* Article banner: the illustration is inlined SVG, so it follows the theme like .diagram does.
-   The frame is the same hairline-on-soft-fill used everywhere else — no new vocabulary. */
+   The frame is the same hairline-on-soft-fill used everywhere else — no new vocabulary.
+
+   The section's own 96px would stack on top of the hero's 72px and the drawing's internal
+   breathing room, leaving the title floating a long way above its illustration. The banner reads
+   as part of the hero, so here the gap is closed instead. */
+.article-body { padding-top: 36px; }
 .article-art { margin: 0 0 44px; }
 .article-art svg {
   display: block; width: 100%; height: auto;
@@ -1170,6 +1175,14 @@ section.tinted {
   box-shadow: var(--shadow);
 }
 .insight-card:hover::before { opacity: 1; }
+/* The thumbnail bleeds to the card's edges: the card padding would otherwise frame it twice,
+   once with its own border and once with the drawing's enclosure. */
+.insight-thumb {
+  display: block; margin: -30px -28px 22px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-soft);
+}
+.insight-thumb svg { display: block; width: 100%; height: auto; }
 .insight-card .kicker { margin-bottom: 10px; }
 .insight-card h3 { font-size: 1.18rem; font-weight: 700; margin: 0 0 10px; }
 .insight-card p { color: var(--muted); font-size: 0.94rem; margin: 0; }

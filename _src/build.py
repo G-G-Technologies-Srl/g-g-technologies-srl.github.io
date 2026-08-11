@@ -263,7 +263,12 @@ section.tinted {
 .prose td { color: var(--muted); }
 
 /* Article banner: the illustration is inlined SVG, so it follows the theme like .diagram does.
-   The frame is the same hairline-on-soft-fill used everywhere else — no new vocabulary. */
+   The frame is the same hairline-on-soft-fill used everywhere else — no new vocabulary.
+
+   The section's own 96px would stack on top of the hero's 72px and the drawing's internal
+   breathing room, leaving the title floating a long way above its illustration. The banner reads
+   as part of the hero, so here the gap is closed instead. */
+.article-body { padding-top: 36px; }
 .article-art { margin: 0 0 44px; }
 .article-art svg {
   display: block; width: 100%; height: auto;
@@ -364,6 +369,14 @@ section.tinted {
   box-shadow: var(--shadow);
 }
 .insight-card:hover::before { opacity: 1; }
+/* The thumbnail bleeds to the card's edges: the card padding would otherwise frame it twice,
+   once with its own border and once with the drawing's enclosure. */
+.insight-thumb {
+  display: block; margin: -30px -28px 22px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-soft);
+}
+.insight-thumb svg { display: block; width: 100%; height: auto; }
 .insight-card .kicker { margin-bottom: 10px; }
 .insight-card h3 { font-size: 1.18rem; font-weight: 700; margin: 0 0 10px; }
 .insight-card p { color: var(--muted); font-size: 0.94rem; margin: 0; }
@@ -1122,6 +1135,27 @@ def _art_shape_svg(shape):
             f'opacity="{shape["opacity"]:.2f}"/>')
 
 
+def _art_gradients():
+    """The illustration palette, defined once per page and referenced by every drawing on it.
+
+    The index shows one thumbnail per card: three gradients repeated per card would mean duplicate
+    ids, which is invalid and which check_site.py refuses. Same trick as _icon_gradient().
+    """
+    return (
+        '<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs>'
+        '<linearGradient id="artEdge" x1="0" y1="0" x2="1" y2="0">'
+        '<stop offset="0" stop-color="var(--accent)"/>'
+        '<stop offset="1" stop-color="var(--accent-strong)"/></linearGradient>'
+        '<linearGradient id="artPanel" x1="0" y1="0" x2="0.4" y2="1">'
+        '<stop offset="0" stop-color="var(--panel-2)"/>'
+        '<stop offset="0.6" stop-color="var(--panel)"/></linearGradient>'
+        '<radialGradient id="artGlow" cx="0.5" cy="0.5" r="0.5">'
+        '<stop offset="0" stop-color="var(--glow-a)"/>'
+        '<stop offset="1" stop-color="var(--glow-a)" stop-opacity="0"/></radialGradient>'
+        '</defs></svg>'
+    )
+
+
 def _article_art_html(article, lang):
     """The banner above the article, or nothing when the article has no illustration yet."""
     draw = article_art.ARTICLE_ART.get(article["key"])
@@ -1140,24 +1174,28 @@ def _article_art_html(article, lang):
                aria-labelledby="{ident}T {ident}D">
             <title id="{ident}T">{_esc(words['title'])}</title>
             <desc id="{ident}D">{_esc(words['desc'])}</desc>
-            <defs>
-              <linearGradient id="artEdge" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0" stop-color="var(--accent)"/>
-                <stop offset="1" stop-color="var(--accent-strong)"/>
-              </linearGradient>
-              <linearGradient id="artPanel" x1="0" y1="0" x2="0.4" y2="1">
-                <stop offset="0" stop-color="var(--panel-2)"/>
-                <stop offset="0.6" stop-color="var(--panel)"/>
-              </linearGradient>
-              <radialGradient id="artGlow" cx="0.5" cy="0.5" r="0.5">
-                <stop offset="0" stop-color="var(--glow-a)"/>
-                <stop offset="1" stop-color="var(--glow-a)" stop-opacity="0"/>
-              </radialGradient>
-            </defs>
             {body}
           </svg>
         </figure>
 """
+
+
+def _insight_thumb_html(article):
+    """The same drawing at card size, on the index.
+
+    Decorative here, so aria-hidden: the card already carries the title and the summary as text,
+    and a screen reader reading the illustration again would only add noise.
+
+    The geometry is asked for the card's own proportions rather than scaled down: a squashed
+    version would turn the fragments into lozenges and read as a different picture.
+    """
+    draw = article_art.ARTICLE_ART.get(article["key"])
+    if not draw:
+        return ""
+    w, h = article_art.THUMB_W, article_art.THUMB_H
+    body = "".join(_art_shape_svg(s) for s in draw(w, h))
+    return (f'<span class="insight-thumb"><svg viewBox="0 0 {w} {h}" aria-hidden="true" '
+            f'focusable="false">{body}</svg></span>')
 
 
 def _photo_html(data):
@@ -1876,6 +1914,7 @@ def _render_article(lang, article):
 </head>
 <body>
 {_icon_gradient()}
+{_art_gradients()}
 {_header(lang, other_url)}
 
   <main id="main">
@@ -1895,7 +1934,7 @@ def _render_article(lang, article):
       </div>
     </section>
 
-    <section>
+    <section class="article-body">
       <div class="container">
 {_article_art_html(article, lang)}{banner}        <p class="article-meta">
           <strong>{_esc(article['author'])}</strong> · {_long_date(lang, article['date'])} ·
@@ -1958,6 +1997,7 @@ def _render_insights_index(lang):
         chips = "".join(f'<span class="tag">{TAGS[t][lang]}</span>' for t in tags)
         cards.append(f"""          <a class="insight-card reveal" href="/{entry['slug']}/"
              data-tags="{' '.join(tags)}">
+            {_insight_thumb_html(article)}
             <div class="kicker">{entry['kicker']}{mark}</div>
             <h3>{_esc(entry['short'])}</h3>
             <p>{entry['description']}</p>
@@ -2024,6 +2064,7 @@ def _render_insights_index(lang):
 </head>
 <body>
 {_icon_gradient()}
+{_art_gradients()}
 {_header(lang, other_url)}
 
   <main id="main">

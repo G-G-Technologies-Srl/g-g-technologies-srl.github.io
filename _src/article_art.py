@@ -16,7 +16,11 @@ Everything is parametric on width and height, so the same drawing survives being
 Pure Python, no dependencies: `build.py` has to keep running with nothing installed.
 """
 
-BANNER_W, BANNER_H = 1000, 420
+# The banner sits right under the article title, so it is wide and low: a taller one pushes the
+# first paragraph off the screen and opens a hole between the title and the drawing.
+BANNER_W, BANNER_H = 1000, 340
+# The card thumbnail on /insights. Lower still, because under it come kicker, title and summary.
+THUMB_W, THUMB_H = 800, 200
 
 # Roles a renderer has to know how to paint.
 GLOW = "glow"          # the soft halo behind everything, or nothing at all on a flat surface
