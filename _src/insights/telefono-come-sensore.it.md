@@ -81,11 +81,11 @@ L'ultima riga è la più utile, e la meno sfruttata. Un modello di visione o di 
 
 ## Cosa fare, in ordine
 
-1. **Scrivi la domanda prima di accendere qualsiasi cosa.** Non «raccogliamo dati e vediamo», ma: quale grandezza, in quale punto, per distinguere quale situazione da quale altra.
+1. **Scrivi la domanda prima di accendere qualsiasi cosa.** Non «raccogliamo dati e vediamo». Una domanda utile dice tre cose: che cosa misuri, dove lo misuri, e quali due situazioni devi riuscire a distinguere. Per esempio: «la vibrazione, misurata sul fianco del motore, permette di distinguere un cuscinetto integro da uno che sta per rompersi?»
 2. **Fai l'inventario dei telefoni che hai** e controlla fino a quando ognuno riceve aggiornamenti. Quelli non più aggiornati vanno tenuti su una rete separata da quella aziendale.
 3. **Controlla che i sensori che ti servono ci siano davvero.** Barometro e magnetometro mancano su parecchi modelli, e la qualità del ricevitore satellitare cambia molto da telefono a telefono.
 4. **Registra i dati grezzi, non solo i risultati elaborati.** Sui dati grezzi puoi tornare fra sei mesi con un'idea nuova; su una media già calcolata no.
-5. **Lascia andare il pilota abbastanza a lungo** da coprire un ciclo intero: un turno completo, una settimana, un cambio di stagione se misuri qualcosa di ambientale.
+5. **Tieni il pilota acceso abbastanza a lungo** da coprire un ciclo intero: un turno completo, una settimana, un cambio di stagione se misuri qualcosa di ambientale.
 6. **Scrivi la specifica del dispositivo definitivo partendo dai dati raccolti**, non dal catalogo dei fornitori.
 7. **Decidi quando finisce il pilota nel momento in cui lo inizi.** Un telefono lasciato su un macchinario «per adesso» diventa un'installazione permanente che nessuno ha progettato — ed è così che i cinque confini di prima diventano un problema vero.
 
