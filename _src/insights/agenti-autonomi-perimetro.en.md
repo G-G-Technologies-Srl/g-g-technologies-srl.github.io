@@ -90,7 +90,7 @@ The same holds for the choice to keep the model on site rather than on an extern
 
 If you are considering giving an AI assistant access to the mailbox, the documents or the business system, the useful conversation comes first and does not take long: which actions do you want it to perform on its own, and what happens the day it performs one you had not foreseen.
 
-*The author wrote* [OpenClaw — the complete guide](https://github.com/angelogeminiani/openclaw-la-guida-completa)*, a free manual on autonomous agents, and part of the material in this article comes from it.*
+*The author wrote* [OpenClaw — the complete guide](https://angelogeminiani.github.io/openclaw-la-guida-completa/)*, a free manual on autonomous agents, and part of the material in this article comes from it.*
 
 ## Sources
 

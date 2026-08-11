@@ -90,7 +90,7 @@ Vale anche per la scelta di tenere il modello in sede invece che su un servizio 
 
 Se stai valutando di dare a un assistente AI accesso alla posta, ai documenti o al gestionale, la conversazione utile è prima, e dura poco: quali azioni vuoi che compia da solo, e cosa succede il giorno in cui ne compie una che non avevi previsto.
 
-*Chi scrive è l'autore di* [OpenClaw — la guida completa](https://github.com/angelogeminiani/openclaw-la-guida-completa)*, manuale gratuito sugli agenti autonomi, da cui viene parte del materiale di questo articolo.*
+*Chi scrive è l'autore di* [OpenClaw — la guida completa](https://angelogeminiani.github.io/openclaw-la-guida-completa/)*, manuale gratuito sugli agenti autonomi, da cui viene parte del materiale di questo articolo.*
 
 ## Fonti
 
