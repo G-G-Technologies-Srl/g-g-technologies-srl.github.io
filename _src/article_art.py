@@ -141,9 +141,51 @@ def lifespan(w=BANNER_W, h=BANNER_H):
     return shapes
 
 
+def inventory(w=BANNER_W, h=BANNER_H):
+    """You already own more sensors than the project needs; the pilot says which ones.
+
+    A regular grid of cells is everything the device carries. A handful are picked out in the
+    accent colour: the ones that turn out to matter. The regularity is the point — this is an
+    inventory, not a dispersion, and it has to read differently from the other drawings.
+    """
+    box_x, box_y = 0.040 * w, 0.157 * h
+    box_w, box_h = 0.920 * w, 0.686 * h
+
+    shapes = [
+        {"role": GLOW, "cx": 0.50 * w, "cy": 0.50 * h, "rx": 0.38 * w, "ry": 0.52 * h},
+        {"role": PANEL, "x": box_x, "y": box_y, "w": box_w, "h": box_h, "r": 0.052 * h},
+        {"role": EDGE, "x1": box_x + 0.057 * box_w, "y1": box_y,
+         "x2": box_x + 0.943 * box_w, "y2": box_y},
+    ]
+
+    cols, rows = 15, 5
+    span_x, span_y = box_x + 0.045 * box_w, box_y + 0.150 * box_h
+    span_w, span_h = box_w * 0.910, box_h * 0.700
+    # The cell is sized from whichever spacing is tighter. Deriving it from the width alone made
+    # the rows overlap into vertical bars on the card, where the band is far flatter than the
+    # banner: two measures pulled from two different dimensions cannot both be right.
+    cell = 0.60 * min(span_w / cols, span_h / rows)
+    step_x = (span_w - cell) / (cols - 1)
+    step_y = (span_h - cell) / (rows - 1)
+
+    # Fixed, not sampled: the same five cells light up on every build and at every size.
+    chosen = {(1, 2), (0, 6), (3, 4), (2, 9), (4, 12)}
+    for r in range(rows):
+        for c in range(cols):
+            picked = (r, c) in chosen
+            shapes.append({
+                "role": MARK if picked else ROW,
+                "x": span_x + c * step_x, "y": span_y + r * step_y,
+                "w": cell, "h": cell,
+                "opacity": 1.0 if picked else 0.22 + 0.05 * ((r + c) % 3),
+            })
+    return shapes
+
+
 # The registry the renderers read. A new article needs a drawing here and an "art" entry with
 # title and desc in content.py — build.py stops if it finds one without the other.
 ARTICLE_ART = {
     "ai-act-dati-clienti": perimeter,
     "durabilita-per-progetto": lifespan,
+    "telefono-come-sensore": inventory,
 }

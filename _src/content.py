@@ -210,13 +210,15 @@ ARTICLES = [
         "tags": ["wearable", "robotica"],
         "it": {
             "slug": "insights/durabilita-per-progetto",
-            "short": "La durata è diventata un requisito",
-            "title": "La durata è diventata un requisito — G&G Technologies",
+            "short": "La durata dell'hardware è diventata un requisito",
+            # The <title> has to stay under 65 characters, so it drops "diventata": on a search
+            # results page the tense matters less than saying what the subject is.
+            "title": "La durata dell'hardware è un requisito — G&G Technologies",
             "description": "Ecodesign, diritto alla riparazione e regolamento batterie si sommano: "
                            "cosa cambia per chi progetta hardware, e le decisioni da prendere "
                            "prima dell'architettura.",
             "kicker": "Progettazione · 11 agosto 2026",
-            "h1": "La durata non è più una promessa. "
+            "h1": "La durata dell'hardware non è più una promessa. "
                   "È un <span class=\"grad-text\">requisito con una data</span>.",
             "lead": "Tre norme europee convergono sullo stesso punto, con soglie numeriche e "
                     "scadenze. Poi sette decisioni da prendere in fase di progetto, non dopo.",
@@ -238,13 +240,13 @@ ARTICLES = [
         },
         "en": {
             "slug": "en/insights/durability-by-design",
-            "short": "Longevity has become a requirement",
-            "title": "Longevity has become a requirement — G&G Technologies",
+            "short": "Hardware longevity has become a requirement",
+            "title": "Hardware longevity is now a requirement — G&G Technologies",
             "description": "Ecodesign, the right to repair and the battery regulation stack up: "
                            "what changes for people designing hardware, and the decisions to "
                            "take before the architecture.",
             "kicker": "Design · 11 August 2026",
-            "h1": "Longevity is no longer a promise. "
+            "h1": "Hardware longevity is no longer a promise. "
                   "It is a <span class=\"grad-text\">requirement with a date</span>.",
             "lead": "Three European rules converge on the same point, with numeric thresholds and "
                     "deadlines. Then seven decisions to take at design time, not after.",
@@ -263,6 +265,65 @@ ARTICLES = [
             "cta_text": "Tell us what useful life you are promising and how it is built today. A "
                         "person from the team answers, not a form.",
             "related": ["wearable", "robotics", "digisense"],
+        },
+    },
+    {
+        "key": "telefono-come-sensore",
+        "date": "2026-08-11",
+        "stato": "bozza",
+        "author": "Gian Angelo Geminiani",
+        "tags": ["robotica", "automazione"],
+        "it": {
+            "slug": "insights/telefono-come-sensore",
+            "short": "Il telefono che hai già è un nodo sensore",
+            "title": "Il telefono che hai già è il tuo primo sensore — G&G Technologies",
+            "description": "Prima di comprare hardware per un pilota: cosa un telefono dismesso "
+                           "misura già, e i cinque confini oltre i quali smette di bastare.",
+            "kicker": "Progettazione · 11 agosto 2026",
+            "h1": "Prima di comprare hardware, apri il "
+                  "<span class=\"grad-text\">cassetto dei telefoni</span>.",
+            "lead": "Un telefono dismesso ha già i sensori, la rete e il calcolo per dirti se il "
+                    "dato che ti serve esiste. E cinque confini oltre i quali diventa un errore.",
+            "role": "Per chi deve validare un'idea IoT prima di stanziare un budget.",
+            "disclaimer": "Questo articolo ha finalità informative e non costituisce parere "
+                          "legale né valutazione di conformità. Per il tuo caso specifico, "
+                          "rivolgiti a un organismo notificato o a un consulente qualificato.",
+            "art": {
+                "title": "Più sensori di quelli che servono",
+                "desc": "Dentro un riquadro, una griglia regolare di celle rappresenta tutto ciò "
+                        "che un dispositivo ha a bordo. Cinque celle sono accese nel colore di "
+                        "accento: quelle che al progetto servono davvero.",
+            },
+            "cta_title": "Hai un'idea che dipende da una misura che nessuno ha ancora fatto?",
+            "cta_text": "Raccontaci quale sarebbe quella misura e dove andrebbe presa. Risponde "
+                        "una persona del team, non un form.",
+            "related": ["robotics", "digisense", "ai"],
+        },
+        "en": {
+            "slug": "en/insights/phone-as-a-sensor",
+            "short": "The phone you already own is a sensor node",
+            "title": "The phone you already own is your first sensor — G&G Technologies",
+            "description": "Before buying hardware for a pilot: what a retired phone already "
+                           "measures, and the five boundaries where it stops being enough.",
+            "kicker": "Design · 11 August 2026",
+            "h1": "Before buying hardware, open the "
+                  "<span class=\"grad-text\">drawer of old phones</span>.",
+            "lead": "A retired phone already has the sensors, the network and the compute to tell "
+                    "you whether your data exists. And five boundaries where it becomes a mistake.",
+            "role": "For people validating an IoT idea before committing a budget.",
+            "disclaimer": "This article is for information purposes only and constitutes neither "
+                          "legal advice nor a conformity assessment. For your specific case, "
+                          "consult a notified body or a qualified adviser.",
+            "art": {
+                "title": "More sensors than the project needs",
+                "desc": "Inside a panel, a regular grid of cells stands for everything a device "
+                        "carries on board. Five cells are lit in the accent colour: the ones the "
+                        "project actually needs.",
+            },
+            "cta_title": "Have an idea that hangs on a measurement nobody has taken?",
+            "cta_text": "Tell us what that measurement would be and where it would be taken. A "
+                        "person from the team answers, not a form.",
+            "related": ["robotics", "digisense", "ai"],
         },
     },
 ]

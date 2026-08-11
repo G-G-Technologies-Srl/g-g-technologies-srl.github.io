@@ -10,6 +10,7 @@ source of truth for the design system: change a token there and the inner pages 
 Usage:  python3 _src/build.py
 """
 
+import hashlib
 import html
 import json
 import os
@@ -29,6 +30,15 @@ SRC = Path(__file__).resolve().parent
 # and of the shared stylesheet.
 INDEX = SRC / "home.html"
 ASSETS = ROOT / "assets"
+
+# The stylesheet and the script carry a hash of their own content in the filename, and the pages
+# link to that name. GitHub Pages serves assets with max-age=600 and the filename never used to
+# change, so for ten minutes after a deploy browsers kept the previous CSS while the HTML was
+# already new — the layout looked broken to anyone who had visited recently, including us. With
+# the hash in the name a changed file is a new URL and cannot be served from cache; an unchanged
+# one keeps its name and stays cached. main() fills these in before any page is rendered.
+ASSET_CSS = "site.css"
+ASSET_JS = "site.js"
 
 LANGS = ("it", "en")
 LOCALE = {"it": "it_IT", "en": "en_GB"}
@@ -1786,7 +1796,7 @@ def _render_page(lang, page):
   <script>
     {BOOTSTRAP_JS}
   </script>
-  <link rel="stylesheet" href="{prefix}assets/site.css">
+  <link rel="stylesheet" href="{prefix}assets/{ASSET_CSS}">
   <script type="application/ld+json">
 {_json_ld(lang, page, data, url)}
   </script>
@@ -1801,7 +1811,7 @@ def _render_page(lang, page):
 
 {_footer(lang)}
 
-  <script src="{prefix}assets/site.js" defer></script>
+  <script src="{prefix}assets/{ASSET_JS}" defer></script>
 </body>
 </html>
 """
@@ -1934,7 +1944,7 @@ def _render_article(lang, article):
   <script>
     {BOOTSTRAP_JS}
   </script>
-  <link rel="stylesheet" href="{prefix}assets/site.css">
+  <link rel="stylesheet" href="{prefix}assets/{ASSET_CSS}">
   <script type="application/ld+json">
 {_article_json_ld(lang, article, data, url)}
   </script>
@@ -2001,7 +2011,7 @@ def _render_article(lang, article):
 
 {_footer(lang)}
 
-  <script src="{prefix}assets/site.js" defer></script>
+  <script src="{prefix}assets/{ASSET_JS}" defer></script>
 </body>
 </html>
 """
@@ -2087,7 +2097,7 @@ def _render_insights_index(lang):
   <script>
     {BOOTSTRAP_JS}
   </script>
-  <link rel="stylesheet" href="{prefix}assets/site.css">
+  <link rel="stylesheet" href="{prefix}assets/{ASSET_CSS}">
   <script type="application/ld+json">
 {json_ld}
   </script>
@@ -2124,7 +2134,7 @@ def _render_insights_index(lang):
 
 {_footer(lang)}
 
-  <script src="{prefix}assets/site.js" defer></script>
+  <script src="{prefix}assets/{ASSET_JS}" defer></script>
 </body>
 </html>
 """
@@ -2274,7 +2284,7 @@ def _redirect_page(lang, old_slug, new_url, label):
   <link rel="canonical" href="{new_url}">
   <meta http-equiv="refresh" content="0; url={new_url}">
   <meta name="robots" content="noarchive">
-  <link rel="stylesheet" href="/assets/site.css">
+  <link rel="stylesheet" href="/assets/{ASSET_CSS}">
 </head>
 <body>
   <main id="main" style="min-height:60vh;display:grid;place-items:center;text-align:center;padding:40px">
@@ -2526,18 +2536,46 @@ def _check_insights():
     return problems
 
 
+def _write_asset(base, extension, content):
+    """Write an asset under a name that carries a hash of its content, and drop the older ones.
+
+    Eight hex characters are plenty here: this guards against a stale cache, not against someone
+    forging a collision. Stale copies are removed so assets/ does not fill up with one file per
+    deploy, and so a page that somehow still links an old name fails loudly instead of quietly
+    serving last week's stylesheet.
+    """
+    digest = hashlib.sha256(content.encode("utf-8")).hexdigest()[:8]
+    name = f"{base}.{digest}{extension}"
+    (ASSETS / name).write_text(content, encoding="utf-8")
+
+    # Sweeping up is housekeeping, not correctness: the pages link the hashed name, so a leftover
+    # copy is clutter and nothing more. It must not be able to stop a build — on a read-only
+    # checkout the delete fails, and failing there would block a publication for no reason.
+    stale = [p for p in ASSETS.glob(f"{base}.*{extension}") if p.name != name]
+    stale += [p for p in [ASSETS / f"{base}{extension}"] if p.exists()]   # the pre-hash name
+    for old in stale:
+        try:
+            old.unlink()
+        except OSError as err:
+            print(f"nota: non riesco a togliere assets/{old.name} ({err.strerror}), toglilo a mano")
+    return name
+
+
 def main():
     from datetime import date
 
+    global ASSET_CSS, ASSET_JS
+
     _check_parity()
 
+    # Both assets are named before any page is rendered: the templates read these globals.
     ASSETS.mkdir(exist_ok=True)
-    (ASSETS / "site.css").write_text(_extract_homepage_css() + EXTRA_CSS, encoding="utf-8")
+    ASSET_CSS = _write_asset("site", ".css", _extract_homepage_css() + EXTRA_CSS)
+    ASSET_JS = _write_asset("site", ".js", SITE_JS)
 
     (ROOT / "index.html").write_text(_render_home("it"), encoding="utf-8")
     (ROOT / "en").mkdir(exist_ok=True)
     (ROOT / "en" / "index.html").write_text(_render_home("en"), encoding="utf-8")
-    (ASSETS / "site.js").write_text(SITE_JS, encoding="utf-8")
 
     written = []
     for page in PAGES:
@@ -2576,8 +2614,8 @@ def main():
 
     print("index.html       (it)")
     print("en/index.html    (en)")
-    print(f"assets/site.css  ({(ASSETS / 'site.css').stat().st_size // 1024} KB)")
-    print("assets/site.js")
+    print(f"assets/{ASSET_CSS}  ({(ASSETS / ASSET_CSS).stat().st_size // 1024} KB)")
+    print(f"assets/{ASSET_JS}")
     for slug in written:
         print(slug)
     urls = len(re.findall(r"<loc>", (ROOT / "sitemap.xml").read_text(encoding="utf-8")))
