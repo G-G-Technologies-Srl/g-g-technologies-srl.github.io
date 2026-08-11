@@ -88,15 +88,18 @@ INSIGHTS_INDEX = {
     "it": {
         "slug": "insights",
         "title": "Insights — G&G Technologies",
-        "description": "Analisi su intelligenza artificiale, dati e normativa: cosa è cambiato, "
-                       "da quando si applica e quali sono le conseguenze operative.",
+        "description": "Analisi tecniche su wearable medicali, robotica, automazione e "
+                       "intelligenza artificiale: cosa è cambiato e quali sono le conseguenze "
+                       "operative.",
         "kicker": "Insights",
-        "h1": "Analisi tecniche su intelligenza artificiale, "
-              "<span class=\"grad-text\">dati e normativa</span>.",
+        # The four areas are the company's four tags: the title has to cover the whole perimeter,
+        # not just the one topic the first article happens to be about.
+        "h1": "Analisi tecniche su wearable medicali, robotica, automazione e "
+              "<span class=\"grad-text\">intelligenza artificiale</span>.",
         # The sources are named once, in sources_note just below: saying it here too would print
         # the same sentence twice, one under the other, in the same hero.
-        "lead": "Ogni articolo ricostruisce una materia per intero. Li pubblichiamo quando la "
-                "questione non si chiude in una sintesi.",
+        "lead": "Scriviamo di quello che progettiamo e realizziamo. Ogni articolo parte da un "
+                "problema concreto e lo ricostruisce per intero, dalla norma al codice.",
         "short": "Insights",
         "empty": "Non c'è ancora niente di pubblico in questa sezione.",
         "read_more": "Leggi l'articolo",
@@ -107,13 +110,14 @@ INSIGHTS_INDEX = {
     "en": {
         "slug": "en/insights",
         "title": "Insights — G&G Technologies",
-        "description": "Analysis on artificial intelligence, data and regulation: what changed, "
-                       "when it starts to apply and what follows from it in practice.",
+        "description": "Technical analysis on medical wearables, robotics, automation and "
+                       "artificial intelligence: what changed and what follows from it in "
+                       "practice.",
         "kicker": "Insights",
-        "h1": "Technical analysis on artificial intelligence, "
-              "<span class=\"grad-text\">data and regulation</span>.",
-        "lead": "Each article reconstructs a subject in full. We publish one when the question "
-                "does not close in a summary.",
+        "h1": "Technical analysis on medical wearables, robotics, automation and "
+              "<span class=\"grad-text\">artificial intelligence</span>.",
+        "lead": "We write about what we design and build. Each article starts from a concrete "
+                "problem and reconstructs it in full, from regulation to code.",
         "short": "Insights",
         "empty": "Nothing is public in this section yet.",
         "read_more": "Read the article",
