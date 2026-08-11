@@ -247,11 +247,15 @@ def main():
         for lang in ("it", "en"):
             made.append(_card(page["key"], lang, page[lang], bold, regular, ASSETS))
 
-    # the two homepages: the tagline is the whole message there
+    # The two homepages: the tagline is the whole message there.
+    #
+    # These two titles repeat the <h1> of _src/home.html by hand, and nothing checks that they still
+    # agree — the same trap as the two footers. If you change the homepage headline, change it here
+    # in the same edit and rerun this script, or the card will keep advertising the old one.
     home = {
-        "it": {"short": "", "title": "Trent'anni di tecnologia. L'AI di oggi. Le persone che decidono.",
+        "it": {"short": "", "title": "Facevamo machine learning prima che si chiamasse AI.",
                "lead": "Progettiamo e realizziamo tecnologia dalla Repubblica di San Marino."},
-        "en": {"short": "", "title": "Thirty years of technology. Today's AI. People who decide.",
+        "en": {"short": "", "title": "We were doing machine learning before it was called AI.",
                "lead": "We design and build technology from the Republic of San Marino."},
     }
     for lang, data in home.items():

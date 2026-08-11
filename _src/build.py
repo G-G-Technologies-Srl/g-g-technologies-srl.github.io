@@ -1308,13 +1308,17 @@ def _research_html(data):
 
 
 def _case_html(data):
-    """A named client, what was built, and — when there is one — a quote from the person who
-    signed it off.
+    """Checkable proof of what the page has just described, named so a reader can go and verify.
+
+    Two kinds qualify. A named client, what was built, and — when there is one — a quote from the
+    person who signed it off. Or something of ours a stranger can inspect on their own: the product,
+    with its trial and its public release history.
 
     The rule this component exists to serve: the site describes a method on sixteen pages and for
     a long time named nobody. A case says who, so a reader can check. It follows that nothing here
-    may be softened into an anonymous "a leading manufacturer": either the client agreed to be
-    named, or the case does not go up.
+    may be softened into an anonymous "a leading manufacturer": either the subject is named, or the
+    case does not go up. Most of our work sits under confidentiality agreements, which is why the
+    second kind matters — it is the proof those agreements cannot take away.
     """
     case = data.get("case")
     if not case:

@@ -1009,8 +1009,8 @@
 
       <div class="nav-links" id="navLinks">
         <a href="#services"><span class="it">Servizi</span></a>
-        <a href="#why"><span class="it">Perché noi</span></a>
         <a href="#podz">Podz.AI</a>
+        <a class="it" href="/insights/">Insights</a>
         <a href="#about"><span class="it">Chi siamo</span></a>
         <a href="#contact"><span class="it">Contatti</span></a>
       </div>
@@ -1052,18 +1052,22 @@
 
       <div class="container hero-inner">
         <div>
+          <!-- The kicker carries the offer, which leaves the h1 free to say why we are credible.
+               Max ~50 characters: .kicker is inline-flex and past that the dash is left behind. -->
           <div class="kicker">
-            <span class="it">Tecnologia e innovazione · progettate a San Marino</span>
+            <span class="it">Wearable medicali, robotica e AI · San Marino</span>
             
           </div>
 
-          <h1 class="it">Trent'anni di tecnologia. L'<span class="grad-text">AI di oggi</span>. Le persone che decidono.</h1>
+          <!-- Written twice: make_og_cards.py repeats it by hand. Change both, then regenerate. -->
+          <h1 class="it">Facevamo machine learning <span class="grad-text">prima che si chiamasse AI</span>.</h1>
           
 
+          <!-- The three practices are in the kicker now: do not list them here a second time. -->
           <p class="hero-sub it">
-            Wearable medicali, robotica industriale, intelligenza artificiale: progettiamo e realizziamo
-            la tecnologia che entra nei tuoi processi. La costruiamo sul nostro framework
-            <strong>DigiSense®</strong>, e su un principio fermo — l'AI legge, propone, prepara.
+            Progettiamo e realizziamo la tecnologia che entra nei tuoi processi: elettronica, firmware,
+            robot e modelli, sulla stessa base. Quella base è il nostro framework
+            <strong>DigiSense®</strong>, e il principio è fermo — l'AI legge, propone, prepara.
             A validare è sempre una persona.
           </p>
           
@@ -1084,16 +1088,16 @@
 
           <div class="hero-stats">
             <div class="stat">
-              <div class="num">30+</div>
-              <div class="label"><span class="it">anni di esperienza</span></div>
+              <div class="num">1997</div>
+              <div class="label"><span class="it">il primo progetto</span></div>
             </div>
             <div class="stat">
-              <div class="num">10+</div>
-              <div class="label"><span class="it">fabbriche automatizzate</span></div>
+              <div class="num">18</div>
+              <div class="label"><span class="it">anni nella manifattura</span></div>
             </div>
             <div class="stat">
-              <div class="num">100%</div>
-              <div class="label"><span class="it">sviluppo in Europa</span></div>
+              <div class="num">900</div>
+              <div class="label"><span class="it">operatori monitorati</span></div>
             </div>
           </div>
         </div>
@@ -1241,7 +1245,7 @@
             <div class="n">01</div>
             <h3 class="it">Competenza</h3>
             
-            <p class="it">Trent'anni fra elettronica, firmware, robotica e software. Non assembliamo prodotti di altri: li progettiamo.</p>
+            <p class="it">Dal 1997 fra elettronica, firmware, robotica e software. Non assembliamo prodotti di altri: li progettiamo.</p>
             
           </div>
           <div class="pillar reveal">
@@ -1432,8 +1436,11 @@
           <div class="about-text reveal">
             <p class="it">
               <strong>G&amp;G Technologies Srl</strong> progetta e realizza tecnologia dalla
-              Repubblica di San Marino. Il team unisce programmatori esperti, architetti software e sistemisti,
-              con oltre 30 anni di attività nel mondo dell'informatica e dell'innovazione.
+              Repubblica di San Marino. Alla guida c'è <strong>Gian Angelo Geminiani</strong>, che fa
+              questo mestiere dal 1997. Attorno, una rete di collaboratori e partner tecnologici in
+              più paesi: architetti software, progettisti elettronici, sistemisti, scelti in base al
+              progetto. È il modo in cui una struttura piccola tiene insieme elettronica, robotica e
+              AI senza fingere di avere tre reparti.
             </p>
             
             <p class="it">
@@ -1471,7 +1478,7 @@
             <div class="fact">
               <span class="f-dot"></span>
               <div>
-                <h4 class="it">30+ anni di esperienza</h4>
+                <h4 class="it">In questo mestiere dal 1997</h4>
                 
                 <p class="it">Innovazione, software e automazione industriale</p>
                 
@@ -1510,7 +1517,7 @@
               <div>
                 <h4 class="it">Innovation Manager accreditato</h4>
                 
-                <p class="it">Il nostro amministratore delegato, nell'elenco MISE dal 2020</p>
+                <p class="it">Gian Angelo Geminiani, nell'elenco ministeriale dal 2020</p>
                 
               </div>
             </div>
@@ -1532,6 +1539,15 @@
         </div>
 
         <div class="pillars pillars-stack">
+          <!-- This entry exists because the hero says 1997 and the timeline used to open in 2002:
+               five years the page claimed and did not account for. -->
+          <div class="pillar reveal">
+            <div class="n">1997 – 2002</div>
+            <h3 class="it">Silcea Group, poi SkyLab</h3>
+            
+            <p class="it">Responsabile dei sistemi informativi in Silcea Group, con l'incarico di mettere in produzione il nuovo ERP — il gestionale che tiene insieme produzione, magazzino e amministrazione. Poi la fondazione di SkyLab, che assemblava workstation per studi di architettura, con schede video scelte per far girare il CAD. Dimensionare una macchina attorno al carico che deve sostenere è lo stesso mestiere di oggi, quando la domanda è quanta memoria GPU serve per tenere un modello in casa.</p>
+            
+          </div>
           <div class="pillar reveal">
             <div class="n">2002 – 2020</div>
             <h3 class="it">Diciotto anni in Gruppo Fontanot</h3>
@@ -1550,7 +1566,7 @@
             <div class="n">2015 – 2024</div>
             <h3 class="it">Botika, intelligenza artificiale applicata</h3>
             
-            <p class="it">Il nostro amministratore delegato ha co-fondato e guidato Botika — nata come FunnyGain — azienda che porta gli algoritmi dentro i processi industriali. Nel 2019 Confindustria Romagna l'ha scelta come primo partner tecnologico sammarinese del team SmartTech.</p>
+            <p class="it">Geminiani ha co-fondato e guidato Botika — nata come FunnyGain — azienda che porta gli algoritmi dentro i processi industriali. Nel 2019 Confindustria Romagna l'ha scelta come primo partner tecnologico sammarinese del team SmartTech.</p>
             
           </div>
           <div class="pillar reveal">

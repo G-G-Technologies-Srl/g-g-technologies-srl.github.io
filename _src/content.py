@@ -475,10 +475,13 @@ CHROME = {
     "it": {
         "skip": "Vai al contenuto",
         "payoff": "Accendiamo il futuro",
+        # "Perché noi" left the navigation for Insights: it was an anchor to a section of the
+        # homepage, while the articles are the cheapest proof of technical depth the site has and
+        # were reachable from the footer only. "Perché noi" is still in the footer, under Azienda.
         "nav": [
             ("Servizi", "/#services"),
-            ("Perché noi", "/#why"),
             ("Podz.AI", "/podz-ai/"),
+            ("Insights", "/insights/"),
             ("Chi siamo", "/#about"),
             ("Contatti", "/#contact"),
         ],
@@ -512,10 +515,23 @@ CHROME = {
                         "C.O.E./VAT SM29141",
         "footer_note": "DigiSense® è un marchio registrato. Questo sito non usa cookie né tracker.",
         # The same three figures the homepage hero carries.
+        #
+        # "30+ anni di esperienza" used to sit here and it worked against us: the company was founded
+        # in 2022, so anybody checking the register found a four-year-old firm claiming thirty years.
+        # A date cannot be inflated, and the year is the one the timeline documents. If the trade
+        # actually starts earlier than 1997, change the year here and in home.html together.
+        #
+        # The third slot used to be "100% sviluppo in Europa", which is data sovereignty rather than
+        # experience. The study is the only figure on this site with a permanent identifier, so it
+        # earns the place.
+        # Keep the labels short: .hero-stats is a flex row and the items size to their content, so
+        # past roughly twenty characters each the third figure wraps onto a second line and leaves a
+        # hole to its right. The study behind the 900 is named further down the homepage, in "Chi
+        # siamo", with the link.
         "stats": [
-            ("30+", "anni di esperienza"),
-            ("10+", "fabbriche automatizzate"),
-            ("100%", "sviluppo in Europa"),
+            ("1997", "il primo progetto"),
+            ("18", "anni nella manifattura"),
+            ("900", "operatori monitorati"),
         ],
         "breadcrumb_home": "Home",
         "breadcrumb_services": "Servizi",
@@ -539,8 +555,8 @@ CHROME = {
         # The homepage is a single bilingual URL: English navigation points at it too.
         "nav": [
             ("Services", "/en/#services"),
-            ("Why us", "/en/#why"),
             ("Podz.AI", "/en/podz-ai/"),
+            ("Insights", "/en/insights/"),
             ("About", "/en/#about"),
             ("Contact", "/en/#contact"),
         ],
@@ -574,9 +590,9 @@ CHROME = {
                         "C.O.E./VAT SM29141",
         "footer_note": "DigiSense® is a registered trademark. This site uses no cookies or trackers.",
         "stats": [
-            ("30+", "years of experience"),
-            ("10+", "automated factories"),
-            ("100%", "developed in Europe"),
+            ("1997", "the first project"),
+            ("18", "years in manufacturing"),
+            ("900", "workers monitored"),
         ],
         "breadcrumb_home": "Home",
         "breadcrumb_services": "Services",
@@ -679,9 +695,10 @@ PAGES = [
                     "Sono stati seguiti 900 fra paramedici e operatori dell'emergenza, per dodici mesi. "
                     "G&amp;G Technologies è una delle affiliazioni dello studio, insieme al CNR, "
                     "all'Università di Bologna, alla Johns Hopkins University e all'Università Politecnica "
-                    "delle Marche. Il nostro amministratore delegato ne è il secondo autore.",
+                    "delle Marche. Il nostro amministratore delegato, <strong>Gian Angelo "
+                    "Geminiani</strong>, ne è il secondo autore.",
                     "Un'altra affiliazione è AccYouRate Group, che progetta, brevetta e produce i "
-                    "dispositivi indossabili: lì il nostro amministratore delegato è stato direttore "
+                    "dispositivi indossabili: lì Geminiani è stato direttore "
                     "tecnico per quasi cinque anni, dal 2020 al 2024. La competenza su questa pagina "
                     "viene da lì prima che da qualsiasi altra parte.",
                 ],
@@ -795,9 +812,10 @@ PAGES = [
                     "900 paramedics and emergency workers were followed for twelve months. "
                     "G&amp;G Technologies is one of the affiliations on the study, alongside the Italian "
                     "National Research Council, the University of Bologna, Johns Hopkins University and "
-                    "Università Politecnica delle Marche. Our chief executive is its second author.",
+                    "Università Politecnica delle Marche. Our chief executive, <strong>Gian Angelo "
+                    "Geminiani</strong>, is its second author.",
                     "Another affiliation is AccYouRate Group, which designs, patents and manufactures the "
-                    "wearable devices themselves: our chief executive was its chief technology officer "
+                    "wearable devices themselves: Geminiani was its chief technology officer "
                     "for almost five years, from 2020 to 2024. The expertise on this page comes from "
                     "there before it comes from anywhere else.",
                 ],
@@ -822,7 +840,7 @@ PAGES = [
                  ["Continuous parameter acquisition",
                   "Threshold and anomaly alerts",
                   "Interfaces for operators and for patients"]),
-                ("data", "Physiological data at scale",
+                ("data", "Physiological signal processing",
                  "Biological signals are noisy and voluminous. We filter them, normalise them and make "
                  "them queryable.",
                  ["Signal cleaning and normalisation",
@@ -896,17 +914,31 @@ PAGES = [
             "intro_title": "Il punto di partenza",
             "intro_h2": "L'automazione fallisce quando si <span class=\"grad-text\">compra prima di capire</span>.",
             "title": "Robotica e automazione industriale — G&G Technologies",
+            # No mention of the Italian incentive programmes here: we do not walk clients through the
+            # tax-credit paperwork, so naming "Industria 4.0" or "Transizione 5.0" would attract a
+            # question this page does not answer.
             "description": "Celle robotizzate, integrazione con i gestionali in uso e misura di fermi e "
-                           "scarti. Oltre dieci fabbriche automatizzate, fra Industria 4.0 e Transizione 5.0.",
+                           "scarti. Anni di lavoro dentro la produzione, dal bordo macchina alla linea.",
             "kicker": "Robotica &amp; Automazione",
             "h1": "Automazione che parte dal <span class=\"grad-text\">processo</span>, non dal robot.",
-            "lead": "Oltre dieci fabbriche automatizzate e processi manuali affidati ai robot. Partiamo dal "
-                    "collo di bottiglia, non dal catalogo dei robot.",
+            "lead": "Schedulazione a bordo macchina, magazzini automatici, monitoraggio della produzione. "
+                    "Partiamo dal collo di bottiglia, non dal catalogo dei robot.",
             "intro": [
                 "Il risultato si vede dopo sei mesi: un'isola che funziona benissimo da sola e non parla con "
                 "il resto della fabbrica.",
                 "Noi partiamo dall'altra parte. Guardiamo dove si perde tempo, dove si sbaglia e dove un "
                 "dato esiste già ma nessuno lo legge. Poi scegliamo cosa automatizzare — e cosa no.",
+                # Examples instead of a count. "Oltre dieci fabbriche automatizzate" used to open this
+                # page and it read as ten different clients, which is not what happened: the work was
+                # done from inside two manufacturing groups, as the person responsible for the systems.
+                # Depth is the stronger claim anyway, and it is the one that is true.
+                "Lo sappiamo perché l'abbiamo fatto da dentro, non da fornitori: anni nei sistemi "
+                "informativi di due gruppi manifatturieri. Uno schedulatore di processo che arriva fino "
+                "al bordo macchina. Un magazzino automatico dove una luce si accende sull'ubicazione "
+                "giusta, invece di mandare l'operatore a cercare il codice su un elenco. Il monitoraggio "
+                "della produzione preso dalle macchine. E un sistema che seguiva le manovie — i "
+                "trasportatori aerei su cui i pezzi viaggiano appesi lungo la linea — per organizzare le "
+                "commesse.",
             ],
             # Il primo cliente nominato del sito. Niente cifre: non ce ne sono di dimostrabili, e
             # una descrizione onesta vale più di un numero che nessuno può controllare.
@@ -972,8 +1004,9 @@ PAGES = [
             ],
             "facts_title": "In sintesi",
             "facts": [
-                ("Esperienza", "Oltre trent'anni di software e automazione per la manifattura."),
-                ("Manifattura", "Oltre dieci fabbriche automatizzate e processi manuali affidati ai robot."),
+                ("Esperienza", "Software e automazione per la manifattura dal 1997."),
+                ("Manifattura", "Anni dentro la produzione, non un progetto occasionale: schedulazione a "
+                                "bordo macchina, magazzini automatici, monitoraggio dei processi."),
                 ("Tecnologia", "Controllo macchina e raccolta dati poggiano sul nostro framework "
                                 "<a href=\"/digisense/\">DigiSense®</a>."),
             ],
@@ -983,13 +1016,30 @@ PAGES = [
                  "Dalla misura. Prima si guarda dove il processo perde tempo o genera scarti: spesso il "
                  "collo di bottiglia non è dove ci si aspetta, e l'intervento giusto costa meno di quello "
                  "che si stava per comprare."),
+                # The advice was sound and unsupported: the reader had no reason to take our word for
+                # it. The closing clause is the credential that makes it a judgement instead of an
+                # opinion — see the 1997-2002 entry on the homepage timeline.
                 ("Dobbiamo cambiare il gestionale?",
                  "Quasi mai. L'automazione si innesta sui flussi e sui sistemi già in uso. Sostituire il "
-                 "gestionale è un progetto a sé: se serve, lo si dice, ma non è un prerequisito."),
+                 "gestionale è un progetto a sé: se serve lo diciamo, ma non è un prerequisito — e lo "
+                 "diciamo sapendo cosa costa, perché il nostro amministratore delegato ha messo in "
+                 "produzione un ERP da responsabile dei sistemi informativi."),
                 ("Cosa vuol dire Industria 5.0 in pratica?",
                  "Che la macchina è al servizio della persona che ci lavora, non il contrario: automazione "
                  "dove l'operazione è ripetitiva o pericolosa, e dati leggibili dove serve una decisione "
                  "umana."),
+                # The question every manufacturing buyer asks and the site did not answer. Most of the
+                # work is under confidentiality agreements, so the honest move is to state that as a
+                # principle instead of leaving it as an absence, and then point at what a prospect can
+                # actually inspect on their own: the product, the articles, the DOI.
+                ("Posso parlare con un vostro cliente?",
+                 "Sui lavori abbiamo accordi di riservatezza e non li aggiriamo: chi ti mostra i nomi "
+                 "degli altri, un giorno mostrerà il tuo. Quello che possiamo darti si controlla meglio "
+                 "di una telefonata. Il software che vendiamo si scarica e si prova per trenta giorni. "
+                 "Il metodo è scritto negli articoli, con le fonti elencate in fondo a ciascuno. Il "
+                 "lavoro sui wearable è dentro uno studio con revisione paritaria, che ha un suo "
+                 "identificatore permanente. E di quello che abbiamo fatto in fabbrica parliamo "
+                 "volentieri: descrivendo i problemi, non i nomi."),
                 ("Quanto dura un intervento come il nostro?",
                  "Dipende dal processo, e una stima a scatola chiusa non varrebbe niente. L'analisi è la "
                  "prima fase, ha una durata concordata prima di partire e finisce con un documento: cosa "
@@ -1009,10 +1059,10 @@ PAGES = [
             "intro_h2": "Automation fails when you <span class=\"grad-text\">buy before you understand</span>.",
             "title": "Industrial robotics and automation — G&G Technologies",
             "description": "Robotic cells, integration with the systems you already run, and measurement of "
-                           "downtime and scrap. More than ten plants automated. Industry 4.0 and 5.0.",
+                           "downtime and scrap. Years of work inside production, from the machine to the line.",
             "kicker": "Robotics &amp; Automation",
             "h1": "Automation that starts from the <span class=\"grad-text\">process</span>, not the robot.",
-            "lead": "More than ten plants automated and manual processes handed to robots. We start from "
+            "lead": "Scheduling at the machine, automated warehouses, production monitoring. We start from "
                     "the bottleneck, not from the robot catalogue.",
             "intro": [
                 "You see the result six months later: an island that works beautifully on its own and does "
@@ -1020,6 +1070,12 @@ PAGES = [
                 "We start from the other end. We look at where time is lost, where mistakes happen, and "
                 "where a piece of data already exists but nobody reads it. Then we decide what to automate "
                 "— and what to leave alone.",
+                "We know because we did it from the inside, not as suppliers: years in the information "
+                "systems of two manufacturing groups. A process scheduler that reached down to the machine "
+                "itself. An automated warehouse where a light comes on at the right location, instead of "
+                "sending somebody to look a code up on a list. Production monitoring taken from the "
+                "machines. And a system that followed the overhead conveyors — the lines parts travel "
+                "along, hanging — to organise the work orders.",
             ],
             "case": {
                 "kicker": "A case · Brighi Infissi, 2010",
@@ -1083,8 +1139,9 @@ PAGES = [
             ],
             "facts_title": "In short",
             "facts": [
-                ("Experience", "Thirty years of software and automation for manufacturers."),
-                ("Manufacturing", "More than ten plants automated and manual processes handed to robots."),
+                ("Experience", "Software and automation for manufacturers since 1997."),
+                ("Manufacturing", "Years inside production, not the occasional project: scheduling at the "
+                                  "machine, automated warehouses, process monitoring."),
                 ("Technology", "Machine control and data collection sit on our "
                                "<a href=\"/en/digisense/\">DigiSense®</a> framework."),
             ],
@@ -1097,15 +1154,25 @@ PAGES = [
                 ("Do we have to replace our ERP?",
                  "Almost never. Automation sits on top of the systems and flows you already run. Replacing the "
                  "ERP is a project in its own right: if it is needed we will say so, but it is not a "
-                 "prerequisite."),
+                 "prerequisite — and we say it knowing what it costs, because our chief executive put an "
+                 "ERP into production as head of information systems."),
                 ("What does Industry 5.0 mean in practice?",
                  "That the machine serves the person working with it, not the other way round: automation "
                  "where the operation is repetitive or dangerous, and readable data where a human decision "
                  "is needed."),
+                ("Can I speak to one of your clients?",
+                 "Our work sits under confidentiality agreements and we do not work around them: a "
+                 "supplier who shows you other people's names will one day show yours. What we can give "
+                 "you is easier to check than a phone call. The software we sell can be downloaded and "
+                 "tried for thirty days. The method is written out in our articles, with the sources "
+                 "listed at the foot of each one. The wearable work sits inside a peer-reviewed study "
+                 "with a permanent identifier of its own. And we will gladly talk about the work we have "
+                 "done in plants: describing the problems, not the names."),
                 ("How long does a typical project take?",
-                 "It depends on the process, and we are wary of generic answers. What we can tell you "
-                 "upfront is how we will find out: process analysis is the first phase and it has a defined "
-                 "duration."),
+                 "It depends on the process, and an estimate made sight unseen would be worth nothing. "
+                 "Process analysis is the first phase, its duration is agreed before we start, and it ends "
+                 "with a document: what to automate, in what order and at what cost. From there the quote "
+                 "is about your process, not about an average."),
             ],
             "cta_title": "Is there a process costing you more than it should?",
             "cta_text": "Describe it to us. If the answer is not to automate it, we will say so.",
@@ -1184,8 +1251,15 @@ PAGES = [
             "facts": [
                 ("DigiSense®", "Il <a href=\"/digisense/\">framework registrato</a> su cui costruiamo ogni "
                                "implementazione di AI."),
-                ("Podz.AI", "La workstation AI personale per chi lavora con dati riservati."),
-                ("Software europeo", "Progettato e sviluppato interamente in Europa."),
+                # Framed as something to inspect, not as a product to describe: it is the fastest way a
+                # stranger can check our work without asking anybody's permission.
+                ("Podz.AI", "Il nostro prodotto: <a href=\"/podz-ai/\">si scarica e si prova trenta "
+                            "giorni</a>. Il modo più rapido di vedere come lavoriamo."),
+                # The other pages say "developed entirely in Europe" and stop there. Said four times
+                # it turns into filler, so one page explains what is actually at stake.
+                ("Software europeo", "Progettato e sviluppato in Europa: quello che conta è la "
+                                     "giurisdizione a cui rispondono i tuoi dati, non solo dove "
+                                     "lavoriamo noi."),
             ],
             "faq_title": "Domande frequenti",
             "faq": [
@@ -1201,6 +1275,16 @@ PAGES = [
                  "Il chatbot risponde. L'agente esegue un compito: legge un documento, interroga un "
                  "sistema, produce un risultato verificabile. La differenza pratica è che di un agente si "
                  "può misurare l'esito."),
+                # Same substance as the version on the robotics page, but here the argument is stronger:
+                # a firm that proposes keeping your data in-house and then parades client logos is
+                # contradicting its own pitch. The constraint becomes evidence of the thing we sell.
+                ("Non avete casi da mostrare?",
+                 "Pochi, e per un motivo che dovrebbe interessarti. I lavori stanno sotto accordi di "
+                 "riservatezza, e chi ti mostra i nomi degli altri clienti un giorno mostrerà il tuo: "
+                 "sarebbe una scelta curiosa per chi ti propone di tenere i dati in casa. Quello che si "
+                 "controlla da fuori invece lo trovi: Podz.AI si scarica e si prova, gli articoli hanno "
+                 "le fonti in fondo, e lo studio sui wearable ha un identificatore permanente. Del resto "
+                 "parliamo descrivendo i problemi, non i nomi."),
                 ("Come si capisce se un progetto AI conviene?",
                  "Si sceglie prima cosa si misura: ore risparmiate, errori evitati, tempi di risposta. Se "
                  "non si riesce a definire la misura prima di partire, di solito il progetto non era "
@@ -1273,8 +1357,10 @@ PAGES = [
             "facts": [
                 ("DigiSense®", "The <a href=\"/en/digisense/\">registered framework</a> we build every AI "
                                "implementation on."),
-                ("Podz.AI", "The personal AI workstation for people who work with confidential data."),
-                ("European software", "Designed and developed entirely in Europe."),
+                ("Podz.AI", "Our own product: <a href=\"/en/podz-ai/\">download it and try it for thirty "
+                            "days</a>. The quickest way to see how we work."),
+                ("European software", "Designed and developed in Europe: what matters is the "
+                                      "jurisdiction your data answers to, not just where we work."),
             ],
             "faq_title": "Frequently asked questions",
             "faq": [
@@ -1290,6 +1376,13 @@ PAGES = [
                  "A chatbot answers. An agent performs a task: it reads a document, queries a system, "
                  "produces a verifiable result. The practical difference is that an agent's outcome can be "
                  "measured."),
+                ("Do you not have case studies to show?",
+                 "Few, and for a reason that should matter to you. The work sits under confidentiality "
+                 "agreements, and a firm that shows you other clients' names will one day show yours — "
+                 "an odd choice for somebody proposing to keep your data in-house. What can be checked "
+                 "from outside is all there: Podz.AI can be downloaded and tried, the articles list their "
+                 "sources at the foot of the page, and the wearable study has a permanent identifier. "
+                 "About the rest we talk by describing the problems, not the names."),
                 ("How do you tell whether an AI project is worth it?",
                  "You pick the measure first: hours saved, errors avoided, response times. If the measure "
                  "cannot be defined before you start, the project usually is not ready."),
@@ -1327,9 +1420,9 @@ PAGES = [
             "intro": [
                 "Podz.AI è un'unica applicazione che si installa sul computer e lavora con i documenti di chi "
                 "la usa, senza mandarli a nessuno. Il cloud è una scelta, non il default.",
-                "Non è un lavoro su commessa: è il nostro prodotto. È costruito sul framework "
-                "DigiSense® e risponde alla domanda che ci arrivava da anni — come si usa l'AI su "
-                "documenti che non possono uscire dallo studio o dall'azienda.",
+                "Nessuno ce l'ha ordinato: l'abbiamo costruito prima di tutto per noi, sul framework "
+                "DigiSense®, per rispondere a una domanda che ci arrivava da anni — come si usa l'AI "
+                "su documenti che non possono uscire dallo studio o dall'azienda.",
             ],
             "cards_title": "Come funziona, in breve",
             "cards_intro": "Locale come impostazione. Mascherato prima di uscire. Specialisti che installi.",
@@ -1577,7 +1670,7 @@ PAGES = [
                  "No. DigiSense\u00ae \u00e8 il framework con cui costruiamo, non un pacchetto a scaffale. "
                  "Il prodotto costruito su DigiSense\u00ae \u00e8 Podz.AI, e quello si scarica dal sito di "
                  "prodotto."),
-                ("Che vantaggio ha per chi ci commissiona un progetto?",
+                ("Che vantaggio ha per il mio progetto?",
                  "Che non si parte da zero. Acquisizione dei dati, esecuzione dei modelli e controllo "
                  "macchina sono gi\u00e0 risolti e collaudati: il lavoro si concentra sul problema "
                  "specifico, non sull'impalcatura sotto."),
@@ -1713,6 +1806,26 @@ PAGES = [
                 "i documenti non la lasciano mai. È il principio su cui abbiamo costruito Podz.AI, ed è "
                 "lo stesso che applichiamo nei progetti su misura.",
             ],
+            # The proof block on this page is our own product rather than a client: the work is under
+            # confidentiality agreements, and this is the evidence they cannot touch. It belongs here
+            # more than anywhere else, because it is the running instance of exactly what the page argues.
+            "case": {
+                "kicker": "La prova · Podz.AI",
+                "heading": "Questa pagina descrive un metodo. "
+                           "<span class=\"grad-text\">Puoi scaricarlo</span>.",
+                "body": [
+                    "Tutto quello che sta scritto qui sopra — il modello che gira dentro la tua "
+                    "infrastruttura, i documenti che non la lasciano, i dati personali mascherati quando "
+                    "serve il cloud — è già dentro un programma che si installa.",
+                    "Si chiama <strong>Podz.AI</strong>, è il nostro prodotto, e la prova dura trenta "
+                    "giorni. Non serve una riunione: lo scarichi, gli dai i tuoi documenti e guardi cosa "
+                    "fa. Se qualcuno ti racconta l'AI on-premise, provare quello che ha costruito è il "
+                    "modo più rapido di capire se sa costruirla.",
+                    "Anche lo <a href=\"https://github.com/G-G-Technologies-Srl/digisense-releases/"
+                    "releases\">storico delle versioni</a> è pubblico, insieme al listino. Da lì si vede "
+                    "da quanto tempo lo manteniamo, che è una cosa che un preventivo non dice.",
+                ],
+            },
             "cards_title": "Come si fa, in concreto",
             "cards_intro": "Tre configurazioni, a seconda di dove devono restare i dati e di quanta potenza "
                            "serve.",
@@ -1759,7 +1872,10 @@ PAGES = [
                  "Dipende dalla dimensione del modello e dal carico, e in pratica dipende dalla memoria "
                  "della GPU. Per un uso personale bastano un Mac con chip Apple Silicon o un PC con GPU "
                  "dedicata; per un uso aziendale continuo serve un server con GPU. Il dimensionamento "
-                 "esatto lo facciamo insieme, prima del preventivo."),
+                 "esatto lo facciamo insieme, prima del preventivo. È un mestiere che facciamo da prima "
+                 "che servisse all'AI: alla fine degli anni Novanta il nostro amministratore delegato "
+                 "assemblava workstation con le schede video scelte per far girare il CAD, e il vincolo "
+                 "da rispettare era lo stesso."),
                 ("L'AI locale è meno capace di quella in cloud?",
                  "Su compiti generici, i modelli di frontiera in cloud restano più potenti. Su un compito "
                  "definito — leggere un tipo di documento, estrarre certi campi — la differenza si assottiglia "
@@ -1799,6 +1915,23 @@ PAGES = [
                 "the documents never leave it. It is the principle Podz.AI is built on, and the same one "
                 "we apply in tailored projects.",
             ],
+            "case": {
+                "kicker": "The proof · Podz.AI",
+                "heading": "This page describes a method. "
+                           "<span class=\"grad-text\">You can download it</span>.",
+                "body": [
+                    "Everything written above — the model running inside your own infrastructure, the "
+                    "documents that never leave it, personal data masked when the cloud is needed — is "
+                    "already inside a program you can install.",
+                    "It is called <strong>Podz.AI</strong>, it is our own product, and the trial runs for "
+                    "thirty days. No meeting required: you download it, give it your documents and watch "
+                    "what it does. If somebody tells you about on-premise AI, trying what they built is "
+                    "the quickest way to find out whether they can build it.",
+                    "The <a href=\"https://github.com/G-G-Technologies-Srl/digisense-releases/releases\">"
+                    "release history</a> is public too, along with the price list. It shows how long we "
+                    "have been maintaining it, which is something a quotation does not tell you.",
+                ],
+            },
             "cards_title": "How it works in practice",
             "cards_intro": "Three configurations, depending on where the data must stay and how much power "
                            "is needed.",
@@ -1843,7 +1976,10 @@ PAGES = [
                 ("What machine do you need to run AI locally?",
                  "It depends on model size and load, and in practice on how much GPU memory you have. For "
                  "one person, a Mac with Apple Silicon or a PC with a dedicated GPU. For continuous "
-                 "business use, a server with a GPU. Exact sizing we do together, before any quote."),
+                 "business use, a server with a GPU. Exact sizing we do together, before any quote. It is "
+                 "a trade we practised before AI needed it: in the late nineties our chief executive was "
+                 "assembling workstations with the graphics cards chosen to run CAD, and the constraint "
+                 "was the same one."),
                 ("Is local AI less capable than cloud AI?",
                  "On generic tasks, frontier cloud models remain more powerful. On a defined task — reading "
                  "one type of document, extracting certain fields — the gap narrows considerably, and the "
