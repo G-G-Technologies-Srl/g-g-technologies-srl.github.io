@@ -81,7 +81,7 @@ L'ultima riga è la più utile, e la meno sfruttata. Un modello di visione o di 
 
 ## Cosa fare, in ordine
 
-1. **Scrivi la domanda prima di accendere qualsiasi cosa.** Non «raccogliamo dati e vediamo». Una domanda utile dice tre cose: che cosa misuri, dove lo misuri, e quali due situazioni devi riuscire a distinguere. Per esempio: «la vibrazione, misurata sul fianco del motore, permette di distinguere un cuscinetto integro da uno che sta per rompersi?»
+1. **Scrivi la domanda prima di attaccare il primo sensore**, in questa forma: «la vibrazione, misurata sul fianco del motore, distingue un cuscinetto integro da uno che sta per cedere?» Che cosa misuri, in che punto, e quali due situazioni devi separare. Se le due situazioni non sai nominarle, non sai ancora che cosa stai cercando.
 2. **Fai l'inventario dei telefoni che hai** e controlla fino a quando ognuno riceve aggiornamenti. Quelli non più aggiornati vanno tenuti su una rete separata da quella aziendale.
 3. **Controlla che i sensori che ti servono ci siano davvero.** Barometro e magnetometro mancano su parecchi modelli, e la qualità del ricevitore satellitare cambia molto da telefono a telefono.
 4. **Registra i dati grezzi, non solo i risultati elaborati.** Sui dati grezzi puoi tornare fra sei mesi con un'idea nuova; su una media già calcolata no.

@@ -81,7 +81,7 @@ That last row is the most useful, and the least used. A vision or classification
 
 ## What to do, in order
 
-1. **Write the question before switching anything on.** Not "let us collect data and see". A useful question says three things: what you measure, where you measure it, and which two situations you have to tell apart. For instance: "does vibration, measured on the side of the motor, tell a sound bearing from one about to fail?"
+1. **Write the question before you fit the first sensor**, in this form: "does vibration, measured on the side of the motor, tell a sound bearing from one about to fail?" What you measure, at which point, and which two situations you have to separate. If you cannot name the two situations, you do not yet know what you are looking for.
 2. **Take an inventory of the phones you have** and check how long each one still receives updates. Those no longer updated belong on a network separate from the company one.
 3. **Check the sensors you need are actually there.** Barometer and magnetometer are missing on plenty of models, and satellite receiver quality varies a lot from phone to phone.
 4. **Record raw data, not only the processed results.** You can come back to raw data in six months with a new idea; to an average already computed you cannot.
