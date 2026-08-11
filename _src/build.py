@@ -363,7 +363,11 @@ section.tinted {
 /* Same recipe as .card, minus the icon: the index has to look like the rest of the site. */
 /* Two columns, dropping to one when there is no room for two. No breakpoint is written here: the
    column count comes from the card's own minimum width, so it stays right the day the card grows.
-   The cap at two is the max-width — a third 360px track needs 1.120px and never gets it.
+   The cap at two is the container: it is --maxw minus its 48px of padding, 1.072px, and a third
+   360px track would need 1.120px. There is no max-width of its own here — one used to be, set to
+   1.000px, and since a grid does not centre itself it left 72px of dead space on the right while
+   the filter bar above spanned the full width. The two right edges did not line up.
+   If --maxw ever passes 1.168px a third column appears: that is the line to watch.
 
    auto-fill, not auto-fit: auto-fit would collapse the empty track, so a single card — the last
    article left after filtering, or the first one ever published — would suddenly stretch to
@@ -371,7 +375,6 @@ section.tinted {
 .insight-list {
   display: grid; gap: 20px; margin-top: 48px;
   grid-template-columns: repeat(auto-fill, minmax(min(360px, 100%), 1fr));
-  max-width: 1000px;
 }
 .insight-card {
   display: block;
