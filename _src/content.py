@@ -117,10 +117,23 @@ INSIGHTS_INDEX = {
     },
 }
 
+# Article taxonomy. Four groups, deliberately few: a tag list that grows with every article stops
+# being a filter and becomes a second index. The key is language-independent — it ends up in the
+# URL as ?tag=… — and only the label is translated.
+TAGS = {
+    "robotica": {"it": "Robotica", "en": "Robotics"},
+    "automazione": {"it": "Automazione", "en": "Automation"},
+    "wearable": {"it": "Wearable", "en": "Wearables"},
+    "ia": {"it": "IA", "en": "AI"},
+}
+
 ARTICLES = [
     {
         "key": "ai-act-dati-clienti",
         "date": "2026-08-07",
+        # One or more keys from TAGS. The build stops on an empty list or an unknown key: an
+        # untagged article disappears the moment somebody uses the filter.
+        "tags": ["ia"],
         # bozza | pronto — only "pronto" is indexed and listed in the sitemap.
         "stato": "pronto",
         "author": "Gian Angelo Geminiani",
@@ -139,6 +152,14 @@ ARTICLES = [
             "disclaimer": "Questo articolo ha finalità informative e non costituisce parere legale. "
                           "Per la valutazione del tuo caso specifico, rivolgiti a un professionista "
                           "qualificato o al tuo ordine professionale.",
+            # Illustration: no text inside it, so the same drawing serves both languages. These two
+            # strings are what a screen reader announces, and the only part that is translated.
+            "art": {
+                "title": "Il fascicolo che esce dal perimetro",
+                "desc": "Un riquadro chiuso contiene le righe di un documento, ordinate e intere. "
+                        "Oltre la linea verticale che segna il confine, le stesse righe si spezzano "
+                        "in frammenti che si allontanano, si disperdono e sbiadiscono.",
+            },
             "cta_title": "Vuoi capire dove finiscono i dati del tuo studio?",
             "cta_text": "Raccontaci come lavorate oggi e quali strumenti usate. Risponde una persona "
                         "del team, non un form.",
@@ -159,6 +180,12 @@ ARTICLES = [
             "disclaimer": "This article is for information purposes only and does not constitute legal "
                           "advice. For your specific situation, consult a qualified professional or "
                           "your professional body.",
+            "art": {
+                "title": "The file that leaves the perimeter",
+                "desc": "An enclosed panel holds the lines of a document, ordered and whole. Past "
+                        "the vertical line that marks the boundary, those same lines break into "
+                        "fragments that drift apart, scatter and fade.",
+            },
             "cta_title": "Want to know where your firm's data ends up?",
             "cta_text": "Tell us how you work today and which tools you use. A person from the team "
                         "answers, not a form.",
@@ -221,6 +248,17 @@ CHROME = {
         "breadcrumb_services": "Servizi",
         "other_lang_label": "EN",
         "related_title": "Continua da qui",
+        # Share bar: plain links, no third-party script. Loading a network's widget would put a
+        # tracker on a page that argues against sending data to other people's servers.
+        "share_label": "Condividi",
+        "share_on": "Condividi su",
+        "share_mail": "Manda per email",
+        "share_copy": "Copia il link",
+        "share_copied": "Link copiato",
+        "filter_label": "Filtra per argomento",
+        "filter_all": "Tutti",
+        "filter_empty": "Nessun articolo con questo argomento, per ora.",
+        "tags_label": "Argomenti",
     },
     "en": {
         "skip": "Skip to content",
@@ -271,6 +309,15 @@ CHROME = {
         "breadcrumb_services": "Services",
         "other_lang_label": "IT",
         "related_title": "Where to go next",
+        "share_label": "Share",
+        "share_on": "Share on",
+        "share_mail": "Send by email",
+        "share_copy": "Copy the link",
+        "share_copied": "Link copied",
+        "filter_label": "Filter by topic",
+        "filter_all": "All",
+        "filter_empty": "No articles on this topic yet.",
+        "tags_label": "Topics",
     },
 }
 

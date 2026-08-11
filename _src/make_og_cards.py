@@ -19,15 +19,22 @@ ROOT = SRC.parent
 ASSETS = ROOT / "assets"
 
 sys.path.insert(0, str(SRC))
-from content import CHROME, PAGES  # noqa: E402
+import article_art  # noqa: E402
+from content import ARTICLES, CHROME, PAGES  # noqa: E402
 
 W, H = 1200, 630
 INK = (13, 18, 32)
 PANEL = (23, 33, 54)
+PANEL_2 = (30, 42, 67)
+MUTED = (170, 179, 201)
 TEXT = (238, 241, 248)
 FAINT = (143, 152, 173)
 EMERALD = (52, 211, 153)
 EMERALD_LIGHT = (94, 236, 171)
+
+# The illustration band at the foot of an article card. The card is always dark — a JPEG cannot
+# follow the theme switch the way the inline banner does.
+ART_BOX = (0, 372, W, 186)
 
 BRAND_CANDIDATES = [
     Path.home() / "Claude" / "Projects" / "ggtechnologies-brand",
@@ -87,6 +94,78 @@ def _mark(draw, x, y, size):
     draw.line([x + size * 0.66, y + r, x + size, y + r], fill=EMERALD_LIGHT, width=max(3, size // 8))
     d = size * 0.18
     draw.ellipse([x + r - d, y + r - d, x + r + d, y + r + d], fill=TEXT)
+
+
+def _blend(colour, opacity, over=INK):
+    """Pillow has no alpha on a plain RGB canvas, so opacity is mixed in by hand."""
+    return tuple(round(over[i] + (colour[i] - over[i]) * opacity) for i in range(3))
+
+
+def _paint_art(img, draw, shapes, box):
+    """The article illustration, from the same primitives the inline banner is built from.
+
+    The banner and the card have different aspect ratios, so `article_art` is asked for the band's
+    own size instead of scaling a finished picture: stretching would flatten the fragments into
+    lozenges and give the two versions a different texture.
+    """
+    ox, oy, _, _ = box
+    for shape in shapes:
+        role = shape["role"]
+        if role == article_art.GLOW:
+            continue  # a radial halo would band badly in a JPEG; the flat panel reads better
+        if role == article_art.PANEL:
+            draw.rounded_rectangle(
+                [ox + shape["x"], oy + shape["y"],
+                 ox + shape["x"] + shape["w"], oy + shape["y"] + shape["h"]],
+                radius=shape["r"], fill=PANEL_2, outline=PANEL, width=1)
+        elif role == article_art.EDGE:
+            draw.line([ox + shape["x1"], oy + shape["y1"], ox + shape["x2"], oy + shape["y2"]],
+                      fill=EMERALD, width=3)
+        elif role == article_art.ROW:
+            draw.rounded_rectangle(
+                [ox + shape["x"], oy + shape["y"],
+                 ox + shape["x"] + shape["w"], oy + shape["y"] + shape["h"]],
+                radius=shape["h"] / 2, fill=_blend(MUTED, shape["opacity"], PANEL_2))
+        else:
+            size = max(2.0, shape["size"])
+            draw.rounded_rectangle(
+                [ox + shape["x"], oy + shape["y"], ox + shape["x"] + size, oy + shape["y"] + size],
+                radius=1, fill=_blend(EMERALD, shape["opacity"]))
+
+
+def _article_card(article, lang, bold, regular, out):
+    """An article card: same furniture as a page card, with the illustration in place of the band."""
+    data = article[lang]
+    img = Image.new("RGB", (W, H), INK)
+    draw = ImageDraw.Draw(img)
+    draw.line([0, 0, W, 0], fill=EMERALD, width=8)
+
+    shapes = article_art.ARTICLE_ART[article["key"]](ART_BOX[2], ART_BOX[3])
+    _paint_art(img, draw, shapes, ART_BOX)
+
+    margin = 72
+    _mark(draw, margin, 64, 52)
+    draw.text((margin + 74, 78), "G&G Technologies", font=ImageFont.truetype(str(bold), 26), fill=TEXT)
+
+    kicker = re.sub(r"<[^>]+>", "", data["kicker"]).replace("&amp;", "&")
+    draw.text((margin, 166), kicker.upper(), font=ImageFont.truetype(str(bold), 22), fill=EMERALD)
+
+    # The h1, not the <title>: the <title> carries the company suffix, which the card already shows.
+    headline = re.sub(r"<[^>]+>", "", data["h1"]).replace("&amp;", "&")
+    font, lines = _title_font(draw, headline, bold, W - margin * 2, max_lines=3)
+    y = 216
+    for line in lines:
+        draw.text((margin, y), line, font=font, fill=TEXT)
+        y += font.size + 10
+
+    small = ImageFont.truetype(str(regular), 24)
+    draw.text((margin, H - 56), CHROME[lang]["payoff"], font=small, fill=FAINT)
+    domain = "ggtechnologies.sm" + ("/en" if lang == "en" else "")
+    draw.text((W - margin - draw.textlength(domain, font=small), H - 56), domain, font=small, fill=FAINT)
+
+    name = f"og-{article['key']}-{lang}.jpg"
+    img.save(out / name, "JPEG", quality=88, optimize=True, progressive=True)
+    return name, (out / name).stat().st_size
 
 
 def _card(page_key, lang, data, bold, regular, out):
@@ -168,6 +247,13 @@ def main():
     }
     for lang, data in home.items():
         made.append(_card("home", lang, data, bold, regular, ASSETS))
+
+    # Articles: only those that have an illustration. One without would be a page card with a hole.
+    for article in ARTICLES:
+        if article["key"] not in article_art.ARTICLE_ART:
+            continue
+        for lang in ("it", "en"):
+            made.append(_article_card(article, lang, bold, regular, ASSETS))
 
     for name, size in made:
         print(f"  {name:<34} {size / 1024:5.0f} KB")

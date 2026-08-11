@@ -16,10 +16,12 @@ import os
 import re
 import sys
 from pathlib import Path
+from urllib.parse import quote as _quote
 
 sys.path.insert(0, str(Path(__file__).parent))
+import article_art  # noqa: E402
 from content import (ARTICLES, BANNED, CHROME, INSIGHTS_INDEX, PAGES,  # noqa: E402
-                     PODZ_SITE, PRICING, SITE, STUDY)
+                     PODZ_SITE, PRICING, SITE, STUDY, TAGS)
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = Path(__file__).resolve().parent
@@ -259,6 +261,60 @@ section.tinted {
 }
 .prose th { color: var(--text); font-weight: 600; border-bottom-color: var(--border-strong); }
 .prose td { color: var(--muted); }
+
+/* Article banner: the illustration is inlined SVG, so it follows the theme like .diagram does.
+   The frame is the same hairline-on-soft-fill used everywhere else — no new vocabulary. */
+.article-art { margin: 0 0 44px; }
+.article-art svg {
+  display: block; width: 100%; height: auto;
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+  background: var(--bg-soft);
+}
+
+/* Tags and filter: the same pill again, quieter. A tag is a label, not a call to action. */
+.tag, .filter-btn {
+  display: inline-flex; align-items: center;
+  padding: 6px 14px; border-radius: 999px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); font: inherit; font-size: 0.8rem; font-weight: 600;
+  text-decoration: none; cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+.tag:hover, .filter-btn:hover { border-color: var(--border-strong); color: var(--text); }
+.filter-btn[aria-pressed="true"] {
+  border-color: var(--accent); color: var(--accent-text);
+  background: var(--tint-1);
+}
+.article-tags {
+  max-width: 720px; margin: -22px auto 40px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+}
+.tag-label, .filter-label { color: var(--faint); font-size: 0.85rem; margin-right: 4px; }
+.filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 40px; }
+.filter-empty { color: var(--faint); margin-top: 32px; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+/* Inside a card the whole tile is the link, so the tags must not look clickable on their own. */
+.insight-card .tag { pointer-events: none; }
+
+/* Share bar: the same pill as .btn-ghost, one size down. Nothing new invented, and no third-party
+   widget — the networks' own buttons ship a tracker with them. */
+.share {
+  max-width: 720px; margin: 44px auto 0; padding-top: 26px;
+  border-top: 1px solid var(--border);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+}
+.share-label { color: var(--faint); font-size: 0.85rem; margin-right: 4px; }
+.share-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 16px; border-radius: 999px;
+  border: 1px solid var(--border-strong); background: transparent;
+  color: var(--text); font: inherit; font-size: 0.85rem; font-weight: 600;
+  text-decoration: none; cursor: pointer;
+  transition: transform 0.18s ease, background 0.18s ease;
+}
+.share-btn:hover { background: rgba(127, 127, 127, 0.12); transform: translateY(-2px); }
+.share-btn svg { width: 15px; height: 15px; flex: none; }
+.share-btn[data-copied] { color: var(--accent-text); border-color: var(--accent); }
 
 .article-meta {
   max-width: 720px; margin: 0 auto 40px;
@@ -514,11 +570,93 @@ SITE_JS = """/* Inner pages: theme toggle, mobile menu, reveal on scroll, footer
   //  i n i t
   // ---------------------------------------------------------------------------------------------------------------
 
+  // ---------------------------------------------------------------------------------------------------------------
+  //  i n s i g h t s   f i l t e r
+  // ---------------------------------------------------------------------------------------------------------------
+
+  function _initFilters() {
+    var bar = document.querySelector('[data-filters]');
+    if (!bar) return;
+    var buttons = [].slice.call(bar.querySelectorAll('[data-tag]'));
+    var cards = [].slice.call(document.querySelectorAll('.insight-card[data-tags]'));
+    var empty = document.querySelector('[data-filter-empty]');
+
+    // The bar ships hidden and is revealed here: without JavaScript it would be a row of buttons
+    // that do nothing, and every article is visible anyway.
+    bar.hidden = false;
+
+    function _apply(tag) {
+      var shown = 0;
+      cards.forEach(function (card) {
+        var match = !tag || card.getAttribute('data-tags').split(' ').indexOf(tag) !== -1;
+        card.hidden = !match;
+        if (match) shown++;
+      });
+      buttons.forEach(function (button) {
+        button.setAttribute('aria-pressed', button.getAttribute('data-tag') === tag ? 'true' : 'false');
+      });
+      if (empty) empty.hidden = shown > 0;
+      // Keep the address bar in step, so a filtered view can be sent to somebody.
+      var url = location.pathname + (tag ? '?tag=' + encodeURIComponent(tag) : '');
+      history.replaceState(null, '', url);
+    }
+
+    buttons.forEach(function (button) {
+      button.addEventListener('click', function () { _apply(button.getAttribute('data-tag')); });
+    });
+
+    var wanted = new URLSearchParams(location.search).get('tag');
+    if (wanted && buttons.some(function (b) { return b.getAttribute('data-tag') === wanted; })) {
+      _apply(wanted);
+    }
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------
+  //  s h a r e
+  // ---------------------------------------------------------------------------------------------------------------
+
+  function _copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    // Older browsers and pages served over plain http: fall back to a throwaway field.
+    return new Promise(function (resolve, reject) {
+      var field = document.createElement('textarea');
+      field.value = text;
+      field.setAttribute('readonly', '');
+      field.style.position = 'fixed';
+      field.style.opacity = '0';
+      document.body.appendChild(field);
+      field.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (err) { ok = false; }
+      document.body.removeChild(field);
+      ok ? resolve() : reject();
+    });
+  }
+
+  function _initShare() {
+    var button = document.querySelector('[data-share-copy]');
+    if (!button) return;
+    var label = button.querySelector('span');
+    var original = label.textContent;
+    button.addEventListener('click', function () {
+      _copyText(button.getAttribute('data-share-copy')).then(function () {
+        label.textContent = button.getAttribute('data-share-done');
+        button.setAttribute('data-copied', '');
+        setTimeout(function () {
+          label.textContent = original;
+          button.removeAttribute('data-copied');
+        }, 2200);
+      }).catch(function () { /* nothing to say: the address bar still has the URL */ });
+    });
+  }
+
   function _init() {
     _initTheme();
     _initMenu();
     _initReveal();
     _initOrbit();
+    _initFilters();
+    _initShare();
     var year = document.getElementById('year');
     if (year) year.textContent = String(new Date().getFullYear());
   }
@@ -586,6 +724,152 @@ def _icon(name):
         '<svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" '
         f'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{body}</svg>'
     )
+
+
+# -----------------------------------------------------------------------------------------------------------------
+#  s h a r e   b a r
+# -----------------------------------------------------------------------------------------------------------------
+
+# Filled glyphs, unlike the outlined card icons: a network mark drawn in hairlines is unreadable at
+# 16px. Simplified on purpose — these stand in for the marks, they are not the marks.
+SHARE_ICONS = {
+    "linkedin": '<path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9h4v12H3zM10 9h3.8v1.7h.05c.53-.95'
+                ' 1.83-1.95 3.77-1.95 4.03 0 4.78 2.5 4.78 5.75V21h-4v-5.6c0-1.34-.03-3.06-1.9-3.06-1.9 0-2.2'
+                ' 1.46-2.2 2.96V21h-4z"/>',
+    "x": '<path d="M17.3 3h3.1l-6.8 7.75L21.6 21h-6.3l-4.9-6.4L4.8 21H1.7l7.25-8.3L1.9 3h6.45l4.45 5.9Zm-1.1'
+         ' 16.1h1.7L7.9 4.8H6.05Z"/>',
+    "mail": '<path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm9 8.1L20 7.2V6.6'
+            'L12 12 4 6.6v.6Z"/>',
+    "link": '<path d="M10.6 13.4a1 1 0 0 1 0-1.4l1.4-1.4a1 1 0 0 1 1.4 1.4l-1.4 1.4a1 1 0 0 1-1.4 0Zm-3.3 5.4'
+            'a4.5 4.5 0 0 1 0-6.4l2.6-2.6 1.4 1.4-2.6 2.6a2.5 2.5 0 0 0 3.5 3.5l2.6-2.6 1.4 1.4-2.6 2.6a4.5 4.5'
+            ' 0 0 1-6.3 0Zm4-11.2 2.6-2.6a4.5 4.5 0 0 1 6.4 6.4l-2.6 2.6-1.4-1.4 2.6-2.6a2.5 2.5 0 0 0-3.5-3.5'
+            'l-2.6 2.6Z"/>',
+}
+
+
+def _share_icon(name):
+    return (f'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">'
+            f'{SHARE_ICONS[name]}</svg>')
+
+
+# -----------------------------------------------------------------------------------------------------------------
+#  t a g s   a n d   f i l t e r
+# -----------------------------------------------------------------------------------------------------------------
+
+def _article_tags(article):
+    """The article's tags, checked. An untagged article vanishes the moment somebody filters."""
+    tags = article.get("tags") or []
+    unknown = [t for t in tags if t not in TAGS]
+    if unknown:
+        raise SystemExit(
+            f"l'articolo «{article['key']}» ha tag sconosciuti: {', '.join(unknown)}\n"
+            f"  quelli ammessi sono: {', '.join(TAGS)}"
+        )
+    if not tags:
+        raise SystemExit(
+            f"l'articolo «{article['key']}» non ha tag. Scegline almeno uno fra: {', '.join(TAGS)}\n"
+            "  senza tag l'articolo sparisce appena qualcuno usa il filtro su /insights"
+        )
+    return tags
+
+
+def _tags_html(lang, article):
+    """The tags under an article, each linking to the index already filtered on it."""
+    index = "/" + INSIGHTS_INDEX[lang]["slug"] + "/"
+    chips = "".join(
+        f'<a class="tag" href="{index}?tag={tag}">{TAGS[tag][lang]}</a>'
+        for tag in _article_tags(article)
+    )
+    return (f'<p class="article-tags"><span class="tag-label">{CHROME[lang]["tags_label"]}</span>'
+            f'{chips}</p>')
+
+
+def _filter_html(lang):
+    """The filter bar on the index.
+
+    Buttons, not links to one page per tag: four extra URLs holding the same articles would split
+    the ranking and need their own place in the sitemap for no gain. The querystring is written
+    back with replaceState, so a filtered view is still something you can send to somebody.
+
+    Without JavaScript the bar simply is not there and every article stays visible.
+    """
+    chrome = CHROME[lang]
+    used = sorted({tag for article in ARTICLES for tag in _article_tags(article)},
+                  key=lambda t: list(TAGS).index(t))
+    if not used:
+        return ""
+    buttons = "".join(f'<button class="filter-btn" type="button" data-tag="{tag}">'
+                      f'{TAGS[tag][lang]}</button>' for tag in used)
+    return f"""        <div class="filters" data-filters hidden>
+          <span class="filter-label">{chrome['filter_label']}</span>
+          <button class="filter-btn" type="button" data-tag="" aria-pressed="true">{chrome['filter_all']}</button>
+          {buttons}
+        </div>
+        <p class="filter-empty" data-filter-empty hidden>{chrome['filter_empty']}</p>
+"""
+
+
+def _article_og_image(article, lang):
+    """The card make_og_cards.py drew for this article, by convention rather than by hand.
+
+    Wiring the filename into content.py would be one more thing to forget, and forgetting it is
+    silent: the article would ship with the generic card and look like every other page in a feed.
+    An article with an illustration therefore must have its card, and the build says so if it does
+    not — run `python3 _src/make_og_cards.py`.
+    """
+    if article["key"] not in article_art.ARTICLE_ART:
+        return "og-card.png"
+    name = f"og-{article['key']}-{lang}.jpg"
+    if not (ROOT / "assets" / name).exists():
+        raise SystemExit(
+            f"manca la card social dell'articolo «{article['key']}» ({lang}): assets/{name}\n"
+            "  generala con: python3 _src/make_og_cards.py"
+        )
+    return name
+
+
+def _share_html(lang, data, title):
+    """The same four buttons under every article, in both languages.
+
+    Built from `url` and `title` at build time, so nothing has to run in the browser except the
+    copy button. No network SDK is loaded: an article that argues against sending client data to
+    other people's servers cannot ship a tracker from LinkedIn to render its own share button.
+    """
+    chrome = CHROME[lang]
+    url = _url(data["slug"])
+    # The <title> carries the company suffix for the browser tab and for search. In a shared post
+    # it is noise: the card underneath already says who wrote this.
+    subject = _strip_tags(title)
+    for suffix in (" — G&G Technologies", " — G&amp;G Technologies"):
+        if subject.endswith(suffix):
+            subject = subject[: -len(suffix)]
+    quoted_url = _quote(url, safe="")
+    quoted_title = _quote(subject, safe="")
+    targets = [
+        ("linkedin", "LinkedIn", f"https://www.linkedin.com/sharing/share-offsite/?url={quoted_url}",
+         f"{chrome['share_on']} LinkedIn"),
+        ("x", "X", f"https://x.com/intent/post?url={quoted_url}&text={quoted_title}",
+         f"{chrome['share_on']} X"),
+        ("mail", "Email", f"mailto:?subject={quoted_title}&body={quoted_url}", chrome["share_mail"]),
+    ]
+    # The query separators go through _esc: this is an HTML attribute, not a URL typed into a
+    # browser, and check_site.py fails the page for a bare ampersand.
+    links = []
+    for icon, name, href, label in targets:
+        window = ' target="_blank" rel="noopener"' if href.startswith("https") else ""
+        links.append(
+            f'<a class="share-btn" href="{_esc(href)}" title="{_esc(label)}" '
+            f'aria-label="{_esc(label)}"{window}>{_share_icon(icon)}<span>{name}</span></a>'
+        )
+    return f"""        <div class="share">
+          <span class="share-label">{chrome['share_label']}</span>
+          {''.join(links)}
+          <button class="share-btn" type="button" data-share-copy="{url}"
+                  data-share-done="{_esc(chrome['share_copied'])}"
+                  title="{_esc(chrome['share_copy'])}" aria-label="{_esc(chrome['share_copy'])}">
+            {_share_icon('link')}<span>{chrome['share_copy']}</span></button>
+        </div>
+"""
 
 
 def _icon_gradient():
@@ -799,6 +1083,81 @@ def _diagram_html(lang):
             <text x="675" y="200" text-anchor="middle" font-size="11.5" fill="var(--faint)">{w['never']}</text>
           </svg>
         </figure>"""
+
+
+# -----------------------------------------------------------------------------------------------------------------
+#  a r t i c l e   i l l u s t r a t i o n
+# -----------------------------------------------------------------------------------------------------------------
+
+# The banner uses CSS variables for every colour, so it inverts with the theme switch. An <img> to
+# an external SVG could not: the file would carry the dark palette into the light theme.
+ART_PAINT = {
+    article_art.EDGE: "url(#artEdge)",
+    article_art.PANEL: "url(#artPanel)",
+    article_art.GLOW: "url(#artGlow)",
+    article_art.ROW: "var(--muted)",
+    article_art.PACKET: "url(#artEdge)",
+}
+
+
+def _art_shape_svg(shape):
+    """One primitive from article_art, as SVG."""
+    role, paint = shape["role"], ART_PAINT[shape["role"]]
+    if role == article_art.GLOW:
+        return (f'<ellipse cx="{shape["cx"]:.0f}" cy="{shape["cy"]:.0f}" rx="{shape["rx"]:.0f}" '
+                f'ry="{shape["ry"]:.0f}" fill="{paint}"/>')
+    if role == article_art.PANEL:
+        return (f'<rect x="{shape["x"]:.0f}" y="{shape["y"]:.0f}" width="{shape["w"]:.0f}" '
+                f'height="{shape["h"]:.0f}" rx="{shape["r"]:.0f}" fill="{paint}" '
+                f'stroke="var(--border)"/>')
+    if role == article_art.EDGE:
+        return (f'<path d="M{shape["x1"]:.0f} {shape["y1"]:.0f} L{shape["x2"]:.0f} '
+                f'{shape["y2"]:.0f}" stroke="{paint}" stroke-width="2" stroke-linecap="round"/>')
+    if role == article_art.ROW:
+        return (f'<rect x="{shape["x"]:.0f}" y="{shape["y"]:.0f}" width="{shape["w"]:.0f}" '
+                f'height="{shape["h"]:.0f}" rx="4" fill="{paint}" '
+                f'opacity="{shape["opacity"]:.2f}"/>')
+    return (f'<rect x="{shape["x"]:.0f}" y="{shape["y"]:.0f}" width="{shape["size"]:.1f}" '
+            f'height="{shape["size"]:.1f}" rx="2" fill="{paint}" '
+            f'opacity="{shape["opacity"]:.2f}"/>')
+
+
+def _article_art_html(article, lang):
+    """The banner above the article, or nothing when the article has no illustration yet."""
+    draw = article_art.ARTICLE_ART.get(article["key"])
+    words = article[lang].get("art")
+    if not draw:
+        return ""
+    if not words:
+        raise SystemExit(
+            f"l'articolo \u00ab{article['key']}\u00bb ha un'illustrazione ma manca \u00abart\u00bb in {lang}: "
+            "servono \u00abtitle\u00bb e \u00abdesc\u00bb, altrimenti il banner \u00e8 muto per chi usa uno screen reader"
+        )
+    ident = re.sub(r"[^a-z0-9]", "", article["key"])
+    body = "".join(_art_shape_svg(s) for s in draw())
+    return f"""        <figure class="article-art reveal">
+          <svg viewBox="0 0 {article_art.BANNER_W} {article_art.BANNER_H}" role="img"
+               aria-labelledby="{ident}T {ident}D">
+            <title id="{ident}T">{_esc(words['title'])}</title>
+            <desc id="{ident}D">{_esc(words['desc'])}</desc>
+            <defs>
+              <linearGradient id="artEdge" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="var(--accent)"/>
+                <stop offset="1" stop-color="var(--accent-strong)"/>
+              </linearGradient>
+              <linearGradient id="artPanel" x1="0" y1="0" x2="0.4" y2="1">
+                <stop offset="0" stop-color="var(--panel-2)"/>
+                <stop offset="0.6" stop-color="var(--panel)"/>
+              </linearGradient>
+              <radialGradient id="artGlow" cx="0.5" cy="0.5" r="0.5">
+                <stop offset="0" stop-color="var(--glow-a)"/>
+                <stop offset="1" stop-color="var(--glow-a)" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+            {body}
+          </svg>
+        </figure>
+"""
 
 
 def _photo_html(data):
@@ -1471,6 +1830,7 @@ def _render_article(lang, article):
 
     banner = (f'      <p class="article-draft">{DRAFT_NOTE[lang]}</p>\n' if draft else "")
     minutes = _reading_minutes(article["key"], lang)
+    og_image = data.get("og_image") or _article_og_image(article, lang)
 
     return f"""<!DOCTYPE html>
 <html lang="{lang}">
@@ -1492,7 +1852,7 @@ def _render_article(lang, article):
   <meta property="og:title" content="{_esc(data['title'])}">
   <meta property="og:description" content="{_esc(data['description'])}">
   <meta property="og:url" content="{url}">
-  <meta property="og:image" content="{SITE}/assets/{data.get('og_image', 'og-card.png')}">
+  <meta property="og:image" content="{SITE}/assets/{og_image}">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:locale" content="{LOCALE[lang]}">
@@ -1502,7 +1862,7 @@ def _render_article(lang, article):
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{_esc(data['title'])}">
   <meta name="twitter:description" content="{_esc(data['description'])}">
-  <meta name="twitter:image" content="{SITE}/assets/{data.get('og_image', 'og-card.png')}">
+  <meta name="twitter:image" content="{SITE}/assets/{og_image}">
   <!-- Favicon -->
   <link rel="apple-touch-icon" sizes="180x180" href="{prefix}assets/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="{prefix}assets/favicon-32.png">
@@ -1537,15 +1897,16 @@ def _render_article(lang, article):
 
     <section>
       <div class="container">
-{banner}        <p class="article-meta">
+{_article_art_html(article, lang)}{banner}        <p class="article-meta">
           <strong>{_esc(article['author'])}</strong> · {_long_date(lang, article['date'])} ·
           {minutes} {INSIGHTS_INDEX[lang]['reading']}<br>
           {data['role']}
         </p>
+        {_tags_html(lang, article)}
         <div class="prose reveal">
 {_article_body(article['key'], lang)}
         </div>
-        <p class="article-disclaimer">{data['disclaimer']}</p>
+{_share_html(lang, data, data['title'])}        <p class="article-disclaimer">{data['disclaimer']}</p>
       </div>
     </section>
 
@@ -1593,12 +1954,17 @@ def _render_insights_index(lang):
         entry = article[lang]
         mark = "" if article["stato"] == "pronto" else (
             " · bozza" if lang == "it" else " · draft")
-        cards.append(f"""          <a class="insight-card reveal" href="/{entry['slug']}/">
+        tags = _article_tags(article)
+        chips = "".join(f'<span class="tag">{TAGS[t][lang]}</span>' for t in tags)
+        cards.append(f"""          <a class="insight-card reveal" href="/{entry['slug']}/"
+             data-tags="{' '.join(tags)}">
             <div class="kicker">{entry['kicker']}{mark}</div>
             <h3>{_esc(entry['short'])}</h3>
             <p>{entry['description']}</p>
+            <span class="tag-row">{chips}</span>
           </a>""")
-    listing = ('        <div class="insight-list">\n' + "\n".join(cards) + "\n        </div>"
+    listing = (_filter_html(lang) + '        <div class="insight-list">\n' + "\n".join(cards)
+               + "\n        </div>"
                if cards else f'        <p class="section-intro">{data["empty"]}</p>')
 
     crumbs = (f'<li><a href="{home}">{chrome["breadcrumb_home"]}</a></li>'

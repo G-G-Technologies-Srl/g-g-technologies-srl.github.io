@@ -121,11 +121,19 @@
 
     <section>
       <div class="container">
+        <div class="filters" data-filters hidden>
+          <span class="filter-label">Filter by topic</span>
+          <button class="filter-btn" type="button" data-tag="" aria-pressed="true">All</button>
+          <button class="filter-btn" type="button" data-tag="ia">AI</button>
+        </div>
+        <p class="filter-empty" data-filter-empty hidden>No articles on this topic yet.</p>
         <div class="insight-list">
-          <a class="insight-card reveal" href="/en/insights/ai-act-client-data/">
+          <a class="insight-card reveal" href="/en/insights/ai-act-client-data/"
+             data-tags="ia">
             <div class="kicker">AI Act · 7 August 2026</div>
             <h3>The AI Act and client data</h3>
             <p>What a firm using AI on client data actually risks, between the AI Act, the GDPR and Italian Law 132/2025, and what to do from Monday morning.</p>
+            <span class="tag-row"><span class="tag">AI</span></span>
           </a>
         </div>
       </div>

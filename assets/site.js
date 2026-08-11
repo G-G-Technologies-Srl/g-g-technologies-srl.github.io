@@ -161,11 +161,93 @@
   //  i n i t
   // ---------------------------------------------------------------------------------------------------------------
 
+  // ---------------------------------------------------------------------------------------------------------------
+  //  i n s i g h t s   f i l t e r
+  // ---------------------------------------------------------------------------------------------------------------
+
+  function _initFilters() {
+    var bar = document.querySelector('[data-filters]');
+    if (!bar) return;
+    var buttons = [].slice.call(bar.querySelectorAll('[data-tag]'));
+    var cards = [].slice.call(document.querySelectorAll('.insight-card[data-tags]'));
+    var empty = document.querySelector('[data-filter-empty]');
+
+    // The bar ships hidden and is revealed here: without JavaScript it would be a row of buttons
+    // that do nothing, and every article is visible anyway.
+    bar.hidden = false;
+
+    function _apply(tag) {
+      var shown = 0;
+      cards.forEach(function (card) {
+        var match = !tag || card.getAttribute('data-tags').split(' ').indexOf(tag) !== -1;
+        card.hidden = !match;
+        if (match) shown++;
+      });
+      buttons.forEach(function (button) {
+        button.setAttribute('aria-pressed', button.getAttribute('data-tag') === tag ? 'true' : 'false');
+      });
+      if (empty) empty.hidden = shown > 0;
+      // Keep the address bar in step, so a filtered view can be sent to somebody.
+      var url = location.pathname + (tag ? '?tag=' + encodeURIComponent(tag) : '');
+      history.replaceState(null, '', url);
+    }
+
+    buttons.forEach(function (button) {
+      button.addEventListener('click', function () { _apply(button.getAttribute('data-tag')); });
+    });
+
+    var wanted = new URLSearchParams(location.search).get('tag');
+    if (wanted && buttons.some(function (b) { return b.getAttribute('data-tag') === wanted; })) {
+      _apply(wanted);
+    }
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------
+  //  s h a r e
+  // ---------------------------------------------------------------------------------------------------------------
+
+  function _copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    // Older browsers and pages served over plain http: fall back to a throwaway field.
+    return new Promise(function (resolve, reject) {
+      var field = document.createElement('textarea');
+      field.value = text;
+      field.setAttribute('readonly', '');
+      field.style.position = 'fixed';
+      field.style.opacity = '0';
+      document.body.appendChild(field);
+      field.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (err) { ok = false; }
+      document.body.removeChild(field);
+      ok ? resolve() : reject();
+    });
+  }
+
+  function _initShare() {
+    var button = document.querySelector('[data-share-copy]');
+    if (!button) return;
+    var label = button.querySelector('span');
+    var original = label.textContent;
+    button.addEventListener('click', function () {
+      _copyText(button.getAttribute('data-share-copy')).then(function () {
+        label.textContent = button.getAttribute('data-share-done');
+        button.setAttribute('data-copied', '');
+        setTimeout(function () {
+          label.textContent = original;
+          button.removeAttribute('data-copied');
+        }, 2200);
+      }).catch(function () { /* nothing to say: the address bar still has the URL */ });
+    });
+  }
+
   function _init() {
     _initTheme();
     _initMenu();
     _initReveal();
     _initOrbit();
+    _initFilters();
+    _initShare();
     var year = document.getElementById('year');
     if (year) year.textContent = String(new Date().getFullYear());
   }

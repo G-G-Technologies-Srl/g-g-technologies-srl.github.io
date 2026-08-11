@@ -138,7 +138,9 @@ def _check_indexing(problems):
 def _check_links_and_images(problems):
     for f, t in _pages():
         for href in re.findall(r'href="(/[^"#]*)"', t):
-            target = href.strip("/")
+            # A querystring is not part of the path: /insights/?tag=ia is the index, filtered by
+            # JavaScript, not a page of its own that has to exist on disk.
+            target = href.split("?", 1)[0].strip("/")
             if href.startswith("/assets/"):
                 if not (ROOT / target).exists():
                     problems.append(f"{f}: asset mancante {href}")

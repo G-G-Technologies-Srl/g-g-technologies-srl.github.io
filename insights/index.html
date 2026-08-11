@@ -121,11 +121,19 @@
 
     <section>
       <div class="container">
+        <div class="filters" data-filters hidden>
+          <span class="filter-label">Filtra per argomento</span>
+          <button class="filter-btn" type="button" data-tag="" aria-pressed="true">Tutti</button>
+          <button class="filter-btn" type="button" data-tag="ia">IA</button>
+        </div>
+        <p class="filter-empty" data-filter-empty hidden>Nessun articolo con questo argomento, per ora.</p>
         <div class="insight-list">
-          <a class="insight-card reveal" href="/insights/ai-act-dati-clienti/">
+          <a class="insight-card reveal" href="/insights/ai-act-dati-clienti/"
+             data-tags="ia">
             <div class="kicker">AI Act · 7 agosto 2026</div>
             <h3>AI Act e dati dei clienti</h3>
             <p>Cosa rischia davvero uno studio che usa l'AI sui dati dei clienti, fra AI Act, GDPR e legge 132/2025, e cosa può fare da lunedì mattina.</p>
+            <span class="tag-row"><span class="tag">IA</span></span>
           </a>
         </div>
       </div>

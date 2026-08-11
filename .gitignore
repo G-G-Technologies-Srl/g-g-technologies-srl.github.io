@@ -3,3 +3,7 @@ __pycache__/
 
 # backup temporaneo del test sui prezzi
 *.orig
+
+# libri di riferimento: archiviati in locale, mai pubblicati
+_src/fonti/libri/
+_src/fonti/testo/
