@@ -63,7 +63,12 @@
           observer.unobserve(entry.target);
         }
       });
-    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+      // threshold must stay 0. A ratio threshold is a share of the *target*, so an element taller
+      // than the viewport can never reach it: a 6.000px article body in an 800px window tops out
+      // around 12%, and a longer one in a shorter window never crosses 8% at all — the block would
+      // stay invisible for good. The negative bottom margin is what delays the reveal instead, and
+      // it works the same whatever the element's height.
+    }, { rootMargin: '0px 0px -10% 0px', threshold: 0 });
     items.forEach(function (el) { observer.observe(el); });
   }
 

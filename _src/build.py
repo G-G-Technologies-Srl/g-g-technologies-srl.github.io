@@ -489,7 +489,12 @@ SITE_JS = """/* Inner pages: theme toggle, mobile menu, reveal on scroll, footer
           observer.unobserve(entry.target);
         }
       });
-    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+      // threshold must stay 0. A ratio threshold is a share of the *target*, so an element taller
+      // than the viewport can never reach it: a 6.000px article body in an 800px window tops out
+      // around 12%, and a longer one in a shorter window never crosses 8% at all — the block would
+      // stay invisible for good. The negative bottom margin is what delays the reveal instead, and
+      // it works the same whatever the element's height.
+    }, { rootMargin: '0px 0px -10% 0px', threshold: 0 });
     items.forEach(function (el) { observer.observe(el); });
   }
 
@@ -1947,7 +1952,10 @@ def _render_article(lang, article):
           {data['role']}
         </p>
         {_tags_html(lang, article)}
-        <div class="prose reveal">
+        <!-- No .reveal here on purpose: this is the text the reader came for, and fading in a
+             whole article as one block means the page looks empty until it fills the screen.
+             The animation belongs to cards and to the banner, not to the body copy. -->
+        <div class="prose">
 {_article_body(article['key'], lang)}
         </div>
 {_share_html(lang, data, data['title'])}        <p class="article-disclaimer">{data['disclaimer']}</p>
