@@ -351,7 +351,18 @@ section.tinted {
 .article-draft { margin: 0 auto 32px; border-color: var(--border-strong); color: var(--muted); }
 
 /* Same recipe as .card, minus the icon: the index has to look like the rest of the site. */
-.insight-list { display: grid; gap: 20px; margin-top: 48px; max-width: 820px; }
+/* Two columns, dropping to one when there is no room for two. No breakpoint is written here: the
+   column count comes from the card's own minimum width, so it stays right the day the card grows.
+   The cap at two is the max-width — a third 360px track needs 1.120px and never gets it.
+
+   auto-fill, not auto-fit: auto-fit would collapse the empty track, so a single card — the last
+   article left after filtering, or the first one ever published — would suddenly stretch to
+   double width. Keeping the track reserved makes the grid stable while the filter runs. */
+.insight-list {
+  display: grid; gap: 20px; margin-top: 48px;
+  grid-template-columns: repeat(auto-fill, minmax(min(360px, 100%), 1fr));
+  max-width: 1000px;
+}
 .insight-card {
   display: block;
   position: relative;
