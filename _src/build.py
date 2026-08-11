@@ -278,6 +278,12 @@ section.tinted {
   background: var(--bg-soft);
 }
 
+/* The browser's own [hidden] rule is `display: none`, and any author rule that sets `display`
+   beats it. Both of these do, so setting el.hidden from JavaScript would change nothing unless
+   they say it themselves: the filter would mark cards as hidden and leave them on screen, and the
+   bar would show up for visitors without JavaScript. */
+.insight-card[hidden], .filters[hidden] { display: none; }
+
 /* Tags and filter: the same pill again, quieter. A tag is a label, not a call to action. */
 .tag, .filter-btn {
   display: inline-flex; align-items: center;
