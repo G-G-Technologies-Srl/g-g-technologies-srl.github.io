@@ -181,4 +181,22 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+  <url>
+    <loc>https://ggtechnologies.sm/insights/durabilita-per-progetto/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/durabilita-per-progetto/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/durability-by-design/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/durabilita-per-progetto/"/>
+    <lastmod>2026-08-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/en/insights/durability-by-design/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/durabilita-per-progetto/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/durability-by-design/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/durabilita-per-progetto/"/>
+    <lastmod>2026-08-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>

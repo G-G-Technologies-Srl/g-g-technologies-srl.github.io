@@ -205,7 +205,7 @@ ARTICLES = [
     {
         "key": "durabilita-per-progetto",
         "date": "2026-08-11",
-        "stato": "bozza",
+        "stato": "pronto",
         "author": "Gian Angelo Geminiani",
         "tags": ["wearable", "robotica"],
         "it": {
