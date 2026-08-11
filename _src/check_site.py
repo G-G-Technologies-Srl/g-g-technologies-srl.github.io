@@ -189,6 +189,29 @@ def _check_banned(problems):
                 problems.append(f"{f}: «{phrase}» — {reason}")
 
 
+def _stylesheet_of(page_path, text, problems):
+    """The CSS a page actually loads: its own inline <style>, or the file its <link> points at.
+
+    Resolved from the page instead of a fixed name on purpose. assets/site.css used to be that
+    fixed name, then the stylesheet started carrying a hash of its content and this check kept
+    looking for a file that no longer existed — reporting every page as unstyled. Following the
+    link is both correct and self-maintaining.
+    """
+    inline = "".join(re.findall(r"<style[^>]*>(.*?)</style>", text, re.S))
+    if inline:
+        return inline
+    href = re.search(r'<link rel="stylesheet" href="([^"]+)"', text)
+    if not href:
+        problems.append(f"{page_path}: nessun foglio di stile, né inline né collegato")
+        return ""
+    target = href.group(1)
+    path = (ROOT / target.lstrip("/")) if target.startswith("/") else (ROOT / page_path).parent / target
+    if not path.exists():
+        problems.append(f"{page_path}: il foglio di stile collegato non esiste ({target})")
+        return ""
+    return path.read_text(encoding="utf-8")
+
+
 def _check_lang_switch_styled(problems):
     """Lo switch di lingua deve risultare stilizzato su ogni pagina, home compresa.
 
@@ -198,16 +221,12 @@ def _check_lang_switch_styled(problems):
     Non basta cercare il selettore: compare anche dentro regole combinate. Qui si controlla che
     esista davvero una dichiarazione di padding applicabile ai due elementi dello switch.
     """
-    shared = (ROOT / "assets" / "site.css")
-    shared_css = shared.read_text(encoding="utf-8") if shared.exists() else ""
-
     for f, t in _pages():
         found = re.search(r'<div class="lang-switch"[^>]*>(.*?)</div>', t, re.S)
         if not found:
             problems.append(f"{f}: switch di lingua assente")
             continue
-        inline = "".join(re.findall(r"<style[^>]*>(.*?)</style>", t, re.S))
-        css = (inline or shared_css)
+        css = _stylesheet_of(f, t, problems)
 
         for element, needle in (("<span class=\"current\">", ".lang-switch .current"),
                                 ("<a>", ".lang-switch a")):
