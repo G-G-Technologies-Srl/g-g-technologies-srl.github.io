@@ -397,6 +397,74 @@ ARTICLES = [
             "related": ["onprem", "ai", "digisense"],
         },
     },
+    {
+        "key": "documentazione-che-non-invecchia",
+        "date": "2026-08-11",
+        "stato": "pronto",
+        "author": "Gian Angelo Geminiani",
+        # Not "ia": the piece is about how a technical document is assembled, and the machine is
+        # the subject. Tagging it "ia" because the example comes from an AI manual would put a
+        # third article in the fullest group and leave the two that describe what we build empty.
+        "tags": ["automazione", "robotica"],
+        "it": {
+            "slug": "insights/documentazione-che-non-invecchia",
+            "short": "Il manuale invecchia prima della macchina",
+            "title": "Il manuale invecchia prima della macchina — G&G Technologies",
+            "description": "Perché un manuale d'impianto diventa falso in una riga sola, e come "
+                           "si monta un documento che regge: la procedura da una parte, i valori "
+                           "che scadono dall'altra.",
+            "kicker": "Progettazione · 11 agosto 2026",
+            "h1": "Il manuale di una macchina invecchia "
+                  "<span class=\"grad-text\">prima della macchina</span>.",
+            "lead": "Non perché sia scritto male. Perché dentro stanno insieme due cose con due "
+                    "scadenze diverse: la procedura, che dura quanto l'impianto, e i valori che "
+                    "cambiano al primo aggiornamento.",
+            "role": "Per chi mette in servizio macchine e impianti e firma la documentazione.",
+            "disclaimer": "Questo articolo ha finalità informative e non costituisce parere "
+                          "legale né valutazione di conformità. Per il tuo caso specifico, "
+                          "rivolgiti a un organismo notificato o a un consulente qualificato.",
+            "art": {
+                "title": "Lo stesso documento, montato in due modi",
+                "desc": "Dentro un riquadro, due colonne mostrano le stesse sei righe di un "
+                        "documento. A sinistra le righe nel colore di accento — quelle che "
+                        "contengono un valore destinato a cambiare — stanno sparse fra le altre. "
+                        "A destra le stesse righe sono raccolte insieme in fondo alla colonna.",
+            },
+            "cta_title": "Hai un manuale che nessuno apre più?",
+            "cta_text": "Raccontaci di che impianto è e da quanto non si tocca. Risponde una "
+                        "persona del team, non un form.",
+            "related": ["robotics", "digisense", "ai"],
+        },
+        "en": {
+            "slug": "en/insights/documentation-that-ages-well",
+            "short": "The manual ages before the machine",
+            "title": "The manual ages before the machine — G&G Technologies",
+            "description": "Why a plant manual goes wrong in a single line, and how to assemble "
+                           "one that holds: the procedure on one side, the values that expire on "
+                           "the other.",
+            "kicker": "Design · 11 August 2026",
+            "h1": "A machine's manual ages "
+                  "<span class=\"grad-text\">before the machine</span>.",
+            "lead": "Not because it is badly written. Because two things with two different "
+                    "lifespans sit inside it: the procedure, which lasts as long as the plant, "
+                    "and the values that change at the first update.",
+            "role": "For people commissioning machines and plants who sign off the documentation.",
+            "disclaimer": "This article is for information purposes only and constitutes neither "
+                          "legal advice nor a conformity assessment. For your specific case, "
+                          "consult a notified body or a qualified adviser.",
+            "art": {
+                "title": "The same document, assembled two ways",
+                "desc": "Inside a panel, two columns show the same six lines of a document. On "
+                        "the left the lines in the accent colour — the ones holding a value bound "
+                        "to change — are scattered among the others. On the right those same "
+                        "lines are gathered together at the foot of the column.",
+            },
+            "cta_title": "Have a manual nobody opens any more?",
+            "cta_text": "Tell us what plant it covers and how long it has sat untouched. A person "
+                        "from the team answers, not a form.",
+            "related": ["robotics", "digisense", "ai"],
+        },
+    },
 ]
 
 # -----------------------------------------------------------------------------------------------------------------

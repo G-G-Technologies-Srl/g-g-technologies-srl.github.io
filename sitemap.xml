@@ -235,4 +235,22 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+  <url>
+    <loc>https://ggtechnologies.sm/insights/documentazione-che-non-invecchia/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/documentazione-che-non-invecchia/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/documentation-that-ages-well/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/documentazione-che-non-invecchia/"/>
+    <lastmod>2026-08-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/en/insights/documentation-that-ages-well/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/documentazione-che-non-invecchia/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/documentation-that-ages-well/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/documentazione-che-non-invecchia/"/>
+    <lastmod>2026-08-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>

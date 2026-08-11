@@ -243,6 +243,62 @@ def directive(w=BANNER_W, h=BANNER_H):
     return shapes
 
 
+def separation(w=BANNER_W, h=BANNER_H):
+    """The same document assembled twice: the dated lines mixed in, and the dated lines gathered.
+
+    Left of the divider, the marked rows sit among the plain ones — the page where a value that
+    expires is buried in a sentence that does not. Right of it, the same rows, with the marked ones
+    collected into a block of their own at the foot of the stack. Nothing is added and nothing is
+    removed: only the arrangement changes, which is the whole argument.
+
+    The two stacks hold the same number of rows and the same widths, so a reader comparing them
+    sees one difference and not several.
+
+    Same rules as the other drawings: no text, no random numbers, parametric on width and height.
+    """
+    box_x, box_y = 0.040 * w, 0.157 * h
+    box_w, box_h = 0.920 * w, 0.686 * h
+    mid = box_x + box_w / 2
+
+    shapes = [
+        {"role": GLOW, "cx": 0.72 * w, "cy": 0.50 * h, "rx": 0.32 * w, "ry": 0.50 * h},
+        {"role": PANEL, "x": box_x, "y": box_y, "w": box_w, "h": box_h, "r": 0.052 * h},
+        {"role": EDGE, "x1": box_x + 0.057 * box_w, "y1": box_y,
+         "x2": box_x + 0.943 * box_w, "y2": box_y},
+    ]
+
+    # Six rows per stack. Seven came out as hairlines on the card band, which is much flatter than
+    # the banner, and a row nobody can see is a row that is not in the drawing.
+    rows, row_h = 6, 0.024 * h
+    row_top, row_step = box_y + 0.150 * box_h, 0.135 * box_h
+    stack_w = box_w / 2 - 0.075 * box_w
+    widths = [0.880, 0.700, 0.940, 0.640, 0.820, 0.760]
+    # Which rows carry a value with an expiry date. Interleaved on the left, so they read as buried
+    # in the text; the same three, gathered at the foot of the stack, on the right.
+    mixed = {1, 3, 4}
+    gathered = {3, 4, 5}
+
+    for side, marked in ((0, mixed), (1, gathered)):
+        stack_x = box_x + 0.050 * box_w + side * (box_w / 2)
+        # Right of the divider the rows keep their widths and follow a new order: an exact
+        # permutation, the plain rows first and the dated ones after. The two stacks have to be
+        # the same six lines rearranged, or the drawing argues for rewriting the document instead
+        # of reassembling it, which is the opposite of the point.
+        order = range(rows) if side == 0 else [0, 2, 5, 1, 3, 4]
+        for i, src in enumerate(order):
+            shapes.append({
+                "role": MARK if i in marked else ROW,
+                "x": stack_x, "y": row_top + i * row_step,
+                "w": widths[src] * stack_w, "h": row_h,
+                "opacity": 1.0 if i in marked else 0.30 + 0.06 * (src % 3),
+            })
+
+    # The divider, drawn past the enclosure on both sides so it reads as a fold and not as a wall.
+    shapes.append({"role": EDGE, "x1": mid, "y1": box_y - 0.062 * h,
+                   "x2": mid, "y2": box_y + box_h + 0.062 * h})
+    return shapes
+
+
 # The registry the renderers read. A new article needs a drawing here and an "art" entry with
 # title and desc in content.py — build.py stops if it finds one without the other.
 ARTICLE_ART = {
@@ -250,4 +306,5 @@ ARTICLE_ART = {
     "durabilita-per-progetto": lifespan,
     "telefono-come-sensore": inventory,
     "agenti-autonomi-perimetro": directive,
+    "documentazione-che-non-invecchia": separation,
 }
