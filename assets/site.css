@@ -1075,7 +1075,9 @@ section.tinted {
    breathing room, leaving the title floating a long way above its illustration. The banner reads
    as part of the hero, so here the gap is closed instead. */
 .article-body { padding-top: 36px; }
-.article-art { margin: 0 0 44px; }
+/* Same width as .prose: the banner belongs to the article, and one wider than the column it
+   introduces reads as a separate object sitting above the text. */
+.article-art { max-width: 720px; margin: 0 auto 44px; }
 .article-art svg {
   display: block; width: 100%; height: auto;
   border: 1px solid var(--border); border-radius: var(--radius-lg);
@@ -1101,7 +1103,9 @@ section.tinted {
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
 }
 .tag-label, .filter-label { color: var(--faint); font-size: 0.85rem; margin-right: 4px; }
-.filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 40px; }
+/* No top margin: the section already provides the space, and the two would stack into a hole
+   between the hero and the first thing the reader can act on. */
+.filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .filter-empty { color: var(--faint); margin-top: 32px; }
 .tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 /* Inside a card the whole tile is the link, so the tags must not look clickable on their own. */

@@ -88,32 +88,38 @@ INSIGHTS_INDEX = {
     "it": {
         "slug": "insights",
         "title": "Insights — G&G Technologies",
-        "description": "Articoli su intelligenza artificiale, dati e regole, scritti per chi deve "
-                       "decidere: cosa cambia davvero e cosa si può fare la settimana prossima.",
+        "description": "Analisi su intelligenza artificiale, dati e normativa: cosa è cambiato, "
+                       "da quando si applica e quali sono le conseguenze operative.",
         "kicker": "Insights",
-        "h1": "Quello che abbiamo <span class=\"grad-text\">capito</span>, scritto per intero.",
-        "lead": "Pochi articoli, lunghi, con le fonti in fondo. Li scriviamo quando abbiamo qualcosa "
-                "da dire che non sta in un post.",
+        "h1": "Analisi tecniche su intelligenza artificiale, "
+              "<span class=\"grad-text\">dati e normativa</span>.",
+        # The sources are named once, in sources_note just below: saying it here too would print
+        # the same sentence twice, one under the other, in the same hero.
+        "lead": "Ogni articolo ricostruisce una materia per intero. Li pubblichiamo quando la "
+                "questione non si chiude in una sintesi.",
         "short": "Insights",
         "empty": "Non c'è ancora niente di pubblico in questa sezione.",
         "read_more": "Leggi l'articolo",
         "reading": "minuti di lettura",
-        "sources_note": "Le fonti di ogni articolo sono elencate in fondo alla pagina.",
+        "sources_note": "Le fonti di ogni articolo sono elencate e verificabili in fondo alla "
+                        "pagina.",
     },
     "en": {
         "slug": "en/insights",
         "title": "Insights — G&G Technologies",
-        "description": "Articles on artificial intelligence, data and regulation, written for people "
-                       "who have to decide: what actually changed and what you can do next week.",
+        "description": "Analysis on artificial intelligence, data and regulation: what changed, "
+                       "when it starts to apply and what follows from it in practice.",
         "kicker": "Insights",
-        "h1": "What we have <span class=\"grad-text\">worked out</span>, written in full.",
-        "lead": "A few long articles, with the sources at the bottom. We write one when we have "
-                "something to say that does not fit in a post.",
+        "h1": "Technical analysis on artificial intelligence, "
+              "<span class=\"grad-text\">data and regulation</span>.",
+        "lead": "Each article reconstructs a subject in full. We publish one when the question "
+                "does not close in a summary.",
         "short": "Insights",
         "empty": "Nothing is public in this section yet.",
         "read_more": "Read the article",
         "reading": "minute read",
-        "sources_note": "The sources for each article are listed at the foot of its page.",
+        "sources_note": "The sources for each article are listed and verifiable at the foot of "
+                        "its page.",
     },
 }
 
