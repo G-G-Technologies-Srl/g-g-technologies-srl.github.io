@@ -8,7 +8,7 @@ Ci sono però dei confini oltre i quali questa strada diventa un errore. Contano
 
 ## Che cosa hai già a bordo
 
-I sensori di uno smartphone sono componenti MEMS: gli stessi che compreresti come moduli separati. Qui però sono già montati, alimentati, calibrati in fabbrica e raggiungibili da un'unica interfaccia software.
+I sensori di uno smartphone sono componenti MEMS — micromeccanismi incisi nel silicio, come i circuiti — cioè gli stessi che compreresti come moduli separati. Qui però sono già montati, alimentati, calibrati in fabbrica e raggiungibili da un'unica interfaccia software.
 
 L'inventario tipico di un telefono di fascia media degli ultimi anni:
 
@@ -47,11 +47,11 @@ Un pilota che risponde «no, quel segnale non c'è» in tre giorni vale molto pi
 
 Questa è la parte che conta, ed è quella che di solito nessuno dice. Un telefono è un ottimo strumento per capire, e un pessimo prodotto finito. I confini sono cinque, e sono netti.
 
-**La batteria.** In un dispositivo che deve restare acceso per anni, la cella al litio è il primo componente a esaurirsi, e in un telefono non si cambia senza aprirlo. Una batteria che si gonfia dentro un quadro elettrico, o addosso a una persona, non è un fastidio: è un pericolo. Se il pilota diventa definitivo, l'alimentazione va rifatta da capo.
+**La batteria.** In un dispositivo che deve restare acceso per anni, la cella al litio è il primo componente ad arrivare a fine vita, e in un telefono non si cambia senza aprirlo. Una batteria che si gonfia dentro un quadro elettrico, o addosso a una persona, non è un fastidio: è un pericolo. Se il pilota diventa definitivo, l'alimentazione va rifatta da capo.
 
 **L'ambiente.** Un telefono non è pensato per stare a 60 °C dentro un armadio elettrico, sotto vibrazione continua, nell'umidità o nella polvere. Resiste molto più di quanto ci si aspetti, e per questo inganna: funziona per settimane e poi smette, di solito proprio quando hai iniziato a fidarti.
 
-**Gli aggiornamenti.** È il vincolo che si sottovaluta di più. Un telefono che non riceve più aggiornamenti di sicurezza è un computer attaccato alla tua rete di cui nessuno corregge più i difetti. I numeri sono questi: i Pixel dal modello 8 in poi e i Galaxy dalla serie S24 in poi ricevono **sette anni** di aggiornamenti di sistema e di sicurezza dall'uscita del modello; i modelli precedenti si fermano a cinque. Un telefono usato ha già consumato parte di quel periodo. E quando gli aggiornamenti finiscono il telefono non diventa lento: diventa il punto da cui si entra nella tua rete.
+**Gli aggiornamenti.** È il vincolo che si sottovaluta di più. Un telefono che non riceve più aggiornamenti di sicurezza è un computer attaccato alla tua rete di cui nessuno corregge più i difetti. I numeri sono questi: i Pixel dal modello 8 in poi e i Galaxy dalla serie S24 in poi ricevono **sette anni** di aggiornamenti di sistema e di sicurezza dall'uscita del modello; sui modelli precedenti gli aggiornamenti di sicurezza si fermano a cinque anni. Un telefono usato ha già consumato parte di quel periodo. E quando gli aggiornamenti finiscono il telefono non diventa lento: diventa il punto da cui si entra nella tua rete.
 
 **La misura che ha valore legale.** Se il dato serve a fatturare, a certificare, a far scattare una manutenzione obbligatoria o a documentare un collaudo, non basta che sia accurato. Deve essere **riferibile a un campione**: cioè confrontabile, attraverso una catena documentata di tarature, con il campione nazionale di quella grandezza. La calibrazione di fabbrica di uno smartphone non lo è, e nessuna procedura software la rende tale.
 
@@ -93,7 +93,7 @@ L'ultima riga è la più utile, e la meno sfruttata. Un modello di visione o di 
 
 Progettiamo dispositivi, e questo è il modo in cui riduciamo il rischio di progettarne uno sbagliato. Il pilota fatto con l'hardware che c'è già è la fase in cui vengono fuori le cose che cambiano il progetto: che il segnale è più debole del previsto, che bisogna campionare più spesso, che due impianti all'apparenza identici non lo sono.
 
-DigiSense®, il framework su cui costruiamo le implementazioni con sensori, AI e robot, tiene separate tre cose: la raccolta dei dati, la loro elaborazione e il comando della macchina. Serve proprio a questo. La sorgente dei dati può cambiare — da un telefono a una scheda dedicata — senza riscrivere quello che ci sta sopra. Fra il pilota e il prodotto finito resta lo stesso ragionamento, anche se l'hardware è diverso.
+DigiSense®, il framework su cui costruiamo le implementazioni con sensori, AI e robot, tiene separati l'acquisizione dei dati, l'elaborazione e il controllo della macchina. È questa separazione che permette a un pilota di diventare un prodotto: la sorgente dei dati cambia — da un telefono a una scheda dedicata — e quello che ci sta sopra non si riscrive. Cambia l'hardware, non il ragionamento.
 
 Se hai un'idea che dipende da una misura che nessuno ha ancora fatto, si parte da lì: quale sarebbe quella misura, e come ottenerla la settimana prossima invece che fra sei mesi.
 

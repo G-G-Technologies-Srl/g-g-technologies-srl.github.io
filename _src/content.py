@@ -270,7 +270,7 @@ ARTICLES = [
     {
         "key": "telefono-come-sensore",
         "date": "2026-08-11",
-        "stato": "bozza",
+        "stato": "pronto",
         "author": "Gian Angelo Geminiani",
         "tags": ["robotica", "automazione"],
         "it": {

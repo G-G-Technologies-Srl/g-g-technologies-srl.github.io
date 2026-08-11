@@ -8,7 +8,7 @@ There are boundaries, though, beyond which this route becomes a mistake. They ma
 
 ## What is already on board
 
-The sensors in a smartphone are MEMS components: the same ones you would buy as separate modules. Here, though, they are already mounted, powered, factory-calibrated and reachable through a single software interface.
+The sensors in a smartphone are MEMS components — micro-mechanisms etched into silicon, the way circuits are — that is, the same ones you would buy as separate modules. Here, though, they are already mounted, powered, factory-calibrated and reachable through a single software interface.
 
 The typical inventory of a recent mid-range phone:
 
@@ -47,11 +47,11 @@ A pilot that answers "no, that signal is not there" in three days is worth far m
 
 This is the part that matters, and the part nobody usually mentions. A phone is an excellent instrument for finding out, and a poor finished product. There are five boundaries, and they are sharp.
 
-**The battery.** In a device that has to stay on for years, the lithium cell is the first component to run out, and in a phone it cannot be changed without opening the case. A battery swelling inside an electrical cabinet, or on a person, is not a nuisance: it is a hazard. If the pilot becomes permanent, power has to be rebuilt from scratch.
+**The battery.** In a device that has to stay on for years, the lithium cell is the first component to reach the end of its life, and in a phone it cannot be changed without opening the case. A battery swelling inside an electrical cabinet, or on a person, is not a nuisance: it is a hazard. If the pilot becomes permanent, power has to be rebuilt from scratch.
 
 **The environment.** A phone is not meant to sit at 60 °C inside an electrical cabinet, under constant vibration, in damp or dust. It survives far more than you would expect, and that is why it misleads: it works for weeks and then stops, usually just as you have started to rely on it.
 
-**Updates.** This is the most underestimated constraint. A phone that no longer receives security updates is a computer attached to your network whose faults nobody fixes any more. The numbers are these: Pixels from model 8 onwards and Galaxy devices from the S24 series onwards get **seven years** of system and security updates from the model's release; earlier models stop at five. A second-hand phone has already used up part of that period. And when the updates end the phone does not merely get slow: it becomes the way into your network.
+**Updates.** This is the most underestimated constraint. A phone that no longer receives security updates is a computer attached to your network whose faults nobody fixes any more. The numbers are these: Pixels from model 8 onwards and Galaxy devices from the S24 series onwards get **seven years** of system and security updates from the model's release; on earlier models the security updates stop at five years. A second-hand phone has already used up part of that period. And when the updates end the phone does not merely get slow: it becomes the way into your network.
 
 **Measurement with legal standing.** If the data is used to invoice, to certify, to trigger mandatory maintenance or to document an acceptance test, being accurate is not enough. It has to be **traceable to a standard**: comparable, through a documented chain of calibrations, with the national standard for that quantity. A smartphone's factory calibration is not, and no amount of software makes it so.
 
@@ -93,7 +93,7 @@ That last row is the most useful, and the least used. A vision or classification
 
 We design devices, and this is how we cut the risk of designing the wrong one. The pilot run with hardware you already own is the phase where the things that change the design come out: that the signal is weaker than expected, that you have to sample more often, that two apparently identical plants are not.
 
-DigiSense®, the framework we build our sensor, AI and robotics implementations on, keeps three things apart: collecting the data, processing it, and driving the machine. That separation exists for exactly this. The source of the data can change — from a phone to a dedicated board — without rewriting what sits above it. Between the pilot and the finished product the reasoning stays the same, even when the hardware does not.
+DigiSense®, the framework we build our sensor, AI and robotics implementations on, keeps data acquisition, processing and machine control separate. That separation is what lets a pilot become a product: the source of the data changes — from a phone to a dedicated board — and what sits above it is not rewritten. The hardware changes, the reasoning does not.
 
 If you have an idea that hangs on a measurement nobody has taken yet, that is where it starts: what that measurement would be, and how to get it next week instead of in six months.
 
