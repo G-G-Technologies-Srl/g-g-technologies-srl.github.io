@@ -277,8 +277,16 @@ section.tinted {
 
    The section's own 96px would stack on top of the hero's 72px and the drawing's internal
    breathing room, leaving the title floating a long way above its illustration. The banner reads
-   as part of the hero, so here the gap is closed instead. */
-.article-body { padding-top: 36px; }
+   as part of the hero, so here the gap is closed instead.
+
+   Four numbers stack up between the last line of the lead and the drawn panel, and only counting
+   them together explains the hole that was left: the hero's bottom padding, the lead's own
+   bottom margin, this padding, and the space inside the drawing — which is real space, because
+   the figure has a visible frame. 72 + 30 + 36 was too much before the drawing had even started;
+   24 + 30 + 16 is the same rhythm without the gap. The space inside the drawing stays as it is:
+   it belongs to the composition, and the three other articles share it. */
+.article-hero { padding-bottom: 24px; }
+.article-body { padding-top: 16px; }
 /* Same width as .prose: the banner belongs to the article, and one wider than the column it
    introduces reads as a separate object sitting above the text. */
 .article-art { max-width: 720px; margin: 0 auto 44px; }
@@ -1164,8 +1172,20 @@ def _art_shape_svg(shape):
                 f'height="{shape["h"]:.0f}" rx="{shape["r"]:.0f}" fill="{paint}" '
                 f'stroke="var(--border)"/>')
     if role == article_art.EDGE:
-        return (f'<path d="M{shape["x1"]:.0f} {shape["y1"]:.0f} L{shape["x2"]:.0f} '
-                f'{shape["y2"]:.0f}" stroke="{paint}" stroke-width="2" stroke-linecap="round"/>')
+        # A rectangle, not a stroked line, and the reason is a rule of SVG that costs an hour to
+        # find: a gradient in objectBoundingBox units is not painted at all when the box has zero
+        # width or height. A horizontal or vertical line has exactly that, so every 2px filament
+        # and every boundary came out invisible — on the published articles too. A rect has both
+        # dimensions, so the same line keeps the accent gradient it is supposed to have.
+        x1, y1, x2, y2 = shape["x1"], shape["y1"], shape["x2"], shape["y2"]
+        thin = 2.0
+        w, h = abs(x2 - x1), abs(y2 - y1)
+        # The stroke used to be centred on the path; the rect has to be shifted by half its
+        # thickness to sit where the line sat.
+        x = min(x1, x2) - (thin / 2 if w < thin else 0)
+        y = min(y1, y2) - (thin / 2 if h < thin else 0)
+        return (f'<rect x="{x:.1f}" y="{y:.1f}" width="{max(w, thin):.1f}" '
+                f'height="{max(h, thin):.1f}" rx="1" fill="{paint}"/>')
     if role in (article_art.ROW, article_art.MARK):
         return (f'<rect x="{shape["x"]:.0f}" y="{shape["y"]:.0f}" width="{shape["w"]:.0f}" '
                 f'height="{shape["h"]:.0f}" rx="4" fill="{paint}" '
@@ -1958,7 +1978,9 @@ def _render_article(lang, article):
 {_header(lang, other_url)}
 
   <main id="main">
-    <section class="hero page-hero">
+    <!-- article-hero on top of the shared page-hero: on every other page the hero ends the
+         screen, here it is followed by the banner, and the two blocks have to read as one. -->
+    <section class="hero page-hero article-hero">
       <div class="hero-bg" aria-hidden="true">
         <div class="glow glow-1"></div>
         <div class="glow glow-2"></div>

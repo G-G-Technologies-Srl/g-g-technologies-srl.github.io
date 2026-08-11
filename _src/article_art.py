@@ -182,10 +182,72 @@ def inventory(w=BANNER_W, h=BANNER_H):
     return shapes
 
 
+def directive(w=BANNER_W, h=BANNER_H):
+    """One line among the others is an instruction, and only its shape says so: nothing.
+
+    The enclosure holds the lines of a document, all alike. One of them is in the accent colour —
+    same length, same height, same place in the stack, so it is singled out by nothing a reader
+    could use. From that line alone a train of squares crosses the boundary and grows on the way
+    out: the content did not leak, it acted.
+
+    This is the deliberate opposite of `perimeter()`, where every row scatters and the fragments
+    fade as they travel. Here a single row produces the stream, and it arrives.
+
+    Same rules as the others: no text, no random numbers, parametric on width and height.
+    """
+    box_x, box_y = 0.040 * w, 0.157 * h
+    box_w, box_h = 0.470 * w, 0.686 * h
+    gate = box_x + box_w
+
+    shapes = [
+        {"role": GLOW, "cx": 0.80 * w, "cy": 0.50 * h, "rx": 0.30 * w, "ry": 0.50 * h},
+        {"role": PANEL, "x": box_x, "y": box_y, "w": box_w, "h": box_h, "r": 0.052 * h},
+        {"role": EDGE, "x1": box_x + 0.057 * box_w, "y1": box_y,
+         "x2": box_x + 0.943 * box_w, "y2": box_y},
+    ]
+
+    # Seven lines, one of which is the instruction. Index 3 keeps it in the middle of the stack:
+    # first or last would read as a heading or a footnote, which is the opposite of the point.
+    speaking = 3
+    rows, row_h = 7, 0.021 * h
+    row_top, row_step = box_y + 0.160 * box_h, 0.115 * box_h
+    # The marked row is not the longest and not the shortest — its width sits among the others.
+    widths = [0.836, 0.702, 0.615, 0.744, 0.788, 0.660, 0.810]
+    for i, share in enumerate(widths):
+        shapes.append({
+            "role": MARK if i == speaking else ROW,
+            "x": box_x + 0.089 * box_w, "y": row_top + i * row_step,
+            "w": share * box_w, "h": row_h,
+            "opacity": 1.0 if i == speaking else 0.30 + 0.06 * (i % 3),
+        })
+
+    shapes.append({"role": EDGE, "x1": gate, "y1": box_y - 0.062 * h,
+                   "x2": gate, "y2": box_y + box_h + 0.062 * h})
+
+    # The stream leaves the marked row and only that one. Even spacing, because this is a sequence
+    # of steps and not a dispersion: an action that carries through, not data blowing away.
+    y = row_top + speaking * row_step + row_h / 2
+    # The margin on the right is wider than the square, so the last one stops short of the edge
+    # instead of touching it: a stream that runs off the canvas reads as cropped, not as arriving.
+    x, step = gate + 0.032 * w, 0.042 * w
+    while x < w - 0.058 * w:
+        travel = (x - gate) / (w - gate)
+        size = (0.0075 + 0.0080 * travel) * w
+        shapes.append({
+            "role": PACKET,
+            "x": x, "y": y - size / 2, "size": size,
+            "opacity": min(1.0, 0.34 + 0.72 * travel),
+        })
+        x += step
+
+    return shapes
+
+
 # The registry the renderers read. A new article needs a drawing here and an "art" entry with
 # title and desc in content.py — build.py stops if it finds one without the other.
 ARTICLE_ART = {
     "ai-act-dati-clienti": perimeter,
     "durabilita-per-progetto": lifespan,
     "telefono-come-sensore": inventory,
+    "agenti-autonomi-perimetro": directive,
 }

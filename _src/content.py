@@ -326,6 +326,77 @@ ARTICLES = [
             "related": ["robotics", "digisense", "ai"],
         },
     },
+    {
+        "key": "agenti-autonomi-perimetro",
+        "date": "2026-08-11",
+        "stato": "pronto",
+        "author": "Gian Angelo Geminiani",
+        # "automazione" as well as "ia": an agent that carries out tasks on its own is automation,
+        # whatever it is built on. It also keeps the filter from becoming one full group and three
+        # empty ones.
+        "tags": ["ia", "automazione"],
+        "it": {
+            "slug": "insights/agenti-autonomi-perimetro",
+            "short": "Prima di dare le chiavi a un agente AI",
+            # Under 65 characters, so the <title> drops "a un agente AI": on a results page the
+            # subject is already carried by the description.
+            "title": "Prima di dare le chiavi a un agente — G&G Technologies",
+            "description": "Per un agente AI il contenuto che legge e le istruzioni che riceve "
+                           "sono lo stesso testo. Cosa ne segue, e le tre domande da farsi prima "
+                           "di collegarlo alla posta.",
+            "kicker": "Agenti autonomi · 11 agosto 2026",
+            "h1": "Un agente non distingue "
+                  "<span class=\"grad-text\">i dati dagli ordini</span>.",
+            "lead": "L'autonomia eccessiva è salita dal sesto al terzo posto fra i rischi OWASP, "
+                    "e non per un cambio di opinione. Poi tre decisioni di architettura.",
+            "role": "Per chi sta per collegare un assistente AI alla posta, ai file o al "
+                    "gestionale.",
+            "disclaimer": "Questo articolo ha finalità informative e non costituisce una "
+                          "valutazione di sicurezza. Prima di collegare un agente ai tuoi "
+                          "sistemi, fai valutare il caso specifico da chi risponde della "
+                          "sicurezza informatica.",
+            "art": {
+                "title": "La riga che non si distingue dalle altre",
+                "desc": "Dentro un riquadro, sette righe di un documento sembrano identiche. Una "
+                        "sola è nel colore di accento, e non per lunghezza o posizione: da "
+                        "quella, e da nessun'altra, una fila di quadratini attraversa il confine "
+                        "e cresce mentre si allontana.",
+            },
+            "cta_title": "Stai per dare a un assistente AI accesso ai tuoi sistemi?",
+            "cta_text": "Raccontaci quali azioni dovrebbe compiere da solo. Risponde una persona "
+                        "del team, non un form.",
+            "related": ["onprem", "ai", "digisense"],
+        },
+        "en": {
+            "slug": "en/insights/autonomous-agents-boundaries",
+            "short": "Before you hand an AI agent the keys",
+            "title": "Before you hand an agent the keys — G&G Technologies",
+            "description": "To an AI agent, the content it reads and the instructions it receives "
+                           "are the same text. What follows from that, and three questions to ask "
+                           "first.",
+            "kicker": "Autonomous agents · 11 August 2026",
+            "h1": "An agent cannot tell "
+                  "<span class=\"grad-text\">data from orders</span>.",
+            "lead": "Excessive agency climbed from sixth to third among the OWASP risks, and not "
+                    "because anyone changed their mind. Then three architecture decisions.",
+            "role": "For people about to connect an AI assistant to the mailbox, the files or the "
+                    "business system.",
+            "disclaimer": "This article is for information purposes only and does not constitute "
+                          "a security assessment. Before connecting an agent to your systems, "
+                          "have the specific case reviewed by whoever answers for information "
+                          "security.",
+            "art": {
+                "title": "The line that looks like all the others",
+                "desc": "Inside a panel, seven lines of a document look identical. Only one is in "
+                        "the accent colour, and not by length or position: from that one, and no "
+                        "other, a row of small squares crosses the boundary and grows as it goes.",
+            },
+            "cta_title": "About to give an AI assistant access to your systems?",
+            "cta_text": "Tell us which actions it would perform on its own. A person from the "
+                        "team answers, not a form.",
+            "related": ["onprem", "ai", "digisense"],
+        },
+    },
 ]
 
 # -----------------------------------------------------------------------------------------------------------------
