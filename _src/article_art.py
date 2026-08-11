@@ -28,6 +28,7 @@ PANEL = "panel"        # the enclosure
 EDGE = "edge"          # the 2px accent filament and the perimeter line
 ROW = "row"            # a line of the document, still intact
 PACKET = "packet"      # a fragment that has left the perimeter
+MARK = "mark"          # a bar the drawing wants to single out, in the accent colour
 
 
 # -----------------------------------------------------------------------------------------------------------------
@@ -92,8 +93,57 @@ def perimeter(w=BANNER_W, h=BANNER_H):
     return shapes
 
 
+def lifespan(w=BANNER_W, h=BANNER_H):
+    """The shortest component decides when the whole device stops.
+
+    Bars of different length are the parts of a product, each with its own useful life. One of
+    them — the battery — is much shorter than the others, and a line drawn at its end cuts the
+    rest short: everything past that line is life the product had and does not get to use.
+
+    Same rules as the other drawings: no text, no random numbers, parametric on width and height.
+    """
+    box_x, box_y = 0.040 * w, 0.157 * h
+    box_w, box_h = 0.920 * w, 0.686 * h
+
+    # The bars live inside the enclosure, with a margin on both sides.
+    span_x = box_x + 0.045 * box_w
+    span_w = box_w * 0.910
+    shortest = 0.34                       # the battery, as a fraction of the full span
+    cut = span_x + shortest * span_w
+
+    shapes = [
+        {"role": GLOW, "cx": 0.30 * w, "cy": 0.50 * h, "rx": 0.34 * w, "ry": 0.52 * h},
+        {"role": PANEL, "x": box_x, "y": box_y, "w": box_w, "h": box_h, "r": 0.052 * h},
+        {"role": EDGE, "x1": box_x + 0.057 * box_w, "y1": box_y,
+         "x2": box_x + 0.943 * box_w, "y2": box_y},
+    ]
+
+    # Five bars, not more: the card band is very flat, and seven would come out as hairlines.
+    bar_h = 0.055 * h
+    row_top, row_step = box_y + 0.150 * box_h, 0.165 * box_h
+    # The third bar is the short one. The others outlive it by different margins, which is the
+    # whole point: they are not wasted equally.
+    for i, share in enumerate([1.000, 0.830, shortest, 0.640, 0.930]):
+        y = row_top + i * row_step
+        if share <= shortest:
+            shapes.append({"role": MARK, "x": span_x, "y": y,
+                           "w": share * span_w, "h": bar_h, "opacity": 1.0})
+            continue
+        # what the part actually gets to serve, then what it had left when the device stopped
+        shapes.append({"role": ROW, "x": span_x, "y": y,
+                       "w": shortest * span_w, "h": bar_h, "opacity": 0.52})
+        shapes.append({"role": ROW, "x": cut, "y": y,
+                       "w": (share - shortest) * span_w, "h": bar_h, "opacity": 0.14})
+
+    # the line where the device stops, drawn past the enclosure so it reads as a limit
+    shapes.append({"role": EDGE, "x1": cut, "y1": box_y - 0.062 * h,
+                   "x2": cut, "y2": box_y + box_h + 0.062 * h})
+    return shapes
+
+
 # The registry the renderers read. A new article needs a drawing here and an "art" entry with
 # title and desc in content.py — build.py stops if it finds one without the other.
 ARTICLE_ART = {
     "ai-act-dati-clienti": perimeter,
+    "durabilita-per-progetto": lifespan,
 }

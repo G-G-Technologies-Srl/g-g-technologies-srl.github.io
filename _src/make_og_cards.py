@@ -121,11 +121,12 @@ def _paint_art(img, draw, shapes, box):
         elif role == article_art.EDGE:
             draw.line([ox + shape["x1"], oy + shape["y1"], ox + shape["x2"], oy + shape["y2"]],
                       fill=EMERALD, width=3)
-        elif role == article_art.ROW:
+        elif role in (article_art.ROW, article_art.MARK):
+            colour = EMERALD if role == article_art.MARK else MUTED
             draw.rounded_rectangle(
                 [ox + shape["x"], oy + shape["y"],
                  ox + shape["x"] + shape["w"], oy + shape["y"] + shape["h"]],
-                radius=shape["h"] / 2, fill=_blend(MUTED, shape["opacity"], PANEL_2))
+                radius=shape["h"] / 2, fill=_blend(colour, shape["opacity"], PANEL_2))
         else:
             size = max(2.0, shape["size"])
             draw.rounded_rectangle(
@@ -152,8 +153,16 @@ def _article_card(article, lang, bold, regular, out):
 
     # The h1, not the <title>: the <title> carries the company suffix, which the card already shows.
     headline = re.sub(r"<[^>]+>", "", data["h1"]).replace("&amp;", "&")
-    font, lines = _title_font(draw, headline, bold, W - margin * 2, max_lines=3)
     y = 216
+    # The title has to stop above the illustration. Titles differ a lot in length, so the size is
+    # chosen from the room actually left, not from a fixed maximum: a long one on three lines at
+    # 66pt would print straight over the drawing.
+    room = ART_BOX[1] - y - 18
+    for size in range(58, 31, -2):
+        font = ImageFont.truetype(str(bold), size)
+        lines = _wrap(draw, headline, font, W - margin * 2)
+        if len(lines) * (size + 10) <= room:
+            break
     for line in lines:
         draw.text((margin, y), line, font=font, fill=TEXT)
         y += font.size + 10

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>La durata è diventata un requisito — G&amp;G Technologies</title>
+  <meta name="description" content="Ecodesign, diritto alla riparazione e regolamento batterie si sommano: cosa cambia per chi progetta hardware, e le decisioni da prendere prima dell'architettura.">
+  <meta name="author" content="Gian Angelo Geminiani">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0d1220">
+  <link rel="canonical" href="https://ggtechnologies.sm/insights/durabilita-per-progetto/">
+  <link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/durabilita-per-progetto/">
+  <link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/durability-by-design/">
+  <link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/durabilita-per-progetto/">
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="G&amp;G Technologies">
+  <meta property="og:title" content="La durata è diventata un requisito — G&amp;G Technologies">
+  <meta property="og:description" content="Ecodesign, diritto alla riparazione e regolamento batterie si sommano: cosa cambia per chi progetta hardware, e le decisioni da prendere prima dell'architettura.">
+  <meta property="og:url" content="https://ggtechnologies.sm/insights/durabilita-per-progetto/">
+  <meta property="og:image" content="https://ggtechnologies.sm/assets/og-durabilita-per-progetto-it.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="it_IT">
+  <meta property="og:locale:alternate" content="en_GB">
+  <meta property="article:published_time" content="2026-08-11">
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="La durata è diventata un requisito — G&amp;G Technologies">
+  <meta name="twitter:description" content="Ecodesign, diritto alla riparazione e regolamento batterie si sommano: cosa cambia per chi progetta hardware, e le decisioni da prendere prima dell'architettura.">
+  <meta name="twitter:image" content="https://ggtechnologies.sm/assets/og-durabilita-per-progetto-it.jpg">
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../../assets/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../../assets/favicon-32.png">
+  <script>
+    (function () {
+      var theme = '';
+      try { theme = localStorage.getItem('gg-theme') || ''; } catch (ignored) { /* unavailable */ }
+      if (theme !== 'light' && theme !== 'dark') {
+        theme = (window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+      }
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.classList.add('js');
+    })();
+  </script>
+  <link rel="stylesheet" href="../../assets/site.css">
+  <script type="application/ld+json">
+[
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://ggtechnologies.sm/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Insights",
+        "item": "https://ggtechnologies.sm/insights/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "La durata è diventata un requisito",
+        "item": "https://ggtechnologies.sm/insights/durabilita-per-progetto/"
+      }
+    ]
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "La durata non è più una promessa. È un requisito con una data.",
+    "name": "La durata è diventata un requisito",
+    "url": "https://ggtechnologies.sm/insights/durabilita-per-progetto/",
+    "description": "Ecodesign, diritto alla riparazione e regolamento batterie si sommano: cosa cambia per chi progetta hardware, e le decisioni da prendere prima dell'architettura.",
+    "inLanguage": "it",
+    "datePublished": "2026-08-11",
+    "author": {
+      "@type": "Person",
+      "name": "Gian Angelo Geminiani"
+    },
+    "publisher": {
+      "@id": "https://ggtechnologies.sm/#organization"
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://ggtechnologies.sm/insights/durabilita-per-progetto/"
+    }
+  }
+]
+  </script>
+</head>
+<body>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs><linearGradient id="icoGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#10b981"/></linearGradient></defs></svg>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs><linearGradient id="artEdge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent-strong)"/></linearGradient><linearGradient id="artPanel" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="var(--panel-2)"/><stop offset="0.6" stop-color="var(--panel)"/></linearGradient><radialGradient id="artGlow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="var(--glow-a)"/><stop offset="1" stop-color="var(--glow-a)" stop-opacity="0"/></radialGradient></defs></svg>
+  <a class="skip-link" href="#main">Vai al contenuto</a>
+
+  <header class="site-header">
+    <nav class="nav" aria-label="Navigazione principale">
+      <a href="/" class="brand">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><defs><linearGradient id="ggMark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5eecab"/><stop offset="1" stop-color="#10b981"/></linearGradient><mask id="ggWire"><path d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="#fff" stroke-width="13"/><path d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="#000" stroke-width="10"/></mask></defs><rect class="wire" width="100" height="100" mask="url(#ggWire)"/><path class="lit" d="M66 50 H86 A36 36 0 1 1 50 14" fill="none" stroke="url(#ggMark)" stroke-width="13" stroke-linecap="round"/><circle class="click" cx="50" cy="50" r="9" fill="none" stroke="#34d399" stroke-width="2"/><circle class="led" cx="50" cy="50" r="9"/></svg></span>
+        <span class="brand-text">
+          <span class="brand-name">G&amp;G Technologies</span>
+          <span class="brand-payoff">Accendiamo il futuro</span>
+        </span>
+      </a>
+
+      <div class="nav-links" id="navLinks">
+        <a href="/#services">Servizi</a>
+        <a href="/#why">Perché noi</a>
+        <a href="/podz-ai/">Podz.AI</a>
+        <a href="/#about">Chi siamo</a>
+        <a href="/#contact">Contatti</a>
+      </div>
+
+      <div class="nav-actions">
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Tema chiaro/scuro · Light/dark theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2"/>
+            <path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.2 14.5A8.3 8.3 0 0 1 9.5 3.8a8.3 8.3 0 1 0 10.7 10.7Z"/>
+          </svg>
+        </button>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <span class="current">IT</span>
+          <a href="https://ggtechnologies.sm/en/insights/durability-by-design/" hreflang="en" lang="en">EN</a>
+        </div>
+        <a class="btn btn-primary nav-cta" href="mailto:info@ggtechnologies.sm?subject=Richiesta%20informazioni">Parla con noi</a>
+        <button class="menu-toggle" id="menuToggle" aria-label="Menu" aria-expanded="false" aria-controls="navLinks"><span></span></button>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero page-hero">
+      <div class="hero-bg" aria-hidden="true">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+      </div>
+
+      <div class="container">
+        <div class="prose">
+          <nav class="breadcrumb" aria-label="Percorso"><ol><li><a href="/">Home</a></li><li><a href="/insights/">Insights</a></li><li aria-current="page">La durata è diventata un requisito</li></ol></nav>
+          <div class="kicker">Progettazione · 11 agosto 2026</div>
+          <h1>La durata non è più una promessa. È un <span class="grad-text">requisito con una data</span>.</h1>
+          <p class="hero-sub">Tre norme europee convergono sullo stesso punto, con soglie numeriche e scadenze. Poi sette decisioni da prendere in fase di progetto, non dopo.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="article-body">
+      <div class="container">
+        <figure class="article-art reveal">
+          <svg viewBox="0 0 1000 340" role="img"
+               aria-labelledby="durabilitaperprogettoT durabilitaperprogettoD">
+            <title id="durabilitaperprogettoT">Il componente più corto decide la vita del prodotto</title>
+            <desc id="durabilitaperprogettoD">Dentro un riquadro, sei barre di lunghezza diversa rappresentano le parti di un dispositivo. Una è molto più corta delle altre, e una linea verticale tracciata alla sua fine tronca tutte le altre: quello che resta oltre la linea è vita che il prodotto non arriva a usare.</desc>
+            <ellipse cx="300" cy="170" rx="340" ry="177" fill="url(#artGlow)"/><rect x="40" y="53" width="920" height="233" rx="18" fill="url(#artPanel)" stroke="var(--border)"/><path d="M92 53 L908 53" stroke="url(#artEdge)" stroke-width="2" stroke-linecap="round"/><rect x="81" y="88" width="285" height="19" rx="4" fill="var(--muted)" opacity="0.52"/><rect x="366" y="88" width="553" height="19" rx="4" fill="var(--muted)" opacity="0.14"/><rect x="81" y="127" width="285" height="19" rx="4" fill="var(--muted)" opacity="0.52"/><rect x="366" y="127" width="410" height="19" rx="4" fill="var(--muted)" opacity="0.14"/><rect x="81" y="165" width="285" height="19" rx="4" fill="url(#artEdge)" opacity="1.00"/><rect x="81" y="204" width="285" height="19" rx="4" fill="var(--muted)" opacity="0.52"/><rect x="366" y="204" width="251" height="19" rx="4" fill="var(--muted)" opacity="0.14"/><rect x="81" y="242" width="285" height="19" rx="4" fill="var(--muted)" opacity="0.52"/><rect x="366" y="242" width="494" height="19" rx="4" fill="var(--muted)" opacity="0.14"/><path d="M366 32 L366 308" stroke="url(#artEdge)" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </figure>
+      <p class="article-draft">Bozza. Questo articolo non è ancora stato licenziato per la pubblicazione: non è indicizzato e non compare nella sitemap.</p>
+        <p class="article-meta">
+          <strong>Gian Angelo Geminiani</strong> · 11 agosto 2026 ·
+          10 minuti di lettura<br>
+          Per chi progetta dispositivi elettronici, o li mette sul mercato europeo.
+        </p>
+        <p class="article-tags"><span class="tag-label">Argomenti</span><a class="tag" href="/insights/?tag=wearable">Wearable</a><a class="tag" href="/insights/?tag=robotica">Robotica</a></p>
+        <div class="prose reveal">
+          <p>Il 31 luglio 2026 è passato da poco, e per chi progetta hardware ha cambiato una cosa: la durata di un dispositivo non è più una scelta etica del produttore. È un requisito con una data.</p>
+          <p>Fino a ieri, «quanto dura» era una promessa commerciale. Si scriveva nella brochure, si sottintendeva nel prezzo, e nessuno la verificava. Da adesso è un parametro di progetto, con soglie numeriche, scadenze e un punteggio stampato sull'etichetta.</p>
+          <p>Vale la pena metterlo in fila, perché tre norme diverse si stanno sovrapponendo su questo punto, e ciascuna arriva da una direzione differente.</p>
+          <h2>I numeri che non si discutono</h2>
+          <p>Il <em>Global E-Waste Monitor 2024</em> — la quarta edizione, pubblicata da UNITAR e ITU il 20 marzo 2024 — misura quanto rifiuto elettronico il mondo produce e quanto ne recupera.</p>
+          <p>Nel 2022 il pianeta ha generato <strong>62 milioni di tonnellate</strong> di rifiuti da apparecchiature elettriche ed elettroniche. Di quella massa, il <strong>22,3%</strong> risulta documentato come raccolto e riciclato correttamente. Il resto ha seguito percorsi che nessuno traccia. Le proiezioni indicano il superamento degli <strong>80 milioni di tonnellate annue entro il 2030</strong>.</p>
+          <p>C'è anche una cifra economica: circa <strong>62 miliardi di dollari</strong> di materie prime recuperabili non risultano contabilizzati.</p>
+          <p>Sono numeri che si citano spesso, di solito per concludere che bisogna riciclare di più. È la conclusione sbagliata, o meglio, quella che arriva troppo tardi. Il riciclo agisce a fine vita, quando il prodotto è già stato progettato, venduto e buttato. La leva che conta sta all'inizio: quanto a lungo quel dispositivo resta utile.</p>
+          <p>È esattamente il punto su cui il legislatore europeo ha smesso di fare raccomandazioni e ha iniziato a scrivere requisiti.</p>
+          <h2>Tre regimi, tre date</h2>
+          <p>Non è una norma sola, ed è questo che rende la materia scivolosa. Tre atti diversi convergono sullo stesso oggetto, con obblighi che ricadono su soggetti diversi.</p>
+          <div class="table-wrap">
+            <table>
+            <thead><tr><th>Norma</th><th>Da quando si applica</th><th>Che cosa impone</th></tr></thead>
+            <tbody>
+            <tr><td>Ecodesign, Regolamento (UE) 2023/1670</td><td>20 giugno 2025</td><td>requisiti minimi di progetto: batteria, ricambi, aggiornamenti, resistenza</td></tr>
+            <tr><td>Etichetta energetica, Regolamento (UE) 2023/1669</td><td>20 giugno 2025</td><td>punteggio di riparabilità da A a E sull'etichetta</td></tr>
+            <tr><td>Diritto alla riparazione, Direttiva (UE) 2024/1799</td><td>31 luglio 2026, termine di recepimento</td><td>obbligo di riparare, e un anno in più di garanzia se scegli la riparazione</td></tr>
+            <tr><td>Batterie, Regolamento (UE) 2023/1542</td><td>18 febbraio 2027</td><td>batterie portatili rimovibili e sostituibili dall'utente</td></tr>
+            </tbody>
+            </table>
+          </div>
+          <p>I primi due sono regolamenti: si applicano direttamente, uguali in tutta l'Unione. Il terzo è una direttiva, e va recepita da ciascuno Stato: significa ventisette leggi nazionali diverse a partire dallo stesso testo. Il quarto torna a essere un regolamento, e la sua data è la più vicina di tutte quelle ancora da venire.</p>
+          <h2>Cosa chiede l'ecodesign, in concreto</h2>
+          <p>Il Regolamento 2023/1670 riguarda telefoni cellulari, telefoni cordless e tablet. Ma i requisiti che stabilisce sono la migliore descrizione disponibile di che cosa l'Unione intende per «dispositivo progettato per durare», e vale la pena leggerli anche se il tuo prodotto non rientra in quelle categorie: è la direzione, non l'eccezione.</p>
+          <p>I punti che cambiano il progetto:</p>
+          <ul><li><strong>La batteria deve reggere almeno 800 cicli di carica</strong> mantenendo almeno l'80% della capacità iniziale.</li><li><strong>I ricambi critici vanno forniti in 5-10 giorni lavorativi</strong>, e restano dovuti per almeno <strong>7 anni</strong> dopo che il modello esce dal mercato europeo.</li><li><strong>Gli aggiornamenti del sistema operativo vanno garantiti per almeno 5 anni</strong> dalla data in cui è venduta l'ultima unità del modello.</li><li><strong>I riparatori professionali devono avere accesso equo</strong> al software e al firmware necessari alla riparazione.</li><li>Il dispositivo deve resistere a cadute, graffi, polvere e acqua secondo soglie definite.</li></ul>
+          <p>E poi c'è la parte che si vede: sull'etichetta energetica compare un <strong>punteggio di riparabilità da A a E</strong>, con A che indica il prodotto più riparabile. Finisce nella banca dati pubblica EPREL, quindi è confrontabile.</p>
+          <p>Un punteggio confrontabile e pubblico è una cosa diversa da un obbligo di legge. Un obbligo lo rispetti o no; un punteggio ti mette accanto ai concorrenti su uno scaffale, e la lettera che ti tocca dipende da decisioni prese in fase di progetto, anni prima.</p>
+          <h2>Il vincolo che si sottovaluta è il software</h2>
+          <p>Fra tutti i requisiti, quello che pesa di più sul modo di lavorare è il meno appariscente: cinque anni di aggiornamenti dopo l'ultima unità venduta.</p>
+          <p>Se un modello resta a catalogo tre anni, quell'obbligo copre otto anni dal lancio. Otto anni in cui bisogna mantenere una toolchain, ricompilare, testare su hardware che nel frattempo non si produce più, e tenere in piedi le competenze di chi quel codice l'ha scritto.</p>
+          <p>È un impegno di manutenzione, non una funzione da consegnare. E ha una conseguenza sull'architettura: un prodotto che dipende da un servizio cloud proprietario eredita la vita di quel servizio. Se il servizio chiude, il dispositivo diventa inerte anche se l'hardware funziona ancora perfettamente.</p>
+          <p>Da qui una regola di progetto che vale la pena scrivere prima di iniziare: <strong>la funzione essenziale del dispositivo deve funzionare senza rete.</strong> Il cloud può aggiungere, non può essere il presupposto. È lo stesso principio che ci porta a far girare i modelli a bordo o in sede invece che su server di altri — e vale per la durata quanto per la riservatezza.</p>
+          <h2>La batteria decide quanto vive il prodotto</h2>
+          <p>Il 18 febbraio 2027 è la data più vicina fra quelle ancora aperte, ed è quella che tocca più direttamente il disegno meccanico.</p>
+          <p>Dal Regolamento (UE) 2023/1542, le batterie portatili devono essere <strong>facilmente rimovibili e sostituibili dall'utente finale</strong>, senza strumenti speciali, solventi, calore o competenze professionali. Chi progetta un involucro incollato ha poco più di un anno per cambiare approccio.</p>
+          <p>Non è una questione di conformità e basta. Nella maggior parte dei dispositivi portatili la batteria è il primo componente a esaurirsi: molto prima del processore, dello schermo o dei sensori. Un prodotto in cui la batteria non si cambia ha una vita utile pari a quella della sua cella, qualunque cosa dica il resto della scheda tecnica.</p>
+          <p>Nei dispositivi indossabili in ambito medicale questo si intreccia con altri vincoli — tenuta all'acqua, sterilizzabilità, dimensioni — che spingono nella direzione opposta. È un compromesso ingegneristico vero, e non ha una soluzione di catalogo: va deciso a monte, sapendo che cosa si sta scambiando con cosa.</p>
+          <h2>Cosa la direttiva non copre</h2>
+          <p>Qui serve onestà, perché intorno al diritto alla riparazione circola più entusiasmo di quanto il testo giustifichi.</p>
+          <p>L'estensione di garanzia — <strong>dodici mesi in più</strong> quando scegli la riparazione invece della sostituzione — si applica ai beni di consumo in generale. Quella è larga.</p>
+          <p>L'obbligo del produttore di riparare in tempi e a costi ragionevoli, invece, <strong>vale solo per i prodotti già coperti da requisiti di riparabilità europei</strong>, elencati nell'Allegato II della direttiva. Oggi sono, fra gli altri, lavatrici e lavasciuga, lavastoviglie, frigoriferi, display elettronici, server e prodotti per l'archiviazione dati, telefoni cellulari e cordless, tablet, asciugatrici. Le batterie di biciclette e monopattini elettrici entrano dal 18 febbraio 2027.</p>
+          <p>Tre limiti che è meglio conoscere prima di costruirci sopra una strategia:</p>
+          <ol><li><strong>«Ragionevole» non è definito.</strong> Il testo chiede prezzi ragionevoli per ricambi e strumenti, senza dire che cosa significhi. Sarà la prassi a stabilirlo.</li><li><strong>Il recepimento è disomogeneo.</strong> Al 30 luglio 2026 solo una minoranza di Stati membri aveva notificato alla Commissione di aver completato il recepimento. Chi vende in più paesi, per un po', avrà obblighi diversi in ciascuno.</li><li><strong>Gli strumenti di supporto arrivano dopo.</strong> La piattaforma europea per la riparazione avrà l'interfaccia comune entro il 31 luglio 2027 e sarà pienamente operativa dal 1° gennaio 2028. Le misure nazionali di incentivo vanno notificate entro il 31 luglio 2029.</li></ol>
+          <h2>San Marino, e perché non cambia niente</h2>
+          <p>Progettiamo dalla Repubblica di San Marino, che non è uno Stato membro dell'Unione. Ci viene chiesto spesso se questo cambi qualcosa. Non lo cambia, e la ragione è semplice.</p>
+          <p>La normativa di prodotto europea si applica in base a <strong>dove il prodotto viene immesso sul mercato</strong>, non a dove è stato disegnato. Un dispositivo destinato a un cliente in Italia, in Germania o in Francia deve rispettare quei requisiti a prescindere dalla sede di chi l'ha progettato. Ragionare al contrario è un errore che si paga alla fine, quando il prodotto è finito e cambiare l'involucro costa quanto rifarlo.</p>
+          <h2>Sette decisioni da prendere in fase di progetto</h2>
+          <p>Non sono adempimenti da spuntare a valle. Sono scelte che, se prese dopo, costano un riprogetto.</p>
+          <ol><li><strong>Decidi la vita utile del prodotto prima dell'architettura</strong>, e scrivila. Da quel numero discendono batteria, ricambi, aggiornamenti e costo di manutenzione.</li><li><strong>Rendi la batteria sostituibile</strong>, o accetta consapevolmente che la vita del prodotto sia quella della cella. Se il vincolo è reale — tenuta, dimensioni, sterilizzazione — mettilo per iscritto insieme a ciò che ti costa.</li><li><strong>Conta i ricambi che dovrai tenere a magazzino</strong> per sette anni dopo la fine delle vendite, e includili nel costo del prodotto, non in quello del servizio post-vendita.</li><li><strong>Tratta gli aggiornamenti software come un impegno pluriennale</strong>, con un responsabile e un budget. Non come una voce del piano di lancio.</li><li><strong>Non far dipendere la funzione essenziale da un servizio remoto.</strong> Se il tuo cloud si spegne, l'oggetto deve continuare a fare la cosa per cui è stato comprato.</li><li><strong>Documenta la procedura di smontaggio mentre progetti</strong>, non alla fine. Se serve un ingegnere per scriverla dopo, vuol dire che il prodotto non era pensato per essere aperto.</li><li><strong>Verifica il punteggio di riparabilità che otterresti oggi</strong>, con il progetto com'è adesso. È l'unico modo per scoprire in tempo che la lettera non ti piace.</li></ol>
+          <h2>Cosa significa per come lavoriamo</h2>
+          <p>Non abbiamo una scorciatoia da vendere su questo. La conformità a queste norme non è un modulo da compilare: è il risultato di decisioni prese nelle prime settimane di un progetto, quando ancora sembra che ci sia tempo per tutto.</p>
+          <p>Quello che possiamo dire è come lo affrontiamo. DigiSense®, il framework su cui costruiamo le implementazioni con sensori, AI e robot, tiene separati l'acquisizione dei dati, l'elaborazione e il controllo della macchina. Non è nato per la durabilità — è nato perché tre livelli distinti si aggiornano indipendentemente. Ma l'effetto è quello: un modulo che cambia non trascina con sé gli altri, e un prodotto che deve restare aggiornato per otto anni ne guadagna.</p>
+          <p>Se stai progettando un dispositivo, o ne hai uno a catalogo che dovrà rientrare in queste regole, la conversazione utile è presto e su carta: quale vita utile stai promettendo, e che cosa nel progetto attuale la contraddice.</p>
+          <h2>Fonti</h2>
+          <ul><li><a href="https://ewastemonitor.info/the-global-e-waste-monitor-2024/" rel="noopener">Global E-Waste Monitor 2024 — UNITAR, ITU</a> — dati 2022 su produzione, raccolta e riciclo dei rifiuti elettronici, e proiezioni al 2030.</li><li><a href="https://eur-lex.europa.eu/eli/reg/2023/1670/oj/eng" rel="noopener">Regolamento (UE) 2023/1670 — requisiti di ecodesign per smartphone, telefoni cordless e tablet</a> — testo dell'atto.</li><li><a href="https://eur-lex.europa.eu/eli/reg_del/2023/1669/oj/eng" rel="noopener">Regolamento delegato (UE) 2023/1669 — etichettatura energetica</a> — punteggio di riparabilità e informazioni di prodotto.</li><li><a href="https://single-market-economy.ec.europa.eu/news/new-eu-rules-durable-energy-efficient-and-repairable-smartphones-and-tablets-start-applying-2025-06-20_en" rel="noopener">Commissione europea, «New EU rules for durable, energy-efficient and repairable smartphones and tablets start applying», 20 giugno 2025</a> — sintesi ufficiale dei requisiti in vigore.</li><li><a href="https://eur-lex.europa.eu/EN/legal-content/summary/common-rules-promoting-the-repair-of-goods-and-amending-related-eu-legislation.html" rel="noopener">Direttiva (UE) 2024/1799 sul diritto alla riparazione — sintesi EUR-Lex</a> — ambito, obblighi e termini.</li><li><a href="https://repair.eu/news/the-right-to-repair-directive/" rel="noopener">Right to Repair Europe, «The Right to Repair Directive: what changes on 31 July?», 30 luglio 2026</a> — stato del recepimento e prodotti coperti dall'Allegato II.</li><li><a href="https://eur-lex.europa.eu/EN/legal-content/summary/sustainability-rules-for-batteries-and-waste-batteries.html" rel="noopener">Regolamento (UE) 2023/1542 su batterie e rifiuti di batterie — sintesi EUR-Lex</a> — rimovibilità delle batterie portatili e scadenze.</li><li><a href="https://eprel.ec.europa.eu/screen/home" rel="noopener">Banca dati EPREL — Commissione europea</a> — registro pubblico delle etichette energetiche.</li></ul>
+        </div>
+        <div class="share">
+          <span class="share-label">Condividi</span>
+          <a class="share-btn" href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fggtechnologies.sm%2Finsights%2Fdurabilita-per-progetto%2F" title="Condividi su LinkedIn" aria-label="Condividi su LinkedIn" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9h4v12H3zM10 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.77-1.95 4.03 0 4.78 2.5 4.78 5.75V21h-4v-5.6c0-1.34-.03-3.06-1.9-3.06-1.9 0-2.2 1.46-2.2 2.96V21h-4z"/></svg><span>LinkedIn</span></a><a class="share-btn" href="https://x.com/intent/post?url=https%3A%2F%2Fggtechnologies.sm%2Finsights%2Fdurabilita-per-progetto%2F&amp;text=La%20durata%20%C3%A8%20diventata%20un%20requisito" title="Condividi su X" aria-label="Condividi su X" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.3 3h3.1l-6.8 7.75L21.6 21h-6.3l-4.9-6.4L4.8 21H1.7l7.25-8.3L1.9 3h6.45l4.45 5.9Zm-1.1 16.1h1.7L7.9 4.8H6.05Z"/></svg><span>X</span></a><a class="share-btn" href="mailto:?subject=La%20durata%20%C3%A8%20diventata%20un%20requisito&amp;body=https%3A%2F%2Fggtechnologies.sm%2Finsights%2Fdurabilita-per-progetto%2F" title="Manda per email" aria-label="Manda per email"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm9 8.1L20 7.2V6.6L12 12 4 6.6v.6Z"/></svg><span>Email</span></a>
+          <button class="share-btn" type="button" data-share-copy="https://ggtechnologies.sm/insights/durabilita-per-progetto/"
+                  data-share-done="Link copiato"
+                  title="Copia il link" aria-label="Copia il link">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10.6 13.4a1 1 0 0 1 0-1.4l1.4-1.4a1 1 0 0 1 1.4 1.4l-1.4 1.4a1 1 0 0 1-1.4 0Zm-3.3 5.4a4.5 4.5 0 0 1 0-6.4l2.6-2.6 1.4 1.4-2.6 2.6a2.5 2.5 0 0 0 3.5 3.5l2.6-2.6 1.4 1.4-2.6 2.6a4.5 4.5 0 0 1-6.3 0Zm4-11.2 2.6-2.6a4.5 4.5 0 0 1 6.4 6.4l-2.6 2.6-1.4-1.4 2.6-2.6a2.5 2.5 0 0 0-3.5-3.5l-2.6 2.6Z"/></svg><span>Copia il link</span></button>
+        </div>
+        <p class="article-disclaimer">Questo articolo ha finalità informative e non costituisce parere legale né valutazione di conformità. Per il tuo prodotto specifico, rivolgiti a un organismo notificato o a un consulente qualificato.</p>
+      </div>
+    </section>
+
+    <section class="tinted">
+      <div class="container">
+        <div class="reveal">
+          <h2>Continua da qui</h2>
+        </div>
+        <div class="related-grid">
+          <a class="related-card reveal" href="/servizi/wearable-medicale/">
+            <h3>Wearable medicali</h3>
+            <p>Scheda, firmware e piattaforma di telemonitoraggio, in un progetto solo.</p>
+          </a>
+          <a class="related-card reveal" href="/servizi/robotica-automazione/">
+            <h3>Robotica &amp; Automazione</h3>
+            <p>Bordo macchina, integrazione con i gestionali, misura di fermi e scarti.</p>
+          </a>
+          <a class="related-card reveal" href="/digisense/">
+            <h3>DigiSense®</h3>
+            <p>Cosa c'è sotto, e perché il tuo progetto non parte da zero.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-band">
+      <div class="container reveal">
+        <h2>Hai un dispositivo da progettare, o uno a catalogo da rivedere?</h2>
+        <p class="section-intro">Raccontaci che vita utile stai promettendo e come è fatto oggi. Risponde una persona del team, non un form.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-primary" href="mailto:info@ggtechnologies.sm?subject=Richiesta%20informazioni">Parla con noi</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a href="/" class="brand">
+            <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><rect class="wire" width="100" height="100" mask="url(#ggWire)"/><path class="lit" d="M66 50 H86 A36 36 0 1 1 50 14" fill="none" stroke="url(#ggMark)" stroke-width="13" stroke-linecap="round"/><circle class="click" cx="50" cy="50" r="9" fill="none" stroke="#34d399" stroke-width="2"/><circle class="led" cx="50" cy="50" r="9"/></svg></span>
+            G&amp;G Technologies
+          </a>
+          <p>Progettiamo e realizziamo tecnologia: wearable medicali, robotica e intelligenza artificiale. Sul nostro framework DigiSense® nasce Podz.AI.</p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Servizi</h4>
+          <ul>
+            <li><a href="/servizi/wearable-medicale/">Wearable medicali</a></li>
+            <li><a href="/servizi/robotica-automazione/">Robotica &amp; Automazione</a></li>
+            <li><a href="/servizi/intelligenza-artificiale/">Intelligenza Artificiale</a></li>
+            <li><a href="/servizi/ai-on-premise/">AI on-premise</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Prodotti e ricerca</h4>
+          <ul>
+            <li><a href="/podz-ai/">Podz.AI</a></li>
+            <li><a href="/digisense/">DigiSense®</a></li>
+            <li><a href="/progetti/robot-assistenza-domiciliare/">Robot per l&#x27;assistenza domiciliare</a></li>
+            <li><a href="https://ggtechnologies.sm/digisense-releases/download.html" target="_blank" rel="noopener">Scarica Podz.AI</a></li>
+            <li><a href="https://github.com/G-G-Technologies-Srl/digisense-releases/releases" target="_blank" rel="noopener">Release</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Azienda</h4>
+          <ul>
+            <li><a href="/#about">Chi siamo</a></li>
+            <li><a href="/#why">Perché noi</a></li>
+            <li><a href="/insights/">Insights</a></li>
+            <li><a href="/#contact">Contatti</a></li>
+            <li><a href="https://www.linkedin.com/company/gg-technologies-srl" target="_blank" rel="noopener">LinkedIn</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-legal">
+        <span>© <span id="year">2026</span> G&amp;G Technologies Srl · Via Marino Moretti 23, 47899 Serravalle (RSM) · C.O.E./VAT SM29141</span>
+        <span>DigiSense® è un marchio registrato. Questo sito non usa cookie né tracker.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../../assets/site.js" defer></script>
+</body>
+</html>

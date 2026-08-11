@@ -1114,6 +1114,7 @@ ART_PAINT = {
     article_art.GLOW: "url(#artGlow)",
     article_art.ROW: "var(--muted)",
     article_art.PACKET: "url(#artEdge)",
+    article_art.MARK: "url(#artEdge)",
 }
 
 
@@ -1130,7 +1131,7 @@ def _art_shape_svg(shape):
     if role == article_art.EDGE:
         return (f'<path d="M{shape["x1"]:.0f} {shape["y1"]:.0f} L{shape["x2"]:.0f} '
                 f'{shape["y2"]:.0f}" stroke="{paint}" stroke-width="2" stroke-linecap="round"/>')
-    if role == article_art.ROW:
+    if role in (article_art.ROW, article_art.MARK):
         return (f'<rect x="{shape["x"]:.0f}" y="{shape["y"]:.0f}" width="{shape["w"]:.0f}" '
                 f'height="{shape["h"]:.0f}" rx="4" fill="{paint}" '
                 f'opacity="{shape["opacity"]:.2f}"/>')

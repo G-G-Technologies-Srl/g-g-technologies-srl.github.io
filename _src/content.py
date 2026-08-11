@@ -202,6 +202,69 @@ ARTICLES = [
             "related": ["onprem", "podz", "ai"],
         },
     },
+    {
+        "key": "durabilita-per-progetto",
+        "date": "2026-08-11",
+        "stato": "bozza",
+        "author": "Gian Angelo Geminiani",
+        "tags": ["wearable", "robotica"],
+        "it": {
+            "slug": "insights/durabilita-per-progetto",
+            "short": "La durata è diventata un requisito",
+            "title": "La durata è diventata un requisito — G&G Technologies",
+            "description": "Ecodesign, diritto alla riparazione e regolamento batterie si sommano: "
+                           "cosa cambia per chi progetta hardware, e le decisioni da prendere "
+                           "prima dell'architettura.",
+            "kicker": "Progettazione · 11 agosto 2026",
+            "h1": "La durata non è più una promessa. "
+                  "È un <span class=\"grad-text\">requisito con una data</span>.",
+            "lead": "Tre norme europee convergono sullo stesso punto, con soglie numeriche e "
+                    "scadenze. Poi sette decisioni da prendere in fase di progetto, non dopo.",
+            "role": "Per chi progetta dispositivi elettronici, o li mette sul mercato europeo.",
+            "disclaimer": "Questo articolo ha finalità informative e non costituisce parere "
+                          "legale né valutazione di conformità. Per il tuo prodotto specifico, "
+                          "rivolgiti a un organismo notificato o a un consulente qualificato.",
+            "art": {
+                "title": "Il componente più corto decide la vita del prodotto",
+                "desc": "Dentro un riquadro, sei barre di lunghezza diversa rappresentano le "
+                        "parti di un dispositivo. Una è molto più corta delle altre, e una linea "
+                        "verticale tracciata alla sua fine tronca tutte le altre: quello che "
+                        "resta oltre la linea è vita che il prodotto non arriva a usare.",
+            },
+            "cta_title": "Hai un dispositivo da progettare, o uno a catalogo da rivedere?",
+            "cta_text": "Raccontaci che vita utile stai promettendo e come è fatto oggi. Risponde "
+                        "una persona del team, non un form.",
+            "related": ["wearable", "robotics", "digisense"],
+        },
+        "en": {
+            "slug": "en/insights/durability-by-design",
+            "short": "Longevity has become a requirement",
+            "title": "Longevity has become a requirement — G&G Technologies",
+            "description": "Ecodesign, the right to repair and the battery regulation stack up: "
+                           "what changes for people designing hardware, and the decisions to "
+                           "take before the architecture.",
+            "kicker": "Design · 11 August 2026",
+            "h1": "Longevity is no longer a promise. "
+                  "It is a <span class=\"grad-text\">requirement with a date</span>.",
+            "lead": "Three European rules converge on the same point, with numeric thresholds and "
+                    "deadlines. Then seven decisions to take at design time, not after.",
+            "role": "For people designing electronic devices, or placing them on the EU market.",
+            "disclaimer": "This article is for information purposes only and constitutes neither "
+                          "legal advice nor a conformity assessment. For your specific product, "
+                          "consult a notified body or a qualified adviser.",
+            "art": {
+                "title": "The shortest component decides the product's life",
+                "desc": "Inside a panel, six bars of different length stand for the parts of a "
+                        "device. One is much shorter than the others, and a vertical line drawn "
+                        "at its end cuts all the rest short: what lies beyond the line is life "
+                        "the product never gets to use.",
+            },
+            "cta_title": "Have a device to design, or one on the catalogue to revisit?",
+            "cta_text": "Tell us what useful life you are promising and how it is built today. A "
+                        "person from the team answers, not a form.",
+            "related": ["wearable", "robotics", "digisense"],
+        },
+    },
 ]
 
 # -----------------------------------------------------------------------------------------------------------------
