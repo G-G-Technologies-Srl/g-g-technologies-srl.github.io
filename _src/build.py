@@ -958,10 +958,12 @@ def _share_html(lang, data, title):
     url = _url(data["slug"])
     # The <title> carries the company suffix for the browser tab and for search. In a shared post
     # it is noise: the card underneath already says who wrote this.
-    subject = _strip_tags(title)
-    for suffix in (" — G&G Technologies", " — G&amp;G Technologies"):
-        if subject.endswith(suffix):
-            subject = subject[: -len(suffix)]
+    #
+    # A pattern and no longer a list of two exact strings. The list matched the em dash the articles
+    # use and missed the pipe the app schede use, so the first app shared to X went out naming the
+    # company twice — once in the text and once in the card below it. Whichever separator a page
+    # picks, the name at the end of the title is the same name, and it goes.
+    subject = re.sub(r"\s*[—|·-]\s*G&(?:amp;)?G Technologies\s*$", "", _strip_tags(title))
     quoted_url = _quote(url, safe="")
     quoted_title = _quote(subject, safe="")
     targets = [
