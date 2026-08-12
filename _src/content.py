@@ -465,6 +465,78 @@ ARTICLES = [
             "related": ["robotics", "digisense", "ai"],
         },
     },
+    {
+        "key": "numero-o-misura",
+        "date": "2026-08-12",
+        "stato": "bozza",
+        "author": "Gian Angelo Geminiani",
+        # "wearable" was the empty group: one article out of five, and the only area where the site
+        # already has an external identifier. "ia" belongs here too and is not decoration — the
+        # piece turns on a model inferring a clinical value from an optical signal.
+        "tags": ["wearable", "ia"],
+        "it": {
+            "slug": "insights/numero-o-misura",
+            "short": "Un numero non è una misura",
+            "title": "Un numero non è una misura — G&G Technologies",
+            "description": "Fra un indicatore e una misura ci sono una catena documentata e "
+                           "un'incertezza dichiarata. Cosa cercare in una scheda tecnica prima "
+                           "di firmare.",
+            "kicker": "Misura · 12 agosto 2026",
+            "h1": "Un numero non diventa una misura "
+                  "<span class=\"grad-text\">perché ha due decimali</span>.",
+            "lead": "Anche il bracciale stima. La differenza fra un indicatore e una misura è "
+                    "una catena documentata e un'incertezza dichiarata, e si decide in progetto "
+                    "invece che alla fine.",
+            "role": "Per chi progetta, commissiona o compra dispositivi che mostrano un numero "
+                    "sanitario.",
+            "disclaimer": "Questo articolo ha finalità informative e non costituisce parere "
+                          "medico né valutazione di conformità. Per il tuo dispositivo "
+                          "specifico, rivolgiti a un organismo notificato o a un consulente "
+                          "qualificato.",
+            "art": {
+                "title": "La stessa cifra, con la catena e senza",
+                "desc": "Dentro un riquadro, due colonne scendono verso una barra nel colore di "
+                        "accento, identica nelle due colonne. A sinistra i passaggi sopra la "
+                        "barra sono uniti da una linea continua che arriva fino in fondo. A "
+                        "destra la linea si interrompe dopo il primo passaggio, e quelli che "
+                        "seguono restano staccati dall'asse e sbiaditi.",
+            },
+            "cta_title": "Hai un dispositivo che mostra un numero?",
+            "cta_text": "Raccontaci cosa dichiara di misurare e chi decide su quel dato. "
+                        "Risponde una persona del team, non un form.",
+            "related": ["wearable", "digisense", "ai"],
+        },
+        "en": {
+            "slug": "en/insights/number-or-measurement",
+            "short": "A number is not a measurement",
+            "title": "A number is not a measurement — G&G Technologies",
+            "description": "Between an indicator and a measurement sit a documented chain and a "
+                           "stated uncertainty. What to look for in a datasheet before you sign.",
+            "kicker": "Measurement · 12 August 2026",
+            "h1": "A number does not become a measurement "
+                  "<span class=\"grad-text\">because it has two decimals</span>.",
+            "lead": "The cuff estimates too. What separates an indicator from a measurement is a "
+                    "documented chain and a stated uncertainty, and it gets decided at design "
+                    "time rather than at the end.",
+            "role": "For people designing, specifying or buying devices that display a health "
+                    "number.",
+            "disclaimer": "This article is for information purposes only and constitutes neither "
+                          "medical advice nor a conformity assessment. For your specific device, "
+                          "consult a notified body or a qualified adviser.",
+            "art": {
+                "title": "The same figure, with the chain and without",
+                "desc": "Inside a panel, two columns descend towards a bar in the accent colour, "
+                        "identical in both columns. On the left the steps above the bar are "
+                        "joined by an unbroken line running all the way down. On the right the "
+                        "line stops after the first step, and the ones that follow sit off the "
+                        "axis and faded.",
+            },
+            "cta_title": "Have a device that shows a number?",
+            "cta_text": "Tell us what it claims to measure and who decides on that figure. A "
+                        "person from the team answers, not a form.",
+            "related": ["wearable", "digisense", "ai"],
+        },
+    },
 ]
 
 # -----------------------------------------------------------------------------------------------------------------

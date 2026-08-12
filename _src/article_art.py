@@ -299,6 +299,69 @@ def separation(w=BANNER_W, h=BANNER_H):
     return shapes
 
 
+def chain(w=BANNER_W, h=BANNER_H):
+    """The same reading, once with a chain above it and once without.
+
+    Two columns end in an identical accent bar: the number a person reads, the same on both
+    screens. Above the left one, the links are joined by an unbroken line that runs all the way
+    down — the documented chain of calibrations. Above the right one, the line stops after the
+    first step and what follows drifts off the axis and fades.
+
+    The two endpoints have to be identical in size, colour and position, or the drawing argues
+    that the bad device shows a worse number, which is the opposite of the point: it shows the
+    same number.
+
+    Same rules as the other drawings: no text, no random numbers, parametric on width and height.
+    """
+    box_x, box_y = 0.040 * w, 0.157 * h
+    box_w, box_h = 0.920 * w, 0.686 * h
+    mid = box_x + box_w / 2
+
+    shapes = [
+        {"role": GLOW, "cx": 0.28 * w, "cy": 0.50 * h, "rx": 0.32 * w, "ry": 0.50 * h},
+        {"role": PANEL, "x": box_x, "y": box_y, "w": box_w, "h": box_h, "r": 0.052 * h},
+        {"role": EDGE, "x1": box_x + 0.057 * box_w, "y1": box_y,
+         "x2": box_x + 0.943 * box_w, "y2": box_y},
+    ]
+
+    # Four links, not more: the card band is far flatter than the banner, and a fifth step would
+    # come out as a hairline nobody can see.
+    links = 4
+    top = box_y + 0.165 * box_h
+    step_y = (box_h * 0.660) / (links - 1)
+    # Bars rather than squares, so the two renderers agree: the card rounds them by half their
+    # height, and a square would become a circle there and stay a rounded square in the SVG.
+    link_h = min(0.34 * step_y, 0.055 * h)
+    link_w = 0.085 * box_w
+    # Where the chain gives out on the right. The first step is drawn, so the column reads as a
+    # chain that stops rather than as a column that never had one.
+    breaks_after = 1
+
+    for side, unbroken in ((0, True), (1, False)):
+        col = box_x + (0.27 + 0.46 * side) * box_w
+        for i in range(links):
+            y = top + i * step_y
+            if i == links - 1:
+                # the reading itself, identical on both sides
+                shapes.append({"role": MARK, "x": col - link_w / 2, "y": y - link_h / 2,
+                               "w": link_w, "h": link_h, "opacity": 1.0})
+                continue
+            # a step nobody wrote down slides off the axis and fades
+            loose = not unbroken and i > breaks_after
+            drift = (0.052 * box_w) * (1 if i % 2 else -1) * (i / links) if loose else 0.0
+            shapes.append({"role": ROW, "x": col + drift - link_w / 2, "y": y - link_h / 2,
+                           "w": link_w, "h": link_h, "opacity": 0.18 if loose else 0.60})
+            # the documented passage from one calibration to the next
+            if unbroken or i < breaks_after:
+                shapes.append({"role": EDGE, "x1": col, "y1": y + link_h / 2,
+                               "x2": col, "y2": y + step_y - link_h / 2})
+
+    # the divider between the two cases, drawn past the enclosure so it reads as a fold
+    shapes.append({"role": EDGE, "x1": mid, "y1": box_y - 0.062 * h,
+                   "x2": mid, "y2": box_y + box_h + 0.062 * h})
+    return shapes
+
+
 # The registry the renderers read. A new article needs a drawing here and an "art" entry with
 # title and desc in content.py — build.py stops if it finds one without the other.
 ARTICLE_ART = {
@@ -307,4 +370,5 @@ ARTICLE_ART = {
     "telefono-come-sensore": inventory,
     "agenti-autonomi-perimetro": directive,
     "documentazione-che-non-invecchia": separation,
+    "numero-o-misura": chain,
 }
