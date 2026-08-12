@@ -16,6 +16,8 @@ Everything is parametric on width and height, so the same drawing survives being
 Pure Python, no dependencies: `build.py` has to keep running with nothing installed.
 """
 
+import math
+
 # The banner sits right under the article title, so it is wide and low: a taller one pushes the
 # first paragraph off the screen and opens a hole between the title and the drawing.
 BANNER_W, BANNER_H = 1000, 340
@@ -362,6 +364,94 @@ def chain(w=BANNER_W, h=BANNER_H):
     return shapes
 
 
+def signal(w=BANNER_W, h=BANNER_H):
+    """Measurements read where they already are: a sampled trace that never leaves the enclosure.
+
+    The drawing for the CSV viewer. Two channels share one axis and are plotted as discrete
+    samples rather than as a smooth curve, for a reason that is not decorative: a CSV *is* a
+    series of samples, and the square is already this site's mark for one piece of data.
+
+    The contrast with `perimeter` is the whole point, and it is drawn with the same primitives.
+    There, a line runs past the enclosure and the fragments cross it and fade. Here the two
+    markers stop inside the panel and every sample stays within it: same visual language,
+    opposite statement.
+
+    The marked samples are the selected range — the interval the app can export. It is the one
+    thing on the drawing that says this is a tool and not a chart.
+
+    Same rules as the other drawings: no text, no random numbers, parametric on width and height.
+    """
+    box_x, box_y = 0.040 * w, 0.157 * h
+    box_w, box_h = 0.920 * w, 0.686 * h
+
+    shapes = [
+        {"role": GLOW, "cx": 0.50 * w, "cy": 0.46 * h, "rx": 0.34 * w, "ry": 0.52 * h},
+        {"role": PANEL, "x": box_x, "y": box_y, "w": box_w, "h": box_h, "r": 0.052 * h},
+        {"role": EDGE, "x1": box_x + 0.057 * box_w, "y1": box_y,
+         "x2": box_x + 0.943 * box_w, "y2": box_y},
+    ]
+
+    # The plotting area, inset from the enclosure on every side so no sample touches the border.
+    plot_x, plot_w = box_x + 0.045 * box_w, 0.910 * box_w
+    mid = box_y + 0.520 * box_h
+
+    # How tall the enclosure is relative to its width, 0 on the card band and 1 on a square icon.
+    # Everything below that has to change with the proportion reads this one number, so a banner
+    # and an icon come out as the same drawing rather than one being a squashed copy of the other.
+    tall = min(1.0, box_h / (0.42 * w))
+
+    # The amplitude is capped against the width as well as the height. Left to the height alone, a
+    # 512x512 icon sends the trace to the enclosure and turns the two markers into full-height
+    # bars; capped against the width alone, the same icon comes out as a thin ribbon in an empty
+    # square. The `tall` term is what lets the square fill and the band stay a band.
+    amp = min(0.300 * box_h, 0.085 * w * (1.0 + 1.6 * tall))
+
+    # Two channels on one axis, separated vertically. Overlaid they measured the same thing twice:
+    # the samples interleaved and the pair read as a single fuzzy line, which is the opposite of
+    # what the drawing is for.
+    centre_a, centre_b = mid - 0.55 * amp, mid + 0.75 * amp
+
+    # The selected range, as fractions of the plot width.
+    sel_from, sel_to = 0.455, 0.680
+
+    # Enough samples to read as a trace, few enough to stay separate. The three wide renditions
+    # all take the same count; only a nearly square box thins out, because there the plotting area
+    # is short and forty-four samples would crowd into a dotted line.
+    count = round(44 - 18 * max(0.0, (tall - 0.55) / 0.45))
+    size_a, size_b = 0.0105 * w, 0.0080 * w
+    for i in range(count + 1):
+        t = i / count
+        x = plot_x + t * plot_w
+        # Three frequencies on the first channel, two on the second, all with different phases:
+        # enough to read as measured rather than drawn, and entirely deterministic — two builds
+        # produce the same picture, and a rebuild never reshuffles it.
+        y_a = centre_a - 0.55 * amp * (0.58 * math.sin(2 * math.pi * 1.45 * t + 0.40)
+                                       + 0.28 * math.sin(2 * math.pi * 3.30 * t + 1.15)
+                                       + 0.14 * math.sin(2 * math.pi * 7.10 * t + 2.60))
+        y_b = centre_b - 0.38 * amp * (0.70 * math.sin(2 * math.pi * 0.85 * t + 2.05)
+                                       + 0.30 * math.sin(2 * math.pi * 2.40 * t + 0.25))
+        if sel_from <= t <= sel_to:
+            shapes.append({"role": MARK, "x": x - size_a / 2, "y": y_a - size_a / 2,
+                           "w": size_a, "h": size_a, "opacity": 1.0})
+        else:
+            shapes.append({"role": PACKET, "x": x - size_a / 2, "y": y_a - size_a / 2,
+                           "size": size_a, "opacity": 0.55})
+        # The second channel is quieter on purpose: it is there to say "more than one", not to be
+        # read alongside the first.
+        shapes.append({"role": PACKET, "x": x - size_b / 2, "y": y_b - size_b / 2,
+                       "size": size_b, "opacity": 0.30})
+
+    # The two edges of the selection. Unlike every other vertical line in these drawings they stop
+    # short of the enclosure instead of running past it, and they are measured against the data
+    # rather than against the panel: they mark a range, they do not cut anything.
+    for t in (sel_from, sel_to):
+        x = plot_x + t * plot_w
+        shapes.append({"role": EDGE, "x1": x, "y1": mid - 1.45 * amp,
+                       "x2": x, "y2": mid + 1.45 * amp})
+
+    return shapes
+
+
 # The registry the renderers read. A new article needs a drawing here and an "art" entry with
 # title and desc in content.py — build.py stops if it finds one without the other.
 ARTICLE_ART = {
@@ -371,4 +461,16 @@ ARTICLE_ART = {
     "agenti-autonomi-perimetro": directive,
     "documentazione-che-non-invecchia": separation,
     "numero-o-misura": chain,
+}
+
+# The same registry for the apps, kept separate from the articles' one. Two keys could collide —
+# an article and an app may well be about the same subject — and a shared dictionary would let one
+# silently take the other's drawing.
+#
+# These drawings serve the banner, the card thumbnail and the social card. They do NOT serve the
+# manifest icons, and the attempt is on record because it looked obvious: asked for a square, the
+# trace fills it correctly and still fails, because an icon has to read at 48px and a chart cannot.
+# An icon needs its own rendition, sharing the motif and dropping the detail.
+APP_ART = {
+    "csv-scope": signal,
 }

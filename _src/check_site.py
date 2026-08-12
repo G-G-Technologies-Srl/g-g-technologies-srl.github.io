@@ -53,8 +53,15 @@ class _Balance(HTMLParser):
 
 
 def _pages():
-    """Every generated page, excluding the redirect stubs."""
+    """Every generated page, excluding the redirect stubs and the running apps.
+
+    The apps under app/<key>/run/ are written by hand, are noindex and are not pages of the site:
+    they have no canonical, no hreflang and no single h1, and every check below would fail on them.
+    The exclusion lives here, once, because every other check reads from this function.
+    """
     for f in sorted(glob.glob("**/index.html", recursive=True, root_dir=ROOT)):
+        if re.fullmatch(r"app/[^/]+/run/index\.html", f):
+            continue
         text = (ROOT / f).read_text(encoding="utf-8")
         if 'http-equiv="refresh"' not in text:
             yield f, text

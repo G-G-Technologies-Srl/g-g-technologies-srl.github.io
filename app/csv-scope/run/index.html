@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSV Scope</title>
+<meta name="robots" content="noindex, follow">
+<meta name="theme-color" content="#0d1220">
+<meta name="description" content="Open a CSV of measurements and plot its channels, entirely in your browser.">
+<link rel="canonical" href="https://ggtechnologies.sm/app/csv-scope/">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="stylesheet" href="./styles.css">
+<script>
+  // Before the first paint, on purpose. Applied from a module it would run after the stylesheet,
+  // and the app would flash dark and then jump to light at every start.
+  try {
+    var saved = localStorage.getItem('gg-theme');
+    var light = saved ? saved === 'light'
+      : window.matchMedia('(prefers-color-scheme: light)').matches;
+    if (light) {
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f6f8fc');
+    }
+  } catch (ignored) {}
+</script>
+</head>
+<body>
+
+<!-- Two levels, not one row. The first never changes — the app and its settings — and is quiet.
+     The second changes with every file, holds what you are actually doing, and is the only one
+     with contrast. Six controls at one altitude read as six equally important things. -->
+<header>
+  <div class="appbar">
+    <span class="brand">CSV Scope</span>
+    <span class="meta" id="tagline"></span>
+    <span class="spacer"></span>
+    <button type="button" id="install" class="ghost small" hidden></button>
+    <button type="button" id="lang" class="ghost small"></button>
+    <button type="button" id="theme" class="ghost small icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"></path>
+      </svg>
+    </button>
+  </div>
+
+  <div class="docbar" id="docbar" hidden>
+    <svg class="doc-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path>
+      <path d="M14 3v5h5"></path>
+    </svg>
+    <span class="file" id="fileName"></span>
+    <span class="meta" id="fileMeta"></span>
+    <span class="views" id="views">
+      <button type="button" id="viewChart" aria-pressed="true"></button><button type="button" id="viewTable" aria-pressed="false"></button>
+    </span>
+    <span class="spacer"></span>
+    <button type="button" id="changeFile"></button>
+    <button type="button" id="exportRange" class="accent"></button>
+  </div>
+
+  <p class="hint" id="installHint" hidden></p>
+</header>
+
+<main id="main">
+
+  <section class="drop" id="drop">
+    <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path>
+      <path d="M14 3v5h5"></path>
+      <path d="M8 15l2.5-2.5L13 15l3-3.5"></path>
+    </svg>
+    <h1 id="dropTitle"></h1>
+    <p><span id="dropOr"></span> <button type="button" class="linkish" id="choose"></button>
+       · <button type="button" class="linkish" id="sample"></button></p>
+    <p class="meta" id="dropFormats" style="color:var(--faint);font-size:12.5px"></p>
+    <p class="small" id="dropPrivacy"></p>
+    <input type="file" id="file" accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values" hidden>
+  </section>
+
+  <section class="error" id="error" hidden>
+    <h2 id="errorTitle"></h2>
+    <p id="errorText"></p>
+    <button type="button" id="retry"></button>
+  </section>
+
+  <section class="sheet" id="sheet" hidden>
+    <p class="notice" id="notice" hidden></p>
+    <div class="rows" id="rows"
+         tabindex="0" role="slider"
+         aria-valuemin="0" aria-valuenow="0" aria-valuemax="0">
+      <div class="overlay" id="overlay"></div>
+    </div>
+    <div class="tv" id="table" hidden></div>
+
+    <!-- Zoom and scrolling belong to the chart, so they live here and not in the document bar: the
+         bar above is about the file, this row is about the piece of it you are looking at. The
+         track is aligned with the plot column on purpose — the thumb sits under the same stretch
+         of file the trace is drawing. -->
+    <div class="scrub" id="scrub" hidden>
+      <span class="scrub-tools">
+        <button type="button" id="zoomOut" class="ghost small icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M5 12h14"></path>
+          </svg>
+        </button>
+        <button type="button" id="zoomIn" class="ghost small icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M12 5v14M5 12h14"></path>
+          </svg>
+        </button>
+        <button type="button" id="zoomAll" class="ghost small"></button>
+
+        <span class="sep" aria-hidden="true"></span>
+
+        <button type="button" id="play" class="ghost small icon" aria-pressed="false">
+          <svg class="i-play" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M7 4.5v15l13-7.5z"></path>
+          </svg>
+          <svg class="i-stop" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <rect x="6" y="5" width="4.4" height="14" rx="1"></rect>
+            <rect x="13.6" y="5" width="4.4" height="14" rx="1"></rect>
+          </svg>
+        </button>
+        <button type="button" id="restart" class="ghost small icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M4 12a8 8 0 1 0 2.5-5.8"></path>
+            <path d="M4 4v4h4"></path>
+          </svg>
+        </button>
+        <!-- The speed is a slider and not three fixed steps: what reads well is not the same on a
+             tracing and on a day of temperatures, and only the person watching knows which. -->
+        <input type="range" id="speed" class="scrub-speed"
+               min="-2" max="2" step="0.25" value="0">
+        <span class="scrub-rate" id="speedLabel"></span>
+      </span>
+      <span class="scrub-track" id="scrubTrack" tabindex="0" role="scrollbar"
+            aria-controls="rows" aria-orientation="horizontal"
+            aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <span class="scrub-thumb" id="scrubThumb"></span>
+      </span>
+      <span class="scrub-extent" id="scrubExtent"></span>
+    </div>
+
+    <p class="sr-only" id="selHint"></p>
+    <p class="sr-only" id="viewHint"></p>
+    <!-- The selected range lives here, beside the axis it describes, instead of in a bar of its
+         own at the top. It used to be stated twice: once up there and once as the middle tick. -->
+    <div class="axis" id="axis">
+      <span class="axis-name" id="axisName"></span>
+      <span class="axis-line">
+        <span class="tick" id="tick0"></span>
+        <span class="axis-sel">
+          <strong id="selValue"></strong>
+          <button type="button" class="ghost small" id="selClear" hidden></button>
+        </span>
+        <span class="tick" id="tick1"></span>
+      </span>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <a href="../../" id="backLink"></a>
+  <a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/csv-scope" id="sourceLink"></a>
+  <span class="spacer"></span>
+  <span>Apache-2.0 · G&amp;G Technologies</span>
+</footer>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>

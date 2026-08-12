@@ -18,3 +18,11 @@ _src/fonti/
 # Tienile in locale e in un backup tuo: se cambi macchina, da qui non le recuperi.
 /CLAUDE.md
 /_src/README.md
+# Stessa regola, e va detta a parte perché il pattern sopra è ancorato alla radice e questo file
+# sta un livello sotto. Non è documentazione in più: è servito da GitHub Pages come qualsiasi altro
+# file del repository, quindi committarlo lo pubblicherebbe su ggtechnologies.sm/app/CLAUDE.md.
+/app/CLAUDE.md
+
+# Profilo temporaneo di Chrome, creato e cancellato da make_screenshots.py. Compare solo se lo
+# script si interrompe a metà.
+/_src/.chrome-profile/

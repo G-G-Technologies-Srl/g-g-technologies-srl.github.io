@@ -914,6 +914,64 @@
 .page-hero .hero-note { margin-bottom: 0; }
 .page-hero .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
 
+/* Apps — the pages about them, never the apps themselves (those carry their own stylesheet). */
+/* Screenshot and lists live in the same section as the intro. Split across two sections the
+   paddings stacked and left a hole the width of the page between a paragraph and a card. */
+.app-lists { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-top: 34px; }
+.app-list {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 22px 24px;
+}
+.app-list h3 { font-size: 1.05rem; margin-bottom: 12px; }
+/* The square bullet of the homepage cards, not the browser's dot: it is the site's own mark. */
+.app-list .ticks { list-style: none; display: grid; gap: 9px; padding: 0; margin: 0; }
+.app-list .ticks li { position: relative; padding-left: 20px; color: var(--muted); font-size: 0.93rem; }
+.app-list .ticks li::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 8px;
+  width: 9px; height: 9px;
+  border-radius: 3px;
+  background: var(--gradient);
+  opacity: 0.85;
+}
+/* What an app does not do is said as plainly as what it does, and looks the same weight: a
+   quieter box would read as a disclaimer, and it is not one. */
+.app-list.does-not .ticks li::before { background: var(--border-strong); opacity: 1; }
+
+/* The banner shares its section with the text that follows it, instead of sitting in one of its
+   own. Two sections meant two paddings stacked, and the drawing floated a quarter of a screen
+   above the heading it belongs to — the hole the root CLAUDE.md warns about, made again. */
+.article-body .article-art { margin-bottom: 44px; }
+
+/* In the hero the tag row is not a centred block of prose: `margin: auto` would push it to the
+   middle of the column while everything above it starts at the left edge. */
+.page-hero .article-tags { max-width: none; margin: 0 0 26px; }
+
+/* The intro reuses the paragraph rhythm of .about-text — same rule, no second one to keep in step —
+   and the reading column of the illustration above it, which is .prose's 720px. Without the wrapper
+   the paragraphs had neither: no space between them, and a line the full width of the container. */
+.article-body .about-text { max-width: 720px; }
+/* On an article the banner is centred, because the prose it belongs to is centred too. A scheda is
+   not an article: its occhiello, its h2 and the cards below all start at the left edge of the
+   container, so a centred banner is the only thing on the page floating in the middle. Same 720px,
+   anchored to the same edge as the text. */
+.article-body .app-art { margin-left: 0; }
+.article-body .about-text p:last-child { margin-bottom: 0; }
+.app-shot { margin: 0 0 26px; }
+.app-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.app-meta { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 22px; color: var(--faint); font-size: 0.88rem; }
+.app-meta b { color: var(--muted); font-weight: 500; }
+
 /* Core and chips are anchors, not buttons: neutralise the link defaults. */
 .page-hero .orbit-core, .page-hero .orbit-chip { text-decoration: none; color: var(--text); }
 .page-hero .orbit-chip { text-align: center; }

@@ -21,6 +21,7 @@ from urllib.parse import quote as _quote
 
 sys.path.insert(0, str(Path(__file__).parent))
 import article_art  # noqa: E402
+from apps import APPS, APPS_INDEX, APP_TAGS, KICKER_MAX, REPO_APPS, SUMMARY_MAX  # noqa: E402
 from content import (ARTICLES, BANNED, CHROME, INSIGHTS_INDEX, PAGES,  # noqa: E402
                      PODZ_SITE, PRICING, SITE, STUDY, TAGS)
 
@@ -101,6 +102,64 @@ EXTRA_CSS = """
 .page-hero .hero-sub { margin-bottom: 30px; }
 .page-hero .hero-note { margin-bottom: 0; }
 .page-hero .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+
+/* Apps — the pages about them, never the apps themselves (those carry their own stylesheet). */
+/* Screenshot and lists live in the same section as the intro. Split across two sections the
+   paddings stacked and left a hole the width of the page between a paragraph and a card. */
+.app-lists { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-top: 34px; }
+.app-list {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 22px 24px;
+}
+.app-list h3 { font-size: 1.05rem; margin-bottom: 12px; }
+/* The square bullet of the homepage cards, not the browser's dot: it is the site's own mark. */
+.app-list .ticks { list-style: none; display: grid; gap: 9px; padding: 0; margin: 0; }
+.app-list .ticks li { position: relative; padding-left: 20px; color: var(--muted); font-size: 0.93rem; }
+.app-list .ticks li::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 8px;
+  width: 9px; height: 9px;
+  border-radius: 3px;
+  background: var(--gradient);
+  opacity: 0.85;
+}
+/* What an app does not do is said as plainly as what it does, and looks the same weight: a
+   quieter box would read as a disclaimer, and it is not one. */
+.app-list.does-not .ticks li::before { background: var(--border-strong); opacity: 1; }
+
+/* The banner shares its section with the text that follows it, instead of sitting in one of its
+   own. Two sections meant two paddings stacked, and the drawing floated a quarter of a screen
+   above the heading it belongs to — the hole the root CLAUDE.md warns about, made again. */
+.article-body .article-art { margin-bottom: 44px; }
+
+/* In the hero the tag row is not a centred block of prose: `margin: auto` would push it to the
+   middle of the column while everything above it starts at the left edge. */
+.page-hero .article-tags { max-width: none; margin: 0 0 26px; }
+
+/* The intro reuses the paragraph rhythm of .about-text — same rule, no second one to keep in step —
+   and the reading column of the illustration above it, which is .prose's 720px. Without the wrapper
+   the paragraphs had neither: no space between them, and a line the full width of the container. */
+.article-body .about-text { max-width: 720px; }
+/* On an article the banner is centred, because the prose it belongs to is centred too. A scheda is
+   not an article: its occhiello, its h2 and the cards below all start at the left edge of the
+   container, so a centred banner is the only thing on the page floating in the middle. Same 720px,
+   anchored to the same edge as the text. */
+.article-body .app-art { margin-left: 0; }
+.article-body .about-text p:last-child { margin-bottom: 0; }
+.app-shot { margin: 0 0 26px; }
+.app-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.app-meta { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 22px; color: var(--faint); font-size: 0.88rem; }
+.app-meta b { color: var(--muted); font-weight: 500; }
 
 /* Core and chips are anchors, not buttons: neutralise the link defaults. */
 .page-hero .orbit-core, .page-hero .orbit-chip { text-decoration: none; color: var(--text); }
@@ -2197,6 +2256,428 @@ def _render_insights_index(lang):
 
 
 # -----------------------------------------------------------------------------------------------------------------
+#  a p p s
+# -----------------------------------------------------------------------------------------------------------------
+
+# The pages *about* the apps. The apps themselves live in app/<key>/run/, are written by hand and
+# never pass through here: see app/CLAUDE.md for why the two are kept apart.
+
+def _app_url(app, lang):
+    return _url(app[lang]["slug"])
+
+
+def _app_run_url(app):
+    return f"/app/{app['key']}/run/"
+
+
+def _app_draw(app):
+    draw = article_art.APP_ART.get(app["key"])
+    if draw is None:
+        raise SystemExit(
+            f"l'app «{app['key']}» dichiara il disegno «{app.get('art', {}).get('shape')}» ma non "
+            f"c'è in APP_ART dentro _src/article_art.py"
+        )
+    return draw
+
+
+def _app_art_html(app, lang):
+    """The banner over the scheda. Same rules as the article banners: inline SVG, no text inside."""
+    words = app[lang].get("art")
+    if not words:
+        raise SystemExit(f"l'app «{app['key']}» non ha «art» in {lang}: servono «title» e «desc», "
+                         f"altrimenti il banner è muto per chi usa uno screen reader")
+    ident = "app" + re.sub(r"[^a-z0-9]", "", app["key"])
+    body = "".join(_art_shape_svg(s) for s in _app_draw(app)())
+    return f"""        <figure class="article-art app-art reveal">
+          <svg viewBox="0 0 {article_art.BANNER_W} {article_art.BANNER_H}" role="img"
+               aria-labelledby="{ident}T {ident}D">
+            <title id="{ident}T">{_esc(words['title'])}</title>
+            <desc id="{ident}D">{_esc(words['desc'])}</desc>
+            {body}
+          </svg>
+        </figure>
+"""
+
+
+def _app_thumb_html(app):
+    w, h = article_art.THUMB_W, article_art.THUMB_H
+    body = "".join(_art_shape_svg(s) for s in _app_draw(app)(w, h))
+    return (f'<span class="insight-thumb"><svg viewBox="0 0 {w} {h}" aria-hidden="true" '
+            f'focusable="false">{body}</svg></span>')
+
+
+def _app_shot(app, lang):
+    """The screenshot file name. Generated by make_screenshots.py, never captured by hand."""
+    return f"shot-{app['key']}-{lang}.png"
+
+
+def _app_shot_html(app, lang):
+    """The screenshot, or nothing at all.
+
+    Optional on purpose, and not the same call as for an article. An article has to show its
+    subject because the reader cannot reach it; an app is one free click away, at the top of the
+    same page, so the picture saves a click rather than making the case. Requiring it would mean
+    holding back a finished tool over an image of it.
+
+    Drop the two files in assets/ and they appear here: nothing else has to change.
+    """
+    name = _app_shot(app, lang)
+    if not (ASSETS / name).is_file():
+        return ""
+    caption = ("L'interfaccia dell'app, in esecuzione nel browser."
+               if lang == "it" else "The app running in the browser.")
+    return f"""      <figure class="app-shot reveal">
+        <img src="/assets/{name}" width="1600" height="1000" loading="lazy" decoding="async"
+             alt="{_esc(caption)}">
+      </figure>
+"""
+
+
+def _app_og_image(app, lang):
+    return f"og-app-{app['key']}-{lang}.jpg"
+
+
+def _app_lists_html(lang, data):
+    """What it does and what it does not, side by side. The second half is the honest one."""
+    def block(title, items, extra):
+        rows = "".join(f"              <li>{item}</li>\n" for item in items)
+        return (f'          <div class="app-list {extra}">\n'
+                f'            <h3>{_esc(title)}</h3>\n'
+                f'            <ul class="ticks">\n{rows}            </ul>\n'
+                f'          </div>')
+    return ('        <div class="app-lists">\n'
+            + block(data["does_title"], data["does"], "does") + "\n"
+            + block(data["does_not_title"], data["does_not"], "does-not") + "\n"
+            + '        </div>')
+
+
+def _app_meta_html(lang, app):
+    """Version, date and licence, in plain sight.
+
+    An open source app with no visible date reads as abandoned, and somebody weighing it up has no
+    way to learn otherwise without opening the repository.
+    """
+    chrome = APPS_INDEX[lang]
+    parts = [
+        (chrome["version_label"], _esc(app["version"])),
+        (chrome["updated_label"], _long_date(lang, app["updated"])),
+        (chrome["licence_label"], _esc(app["licence"])),
+    ]
+    items = "".join(f'<span><b>{label}</b> {value}</span>' for label, value in parts)
+    source = f'{REPO_APPS}/{app["key"]}'
+    return (f'        <p class="app-meta">{items}'
+            f'<a href="{source}" rel="noopener">{chrome["source_label"]}</a></p>')
+
+
+def _app_cards_html(lang):
+    """The cards on /app/, in the order the anagrafica gives — never by date.
+
+    By date, releasing a game would put it first for everybody arriving on the section, and a game
+    is the least representative thing the company makes.
+    """
+    cards = []
+    for app in sorted(APPS, key=lambda a: (a.get("order", 99), a["key"])):
+        entry = app[lang]
+        mark = "" if app["stato"] == "pronto" else (" · bozza" if lang == "it" else " · draft")
+        chips = "".join(f'<span class="tag">{APP_TAGS[t][lang]}</span>' for t in _app_tags(app))
+        cards.append(f"""          <a class="insight-card reveal" href="/{entry['slug']}/"
+             data-tags="{' '.join(_app_tags(app))}">
+            {_app_thumb_html(app)}
+            <div class="kicker">{entry['kicker']}{mark}</div>
+            <h3>{_esc(app['name'])}</h3>
+            <p>{entry['summary']}</p>
+            <span class="tag-row">{chips}</span>
+          </a>""")
+    if not cards:
+        return f'        <p class="section-intro">{APPS_INDEX[lang]["empty"]}</p>'
+    return '        <div class="insight-list">\n' + "\n".join(cards) + "\n        </div>"
+
+
+def _app_tags(app):
+    tags = app.get("tags") or []
+    unknown = [t for t in tags if t not in APP_TAGS]
+    if unknown:
+        raise SystemExit(f"l'app «{app['key']}» ha tag sconosciuti: {', '.join(unknown)}\n"
+                         f"  quelli ammessi sono: {', '.join(APP_TAGS)}")
+    if not tags:
+        raise SystemExit(f"l'app «{app['key']}» non ha tag. Scegline almeno uno fra: "
+                         f"{', '.join(APP_TAGS)}")
+    return tags
+
+
+def _check_app_lengths():
+    """The measures that keep the cards even and the kicker on one line."""
+    problems = []
+    for app in APPS:
+        for lang in LANGS:
+            data = app[lang]
+            if len(_strip_tags(data["kicker"])) > KICKER_MAX:
+                problems.append(f"{app['key']}/{lang}: l'occhiello supera i {KICKER_MAX} caratteri, "
+                                f"va a capo e il trattino resta indietro")
+            if len(_strip_tags(data["summary"])) > SUMMARY_MAX:
+                problems.append(f"{app['key']}/{lang}: il sommario supera i {SUMMARY_MAX} "
+                                f"caratteri, le card della griglia crescono di altezze diverse")
+            if data["slug"] != (f"app/{app['key']}" if lang == "it" else f"en/app/{app['key']}"):
+                problems.append(f"{app['key']}/{lang}: lo slug non corrisponde alla chiave")
+    if problems:
+        raise SystemExit("_src/apps.py:\n  " + "\n  ".join(problems))
+
+
+def _check_app_assets():
+    """A published app needs its social card. The screenshot is welcome but not required.
+
+    The card is not negotiable: without it a link shared anywhere shows the generic image, and that
+    happens outside the site, where nobody notices. The screenshot only ever shows up on the scheda
+    itself, above a button that opens the real thing.
+    """
+    problems = []
+    for app in APPS:
+        if app["stato"] != "pronto":
+            continue
+        for lang in LANGS:
+            name = _app_og_image(app, lang)
+            if not (ASSETS / name).is_file():
+                problems.append(f"{app['key']}: manca assets/{name}")
+        if not (ROOT / "app" / app["key"] / "run" / "index.html").is_file():
+            problems.append(f"{app['key']}: la scheda punta a run/ ma l'app non esiste")
+    if problems:
+        raise SystemExit("app in stato «pronto» senza la card social:\n  " + "\n  ".join(problems)
+                         + "\n  rilancia make_og_cards.py, oppure rimettila in «bozza»")
+
+
+def _app_head(lang, data, url, other_url, og_image, prefix, json_ld, robots):
+    """The head shared by the index and the schede. Same signals as every other page."""
+    other_lang = "en" if lang == "it" else "it"
+    return f"""<!DOCTYPE html>
+<html lang="{lang}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{_esc(data['title'])}</title>
+  <meta name="description" content="{_esc(data['description'])}">
+  <meta name="author" content="G&amp;G Technologies Srl">
+  <meta name="robots" content="{robots}">
+  <meta name="theme-color" content="#0d1220">
+  <link rel="canonical" href="{url}">
+  <link rel="alternate" hreflang="it" href="{url if lang == 'it' else other_url}">
+  <link rel="alternate" hreflang="en" href="{other_url if lang == 'it' else url}">
+  <link rel="alternate" hreflang="x-default" href="{url if lang == 'it' else other_url}">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="G&amp;G Technologies">
+  <meta property="og:title" content="{_esc(data['title'])}">
+  <meta property="og:description" content="{_esc(data['description'])}">
+  <meta property="og:url" content="{url}">
+  <meta property="og:image" content="{SITE}/assets/{og_image}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="{LOCALE[lang]}">
+  <meta property="og:locale:alternate" content="{LOCALE[other_lang]}">
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{_esc(data['title'])}">
+  <meta name="twitter:description" content="{_esc(data['description'])}">
+  <meta name="twitter:image" content="{SITE}/assets/{og_image}">
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="{prefix}assets/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="{prefix}assets/favicon-32.png">
+  <script>
+    {BOOTSTRAP_JS}
+  </script>
+  <link rel="stylesheet" href="{prefix}assets/{ASSET_CSS}">
+  <script type="application/ld+json">
+{json_ld}
+  </script>
+</head>"""
+
+
+def _render_apps_index(lang):
+    data = APPS_INDEX[lang]
+    other_lang = "en" if lang == "it" else "it"
+    url, other_url = _url(data["slug"]), _url(APPS_INDEX[other_lang]["slug"])
+    prefix = "../" * (data["slug"].count("/") + 1)
+    home = "/" if lang == "it" else "/en/"
+    chrome = CHROME[lang]
+
+    crumbs = (f'<li><a href="{home}">{chrome["breadcrumb_home"]}</a></li>'
+              f'<li aria-current="page">{_esc(data["short"])}</li>')
+    label = "Percorso" if lang == "it" else "Breadcrumb"
+
+    json_ld = json.dumps([{
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": _strip_tags(data["short"]),
+        "url": url,
+        "description": data["description"],
+        "inLanguage": lang,
+        "isPartOf": {"@id": f"{SITE}/#organization"},
+    }], ensure_ascii=False, indent=2)
+
+    return f"""{_app_head(lang, data, url, other_url, "og-card.png", prefix, json_ld,
+                          "index, follow, max-image-preview:large")}
+<body>
+{_icon_gradient()}
+{_art_gradients()}
+{_header(lang, other_url)}
+
+  <main id="main">
+    <section class="hero page-hero">
+      <div class="hero-bg" aria-hidden="true">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+      </div>
+
+      <div class="container">
+        <div>
+          <nav class="breadcrumb" aria-label="{label}"><ol>{crumbs}</ol></nav>
+          <div class="kicker">{data['kicker']}</div>
+          <h1>{data['h1']}</h1>
+          <p class="hero-sub">{data['lead']}</p>
+          <p class="hero-note">{data['privacy_note']}</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+{_app_cards_html(lang)}
+      </div>
+    </section>
+  </main>
+
+{_footer(lang)}
+
+  <script src="{prefix}assets/{ASSET_JS}" defer></script>
+</body>
+</html>
+"""
+
+
+def _render_app_page(lang, app):
+    data = app[lang]
+    other_lang = "en" if lang == "it" else "it"
+    url, other_url = _app_url(app, lang), _app_url(app, other_lang)
+    prefix = "../" * (data["slug"].count("/") + 1)
+    home = "/" if lang == "it" else "/en/"
+    chrome = CHROME[lang]
+    index = APPS_INDEX[lang]
+    draft = app["stato"] != "pronto"
+
+    crumbs = (f'<li><a href="{home}">{chrome["breadcrumb_home"]}</a></li>'
+              f'<li><a href="/{index["slug"]}/">{_esc(index["short"])}</a></li>'
+              f'<li aria-current="page">{_esc(app["name"])}</li>')
+    label = "Percorso" if lang == "it" else "Breadcrumb"
+    chips = "".join(f'<a class="tag" href="/{index["slug"]}/?tag={t}">{APP_TAGS[t][lang]}</a>'
+                    for t in _app_tags(app))
+
+    json_ld = json.dumps([{
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": app["name"],
+        "url": url,
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Any (web browser)",
+        "softwareVersion": app["version"],
+        "datePublished": app["released"],
+        "dateModified": app["updated"],
+        "license": "https://www.apache.org/licenses/LICENSE-2.0",
+        "description": data["description"],
+        "inLanguage": lang,
+        "isAccessibleForFree": True,
+        # Free is a price, and stating it is what keeps the listing honest in a rich result.
+        "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"},
+        "publisher": {"@id": f"{SITE}/#organization"},
+    }], ensure_ascii=False, indent=2)
+
+    # Wrapped, not bare. A <p> straight in the container inherits no rhythm and no reading width:
+    # the three paragraphs closed up into one block running the full width of the page.
+    intro = ('        <div class="about-text reveal">\n'
+             + "\n".join(f"          <p>{p}</p>" for p in data["intro"])
+             + "\n        </div>")
+    open_label = index["open"]
+
+    return f"""{_app_head(lang, data, url, other_url, _app_og_image(app, lang), prefix, json_ld,
+                          "noindex, follow" if draft else "index, follow, max-image-preview:large")}
+<body>
+{_icon_gradient()}
+{_art_gradients()}
+{_header(lang, other_url)}
+
+  <main id="main">
+    <section class="hero page-hero">
+      <div class="hero-bg" aria-hidden="true">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+      </div>
+
+      <div class="container">
+        <div>
+          <nav class="breadcrumb" aria-label="{label}"><ol>{crumbs}</ol></nav>
+          <div class="kicker">{data['kicker']}</div>
+          <h1>{data['h1']}</h1>
+          <p class="hero-sub">{data['lead']}</p>
+          <p class="article-tags"><span class="tag-label">{index['tags_label']}</span>{chips}</p>
+          <div class="hero-ctas">
+            <a class="btn btn-primary" href="{_app_run_url(app)}">{open_label}</a>
+            <a class="btn btn-ghost" href="{REPO_APPS}/{app['key']}" rel="noopener">
+              {index['source_label']}</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="article-body">
+      <div class="container">
+{_app_art_html(app, lang)}
+        <div class="kicker">{data['intro_title']}</div>
+        <h2>{data['intro_h2']}</h2>
+{intro}
+{_app_shot_html(app, lang)}{_app_lists_html(lang, data)}
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="kicker">{data['facts_title']}</div>
+{_facts_html(data)}
+{_app_meta_html(lang, app)}
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="kicker">FAQ</div>
+        <h2>{data['faq_title']}</h2>
+{_faq_html(data)}
+      </div>
+    </section>
+
+    <section class="cta-band">
+      <div class="container">
+        <h2>{data['cta_title']}</h2>
+        <p class="section-intro">{data['cta_text']}</p>
+        <div class="cta-buttons">
+{_closing_ctas(lang, data)}
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+{_related_html(lang, data)}
+      </div>
+    </section>
+  </main>
+
+{_footer(lang)}
+
+  <script src="{prefix}assets/{ASSET_JS}" defer></script>
+</body>
+</html>
+"""
+
+
+# -----------------------------------------------------------------------------------------------------------------
 #  s i t e m a p
 # -----------------------------------------------------------------------------------------------------------------
 
@@ -2385,6 +2866,15 @@ def _sitemap(lastmod):
     for lang in LANGS:
         entries.append((_url(INSIGHTS_INDEX[lang]["slug"]),
                         _url(INSIGHTS_INDEX["it"]["slug"]), _url(INSIGHTS_INDEX["en"]["slug"])))
+    for lang in LANGS:
+        entries.append((_url(APPS_INDEX[lang]["slug"]),
+                        _url(APPS_INDEX["it"]["slug"]), _url(APPS_INDEX["en"]["slug"])))
+    # A draft app carries noindex, so listing it would tell Google two opposite things.
+    for app in APPS:
+        if app["stato"] != "pronto":
+            continue
+        for lang in LANGS:
+            entries.append((_app_url(app, lang), _app_url(app, "it"), _app_url(app, "en")))
     # Drafts carry noindex, so listing them here would tell Google two opposite things.
     for article in ARTICLES:
         if article["stato"] != "pronto":
@@ -2692,6 +3182,8 @@ def main():
     global ASSET_CSS, ASSET_JS
 
     _check_parity()
+    _check_app_lengths()
+    _check_app_assets()
 
     # Both assets are named before any page is rendered: the templates read these globals.
     ASSETS.mkdir(exist_ok=True)
@@ -2725,6 +3217,21 @@ def main():
         target.mkdir(parents=True, exist_ok=True)
         (target / "index.html").write_text(_render_insights_index(lang), encoding="utf-8")
         written.append(INSIGHTS_INDEX[lang]["slug"] + "/")
+
+    for lang in LANGS:
+        target = ROOT / APPS_INDEX[lang]["slug"]
+        target.mkdir(parents=True, exist_ok=True)
+        (target / "index.html").write_text(_render_apps_index(lang), encoding="utf-8")
+        written.append(APPS_INDEX[lang]["slug"] + "/")
+
+    for app in APPS:
+        for lang in LANGS:
+            slug = app[lang]["slug"]
+            target = ROOT / slug
+            target.mkdir(parents=True, exist_ok=True)
+            (target / "index.html").write_text(_render_app_page(lang, app), encoding="utf-8")
+            state = "" if app["stato"] == "pronto" else f"  ({app['stato']}, noindex)"
+            written.append(f"{slug}/{state}")
 
     for article in ARTICLES:
         for lang in LANGS:

@@ -20,6 +20,7 @@ ASSETS = ROOT / "assets"
 
 sys.path.insert(0, str(SRC))
 import article_art  # noqa: E402
+from apps import APPS
 from content import ARTICLES, CHROME, PAGES  # noqa: E402
 
 W, H = 1200, 630
@@ -177,6 +178,45 @@ def _article_card(article, lang, bold, regular, out):
     return name, (out / name).stat().st_size
 
 
+def _app_card(app, lang, bold, regular, out):
+    """An app card. Same furniture as an article card, with the product name in place of the h1.
+
+    The name is not translated, so the two cards differ only by kicker and summary — which is the
+    point: two languages, one product.
+    """
+    data = app[lang]
+    img = Image.new("RGB", (W, H), INK)
+    draw = ImageDraw.Draw(img)
+    draw.line([0, 0, W, 0], fill=EMERALD, width=8)
+
+    _paint_art(img, draw, article_art.APP_ART[app["key"]](ART_BOX[2], ART_BOX[3]), ART_BOX)
+
+    margin = 72
+    _mark(draw, margin, 64, 52)
+    draw.text((margin + 74, 78), "G&G Technologies", font=ImageFont.truetype(str(bold), 26), fill=TEXT)
+
+    kicker = re.sub(r"<[^>]+>", "", data["kicker"]).replace("&amp;", "&")
+    draw.text((margin, 166), kicker.upper(), font=ImageFont.truetype(str(bold), 22), fill=EMERALD)
+
+    draw.text((margin, 210), app["name"], font=ImageFont.truetype(str(bold), 62), fill=TEXT)
+
+    summary = re.sub(r"<[^>]+>", "", data["summary"]).replace("&amp;", "&")
+    body = ImageFont.truetype(str(regular), 28)
+    y = 292
+    for line in _wrap(draw, summary, body, W - margin * 2)[:2]:
+        draw.text((margin, y), line, font=body, fill=MUTED)
+        y += body.size + 8
+
+    small = ImageFont.truetype(str(regular), 24)
+    draw.text((margin, H - 56), CHROME[lang]["payoff"], font=small, fill=FAINT)
+    domain = "ggtechnologies.sm" + ("/en" if lang == "en" else "")
+    draw.text((W - margin - draw.textlength(domain, font=small), H - 56), domain, font=small, fill=FAINT)
+
+    name = f"og-app-{app['key']}-{lang}.jpg"
+    img.save(out / name, "JPEG", quality=88, optimize=True, progressive=True)
+    return name, (out / name).stat().st_size
+
+
 def _card(page_key, lang, data, bold, regular, out):
     img = Image.new("RGB", (W, H), INK)
     draw = ImageDraw.Draw(img)
@@ -267,6 +307,14 @@ def main():
             continue
         for lang in ("it", "en"):
             made.append(_article_card(article, lang, bold, regular, ASSETS))
+
+    # Apps: the scheda derives og_image from the key and the build stops if the file is missing,
+    # so forgetting to run this cannot be silent.
+    for app in APPS:
+        if app["key"] not in article_art.APP_ART:
+            continue
+        for lang in ("it", "en"):
+            made.append(_app_card(app, lang, bold, regular, ASSETS))
 
     for name, size in made:
         print(f"  {name:<34} {size / 1024:5.0f} KB")
