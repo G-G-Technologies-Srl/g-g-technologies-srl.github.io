@@ -1408,16 +1408,30 @@ def _stats_html(lang, data):
     return '          <div class="hero-stats">\n' + "\n".join(items) + "\n          </div>"
 
 
+def _mailto(lang, data):
+    """The page's own subject line when it declares one, otherwise the generic address.
+
+    A reader who writes from the foot of the on-premise page has already told us what they want to
+    talk about; carrying that into the subject means the request arrives qualified instead of as
+    another "Richiesta informazioni". Only the closing call to action uses this — the navigation
+    button is clicked from anywhere, so a page-specific subject there would be a guess.
+    """
+    subject = data.get("mail_subject")
+    if not subject:
+        return CHROME[lang]["mailto"]
+    return f'mailto:info@ggtechnologies.sm?subject={_quote(subject, safe="")}'
+
+
 def _closing_ctas(lang, data):
     """The closing band leads with the page's own action, then the fallbacks."""
     buttons = []
     if data.get("cta_primary"):
         label, href = data["cta_primary"]
         buttons.append(f'<a class="btn btn-primary" href="{href}">{label}</a>')
-        buttons.append(f'<a class="btn btn-ghost" href="{CHROME[lang]["mailto"]}">'
+        buttons.append(f'<a class="btn btn-ghost" href="{_mailto(lang, data)}">'
                        f'{"Scrivici" if lang == "it" else "Email us"}</a>')
     else:
-        buttons.append(f'<a class="btn btn-primary" href="{CHROME[lang]["mailto"]}">'
+        buttons.append(f'<a class="btn btn-primary" href="{_mailto(lang, data)}">'
                        f'{"Scrivici" if lang == "it" else "Email us"}</a>')
         buttons.append(f'<a class="btn btn-ghost" href="tel:+3780549900824">'
                        f'{"Chiamaci" if lang == "it" else "Call us"}</a>')
@@ -1576,6 +1590,19 @@ def _json_ld(lang, page, data, url):
             "description": data["description"],
             "inLanguage": lang,
             "parentOrganization": {"@id": org_id},
+        })
+    elif page["schema"] == "AboutPage":
+        # Not a Service: this page sells nothing, it describes who is behind the rest. The main
+        # entity is the company itself, declared once in the Organization block and referenced here
+        # by id so the two can never drift.
+        blocks.append({
+            "@context": "https://schema.org",
+            "@type": "AboutPage",
+            "name": _strip_tags(data["short"]),
+            "url": url,
+            "description": data["description"],
+            "inLanguage": lang,
+            "mainEntity": {"@id": org_id},
         })
     elif page["schema"] == "SoftwareApplication":
         blocks.append({

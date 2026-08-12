@@ -15,7 +15,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from content import BANNED, CHROME  # noqa: E402
+from content import BANNED, CHROME, PAGES  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 SITE = "https://ggtechnologies.sm"
@@ -241,6 +241,36 @@ def _check_lang_switch_styled(problems):
                                 f"lingua è senza stile su questa pagina")
 
 
+def _check_home_bullets_agree(problems):
+    """I bullet delle card sulla home devono dire la stessa cosa delle card in content.py.
+
+    Terza forma della stessa trappola, dopo i due footer e l'h1 scritto due volte: la home ricopia
+    a mano le voci che stanno in `cards` dentro content.py, e nessun altro controllo se ne accorge.
+    È già costata una correzione a metà — `Elaborazione dei segnali fisiologici` tradotto
+    `Physiological data at scale`, significato diverso e affermazione vaga fra quelle vietate:
+    corretta sulla pagina wearable, restata sbagliata sulla home per giorni.
+
+    Confronta solo le voci che esistono in entrambi i posti: la home ne ha tre per card, le pagine
+    interne quattro, e le voci in più non sono un problema.
+    """
+    home_src = ROOT / "_src" / "home.html"
+    if not home_src.exists():
+        return
+    pairs = re.findall(r'<li><span class="it">(.*?)</span><span class="en">(.*?)</span></li>',
+                       home_src.read_text(encoding="utf-8"))
+    expected = {}
+    for page in PAGES:
+        it_cards, en_cards = page["it"].get("cards", []), page["en"].get("cards", [])
+        for i, card in enumerate(it_cards):
+            if i < len(en_cards):
+                expected[card[1]] = en_cards[i][1]
+    for it_text, en_text in pairs:
+        want = expected.get(it_text)
+        if want and want != en_text:
+            problems.append(f"_src/home.html: «{it_text}» è tradotto «{en_text}» sulla home ma "
+                            f"«{want}» in content.py — allinea i due, la home ha una copia sua")
+
+
 def _check_footers_agree(problems):
     """I due footer devono elencare le stesse pagine interne.
 
@@ -356,6 +386,7 @@ def main():
     _check_links_and_images(problems)
     _check_lang_switch_styled(problems)
     _check_footers_agree(problems)
+    _check_home_bullets_agree(problems)
     _check_reachable(problems)
     _check_banned(problems)
     _check_redirects(problems)
@@ -366,7 +397,7 @@ def main():
         raise SystemExit(f"\n{len(problems)} problemi.")
     print(f"OK — {len(canonical)} pagine, {urls} URL nella sitemap.\n"
           "     HTML, id, h1, & codificati, lingue separate, canonical, hreflang, JSON-LD,\n"
-          "     link, immagini con alt, switch di lingua stilizzato, footer allineati,\n"
+          "     link, immagini con alt, switch di lingua stilizzato, footer e bullet allineati,\n"
           "     raggiungibilità dalla home, frasi vietate, card social, stub, sitemap.")
 
 

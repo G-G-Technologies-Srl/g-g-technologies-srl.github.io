@@ -482,7 +482,7 @@ CHROME = {
             ("Servizi", "/#services"),
             ("Podz.AI", "/podz-ai/"),
             ("Insights", "/insights/"),
-            ("Chi siamo", "/#about"),
+            ("Chi siamo", "/chi-siamo/"),
             ("Contatti", "/#contact"),
         ],
         "nav_cta": "Parla con noi",
@@ -504,7 +504,7 @@ CHROME = {
                 ("Release", "https://github.com/G-G-Technologies-Srl/digisense-releases/releases"),
             ]),
             ("Azienda", [
-                ("Chi siamo", "/#about"),
+                ("Chi siamo", "/chi-siamo/"),
                 ("Perché noi", "/#why"),
                 ("Insights", "/insights/"),
                 ("Contatti", "/#contact"),
@@ -557,7 +557,7 @@ CHROME = {
             ("Services", "/en/#services"),
             ("Podz.AI", "/en/podz-ai/"),
             ("Insights", "/en/insights/"),
-            ("About", "/en/#about"),
+            ("About", "/en/about/"),
             ("Contact", "/en/#contact"),
         ],
         "nav_cta": "Talk to us",
@@ -579,7 +579,7 @@ CHROME = {
                 ("Releases", "https://github.com/G-G-Technologies-Srl/digisense-releases/releases"),
             ]),
             ("Company", [
-                ("About", "/en/#about"),
+                ("About", "/en/about/"),
                 ("Why us", "/en/#why"),
                 ("Insights", "/en/insights/"),
                 ("Contact", "/en/#contact"),
@@ -661,6 +661,7 @@ PAGES = [
         "in_services": True,
         "it": {
             "slug": "servizi/wearable-medicale",
+            "mail_subject": "Progetto wearable medicale",
             "og_image": "og-wearable-it.jpg",
             "blurb": "Scheda, firmware e piattaforma di telemonitoraggio, in un progetto solo.",
             "short": "Wearable medicali",
@@ -768,6 +769,18 @@ PAGES = [
                  "Sì. Capita spesso che l'hardware ci sia già e manchi la piattaforma che rende i dati "
                  "utilizzabili, o che il firmware vada rifatto per ridurre i consumi. Partiamo da quello "
                  "che c'è."),
+                # The silence on MDR and IEC 62304 read as "they do not do regulated devices". Drawing
+                # the boundary explicitly is worth more than leaving it to be guessed: it says what we
+                # do, what we do not, and that we know where the line is.
+                ("Il dispositivo diventa un dispositivo medico certificato?",
+                 "Non da noi, e la distinzione conta. Progettiamo l'elettronica, il firmware e la "
+                 "piattaforma; la marcatura come dispositivo medico è un percorso a sé, con un "
+                 "organismo notificato che valuta e firma. Quello che facciamo è progettare sapendo "
+                 "dove porta quel percorso — la classificazione del dispositivo, la documentazione "
+                 "che servirà, lo sviluppo software secondo la norma di settore — e dirti dove si "
+                 "colloca il tuo caso prima che tu abbia speso in una direzione sbagliata. Se il "
+                 "dispositivo non deve essere un dispositivo medico, si risparmia molto: è la prima "
+                 "cosa da chiarire."),
                 ("I dati dei pazienti dove finiscono?",
                  "Dove decidi tu. Realizziamo anche architetture in cui l'elaborazione resta sui tuoi server "
                  "e i dati non escono dalla tua infrastruttura: è lo stesso principio su cui abbiamo "
@@ -780,6 +793,7 @@ PAGES = [
         },
         "en": {
             "slug": "en/services/medical-wearables",
+            "mail_subject": "Medical wearable project",
             "og_image": "og-wearable-en.jpg",
             "blurb": "Board, firmware and remote-monitoring platform, in a single project.",
             "short": "Medical wearables",
@@ -886,6 +900,15 @@ PAGES = [
                  "Yes. Often the hardware already exists and what is missing is the platform that makes the "
                  "data usable, or the firmware needs reworking to cut power draw. We start from what is "
                  "already there."),
+                ("Does the device end up certified as a medical device?",
+                 "Not by us, and the distinction matters. We design the electronics, the firmware and "
+                 "the platform; marking a device as a medical device is a separate path, with a "
+                 "notified body that assesses it and signs. What we do is design in the knowledge of "
+                 "where that path leads — how the device would be classified, the documentation it "
+                 "will need, software development to the relevant standard — and tell you where your "
+                 "case sits before you have spent money going the wrong way. If the device does not "
+                 "have to be a medical device, that saves a great deal: it is the first thing to "
+                 "settle."),
                 ("Where does patient data end up?",
                  "Wherever you decide. We also build architectures where processing stays on your own "
                  "servers and the data never leaves your infrastructure — the same principle Podz.AI is "
@@ -908,6 +931,7 @@ PAGES = [
         "in_services": True,
         "it": {
             "slug": "servizi/robotica-automazione",
+            "mail_subject": "Automazione di processo",
             "og_image": "og-robotics-it.jpg",
             "blurb": "Bordo macchina, integrazione con i gestionali, misura di fermi e scarti.",
             "short": "Robotica & Automazione",
@@ -932,7 +956,7 @@ PAGES = [
                 # page and it read as ten different clients, which is not what happened: the work was
                 # done from inside two manufacturing groups, as the person responsible for the systems.
                 # Depth is the stronger claim anyway, and it is the one that is true.
-                "Lo sappiamo perché l'abbiamo fatto da dentro, non da fornitori: anni nei sistemi "
+                "Lo sappiamo perché l'abbiamo fatto dall'interno, non come fornitori: anni nei sistemi "
                 "informativi di due gruppi manifatturieri. Uno schedulatore di processo che arriva fino "
                 "al bordo macchina. Un magazzino automatico dove una luce si accende sull'ubicazione "
                 "giusta, invece di mandare l'operatore a cercare il codice su un elenco. Il monitoraggio "
@@ -1032,13 +1056,30 @@ PAGES = [
                 # work is under confidentiality agreements, so the honest move is to state that as a
                 # principle instead of leaving it as an absence, and then point at what a prospect can
                 # actually inspect on their own: the product, the articles, the DOI.
+                # The card says "logiche di controllo e sicurezza" and a technical reader immediately
+                # wonders who signs the risk assessment. Drawing the boundary is the answer, and it is
+                # the sort of thing that gets asked in the first meeting anyway.
+                ("Chi risponde della sicurezza della macchina?",
+                 "Chi la costruisce o la mette sul mercato: la valutazione dei rischi e la marcatura "
+                 "restano sue, e non è una formalità che si delega al software. Noi facciamo il "
+                 "controllo, l'integrazione e i dati, e lavoriamo con chi firma perché le logiche "
+                 "rispettino quello che la valutazione ha stabilito. Chi ti promette di prendersi in "
+                 "carico anche la sicurezza al posto del costruttore ti sta promettendo una cosa che "
+                 "non può mantenere."),
+                ("Di chi è il codice a fine progetto?",
+                 "Il codice scritto per il tuo progetto è tuo, e ti viene consegnato. Resta nostro "
+                 "<a href=\"/digisense/\">DigiSense®</a>, il framework che sta sotto: te lo "
+                 "concediamo in licenza, perché è la parte che riusiamo su ogni progetto e venderla "
+                 "come esclusiva non sarebbe onesto. Chi possiede cosa si scrive in offerta, prima "
+                 "di cominciare."),
                 ("Posso parlare con un vostro cliente?",
-                 "Sui lavori abbiamo accordi di riservatezza e non li aggiriamo: chi ti mostra i nomi "
+                 "Quasi tutti i lavori sono coperti da accordi di riservatezza, e non li aggiriamo: chi ti "
+                 "mostra i nomi "
                  "degli altri, un giorno mostrerà il tuo. Quello che possiamo darti si controlla meglio "
                  "di una telefonata. Il software che vendiamo si scarica e si prova per trenta giorni. "
                  "Il metodo è scritto negli articoli, con le fonti elencate in fondo a ciascuno. Il "
-                 "lavoro sui wearable è dentro uno studio con revisione paritaria, che ha un suo "
-                 "identificatore permanente. E di quello che abbiamo fatto in fabbrica parliamo "
+                 "lavoro sui wearable è dentro uno studio con revisione paritaria, con un identificatore "
+                 "permanente. E di quello che abbiamo fatto in fabbrica parliamo "
                  "volentieri: descrivendo i problemi, non i nomi."),
                 ("Quanto dura un intervento come il nostro?",
                  "Dipende dal processo, e una stima a scatola chiusa non varrebbe niente. L'analisi è la "
@@ -1052,6 +1093,7 @@ PAGES = [
         },
         "en": {
             "slug": "en/services/robotics-automation",
+            "mail_subject": "Process automation",
             "og_image": "og-robotics-en.jpg",
             "blurb": "Automation at the machine, integration with your systems, downtime measured.",
             "short": "Robotics & Automation",
@@ -1070,7 +1112,7 @@ PAGES = [
                 "We start from the other end. We look at where time is lost, where mistakes happen, and "
                 "where a piece of data already exists but nobody reads it. Then we decide what to automate "
                 "— and what to leave alone.",
-                "We know because we did it from the inside, not as suppliers: years in the information "
+                "We know because we did it from the inside, not as suppliers: years inside the information "
                 "systems of two manufacturing groups. A process scheduler that reached down to the machine "
                 "itself. An automated warehouse where a light comes on at the right location, instead of "
                 "sending somebody to look a code up on a list. Production monitoring taken from the "
@@ -1160,6 +1202,19 @@ PAGES = [
                  "That the machine serves the person working with it, not the other way round: automation "
                  "where the operation is repetitive or dangerous, and readable data where a human decision "
                  "is needed."),
+                ("Who answers for the machine's safety?",
+                 "Whoever builds it or places it on the market: the risk assessment and the marking "
+                 "stay with them, and that is not a formality you delegate to software. We do the "
+                 "control, the integration and the data, and we work with whoever signs so that the "
+                 "logic respects what the assessment established. If we told you the safety side was "
+                 "anybody who offers to take on the safety side in the builder's place is promising you "
+                 "something they cannot deliver."),
+                ("Who owns the code at the end of the project?",
+                 "The code written for your project is yours, and it is handed over. What stays ours "
+                 "is <a href=\"/en/digisense/\">DigiSense®</a>, the framework underneath, licensed to "
+                 "you so you can run what we built together: it is the part we reuse across every "
+                 "project, and selling it as exclusive would not be honest. The split is written into "
+                 "the proposal, before anything starts."),
                 ("Can I speak to one of your clients?",
                  "Our work sits under confidentiality agreements and we do not work around them: a "
                  "supplier who shows you other people's names will one day show yours. What we can give "
@@ -1190,6 +1245,7 @@ PAGES = [
         "in_services": True,
         "it": {
             "slug": "servizi/intelligenza-artificiale",
+            "mail_subject": "Progetto AI",
             "og_image": "og-ai-it.jpg",
             "blurb": "Agenti che leggono documenti e interrogano i tuoi sistemi, con la misura decisa prima.",
             "short": "Intelligenza Artificiale",
@@ -1210,6 +1266,27 @@ PAGES = [
                 "linguistici (LLM) nei sistemi esistenti e — quando i dati sono riservati — li teniamo dentro "
                 "l'azienda.",
             ],
+            # The only service page that had no proof block, and the one with the most traffic. The
+            # proof here is not a client — it is that the reasoning on agent security was done in the
+            # open, against a vulnerability with a public identifier anybody can look up.
+            "case": {
+                "kicker": "La prova · il ragionamento, per scritto",
+                "heading": "Su un agente, la domanda difficile "
+                           "<span class=\"grad-text\">ce la siamo già fatta</span>.",
+                "body": [
+                    "Un agente AI non distingue i dati che legge dalle istruzioni che riceve: per lui "
+                    "sono lo stesso testo. Per questo collegare un assistente alla posta o al "
+                    "gestionale è una decisione di architettura, non una configurazione.",
+                    "Ne abbiamo scritto per esteso, appoggiandoci a una vulnerabilità con un "
+                    "identificatore pubblico — <strong>CVE-2025-32711</strong> — che chiunque può "
+                    "andare a leggere per conto suo, con la sua data e le sue valutazioni di gravità. "
+                    "Non è un'opinione sul rischio: è un caso documentato, e l'articolo elenca le "
+                    "fonti in fondo alla pagina.",
+                    "Prova una cosa sola, ed è quella che conta prima di firmare: il ragionamento è "
+                    "stato fatto, ed è pubblico. Puoi controllarlo da solo, invece di fidarti. "
+                    "<a href=\"/insights/agenti-autonomi-perimetro/\">Leggi l'articolo</a>.",
+                ],
+            },
             "cards_title": "Cosa costruiamo",
             "cards_intro": "Quattro modi in cui l'AI entra in azienda partendo da quello che c'è già.",
             "cards_note": "Se i documenti non possono uscire dall'azienda, il capitolo è un altro: "
@@ -1279,9 +1356,10 @@ PAGES = [
                 # a firm that proposes keeping your data in-house and then parades client logos is
                 # contradicting its own pitch. The constraint becomes evidence of the thing we sell.
                 ("Non avete casi da mostrare?",
-                 "Pochi, e per un motivo che dovrebbe interessarti. I lavori stanno sotto accordi di "
-                 "riservatezza, e chi ti mostra i nomi degli altri clienti un giorno mostrerà il tuo: "
-                 "sarebbe una scelta curiosa per chi ti propone di tenere i dati in casa. Quello che si "
+                 "Pochi, e per un motivo che dovrebbe interessarti. Quasi tutti i lavori sono coperti da "
+                 "accordi di riservatezza, e chi ti mostra i nomi degli altri clienti un giorno "
+                 "mostrerà il tuo: sarebbe una scelta strana da parte nostra, che ti proponiamo di "
+                 "tenere i dati in casa. Quello che si "
                  "controlla da fuori invece lo trovi: Podz.AI si scarica e si prova, gli articoli hanno "
                  "le fonti in fondo, e lo studio sui wearable ha un identificatore permanente. Del resto "
                  "parliamo descrivendo i problemi, non i nomi."),
@@ -1296,6 +1374,7 @@ PAGES = [
         },
         "en": {
             "slug": "en/services/artificial-intelligence",
+            "mail_subject": "AI project",
             "og_image": "og-ai-en.jpg",
             "blurb": "Agents that read documents and query your systems, with the measure agreed first.",
             "short": "Artificial Intelligence",
@@ -1316,12 +1395,31 @@ PAGES = [
                 "integrate language models (LLMs) into the systems you already run and — when the data "
                 "is confidential — keep it inside the company.",
             ],
+            "case": {
+                "kicker": "The proof · the reasoning, written down",
+                "heading": "On agents, the hard question "
+                           "<span class=\"grad-text\">we have already asked ourselves</span>.",
+                "body": [
+                    "An AI agent cannot tell the data it reads from the instructions it receives: to "
+                    "it they are the same text. That is what makes connecting an assistant to the "
+                    "mailbox or the business system an architecture decision rather than a setting.",
+                    "We have written it up at length, resting the argument on a vulnerability with a "
+                    "public identifier — <strong>CVE-2025-32711</strong> — that anybody can go and "
+                    "read for themselves, with its date and its severity ratings. It is not an "
+                    "opinion about risk: it is a documented case, and the article lists its sources "
+                    "at the foot of the page.",
+                    "It proves one thing only, and it is the thing that matters before you sign: the "
+                    "reasoning has been done, and it is public. You can check it yourself instead of "
+                    "taking our word for it. "
+                    "<a href=\"/en/insights/autonomous-agents-boundaries/\">Read the article</a>.",
+                ],
+            },
             "cards_title": "What we build",
             "cards_intro": "Four ways AI enters a company starting from what is already there.",
             "cards_note": "If documents cannot leave the company, that is a separate story: "
                           "<a href=\"/en/services/on-premise-ai/\">how on-premise AI works</a>.",
             "cards": [
-                ("spark", "AI agents built for one job",
+                ("spark", "Agents built for one defined job",
                  "Assistants built around one precise task, with access to company data and tools.",
                  ["One defined task, not a generic chatbot",
                   "Controlled access to company data",
@@ -1377,9 +1475,10 @@ PAGES = [
                  "produces a verifiable result. The practical difference is that an agent's outcome can be "
                  "measured."),
                 ("Do you not have case studies to show?",
-                 "Few, and for a reason that should matter to you. The work sits under confidentiality "
-                 "agreements, and a firm that shows you other clients' names will one day show yours — "
-                 "an odd choice for somebody proposing to keep your data in-house. What can be checked "
+                 "Few, and for a reason that should matter to you. Almost all of it is covered by "
+                 "confidentiality agreements, and a firm that shows you other clients' names will one "
+                 "day show yours — an odd choice for us, of all people, since we propose keeping your "
+                 "data in-house. What can be checked "
                  "from outside is all there: Podz.AI can be downloaded and tried, the articles list their "
                  "sources at the foot of the page, and the wearable study has a permanent identifier. "
                  "About the rest we talk by describing the problems, not the names."),
@@ -1405,6 +1504,7 @@ PAGES = [
         "in_services": False,
         "it": {
             "slug": "podz-ai",
+            "mail_subject": "Podz.AI",
             "og_image": "og-podz-it.jpg",
             "blurb": "Il prodotto già pronto: lo installi, legge i tuoi file, 30 giorni di prova.",
             "short": "Podz.AI",
@@ -1499,6 +1599,7 @@ PAGES = [
         },
         "en": {
             "slug": "en/podz-ai",
+            "mail_subject": "Podz.AI",
             "og_image": "og-podz-en.jpg",
             "blurb": "The product, ready to install: it reads your files, 30 days to try it.",
             "short": "Podz.AI",
@@ -1603,6 +1704,7 @@ PAGES = [
         "steps_numbered": False,
         "it": {
             "slug": "digisense",
+            "mail_subject": "Progetto su DigiSense",
             "og_image": "og-digisense-it.jpg",
             "blurb": "Cosa c'è sotto, e perché il tuo progetto non parte da zero.",
             "short": "DigiSense\u00ae",
@@ -1689,6 +1791,7 @@ PAGES = [
         },
         "en": {
             "slug": "en/digisense",
+            "mail_subject": "DigiSense project",
             "og_image": "og-digisense-en.jpg",
             "blurb": "What sits underneath, and why your project does not start from scratch.",
             "short": "DigiSense\u00ae",
@@ -1786,6 +1889,7 @@ PAGES = [
         "moved_from": {"it": "ai-on-premise", "en": "en/on-premise-ai"},
         "it": {
             "slug": "servizi/ai-on-premise",
+            "mail_subject": "AI on-premise",
             "og_image": "og-onprem-it.jpg",
             "blurb": "Come si sceglie fra tutto in locale, ibrido e cloud, a partire dai tuoi dati.",
             "short": "AI on-premise",
@@ -1816,7 +1920,7 @@ PAGES = [
                 "body": [
                     "Tutto quello che sta scritto qui sopra — il modello che gira dentro la tua "
                     "infrastruttura, i documenti che non la lasciano, i dati personali mascherati quando "
-                    "serve il cloud — è già dentro un programma che si installa.",
+                    "serve il cloud — è già dentro un programma che puoi installare.",
                     "Si chiama <strong>Podz.AI</strong>, è il nostro prodotto, e la prova dura trenta "
                     "giorni. Non serve una riunione: lo scarichi, gli dai i tuoi documenti e guardi cosa "
                     "fa. Se qualcuno ti racconta l'AI on-premise, provare quello che ha costruito è il "
@@ -1895,6 +1999,7 @@ PAGES = [
         },
         "en": {
             "slug": "en/services/on-premise-ai",
+            "mail_subject": "On-premise AI",
             "og_image": "og-onprem-en.jpg",
             "blurb": "How to choose between fully local, hybrid and cloud, starting from your data.",
             "short": "On-premise AI",
@@ -1922,7 +2027,7 @@ PAGES = [
                 "body": [
                     "Everything written above — the model running inside your own infrastructure, the "
                     "documents that never leave it, personal data masked when the cloud is needed — is "
-                    "already inside a program you can install.",
+                    "already inside a program you can install today.",
                     "It is called <strong>Podz.AI</strong>, it is our own product, and the trial runs for "
                     "thirty days. No meeting required: you download it, give it your documents and watch "
                     "what it does. If somebody tells you about on-premise AI, trying what they built is "
@@ -1999,7 +2104,260 @@ PAGES = [
         },
     },
     # -------------------------------------------------------------------------------------------------------------
-    #  7 — robot per l'assistenza domiciliare (progetto, non servizio)
+    #  7 — chi siamo
+    # -------------------------------------------------------------------------------------------------------------
+    # "Chi siamo" used to be an anchor on the homepage, /#about. Consequences: no title of its own in
+    # a results page, nothing to send in an email, no way to compete on searches for the company
+    # name, and the career timeline — the strongest proof on the site — had no address. The homepage
+    # section stays as the summary; this is the version you can link to.
+    {
+        "key": "about",
+        "schema": "AboutPage",
+        "service_type": "Company profile",
+        "in_services": False,
+        # The six entries are a chronology, so they are numbered.
+        "it": {
+            "slug": "chi-siamo",
+            "og_image": "og-about-it.jpg",
+            "mail_subject": "Contatto da Chi siamo",
+            "blurb": "Chi progetta, da dove viene la competenza e cosa puoi verificare.",
+            "short": "Chi siamo",
+            "title": "Chi siamo — G&G Technologies, San Marino",
+            "description": "Chi c'è dietro G&G Technologies: il percorso, il team diffuso fra "
+                           "collaboratori e partner, e le prove che puoi controllare da fuori.",
+            "kicker": "Chi siamo",
+            "h1": "Una struttura piccola, e un mestiere che "
+                  "<span class=\"grad-text\">viene da lontano</span>.",
+            "lead": "Progettiamo e realizziamo tecnologia dalla Repubblica di San Marino. Alla guida "
+                    "c'è Gian Angelo Geminiani, che fa questo mestiere dal 1997.",
+            "intro_title": "Come siamo fatti",
+            "intro_h2": "Non tre reparti. "
+                        "<span class=\"grad-text\">Una rete, e una base sola</span>.",
+            "intro": [
+                "Attorno all'amministratore delegato lavora una rete di collaboratori e partner "
+                "tecnologici in più paesi: architetti software, progettisti elettronici, "
+                "sistemisti, scelti in base al progetto. È il modo in cui una struttura piccola "
+                "tiene insieme elettronica, "
+                "robotica e intelligenza artificiale senza fingere di avere tre reparti.",
+                "Quello che rende la cosa possibile è che non ripartiamo da zero ogni volta. "
+                "Acquisizione dei dati, esecuzione dei modelli e controllo macchina stanno sotto "
+                "ogni progetto, risolti una volta, in <a href=\"/digisense/\">DigiSense®</a>: il "
+                "nostro framework, marchio registrato. Il lavoro si concentra sul tuo problema, non "
+                "sull'impalcatura.",
+            ],
+            "cards_title": "Cosa puoi verificare da fuori",
+            "cards_intro": "Quasi tutti i lavori sono coperti da accordi di riservatezza. Queste tre cose invece si "
+                           "controllano senza chiedere niente a noi.",
+            "cards": [
+                ("data", "Uno studio con revisione paritaria",
+                 "Novecento operatori dell'emergenza seguiti per dodici mesi, in uno studio pubblicato "
+                 "su «Sensors» con il CNR e quattro università. Ha un identificatore permanente.",
+                 ["Geminiani ne è il secondo autore",
+                  "Accesso aperto, licenza CC BY",
+                  "<a href=\"/servizi/wearable-medicale/\">La pagina che lo racconta</a>"]),
+                ("shield", "Un prodotto che si scarica",
+                 "Podz.AI è nostro, si installa e si prova per trenta giorni. Il modo più rapido di "
+                 "giudicare il nostro lavoro senza parlare con noi.",
+                 ["Windows, macOS e Linux, con build firmate",
+                  "Listino e storico delle release pubblici",
+                  "<a href=\"/podz-ai/\">Com'è fatto</a>"]),
+                ("spark", "Il ragionamento, per scritto",
+                 "Gli articoli di <a href=\"/insights/\">Insights</a> elencano le fonti in fondo a "
+                 "ciascuno, e due si appoggiano a un identificatore esterno che chiunque può "
+                 "controllare.",
+                 ["Norme citate per esteso, non riassunte",
+                  "Nessun cliente nominato: solo problemi",
+                  "<a href=\"/insights/\">Leggi gli articoli</a>"]),
+            ],
+            "steps_title": "Da dove viene la competenza",
+            "steps_intro": "Dai sistemi informativi di fabbrica ai dispositivi indossabili, dagli "
+                           "algoritmi alla ricerca universitaria. In ordine di tempo.",
+            "steps": [
+                ("1997 – 2002 · Silcea Group, poi SkyLab",
+                 "Responsabile dei sistemi informativi, con l'incarico di mettere in produzione il "
+                 "nuovo ERP. Poi la fondazione di SkyLab, che assemblava workstation per studi di "
+                 "architettura, con le schede video scelte per far girare il CAD."),
+                ("2002 – 2020 · Diciotto anni in Gruppo Fontanot",
+                 "Project manager e architetto software, poi CIO, poi responsabile dello sviluppo e "
+                 "manager dell'innovazione digitale del gruppo. Processi produttivi, logistica, "
+                 "rete vendita, configuratori. Fra le cose progettate, machine learning applicato "
+                 "al controllo qualità."),
+                ("2007 – 2008 · Ricerca all'Università di Bologna",
+                 "A Scienze degli Alimenti, una piattaforma di tracciabilità per l'ortofrutta di "
+                 "quarta gamma — insalate e frutta già lavate e confezionate: etichette RFID "
+                 "lette sui prodotti e un algoritmo che risale la "
+                 "filiera mostrando a ciascuno solo quello che gli compete."),
+                ("2015 – 2024 · Botika",
+                 "Co-fondata e guidata: porta gli algoritmi dentro i processi industriali. Nel 2019 "
+                 "Confindustria Romagna l'ha scelta come primo partner tecnologico sammarinese del "
+                 "team SmartTech."),
+                ("2020 – 2024 · Direzione tecnica in AccYouRate Group",
+                 "Quasi cinque anni da CTO di un'azienda che progetta, brevetta e produce "
+                 "dispositivi indossabili per il monitoraggio dei parametri vitali. È una delle "
+                 "affiliazioni dello studio su «Sensors»."),
+                ("dal 2022 · G&amp;G Technologies",
+                 "La società nasce nel 2022 e porta quella competenza su DigiSense® e su Podz.AI."),
+            ],
+            "facts_title": "In sintesi",
+            "facts": [
+                ("Sede", "Via Marino Moretti 23, 47899 Serravalle, Repubblica di San Marino. "
+                         "C.O.E./VAT SM29141."),
+                ("Marchio", "DigiSense® è un marchio registrato di G&amp;G Technologies S.r.l."),
+                ("Accreditamento", "L'amministratore delegato è nell'elenco ministeriale degli "
+                                   "Innovation Manager dal 2020."),
+                ("Sviluppo", "Software progettato e sviluppato interamente in Europa."),
+            ],
+            "faq_title": "Domande frequenti",
+            "faq": [
+                ("Quante persone siete?",
+                 "Il nucleo è piccolo, la rete attorno è ampia: collaboratori e partner scelti in "
+                 "base al progetto, in più paesi. Preferiamo dirlo prima. Se cerchi un fornitore da "
+                 "cento persone, non siamo noi. Se vuoi che a risponderti sia chi progetta, e non un "
+                 "commerciale, siamo noi."),
+                ("Lavorate solo a San Marino?",
+                 "No. La sede è a Serravalle e i clienti sono anche in Italia; i collaboratori sono "
+                 "in più paesi. Resta europeo quello che conta per la giurisdizione: dove il "
+                 "software è progettato e dove i dati vengono elaborati."),
+                ("Chi risponde se scrivo?",
+                 "Una persona del team, non un form, entro un giorno lavorativo. La prima "
+                 "conversazione serve a capire se siamo le persone giuste per il tuo problema: se "
+                 "non lo siamo, è più veloce dirlo subito."),
+                ("Perché non ci sono i loghi dei clienti?",
+                 "Perché quasi tutti i lavori sono coperti da accordi di riservatezza, e non li aggiriamo: chi ti "
+                 "mostra i nomi degli altri, un giorno mostrerà il tuo. Sarebbe anche una scelta "
+                 "strana da parte nostra, che ti proponiamo di tenere i dati in casa. Quello che si controlla da "
+                 "fuori lo trovi in questa pagina, e dei progetti parliamo volentieri descrivendo "
+                 "i problemi, non i nomi."),
+            ],
+            "cta_title": "Vuoi capire se siamo le persone giuste?",
+            "cta_text": "Raccontaci il problema, non la soluzione che hai in mente. Risponde una "
+                        "persona del team entro un giorno lavorativo.",
+            "related": ["digisense", "podz", "ai"],
+        },
+        "en": {
+            "slug": "en/about",
+            "og_image": "og-about-en.jpg",
+            "mail_subject": "Enquiry from the About page",
+            "blurb": "Who does the designing, where the expertise comes from, what you can check.",
+            "short": "About",
+            "title": "About us — G&G Technologies, San Marino",
+            "description": "Who is behind G&G Technologies: the track record, the distributed team of "
+                           "collaborators and partners, and the proof you can check from outside.",
+            "kicker": "About us",
+            "h1": "A small outfit, and a trade that "
+                  "<span class=\"grad-text\">goes back a long way</span>.",
+            "lead": "We design and build technology from the Republic of San Marino. It is led by "
+                    "Gian Angelo Geminiani, who has worked in this trade since 1997.",
+            "intro_title": "How we are put together",
+            "intro_h2": "Not three departments. "
+                        "<span class=\"grad-text\">A network, and one shared base</span>.",
+            "intro": [
+                "Around the chief executive works a network of collaborators and technology partners "
+                "across several countries: software architects, electronics designers, system "
+                "engineers, chosen for the project in hand. It is how a small firm keeps "
+                "electronics, robotics and artificial intelligence "
+                "together without pretending to have three departments.",
+                "What makes that possible is that we do not start from scratch each time. Data "
+                "acquisition, running the models and machine control sit under every project, "
+                "solved once, in <a href=\"/en/digisense/\">DigiSense®</a>: our framework, a "
+                "registered trademark. The work goes on your problem, not on the scaffolding.",
+            ],
+            "cards_title": "What you can check from outside",
+            "cards_intro": "Our work sits under confidentiality agreements. These three things, "
+                           "though, can be checked without asking us for anything.",
+            "cards": [
+                ("data", "A peer-reviewed study",
+                 "Nine hundred emergency workers followed for twelve months, in a study published in "
+                 "“Sensors” with the Italian National Research Council and four universities. It "
+                 "has a permanent identifier.",
+                 ["Geminiani is its second author",
+                  "Open access, CC BY licence",
+                  "<a href=\"/en/services/medical-wearables/\">The page that tells it</a>"]),
+                ("shield", "A product you can download",
+                 "Podz.AI is ours, it installs and it runs for a thirty-day trial. The quickest way "
+                 "to judge our work without speaking to us.",
+                 ["Windows, macOS and Linux, with signed builds",
+                  "Public price list and release history",
+                  "<a href=\"/en/podz-ai/\">How it is built</a>"]),
+                ("spark", "The reasoning, written down",
+                 "The <a href=\"/en/insights/\">Insights</a> articles list their sources at the "
+                 "foot of each page, and two rest on an external identifier anybody can look up.",
+                 ["Regulations cited in full, not summarised",
+                  "No client named: problems only",
+                  "<a href=\"/en/insights/\">Read the articles</a>"]),
+            ],
+            "steps_title": "Where the expertise comes from",
+            "steps_intro": "From factory information systems to wearable devices, from algorithms "
+                           "to university research. In chronological order.",
+            "steps": [
+                ("1997 – 2002 · Silcea Group, then SkyLab",
+                 "Head of information systems, tasked with putting the new ERP into production. "
+                 "Then the founding of SkyLab, which assembled workstations for architecture "
+                 "practices, with the graphics cards chosen to run CAD."),
+                ("2002 – 2020 · Eighteen years at Gruppo Fontanot",
+                 "Project manager and software architect, then CIO, then head of development and "
+                 "digital innovation manager for the group. Production processes, logistics, sales "
+                 "network, configurators. Among the things designed, machine learning applied to "
+                 "quality control."),
+                ("2007 – 2008 · Research at the University of Bologna",
+                 "At Food Science, a traceability platform for fresh-cut fruit and vegetables — washed "
+                 "and packed, ready to eat: RFID labels read on the products and an algorithm that "
+                 "walks back up the supply chain, "
+                 "showing each party only what concerns them."),
+                ("2015 – 2024 · Botika",
+                 "Co-founded and led: it brings algorithms into industrial processes. In 2019 "
+                 "Confindustria Romagna picked it as the first San Marino technology partner in "
+                 "its SmartTech team."),
+                ("2020 – 2024 · Chief technology officer at AccYouRate Group",
+                 "Almost five years as CTO of a company that designs, patents and manufactures "
+                 "wearable devices for vital-signs monitoring. It is one of the affiliations on the "
+                 "“Sensors” study."),
+                ("from 2022 · G&amp;G Technologies",
+                 "The company was founded in 2022 and brings that expertise onto DigiSense® and "
+                 "onto Podz.AI."),
+            ],
+            "facts_title": "In short",
+            "facts": [
+                ("Based in", "Via Marino Moretti 23, 47899 Serravalle, Republic of San Marino. "
+                             "C.O.E./VAT SM29141."),
+                ("Trademark", "DigiSense® is a registered trademark of G&amp;G Technologies S.r.l."),
+                ("Accreditation", "The chief executive has been on the Italian ministry register of "
+                                  "innovation managers since 2020."),
+                ("Development", "Software designed and developed entirely in Europe."),
+            ],
+            "faq_title": "Frequently asked questions",
+            "faq": [
+                ("How many of you are there?",
+                 "The core is small and the network around it is wide: collaborators and partners "
+                 "chosen for the project, across several countries. We would rather say so upfront. "
+                 "If you want a hundred-person supplier, we are not it. If you want the person who "
+                 "does the designing to be the one who answers you, rather than a salesperson, we "
+                 "are."),
+                ("Do you only work in San Marino?",
+                 "No. The office is in Serravalle and clients are in Italy too; the collaborators "
+                 "are spread across several countries. What stays European is where the software is "
+                 "designed and where the data is processed, which is the part that matters for "
+                 "jurisdiction."),
+                ("Who answers if I write?",
+                 "A person from the team, not a form, within one working day. The first "
+                 "conversation is about whether we are the right people for your problem: if we are "
+                 "not, saying so quickly is faster for everyone."),
+                ("Why are there no client logos?",
+                 "Because our work sits under confidentiality agreements and we do not work around "
+                 "them: a firm that shows you other people's names will one day show yours. It "
+                 "would also be an odd choice for somebody proposing to keep your data in-house. "
+                 "What can be checked from outside is on this page, and we will gladly talk about "
+                 "projects by describing the problems, not the names."),
+            ],
+            "cta_title": "Want to find out whether we are the right people?",
+            "cta_text": "Tell us the problem, not the solution you have in mind. A person from the "
+                        "team answers within one working day.",
+            "related": ["digisense", "podz", "ai"],
+        },
+    },
+
+    # -------------------------------------------------------------------------------------------------------------
+    #  8 — robot per l'assistenza domiciliare (progetto, non servizio)
     # -------------------------------------------------------------------------------------------------------------
     {
         "key": "homecare",
@@ -2008,6 +2366,7 @@ PAGES = [
         "in_services": False,
         "it": {
             "slug": "progetti/robot-assistenza-domiciliare",
+            "mail_subject": "Robot per assistenza domiciliare",
             "short": "Robot per l'assistenza domiciliare",
             "blurb": "Un robot che assiste in casa, con l'AI a bordo. Prototipo in sviluppo.",
             "title": "Robot per l'assistenza agli anziani in casa — G&G Technologies",
@@ -2121,6 +2480,7 @@ PAGES = [
         },
         "en": {
             "slug": "en/projects/home-care-robot",
+            "mail_subject": "Home care robot",
             "short": "Home care robot",
             "blurb": "A robot that helps at home, with the AI on board. Prototype in development.",
             "title": "Robot for elderly care at home — G&G Technologies",
