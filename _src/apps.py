@@ -131,7 +131,7 @@ APPS = [
         "tags": ["dati"],
         # bozza | pronto — only "pronto" is indexed and listed in the sitemap.
         "stato": "pronto",
-        "version": "0.12.0",
+        "version": "0.12.1",
         "released": "2026-08-12",
         "updated": "2026-08-12",
         "licence": "Apache-2.0",

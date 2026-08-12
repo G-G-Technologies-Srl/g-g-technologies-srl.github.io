@@ -4,7 +4,7 @@
 // arithmetic and the drawing live in their own modules, each of which knows nothing about this
 // one — which is what will make moving them into the shared library a move and not a rewrite.
 
-import { t, num, lang, otherLang, setLang, resolveLang, missingKeys } from "./i18n.js";
+import { t, num, plural, lang, otherLang, setLang, resolveLang, missingKeys } from "./i18n.js";
 import { parse, serialise } from "./csv.js";
 import { summarise } from "./stats.js";
 import { channelSvg, overlayHtml, indexAt } from "./chart.js";
@@ -232,8 +232,8 @@ function _historyRow(entry) {
   const when = new Date(entry.openedLast).toLocaleDateString(
     lang() === "it" ? "it-IT" : "en-GB", { day: "2-digit", month: "short", year: "numeric" });
   const parts = [
-    `${num(entry.rows, 0)} ${t("historyRows")}`,
-    `${num(entry.channels, 0)} ${t("historyChannels")}`,
+    `${num(entry.rows, 0)} ${plural(entry.rows, "historyRow", "historyRows")}`,
+    `${num(entry.channels, 0)} ${plural(entry.channels, "historyChannel", "historyChannels")}`,
     when,
     opened,
   ];
@@ -280,7 +280,8 @@ function _showSheet() {
   el("sheet").hidden = false;
   _toggleFileChrome(true);
   el("fileName").textContent = sourceName;
-  el("fileMeta").textContent = `${num(data.rowCount, 0)} ${t("fileRows")}`;
+  el("fileMeta").textContent = `${num(data.rowCount, 0)} `
+    + plural(data.rowCount, "fileRow", "fileRows");
   el("rows").setAttribute("aria-valuemax", String(data.rowCount - 1));
 
   // With nothing to plot there is no chart to switch to, so the app opens on the table and says

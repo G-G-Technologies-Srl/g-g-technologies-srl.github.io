@@ -11,7 +11,7 @@
 //    a running app means changing the code while somebody has an open file and a live selection,
 //    and saving them one reload is not worth that.
 
-const VERSION = '0.12.0';
+const VERSION = '0.12.1';
 const CACHE = `csv-scope-v${VERSION}`;
 
 // Every file the app is made of. Kept by hand and checked by _src/check_apps.py against the

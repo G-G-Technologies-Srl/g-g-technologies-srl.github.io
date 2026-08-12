@@ -23,7 +23,9 @@ const IT = {
   historyImport: "Importa",
   historyClear: "Svuota",
   historyClearAsk: "Cancello l'elenco dei file aperti? Non si può annullare.",
+  historyRow: "riga",
   historyRows: "righe",
+  historyChannel: "canale",
   historyChannels: "canali",
   historyOpenedOnce: "aperto una volta",
   historyOpenedTimes: "aperto {n} volte",
@@ -36,6 +38,7 @@ const IT = {
   importNewer: "Questa esportazione viene da una versione più recente dell'app.",
   importNothing: "Nell'esportazione non c'è niente da rimettere.",
   dropRelease: "Lascia qui il file",
+  fileRow: "riga",
   fileRows: "righe",
   fileChange: "Cambia file",
   fileExport: "Esporta intervallo",
@@ -119,7 +122,9 @@ const EN = {
   historyImport: "Import",
   historyClear: "Clear",
   historyClearAsk: "Delete the list of opened files? This cannot be undone.",
+  historyRow: "row",
   historyRows: "rows",
+  historyChannel: "channel",
   historyChannels: "channels",
   historyOpenedOnce: "opened once",
   historyOpenedTimes: "opened {n} times",
@@ -132,6 +137,7 @@ const EN = {
   importNewer: "This export comes from a newer version of the app.",
   importNothing: "There is nothing to put back in this export.",
   dropRelease: "Drop the file here",
+  fileRow: "row",
   fileRows: "rows",
   fileChange: "Change file",
   fileExport: "Export range",
@@ -270,6 +276,17 @@ export function otherLang() {
 /** One string. An unknown key returns the key itself, which is loud enough to be spotted. */
 export function t(key) {
   return DICTIONARIES[current][key] ?? key;
+}
+
+/**
+ * Singular or plural, because "1 canali" is the kind of thing that reaches production.
+ *
+ * It did: the history panel went live saying "1 canali". Both languages here split at one and only
+ * at one, so two keys are enough — a language with a dual or a paucal would need Intl.PluralRules,
+ * and this is the line to change on the day one arrives.
+ */
+export function plural(n, one, many) {
+  return t(n === 1 ? one : many);
 }
 
 /** Numbers follow the language: 1.234,5 in Italian and 1,234.5 in English. */
