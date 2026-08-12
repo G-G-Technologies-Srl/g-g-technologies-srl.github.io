@@ -468,7 +468,7 @@ ARTICLES = [
     {
         "key": "numero-o-misura",
         "date": "2026-08-12",
-        "stato": "bozza",
+        "stato": "pronto",
         "author": "Gian Angelo Geminiani",
         # "wearable" was the empty group: one article out of five, and the only area where the site
         # already has an external identifier. "ia" belongs here too and is not decoration — the
@@ -478,17 +478,20 @@ ARTICLES = [
             "slug": "insights/numero-o-misura",
             "short": "Un numero non è una misura",
             "title": "Un numero non è una misura — G&G Technologies",
-            "description": "Fra un indicatore e una misura ci sono una catena documentata e "
-                           "un'incertezza dichiarata. Cosa cercare in una scheda tecnica prima "
-                           "di firmare.",
+            "description": "Che cosa distingue davvero un indicatore da una misura, perché anche "
+                           "il misuratore a bracciale stima, e cosa cercare in una scheda "
+                           "tecnica prima di firmare.",
             "kicker": "Misura · 12 agosto 2026",
             "h1": "Un numero non diventa una misura "
                   "<span class=\"grad-text\">perché ha due decimali</span>.",
-            # The cuff has to be named here, not just referred to: the h1 says nothing about blood
-            # pressure, so "anche il bracciale" had no antecedent for anybody arriving cold.
-            "lead": "Anche il misuratore da ambulatorio stima, e lo dice la sua norma. A "
-                    "separare un indicatore da una misura sono una catena documentata e "
-                    "un'incertezza dichiarata. Poi un test di dieci minuti.",
+            # Two things this lead has to do that the first draft did not. The cuff is named
+            # rather than referred to, because the h1 says nothing about blood pressure and
+            # "anche il bracciale" had no antecedent for anybody arriving cold. And the closing
+            # promise says what the test is on: "un test di dieci minuti" only makes sense to
+            # somebody who has already read the article, which is the wrong way round.
+            "lead": "Anche il misuratore a bracciale stima, e lo dice la sua norma. Un "
+                    "indicatore diventa misura con una catena documentata e un'incertezza "
+                    "dichiarata. Poi cinque cose da cercare in una scheda tecnica.",
             "role": "Per chi progetta, commissiona o compra dispositivi che mostrano un numero "
                     "sanitario.",
             "disclaimer": "Questo articolo ha finalità informative e non costituisce parere "
@@ -512,14 +515,15 @@ ARTICLES = [
             "slug": "en/insights/number-or-measurement",
             "short": "A number is not a measurement",
             "title": "A number is not a measurement — G&G Technologies",
-            "description": "Between an indicator and a measurement sit a documented chain and a "
-                           "stated uncertainty. What to look for in a datasheet before you sign.",
+            "description": "What really separates an indicator from a measurement, why even a "
+                           "cuff monitor is estimating, and what to look for in a datasheet "
+                           "before you sign.",
             "kicker": "Measurement · 12 August 2026",
             "h1": "A number does not become a measurement "
                   "<span class=\"grad-text\">because it has two decimals</span>.",
-            "lead": "The cuff device in a clinic is estimating too: its own standard says so. "
-                    "What separates an indicator from a measurement is a documented chain and a "
-                    "stated uncertainty. Then a ten-minute test.",
+            "lead": "The cuff monitor is estimating too, and its own standard says so. An "
+                    "indicator becomes a measurement with a documented chain and a stated "
+                    "uncertainty. Then five things to look for in a datasheet.",
             "role": "For people designing, specifying or buying devices that display a health "
                     "number.",
             "disclaimer": "This article is for information purposes only and constitutes neither "
