@@ -2229,8 +2229,33 @@ def _drop_other_language(markup, other):
         markup = markup[:match.start()] + markup[index:]
 
 
+def _home_meta(s, name):
+    """Read TITLES or DESCRIPTIONS out of the JavaScript block in home.html.
+
+    Parsed from the object literal instead of matched on the sentence itself. The previous version
+    keyed on the first word — `'(Progettiamo[^']*|We design[^']*)'` — so rewording a description to
+    open differently did not produce a different description: it made the build stop with
+    "DESCRIPTIONS non leggibili", which says nothing about the real cause.
+    """
+    block = re.search(rf"const {name} = \{{(.*?)\}};", s, re.S)
+    if not block:
+        raise SystemExit(f"_src/home.html: blocco {name} non trovato nel JS.")
+    found = dict((lang, value.replace("\\'", "'"))
+                 for lang, value in re.findall(r"(it|en):\s*'((?:[^'\\]|\\.)*)'", block.group(1)))
+    if set(found) != {"it", "en"}:
+        raise SystemExit(f"_src/home.html: {name} deve avere una voce 'it' e una 'en'.")
+    return found
+
+
 def _render_home(lang):
-    """The two single-language homepages, derived from the one bilingual source."""
+    """The two single-language homepages, derived from the one bilingual source.
+
+    Title and description come from the TITLES and DESCRIPTIONS objects in the page's own JavaScript
+    — the language switch needs them at runtime — and this function overwrites the static <meta>
+    tags in the head with them. So **editing those meta tags by hand does nothing**: the value that
+    ships is the one in the JS block. Fifth cousin of the two-footers trap, and the quiet kind: no
+    error, no wrong output, just an edit that evaporates.
+    """
     source = SRC / "home.html"
     if not source.exists():
         raise SystemExit(f"{source} non trovato: è la sorgente bilingue della homepage.")
@@ -2239,10 +2264,7 @@ def _render_home(lang):
     other = "en" if lang == "it" else "it"
     s = _drop_other_language(s, other)
 
-    titles = dict(re.findall(r"(it|en): '([^']*—[^']*)'", s))
-    descriptions = dict(re.findall(r"(it|en): '(Progettiamo[^']*|We design[^']*)'", s))
-    if len(titles) != 2 or len(descriptions) != 2:
-        raise SystemExit("_src/home.html: TITLES o DESCRIPTIONS non leggibili, controlla il blocco JS.")
+    titles, descriptions = _home_meta(s, "TITLES"), _home_meta(s, "DESCRIPTIONS")
     title, description = titles[lang], descriptions[lang]
 
     it_url, en_url = SITE + "/", SITE + "/en/"
