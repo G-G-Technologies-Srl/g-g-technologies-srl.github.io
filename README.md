@@ -7,8 +7,10 @@
 
 # G&G Technologies
 
-**Software, robotica e AI che fanno crescere le imprese.**
-*Software, robotics and AI that make businesses grow.*
+**Accendiamo il futuro** · *Powering the future*
+
+Wearable medicali, robotica industriale e intelligenza artificiale.
+Progettati e realizzati nella Repubblica di San Marino.
 
 [![Sito web](https://img.shields.io/badge/Sito_web-ggtechnologies.sm-10B981?style=flat-square)](https://ggtechnologies.sm/)
 [![Podz.AI](https://img.shields.io/badge/Podz.AI-download-0D1220?style=flat-square)](https://ggtechnologies.sm/digisense-releases/download.html)
@@ -21,45 +23,80 @@
 
 ## Chi siamo
 
-**G&G Technologies Srl** è una società di consulenza tecnologica con sede nella Repubblica di San Marino. Il team unisce programmatori esperti, architetti software e sistemisti, con oltre 30 anni di attività nel mondo dell'informatica e dell'innovazione: processi di vendita digitalizzati, decine di fabbriche automatizzate e soluzioni wearable per il monitoraggio biovitale in ambito medicale e sportivo.
+**G&G Technologies Srl** progetta e realizza tecnologia dalla Repubblica di San Marino. Alla guida
+c'è Gian Angelo Geminiani, che fa questo mestiere dal 1997. Attorno, una rete di collaboratori e
+partner tecnologici in più paesi: architetti software, progettisti elettronici, sistemisti, scelti
+in base al progetto.
 
-Dal nostro percorso di ricerca — il progetto **DigiSense** — è nato [**Podz.AI**](https://ggtechnologies.sm/digisense-releases/), la workstation AI personale.
+Tutto poggia su **DigiSense®**, il nostro framework registrato: acquisizione dei dati, esecuzione
+dei modelli e controllo macchina, risolti una volta e riusati su ogni progetto. Su quel framework è
+costruito [**Podz.AI**](https://ggtechnologies.sm/podz-ai/), la workstation AI personale.
 
-Lavoriamo al fianco di imprenditori e professionisti: prima capiamo il processo, poi scegliamo la tecnologia. Mai il contrario.
+Il lavoro sui wearable è entrato in uno studio con revisione paritaria pubblicato su «Sensors» nel
+2024, firmato con il CNR e quattro università: novecento operatori dell'emergenza seguiti per dodici
+mesi — [DOI 10.3390/s24216992](https://doi.org/10.3390/s24216992).
+
+Prima capiamo il processo, poi scegliamo la tecnologia. Mai il contrario.
 
 ## Cosa facciamo
 
 | Area | Competenze |
 |---|---|
-| **Wearable & Medicale** | Elettronica custom, firmware, piattaforme di telemonitoraggio e big data biovitali per atleti, pazienti e anziani |
-| **Robotica & Automazione** | Automazione bordo macchina, integrazione con sistemi embedded, efficientamento dei processi verso l'Industria 5.0 |
-| **Intelligenza Artificiale** | Agenti AI e specialisti verticali, AI locale e privacy by design, analisi e trasformazione dati |
+| [**Wearable medicali**](https://ggtechnologies.sm/servizi/wearable-medicale/) | Elettronica custom, firmware a basso consumo, piattaforme di telemonitoraggio, elaborazione dei segnali fisiologici |
+| [**Robotica & Automazione**](https://ggtechnologies.sm/servizi/robotica-automazione/) | Automazione bordo macchina, integrazione con i gestionali in uso, misura di fermi e scarti |
+| [**Intelligenza Artificiale**](https://ggtechnologies.sm/servizi/intelligenza-artificiale/) | Agenti costruiti su un compito preciso, ricerca semantica sui documenti, integrazione nei processi esistenti |
+| [**AI on-premise**](https://ggtechnologies.sm/servizi/ai-on-premise/) | Modelli che girano sui tuoi server, anonimizzazione prima del cloud, i documenti non lasciano l'infrastruttura |
 
 Settori in cui abbiamo lavorato: sanità, sport, manifattura, rete vendita.
+
+In sviluppo: un [robot per l'assistenza domiciliare](https://ggtechnologies.sm/progetti/robot-assistenza-domiciliare/)
+su base Reachy Mini, con il modello che gira a bordo e i dati che non escono di casa. È un prototipo,
+non un prodotto in vendita.
 
 ## Podz.AI
 
 > **La tua AI. Sul tuo computer. Con i tuoi dati al sicuro.**
 
-Un'unica applicazione che installi sul tuo computer e che lavora con i tuoi documenti, senza mandare i dati a nessuno. Il cloud è una scelta, non il default: modelli locali privati, Anonimizzatore integrato e specialisti — legale, ricerca web, screening CV — che si installano con un clic.
+Un'unica applicazione che si installa sul computer e lavora con i tuoi documenti sulla tua macchina.
+Il cloud è una scelta, non il default: modelli locali, anonimizzazione integrata e specialisti —
+legale, ricerca web, screening CV — che si installano con un clic.
 
-Prova gratuita di 30 giorni al primo avvio · Windows, macOS e Linux · Made in EU
+Prova gratuita di 30 giorni al primo avvio · Windows, macOS e Linux · sviluppato in Europa
 
-**[Scarica Podz.AI](https://ggtechnologies.sm/digisense-releases/download.html)** · [Sito ufficiale](https://ggtechnologies.sm/digisense-releases/) · [Release](https://github.com/G-G-Technologies-Srl/digisense-releases/releases)
+**[Scarica Podz.AI](https://ggtechnologies.sm/digisense-releases/download.html)** ·
+[Sito ufficiale](https://ggtechnologies.sm/digisense-releases/) ·
+[Release](https://github.com/G-G-Technologies-Srl/digisense-releases/releases)
 
 ## Questo repository
 
-Il sito aziendale, servito da GitHub Pages su [ggtechnologies.sm](https://ggtechnologies.sm/). Una single-page application costruita come scriviamo il software per i nostri clienti: essenziale, misurabile, rispettosa di chi la usa.
+Il sito aziendale, servito da GitHub Pages su [ggtechnologies.sm](https://ggtechnologies.sm/).
+Trenta pagine statiche generate da un build in Python, costruite come scriviamo il software per chi
+ci commissiona un progetto: essenziali, verificabili, rispettose di chi le usa.
 
-- **Un solo file HTML** — niente framework, niente build, niente dipendenze
-- **Zero cookie, zero tracker, zero richieste a terze parti** — anche i font sono di sistema
-- **Bilingue** italiano/inglese con rilevamento automatico della lingua
+- **Nessuna dipendenza a runtime** — niente framework, niente bundler, niente `node_modules`
+- **Zero cookie, zero tracker, zero richieste a terze parti** — anche i caratteri sono quelli di sistema
+- **Bilingue** italiano e inglese, con un URL per lingua e `hreflang` reciproci
 - **Tema chiaro e scuro** con preferenza persistente e rispetto di `prefers-color-scheme`
-- **Accessibile** — contrasti WCAG AA verificati, navigazione da tastiera, skip-link, `prefers-reduced-motion`
-- **SEO completa** — Open Graph, Twitter card, JSON-LD (Organization + WebSite), sitemap e robots
+- **Accessibile** — contrasti WCAG AA, navigazione da tastiera, skip-link, `prefers-reduced-motion`
+- **Dati strutturati** — `Organization`, `WebSite`, `Service`, `SoftwareApplication`, `AboutPage`,
+  `FAQPage`, `BreadcrumbList`, `ScholarlyArticle`, più sitemap e `robots.txt`
+
+### Come si costruisce
+
+Serve Python 3 e nient'altro. Le pagine sono generate: non si modificano a mano.
+
+```bash
+python3 _src/build.py        # genera le pagine, la sitemap e i due asset
+python3 _src/check_site.py   # deve stampare OK prima di pubblicare
+python3 -m http.server 8000  # anteprima su http://localhost:8000
+```
+
+Il build si ferma con un errore esplicito invece di produrre pagine sbagliate in silenzio: controlla
+che le due lingue non divergano, che i prezzi coincidano con il listino del sito di prodotto e che
+ogni articolo abbia la sua illustrazione e la sua card social.
 
 <div align="center">
-  <img src="assets/og-card.png" width="680" alt="G&G Technologies — Software, robotica e AI che fanno crescere le imprese">
+  <img src="assets/og-home-it.jpg" width="680" alt="G&G Technologies — wearable medicali, robotica e intelligenza artificiale, progettati e realizzati a San Marino">
 </div>
 
 <details>
@@ -67,11 +104,27 @@ Il sito aziendale, servito da GitHub Pages su [ggtechnologies.sm](https://ggtech
 
 <br>
 
-**G&G Technologies Srl** is a technology consulting company based in the Republic of San Marino: over 30 years in software and innovation, dozens of automated factories, and wearable solutions for biovital monitoring in healthcare and sport. Our research journey — the **DigiSense** project — led to [**Podz.AI**](https://ggtechnologies.sm/digisense-releases/), the personal AI workstation: a single application that works with your documents on your computer, without sending your data to anyone.
+**G&G Technologies Srl** designs and builds technology from the Republic of San Marino. It is led by
+Gian Angelo Geminiani, who has worked in this trade since 1997, with a network of collaborators and
+technology partners across several countries.
 
-We work in three areas: **medical wearables** (custom electronics, firmware, remote-monitoring platforms), **robotics & automation** (edge integration, Industry 5.0), and **artificial intelligence** (AI agents, local AI, privacy by design).
+Everything sits on **DigiSense®**, our registered framework: data acquisition, running the models
+and machine control, solved once and reused on every project. [**Podz.AI**](https://ggtechnologies.sm/en/podz-ai/),
+the personal AI workstation, is built on it.
 
-This repository hosts the company website — a single dependency-free HTML file: no cookies, no trackers, no third-party requests, bilingual IT/EN, light/dark theme, WCAG AA contrast, full SEO markup.
+We work in four areas: **medical wearables** (custom electronics, firmware, remote vital-signs
+monitoring platforms), **robotics & automation** (automation at the machine, integration with the
+systems you already run), **artificial intelligence** (agents built for one defined job, semantic
+search over your documents) and **on-premise AI** (models that run on your own servers, so the
+documents never leave your infrastructure).
+
+The wearable work went into a peer-reviewed study published in “Sensors” in 2024, written with the
+Italian National Research Council and four universities: nine hundred emergency workers followed for
+twelve months — [DOI 10.3390/s24216992](https://doi.org/10.3390/s24216992).
+
+This repository holds the company website: thirty static pages generated by a Python build. No
+runtime dependencies, no cookies, no trackers, no third-party requests, bilingual IT/EN with one URL
+per language, light and dark themes, WCAG AA contrast, and full structured-data markup.
 
 </details>
 
@@ -79,7 +132,10 @@ This repository hosts the company website — a single dependency-free HTML file
 
 **G&G Technologies Srl**
 Via Marino Moretti, 23 — 47899 Serravalle, Repubblica di San Marino
-[info@ggtechnologies.sm](mailto:info@ggtechnologies.sm) · +378 0549 900824 · [LinkedIn](https://www.linkedin.com/company/gg-technologies-srl)
+[info@ggtechnologies.sm](mailto:info@ggtechnologies.sm) · +378 0549 900824 ·
+[LinkedIn](https://www.linkedin.com/company/gg-technologies-srl)
+
+Risponde una persona del team, non un form, entro un giorno lavorativo.
 
 ---
 
