@@ -80,6 +80,23 @@
     <input type="file" id="file" accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values" hidden>
   </section>
 
+  <!-- The history lives on the opening screen and nowhere else: it is what you look at when you
+       have no file open, and it would be noise beside a trace. The entries are not buttons —
+       nothing can reopen a file from its name — so what they do for you happens elsewhere: the
+       same file, opened again, comes back at the zoom and selection you left it at. -->
+  <section class="history" id="history" hidden>
+    <div class="history-head">
+      <h2 id="historyTitle"></h2>
+      <span class="spacer"></span>
+      <button type="button" id="historyExport" class="ghost small"></button>
+      <button type="button" id="historyImport" class="ghost small"></button>
+      <button type="button" id="historyClear" class="ghost small"></button>
+    </div>
+    <p class="small" id="historyNote"></p>
+    <ul class="history-list" id="historyList"></ul>
+    <input type="file" id="historyFile" accept=".json,application/json" hidden>
+  </section>
+
   <section class="error" id="error" hidden>
     <h2 id="errorTitle"></h2>
     <p id="errorText"></p>

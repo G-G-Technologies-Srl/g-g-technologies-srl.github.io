@@ -225,6 +225,11 @@ button:disabled, input:disabled {
    boxes. The dash appears only while a file is over the window, where it does its actual job —
    saying "you can let go now" instead of decorating. */
 
+/* `flex: 1` while it is alone, `0 1 auto` once the history is under it. Left growing, the drop area
+   pushed the list to the bottom of the window with a hand's width of nothing in between, and the
+   two read as unrelated panels rather than as one opening screen. */
+.drop:has(+ .history:not([hidden])) { flex: 0 1 auto; padding-bottom: 20px; }
+
 .drop {
   flex: 1 1 auto;
   display: flex;
@@ -449,6 +454,65 @@ body.dragging .drop { position: relative; }
   margin-left: -1px;
   background: var(--accent);
 }
+
+/* ---------------------------------------------------------------------------------------------
+   history — the files opened before, on the opening screen only
+   --------------------------------------------------------------------------------------------- */
+
+/* The width of the drop area above it, so the two read as one column and not as two panels that
+   happen to be stacked. */
+.history {
+  width: min(680px, 100%);
+  margin: 0 auto 28px;
+  padding: 0 20px;
+}
+
+.history-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+
+.history-head h2 { font-size: 0.95rem; font-weight: 600; margin: 0; }
+
+/* `.small` is declared under `.drop`, so out here the note came out at body size and outshouted
+   the heading above it. Same values, not a new size. */
+.history .small { color: var(--faint); font-size: 12.5px; margin: 0; }
+
+.history-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.history-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.history-row:last-child { border-bottom: 0; }
+
+/* The name takes the room and the numbers keep theirs: a long name should be cut, not push the
+   figures off the end of the row. */
+.history-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-meta {
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.history-empty { padding: 12px; font-size: 13px; color: var(--faint); }
 
 /* ---------------------------------------------------------------------------------------------
    scrub — where you are in the file, and how much of it you are seeing

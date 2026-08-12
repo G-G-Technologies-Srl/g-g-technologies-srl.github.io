@@ -11,12 +11,15 @@ import { channelSvg, overlayHtml, indexAt } from "./chart.js";
 import * as theme from "./theme.js";
 import { mount as mountTable } from "./table.js";
 import { setup as setupInstall } from "./install.js";
+import * as history from "./history.js";
+import { download, restore } from "./io.js";
 
 const el = (id) => document.getElementById(id);
 
 let data = null;                        // the parse result, or null before a file is opened
 let selection = null;                   // { from, to } in row indices, or null for the whole file
 let sourceName = "";
+let sourceId = null;                    // the fingerprint of the open file, for the history
 const hiddenChannels = new Set();
 let painting = false;
 let view = "chart";                     // "chart" | "table"
@@ -86,6 +89,11 @@ function _applyText() {
   el("speed").setAttribute("aria-label", t("speedLabel"));
   el("restart").setAttribute("aria-label", t("restart"));
   el("viewHint").textContent = t("viewHint");
+  el("historyTitle").textContent = t("historyTitle");
+  el("historyNote").textContent = t("historyNote");
+  el("historyExport").textContent = t("historyExport");
+  el("historyImport").textContent = t("historyImport");
+  el("historyClear").textContent = t("historyClear");
   _updateExportLabel();
 }
 
@@ -109,6 +117,8 @@ async function _open(file) {
     _fit();
     hiddenChannels.clear();
     _showSheet();
+    _showHistory();                     // the panel belongs to the opening screen: it goes now
+    await _remember(file, result);
   } catch (ignored) {
     _fail("errorRead");
   }
@@ -116,7 +126,9 @@ async function _open(file) {
 
 function _fail(key) {
   data = null;
+  sourceId = null;
   el("errorText").textContent = t(key);
+  el("history").hidden = true;
   el("drop").hidden = true;
   el("sheet").hidden = true;
   el("error").hidden = false;
@@ -138,11 +150,118 @@ function _reset() {
   _stop();
   data = null;
   selection = null;
+  sourceId = null;
   el("file").value = "";
   el("error").hidden = true;
   el("sheet").hidden = true;
   el("drop").hidden = false;
   _toggleFileChrome(false);
+  _showHistory();
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  h i s t o r y
+// -----------------------------------------------------------------------------------------------------------------
+
+/**
+ * Write the file into the history, and come back to where it was left.
+ *
+ * The restoring happens here and not inside history.js on purpose: that module keeps records, this
+ * one owns the view. Ranges are clamped to the file as it is now, because the entry may have been
+ * written when the file was longer — same name, same head, a recorder still appending to it.
+ */
+async function _remember(file, result) {
+  sourceId = null;
+  if (!history.handle()) return;
+  const before = await history.record(file, result);
+  sourceId = await history.idOf(file, result.text);
+  if (!before) return;
+
+  const fits = (range) => range
+    && Number.isFinite(range.from) && Number.isFinite(range.to)
+    && range.to > range.from && range.to <= data.rowCount - 1;
+
+  if (fits(before.view)) _setVisible(before.view.from, before.view.to - before.view.from + 1);
+  if (fits(before.selection)) selection = { from: before.selection.from, to: before.selection.to };
+  if (fits(before.view) || fits(before.selection)) {
+    _note(t("historyResumed"));
+    _paint();
+  }
+}
+
+/**
+ * Save where you are, once things have stopped moving.
+ *
+ * Debounced, and it has to be: the view changes on every frame while the trace is playing, and a
+ * write to the database per frame would be sixty transactions a second to record a position nobody
+ * has finished choosing yet.
+ */
+let marking = 0;
+function _markLater() {
+  if (!sourceId) return;
+  clearTimeout(marking);
+  // The three values are captured now and not read inside the timer. Read there, `sourceId` is
+  // whatever is open when the timer fires — so closing one file and opening another within the
+  // delay wrote the first file's position onto the second file's record, and the second file then
+  // reopened somewhere it had never been. Nothing crashes and nothing looks wrong: the entry is
+  // simply about a file it was not about.
+  const id = sourceId;
+  const where = { ...visible };
+  const chosen = selection ? { ...selection } : null;
+  marking = setTimeout(() => history.mark(id, where, chosen), 1200);
+}
+
+/**
+ * Add a line to the notice strip without wiping what is already there.
+ *
+ * `_showNotice` has usually just written into it — dropped columns, ragged rows — and those are
+ * facts about the file that matter more than this one. Assigning would have thrown them away in
+ * the one case where both have something to say.
+ */
+function _note(text) {
+  const box = el("notice");
+  const already = box.innerHTML.trim();
+  box.innerHTML = already ? `${already} ${_escape(text)}` : _escape(text);
+  box.hidden = false;
+}
+
+function _historyRow(entry) {
+  const opened = entry.opened > 1
+    ? t("historyOpenedTimes").replace("{n}", num(entry.opened, 0))
+    : t("historyOpenedOnce");
+  const when = new Date(entry.openedLast).toLocaleDateString(
+    lang() === "it" ? "it-IT" : "en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  const parts = [
+    `${num(entry.rows, 0)} ${t("historyRows")}`,
+    `${num(entry.channels, 0)} ${t("historyChannels")}`,
+    when,
+    opened,
+  ];
+  return `<li class="history-row"><span class="history-name">${_escape(entry.name)}</span>`
+    + `<span class="history-meta">${parts.map(_escape).join(" · ")}</span></li>`;
+}
+
+async function _showHistory() {
+  const panel = el("history");
+  // Only on the opening screen. It follows the drop area exactly, so there is one condition to
+  // keep true instead of three that can disagree.
+  if (!history.handle() || el("drop").hidden) { panel.hidden = true; return; }
+  panel.hidden = false;
+  const entries = await history.recent();
+  el("historyList").innerHTML = entries.length
+    ? entries.map(_historyRow).join("")
+    : `<li class="history-empty">${_escape(t("historyEmpty"))}</li>`;
+  el("historyExport").disabled = entries.length === 0;
+  el("historyClear").disabled = entries.length === 0;
+}
+
+async function _importHistory(file) {
+  if (!file) return;
+  const outcome = await restore(history.handle(), await file.text(), history.IDENTITY);
+  el("historyNote").textContent = outcome.ok
+    ? t("historyImported").replace("{n}", num(outcome.restored, 0))
+    : t(outcome.reason);
+  await _showHistory();
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -322,6 +441,9 @@ function _repaint() {
   el("tick0").textContent = _axisLabel(visible.from);
   el("tick1").textContent = _axisLabel(visible.to);
   _updateExportLabel();
+  // One call site, and it is the right one: everything that moves the view or the selection ends
+  // up repainting. Debounced inside, so a playing trace does not write sixty times a second.
+  _markLater();
   if (view === "table" && table) table.reset();
 }
 
@@ -856,6 +978,26 @@ function _start() {
     // No restart of the loop: the next frame reads the new multiplier by itself, so dragging the
     // slider while it runs changes the pace without a stutter.
     _paint();
+  });
+
+  el("historyExport").addEventListener("click", () => download(history.handle(), history.IDENTITY));
+  el("historyImport").addEventListener("click", () => el("historyFile").click());
+  el("historyFile").addEventListener("change", (event) => {
+    _importHistory(event.target.files[0]);
+    event.target.value = "";            // so choosing the same file twice fires again
+  });
+  el("historyClear").addEventListener("click", async () => {
+    if (!confirm(t("historyClearAsk"))) return;
+    await history.forget();
+    await _showHistory();
+  });
+
+  // The database is opened after the interface is wired, not before: the app has to be usable the
+  // moment it is on screen, and a browser that refuses IndexedDB must cost a line of explanation,
+  // not a blank page.
+  history.start().then((on) => {
+    if (!on) el("historyNote").textContent = t("historyOff");
+    _showHistory();
   });
 
   _dragAndDrop();

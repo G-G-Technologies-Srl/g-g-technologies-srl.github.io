@@ -131,7 +131,7 @@ APPS = [
         "tags": ["dati"],
         # bozza | pronto — only "pronto" is indexed and listed in the sitemap.
         "stato": "pronto",
-        "version": "0.11.0",
+        "version": "0.12.0",
         "released": "2026-08-12",
         "updated": "2026-08-12",
         "licence": "Apache-2.0",
@@ -187,6 +187,7 @@ APPS = [
                 "Minimo, massimo e media di ogni canale sull'intervallo selezionato.",
                 "Esporta l'intervallo selezionato: le righe escono identiche a come sono entrate.",
                 "Legge anche i file a colonna singola, un campione per riga, come li esporta un ECG.",
+                "Riconosce un file già aperto e ti riporta allo zoom e all'intervallo di prima.",
                 "Apre file da centomila righe restando sotto i cento megabyte di memoria.",
             ],
             "does_not_title": "Cosa non fa",
@@ -207,6 +208,8 @@ APPS = [
                                       "rete."),
                 ("Installazione", "Facoltativa. Si apre nel browser, e dove il sistema lo "
                                   "permette si installa come un'app normale."),
+                ("Storico", "Ricorda i file che apri — com'erano fatti e dove eri arrivato, non il "
+                            "contenuto. Lo esporti, lo reimporti o lo svuoti quando vuoi."),
                 ("Lingue", "Italiano e inglese, seguono la lingua del browser."),
                 ("Licenza", "Apache-2.0. Il codice è pubblico e riusabile, anche in un lavoro "
                             "commerciale."),
@@ -291,6 +294,8 @@ APPS = [
                 "Minimum, maximum and mean of each channel over the selected range.",
                 "Exports the selected range: the rows come out exactly as they went in.",
                 "Reads single-column files too, one sample per line, the way an ECG exports them.",
+                "Recognises a file you have opened before and puts you back at the same zoom and "
+                "range.",
                 "Opens files of a hundred thousand rows and stays under a hundred megabytes.",
             ],
             "does_not_title": "What it does not do",
@@ -310,6 +315,9 @@ APPS = [
                 ("Offline", "After the first visit it works without a connection."),
                 ("Installation", "Optional. It opens in the browser, and where the system allows "
                                  "it, installs like any other app."),
+                ("History", "Remembers the files you open — what they looked like and where you "
+                            "had got to, not their contents. Export it, import it back, or clear "
+                            "it whenever you want."),
                 ("Languages", "Italian and English, following your browser language."),
                 ("Licence", "Apache-2.0. The code is public and reusable, commercial work "
                             "included."),
