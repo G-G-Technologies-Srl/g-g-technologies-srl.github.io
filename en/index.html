@@ -238,6 +238,22 @@
     ::selection { background: rgba(52, 211, 153, 0.35); }
 
     a { color: inherit; text-decoration: none; }
+
+    /* Inline links in body copy. The reset above strips every link's affordance and nothing put it
+       back for prose, so 106 links across the site read exactly like the text around them — the DOI
+       of the peer-reviewed study included, which is the one link the whole "check it yourself"
+       argument depends on. Same treatment as .hero-note a, which had its own rule already.
+       Breadcrumb and hero-note are excluded: they have their own look. Anything with a class —
+       .card-link, .btn, the share bar — is untouched. */
+    main :is(p, li) a:not([class]):not(.breadcrumb a):not(.hero-note a) {
+      color: var(--accent-text);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      text-decoration-thickness: 1px;
+    }
+    main :is(p, li) a:not([class]):not(.breadcrumb a):not(.hero-note a):hover {
+      color: var(--text);
+    }
     img { max-width: 100%; display: block; }
     ul { list-style: none; }
 

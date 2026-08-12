@@ -204,7 +204,9 @@ def _stylesheet_of(page_path, text, problems):
     if not href:
         problems.append(f"{page_path}: nessun foglio di stile, né inline né collegato")
         return ""
-    target = href.group(1)
+    # The href carries the version in a query string — site.css?v=012.ef394514 — which is part of
+    # the URL but not of the path on disk.
+    target = href.group(1).split("?", 1)[0]
     path = (ROOT / target.lstrip("/")) if target.startswith("/") else (ROOT / page_path).parent / target
     if not path.exists():
         problems.append(f"{page_path}: il foglio di stile collegato non esiste ({target})")

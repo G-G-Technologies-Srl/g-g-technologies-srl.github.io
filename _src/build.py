@@ -2592,29 +2592,76 @@ def _check_insights():
     return problems
 
 
-def _write_asset(base, extension, content):
-    """Write an asset under a name that carries a hash of its content, and drop the older ones.
+ASSET_SEQ = SRC / "asset-seq.json"
 
-    Eight hex characters are plenty here: this guards against a stale cache, not against someone
-    forging a collision. Stale copies are removed so assets/ does not fill up with one file per
-    deploy, and so a page that somehow still links an old name fails loudly instead of quietly
-    serving last week's stylesheet.
+
+def _asset_seq(key, digest):
+    """The build number to put in an asset's name, so the newest is obvious at a glance.
+
+    A content hash alone cannot be ordered: ?v=21343c1a and ?v=ef394514 say nothing about which
+    came first. A counter can, but it must move *only when the content moves*, or the caching this
+    whole scheme exists for stops working — a rebuild with identical CSS would change the URL and
+    force every reader to download the same bytes again.
+
+    So the counter is keyed to the digest: same content, same number, same URL, still cached. New
+    content, next number. The state lives in _src/asset-seq.json and is committed, otherwise a
+    fresh clone would restart from one and hand out versions lower than what is already online.
+    """
+    try:
+        state = json.loads(ASSET_SEQ.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        state = {}
+    entry = state.get(key) or {}
+    if entry.get("digest") == digest:
+        return entry["seq"]                     # unchanged: keep the name the browser has cached
+
+    # One counter per asset, so ?v=007 on the stylesheet means "the seventh stylesheet", not "the
+    # seventh time any asset changed" — a shared counter made the CSS 001 and the JS 002 in the same
+    # build, which reads like one is newer than the other. Never reuse a lower number, not even when
+    # reverting: the counter answers "how recent is this", not "which revision of the content".
+    seq = entry.get("seq", 0) + 1
+    state[key] = {"seq": seq, "digest": digest}
+    try:
+        ASSET_SEQ.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    except OSError as err:
+        print(f"nota: non riesco a scrivere _src/{ASSET_SEQ.name} ({err.strerror}); il progressivo "
+              f"di questo giro non è stato memorizzato")
+    return seq
+
+
+def _write_asset(base, extension, content):
+    """Write the asset under one fixed name and return the href, versioned with a query string.
+
+    The name on disk never changes — assets/site.css, assets/site.js — and the version travels in
+    the URL: `site.css?v=012.ef394514`. The browser's cache key is the whole URL, query string
+    included, so a changed digest is a different resource and gets refetched; an unchanged digest
+    keeps the same URL and stays cached.
+
+    This replaced putting the hash in the filename, which worked but accumulated: every CSS change
+    wrote a new file and left the previous one to be deleted, and any build that could not delete —
+    a read-only checkout, a stricter sandbox — silently orphaned it. Worse, in git each change
+    arrived as a delete plus an add, so committing half of it published a site with no stylesheet.
+    One file that changes in place has none of that: a normal diff, nothing to sweep, nothing to
+    forget.
+
+    The trade-off, stated plainly: filename fingerprinting is immune to intermediaries that strip or
+    ignore query strings, and this is not. Browsers do not, and neither does the CDN in front of
+    GitHub Pages, so in this setup the exchange is worth it.
     """
     digest = hashlib.sha256(content.encode("utf-8")).hexdigest()[:8]
-    name = f"{base}.{digest}{extension}"
+    name = f"{base}{extension}"
     (ASSETS / name).write_text(content, encoding="utf-8")
 
-    # Sweeping up is housekeeping, not correctness: the pages link the hashed name, so a leftover
-    # copy is clutter and nothing more. It must not be able to stop a build — on a read-only
-    # checkout the delete fails, and failing there would block a publication for no reason.
-    stale = [p for p in ASSETS.glob(f"{base}.*{extension}") if p.name != name]
-    stale += [p for p in [ASSETS / f"{base}{extension}"] if p.exists()]   # the pre-hash name
-    for old in stale:
+    # One-time tidying, left in place: earlier builds wrote site.<hash>.css alongside this one.
+    # It must not be able to stop a build — on a read-only checkout the delete fails, and failing
+    # there would block a publication for no reason.
+    for old in ASSETS.glob(f"{base}.*{extension}"):
         try:
             old.unlink()
         except OSError as err:
             print(f"nota: non riesco a togliere assets/{old.name} ({err.strerror}), toglilo a mano")
-    return name
+
+    return f"{name}?v={_asset_seq(name, digest):03d}.{digest}"
 
 
 def main():
@@ -2670,7 +2717,8 @@ def main():
 
     print("index.html       (it)")
     print("en/index.html    (en)")
-    print(f"assets/{ASSET_CSS}  ({(ASSETS / ASSET_CSS).stat().st_size // 1024} KB)")
+    css_file = ASSET_CSS.split("?", 1)[0]
+    print(f"assets/{ASSET_CSS}  ({(ASSETS / css_file).stat().st_size // 1024} KB)")
     print(f"assets/{ASSET_JS}")
     for slug in written:
         print(slug)

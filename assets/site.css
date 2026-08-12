@@ -137,6 +137,22 @@
     ::selection { background: rgba(52, 211, 153, 0.35); }
 
     a { color: inherit; text-decoration: none; }
+
+    /* Inline links in body copy. The reset above strips every link's affordance and nothing put it
+       back for prose, so 106 links across the site read exactly like the text around them — the DOI
+       of the peer-reviewed study included, which is the one link the whole "check it yourself"
+       argument depends on. Same treatment as .hero-note a, which had its own rule already.
+       Breadcrumb and hero-note are excluded: they have their own look. Anything with a class —
+       .card-link, .btn, the share bar — is untouched. */
+    main :is(p, li) a:not([class]):not(.breadcrumb a):not(.hero-note a) {
+      color: var(--accent-text);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      text-decoration-thickness: 1px;
+    }
+    main :is(p, li) a:not([class]):not(.breadcrumb a):not(.hero-note a):hover {
+      color: var(--text);
+    }
     img { max-width: 100%; display: block; }
     ul { list-style: none; }
 
@@ -1073,8 +1089,16 @@ section.tinted {
 
    The section's own 96px would stack on top of the hero's 72px and the drawing's internal
    breathing room, leaving the title floating a long way above its illustration. The banner reads
-   as part of the hero, so here the gap is closed instead. */
-.article-body { padding-top: 36px; }
+   as part of the hero, so here the gap is closed instead.
+
+   Four numbers stack up between the last line of the lead and the drawn panel, and only counting
+   them together explains the hole that was left: the hero's bottom padding, the lead's own
+   bottom margin, this padding, and the space inside the drawing — which is real space, because
+   the figure has a visible frame. 72 + 30 + 36 was too much before the drawing had even started;
+   24 + 30 + 16 is the same rhythm without the gap. The space inside the drawing stays as it is:
+   it belongs to the composition, and the three other articles share it. */
+.article-hero { padding-bottom: 24px; }
+.article-body { padding-top: 16px; }
 /* Same width as .prose: the banner belongs to the article, and one wider than the column it
    introduces reads as a separate object sitting above the text. */
 .article-art { max-width: 720px; margin: 0 auto 44px; }
