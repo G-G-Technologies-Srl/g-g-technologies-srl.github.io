@@ -7,3 +7,14 @@ __pycache__/
 # libri di riferimento: archiviati in locale, mai pubblicati
 _src/fonti/libri/
 _src/fonti/testo/
+
+# Annotazioni di lavoro, in blocco: appunti, bozze, backlog, analisi interne, registri di
+# decisioni, attribuzioni di progetti a datori di lavoro. Niente di qui è letto dal build —
+# verificato — e niente di qui deve essere leggibile da fuori.
+_src/fonti/
+
+# Istruzioni e documentazione interna di progetto: contengono il ragionamento sincero sugli
+# errori fatti e sulle cose che mancano. Servono a chi lavora nel repository, non a chi lo guarda.
+# Tienile in locale e in un backup tuo: se cambi macchina, da qui non le recuperi.
+/CLAUDE.md
+/_src/README.md
