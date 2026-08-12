@@ -2146,8 +2146,7 @@ PAGES = [
                 "sull'impalcatura.",
             ],
             "cards_title": "Cosa puoi verificare da fuori",
-            "cards_intro": "Quasi tutti i lavori sono coperti da accordi di riservatezza. Queste tre cose invece si "
-                           "controllano senza chiedere niente a noi.",
+            "cards_intro": "Non i nomi dei clienti. Le cose che puoi controllare da solo.",
             "cards": [
                 ("data", "Uno studio con revisione paritaria",
                  "Novecento operatori dell'emergenza seguiti per dodici mesi, in uno studio pubblicato "
@@ -2170,8 +2169,7 @@ PAGES = [
                   "<a href=\"/insights/\">Leggi gli articoli</a>"]),
             ],
             "steps_title": "Da dove viene la competenza",
-            "steps_intro": "Dai sistemi informativi di fabbrica ai dispositivi indossabili, dagli "
-                           "algoritmi alla ricerca universitaria. In ordine di tempo.",
+            "steps_intro": "Dai sistemi di fabbrica alla ricerca universitaria. In ordine di tempo.",
             "steps": [
                 ("1997 – 2002 · Silcea Group, poi SkyLab",
                  "Responsabile dei sistemi informativi, con l'incarico di mettere in produzione il "
@@ -2263,8 +2261,7 @@ PAGES = [
                 "registered trademark. The work goes on your problem, not on the scaffolding.",
             ],
             "cards_title": "What you can check from outside",
-            "cards_intro": "Our work sits under confidentiality agreements. These three things, "
-                           "though, can be checked without asking us for anything.",
+            "cards_intro": "Not client names. The things you can check for yourself.",
             "cards": [
                 ("data", "A peer-reviewed study",
                  "Nine hundred emergency workers followed for twelve months, in a study published in "
@@ -2287,8 +2284,7 @@ PAGES = [
                   "<a href=\"/en/insights/\">Read the articles</a>"]),
             ],
             "steps_title": "Where the expertise comes from",
-            "steps_intro": "From factory information systems to wearable devices, from algorithms "
-                           "to university research. In chronological order.",
+            "steps_intro": "From factory systems to university research. In chronological order.",
             "steps": [
                 ("1997 – 2002 · Silcea Group, then SkyLab",
                  "Head of information systems, tasked with putting the new ERP into production. "
