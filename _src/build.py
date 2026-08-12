@@ -2649,6 +2649,10 @@ def _render_app_page(lang, app):
         <div class="kicker">FAQ</div>
         <h2>{data['faq_title']}</h2>
 {_faq_html(data)}
+        <!-- Same four buttons as an article, and they point at *this* page and not at run/. The
+             running app is noindex and its canonical already names the scheda: a link passed
+             around to a page that asks not to be indexed collects nothing. -->
+{_share_html(lang, data, data['title'])}
       </div>
     </section>
 
