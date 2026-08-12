@@ -484,9 +484,11 @@ ARTICLES = [
             "kicker": "Misura · 12 agosto 2026",
             "h1": "Un numero non diventa una misura "
                   "<span class=\"grad-text\">perché ha due decimali</span>.",
-            "lead": "Anche il bracciale stima. La differenza fra un indicatore e una misura è "
-                    "una catena documentata e un'incertezza dichiarata, e si decide in progetto "
-                    "invece che alla fine.",
+            # The cuff has to be named here, not just referred to: the h1 says nothing about blood
+            # pressure, so "anche il bracciale" had no antecedent for anybody arriving cold.
+            "lead": "Anche il misuratore da ambulatorio stima, e lo dice la sua norma. A "
+                    "separare un indicatore da una misura sono una catena documentata e "
+                    "un'incertezza dichiarata. Poi un test di dieci minuti.",
             "role": "Per chi progetta, commissiona o compra dispositivi che mostrano un numero "
                     "sanitario.",
             "disclaimer": "Questo articolo ha finalità informative e non costituisce parere "
@@ -515,9 +517,9 @@ ARTICLES = [
             "kicker": "Measurement · 12 August 2026",
             "h1": "A number does not become a measurement "
                   "<span class=\"grad-text\">because it has two decimals</span>.",
-            "lead": "The cuff estimates too. What separates an indicator from a measurement is a "
-                    "documented chain and a stated uncertainty, and it gets decided at design "
-                    "time rather than at the end.",
+            "lead": "The cuff device in a clinic is estimating too: its own standard says so. "
+                    "What separates an indicator from a measurement is a documented chain and a "
+                    "stated uncertainty. Then a ten-minute test.",
             "role": "For people designing, specifying or buying devices that display a health "
                     "number.",
             "disclaimer": "This article is for information purposes only and constitutes neither "
