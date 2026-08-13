@@ -381,16 +381,19 @@ APPS = [
             "slug": "app/astrodroid",
             "short": "AstroDroid",
             "title": "AstroDroid — gioco vettoriale nel browser | G&G Technologies",
-            "description": "Un gioco di rocce e inerzia che gira nel browser, con la classifica "
-                           "e il gettone come in sala giochi. Niente account, niente server.",
+            "description": "Asteroidi da spezzare e un punteggio da battere, nel browser. "
+                           "Gettone e classifica come in sala giochi, senza account e senza "
+                           "server.",
             "kicker": "App gratuita e open source",
-            "h1": "Una sala giochi che <span class=\"grad-text\">non manda niente</span> a "
-                  "nessuno.",
-            "lead": "Rocce che si spezzano, una nave che non frena e un gettone da inserire. La "
-                    "classifica resta su questo computer, perché non c'è un server a cui "
-                    "mandarla.",
-            "summary": "Gioco vettoriale con classifica e gettone. Gira nel browser e non manda "
-                       "niente a nessuno.",
+            # Apre con la meccanica, non con il vincolo tecnico: quello che tiene insieme il
+            # catalogo lo dice l'indice, e chi arriva qui vuole sapere che gioco è. La privacy
+            # resta dove è verificabile — nei fatti in breve e nel «cosa non fa».
+            "h1": "Una roccia grande, <span class=\"grad-text\">due più piccole</span>, e "
+                  "nessun freno.",
+            "lead": "Spingi una volta e continui ad andare. Spari, il masso si spezza, e le "
+                    "schegge valgono più del masso. Il gettone è gratis e la classifica è tua.",
+            "summary": "Asteroidi che si spezzano, una nave senza freni e un gettone. La "
+                       "classifica resta su questo computer.",
             "intro_title": "Perché un gioco",
             "intro_h2": "Il vincolo è lo stesso; <span class=\"grad-text\">cambia chi lo "
                         "guarda</span>.",
@@ -409,7 +412,7 @@ APPS = [
             ],
             "does_title": "Cosa fa",
             "does": [
-                "Rocce in tre taglie: una grande si spezza in due medie, una media in due piccole.",
+                "Asteroidi in tre taglie: uno grande si spezza in due medi, uno medio in due piccoli.",
                 "Una nave con l'inerzia: spingi una volta e continui ad andare.",
                 "Iperspazio: ti sposta altrove di colpo, con un rischio che cresce a ogni salto.",
                 "Due dischi volanti, uno che spara a caso e uno che mira.",
@@ -483,15 +486,16 @@ APPS = [
             "slug": "en/app/astrodroid",
             "short": "AstroDroid",
             "title": "AstroDroid — a vector game in the browser | G&G Technologies",
-            "description": "A game of rocks and inertia that runs in the browser, with a high "
-                           "score table and an arcade token. No account, no server.",
+            "description": "Asteroids to break apart and a score to beat, in the browser. A "
+                           "token and a high score table as an arcade had them, with no account "
+                           "and no server.",
             "kicker": "Free and open source",
-            "h1": "An arcade that <span class=\"grad-text\">sends nothing</span> to anybody.",
-            "lead": "Rocks that break apart, a ship with no brakes, and a token to insert. The "
-                    "high score table stays on this computer, because there is no server to send "
-                    "it to.",
-            "summary": "A vector game with a high score table and a token. It runs in the browser "
-                       "and sends nothing anywhere.",
+            "h1": "One large rock, <span class=\"grad-text\">two smaller ones</span>, and no "
+                  "brakes.",
+            "lead": "Thrust once and you keep going. You fire, the rock breaks, and the pieces "
+                    "are worth more than the rock was. The token is free and the table is yours.",
+            "summary": "Asteroids that break apart, a ship with no brakes, and a token. The high "
+                       "score table stays on this computer.",
             "intro_title": "Why a game",
             "intro_h2": "The constraint is the same; <span class=\"grad-text\">the audience "
                         "changes</span>.",
@@ -511,8 +515,8 @@ APPS = [
             ],
             "does_title": "What it does",
             "does": [
-                "Rocks in three sizes: a large one breaks into two medium, a medium into two "
-                "small.",
+                "Asteroids in three sizes: a large one breaks into two medium, a medium into "
+                "two small.",
                 "A ship with inertia: thrust once and you keep going.",
                 "Hyperspace: it drops you elsewhere at once, at a risk that grows with every jump.",
                 "Two saucers, one firing at random and one taking aim.",

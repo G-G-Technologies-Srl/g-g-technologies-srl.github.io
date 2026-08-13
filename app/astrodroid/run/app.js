@@ -149,7 +149,6 @@ function _show(next) {
   }
   el("hud").hidden = !(next === "playing" || next === "paused");
   el("pads").hidden = !(next === "playing");
-  el("demoBadge").hidden = next !== "attract";
   document.documentElement.dataset.astro = next;
 }
 

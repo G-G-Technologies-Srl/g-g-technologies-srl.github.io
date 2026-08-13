@@ -59,19 +59,6 @@ body { overflow: hidden; }              /* the field is the page; nothing here s
 
 #field { display: block; width: 100%; height: 100%; }
 
-.badge {
-  position: absolute;
-  top: 12px;
-  right: 14px;
-  font-size: 11px;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--faint);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 3px 8px;
-  background: var(--panel);
-}
 
 /* The panels sit over the field, and the field is dimmed underneath by the renderer rather than by
    a background here. Done in CSS the veil would cover the app bar too, and the bar is not part of

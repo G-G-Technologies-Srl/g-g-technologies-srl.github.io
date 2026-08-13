@@ -86,7 +86,6 @@ const IT = {
   back: "Indietro",
   backToPage: "Torna alla pagina",
   sourceLabel: "Codice sorgente",
-  demoBadge: "Dimostrazione",
   // The accessibility line, said where it is true instead of in small print. A real-time game is
   // not playable without sight, and pretending otherwise helps nobody.
   a11yNote: "Si gioca interamente da tastiera. È un gioco d'azione in tempo reale: serve vedere "
@@ -169,7 +168,6 @@ const EN = {
   back: "Back",
   backToPage: "Back to the page",
   sourceLabel: "Source code",
-  demoBadge: "Demonstration",
   a11yNote: "It plays entirely from the keyboard. It is a real-time action game: you need to see "
     + "the screen.",
   liveGameOver: "Game over. {score} points, wave {wave}.",
