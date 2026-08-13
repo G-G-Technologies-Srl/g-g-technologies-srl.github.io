@@ -458,11 +458,14 @@ APPS = [
                  "Si perdono. È la conseguenza di non avere un server, e per questo l'esportazione "
                  "è dentro l'app fin dalla prima versione: un file sul tuo disco, che si reimporta "
                  "quando vuoi."),
-                ("È il gioco di Atari?",
-                 "No. È un gioco originale nella tradizione degli sparatutto vettoriali di fine "
-                 "anni Settanta, scritto da noi. Le meccaniche di quel genere si ritrovano in "
-                 "decine di giochi; il nome e il marchio di quello originale appartengono a chi "
-                 "li ha registrati, e qui non compaiono."),
+                # La domanda resta, il marchio no. Nominare il titolo del 1979 per dire «non
+                # siamo quello» crea comunque l'accostamento, e su un dominio aziendale il modo
+                # più pulito di stare lontani da un marchio è non scriverlo.
+                ("È la conversione di un gioco già esistente?",
+                 "No. È un gioco originale, scritto da noi, nella tradizione degli sparatutto "
+                 "vettoriali di fine anni Settanta. Le meccaniche di quel genere si ritrovano in "
+                 "decine di giochi e non appartengono a nessuno; i nomi e i marchi di quei "
+                 "giochi appartengono a chi li ha registrati, e qui non ne compare nessuno."),
                 ("Perché la regalate?",
                  "Perché mostra in due minuti quello che scriviamo nelle pagine: che molte cose "
                  "che oggi passano da un server non hanno bisogno di passarci. Qui il caso è "
@@ -560,11 +563,11 @@ APPS = [
                  "They are lost. That is the consequence of having no server, which is why the "
                  "export is inside the app from the first version: a file on your own disk, put "
                  "back whenever you want."),
-                ("Is this the Atari game?",
-                 "No. It is an original game in the tradition of the vector shooters of the late "
-                 "1970s, written by us. The mechanics of that genre turn up in dozens of games; "
-                 "the name and the mark of the original belong to whoever registered them, and "
-                 "neither appears here."),
+                ("Is this a conversion of an existing game?",
+                 "No. It is an original game, written by us, in the tradition of the vector "
+                 "shooters of the late 1970s. The mechanics of that genre turn up in dozens of "
+                 "games and belong to nobody; the names and marks of those games belong to "
+                 "whoever registered them, and none of them appears here."),
                 ("Why give it away?",
                  "Because in two minutes it shows what our pages argue: that a good deal of what "
                  "goes through a server today has no need to. Here the case is a light one; in "
