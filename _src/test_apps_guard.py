@@ -18,6 +18,7 @@ from pathlib import Path
 SRC = Path(__file__).resolve().parent
 ROOT = SRC.parent
 RUN = ROOT / "app" / "csv-scope" / "run"
+LIB = ROOT / "app" / "_lib"
 
 sys.path.insert(0, str(SRC))
 from apps import APPS                                         # noqa: E402
@@ -78,6 +79,42 @@ CASES = [
      RUN / "app.js",
      'import { parse, serialise } from "./csv.js";',
      'import { parse, serialise } from "../../_lib/csv.js";'),
+
+    # The four below arrived with the library, and the first is the one that mattered: a shared
+    # module left out of the precache list works in every test and is missing only with the
+    # network off — the one condition nobody tries by accident.
+    ("un modulo condiviso fuori dall'elenco di precache",
+     RUN / "sw.js",
+     "  '../../_lib/store.js',\n",
+     ""),
+
+    ("la import map che punta da un'altra parte",
+     RUN / "index.html",
+     '{ "imports": { "gg/": "../../_lib/" } }',
+     '{ "imports": { "gg/": "/app/_lib/v2/" } }'),
+
+    ("una richiesta di rete dentro la libreria condivisa",
+     LIB / "store.js",
+     "export async function persist() {",
+     "export async function persist() {\n  fetch('/telemetria', { method: 'POST' });"),
+
+    ("un modulo elencato che nella libreria non esiste",
+     RUN / "sw.js",
+     "  '../../_lib/io.js',",
+     "  '../../_lib/io.js',\n  '../../_lib/compressione.js',"),
+
+    # The last two are silent failures, which is why they are checked at all: one puts the name of
+    # a key on the page as if it were a label, the other stops the app at the first listener with
+    # a message that names no file the reader would recognise.
+    ("una chiave di traduzione che non esiste",
+     RUN / "index.html",
+     '<span class="meta" id="tagline">',
+     '<span class="meta" id="tagline" data-t="taglineInventata">'),
+
+    ("un elemento cercato dal codice e assente dal markup",
+     RUN / "index.html",
+     'id="fileName"',
+     'id="fileNameRinominato"'),
 ]
 
 

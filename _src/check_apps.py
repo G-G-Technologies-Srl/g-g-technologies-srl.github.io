@@ -23,6 +23,12 @@ from apps import APPS                                         # noqa: E402
 ROOT = Path(__file__).resolve().parent.parent
 APP_DIR = ROOT / "app"
 
+# The shared library, and the specifier the apps reach it by. Both apps import through the import
+# map — `gg/store.js`, never `../../_lib/store.js` — so the day the library takes a version number
+# is one line per app instead of every import in every file.
+LIB_DIR = APP_DIR / "_lib"
+LIB_SPECIFIER = "gg/"
+
 # What the manifest and the palette have to agree on. Same values as styles.css and the site.
 DARK_BAR = "#0d1220"
 
@@ -52,6 +58,27 @@ def _run_files(key):
     """Every file the browser can load, relative to run/."""
     run = APP_DIR / key / "run"
     return sorted(str(p.relative_to(run)) for p in run.rglob("*") if p.is_file())
+
+
+def _lib_files():
+    """Every file in the shared library, as the apps name it in their precache list."""
+    if not LIB_DIR.is_dir():
+        return set()
+    return {f"../../_lib/{p.relative_to(LIB_DIR)}" for p in LIB_DIR.rglob("*") if p.is_file()
+            and p.name not in ("LICENSE", "NOTICE")}
+
+
+def _lib_specifiers(key):
+    """Which library modules an app actually imports, as `gg/…` specifiers."""
+    used = set()
+    run = APP_DIR / key / "run"
+    for path in sorted(run.rglob("*.js")):
+        for match in re.findall(r'from\s+["\'](gg/[^"\']+)["\']', path.read_text(encoding="utf-8")):
+            used.add(match)
+    for path in sorted(run.rglob("*.html")):
+        for match in re.findall(r'href="\.\./\.\./_lib/([^"]+)"', path.read_text(encoding="utf-8")):
+            used.add(LIB_SPECIFIER + match)
+    return used
 
 
 def _js_keys(source, name):
@@ -84,6 +111,41 @@ def _check_registry(problems):
         if app["key"] in on_disk and article_art.APP_ART.get(app["key"]) is None:
             problems.append(f"«{app['key']}»: manca il disegno «{shape}» in APP_ART "
                             f"dentro _src/article_art.py")
+
+
+def _check_lib(problems):
+    """The shared library, once, instead of once per app.
+
+    It exists at all because the rule in app/CLAUDE.md was met: a module enters `_lib/` on its
+    second real use, not on the first, and the second app is what put it there. From that point on
+    the library is a thing that can be got wrong on its own — hence its own licence, and its own
+    version of the promise every app makes.
+    """
+    if not LIB_DIR.is_dir():
+        return
+    for name in ("LICENSE", "NOTICE"):
+        if not (LIB_DIR / name).is_file():
+            problems.append(f"manca app/_lib/{name}: quando un modulo si sposta qui, la sua "
+                            f"licenza viene con lui")
+    _check_lib_no_network(problems)
+
+
+def _check_lib_no_network(problems):
+    """The library makes the same promise the apps do, and nothing else was checking it.
+
+    Worth its own function rather than a wider glob: `_check_no_network` walks `run/`, and the day
+    the first module moved out of an app it left the only check that covered it behind. A shared
+    module that reached the network would break the promise of every app at once.
+    """
+    for path in sorted(LIB_DIR.rglob("*.js")):
+        code = re.sub(r"/\*.*?\*/|//[^\n]*", "", path.read_text(encoding="utf-8"), flags=re.S)
+        for pattern, label in NETWORK:
+            if re.search(pattern, code):
+                problems.append(f"_lib/{path.name}: contiene {label} — le app promettono di non "
+                                f"fare richieste di rete")
+    for path in sorted(LIB_DIR.rglob("*.css")):
+        if re.search(r"url\(\s*['\"]?https?://|@import[^;]*http", path.read_text(encoding="utf-8")):
+            problems.append(f"_lib/{path.name}: carica una risorsa da un altro dominio")
 
 
 def _check_no_network(problems, key):
@@ -126,6 +188,42 @@ def _check_i18n(problems, key):
         problems.append(f"{key}/run/i18n.js: «{missing}» manca in EN")
     for missing in sorted(set(en) - set(it)):
         problems.append(f"{key}/run/i18n.js: «{missing}» manca in IT")
+
+
+def _check_wiring(problems, key):
+    """Every key asked for exists, and every element asked for exists.
+
+    Two failures with the same shape: they are silent. A `data-t` naming a key that is not in the
+    dictionary renders as the key itself — a label reading "howHyper" in the middle of the page,
+    which nobody sees until it is on somebody else's screen. An `el("…")` naming an id that is not
+    in the markup returns null, and the app dies at the first `addEventListener` with a message
+    that names no file the reader recognises.
+
+    Both are caught by reading the two files side by side, which is cheap, and neither is caught by
+    anything else in this project.
+    """
+    run = APP_DIR / key / "run"
+    html_path = run / "index.html"
+    i18n_path = run / "i18n.js"
+    if not html_path.is_file() or not i18n_path.is_file():
+        return
+
+    html = html_path.read_text(encoding="utf-8")
+    known = set(_js_keys(i18n_path.read_text(encoding="utf-8"), "IT") or [])
+    if not known:
+        return                                        # _check_i18n has already said so
+
+    for used in sorted(set(re.findall(r'data-t(?:-label)?="([^"]+)"', html))):
+        if used not in known:
+            problems.append(f"{key}/run/index.html: «data-t={used}» non è una chiave di i18n.js — "
+                            f"in pagina comparirebbe il nome della chiave")
+
+    ids = set(re.findall(r'\bid="([^"]+)"', html))
+    for path in sorted(run.rglob("*.js")):
+        for wanted in sorted(set(re.findall(r'\bel\("([^"]+)"\)', path.read_text(encoding="utf-8")))):
+            if wanted not in ids:
+                problems.append(f"{key}/run/{path.name}: cerca l'elemento «{wanted}», che nel "
+                                f"markup non c'è — l'app si fermerebbe all'avvio")
 
 
 def _check_manifest(problems, key, app):
@@ -202,9 +300,17 @@ def _check_precache(problems, key):
         problems.append(f"{key}/run/sw.js: non trovo l'elenco ASSETS")
         return
 
-    listed = {entry.split("?")[0].lstrip("./")
-              for entry in re.findall(r"'([^']+)'", block.group(1))}
+    # Comments come out first. The list is commented, and an apostrophe in ordinary prose — "the
+    # page's import map" — opens a string as far as this regex is concerned, which turned two
+    # paragraphs of English into two entries that did not exist.
+    body = re.sub(r"//[^\n]*", "", block.group(1))
+    entries = [entry.split("?")[0] for entry in re.findall(r"'([^']+)'", body)]
+
+    # Two kinds of entry, and they are checked against two different directories: what the app is
+    # made of, and what it borrows from the shared library one level up.
+    listed = {entry.lstrip("./") for entry in entries if not entry.startswith("../")}
     listed.discard("")                                        # './' is the directory itself
+    listed_lib = {entry for entry in entries if entry.startswith("../")}
 
     on_disk = set(_run_files(key)) - {"sw.js"}
     for missing in sorted(on_disk - listed):
@@ -212,8 +318,43 @@ def _check_precache(problems, key):
                         f"mancherebbe")
     for extra in sorted(listed - on_disk):
         problems.append(f"{key}/run/sw.js: ASSETS elenca {extra}, che non esiste")
-    if "sw.js" in {e.lstrip("./") for e in re.findall(r"'([^']+)'", block.group(1))}:
+    if "sw.js" in {e.lstrip("./") for e in entries}:
         problems.append(f"{key}/run/sw.js: si mette in cache da sé, e così non si aggiorna più")
+
+    # The library is the one place where a path is written twice: once as `gg/…` through the import
+    # map, and once in full here, because a service worker does not see the import map. Nothing but
+    # this check keeps the two saying the same thing.
+    #
+    # Only what the app imports has to be listed — an app that uses three modules should not carry
+    # six — but everything listed must exist, and everything imported must be listed. The second
+    # half is the one that bites: a module missing from ASSETS works in every test and is missing
+    # only with the network off, which is the one condition nobody tries.
+    on_disk_lib = _lib_files()
+    for extra in sorted(listed_lib - on_disk_lib):
+        problems.append(f"{key}/run/sw.js: ASSETS elenca {extra}, che non esiste in app/_lib/")
+    for used in sorted(_lib_specifiers(key)):
+        wanted = used.replace(LIB_SPECIFIER, "../../_lib/", 1)
+        if wanted not in listed_lib:
+            problems.append(f"{key}: importa «{used}» ma sw.js non lo elenca — senza rete "
+                            f"l'app non partirebbe")
+
+
+def _check_lib_map(problems, key):
+    """The import map exists, points at the library, and is the only way in."""
+    path = APP_DIR / key / "run" / "index.html"
+    if not path.is_file():
+        return
+    html = path.read_text(encoding="utf-8")
+    used = _lib_specifiers(key)
+    found = re.search(r'"imports"\s*:\s*\{[^}]*"gg/"\s*:\s*"([^"]+)"', html)
+    if not found:
+        if used:
+            problems.append(f"{key}/run/index.html: importa «gg/…» ma non c'è la import map che "
+                            f"dice dove sia")
+        return
+    if found.group(1) != "../../_lib/":
+        problems.append(f"{key}/run/index.html: la import map manda «gg/» a {found.group(1)!r}, "
+                        f"atteso '../../_lib/'")
 
 
 def _check_licence(problems, key):
@@ -245,17 +386,20 @@ def _check_lib_imports(problems, key):
 def main():
     problems = []
     _check_registry(problems)
+    _check_lib(problems)
 
     by_key = {app["key"]: app for app in APPS}
     checked = [key for key in _apps_on_disk() if key in by_key]
     for key in checked:
         _check_no_network(problems, key)
         _check_i18n(problems, key)
+        _check_wiring(problems, key)
         _check_manifest(problems, key, by_key[key])
         _check_version(problems, key, by_key[key])
         _check_precache(problems, key)
         _check_licence(problems, key)
         _check_lib_imports(problems, key)
+        _check_lib_map(problems, key)
 
     if problems:
         print("\n".join("  " + p for p in problems))
@@ -263,7 +407,8 @@ def main():
     print(f"OK — {len(checked)} app: {', '.join(checked) or 'nessuna'}.\n"
           "     nessuna richiesta di rete, chiavi IT/EN allineate, manifest e icone,\n"
           "     versione in un posto solo, elenco di precache pari alla cartella,\n"
-          "     licenza nella cartella e non alla radice, import verso _lib/.")
+          "     licenza nella cartella e non alla radice, import map verso _lib/,\n"
+          "     ogni modulo condiviso davvero in cache, chiavi e id che esistono.")
 
 
 if __name__ == "__main__":

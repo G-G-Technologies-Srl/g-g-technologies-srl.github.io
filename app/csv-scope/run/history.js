@@ -14,7 +14,7 @@
 // name, so the history earns its place another way: a fingerprint recognises the same file when it
 // comes back, and the app puts you where you left off instead of at row zero.
 
-import { open, put, get, list, remove, clear, count, persist } from "./store.js";
+import { open, put, get, list, remove, clear, count, persist } from "gg/store.js";
 
 const DB = "gg.csv-scope";
 const STORE = "files";

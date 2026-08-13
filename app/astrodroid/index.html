@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AstroDroid — gioco vettoriale nel browser | G&amp;G Technologies</title>
+  <meta name="description" content="Un gioco di rocce e inerzia che gira nel browser, con la classifica e il gettone come in sala giochi. Niente account, niente server.">
+  <meta name="author" content="G&amp;G Technologies Srl">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="theme-color" content="#0d1220">
+  <link rel="canonical" href="https://ggtechnologies.sm/app/astrodroid/">
+  <link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/app/astrodroid/">
+  <link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/app/astrodroid/">
+  <link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/app/astrodroid/">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="G&amp;G Technologies">
+  <meta property="og:title" content="AstroDroid — gioco vettoriale nel browser | G&amp;G Technologies">
+  <meta property="og:description" content="Un gioco di rocce e inerzia che gira nel browser, con la classifica e il gettone come in sala giochi. Niente account, niente server.">
+  <meta property="og:url" content="https://ggtechnologies.sm/app/astrodroid/">
+  <meta property="og:image" content="https://ggtechnologies.sm/assets/og-app-astrodroid-it.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="it_IT">
+  <meta property="og:locale:alternate" content="en_GB">
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AstroDroid — gioco vettoriale nel browser | G&amp;G Technologies">
+  <meta name="twitter:description" content="Un gioco di rocce e inerzia che gira nel browser, con la classifica e il gettone come in sala giochi. Niente account, niente server.">
+  <meta name="twitter:image" content="https://ggtechnologies.sm/assets/og-app-astrodroid-it.jpg">
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../../assets/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../../assets/favicon-32.png">
+  <script>
+    (function () {
+      var theme = '';
+      try { theme = localStorage.getItem('gg-theme') || ''; } catch (ignored) { /* unavailable */ }
+      if (theme !== 'light' && theme !== 'dark') {
+        theme = (window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+      }
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.classList.add('js');
+    })();
+  </script>
+  <link rel="stylesheet" href="../../assets/site.css?v=009.fcec0e10">
+  <script type="application/ld+json">
+[
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "AstroDroid",
+    "url": "https://ggtechnologies.sm/app/astrodroid/",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Any (web browser)",
+    "softwareVersion": "0.1.0",
+    "datePublished": "2026-08-13",
+    "dateModified": "2026-08-13",
+    "license": "https://www.apache.org/licenses/LICENSE-2.0",
+    "description": "Un gioco di rocce e inerzia che gira nel browser, con la classifica e il gettone come in sala giochi. Niente account, niente server.",
+    "inLanguage": "it",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "EUR"
+    },
+    "publisher": {
+      "@id": "https://ggtechnologies.sm/#organization"
+    }
+  }
+]
+  </script>
+</head>
+<body>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs><linearGradient id="icoGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#10b981"/></linearGradient></defs></svg>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs><linearGradient id="artEdge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent-strong)"/></linearGradient><linearGradient id="artPanel" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="var(--panel-2)"/><stop offset="0.6" stop-color="var(--panel)"/></linearGradient><radialGradient id="artGlow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="var(--glow-a)"/><stop offset="1" stop-color="var(--glow-a)" stop-opacity="0"/></radialGradient></defs></svg>
+  <a class="skip-link" href="#main">Vai al contenuto</a>
+
+  <header class="site-header">
+    <nav class="nav" aria-label="Navigazione principale">
+      <a href="/" class="brand">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><defs><linearGradient id="ggMark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5eecab"/><stop offset="1" stop-color="#10b981"/></linearGradient><mask id="ggWire"><path d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="#fff" stroke-width="13"/><path d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="#000" stroke-width="10"/></mask></defs><rect class="wire" width="100" height="100" mask="url(#ggWire)"/><path class="lit" d="M66 50 H86 A36 36 0 1 1 50 14" fill="none" stroke="url(#ggMark)" stroke-width="13" stroke-linecap="round"/><circle class="click" cx="50" cy="50" r="9" fill="none" stroke="#34d399" stroke-width="2"/><circle class="led" cx="50" cy="50" r="9"/></svg></span>
+        <span class="brand-text">
+          <span class="brand-name">G&amp;G Technologies</span>
+          <span class="brand-payoff">Accendiamo il futuro</span>
+        </span>
+      </a>
+
+      <div class="nav-links" id="navLinks">
+        <a href="/#services">Servizi</a>
+        <a href="/podz-ai/">Podz.AI</a>
+        <a href="/insights/">Insights</a>
+        <a href="/chi-siamo/">Chi siamo</a>
+        <a href="/#contact">Contatti</a>
+      </div>
+
+      <div class="nav-actions">
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Tema chiaro/scuro · Light/dark theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2"/>
+            <path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.2 14.5A8.3 8.3 0 0 1 9.5 3.8a8.3 8.3 0 1 0 10.7 10.7Z"/>
+          </svg>
+        </button>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <span class="current">IT</span>
+          <a href="https://ggtechnologies.sm/en/app/astrodroid/" hreflang="en" lang="en">EN</a>
+        </div>
+        <a class="btn btn-primary nav-cta" href="mailto:info@ggtechnologies.sm?subject=Richiesta%20informazioni">Parla con noi</a>
+        <button class="menu-toggle" id="menuToggle" aria-label="Menu" aria-expanded="false" aria-controls="navLinks"><span></span></button>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero page-hero">
+      <div class="hero-bg" aria-hidden="true">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+      </div>
+
+      <div class="container">
+        <div>
+          <nav class="breadcrumb" aria-label="Percorso"><ol><li><a href="/">Home</a></li><li><a href="/app/">App</a></li><li aria-current="page">AstroDroid</li></ol></nav>
+          <div class="kicker">App gratuita e open source</div>
+          <h1>Una sala giochi che <span class="grad-text">non manda niente</span> a nessuno.</h1>
+          <p class="hero-sub">Rocce che si spezzano, una nave che non frena e un gettone da inserire. La classifica resta su questo computer, perché non c'è un server a cui mandarla.</p>
+          <p class="article-tags"><span class="tag-label">Categoria</span><a class="tag" href="/app/?tag=svago">Svago</a></p>
+          <div class="hero-ctas">
+            <a class="btn btn-primary" href="/app/astrodroid/run/">Apri l'app</a>
+            <a class="btn btn-ghost" href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/astrodroid" rel="noopener">
+              Codice sorgente</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="article-body">
+      <div class="container">
+        <figure class="article-art app-art reveal">
+          <svg viewBox="0 0 1000 340" role="img"
+               aria-labelledby="appastrodroidT appastrodroidD">
+            <title id="appastrodroidT">La roccia che si spezza in pezzi più piccoli</title>
+            <desc id="appastrodroidD">Dentro un riquadro chiuso, un quadrato grande si divide in due più piccoli, che si dividono ancora, fino a una fila di quadratini luminosi. Una linea entra da sinistra e si ferma sul primo quadrato.</desc>
+            <ellipse cx="560" cy="156" rx="360" ry="177" fill="url(#artGlow)"/><rect x="40" y="53" width="920" height="233" rx="18" fill="url(#artPanel)" stroke="var(--border)"/><rect x="92.4" y="52.4" width="815.1" height="2.0" rx="1" fill="url(#artEdge)"/><rect x="81.4" y="173.7" width="87.4" height="2.0" rx="1" fill="url(#artEdge)"/><rect x="248.3" y="104.7" width="223.3" height="70.0" rx="1" fill="url(#artEdge)"/><rect x="248.3" y="174.7" width="223.3" height="70.0" rx="1" fill="url(#artEdge)"/><rect x="185" y="140" width="70.0" height="70.0" rx="2" fill="url(#artEdge)" opacity="0.46"/><rect x="506.3" y="72.5" width="240.5" height="32.2" rx="1" fill="url(#artEdge)"/><rect x="506.3" y="104.7" width="240.5" height="32.2" rx="1" fill="url(#artEdge)"/><rect x="506.3" y="212.4" width="240.5" height="32.2" rx="1" fill="url(#artEdge)"/><rect x="506.3" y="244.6" width="240.5" height="32.2" rx="1" fill="url(#artEdge)"/><rect x="467" y="83" width="43.4" height="43.4" rx="2" fill="url(#artEdge)" opacity="0.73"/><rect x="467" y="223" width="43.4" height="43.4" rx="2" fill="url(#artEdge)" opacity="0.73"/><rect x="744" y="59" width="26.9" height="26.9" rx="2" fill="url(#artEdge)" opacity="1.00"/><rect x="744" y="123" width="26.9" height="26.9" rx="2" fill="url(#artEdge)" opacity="1.00"/><rect x="744" y="199" width="26.9" height="26.9" rx="2" fill="url(#artEdge)" opacity="1.00"/><rect x="744" y="263" width="26.9" height="26.9" rx="2" fill="url(#artEdge)" opacity="1.00"/>
+          </svg>
+        </figure>
+
+        <div class="kicker">Perché un gioco</div>
+        <h2>Il vincolo è lo stesso; <span class="grad-text">cambia chi lo guarda</span>.</h2>
+        <div class="about-text reveal">
+          <p>Le app che pubblichiamo hanno una cosa sola in comune, ed è un vincolo tecnico: girano sulla macchina di chi le apre e non mandano niente da nessuna parte. Un visualizzatore di misure lo dimostra bene a chi ha un file di misure. Un gioco lo dimostra a tutti gli altri.</p>
+          <p>Qui il vincolo si vede in un punto preciso: la classifica. Un gioco online la terrebbe su un server, con un account e una registrazione. Questo la tiene nel browser, come la teneva il cabinato in sala giochi — era la classifica di quella macchina, e per batterla ci tornavi.</p>
+          <p>Il gettone è lo stesso ragionamento. Non serve a limitare le partite, che sono infinite: serve a dire che quello che stai per fare comincia adesso. È anche il gesto che serve al browser per far partire l'audio, quindi il rito si paga da sé.</p>
+        </div>
+        <div class="app-lists">
+          <div class="app-list does">
+            <h3>Cosa fa</h3>
+            <ul class="ticks">
+              <li>Rocce in tre taglie: una grande si spezza in due medie, una media in due piccole.</li>
+              <li>Una nave con l'inerzia: spingi una volta e continui ad andare.</li>
+              <li>Iperspazio: ti sposta altrove di colpo, con un rischio che cresce a ogni salto.</li>
+              <li>Due dischi volanti, uno che spara a caso e uno che mira.</li>
+              <li>Ondate che crescono, una vita in più ogni diecimila punti.</li>
+              <li>Classifica con il tuo nome, chiesto a fine partita.</li>
+              <li>Si gioca da tastiera, da telefono e con un gamepad.</li>
+              <li>Esporta e reimporta la classifica in un file, così una pulizia del browser non la porta via.</li>
+              <li>Funziona senza connessione dopo la prima apertura, e si installa come un'app.</li>
+            </ul>
+          </div>
+          <div class="app-list does-not">
+            <h3>Cosa non fa</h3>
+            <ul class="ticks">
+              <li>Non c'è una classifica mondiale: i punteggi restano in questo browser, su questo computer.</li>
+              <li>Non si gioca in due, né sulla stessa macchina né in rete.</li>
+              <li>Non chiede un account e non mostra pubblicità.</li>
+              <li>Non ha acquisti: i gettoni sono infiniti e non costano niente.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="kicker">In breve</div>
+        <div class="about-facts page-facts reveal">
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Classifica</h4>
+              <p>È di questo browser. Non ce n'è una mondiale, perché non c'è un server a cui mandare i punteggi. La esporti quando vuoi.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Dati</h4>
+              <p>Restano sul tuo computer. Dopo il caricamento della pagina l'app non fa richieste di rete.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Gettoni</h4>
+              <p>Infiniti e gratuiti. Il gettone è il rito d'avvio, non un limite.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Audio</h4>
+              <p>Sintetizzato dall'app: non c'è nessun file audio da scaricare.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Accessibilità</h4>
+              <p>Si gioca interamente da tastiera. È un gioco d'azione in tempo reale: serve vedere lo schermo.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Senza connessione</h4>
+              <p>Dopo la prima apertura funziona anche quando sei senza rete.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Lingue</h4>
+              <p>Italiano e inglese, seguono la lingua del browser.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Licenza</h4>
+              <p>Apache-2.0. Il codice è pubblico e riusabile, anche in un lavoro commerciale.</p>
+            </div>
+          </div>
+        </div>
+        <p class="app-meta"><span><b>Versione</b> 0.1.0</span><span><b>Aggiornata il</b> 13 agosto 2026</span><span><b>Licenza</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/astrodroid" rel="noopener">Codice sorgente</a></p>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="kicker">FAQ</div>
+        <h2>Domande frequenti</h2>
+        <div class="faq-list">
+          <details class="faq-item reveal">
+            <summary>Perché la classifica non è condivisa?</summary>
+            <p>Perché una classifica condivisa richiede un server che riceva i punteggi, e queste app non ne hanno uno. È la stessa scelta che rende il gioco utilizzabile senza connessione e senza account. Se ti serve confrontare i punteggi con qualcuno, esporta il file: contiene la classifica in chiaro.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>Che succede ai miei punteggi se pulisco il browser?</summary>
+            <p>Si perdono. È la conseguenza di non avere un server, e per questo l'esportazione è dentro l'app fin dalla prima versione: un file sul tuo disco, che si reimporta quando vuoi.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>È il gioco di Atari?</summary>
+            <p>No. È un gioco originale nella tradizione degli sparatutto vettoriali di fine anni Settanta, scritto da noi. Le meccaniche di quel genere si ritrovano in decine di giochi; il nome e il marchio di quello originale appartengono a chi li ha registrati, e qui non compaiono.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>Perché la regalate?</summary>
+            <p>Perché mostra in due minuti quello che scriviamo nelle pagine: che molte cose che oggi passano da un server non hanno bisogno di passarci. Qui il caso è leggero; nei progetti su misura è lo stesso ragionamento su dati che non vogliamo far uscire.</p>
+          </details>
+        </div>
+        <!-- Same four buttons as an article, and they point at *this* page and not at run/. The
+             running app is noindex and its canonical already names the scheda: a link passed
+             around to a page that asks not to be indexed collects nothing. -->
+        <div class="share">
+          <span class="share-label">Condividi</span>
+          <a class="share-btn" href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fggtechnologies.sm%2Fapp%2Fastrodroid%2F" title="Condividi su LinkedIn" aria-label="Condividi su LinkedIn" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9h4v12H3zM10 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.77-1.95 4.03 0 4.78 2.5 4.78 5.75V21h-4v-5.6c0-1.34-.03-3.06-1.9-3.06-1.9 0-2.2 1.46-2.2 2.96V21h-4z"/></svg><span>LinkedIn</span></a><a class="share-btn" href="https://x.com/intent/post?url=https%3A%2F%2Fggtechnologies.sm%2Fapp%2Fastrodroid%2F&amp;text=AstroDroid%20%E2%80%94%20gioco%20vettoriale%20nel%20browser" title="Condividi su X" aria-label="Condividi su X" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.3 3h3.1l-6.8 7.75L21.6 21h-6.3l-4.9-6.4L4.8 21H1.7l7.25-8.3L1.9 3h6.45l4.45 5.9Zm-1.1 16.1h1.7L7.9 4.8H6.05Z"/></svg><span>X</span></a><a class="share-btn" href="mailto:?subject=AstroDroid%20%E2%80%94%20gioco%20vettoriale%20nel%20browser&amp;body=https%3A%2F%2Fggtechnologies.sm%2Fapp%2Fastrodroid%2F" title="Manda per email" aria-label="Manda per email"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm9 8.1L20 7.2V6.6L12 12 4 6.6v.6Z"/></svg><span>Email</span></a>
+          <button class="share-btn" type="button" data-share-copy="https://ggtechnologies.sm/app/astrodroid/"
+                  data-share-done="Link copiato"
+                  title="Copia il link" aria-label="Copia il link">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10.6 13.4a1 1 0 0 1 0-1.4l1.4-1.4a1 1 0 0 1 1.4 1.4l-1.4 1.4a1 1 0 0 1-1.4 0Zm-3.3 5.4a4.5 4.5 0 0 1 0-6.4l2.6-2.6 1.4 1.4-2.6 2.6a2.5 2.5 0 0 0 3.5 3.5l2.6-2.6 1.4 1.4-2.6 2.6a4.5 4.5 0 0 1-6.3 0Zm4-11.2 2.6-2.6a4.5 4.5 0 0 1 6.4 6.4l-2.6 2.6-1.4-1.4 2.6-2.6a2.5 2.5 0 0 0-3.5-3.5l-2.6 2.6Z"/></svg><span>Copia il link</span></button>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="cta-band">
+      <div class="container">
+        <h2>Ti serve qualcosa che gira in locale?</h2>
+        <p class="section-intro">Se hai un caso in cui i dati non devono uscire dalla macchina di chi li usa, raccontacelo. Ti risponde una persona del team, non un messaggio automatico.</p>
+        <div class="cta-buttons">
+          <a class="btn btn-primary" href="mailto:info@ggtechnologies.sm?subject=AstroDroid%20%E2%80%94%20applicazioni%20che%20girano%20in%20locale">Scrivici</a>
+          <a class="btn btn-ghost" href="tel:+3780549900824">Chiamaci</a>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="related-grid">
+          <a class="related-card reveal" href="/servizi/ai-on-premise/">
+            <h3>AI on-premise</h3>
+            <p>Come si sceglie fra tutto in locale, ibrido e cloud, a partire dai tuoi dati.</p>
+          </a>
+          <a class="related-card reveal" href="/servizi/intelligenza-artificiale/">
+            <h3>Intelligenza Artificiale</h3>
+            <p>Agenti che leggono documenti e interrogano i tuoi sistemi, con la misura decisa prima.</p>
+          </a>
+          <a class="related-card reveal" href="/digisense/">
+            <h3>DigiSense®</h3>
+            <p>Cosa c'è sotto, e perché il tuo progetto non parte da zero.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a href="/" class="brand">
+            <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><rect class="wire" width="100" height="100" mask="url(#ggWire)"/><path class="lit" d="M66 50 H86 A36 36 0 1 1 50 14" fill="none" stroke="url(#ggMark)" stroke-width="13" stroke-linecap="round"/><circle class="click" cx="50" cy="50" r="9" fill="none" stroke="#34d399" stroke-width="2"/><circle class="led" cx="50" cy="50" r="9"/></svg></span>
+            G&amp;G Technologies
+          </a>
+          <p>Progettiamo e realizziamo tecnologia: wearable medicali, robotica e intelligenza artificiale. Sul nostro framework DigiSense® nasce Podz.AI.</p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Servizi</h4>
+          <ul>
+            <li><a href="/servizi/wearable-medicale/">Wearable medicali</a></li>
+            <li><a href="/servizi/robotica-automazione/">Robotica &amp; Automazione</a></li>
+            <li><a href="/servizi/intelligenza-artificiale/">Intelligenza Artificiale</a></li>
+            <li><a href="/servizi/ai-on-premise/">AI on-premise</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Prodotti e ricerca</h4>
+          <ul>
+            <li><a href="/podz-ai/">Podz.AI</a></li>
+            <li><a href="/digisense/">DigiSense®</a></li>
+            <li><a href="/progetti/robot-assistenza-domiciliare/">Robot per l&#x27;assistenza domiciliare</a></li>
+            <li><a href="https://ggtechnologies.sm/digisense-releases/download.html" target="_blank" rel="noopener">Scarica Podz.AI</a></li>
+            <li><a href="https://github.com/G-G-Technologies-Srl/digisense-releases/releases" target="_blank" rel="noopener">Release</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Azienda</h4>
+          <ul>
+            <li><a href="/chi-siamo/">Chi siamo</a></li>
+            <li><a href="/#why">Perché noi</a></li>
+            <li><a href="/insights/">Insights</a></li>
+            <li><a href="/app/">App gratuite</a></li>
+            <li><a href="/#contact">Contatti</a></li>
+            <li><a href="https://www.linkedin.com/company/gg-technologies-srl" target="_blank" rel="noopener">LinkedIn</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-legal">
+        <span>© <span id="year">2026</span> G&amp;G Technologies Srl · Via Marino Moretti 23, 47899 Serravalle (RSM) · C.O.E./VAT SM29141</span>
+        <span>DigiSense® è un marchio registrato. Questo sito non usa cookie né tracker.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../../assets/site.js?v=001.e222d9a6" defer></script>
+</body>
+</html>

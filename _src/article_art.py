@@ -452,6 +452,82 @@ def signal(w=BANNER_W, h=BANNER_H):
     return shapes
 
 
+def fracture(w=BANNER_W, h=BANNER_H):
+    """One thing broken into smaller things, each worth more than the last.
+
+    The drawing for the game, and it is the game's one rule: a large rock becomes two medium ones,
+    a medium becomes two small ones, and the small ones score the most. Nothing about spaceships —
+    a ship would be an illustration of the subject, and this site's drawings state a mechanism.
+
+    It reuses the vocabulary rather than inventing one. The square is already the site's mark for a
+    single thing; here the same square appears at four sizes, in four generations, and the last
+    generation is in the accent. The line entering from the left is the shot that started it.
+
+    The contrast with `signal` is worth keeping in view, since both are app drawings. There the
+    samples stay inside the enclosure and nothing crosses it. Here everything stays inside too, but
+    it multiplies as it travels — same language, a different statement.
+
+    Same rules as the rest: no text, no random numbers, parametric on width and height.
+    """
+    box_x, box_y = 0.040 * w, 0.157 * h
+    box_w, box_h = 0.920 * w, 0.686 * h
+
+    shapes = [
+        {"role": GLOW, "cx": 0.56 * w, "cy": 0.46 * h, "rx": 0.36 * w, "ry": 0.52 * h},
+        {"role": PANEL, "x": box_x, "y": box_y, "w": box_w, "h": box_h, "r": 0.052 * h},
+        {"role": EDGE, "x1": box_x + 0.057 * box_w, "y1": box_y,
+         "x2": box_x + 0.943 * box_w, "y2": box_y},
+    ]
+
+    mid = box_y + 0.520 * box_h
+    # How square the enclosure is, 0 on the card band and 1 on an icon. Everything that has to
+    # change with the proportion reads this one number, so a banner and a square come out as the
+    # same drawing rather than one being a squashed copy of the other.
+    tall = min(1.0, box_h / (0.42 * w))
+
+    # The first rock is sized against both dimensions. Against the height alone it fills a square
+    # rendition edge to edge; against the width alone it becomes a speck on a wide band.
+    first = min(0.300 * box_h, 0.068 * w * (1.0 + 1.3 * tall))
+
+    # The shot that started it, entering from the left and stopping at the first rock.
+    start_x = box_x + 0.045 * box_w
+    shapes.append({"role": EDGE, "x1": start_x, "y1": mid,
+                   "x2": start_x + 0.095 * box_w, "y2": mid})
+
+    # Three generations, and each pair opens out **from its own parent** rather than from the
+    # middle line, with a filament drawn from parent to child.
+    #
+    # Both of those are corrections, and both were made by looking at the card. Measuring every
+    # offset from the axis produced tidy columns of squares — an inventory, not a rock coming
+    # apart. Four generations then filled a low band with sixteen specks, which is a texture. What
+    # reads is few pieces and a visible link between them: with the filaments the drawing says
+    # "this became those" without a caption, and it still says it at thumbnail size.
+    generations = 3
+    stride = 0.292 * box_w
+    spread = 0.300 * box_h
+    nodes = [(box_x + 0.196 * box_w, mid, first)]
+
+    for gen in range(generations):
+        children = []
+        if gen < generations - 1:
+            for x, y, size in nodes:
+                for sign in (-1, 1):
+                    child = (x + stride, y + sign * spread * (0.46 ** gen), size * 0.62)
+                    children.append(child)
+                    # The link, drawn before the squares so the pieces sit on top of it.
+                    shapes.append({"role": EDGE, "x1": x + size * 0.4, "y1": y,
+                                   "x2": child[0] - child[2] * 0.4, "y2": child[1]})
+        # The smallest pieces are the brightest, because in the game they are the ones that score.
+        # It is the opposite of `perimeter`, where the fragments fade as they get away — and the
+        # opposite is the point: there something is being lost, here something is being won.
+        for x, y, size in nodes:
+            shapes.append({"role": PACKET, "x": x - size / 2, "y": y - size / 2,
+                           "size": size, "opacity": 0.46 + 0.27 * gen})
+        nodes = children
+
+    return shapes
+
+
 # The registry the renderers read. A new article needs a drawing here and an "art" entry with
 # title and desc in content.py — build.py stops if it finds one without the other.
 ARTICLE_ART = {
@@ -473,4 +549,5 @@ ARTICLE_ART = {
 # An icon needs its own rendition, sharing the motif and dropping the detail.
 APP_ART = {
     "csv-scope": signal,
+    "astrodroid": fracture,
 }

@@ -1,7 +1,17 @@
 // Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
 
-// Every visible string, in one file, two objects with the same keys. Text written inline in the
-// markup or inside a function is how one language quietly falls behind the other.
+// Every visible string of this app, in one file, two objects with the same keys. Text written
+// inline in the markup or inside a function is how one language quietly falls behind the other.
+//
+// The machinery — choosing the language, looking a key up, plurals, numbers — moved to
+// `gg/i18n.js` when the second app arrived. What stays here is what belongs to this app and to
+// nothing else: the words. Re-exporting the library from here keeps every caller importing
+// `./i18n.js`, and keeps `check_apps.py` pointed at one file per app when it compares the two key
+// lists.
+
+export * from "gg/i18n.js";
+
+import { configure } from "gg/i18n.js";
 
 const IT = {
   tagline: "Visualizzatore di file CSV",
@@ -203,109 +213,8 @@ const EN = {
 };
 
 // -----------------------------------------------------------------------------------------------------------------
-//  p a r i t y
+//  w i r i n g
 // -----------------------------------------------------------------------------------------------------------------
 
-// The check the site applies to its pages, applied here. It runs on load and costs nothing: two
-// key lists compared once. A missing key would otherwise surface as an empty label, in one
-// language, on somebody else's machine.
-export function missingKeys() {
-  const it = Object.keys(IT);
-  const en = Object.keys(EN);
-  return [
-    ...it.filter((k) => !en.includes(k)).map((k) => `${k}: manca in EN`),
-    ...en.filter((k) => !it.includes(k)).map((k) => `${k}: manca in IT`),
-  ];
-}
-
-export const DICTIONARIES = { it: IT, en: EN };
-export const LANGUAGES = ["it", "en"];
-
-// -----------------------------------------------------------------------------------------------------------------
-//  s t a t e
-// -----------------------------------------------------------------------------------------------------------------
-
-const STORAGE_KEY = "gg.csv-scope.lang";
-
-let current = "it";
-
-function _fromQuery() {
-  const asked = new URLSearchParams(location.search).get("lang");
-  return LANGUAGES.includes(asked) ? asked : null;
-}
-
-function _fromStorage() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return LANGUAGES.includes(saved) ? saved : null;
-  } catch (ignored) {
-    return null;                        // storage can be unavailable; it is only a preference
-  }
-}
-
-function _fromBrowser() {
-  for (const tag of navigator.languages || [navigator.language || ""]) {
-    const base = String(tag).slice(0, 2).toLowerCase();
-    if (LANGUAGES.includes(base)) return base;
-  }
-  return null;
-}
-
-/** The language to start in: the URL first, then what was chosen before, then the browser. */
-export function resolveLang() {
-  return _fromQuery() || _fromStorage() || _fromBrowser() || "it";
-}
-
-export function setLang(lang) {
-  current = LANGUAGES.includes(lang) ? lang : "it";
-  document.documentElement.setAttribute("lang", current);
-  try {
-    localStorage.setItem(STORAGE_KEY, current);
-  } catch (ignored) { /* a preference that cannot be saved is not an error worth showing */ }
-  return current;
-}
-
-export function lang() {
-  return current;
-}
-
-export function otherLang() {
-  return current === "it" ? "en" : "it";
-}
-
-/** One string. An unknown key returns the key itself, which is loud enough to be spotted. */
-export function t(key) {
-  return DICTIONARIES[current][key] ?? key;
-}
-
-/**
- * Singular or plural, because "1 canali" is the kind of thing that reaches production.
- *
- * It did: the history panel went live saying "1 canali". Both languages here split at one and only
- * at one, so two keys are enough — a language with a dual or a paucal would need Intl.PluralRules,
- * and this is the line to change on the day one arrives.
- */
-export function plural(n, one, many) {
-  return t(n === 1 ? one : many);
-}
-
-/** Numbers follow the language: 1.234,5 in Italian and 1,234.5 in English. */
-export function num(value, decimals = null) {
-  if (!Number.isFinite(value)) return "—";
-  const digits = decimals === null ? _decimalsFor(value) : decimals;
-  return value.toLocaleString(current === "it" ? "it-IT" : "en-GB", {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
-  });
-}
-
-function _decimalsFor(value) {
-  // A counter is not a measurement: "min 1,00 · max 5,00" on a column of whole numbers reads as
-  // precision the file never had.
-  if (Number.isInteger(value)) return 0;
-  const size = Math.abs(value);
-  if (size === 0 || size >= 1000) return 0;
-  if (size >= 10) return 1;
-  if (size >= 1) return 2;
-  return 3;
-}
+// One localStorage for the whole origin, site and apps together, so the key carries the app name.
+configure({ it: IT, en: EN, key: "gg.csv-scope.lang" });

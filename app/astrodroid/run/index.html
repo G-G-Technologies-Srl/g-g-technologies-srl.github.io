@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AstroDroid</title>
+<meta name="robots" content="noindex, follow">
+<meta name="theme-color" content="#0d1220">
+<meta name="description" content="A vector shooter in the arcade tradition, played entirely in your browser.">
+<link rel="canonical" href="https://ggtechnologies.sm/app/astrodroid/">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="stylesheet" href="../../_lib/base.css">
+<link rel="stylesheet" href="./styles.css">
+<script>
+  // Before the first paint, on purpose. Applied from a module it would run after the stylesheet,
+  // and the app would flash dark and then jump to light at every start.
+  try {
+    var saved = localStorage.getItem('gg-theme');
+    var light = saved ? saved === 'light'
+      : window.matchMedia('(prefers-color-scheme: light)').matches;
+    if (light) {
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f6f8fc');
+    }
+  } catch (ignored) {}
+</script>
+</head>
+<body>
+
+<header>
+  <div class="appbar">
+    <span class="brand">AstroDroid</span>
+    <span class="meta" data-t="tagline"></span>
+    <span class="spacer"></span>
+    <button type="button" id="install" class="ghost small" hidden></button>
+    <button type="button" id="lang" class="ghost small"></button>
+    <button type="button" id="sound" class="ghost small icon" data-t-label="soundOn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <path d="M4 9v6h4l5 4V5L8 9H4z"></path>
+        <path d="M16.5 8.5a5 5 0 0 1 0 7"></path>
+      </svg>
+    </button>
+    <button type="button" id="theme" class="ghost small icon" data-t-label="themeToLight">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"></path>
+      </svg>
+    </button>
+  </div>
+
+  <!-- The second altitude: what is happening in the game. Hidden until there is a game. -->
+  <div class="hudbar" id="hud" hidden>
+    <span class="hud-item"><span class="hud-label" data-t="score"></span><b id="hudScore">0</b></span>
+    <span class="hud-item"><span class="hud-label" data-t="wave"></span><b id="hudWave">1</b></span>
+    <span class="hud-item lives"><span class="hud-label" data-t="lives"></span><b id="hudLives"></b></span>
+    <span class="spacer"></span>
+    <!-- A pause control, and not only for tidiness: P and Esc exist, and a phone has neither. -->
+    <button type="button" id="pauseButton" class="ghost small" data-t="pause"></button>
+  </div>
+
+  <p class="hint" id="installHint" hidden></p>
+</header>
+
+<main id="main">
+
+  <!-- The field. Everything else in this page sits over it, which is why the canvas is drawn with
+       a veil under each panel rather than being hidden: a cabinet never went dark either. -->
+  <div class="stage">
+    <canvas id="field" aria-hidden="true"></canvas>
+
+    <span class="badge" id="demoBadge" data-t="demoBadge"></span>
+
+    <!-- attract -->
+    <section class="panel attract" data-screen="attract">
+      <h1 class="title">AstroDroid</h1>
+      <p class="sub" data-t="tagline"></p>
+      <button type="button" id="coinButton" class="coin">
+        <span class="coin-mark" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M9.5 12h5M12 9.5v5"></path>
+          </svg>
+        </span>
+        <span data-t="insertCoin"></span>
+      </button>
+      <p class="small" data-t="coinFree"></p>
+      <p><button type="button" id="scoresButton" class="linkish" data-t="scoresTitle"></button></p>
+    </section>
+
+    <!-- credit -->
+    <section class="panel" data-screen="credit">
+      <div class="sheet">
+        <p class="kicker"><span data-t="credits"></span> <b id="creditsBig">1</b></p>
+        <h2 class="title small-title" data-t="pressStart"></h2>
+        <button type="button" id="startButton" class="primary big" data-t="start"></button>
+        <p class="small" data-t="startHint"></p>
+        <div class="how">
+          <h2 data-t="howTitle"></h2>
+          <ul>
+            <li data-t="howKeys"></li>
+            <li data-t="howTouch"></li>
+            <li data-t="howInertia"></li>
+            <li data-t="howRocks"></li>
+            <li data-t="howHyper"></li>
+          </ul>
+          <p class="small" data-t="a11yNote"></p>
+        </div>
+        <p><button type="button" id="backFromCredit" class="linkish" data-t="back"></button></p>
+      </div>
+    </section>
+
+    <!-- paused -->
+    <section class="panel" data-screen="paused">
+      <div class="sheet">
+        <h2 class="title small-title" data-t="paused"></h2>
+        <p>
+          <button type="button" id="resumeButton" class="primary" data-t="resume"></button>
+          <button type="button" id="quitButton" data-t="quit"></button>
+        </p>
+      </div>
+    </section>
+
+    <!-- game over -->
+    <section class="panel" data-screen="over">
+      <div class="sheet">
+        <h2 class="title small-title" data-t="gameOver"></h2>
+        <p id="overScore" class="lead"></p>
+        <p id="overPlace" class="small"></p>
+        <form id="nameform" class="nameform" autocomplete="off">
+          <label for="namefield" data-t="nameLabel"></label>
+          <input type="text" id="namefield" maxlength="12" enterkeyhint="done" spellcheck="false">
+          <button type="submit" id="saveButton" class="primary" data-t="save"></button>
+        </form>
+        <p class="small" data-t="nameNote"></p>
+        <p>
+          <button type="button" id="coinAgain" class="linkish" data-t="playAgain"></button>
+          ·
+          <button type="button" id="scoresFromOver" class="linkish" data-t="scoresTitle"></button>
+        </p>
+      </div>
+    </section>
+
+    <!-- the table -->
+    <section class="panel wide" data-screen="scores">
+      <div class="sheet">
+        <h2 class="title small-title" data-t="scoresTitle"></h2>
+        <p class="small" data-t="scoresLocal"></p>
+        <p class="small" id="storageNote" hidden data-t="storageOff"></p>
+        <table class="scores">
+          <thead>
+            <tr>
+              <th class="pos" data-t="scoresPos"></th>
+              <th data-t="scoresName"></th>
+              <th class="pts" data-t="scoresScore"></th>
+              <th class="pts" data-t="scoresWave"></th>
+              <th class="when" data-t="scoresDate"></th>
+            </tr>
+          </thead>
+          <tbody id="scoreRows"></tbody>
+        </table>
+        <p class="small" id="scoresEmpty" data-t="scoresEmpty"></p>
+        <p class="totals">
+          <span><b id="statGames">0</b> <span data-t="statsGames"></span></span>
+          <span><b id="statBest">1</b> <span data-t="statsBest"></span></span>
+          <span><b id="statCoins">0</b> <span data-t="statsCoins"></span></span>
+        </p>
+        <p class="small" data-t="exportHint"></p>
+        <p class="io">
+          <button type="button" id="exportButton" class="accent" data-t="export"></button>
+          <button type="button" id="importButton" data-t="import"></button>
+          <button type="button" id="clearButton" data-t="clear"></button>
+          <input type="file" id="importFile" accept="application/json,.json" hidden>
+        </p>
+        <p class="small" id="ioNote"></p>
+        <p><button type="button" id="backFromScores" class="linkish" data-t="back"></button></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- Touch controls. Only while playing, and never smaller than a thumb: the smallest of these is
+       56px, over the 44 the guidance asks for, because a control you miss in a game costs a life
+       rather than a click. -->
+  <div class="pads" id="pads" hidden>
+    <div class="pad-group">
+      <button type="button" class="pad" data-action="left" data-t-label="ctrlLeft">◀</button>
+      <button type="button" class="pad" data-action="right" data-t-label="ctrlRight">▶</button>
+    </div>
+    <div class="pad-group">
+      <button type="button" class="pad" data-action="hyperspace" data-t-label="ctrlHyper">✳</button>
+      <button type="button" class="pad" data-action="thrust" data-t-label="ctrlThrust">▲</button>
+      <button type="button" class="pad wide-pad" data-action="fire" data-t-label="ctrlFire">●</button>
+    </div>
+  </div>
+
+  <!-- What a screen reader is told. A real-time game cannot be narrated as it happens; the end of
+       one can, and that is what goes here rather than a running commentary nobody could follow. -->
+  <p class="sr-only" id="live" role="status" aria-live="polite"></p>
+</main>
+
+<footer class="foot">
+  <a href="../" data-t="backToPage"></a>
+  <span class="spacer"></span>
+  <a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/astrodroid"
+     rel="noopener" data-t="sourceLabel"></a>
+</footer>
+
+<!-- Every import into the shared library goes through here, never up the tree. Both forms work
+     identically today; the difference arrives the day _lib/ takes a version number, and it is one
+     line per app instead of every import in every file. check_apps.py rejects the relative form. -->
+<script type="importmap">
+{ "imports": { "gg/": "../../_lib/" } }
+</script>
+<script type="module" src="./app.js"></script>
+</body>
+</html>

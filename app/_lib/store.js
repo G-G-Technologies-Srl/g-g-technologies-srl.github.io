@@ -1,12 +1,14 @@
 // Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
 
-// A small store over IndexedDB, and nothing about CSV files in it.
+// A small store over IndexedDB, and nothing about any one app in it.
 //
-// This file is written to be moved. The rule in app/CLAUDE.md is that nothing enters `_lib/` before
-// it has two real uses — a library designed around one case describes that case and the second one
-// finds it already bent — but it also says the first app must be written already divided, so that
-// the extraction is a file move and not a rewrite. That is what this is: it knows about databases,
-// stores and records, and it has never heard of a channel or a delimiter.
+// This file was written to be moved, and then it moved. The rule in app/CLAUDE.md is that nothing
+// enters `_lib/` before it has two real uses — a library designed around one case describes that
+// case, and the second one finds it already bent — but it also says the first app must be written
+// already divided, so that the extraction is a file move and not a rewrite. It was: a viewer of
+// measurements and a game keep different things, and both keep them through this file unchanged.
+// It knows about databases, stores and records, and it has never heard of a channel, a delimiter
+// or a high score.
 //
 // Why IndexedDB and not localStorage: localStorage is for preferences — a few kilobytes of strings,
 // read synchronously at start. Anything that looks like a document belongs here, where the browser
@@ -62,9 +64,10 @@ function _upgrade(db, transaction, stores) {
  * Open a database and return the handle every other function here takes.
  *
  * Returns `null` rather than throwing when IndexedDB is unavailable — private windows and locked-
- * down profiles do turn it off, and an app whose whole job is reading a file the visitor already
- * has must not refuse to start because it cannot keep a history of having done so. Every call
- * below tolerates a null handle, so the caller has one check to make and not twelve.
+ * down profiles do turn it off, and what these apps keep is a convenience, never the point. A
+ * viewer must still open the file, and a game must still be playable, on a browser that will not
+ * remember either. Every call below tolerates a null handle, so the caller has one check to make
+ * and not twelve.
  */
 export async function open(name, version, stores) {
   if (!self.indexedDB) return null;

@@ -1,0 +1,376 @@
+/* Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0 */
+
+/* What this app shapes differently. The palette, the resets, the buttons, the app bar, the error
+   box and the footer come from ../../_lib/base.css, loaded first.
+
+   One thing here is worth reading before the rest. A game is the app most likely to be handed a
+   whole screen and the least likely to be read, so the type scale is larger than the viewer's and
+   the targets are bigger. The site's shapes are unchanged: hairline borders, the accent used for
+   one meaning, squares instead of bullets, and no dashed boxes anywhere. */
+
+body { overflow: hidden; }              /* the field is the page; nothing here scrolls */
+
+/* ---------------------------------------------------------------------------------------------
+   the second bar: what the game is doing
+   --------------------------------------------------------------------------------------------- */
+
+.hudbar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+  flex-wrap: wrap;
+}
+
+.hud-item { display: inline-flex; align-items: baseline; gap: 7px; }
+
+.hud-label {
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+/* Tabular figures, or the score jitters sideways every time a digit changes — which on a counter
+   that ticks a hundred times a minute reads as the whole bar wobbling. */
+.hud-item b {
+  font-size: 17px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+/* The ships left, as ships. A number would be clearer and would say nothing: the shape is the one
+   thing on the bar you can read without looking at it. */
+.lives b { color: var(--accent-text); letter-spacing: 2px; font-size: 15px; }
+
+/* ---------------------------------------------------------------------------------------------
+   the field, and the panels over it
+   --------------------------------------------------------------------------------------------- */
+
+.stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+}
+
+#field { display: block; width: 100%; height: 100%; }
+
+.badge {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--faint);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 3px 8px;
+  background: var(--panel);
+}
+
+/* The panels sit over the field, and the field is dimmed underneath by the renderer rather than by
+   a background here. Done in CSS the veil would cover the app bar too, and the bar is not part of
+   the game. */
+.panel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  padding: 20px;
+  overflow: auto;
+}
+
+.panel > * { max-width: 460px; }
+
+.panel.wide > * { max-width: 620px; }
+
+/* The content of every panel except the attract screen sits on a surface of its own.
+
+   The first version relied on a veil painted over the field by the renderer, and it works in the
+   dark theme and does nothing at all in the light one: there the veil is white on a white field,
+   so the frozen game shows through at full strength and a rock lands on the title. Found by
+   opening the app with the light theme already set, which is exactly why that is in the list.
+   A surface fixes both themes at once, and it is the site's own shape — panel, hairline, and the
+   2px filament along the top. */
+.sheet {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(170deg, var(--panel-2), var(--panel) 60%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 26px 28px 22px;
+  max-width: 100%;
+}
+
+.sheet::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 12%;
+  right: 12%;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-text));
+}
+
+.sheet > * { max-width: 460px; }
+
+.panel.wide .sheet > * { max-width: 620px; }
+
+/* Serif here and nowhere else in the app. The rule from app/CLAUDE.md: the serif says "text to be
+   read", and the only moments this app speaks rather than works are its name and its panels. */
+.title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(30px, 6vw, 46px);
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+.small-title { font-size: clamp(22px, 4vw, 30px); }
+
+.sub { margin: -4px 0 4px; color: var(--muted); }
+
+.lead { margin: 0; font-size: 17px; color: var(--text); }
+
+.small { font-size: 12.5px; color: var(--faint); margin: 0; line-height: 1.55; }
+
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+  margin: 0;
+}
+
+.kicker b { font-size: 20px; font-variant-numeric: tabular-nums; }
+
+.linkish {
+  border: none;
+  padding: 2px 0;
+  color: var(--accent-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  background: none;
+  font-size: 13px;
+}
+
+.big { font-size: 17px; padding: 12px 30px; }
+
+/* ---------------------------------------------------------------------------------------------
+   the token
+   --------------------------------------------------------------------------------------------- */
+
+/* The one control on the opening screen, and the whole idea of the app. Large, outlined in the
+   accent, and blinking — the blink is the cabinet quoting itself, and it is the only animation in
+   the app that is not the game. */
+.coin {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  padding: 13px 26px;
+  border: 1px solid var(--accent);
+  color: var(--accent-text);
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  animation: blink 1.6s steps(1, end) infinite;
+}
+
+.coin:hover { background: var(--accent-soft); border-color: var(--accent); }
+
+.coin-mark { display: inline-flex; }
+
+@keyframes blink { 0%, 62% { opacity: 1; } 63%, 100% { opacity: 0.45; } }
+
+/* Somebody who has asked for less movement has asked for less of exactly this. The game itself is
+   not slowed: that would be changing the rules, which is not what the preference means. */
+@media (prefers-reduced-motion: reduce) {
+  .coin { animation: none; }
+}
+
+/* ---------------------------------------------------------------------------------------------
+   how to play, the name, the table
+   --------------------------------------------------------------------------------------------- */
+
+.how {
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  padding: 14px 16px;
+}
+
+.how h2 {
+  font-size: 12px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin: 0 0 8px;
+  font-weight: 500;
+}
+
+.how ul { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 7px; }
+
+/* The site's square instead of the browser's bullet. */
+.how li {
+  position: relative;
+  padding-left: 16px;
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.how li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 7px;
+  width: 6px;
+  height: 6px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-text));
+}
+
+.nameform {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.nameform label {
+  font-size: 12px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.nameform input {
+  font: inherit;
+  font-size: 16px;              /* under 16px, iOS zooms the page when the field takes focus */
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  width: 190px;
+}
+
+.scores {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  text-align: left;
+}
+
+.scores th {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+  font-weight: 500;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.scores td { padding: 6px 8px; border-bottom: 1px solid var(--border); color: var(--muted); }
+
+.scores .pos { width: 40px; color: var(--faint); font-variant-numeric: tabular-nums; }
+
+.scores .who { color: var(--text); overflow-wrap: anywhere; }
+
+.scores .pts { text-align: right; font-variant-numeric: tabular-nums; width: 74px; }
+
+.scores .when { text-align: right; color: var(--faint); white-space: nowrap; }
+
+.totals {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  justify-content: center;
+  font-size: 12.5px;
+  color: var(--faint);
+  margin: 2px 0;
+}
+
+.totals b { color: var(--text); font-variant-numeric: tabular-nums; }
+
+.io { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 2px 0; }
+
+/* ---------------------------------------------------------------------------------------------
+   touch controls
+   --------------------------------------------------------------------------------------------- */
+
+/* Shown only while playing, and translucent: they sit over the bottom of the field, and an opaque
+   bar there would eat the part of the screen a player is flying through. */
+.pads {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+
+.pad-group { display: flex; gap: 10px; pointer-events: auto; }
+
+/* 56px, over the 44 the guidance asks for. A control you miss in a game costs a life, not a click,
+   and a thumb is not a mouse pointer. */
+.pad {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: color-mix(in srgb, var(--panel) 78%, transparent);
+  color: var(--muted);
+  font-size: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;                   /* or a held button also drags the page */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.pad:active { color: var(--accent-text); border-color: var(--accent); }
+
+.wide-pad { width: 76px; }
+
+/* A pointer means a keyboard is likely and a thumb is not. The controls stay reachable on a
+   touchscreen laptop, because `coarse` is about the pointer and not about the screen. */
+@media (pointer: fine) {
+  .pads { display: none; }
+}
+
+/* ---------------------------------------------------------------------------------------------
+   small screens
+   --------------------------------------------------------------------------------------------- */
+
+@media (max-width: 620px) {
+  .hudbar { gap: 12px; padding: 6px 12px; }
+  .hud-item b { font-size: 15px; }
+  .panel { padding: 16px; gap: 10px; }
+  /* The panels have to clear the touch controls, which are over the bottom of the same field. */
+  .panel[data-screen="paused"], .panel[data-screen="over"] { padding-bottom: 96px; }
+  .scores .when { display: none; }
+  .scores th.when { display: none; }
+}

@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
 """The manifest icons of the apps, painted with Pillow.
 
-Deliberately NOT `article_art.signal()` asked for a square. That was tried, and it fails for a
-reason no amount of parameters fixes: an icon has to read at 48 px on a home screen, and a chart
-at 48 px is a smudge. So the icon keeps the motif — sampled points, a marked range, the enclosure
-— and throws away everything else: five squares instead of forty-five, no second channel, no
-filament thinner than the eye can hold.
+Deliberately NOT the app's drawing from `article_art` asked for a square. That was tried, and it
+fails for a reason no amount of parameters fixes: an icon has to read at 48 px on a home screen,
+and a chart at 48 px is a smudge — so is a cascade of eight squares. So each icon keeps the motif
+and throws away everything else. The viewer's keeps sampled points and a marked range, five
+squares instead of forty-five; the game's keeps one rock and the two pieces it broke into, three
+shapes instead of fifteen.
+
+One painter per app, in `ICONS` at the bottom. Not one painter with a parameter: two icons that
+share code end up sharing a look, and two installed apps that look alike on a home screen are the
+one failure an icon cannot recover from.
 
 Usage:  python3 _src/make_app_icons.py [--app csv-scope]
 """
@@ -36,8 +41,8 @@ PICKED = (2, 4)
 #  p r i v a t e
 # -----------------------------------------------------------------------------------------------------------------
 
-def _paint(size, inset, rounded):
-    """One icon. `inset` is the share of the canvas the art occupies, centred."""
+def _csv_scope(size, inset, rounded):
+    """One icon for the viewer. `inset` is the share of the canvas the art occupies, centred."""
     img = Image.new("RGB", (size, size), INK)
     draw = ImageDraw.Draw(img)
 
@@ -70,6 +75,51 @@ def _paint(size, inset, rounded):
     return img
 
 
+def _astrodroid(size, inset, rounded):
+    """One icon for the game: a rock, and the two pieces it just became.
+
+    The banner drawing has four generations of squares. Three of them disappear here — at 48 px
+    eight small blocks are a texture, not a rule — and what is left says the same thing with three
+    shapes: the rock it was, and two pieces, the accent one being the smaller and the one worth
+    more.
+
+    The rock is a polygon and not a square, because at this size the outline is the only thing that
+    tells it apart from the pieces. Its vertices are written out rather than generated: a shape
+    this small is judged by eye once and then never again.
+    """
+    img = Image.new("RGB", (size, size), INK)
+    draw = ImageDraw.Draw(img)
+
+    if rounded:
+        draw.rounded_rectangle([0, 0, size - 1, size - 1], radius=int(0.22 * size), fill=INK)
+
+    box = inset * size
+    ox = oy = (size - box) / 2
+    draw.rounded_rectangle([ox, oy, ox + box, oy + box], radius=int(0.14 * box), fill=PANEL)
+
+    # The filament along the top edge, at a thickness that survives being shrunk to a home screen.
+    thin = max(2, round(0.055 * box))
+    draw.rounded_rectangle([ox + 0.16 * box, oy - thin / 2, ox + 0.84 * box, oy + thin / 2],
+                           radius=thin // 2, fill=EMERALD)
+
+    # The rock, low and left, as an irregular seven-sided lump.
+    # The radii vary on purpose: a regular polygon at this size reads as a road sign, not a rock.
+    rock = [(0.09, 0.49), (0.16, 0.30), (0.33, 0.26), (0.48, 0.37),
+            (0.51, 0.57), (0.41, 0.75), (0.23, 0.78), (0.11, 0.67)]
+    draw.polygon([(ox + fx * box, oy + fy * box) for fx, fy in rock], fill=MUTED)
+
+    # The two pieces, up and to the right, the smaller one in the accent. Squares, because that is
+    # the site's mark for one thing — and because two lumps at this size read as noise.
+    piece = round(0.150 * box)
+    px, py = ox + 0.60 * box, oy + 0.28 * box
+    draw.rectangle([px, py, px + piece, py + piece], fill=MUTED)
+
+    small = round(0.115 * box)
+    sx, sy = ox + 0.70 * box, oy + 0.58 * box
+    draw.rectangle([sx, sy, sx + small, sy + small], fill=EMERALD)
+    return img
+
+
 def _blend(colour, opacity, over):
     return tuple(round(over[i] + (colour[i] - over[i]) * opacity) for i in range(3))
 
@@ -77,6 +127,15 @@ def _blend(colour, opacity, over):
 # -----------------------------------------------------------------------------------------------------------------
 #  m a i n
 # -----------------------------------------------------------------------------------------------------------------
+
+# One painter per app. Using the company symbol for all of them was the tempting shortcut and is
+# the one thing an icon must not do: two installed apps would be indistinguishable on the home
+# screen of whoever opens them.
+ICONS = {
+    "csv-scope": _csv_scope,
+    "astrodroid": _astrodroid,
+}
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -86,6 +145,9 @@ def main():
     out = ROOT / "app" / args.app / "run"
     if not out.is_dir():
         raise SystemExit(f"{out} non esiste: l'app va creata prima delle sue icone")
+    if args.app not in ICONS:
+        raise SystemExit(f"«{args.app}» non ha un disegno in ICONS dentro _src/make_app_icons.py")
+    _paint = ICONS[args.app]
 
     # 0.74 for the plain icons, which the system draws as they are. The maskable one is cropped to
     # a shape the platform picks, so its art stays inside the safe circle — 0.56 keeps every corner

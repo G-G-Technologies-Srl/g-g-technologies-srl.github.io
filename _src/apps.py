@@ -8,7 +8,9 @@ is deliberately outside the build: see app/CLAUDE.md for why the two are kept ap
 Same rules as content.py: every string exists in both languages, no claim enters unless it can be
 demonstrated, and the build stops rather than publish a half-filled scheda.
 
-Folders starting with "_" are excluded from the GitHub Pages build, so this source is not served.
+This file is public. Folders starting with "_" are normally skipped by GitHub Pages, but
+the repository has a .nojekyll at the root — which is what lets app/_lib/ be served — so
+_src/ is served too. Nothing secret goes in here; the repository is public anyway.
 """
 
 SITE = "https://ggtechnologies.sm"
@@ -131,9 +133,9 @@ APPS = [
         "tags": ["dati"],
         # bozza | pronto — only "pronto" is indexed and listed in the sitemap.
         "stato": "pronto",
-        "version": "0.12.1",
+        "version": "0.13.0",
         "released": "2026-08-12",
-        "updated": "2026-08-12",
+        "updated": "2026-08-13",
         "licence": "Apache-2.0",
         # The illustration geometry, shared by banner, card thumbnail, social card and the two
         # manifest icons. It needs its own function in article_art.py: reusing an article's drawing
@@ -354,6 +356,228 @@ APPS = [
                 "desc": "An enclosed panel holds a wavering trace, unbroken from one edge to the "
                         "other. Some points along the trace are marked and brighter, and nothing "
                         "crosses the panel's edge.",
+            },
+        },
+    },
+    {
+        # A game, and the tag to handle with care. What holds this catalogue together is the
+        # constraint and not the subject: this keeps its high score table without a server, which
+        # is the same thing the CSV viewer demonstrates, shown to somebody who would never open a
+        # CSV. The name is original — the mechanics of the genre are not protected, a 1979 arcade
+        # title is, and a company site is the wrong place to be casual about that.
+        "key": "astrodroid",
+        "name": "AstroDroid",
+        # After the viewer, deliberately. Ordered by date a game would be the first thing anybody
+        # arriving at /app/ sees, and it is the least representative of what the company does.
+        "order": 2,
+        "tags": ["svago"],
+        "stato": "pronto",
+        "version": "0.1.0",
+        "released": "2026-08-13",
+        "updated": "2026-08-13",
+        "licence": "Apache-2.0",
+        "art": {"shape": "fracture"},
+        "it": {
+            "slug": "app/astrodroid",
+            "short": "AstroDroid",
+            "title": "AstroDroid — gioco vettoriale nel browser | G&G Technologies",
+            "description": "Un gioco di rocce e inerzia che gira nel browser, con la classifica "
+                           "e il gettone come in sala giochi. Niente account, niente server.",
+            "kicker": "App gratuita e open source",
+            "h1": "Una sala giochi che <span class=\"grad-text\">non manda niente</span> a "
+                  "nessuno.",
+            "lead": "Rocce che si spezzano, una nave che non frena e un gettone da inserire. La "
+                    "classifica resta su questo computer, perché non c'è un server a cui "
+                    "mandarla.",
+            "summary": "Gioco vettoriale con classifica e gettone. Gira nel browser e non manda "
+                       "niente a nessuno.",
+            "intro_title": "Perché un gioco",
+            "intro_h2": "Il vincolo è lo stesso; <span class=\"grad-text\">cambia chi lo "
+                        "guarda</span>.",
+            "intro": [
+                "Le app che pubblichiamo hanno una cosa sola in comune, ed è un vincolo tecnico: "
+                "girano sulla macchina di chi le apre e non mandano niente da nessuna parte. Un "
+                "visualizzatore di misure lo dimostra bene a chi ha un file di misure. Un gioco "
+                "lo dimostra a tutti gli altri.",
+                "Qui il vincolo si vede in un punto preciso: la classifica. Un gioco online la "
+                "terrebbe su un server, con un account e una registrazione. Questo la tiene nel "
+                "browser, come la teneva il cabinato in sala giochi — era la classifica di quella "
+                "macchina, e per batterla ci tornavi.",
+                "Il gettone è lo stesso ragionamento. Non serve a limitare le partite, che sono "
+                "infinite: serve a dire che quello che stai per fare comincia adesso. È anche il "
+                "gesto che serve al browser per far partire l'audio, quindi il rito si paga da sé.",
+            ],
+            "does_title": "Cosa fa",
+            "does": [
+                "Rocce in tre taglie: una grande si spezza in due medie, una media in due piccole.",
+                "Una nave con l'inerzia: spingi una volta e continui ad andare.",
+                "Iperspazio: ti sposta altrove di colpo, con un rischio che cresce a ogni salto.",
+                "Due dischi volanti, uno che spara a caso e uno che mira.",
+                "Ondate che crescono, una vita in più ogni diecimila punti.",
+                "Classifica con il tuo nome, chiesto a fine partita.",
+                "Si gioca da tastiera, da telefono e con un gamepad.",
+                "Esporta e reimporta la classifica in un file, così una pulizia del browser non "
+                "la porta via.",
+                "Funziona senza connessione dopo la prima apertura, e si installa come un'app.",
+            ],
+            "does_not_title": "Cosa non fa",
+            "does_not": [
+                "Non c'è una classifica mondiale: i punteggi restano in questo browser, su questo "
+                "computer.",
+                "Non si gioca in due, né sulla stessa macchina né in rete.",
+                "Non chiede un account e non mostra pubblicità.",
+                "Non ha acquisti: i gettoni sono infiniti e non costano niente.",
+            ],
+            "facts_title": "In breve",
+            "facts": [
+                ("Classifica", "È di questo browser. Non ce n'è una mondiale, perché non c'è un "
+                               "server a cui mandare i punteggi. La esporti quando vuoi."),
+                ("Dati", "Restano sul tuo computer. Dopo il caricamento della pagina l'app non fa "
+                         "richieste di rete."),
+                ("Gettoni", "Infiniti e gratuiti. Il gettone è il rito d'avvio, non un limite."),
+                ("Audio", "Sintetizzato dall'app: non c'è nessun file audio da scaricare."),
+                ("Accessibilità", "Si gioca interamente da tastiera. È un gioco d'azione in tempo "
+                                  "reale: serve vedere lo schermo."),
+                ("Senza connessione", "Dopo la prima apertura funziona anche quando sei senza "
+                                      "rete."),
+                ("Lingue", "Italiano e inglese, seguono la lingua del browser."),
+                ("Licenza", "Apache-2.0. Il codice è pubblico e riusabile, anche in un lavoro "
+                            "commerciale."),
+            ],
+            "faq_title": "Domande frequenti",
+            "faq": [
+                ("Perché la classifica non è condivisa?",
+                 "Perché una classifica condivisa richiede un server che riceva i punteggi, e "
+                 "queste app non ne hanno uno. È la stessa scelta che rende il gioco utilizzabile "
+                 "senza connessione e senza account. Se ti serve confrontare i punteggi con "
+                 "qualcuno, esporta il file: contiene la classifica in chiaro."),
+                ("Che succede ai miei punteggi se pulisco il browser?",
+                 "Si perdono. È la conseguenza di non avere un server, e per questo l'esportazione "
+                 "è dentro l'app fin dalla prima versione: un file sul tuo disco, che si reimporta "
+                 "quando vuoi."),
+                ("È il gioco di Atari?",
+                 "No. È un gioco originale nella tradizione degli sparatutto vettoriali di fine "
+                 "anni Settanta, scritto da noi. Le meccaniche di quel genere si ritrovano in "
+                 "decine di giochi; il nome e il marchio di quello originale appartengono a chi "
+                 "li ha registrati, e qui non compaiono."),
+                ("Perché la regalate?",
+                 "Perché mostra in due minuti quello che scriviamo nelle pagine: che molte cose "
+                 "che oggi passano da un server non hanno bisogno di passarci. Qui il caso è "
+                 "leggero; nei progetti su misura è lo stesso ragionamento su dati che non "
+                 "vogliamo far uscire."),
+            ],
+            "cta_title": "Ti serve qualcosa che gira in locale?",
+            "cta_text": "Se hai un caso in cui i dati non devono uscire dalla macchina di chi li "
+                        "usa, raccontacelo. Ti risponde una persona del team, non un messaggio "
+                        "automatico.",
+            "mail_subject": "AstroDroid — applicazioni che girano in locale",
+            "related": ["onprem", "ai", "digisense"],
+            "art": {
+                "title": "La roccia che si spezza in pezzi più piccoli",
+                "desc": "Dentro un riquadro chiuso, un quadrato grande si divide in due più "
+                        "piccoli, che si dividono ancora, fino a una fila di quadratini luminosi. "
+                        "Una linea entra da sinistra e si ferma sul primo quadrato.",
+            },
+        },
+        "en": {
+            "slug": "en/app/astrodroid",
+            "short": "AstroDroid",
+            "title": "AstroDroid — a vector game in the browser | G&G Technologies",
+            "description": "A game of rocks and inertia that runs in the browser, with a high "
+                           "score table and an arcade token. No account, no server.",
+            "kicker": "Free and open source",
+            "h1": "An arcade that <span class=\"grad-text\">sends nothing</span> to anybody.",
+            "lead": "Rocks that break apart, a ship with no brakes, and a token to insert. The "
+                    "high score table stays on this computer, because there is no server to send "
+                    "it to.",
+            "summary": "A vector game with a high score table and a token. It runs in the browser "
+                       "and sends nothing anywhere.",
+            "intro_title": "Why a game",
+            "intro_h2": "The constraint is the same; <span class=\"grad-text\">the audience "
+                        "changes</span>.",
+            "intro": [
+                "The apps we publish have one thing in common, and it is a technical constraint: "
+                "they run on the machine of whoever opens them and send nothing anywhere. A viewer "
+                "of measurements demonstrates that well to somebody holding a file of "
+                "measurements. A game demonstrates it to everybody else.",
+                "Here the constraint shows in one place: the high score table. An online game "
+                "would keep it on a server, behind an account and a sign-up. This one keeps it in "
+                "the browser, the way the cabinet in an arcade did — it was that machine's table, "
+                "and you went back to that machine to beat it.",
+                "The token is the same reasoning. It is not there to ration games, which are "
+                "unlimited: it is there to say that what you are about to do starts now. It is "
+                "also the gesture a browser needs before it will play any sound, so the ritual "
+                "pays for itself.",
+            ],
+            "does_title": "What it does",
+            "does": [
+                "Rocks in three sizes: a large one breaks into two medium, a medium into two "
+                "small.",
+                "A ship with inertia: thrust once and you keep going.",
+                "Hyperspace: it drops you elsewhere at once, at a risk that grows with every jump.",
+                "Two saucers, one firing at random and one taking aim.",
+                "Waves that grow, and an extra ship every ten thousand points.",
+                "A high score table with your name, asked for at the end of the game.",
+                "It plays from the keyboard, from a phone and with a gamepad.",
+                "Exports and re-imports the table as a file, so a browser cleanup does not take "
+                "it away.",
+                "Works without a connection after the first visit, and installs like an app.",
+            ],
+            "does_not_title": "What it does not do",
+            "does_not": [
+                "There is no worldwide table: the scores stay in this browser, on this computer.",
+                "There is no two-player game, on one machine or over a network.",
+                "It asks for no account and shows no advertising.",
+                "There is nothing to buy: the tokens are unlimited and cost nothing.",
+            ],
+            "facts_title": "At a glance",
+            "facts": [
+                ("High scores", "This browser's table. There is no worldwide one, because there "
+                                "is no server to send the scores to. Export it whenever you want."),
+                ("Data", "Stays on your computer. Once the page has loaded the app makes no "
+                         "network requests."),
+                ("Tokens", "Unlimited and free. The token is the starting ritual, not a limit."),
+                ("Sound", "Synthesised by the app: there is no audio file to download."),
+                ("Accessibility", "It plays entirely from the keyboard. It is a real-time action "
+                                  "game: you need to see the screen."),
+                ("Offline", "After the first visit it works without a connection."),
+                ("Languages", "Italian and English, following your browser language."),
+                ("Licence", "Apache-2.0. The code is public and reusable, commercial work "
+                            "included."),
+            ],
+            "faq_title": "Frequently asked questions",
+            "faq": [
+                ("Why is the table not shared?",
+                 "Because a shared table needs a server to receive the scores, and these apps do "
+                 "not have one. It is the same choice that makes the game usable without a "
+                 "connection and without an account. If you want to compare scores with somebody, "
+                 "export the file: it holds the table in plain text."),
+                ("What happens to my scores if I clear my browser?",
+                 "They are lost. That is the consequence of having no server, which is why the "
+                 "export is inside the app from the first version: a file on your own disk, put "
+                 "back whenever you want."),
+                ("Is this the Atari game?",
+                 "No. It is an original game in the tradition of the vector shooters of the late "
+                 "1970s, written by us. The mechanics of that genre turn up in dozens of games; "
+                 "the name and the mark of the original belong to whoever registered them, and "
+                 "neither appears here."),
+                ("Why give it away?",
+                 "Because in two minutes it shows what our pages argue: that a good deal of what "
+                 "goes through a server today has no need to. Here the case is a light one; in "
+                 "custom projects it is the same reasoning applied to data we would rather not "
+                 "let out."),
+            ],
+            "cta_title": "Need something that runs locally?",
+            "cta_text": "If you have a case where the data must not leave the machine using it, "
+                        "tell us about it. A person from the team answers you, not an automated "
+                        "reply.",
+            "mail_subject": "AstroDroid — applications that run locally",
+            "related": ["onprem", "ai", "digisense"],
+            "art": {
+                "title": "The rock breaking into smaller pieces",
+                "desc": "Inside an enclosed panel, a large square splits into two smaller ones, "
+                        "which split again, down to a row of bright little squares. A line enters "
+                        "from the left and stops at the first square.",
             },
         },
     },

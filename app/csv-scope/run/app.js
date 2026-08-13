@@ -8,11 +8,11 @@ import { t, num, plural, lang, otherLang, setLang, resolveLang, missingKeys } fr
 import { parse, serialise } from "./csv.js";
 import { summarise } from "./stats.js";
 import { channelSvg, overlayHtml, indexAt } from "./chart.js";
-import * as theme from "./theme.js";
+import * as theme from "gg/theme.js";
 import { mount as mountTable } from "./table.js";
-import { setup as setupInstall } from "./install.js";
+import { setup as setupInstall } from "gg/install.js";
 import * as history from "./history.js";
-import { download, restore } from "./io.js";
+import { download, restore } from "gg/io.js";
 
 const el = (id) => document.getElementById(id);
 
@@ -1007,7 +1007,8 @@ function _start() {
   _keyboardSelection();
   _scrubPointer();
   _keyboardZoom();
-  setupInstall(el("install"), el("installHint"));
+  setupInstall(el("install"), el("installHint"),
+    { storageKey: "gg.csv-scope.install-dismissed", iosText: t("installIos") });
 
   if (new URLSearchParams(location.search).has("demo")) _demo();
 

@@ -4,7 +4,9 @@
 Only facts already published on the corporate site, in the company profile or on the Podz.AI
 product site. No metric enters this file unless it can be backed by one of those sources.
 
-Folders starting with "_" are excluded from the GitHub Pages build, so this source is not served.
+This file is public. Folders starting with "_" are normally skipped by GitHub Pages, but
+the repository has a .nojekyll at the root — which is what lets app/_lib/ be served — so
+_src/ is served too. Nothing secret goes in here; the repository is public anyway.
 """
 
 SITE = "https://ggtechnologies.sm"

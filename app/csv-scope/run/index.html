@@ -11,6 +11,7 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon-192.png" sizes="192x192">
 <link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="stylesheet" href="../../_lib/base.css">
 <link rel="stylesheet" href="./styles.css">
 <script>
   // Before the first paint, on purpose. Applied from a module it would run after the stylesheet,
@@ -187,6 +188,12 @@
   <span>Apache-2.0 · G&amp;G Technologies</span>
 </footer>
 
+<!-- Every import into the shared library goes through here, never up the tree. Both forms work
+     identically today; the difference arrives the day _lib/ takes a version number, and it is one
+     line per app instead of every import in every file. check_apps.py rejects the relative form. -->
+<script type="importmap">
+{ "imports": { "gg/": "../../_lib/" } }
+</script>
 <script type="module" src="./app.js"></script>
 </body>
 </html>
