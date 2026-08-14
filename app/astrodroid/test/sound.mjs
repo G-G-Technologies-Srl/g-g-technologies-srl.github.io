@@ -135,10 +135,25 @@ for (const evento of [...conVoce].sort()) {
   check("app.js lo accende con lo stato della nave", app.includes("audio.setThrust"),
         "senza questa riga la nave spinge in silenzio, e nessuna case mancante lo direbbe");
   check("e lo spegne fuori dalla partita",
-        app.includes('if (screen !== "playing") audio.setThrust(false)'),
+        app.includes('if (screen !== "playing") { audio.setThrust(false)'),
         "un anello non finisce da sé: resterebbe acceso sopra la pausa e la fine partita");
-  check("togliere l'audio lo ferma", audio.includes("if (!enabled) setThrust(false)"),
-        "è l'unico suono che sopravviverebbe al master a zero");
+  check("togliere l'audio ferma i due suoni continui",
+        audio.includes("setThrust(false); setSiren(null);"),
+        "sono gli unici due che sopravviverebbero al master a zero");
+
+  // La sirena è l'altro stato: dura quanto il disco resta in campo, non quanto una nota.
+  check("la sirena esiste", audio.includes("export function setSiren"),
+        "un solo suono alla comparsa lo senti una volta e te lo dimentichi");
+  check("ed è un tono continuo con l'ondeggiamento nel grafo",
+        audio.includes("wobble.connect(depth).connect(tone.frequency)"),
+        "due note alternate con dei timer andrebbero fuori sincrono con l'orologio audio");
+  check("distingue le due navette", audio.includes('wanted === "small" ? 330 : 190'),
+        "la piccola mira e vale mille punti: è un allarme diverso e va sentito diverso");
+  check("app.js la accende col disco in campo", app.includes("audio.setSiren(running.ufo"),
+        "senza questa riga il disco attraversa lo schermo in silenzio");
+  check("e la spegne fuori dalla partita",
+        app.includes('audio.setThrust(false); audio.setSiren(null);'),
+        "un tono continuo non finisce da sé");
   // Il gettone è il primo suono di tutti ed è quello che apre il contesto: se viene programmato
   // mentre il contesto è ancora sospeso, riceve tempi che al risveglio sono già passati e non si
   // sente. Trovato provando con un click vero invece che con `el.click()`, che non conta come

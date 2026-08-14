@@ -48,10 +48,13 @@ export const SHOT = {
   radius: 3,
 };
 
+// `splits` è quanti pezzi lascia. Due per le taglie normali, tre per il monolite: un masso che si
+// apre in tre riempie lo schermo di colpo, ed è tutto il carattere dell'ondata che lo contiene.
 export const ROCK = {
-  large: { radius: 54, next: "medium", score: 20 },
-  medium: { radius: 28, next: "small", score: 50 },
-  small: { radius: 14, next: null, score: 100 },
+  huge: { radius: 92, next: "large", score: 10, splits: 3 },
+  large: { radius: 54, next: "medium", score: 20, splits: 2 },
+  medium: { radius: 28, next: "small", score: 50, splits: 2 },
+  small: { radius: 14, next: null, score: 100, splits: 0 },
 };
 
 export const UFO = {
@@ -66,12 +69,48 @@ export const RULES = {
   waveRocksMax: 11,
   waveBreak: 1.6,             // seconds between one wave and the next
   dying: 1.8,
-  ufoFirst: 22,               // seconds into a wave before the first saucer can appear
+  // Quanto si aspetta la prima navetta. Cala di due secondi a ondata fino al minimo: nelle prime
+  // partite è una comparsa, più avanti è un assedio, e il gioco cambia ritmo senza cambiare regole.
+  ufoFirst: 22,
+  ufoFirstMin: 7,
   ufoEvery: 19,
+  ufoEveryMin: 8,
   ufoSmallFrom: 8000,         // score at which the small saucer starts showing up
   hyperspaceRisk: 0.015,      // and the same again for every jump already taken
   hyperspaceCooldown: 1.1,
+
+  // Lo scudo. Corto e lento a tornare: è una decisione da prendere, non un modo di giocare. Con una
+  // ricarica breve diventerebbe il tasto che si tiene premuto, e l'inerzia smetterebbe di contare.
+  shield: 1.2,
+  shieldCooldown: 12,
+
+  // Il moltiplicatore. Sale a colpi consecutivi a segno e cade interamente al primo colpo a vuoto:
+  // a scalini invece che a scendere piano, perché una penalità che si sente è quello che rende
+  // una serie lunga una cosa che stai difendendo.
+  streakSteps: [4, 8, 16],
+  streakFactors: [2, 4, 8],
+
+  // Ondata chiusa senza perdere una vita. Cresce con l'ondata, così vale la pena giocare bene
+  // proprio quando è più difficile farlo.
+  cleanBonus: 500,
 };
+
+/**
+ * Che ondata è la numero `n`.
+ *
+ * Una funzione del numero e nient'altro: nessuno stato, nessun caso, e lo stesso schema per tutti.
+ * Le ondate crescevano soltanto — la settima era la prima con più sassi — e dopo tre minuti non
+ * c'era più niente da scoprire. Adesso ogni tanto ne arriva una fatta d'altro.
+ *
+ * L'ordine dei controlli conta: `monolith` prima di `swarm` perché l'ondata 15 sarebbe entrambe, e
+ * un monolite fra dodici frammenti non si vedrebbe nemmeno.
+ */
+export function waveKind(n) {
+  if (n % 5 === 0) return "monolith";
+  if (n % 3 === 0) return "swarm";
+  if (n % 7 === 0) return "escort";
+  return "field";
+}
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c h a n c e
@@ -163,6 +202,19 @@ function _waveSpeed(world) {
   return Math.min(46 + 7 * (world.wave - 1), 104);
 }
 
+/** Un punto lontano dal centro, dove la nave rinasce. */
+function _awayFromCentre(world) {
+  let x = 0;
+  let y = 0;
+  let guard = 0;
+  do {
+    x = _between(world, 0, FIELD.w);
+    y = _between(world, 0, FIELD.h);
+    guard += 1;
+  } while (guard < 40 && Math.hypot(x - FIELD.w / 2, y - FIELD.h / 2) < 190);
+  return { x, y };
+}
+
 /**
  * Fill the field for a wave.
  *
@@ -171,20 +223,47 @@ function _waveSpeed(world) {
  * you is not difficulty, it is a coin taken without a game.
  */
 function _spawnWave(world) {
-  const count = Math.min(RULES.waveRocks + 2 * (world.wave - 1), RULES.waveRocksMax);
+  const kind = waveKind(world.wave);
   const speed = _waveSpeed(world);
-  for (let i = 0; i < count; i += 1) {
-    let x = 0;
-    let y = 0;
-    let guard = 0;
-    do {
-      x = _between(world, 0, FIELD.w);
-      y = _between(world, 0, FIELD.h);
-      guard += 1;
-    } while (guard < 40 && Math.hypot(x - FIELD.w / 2, y - FIELD.h / 2) < 190);
-    world.rocks.push(_makeRock(world, "large", x, y, _between(world, speed * 0.6, speed)));
+  world.kind = kind;
+
+  if (kind === "monolith") {
+    // Uno solo, enorme, al centro dello schermo che la nave ha appena lasciato. Si apre in tre
+    // grandi, che si aprono in sei medie: un'ondata che comincia calma e diventa la più affollata
+    // di tutte, e la calma iniziale è metà dell'effetto.
+    const spot = _awayFromCentre(world);
+    world.rocks.push(_makeRock(world, "huge", spot.x, spot.y, _between(world, 22, 38)));
+  } else if (kind === "swarm") {
+    // Molti frammenti veloci e nient'altro. Non si spezzano — sono già l'ultimo pezzo — quindi
+    // l'ondata si svuota mentre spari invece di raddoppiare, ed è l'unica che si gioca in avanti.
+    const count = Math.min(9 + world.wave, 18);
+    for (let i = 0; i < count; i += 1) {
+      const spot = _awayFromCentre(world);
+      world.rocks.push(_makeRock(world, "small", spot.x, spot.y,
+                                 _between(world, speed * 1.5, speed * 2.2)));
+    }
+  } else if (kind === "escort") {
+    // Poche rocce e due navette insieme, subito. È l'ondata in cui il campo è quasi libero e la
+    // minaccia non è dove guardi.
+    for (let i = 0; i < 3; i += 1) {
+      const spot = _awayFromCentre(world);
+      world.rocks.push(_makeRock(world, "large", spot.x, spot.y, _between(world, speed * 0.5, speed)));
+    }
+  } else {
+    const count = Math.min(RULES.waveRocks + 2 * (world.wave - 1), RULES.waveRocksMax);
+    for (let i = 0; i < count; i += 1) {
+      const spot = _awayFromCentre(world);
+      world.rocks.push(_makeRock(world, "large", spot.x, spot.y,
+                                 _between(world, speed * 0.6, speed)));
+    }
   }
-  world.ufoIn = RULES.ufoFirst + _between(world, -4, 4);
+
+  // L'attesa cala di due secondi a ondata, con un pavimento: la navetta passa da rara a costante
+  // senza mai diventare continua.
+  const first = Math.max(RULES.ufoFirstMin, RULES.ufoFirst - 2 * (world.wave - 1));
+  world.ufoIn = kind === "escort" ? 0.6 : first + _between(world, -3, 3);
+  world.ufoPending = kind === "escort" ? 2 : 1;
+  world.cleanWave = true;
 }
 
 function _newShip() {
@@ -198,6 +277,8 @@ function _newShip() {
     invulnerable: SHIP.invulnerable,
     cooldown: 0,
     hyperCooldown: 0,
+    shield: 0,                // secondi di scudo ancora attivi
+    shieldCooldown: 0,
   };
 }
 
@@ -215,9 +296,18 @@ function _burst(world, x, y, count, spread) {
   }
 }
 
-function _award(world, points) {
+/** Il fattore corrente, dedotto dalla serie di colpi a segno. */
+export function multiplier(world) {
+  let factor = 1;
+  RULES.streakSteps.forEach((soglia, i) => {
+    if (world.streak >= soglia) factor = RULES.streakFactors[i];
+  });
+  return factor;
+}
+
+function _award(world, points, multiplied = true) {
   const before = world.score;
-  world.score += points;
+  world.score += multiplied ? points * multiplier(world) : points;
   // Every multiple, not just the first: a run that jumps from 9 800 to 20 100 in one saucer has
   // earned two ships, and awarding one would quietly punish the best shot of the game.
   const earned = Math.floor(world.score / RULES.extraLife) - Math.floor(before / RULES.extraLife);
@@ -236,14 +326,19 @@ function _split(world, rock) {
 
   const speed = Math.hypot(rock.vx, rock.vy);
   const heading = Math.atan2(rock.vy, rock.vx);
-  for (const turn of [-1, 1]) {
+  // I pezzi si aprono a ventaglio attorno alla direzione del padre, quanti ne vuole la taglia.
+  const pezzi = spec.splits || 2;
+  for (let i = 0; i < pezzi; i += 1) {
+    const turn = pezzi === 1 ? 0 : -1 + (2 * i) / (pezzi - 1);
     // The children leave along the parent's heading, opened out. Sending them off at unrelated
     // angles looks like two new rocks arriving rather than one rock coming apart, and the player
     // loses the only cue that says where the pieces are going.
     const angle = heading + turn * _between(world, 0.35, 0.85);
     const child = _makeRock(world, spec.next, rock.x, rock.y, 0);
-    child.vx = Math.cos(angle) * speed * _between(world, 1.08, 1.36);
-    child.vy = Math.sin(angle) * speed * _between(world, 1.08, 1.36);
+    // Il monolite è lento: i suoi pezzi partono più svelti di lui, o l'ondata resterebbe ferma.
+    const spinta = rock.size === "huge" ? _between(world, 2.2, 3.4) : _between(world, 1.08, 1.36);
+    child.vx = Math.cos(angle) * speed * spinta;
+    child.vy = Math.sin(angle) * speed * spinta;
     world.rocks.push(child);
   }
 }

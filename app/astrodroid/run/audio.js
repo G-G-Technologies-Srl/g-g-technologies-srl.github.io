@@ -19,12 +19,16 @@ let enabled = true;
 let beatAt = 0;
 let beatLow = true;
 
-// The engine. Everything else here is an event — a shot, a rock breaking — and this one is not:
-// thrust is a state that lasts as long as a finger is down, so it cannot be a note that gets
-// played. It is one noise source that runs from the first time it is needed until the tab closes,
-// with a gain that opens and shuts. Restarting a source on every press would click at both ends
-// and would not survive the key being held for a minute.
+// Two sounds are not events, and it is the same reason twice: they last as long as something is
+// true, not as long as a note. The engine runs while a finger is down; the saucer's siren runs
+// while the saucer is on screen. Neither can be a note that gets played — a note has to end, and
+// these end when the world says so.
+//
+// Both are one source, started the first time they are needed and left running until the tab
+// closes, with a gain that opens and shuts. Restarting a source on every press clicks at both ends
+// and does not survive being held for a minute.
 let engine = null;
+let siren = null;
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
@@ -95,17 +99,64 @@ function _buildEngine() {
   source.buffer = buffer;
   source.loop = true;
 
+  // Risonante, non solo passa-basso. La prima versione tagliava a 340 Hz con poca risonanza: era
+  // corretta e non si sentiva, perché di quel rumore restava solo la parte che gli altoparlanti
+  // piccoli non riproducono. Il picco intorno ai 520 Hz dà al rombo un corpo che passa anche da un
+  // portatile.
   const filter = ctx.createBiquadFilter();
   filter.type = "lowpass";
-  filter.frequency.value = 340;
-  filter.Q.value = 3.2;
+  filter.frequency.value = 520;
+  filter.Q.value = 7;
+
+  // Sotto al rumore, una nota bassa. È quella che si sente per prima su un altoparlante piccolo:
+  // il rumore da solo è aria, questa è il motore.
+  const body = ctx.createOscillator();
+  body.type = "sawtooth";
+  body.frequency.value = 62;
 
   const amp = ctx.createGain();
   amp.gain.value = 0.0001;
+  const bodyAmp = ctx.createGain();
+  bodyAmp.gain.value = 0.45;
 
-  source.connect(filter).connect(amp).connect(master);
+  source.connect(filter).connect(amp);
+  body.connect(bodyAmp).connect(amp);
+  amp.connect(master);
   source.start();
+  body.start();
   return { amp, on: false };
+}
+
+/**
+ * La sirena del disco volante: due toni che si alternano, in continuo.
+ *
+ * Non è un effetto, è un avviso. Il disco arriva da un bordo mentre stai guardando dall'altra
+ * parte, e quello che deve dirti non è «è successo qualcosa» ma «c'è qualcosa, ed è ancora lì» —
+ * per tutto il tempo che ci resta. Un suono solo alla comparsa lo diresti una volta e poi il
+ * giocatore se lo dimentica, che è esattamente quando gli sparano.
+ *
+ * L'ondeggiamento lo fa un oscillatore lento sulla frequenza dell'altro. Due note alternate a mano
+ * con dei timer andrebbero fuori sincrono con l'orologio audio; così la modulazione vive dentro il
+ * grafo e non ha bisogno di nessuno che la aggiorni.
+ */
+function _buildSiren() {
+  const tone = ctx.createOscillator();
+  tone.type = "square";
+  tone.frequency.value = 190;
+
+  const wobble = ctx.createOscillator();
+  wobble.type = "sine";
+  wobble.frequency.value = 7.5;
+  const depth = ctx.createGain();
+  depth.gain.value = 46;
+  wobble.connect(depth).connect(tone.frequency);
+
+  const amp = ctx.createGain();
+  amp.gain.value = 0.0001;
+  tone.connect(amp).connect(master);
+  tone.start();
+  wobble.start();
+  return { amp, tone, kind: null };
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -134,9 +185,9 @@ export function wake() {
 export function setEnabled(value) {
   enabled = Boolean(value);
   if (master) master.gain.value = enabled ? 0.34 : 0;
-  // The engine is the one sound that would otherwise keep running under a muted master: everything
-  // else is a note that ends by itself, this is a loop that does not.
-  if (!enabled) setThrust(false);
+  // Motore e sirena sono gli unici due suoni che continuerebbero sotto un master a zero:
+  // ogni altra nota finisce da sé, questi due no.
+  if (!enabled) { setThrust(false); setSiren(null); }
   return enabled;
 }
 
@@ -159,8 +210,31 @@ export function setThrust(on) {
   const now = ctx.currentTime;
   engine.amp.gain.cancelScheduledValues(now);
   engine.amp.gain.setValueAtTime(Math.max(0.0001, engine.amp.gain.value), now);
-  engine.amp.gain.exponentialRampToValueAtTime(wanted ? 0.20 : 0.0001,
+  engine.amp.gain.exponentialRampToValueAtTime(wanted ? 0.55 : 0.0001,
                                                now + (wanted ? 0.05 : 0.14));
+}
+
+/**
+ * La sirena accesa o spenta, chiamata a ogni fotogramma con il disco che c'è — o con `null`.
+ *
+ * Prende la taglia e non un acceso/spento perché le due navette vanno distinte a orecchio: quella
+ * piccola mira e vale mille punti, quella grande spara a caso e ne vale duecento. Sono due livelli
+ * di allarme diversi, e il colore del suono è il modo di dirlo senza scriverlo da nessuna parte.
+ */
+export function setSiren(kind) {
+  const wanted = enabled ? kind : null;
+  if (!ctx || (!wanted && !siren)) return;
+  if (!siren) siren = _buildSiren();
+  if (siren.kind === wanted) return;
+  const now = ctx.currentTime;
+  if (wanted) {
+    siren.tone.frequency.setValueAtTime(wanted === "small" ? 330 : 190, now);
+  }
+  siren.kind = wanted;
+  siren.amp.gain.cancelScheduledValues(now);
+  siren.amp.gain.setValueAtTime(Math.max(0.0001, siren.amp.gain.value), now);
+  siren.amp.gain.exponentialRampToValueAtTime(wanted ? 0.11 : 0.0001,
+                                              now + (wanted ? 0.08 : 0.20));
 }
 
 export function isEnabled() {
@@ -204,11 +278,14 @@ function _voice(event) {
     case "hyperspace":
       _tone({ type: "sine", from: 140, to: 1600, length: 0.28, gain: 0.14 });
       break;
+    // L'arrivo è un colpo secco, non una nota lunga: subito dopo attacca la sirena, e due suoni
+    // sovrapposti che dicono la stessa cosa si coprono a vicenda. Serve solo a far alzare gli
+    // occhi nell'istante in cui il disco entra dal bordo.
     case "ufo-large":
-      _tone({ type: "square", from: 220, to: 180, length: 0.5, gain: 0.08 });
+      _tone({ type: "square", from: 300, to: 190, length: 0.12, gain: 0.13 });
       break;
     case "ufo-small":
-      _tone({ type: "square", from: 420, to: 360, length: 0.4, gain: 0.07 });
+      _tone({ type: "square", from: 560, to: 330, length: 0.10, gain: 0.12 });
       break;
     case "ufo-fire":
       _tone({ type: "sawtooth", from: 520, to: 180, length: 0.14, gain: 0.09 });
