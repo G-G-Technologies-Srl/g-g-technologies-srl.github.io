@@ -8,6 +8,7 @@ Usage:  python3 _src/check_site.py
 """
 
 import glob
+import html
 import json
 import re
 import sys
@@ -320,6 +321,58 @@ def _check_footers_agree(problems):
         for href in sorted(in_home - in_pages):
             problems.append(f"{home}: {href} è nel footer della home ma non in quello delle pagine "
                             f"interne — aggiungilo a footer_cols in content.py")
+
+        _check_footer_columns_agree(problems, lang, home, footer)
+
+
+def _check_footer_columns_agree(problems, lang, home, footer):
+    """Le stesse voci, ma anche nella stessa colonna e con la stessa etichetta.
+
+    Il controllo sopra confronta l'insieme dei link e basta, e per questo ha lasciato passare un
+    footer che elencava le stesse pagine disposte in modo diverso: la home metteva `App gratuite`
+    sotto «Prodotti e ricerca», le pagine interne sotto «Azienda». Il link c'era in tutte e due, e
+    chi lo cercava dove l'aveva visto sulla home non lo trovava — che a leggerlo è indistinguibile
+    da una voce mancante.
+
+    Confronta le colonne in ordine, con l'intestazione e con le coppie etichetta-indirizzo. È il
+    confronto stretto: qualunque divergenza ferma il build, perché il footer è uno solo scritto in
+    due posti e l'unico modo di tenerlo tale è non lasciargli margine.
+    """
+    def _text(fragment):
+        return html.unescape(re.sub(r"<[^>]+>", "", fragment)).strip()
+
+    found = []
+    for block in re.findall(r'<div class="footer-col">(.*?)</div>', footer, re.S):
+        title = re.search(r"<h4[^>]*>(.*?)</h4>", block, re.S)
+        items = [(_text(label), href)
+                 for href, label in re.findall(r'<a href="([^"]+)"[^>]*>(.*?)</a>', block, re.S)]
+        found.append((_text(title.group(1)) if title else "", items))
+
+    expected = [(title, [(label, href) for label, href in items])
+                for title, items in CHROME[lang]["footer_cols"]]
+
+    if len(found) != len(expected):
+        problems.append(f"{home}: il footer ha {len(found)} colonne, footer_cols in content.py ne "
+                        f"ha {len(expected)}")
+        return
+
+    for (got_title, got_items), (want_title, want_items) in zip(found, expected):
+        if got_title != want_title:
+            problems.append(f"{home}: la colonna del footer si intitola «{got_title}», in "
+                            f"footer_cols è «{want_title}»")
+        if got_items != want_items:
+            only_home = [i for i in got_items if i not in want_items]
+            only_pages = [i for i in want_items if i not in got_items]
+            if only_home or only_pages:
+                for label, href in only_home:
+                    problems.append(f"{home}: «{label}» ({href}) è nella colonna «{got_title}» "
+                                    f"della home e non in quella di footer_cols")
+                for label, href in only_pages:
+                    problems.append(f"{home}: «{label}» ({href}) è nella colonna «{want_title}» "
+                                    f"di footer_cols e non in quella della home")
+            else:
+                problems.append(f"{home}: la colonna «{got_title}» ha le stesse voci in un ordine "
+                                f"diverso da footer_cols")
 
 
 def _check_reachable(problems):

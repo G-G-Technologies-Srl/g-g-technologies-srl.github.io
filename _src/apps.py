@@ -380,9 +380,9 @@ APPS = [
         "order": 2,
         "tags": ["svago"],
         "stato": "pronto",
-        "version": "0.1.0",
+        "version": "0.1.1",
         "released": "2026-08-13",
-        "updated": "2026-08-13",
+        "updated": "2026-08-14",
         "licence": "Apache-2.0",
         "art": {"shape": "fracture"},
         "it": {
