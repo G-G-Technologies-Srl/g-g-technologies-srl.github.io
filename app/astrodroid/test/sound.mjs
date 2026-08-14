@@ -164,6 +164,19 @@ for (const evento of [...conVoce].sort()) {
   // mentre il contesto è ancora sospeso, riceve tempi che al risveglio sono già passati e non si
   // sente. Trovato provando con un click vero invece che con `el.click()`, che non conta come
   // gesto dell'utente e lascia il contesto fermo — cioè misurando per mezz'ora un audio spento.
+  // Il rombo deve avere energia dove un altoparlante piccolo la riproduce. Misurato con un
+  // analizzatore sull'uscita, il motore ha il 53% dell'energia sotto i 150 Hz e il 37% fra 150 e
+  // 1000: è quel 37% che lo rende udibile su un portatile. Con il filtro sbagliato — 200 Hz e Q
+  // bassa — stava quasi tutto sotto i 150 e il motore spariva del tutto, pur avendo il guadagno
+  // giusto. Qui non si può misurare il suono, ma si può impedire che il taglio torni là sotto.
+  const taglio = Number((audio.match(/filter\.frequency\.value = (\d+);/) || [])[1]);
+  check("il filtro del motore lascia passare la banda che si sente",
+        taglio >= 350 && taglio <= 700,
+        `taglia a ${taglio} Hz: sotto i 350 l'energia finisce dove i diffusori piccoli non arrivano`);
+  const risonanza = Number((audio.match(/filter\.Q\.value = ([\d.]+);/) || [])[1]);
+  check("e non ha risonanza, che è quello che faceva la pernacchia",
+        risonanza <= 1.5, `Q a ${risonanza}: sopra 1,5 il picco colora il rumore`);
+
   check("una nota programmata a contesto sospeso viene rimandata",
         audio.includes('if (ctx.state !== "running")') && audio.includes("ctx.resume().then"),
         "il gettone verrebbe perso: l'inviluppo salta alla fine invece di aprirsi");

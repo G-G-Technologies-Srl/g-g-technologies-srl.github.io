@@ -99,24 +99,29 @@ function _buildEngine() {
   source.buffer = buffer;
   source.loop = true;
 
-  // Cupo, e senza risonanza. Il taglio a 520 Hz con Q alta metteva in evidenza proprio la banda
-  // che rende un rumore una pernacchia: si sentiva, e si sentiva male. A 200 Hz con Q bassa resta
-  // il rombo e sparisce il ronzio.
+  // Il verso veniva dalla **risonanza**, non dall'altezza. Q a 7 metteva un picco proprio nella
+  // banda in cui un rumore fa la pernacchia; scendere a 200 Hz per scappare da lì ha risolto il
+  // timbro e creato il problema opposto — sotto i duecento hertz un altoparlante di portatile non
+  // riproduce niente, e il motore è sparito del tutto.
+  //
+  // La misura giusta è il taglio dove si sente e Q che non colora: 420 Hz e Q 0,7 danno un rombo
+  // largo, senza picco, che passa anche da uno schermo.
   const filter = ctx.createBiquadFilter();
   filter.type = "lowpass";
-  filter.frequency.value = 200;
-  filter.Q.value = 0.8;
+  filter.frequency.value = 420;
+  filter.Q.value = 0.7;
 
-  // Sotto al rumore, una nota bassa — e una sinusoide, non un dente di sega. Il dente di sega ha
-  // le armoniche, ed erano quelle a fare il verso: una sinusoide a 46 Hz è peso e basta.
+  // Sotto al rumore, la nota del motore. Un triangolo a 74 Hz e non una sinusoide a 46: la
+  // sinusoide a quell'altezza è energia che i diffusori piccoli buttano via, il triangolo porta
+  // qualche armonica ed è quella che li fa suonare.
   const body = ctx.createOscillator();
-  body.type = "sine";
-  body.frequency.value = 46;
+  body.type = "triangle";
+  body.frequency.value = 74;
 
   const amp = ctx.createGain();
   amp.gain.value = 0.0001;
   const bodyAmp = ctx.createGain();
-  bodyAmp.gain.value = 0.85;
+  bodyAmp.gain.value = 0.60;
 
   source.connect(filter).connect(amp);
   body.connect(bodyAmp).connect(amp);
@@ -209,8 +214,15 @@ export function setThrust(on) {
   const now = ctx.currentTime;
   engine.amp.gain.cancelScheduledValues(now);
   engine.amp.gain.setValueAtTime(Math.max(0.0001, engine.amp.gain.value), now);
-  // Più basso di prima: era il suono più forte del gioco, e copriva i colpi.
-  engine.amp.gain.exponentialRampToValueAtTime(wanted ? 0.30 : 0.0001,
+  // Tarato con un analizzatore sull'uscita, non a orecchio, e questo è il mixaggio che ne è uscito
+  // (picchi misurati sul master):
+  //
+  //     nave persa  0,068   ·   sirena piccola  0,058   ·   esplosione grande  0,036   ·   colpo  0,033
+  //
+  // A 0,42 il motore stava a 0,124 — il suono più forte del gioco, tre volte e mezzo un'esplosione,
+  // e per giunta continuo. Qui sta poco sotto la sirena: si sente per tutto il tempo che spingi
+  // senza coprire le cose che succedono una volta sola.
+  engine.amp.gain.exponentialRampToValueAtTime(wanted ? 0.20 : 0.0001,
                                                now + (wanted ? 0.05 : 0.14));
 }
 

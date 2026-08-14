@@ -69,6 +69,7 @@ function _applyText() {
   el("theme").setAttribute("aria-label",
     theme.current() === "light" ? t("themeToDark") : t("themeToLight"));
   el("sound").setAttribute("aria-label", audio.isEnabled() ? t("soundOn") : t("soundOff"));
+  el("sound").dataset.sound = audio.isEnabled() ? "on" : "off";
   el("install").textContent = t("installButton");
   _paintHud();
   _paintScores();

@@ -36,10 +36,14 @@
     <span class="spacer"></span>
     <button type="button" id="install" class="ghost small" hidden></button>
     <button type="button" id="lang" class="ghost small"></button>
-    <button type="button" id="sound" class="ghost small icon" data-t-label="soundOn">
+    <!-- L'icona cambia con lo stato, non solo l'etichetta: l'onda quando suona, la croce quando
+         no. Un pulsante che resta identico dopo che l'hai premuto non dice di aver fatto niente,
+         e l'aria-label lo sa solo chi usa uno screen reader. -->
+    <button type="button" id="sound" class="ghost small icon" data-t-label="soundOn" data-sound="on">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
         <path d="M4 9v6h4l5 4V5L8 9H4z"></path>
-        <path d="M16.5 8.5a5 5 0 0 1 0 7"></path>
+        <path class="i-wave" d="M16.5 8.5a5 5 0 0 1 0 7"></path>
+        <path class="i-mute" d="M17 10l4 4M21 10l-4 4"></path>
       </svg>
     </button>
     <button type="button" id="theme" class="ghost small icon" data-t-label="themeToLight">

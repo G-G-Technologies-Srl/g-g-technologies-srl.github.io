@@ -67,6 +67,14 @@ body { overflow: hidden; }              /* the field is the page; nothing here s
 
 .shield[data-state="charging"] b { color: var(--faint); font-variant-numeric: tabular-nums; }
 
+/* L'onda o la croce, mai tutte e due. Lo stato sta su un attributo del pulsante invece che su una
+   classe cambiata da JavaScript, così il markup dice da solo in che stato è. */
+#sound[data-sound="on"] .i-mute { display: none; }
+
+#sound[data-sound="off"] .i-wave { display: none; }
+
+#sound[data-sound="off"] { color: var(--faint); }
+
 /* ---------------------------------------------------------------------------------------------
    the field, and the panels over it
    --------------------------------------------------------------------------------------------- */
