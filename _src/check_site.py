@@ -344,8 +344,12 @@ def _check_footer_columns_agree(problems, lang, home, footer):
     found = []
     for block in re.findall(r'<div class="footer-col">(.*?)</div>', footer, re.S):
         title = re.search(r"<h4[^>]*>(.*?)</h4>", block, re.S)
+        # href is not always the first attribute: the homepage writes class="it"/class="en" first,
+        # and matching only <a href=…> silently found nothing there — which read as "every entry is
+        # missing from the home" instead of "the regex is wrong".
         items = [(_text(label), href)
-                 for href, label in re.findall(r'<a href="([^"]+)"[^>]*>(.*?)</a>', block, re.S)]
+                 for href, label in re.findall(r'<a\b[^>]*?href="([^"]+)"[^>]*>(.*?)</a>',
+                                               block, re.S)]
         found.append((_text(title.group(1)) if title else "", items))
 
     expected = [(title, [(label, href) for label, href in items])
