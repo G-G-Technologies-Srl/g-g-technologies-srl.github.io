@@ -20,6 +20,7 @@ import * as input from "./input.js";
 import * as audio from "./audio.js";
 import * as scores from "./scores.js";
 import { autopilot } from "./attract.js";
+import * as card from "./card.js";
 import * as theme from "gg/theme.js";
 import { setup as setupInstall } from "gg/install.js";
 import { download, restore } from "gg/io.js";
@@ -223,6 +224,7 @@ async function _finish() {
   let known = "";
   try { known = localStorage.getItem(PREF.name) || ""; } catch (ignored) { known = ""; }
   el("namefield").value = known;
+  _prepareShare(played);
   el("namefield").focus();
   el("namefield").select();
 }
@@ -239,6 +241,58 @@ async function _finish() {
  * a phone, which no amount of tidy wiring prevents.
  */
 let saving = false;
+
+// Il link è quello della **scheda**, mai di run/: l'app è noindex e il suo canonical nomina già la
+// scheda, quindi un link verso run/ non accumula niente e scarica chi arriva dentro un attrezzo
+// senza il testo che spiega cos'è. La regola sta in app/CLAUDE.md.
+const SCHEDA = "https://ggtechnologies.sm/app/astrodroid/";
+
+/**
+ * Prepara la condivisione per la partita appena finita.
+ *
+ * Gli `href` si costruiscono qui e si vedono nella barra di stato del browser prima di cliccare:
+ * niente parte senza che chi gioca lo abbia scelto, e il testo che partirebbe è leggibile prima.
+ */
+function _prepareShare(played) {
+  const punti = num(played.score, 0);
+  const testo = tf("shareText", { score: punti, wave: num(played.wave, 0) });
+  const url = lang() === "en" ? SCHEDA.replace("/app/", "/en/app/") : SCHEDA;
+
+  el("shareLinkedin").href =
+    `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+  el("shareX").href =
+    `https://twitter.com/intent/tweet?text=${encodeURIComponent(testo)}`
+    + `&url=${encodeURIComponent(url)}`;
+  el("shareMail").href =
+    `mailto:?subject=${encodeURIComponent(tf("shareMailSubject", { score: punti }))}`
+    + `&body=${encodeURIComponent(`${testo} ${url}`)}`;
+  el("shareNote").textContent = "";
+
+  el("shareCopy").onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(`${testo} ${url}`);
+      el("shareNote").textContent = t("shareCopied");
+    } catch (ignored) {
+      // Un browser che nega gli appunti non è un errore da mostrare: il link è visibile lo stesso.
+      el("shareNote").textContent = url;
+    }
+  };
+
+  el("shareImage").onclick = async () => {
+    const disegno = card.draw(played, {
+      nome: el("namefield").value.trim(),
+      punteggio: punti,
+      ondata: num(played.wave, 0),
+      testi: {
+        kicker: t("shareCardKicker"),
+        riga: t("shareCardLine"),
+        ondata: t("shareCardWave"),
+      },
+    });
+    const nome = await card.save(disegno, `astrodroid-${played.score}.png`);
+    el("shareNote").textContent = tf("shareSaved", { name: nome });
+  };
+}
 
 async function _saveScore() {
   const played = world;

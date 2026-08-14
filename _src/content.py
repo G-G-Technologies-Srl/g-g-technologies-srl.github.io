@@ -557,11 +557,17 @@ CHROME = {
         "payoff": "Accendiamo il futuro",
         # "Perché noi" left the navigation for Insights: it was an anchor to a section of the
         # homepage, while the articles are the cheapest proof of technical depth the site has and
-        # were reachable from the footer only. "Perché noi" is still in the footer, under Azienda.
+        # were reachable from the footer only. It has now left the footer as well, for the same
+        # reason the homepage footer never carried it: an anchor to a strip of the home is not a
+        # destination, and the header already leads back there.
+        #
+        # "App" sits after Insights, and the same six entries are hand-written in _src/home.html:
+        # it was the one section of the site reachable from the footer only.
         "nav": [
             ("Servizi", "/#services"),
             ("Podz.AI", "/podz-ai/"),
             ("Insights", "/insights/"),
+            ("App", "/app/"),
             ("Chi siamo", "/chi-siamo/"),
             ("Contatti", "/#contact"),
         ],
@@ -569,6 +575,12 @@ CHROME = {
         "mailto": "mailto:info@ggtechnologies.sm?subject=Richiesta%20informazioni",
         "footer_blurb": "Progettiamo e realizziamo tecnologia: wearable medicali, robotica e "
                         "intelligenza artificiale. Sul nostro framework DigiSense® nasce Podz.AI.",
+        # Three columns, in the order and with the labels the homepage uses. They must stay the
+        # same list *and* the same arrangement: a reader who learned on the home that App gratuite
+        # sits under «Prodotti e ricerca» goes looking for it there on every other page, and until
+        # now the internal pages filed it under «Azienda». It was there, in the wrong column, which
+        # reads exactly like missing. _check_footers_agree compared the set of links and let it
+        # through; it now compares column and label too.
         "footer_cols": [
             ("Servizi", [
                 ("Wearable medicali", "/servizi/wearable-medicale/"),
@@ -578,17 +590,18 @@ CHROME = {
             ]),
             ("Prodotti e ricerca", [
                 ("Podz.AI", "/podz-ai/"),
-                ("DigiSense®", "/digisense/"),
                 ("Robot per l'assistenza domiciliare", "/progetti/robot-assistenza-domiciliare/"),
-                ("Scarica Podz.AI", PODZ_SITE + "/download.html"),
-                ("Release", "https://github.com/G-G-Technologies-Srl/digisense-releases/releases"),
-            ]),
-            ("Azienda", [
-                ("Chi siamo", "/chi-siamo/"),
-                ("Perché noi", "/#why"),
+                ("DigiSense®", "/digisense/"),
                 ("Insights", "/insights/"),
                 ("App gratuite", "/app/"),
-                ("Contatti", "/#contact"),
+                ("Sito ufficiale", PODZ_SITE + "/"),
+                ("Download", PODZ_SITE + "/download.html"),
+                ("Release", "https://github.com/G-G-Technologies-Srl/digisense-releases/releases"),
+            ]),
+            ("Contatti", [
+                ("Chi siamo", "/chi-siamo/"),
+                ("info@ggtechnologies.sm", "mailto:info@ggtechnologies.sm"),
+                ("+378 0549 900824", "tel:+3780549900824"),
                 ("LinkedIn", "https://www.linkedin.com/company/gg-technologies-srl"),
             ]),
         ],
@@ -638,6 +651,7 @@ CHROME = {
             ("Services", "/en/#services"),
             ("Podz.AI", "/en/podz-ai/"),
             ("Insights", "/en/insights/"),
+            ("Apps", "/en/app/"),
             ("About", "/en/about/"),
             ("Contact", "/en/#contact"),
         ],
@@ -654,17 +668,18 @@ CHROME = {
             ]),
             ("Products and research", [
                 ("Podz.AI", "/en/podz-ai/"),
-                ("DigiSense®", "/en/digisense/"),
                 ("Home care robot", "/en/projects/home-care-robot/"),
-                ("Download Podz.AI", PODZ_SITE + "/download.html"),
-                ("Releases", "https://github.com/G-G-Technologies-Srl/digisense-releases/releases"),
-            ]),
-            ("Company", [
-                ("About", "/en/about/"),
-                ("Why us", "/en/#why"),
+                ("DigiSense®", "/en/digisense/"),
                 ("Insights", "/en/insights/"),
                 ("Free apps", "/en/app/"),
-                ("Contact", "/en/#contact"),
+                ("Official website", PODZ_SITE + "/"),
+                ("Download", PODZ_SITE + "/download.html"),
+                ("Releases", "https://github.com/G-G-Technologies-Srl/digisense-releases/releases"),
+            ]),
+            ("Contact", [
+                ("About", "/en/about/"),
+                ("info@ggtechnologies.sm", "mailto:info@ggtechnologies.sm"),
+                ("+378 0549 900824", "tel:+3780549900824"),
                 ("LinkedIn", "https://www.linkedin.com/company/gg-technologies-srl"),
             ]),
         ],

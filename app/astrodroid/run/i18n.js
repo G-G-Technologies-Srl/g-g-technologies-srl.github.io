@@ -57,6 +57,26 @@ const IT = {
   namePlaceholder: "Come ti chiami",
   nameNote: "Massimo dodici caratteri. Resta su questo computer.",
   save: "Registra",
+  shareTitle: "Racconta la partita",
+  shareImage: "Salva l'immagine",
+  shareOnLinkedin: "Condividi su LinkedIn",
+  shareOnX: "Condividi su X",
+  shareByMail: "Manda per email",
+  shareCopy: "Copia il link",
+  shareCopied: "Link copiato.",
+  shareSaved: "Immagine salvata in {name}.",
+  // Il testo che parte insieme al link. Il punteggio non è verificabile — chiunque può scrivere il
+  // numero che vuole — e non lo presentiamo come un record: è il racconto di una partita, più una
+  // sfida a chi legge.
+  //
+  // È l'unico testo dell'app scritto in prima persona, e non è una svista: qui non parla il
+  // prodotto, parla chi ha appena giocato. Ovunque altro l'app dà del tu e non dice mai «io».
+  shareText: "{score} punti su AstroDroid, ondata {wave}. Riesci a fare meglio? "
+    + "Il gettone è gratis e gira nel browser:",
+  shareMailSubject: "AstroDroid — batti i miei {score} punti",
+  shareCardKicker: "Partita finita",
+  shareCardLine: "punti",
+  shareCardWave: "ondata {n}",
   playAgain: "Un altro gettone",
   scoresTitle: "Classifica",
   scoresLocal: "È la classifica di questo browser. Non ce n'è una mondiale, perché non c'è un "
@@ -92,7 +112,7 @@ const IT = {
   installButton: "Installa",
   installIos: "Per installarla: Condividi, poi «Aggiungi a Home».",
   back: "Indietro",
-  backToPage: "Torna alla pagina",
+  backToPage: "Torna alla scheda",
   sourceLabel: "Codice sorgente",
   // The accessibility line, said where it is true instead of in small print. A real-time game is
   // not playable without sight, and pretending otherwise helps nobody.
@@ -149,6 +169,20 @@ const EN = {
   namePlaceholder: "What you go by",
   nameNote: "Twelve characters at most. It stays on this computer.",
   save: "Record it",
+  shareTitle: "Tell somebody",
+  shareImage: "Save the image",
+  shareOnLinkedin: "Share on LinkedIn",
+  shareOnX: "Share on X",
+  shareByMail: "Send by email",
+  shareCopy: "Copy the link",
+  shareCopied: "Link copied.",
+  shareSaved: "Image saved as {name}.",
+  shareText: "{score} points on AstroDroid, wave {wave}. Think you can do better? "
+    + "The token is free and it runs in your browser:",
+  shareMailSubject: "AstroDroid — beat my {score} points",
+  shareCardKicker: "Game over",
+  shareCardLine: "points",
+  shareCardWave: "wave {n}",
   playAgain: "Another token",
   scoresTitle: "High scores",
   scoresLocal: "This is the table of this browser. There is no worldwide one, because there is no "
@@ -183,7 +217,7 @@ const EN = {
   installButton: "Install",
   installIos: "To install: Share, then “Add to Home Screen”.",
   back: "Back",
-  backToPage: "Back to the page",
+  backToPage: "Back to the app page",
   sourceLabel: "Source code",
   a11yNote: "It plays entirely from the keyboard. It is a real-time action game: you need to see "
     + "the screen.",

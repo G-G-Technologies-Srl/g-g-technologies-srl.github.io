@@ -141,9 +141,9 @@ APPS = [
         "tags": ["dati"],
         # bozza | pronto — only "pronto" is indexed and listed in the sitemap.
         "stato": "pronto",
-        "version": "0.13.0",
+        "version": "0.13.1",
         "released": "2026-08-12",
-        "updated": "2026-08-13",
+        "updated": "2026-08-14",
         "licence": "Apache-2.0",
         # The illustration geometry, shared by banner, card thumbnail, social card and the two
         # manifest icons. It needs its own function in article_art.py: reusing an article's drawing

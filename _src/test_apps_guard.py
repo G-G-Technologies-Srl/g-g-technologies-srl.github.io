@@ -111,6 +111,12 @@ CASES = [
      '<span class="meta" id="tagline">',
      '<span class="meta" id="tagline" data-t="taglineInventata">'),
 
+    # La condivisione appena aggiunta al gioco: il link deve andare alla scheda, non all'app.
+    ("un link di condivisione che punta all'app invece che alla scheda",
+     ROOT / "app" / "astrodroid" / "run" / "app.js",
+     'const SCHEDA = "https://ggtechnologies.sm/app/astrodroid/";',
+     'const SCHEDA = "https://ggtechnologies.sm/app/astrodroid/run/";'),
+
     ("un elemento cercato dal codice e assente dal markup",
      RUN / "index.html",
      'id="fileName"',

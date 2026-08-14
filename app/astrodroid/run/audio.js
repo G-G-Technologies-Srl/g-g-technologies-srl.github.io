@@ -220,9 +220,12 @@ export function setThrust(on) {
   //     nave persa  0,068   ·   sirena piccola  0,058   ·   esplosione grande  0,036   ·   colpo  0,033
   //
   // A 0,42 il motore stava a 0,124 — il suono più forte del gioco, tre volte e mezzo un'esplosione,
-  // e per giunta continuo. Qui sta poco sotto la sirena: si sente per tutto il tempo che spingi
-  // senza coprire le cose che succedono una volta sola.
-  engine.amp.gain.exponentialRampToValueAtTime(wanted ? 0.20 : 0.0001,
+  // e per giunta continuo. Qui sta appena sotto la nave persa, che è il picco più alto: il rombo si
+  // sente per tutto il tempo che spingi e le cose che succedono una volta sola gli restano sopra.
+  //
+  // Che sia continuo conta anche per come lo si percepisce: un rumore basso e costante disturba
+  // meno di un'esplosione a pari picco, quindi può stare più in alto di quanto il numero suggerisca.
+  engine.amp.gain.exponentialRampToValueAtTime(wanted ? 0.26 : 0.0001,
                                                now + (wanted ? 0.05 : 0.14));
 }
 

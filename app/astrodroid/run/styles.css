@@ -329,6 +329,44 @@ body { overflow: hidden; }              /* the field is the page; nothing here s
 
 .io { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 2px 0; }
 
+/* La condivisione a fine partita. Gli stessi quattro segni della scheda e degli articoli, con in
+   più il salvataggio dell'immagine — che è la cosa che qui si può fare e che altrove no. */
+.share {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 4px 0 0;
+}
+
+.share-label {
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--faint);
+  width: 100%;
+}
+
+/* Bersagli da 40px anche per i tre link: sono gli unici comandi tondi fuori dai comandi touch, e
+   una riga di icone piccole a fine partita si sbaglia su un telefono. */
+.share-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 15px;
+  cursor: pointer;
+  background: none;
+}
+
+.share-link:hover { border-color: var(--accent); color: var(--accent-text); }
+
 /* ---------------------------------------------------------------------------------------------
    touch controls
    --------------------------------------------------------------------------------------------- */

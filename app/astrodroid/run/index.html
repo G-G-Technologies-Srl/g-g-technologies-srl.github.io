@@ -140,6 +140,24 @@
           <button type="submit" id="saveButton" class="primary" data-t="save"></button>
         </form>
         <p class="small" data-t="nameNote"></p>
+
+        <!-- La condivisione, e le due regole che la tengono onesta.
+             Gli href sono normali: nessuno script di terze parti, come sugli articoli e sulla
+             scheda. Il widget ufficiale di un social porta un tracker, e su un gioco che si vende
+             dicendo di non mandare niente a nessuno sarebbe la contraddizione più visibile.
+             E puntano alla **scheda**, mai a run/: l'app è noindex e il suo canonical nomina già
+             la scheda, quindi un link verso run/ non accumula niente e scarica chi arriva dentro
+             un attrezzo senza il testo che spiega cos'è. -->
+        <div class="share">
+          <span class="share-label" data-t="shareTitle"></span>
+          <button type="button" id="shareImage" class="accent" data-t="shareImage"></button>
+          <a id="shareLinkedin" class="share-link" rel="noopener" target="_blank" data-t-label="shareOnLinkedin">in</a>
+          <a id="shareX" class="share-link" rel="noopener" target="_blank" data-t-label="shareOnX">✕</a>
+          <a id="shareMail" class="share-link" data-t-label="shareByMail">✉</a>
+          <button type="button" id="shareCopy" class="share-link" data-t-label="shareCopy">⧉</button>
+        </div>
+        <p class="small" id="shareNote"></p>
+
         <p>
           <button type="button" id="coinAgain" class="linkish" data-t="playAgain"></button>
           ·

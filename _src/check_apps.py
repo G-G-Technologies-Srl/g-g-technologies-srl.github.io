@@ -226,6 +226,37 @@ def _check_wiring(problems, key):
                                 f"markup non c'è — l'app si fermerebbe all'avvio")
 
 
+def _check_share(problems, key):
+    """Un'app non scrive mai il proprio indirizzo `run/` come link assoluto.
+
+    La regola è quella della barra di condivisione in app/CLAUDE.md, applicata al posto in cui si
+    rompe: l'app è `noindex` e il suo canonical nomina già la scheda, quindi un link verso `run/`
+    passato in giro non accumula niente e scarica chi arriva dentro un attrezzo senza il testo che
+    spiega cos'è e a che condizioni.
+
+    Il controllo guarda le stringhe intere e non le righe, perché la prima versione cercava il
+    dominio di un social e «/run/» sulla stessa riga — e l'indirizzo stava tre righe più su, in una
+    costante. Un controllo che dipende da come è formattato il codice non controlla niente.
+
+    E gli script di terze parti: `_check_no_network` prende gli `src` esterni ovunque, qui resta la
+    metà che riguarda i widget, cioè che non ne compaia uno nemmeno per condividere.
+    """
+    run = APP_DIR / key / "run"
+    proprio = f"ggtechnologies.sm/app/{key}/run"
+    for path in sorted(run.rglob("*.js")):
+        for stringa in re.findall(r'["\'`]([^"\'`]*)["\'`]', path.read_text(encoding="utf-8")):
+            if proprio in stringa:
+                problems.append(f"{key}/run/{path.name}: «{stringa}» è un link assoluto verso "
+                                f"run/. Quello che si passa in giro è la scheda")
+
+    # Solo gli script che vengono da fuori: `./app.js` è l'app, e va benissimo.
+    for path in sorted(run.rglob("*.html")):
+        html = path.read_text(encoding="utf-8")
+        for match in re.findall(r'<script[^>]*src="((?:https?:)?//[^"]+)"', html):
+            problems.append(f"{key}/run/{path.name}: carica lo script {match} — la condivisione "
+                            f"si fa con href normali, i widget dei social portano un tracker")
+
+
 def _check_manifest(problems, key, app):
     path = APP_DIR / key / "run" / "manifest.webmanifest"
     if not path.is_file():
@@ -394,6 +425,7 @@ def main():
         _check_no_network(problems, key)
         _check_i18n(problems, key)
         _check_wiring(problems, key)
+        _check_share(problems, key)
         _check_manifest(problems, key, by_key[key])
         _check_version(problems, key, by_key[key])
         _check_precache(problems, key)

@@ -209,7 +209,7 @@ const EN = {
   errorRead: "Reading stopped. Try again, or try another file.",
   retry: "Choose another file",
   sourceLabel: "Source code",
-  backToPage: "Back to the page",
+  backToPage: "Back to the app page",
 };
 
 // -----------------------------------------------------------------------------------------------------------------
