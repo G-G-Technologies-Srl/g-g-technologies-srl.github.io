@@ -58,6 +58,11 @@ APPS_INDEX = {
         "open": "Apri l'app",
         "detail": "Cosa fa",
         "tags_label": "Categoria",
+        # The filter bar over the cards. Own strings, not CHROME's: there the reader filters
+        # articles by topic, here apps by what they are for, and "Tutti" would not agree with app.
+        "filter_label": "Filtra per categoria",
+        "filter_all": "Tutte",
+        "filter_empty": "Nessuna app in questa categoria, per ora.",
         "source_label": "Codice sorgente",
         "version_label": "Versione",
         "updated_label": "Aggiornata il",
@@ -81,6 +86,9 @@ APPS_INDEX = {
         "open": "Open the app",
         "detail": "What it does",
         "tags_label": "Category",
+        "filter_label": "Filter by category",
+        "filter_all": "All",
+        "filter_empty": "No apps in this category yet.",
         "source_label": "Source code",
         "version_label": "Version",
         "updated_label": "Updated",

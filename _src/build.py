@@ -903,22 +903,27 @@ def _tags_html(lang, article):
             f'{chips}</p>')
 
 
-def _filter_html(lang):
-    """The filter bar on the index.
+def _filter_bar_html(chrome, used):
+    """The filter bar over a grid of cards, on /insights and on /app/.
 
-    Buttons, not links to one page per tag: four extra URLs holding the same articles would split
-    the ranking and need their own place in the sitemap for no gain. The querystring is written
-    back with replaceState, so a filtered view is still something you can send to somebody.
+    One function for both because the markup and the script are the same: the difference is only
+    which vocabulary the buttons carry, so it arrives already resolved in `used`, a list of
+    (key, label) pairs in the order the vocabulary declares them.
 
-    Without JavaScript the bar simply is not there and every article stays visible.
+    Buttons, not links to one page per tag: extra URLs holding the same cards would split the
+    ranking and need their own place in the sitemap for no gain. The querystring is written back
+    with replaceState, so a filtered view is still something you can send to somebody.
+
+    Below two groups there is no bar. A filter offering "All" and one other button hides nothing on
+    either setting: it looks like a control and behaves like a label. That is the state /app/ will
+    go back to the day a category is retired, and it should disappear on its own.
+
+    Without JavaScript the bar simply is not there and every card stays visible.
     """
-    chrome = CHROME[lang]
-    used = sorted({tag for article in ARTICLES for tag in _article_tags(article)},
-                  key=lambda t: list(TAGS).index(t))
-    if not used:
+    if len(used) < 2:
         return ""
     buttons = "".join(f'<button class="filter-btn" type="button" data-tag="{tag}">'
-                      f'{TAGS[tag][lang]}</button>' for tag in used)
+                      f'{label}</button>' for tag, label in used)
     return f"""        <div class="filters" data-filters hidden>
           <span class="filter-label">{chrome['filter_label']}</span>
           <button class="filter-btn" type="button" data-tag="" aria-pressed="true">{chrome['filter_all']}</button>
@@ -926,6 +931,13 @@ def _filter_html(lang):
         </div>
         <p class="filter-empty" data-filter-empty hidden>{chrome['filter_empty']}</p>
 """
+
+
+def _filter_html(lang):
+    """The bar on /insights, over the article vocabulary."""
+    used = sorted({tag for article in ARTICLES for tag in _article_tags(article)},
+                  key=lambda t: list(TAGS).index(t))
+    return _filter_bar_html(CHROME[lang], [(tag, TAGS[tag][lang]) for tag in used])
 
 
 def _article_og_image(article, lang):
@@ -2392,7 +2404,19 @@ def _app_cards_html(lang):
           </a>""")
     if not cards:
         return f'        <p class="section-intro">{APPS_INDEX[lang]["empty"]}</p>'
-    return '        <div class="insight-list">\n' + "\n".join(cards) + "\n        </div>"
+    return (_app_filter_html(lang) + '        <div class="insight-list">\n'
+            + "\n".join(cards) + "\n        </div>")
+
+
+def _app_filter_html(lang):
+    """The bar on /app/, over the app vocabulary.
+
+    It is the other half of a link that already exists: every scheda points at
+    /app/?tag=<categoria>, and until now that query string landed on an unfiltered index.
+    """
+    used = sorted({tag for app in APPS for tag in _app_tags(app)},
+                  key=lambda t: list(APP_TAGS).index(t))
+    return _filter_bar_html(APPS_INDEX[lang], [(tag, APP_TAGS[tag][lang]) for tag in used])
 
 
 def _app_tags(app):

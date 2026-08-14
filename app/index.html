@@ -122,6 +122,12 @@
 
     <section>
       <div class="container">
+        <div class="filters" data-filters hidden>
+          <span class="filter-label">Filtra per categoria</span>
+          <button class="filter-btn" type="button" data-tag="" aria-pressed="true">Tutte</button>
+          <button class="filter-btn" type="button" data-tag="dati">Dati</button><button class="filter-btn" type="button" data-tag="svago">Svago</button>
+        </div>
+        <p class="filter-empty" data-filter-empty hidden>Nessuna app in questa categoria, per ora.</p>
         <div class="insight-list">
           <a class="insight-card reveal" href="/app/csv-scope/"
              data-tags="dati">
