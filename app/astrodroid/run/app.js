@@ -14,7 +14,7 @@
 // pasted over the game.
 
 import { t, tf, num, lang, otherLang, setLang, resolveLang, missingKeys } from "./i18n.js";
-import { create, step, pressure, STEP, RULES } from "./game.js";
+import { create, step, pressure, multiplier, STEP, RULES } from "./game.js";
 import * as render from "./render.js";
 import * as input from "./input.js";
 import * as audio from "./audio.js";
@@ -82,6 +82,26 @@ function _paintHud() {
   el("hudLives").setAttribute("aria-label",
     `${t("lives")}: ${showing ? showing.lives : 0}`);
   el("creditsBig").textContent = num(credits, 0);
+
+  // Il moltiplicatore compare solo quando c'è: a ×1 sarebbe una casella che dice «niente», e in
+  // una barra di quattro numeri è quella che si impara a non guardare.
+  const factor = showing ? multiplier(showing) : 1;
+  el("hudMult").hidden = factor <= 1;
+  el("hudMultValue").textContent = `×${num(factor, 0)}`;
+
+  // Lo scudo: pronto, in uso, o quanto manca. Un comando che nessuno sa di avere non esiste.
+  const ship = showing && showing.ship;
+  const shieldBox = el("hudShield");
+  if (!ship) {
+    shieldBox.hidden = true;
+  } else {
+    shieldBox.hidden = false;
+    const ready = ship.shieldCooldown === 0;
+    shieldBox.dataset.state = ship.shield > 0 ? "on" : (ready ? "ready" : "charging");
+    el("hudShieldValue").textContent = ship.shield > 0
+      ? t("shieldOn")
+      : (ready ? t("shieldReady") : `${Math.ceil(ship.shieldCooldown)}s`);
+  }
 }
 
 function _stamp(iso) {
@@ -283,7 +303,10 @@ function _frame(now) {
       audio.setThrust(running.ship && running.ship.thrusting);
       // Stessa faccenda: la sirena dura quanto il disco resta in campo, non quanto
       // una nota. Quando il disco esce o viene abbattuto, `ufo` torna nullo e si spegne.
-      audio.setSiren(running.ufo ? running.ufo.kind : null);
+      // La più pericolosa delle due detta il suono: con una scorta in campo, quella
+      // piccola mira, e il suo allarme non deve essere coperto da quello grande.
+      const minaccia = running.ufos.find((u) => u.kind === "small") || running.ufos[0];
+      audio.setSiren(minaccia ? minaccia.kind : null);
       _paintHud();
     }
   }

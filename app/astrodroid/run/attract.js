@@ -57,11 +57,14 @@ function _nearest(ship, bodies) {
  * means it can be dropped in front of any world without being set up first.
  */
 export function autopilot(world) {
-  const intent = { left: false, right: false, thrust: false, fire: false, hyperspace: false };
+  const intent = {
+    left: false, right: false, thrust: false, fire: false, hyperspace: false,
+    shield: false,
+  };
   const ship = world.ship;
   if (!ship) return intent;
 
-  const targets = world.ufo ? [world.ufo, ...world.rocks] : world.rocks;
+  const targets = world.ufos.length ? [...world.ufos, ...world.rocks] : world.rocks;
   const near = _nearest(ship, targets);
   if (!near) return intent;
 
@@ -81,6 +84,13 @@ export function autopilot(world) {
   // Dodging comes second and overrides the aim: something close and coming at you matters more
   // than the shot you were lining up.
   const danger = ROCK[near.body.size]?.radius ?? near.body.radius ?? 20;
+  // Lo scudo, e solo all'ultimo momento. La dimostrazione deve mostrare che esiste — nessuno che
+  // guarda saprebbe altrimenti di averlo — ma alzarlo appena qualcosa si avvicina la rende
+  // immortale, e un'attrazione che non perde mai non torna mai alla classifica. Con questa soglia
+  // lo usa qualche volta e muore lo stesso.
+  if (near.distance < danger + 18 && ship.shield === 0 && ship.shieldCooldown === 0) {
+    intent.shield = true;
+  }
   if (near.distance < danger + 105) {
     const away = _turnTo(ship.angle, wanted + Math.PI);
     if (Math.abs(away) < 0.9) intent.thrust = true;

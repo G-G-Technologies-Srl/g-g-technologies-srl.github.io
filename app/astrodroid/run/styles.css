@@ -46,6 +46,27 @@ body { overflow: hidden; }              /* the field is the page; nothing here s
    thing on the bar you can read without looking at it. */
 .lives b { color: var(--accent-text); letter-spacing: 2px; font-size: 15px; }
 
+/* Il moltiplicatore. Compare solo sopra ×1 e non lampeggia: sta accanto al punteggio, che è già
+   il numero che si guarda, e un numero che pulsa in una barra fa perdere di vista quello vero. */
+.mult b {
+  color: var(--btn-text);
+  background: var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 1px 8px;
+  font-size: 15px;
+}
+
+/* Lo scudo dice il proprio stato con la parola, non solo col colore: «pronto», «attivo», o i
+   secondi che mancano. Il colore da solo non basta, ed è la regola del sito. */
+.shield b { font-size: 13px; font-weight: 500; }
+
+.shield[data-state="ready"] b { color: var(--accent-text); }
+
+.shield[data-state="on"] b { color: var(--btn-text); background: var(--accent);
+  border-radius: var(--radius-sm); padding: 1px 8px; }
+
+.shield[data-state="charging"] b { color: var(--faint); font-variant-numeric: tabular-nums; }
+
 /* ---------------------------------------------------------------------------------------------
    the field, and the panels over it
    --------------------------------------------------------------------------------------------- */

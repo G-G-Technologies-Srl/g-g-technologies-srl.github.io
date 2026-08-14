@@ -99,25 +99,24 @@ function _buildEngine() {
   source.buffer = buffer;
   source.loop = true;
 
-  // Risonante, non solo passa-basso. La prima versione tagliava a 340 Hz con poca risonanza: era
-  // corretta e non si sentiva, perché di quel rumore restava solo la parte che gli altoparlanti
-  // piccoli non riproducono. Il picco intorno ai 520 Hz dà al rombo un corpo che passa anche da un
-  // portatile.
+  // Cupo, e senza risonanza. Il taglio a 520 Hz con Q alta metteva in evidenza proprio la banda
+  // che rende un rumore una pernacchia: si sentiva, e si sentiva male. A 200 Hz con Q bassa resta
+  // il rombo e sparisce il ronzio.
   const filter = ctx.createBiquadFilter();
   filter.type = "lowpass";
-  filter.frequency.value = 520;
-  filter.Q.value = 7;
+  filter.frequency.value = 200;
+  filter.Q.value = 0.8;
 
-  // Sotto al rumore, una nota bassa. È quella che si sente per prima su un altoparlante piccolo:
-  // il rumore da solo è aria, questa è il motore.
+  // Sotto al rumore, una nota bassa — e una sinusoide, non un dente di sega. Il dente di sega ha
+  // le armoniche, ed erano quelle a fare il verso: una sinusoide a 46 Hz è peso e basta.
   const body = ctx.createOscillator();
-  body.type = "sawtooth";
-  body.frequency.value = 62;
+  body.type = "sine";
+  body.frequency.value = 46;
 
   const amp = ctx.createGain();
   amp.gain.value = 0.0001;
   const bodyAmp = ctx.createGain();
-  bodyAmp.gain.value = 0.45;
+  bodyAmp.gain.value = 0.85;
 
   source.connect(filter).connect(amp);
   body.connect(bodyAmp).connect(amp);
@@ -210,7 +209,8 @@ export function setThrust(on) {
   const now = ctx.currentTime;
   engine.amp.gain.cancelScheduledValues(now);
   engine.amp.gain.setValueAtTime(Math.max(0.0001, engine.amp.gain.value), now);
-  engine.amp.gain.exponentialRampToValueAtTime(wanted ? 0.55 : 0.0001,
+  // Più basso di prima: era il suono più forte del gioco, e copriva i colpi.
+  engine.amp.gain.exponentialRampToValueAtTime(wanted ? 0.30 : 0.0001,
                                                now + (wanted ? 0.05 : 0.14));
 }
 
@@ -233,7 +233,9 @@ export function setSiren(kind) {
   siren.kind = wanted;
   siren.amp.gain.cancelScheduledValues(now);
   siren.amp.gain.setValueAtTime(Math.max(0.0001, siren.amp.gain.value), now);
-  siren.amp.gain.exponentialRampToValueAtTime(wanted ? 0.11 : 0.0001,
+  // Sopra il motore, non sotto: è un avviso, e un avviso che si sente solo quando non stai
+  // spingendo arriva sempre nel momento sbagliato.
+  siren.amp.gain.exponentialRampToValueAtTime(wanted ? 0.17 : 0.0001,
                                               now + (wanted ? 0.08 : 0.20));
 }
 
@@ -313,6 +315,29 @@ function _voice(event) {
       break;
     case "wave":
       _tone({ type: "triangle", from: 330, to: 660, length: 0.2, gain: 0.12 });
+      break;
+    case "streak-up":
+      // Sale di un gradino. Due note che salgono, corte e chiare: deve sentirsi sopra il resto
+      // senza rubare l'attenzione, perché succede mentre stai mirando.
+      _tone({ type: "triangle", from: 880, length: 0.05, gain: 0.11 });
+      _tone({ type: "triangle", from: 1320, start: 0.05, length: 0.07, gain: 0.11 });
+      break;
+    case "streak-lost":
+      // E scende. Una nota sola che cade: la perdita si deve sentire, o il moltiplicatore non è
+      // una cosa che stai difendendo.
+      _tone({ type: "triangle", from: 660, to: 220, length: 0.18, gain: 0.10 });
+      break;
+    case "clean-wave":
+      _tone({ type: "triangle", from: 523, length: 0.09, gain: 0.15 });
+      _tone({ type: "triangle", from: 659, start: 0.09, length: 0.09, gain: 0.15 });
+      _tone({ type: "triangle", from: 880, start: 0.18, length: 0.09, gain: 0.15 });
+      _tone({ type: "triangle", from: 1174, start: 0.27, length: 0.20, gain: 0.15 });
+      break;
+    case "shield-on":
+      _tone({ type: "sine", from: 300, to: 900, length: 0.14, gain: 0.13 });
+      break;
+    case "shield-off":
+      _tone({ type: "sine", from: 700, to: 260, length: 0.16, gain: 0.09 });
       break;
     case "respawn":
       // La nave torna. Sotto tutto il resto come volume: dice «ci sei di nuovo», non festeggia.

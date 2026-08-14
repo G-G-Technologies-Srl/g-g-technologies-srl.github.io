@@ -240,7 +240,7 @@ export function draw(canvas, world, { shake = 0, dim = 0 } = {}) {
 
   ctx.strokeStyle = palette.line;
   for (const rock of world.rocks) _drawRock(ctx, rock);
-  if (world.ufo) _drawUfo(ctx, world.ufo);
+  for (const ufo of world.ufos) _drawUfo(ctx, ufo);
 
   ctx.fillStyle = palette.faint;
   for (const bit of world.debris) {
@@ -259,6 +259,18 @@ export function draw(canvas, world, { shake = 0, dim = 0 } = {}) {
   if (world.ship) {
     ctx.strokeStyle = palette.accent;
     _drawShip(ctx, world.ship, world.time);
+    // Lo scudo, disegnato attorno alla nave. Un cerchio e non un bagliore: si deve vedere dove
+    // finisce, perché è quello che decide se una roccia ti prende.
+    if (world.ship.shield > 0) {
+      const fade = Math.min(1, world.ship.shield / 0.35);
+      ctx.globalAlpha = 0.35 + 0.45 * fade;
+      _wrapped(ctx, world.ship, 34, (x, y) => {
+        ctx.beginPath();
+        ctx.arc(x, y, 24, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+      ctx.globalAlpha = 1;
+    }
   }
   ctx.restore();
 

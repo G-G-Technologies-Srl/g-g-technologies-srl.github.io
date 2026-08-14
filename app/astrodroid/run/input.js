@@ -9,7 +9,7 @@
 // -----------------------------------------------------------------------------------------------------------------
 
 const intent = {
-  left: false, right: false, thrust: false, fire: false, hyperspace: false,
+  left: false, right: false, thrust: false, fire: false, hyperspace: false, shield: false,
 };
 
 // Held per source, so releasing a key does not cancel a thumb still down on the screen. Merged on
@@ -24,6 +24,7 @@ const KEYS = {
   Space: "fire", KeyJ: "fire",
   ShiftLeft: "hyperspace", ShiftRight: "hyperspace", ArrowDown: "thrust", KeyS: "thrust",
   KeyH: "hyperspace",
+  KeyE: "shield", KeyQ: "shield",
 };
 
 // Keys the page would otherwise act on. Space scrolls, the arrows scroll, and a game that scrolls
@@ -133,6 +134,7 @@ export function pollPad() {
     if (pad.buttons[12]?.pressed || pad.buttons[7]?.pressed) held.pad.add("thrust");
     if (pad.buttons[0]?.pressed) held.pad.add("fire");
     if (pad.buttons[1]?.pressed || pad.buttons[6]?.pressed) held.pad.add("hyperspace");
+    if (pad.buttons[2]?.pressed || pad.buttons[4]?.pressed) held.pad.add("shield");
     if (pad.buttons[9]?.pressed) onCommand("coin");
   }
   if (any) _merge();

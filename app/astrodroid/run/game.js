@@ -64,7 +64,12 @@ export const UFO = {
 
 export const RULES = {
   lives: 3,
-  extraLife: 10000,           // and every multiple of it
+  // Una vita ogni venticinquemila, non ogni diecimila. La soglia era tarata su un gioco in cui i
+  // punti si facevano solo rompendo sassi; col moltiplicatore e il bonus di ondata pulita gli
+  // stessi tre minuti ne fanno cinque volte tanti, e la stessa soglia regalava una nave ogni
+  // ondata. Trovato dalla dimostrazione, che ha smesso di morire — guadagnava vite più in fretta
+  // di quanto le perdesse, e l'attrazione non tornava mai alla classifica.
+  extraLife: 25000,           // and every multiple of it
   waveRocks: 4,               // plus two per wave
   waveRocksMax: 11,
   waveBreak: 1.6,             // seconds between one wave and the next
@@ -358,7 +363,7 @@ function _spawnUfo(world) {
   const kind = world.score >= RULES.ufoSmallFrom && _random(world) < 0.45 ? "small" : "large";
   const spec = UFO[kind];
   const fromLeft = _random(world) < 0.5;
-  world.ufo = {
+  world.ufos.push({
     kind,
     radius: spec.radius,
     x: fromLeft ? 1 : FIELD.w - 1,
@@ -368,13 +373,17 @@ function _spawnUfo(world) {
     fireIn: spec.fireEvery,
     turnIn: _between(world, 0.7, 1.9),
     crossed: 0,
-  };
+  });
   world.events.push(`ufo-${kind}`);
 }
 
-function _stepUfo(world, dt) {
-  const ufo = world.ufo;
-  if (!ufo) return;
+/** Quanto si aspetta la prossima navetta, con il pavimento che le ondate alte non scendono sotto. */
+function _ufoGap(world) {
+  return Math.max(RULES.ufoEveryMin, RULES.ufoEvery - 1.5 * (world.wave - 1))
+    + _between(world, -3, 3);
+}
+
+function _stepUfo(world, ufo, dt) {
   const spec = UFO[ufo.kind];
 
   ufo.turnIn -= dt;
@@ -392,8 +401,7 @@ function _stepUfo(world, dt) {
   if (ufo.y < 0) ufo.y += FIELD.h;
   else if (ufo.y >= FIELD.h) ufo.y -= FIELD.h;
   if (ufo.x < -40 || ufo.x > FIELD.w + 40) {
-    world.ufo = null;
-    world.ufoIn = RULES.ufoEvery + _between(world, -5, 5);
+    ufo.gone = true;
     return;
   }
 
@@ -419,13 +427,18 @@ function _centreBusy(world) {
   for (const rock of world.rocks) {
     if (distance(centre, rock) < ROCK[rock.size].radius + 120) return true;
   }
-  if (world.ufo && distance(centre, world.ufo) < 190) return true;
+  if (world.ufos.some((ufo) => distance(centre, ufo) < 190)) return true;
   return false;
 }
 
 function _killShip(world) {
   _burst(world, world.ship.x, world.ship.y, 18, 210);
   world.events.push("ship-lost");
+  // Una vita persa toglie il bonus di ondata pulita e azzera la serie: sono le due cose che
+  // rendono una morte cara anche quando di vite ne restano.
+  world.cleanWave = false;
+  if (world.streak > 0) world.events.push("streak-lost");
+  world.streak = 0;
   world.ship = null;
   world.lives -= 1;
   world.phase = world.lives > 0 ? "dying" : "over";
@@ -463,15 +476,21 @@ export function create(seed = 1) {
     score: 0,
     lives: RULES.lives,
     wave: 1,
+    kind: "field",            // che ondata è: field | swarm | monolith | escort
     ship: _newShip(),
     rocks: [],
     shots: [],
     debris: [],
-    ufo: null,
+    ufos: [],
     ufoIn: RULES.ufoFirst,
+    ufoPending: 1,
     hyperspaceUses: 0,
     shotsFired: 0,
     shotsHit: 0,
+    // La serie di colpi a segno, e se l'ondata è ancora senza morti.
+    streak: 0,
+    bestStreak: 0,
+    cleanWave: true,
     events: [],
   };
   _spawnWave(world);
@@ -479,7 +498,7 @@ export function create(seed = 1) {
 }
 
 export const NO_INTENT = Object.freeze({
-  left: false, right: false, thrust: false, fire: false, hyperspace: false,
+  left: false, right: false, thrust: false, fire: false, hyperspace: false, shield: false,
 });
 
 /**
@@ -546,6 +565,16 @@ export function step(world, intent = NO_INTENT) {
     ship.invulnerable = Math.max(0, ship.invulnerable - dt);
     ship.cooldown = Math.max(0, ship.cooldown - dt);
     ship.hyperCooldown = Math.max(0, ship.hyperCooldown - dt);
+    const scudoPrima = ship.shield;
+    ship.shield = Math.max(0, ship.shield - dt);
+    ship.shieldCooldown = Math.max(0, ship.shieldCooldown - dt);
+    if (scudoPrima > 0 && ship.shield === 0) world.events.push("shield-off");
+
+    if (intent.shield && ship.shield === 0 && ship.shieldCooldown === 0) {
+      ship.shield = RULES.shield;
+      ship.shieldCooldown = RULES.shieldCooldown;
+      world.events.push("shield-on");
+    }
 
     if (intent.fire && ship.cooldown === 0
         && world.shots.filter((shot) => shot.ship).length < SHOT.max) {
@@ -570,14 +599,32 @@ export function step(world, intent = NO_INTENT) {
     _move(bit, dt);
     bit.life -= dt;
   }
+  // Un colpo che scade senza aver toccato niente è un colpo a vuoto, ed è quello che azzera la
+  // serie. Non c'è altro modo di riconoscere un errore: sparare non costa, mancare sì.
+  const scaduti = world.shots.filter((shot) => shot.life <= 0 && shot.ship).length;
+  if (scaduti > 0 && world.streak > 0) {
+    if (multiplier(world) > 1) world.events.push("streak-lost");
+    world.streak = 0;
+  }
   world.shots = world.shots.filter((shot) => shot.life > 0);
   world.debris = world.debris.filter((bit) => bit.life > 0);
 
   if (world.phase === "playing" || world.phase === "dying") {
-    if (world.ufo) _stepUfo(world, dt);
-    else if (world.rocks.length > 0) {
+    for (const ufo of world.ufos) _stepUfo(world, ufo, dt);
+    const uscite = world.ufos.filter((ufo) => ufo.gone).length;
+    if (uscite > 0) {
+      world.ufos = world.ufos.filter((ufo) => !ufo.gone);
+      world.ufoPending = 1;
+      world.ufoIn = _ufoGap(world);
+    }
+    if (world.ufos.length === 0 && world.rocks.length > 0) {
       world.ufoIn -= dt;
-      if (world.ufoIn <= 0) _spawnUfo(world);
+      if (world.ufoIn <= 0) {
+        // La scorta ne porta due insieme: il conto pendente dice quante, e viene azzerato dopo.
+        for (let i = 0; i < Math.max(1, world.ufoPending); i += 1) _spawnUfo(world);
+        world.ufoPending = 1;
+        world.ufoIn = _ufoGap(world);
+      }
     }
   }
 
@@ -590,18 +637,27 @@ export function step(world, intent = NO_INTENT) {
       if (distance(shot, rock) < ROCK[rock.size].radius + SHOT.radius) {
         spent.add(shot);
         broken.add(rock);
-        if (shot.ship) world.shotsHit += 1;
+        if (shot.ship) {
+          world.shotsHit += 1;
+          const prima = multiplier(world);
+          world.streak += 1;
+          world.bestStreak = Math.max(world.bestStreak, world.streak);
+          if (multiplier(world) > prima) world.events.push("streak-up");
+        }
       }
     }
-    if (world.ufo && !spent.has(shot) && shot.ship
-        && distance(shot, world.ufo) < world.ufo.radius + SHOT.radius) {
-      spent.add(shot);
-      world.shotsHit += 1;
-      _award(world, UFO[world.ufo.kind].score);
-      _burst(world, world.ufo.x, world.ufo.y, 14, 220);
-      world.events.push(`ufo-lost-${world.ufo.kind}`);
-      world.ufo = null;
-      world.ufoIn = RULES.ufoEvery + _between(world, -5, 5);
+    if (!spent.has(shot) && shot.ship) {
+      const colpita = world.ufos.find((ufo) => distance(shot, ufo) < ufo.radius + SHOT.radius);
+      if (colpita) {
+        spent.add(shot);
+        world.shotsHit += 1;
+        world.streak += 1;
+        _award(world, UFO[colpita.kind].score);
+        _burst(world, colpita.x, colpita.y, 14, 220);
+        world.events.push(`ufo-lost-${colpita.kind}`);
+        world.ufos = world.ufos.filter((ufo) => ufo !== colpita);
+        world.ufoIn = _ufoGap(world);
+      }
     }
   }
   // Split after the loop, not inside it: `_split` pushes new rocks onto the same array being
@@ -613,7 +669,7 @@ export function step(world, intent = NO_INTENT) {
   world.shots = world.shots.filter((shot) => !spent.has(shot));
 
   // ---- everything against the ship ----
-  if (world.ship && world.ship.invulnerable === 0) {
+  if (world.ship && world.ship.invulnerable === 0 && world.ship.shield === 0) {
     let hit = null;
     for (const rock of world.rocks) {
       if (distance(world.ship, rock) < ROCK[rock.size].radius + SHIP.radius) { hit = rock; break; }
@@ -622,10 +678,11 @@ export function step(world, intent = NO_INTENT) {
       world.rocks = world.rocks.filter((rock) => rock !== hit);
       _split(world, hit);
       _killShip(world);
-    } else if (world.ufo && distance(world.ship, world.ufo) < world.ufo.radius + SHIP.radius) {
-      _burst(world, world.ufo.x, world.ufo.y, 14, 220);
-      world.ufo = null;
-      world.ufoIn = RULES.ufoEvery;
+    } else if (world.ufos.some((u) => distance(world.ship, u) < u.radius + SHIP.radius)) {
+      const addosso = world.ufos.find((u) => distance(world.ship, u) < u.radius + SHIP.radius);
+      _burst(world, addosso.x, addosso.y, 14, 220);
+      world.ufos = world.ufos.filter((u) => u !== addosso);
+      world.ufoIn = _ufoGap(world);
       _killShip(world);
     } else {
       const shot = world.shots.find((s) => !s.ship
@@ -638,9 +695,15 @@ export function step(world, intent = NO_INTENT) {
   }
 
   // ---- the wave ----
-  if (world.phase === "playing" && world.rocks.length === 0 && !world.ufo) {
+  if (world.phase === "playing" && world.rocks.length === 0 && world.ufos.length === 0) {
     world.phase = "cleared";
     world.phaseIn = RULES.waveBreak;
+    // Chiusa senza perdere una vita: il premio cresce con l'ondata, e non passa dal
+    // moltiplicatore — è già un premio, moltiplicarlo lo renderebbe la cosa da inseguire.
+    if (world.cleanWave) {
+      _award(world, RULES.cleanBonus * world.wave, false);
+      world.events.push("clean-wave");
+    }
     world.events.push("cleared");
   }
 

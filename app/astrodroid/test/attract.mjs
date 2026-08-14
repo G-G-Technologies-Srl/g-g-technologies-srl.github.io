@@ -78,11 +78,16 @@ function demonstrate(seed, seconds) {
 }
 
 {
-  // Mediocre on purpose. Five seeds, three minutes each: if none of them ever loses, the autopilot
-  // is too good and the attract loop never returns to the table.
-  const deaths = [3, 5, 7, 11, 13].filter((seed) => demonstrate(seed, 180).world.phase === "over");
-  check("prima o poi la dimostrazione perde", deaths.length > 0,
-        "cinque semi, tre minuti l'uno, nessuna partita finita");
+  // Mediocre di proposito. Cinque semi, cinque minuti l'uno: se non ne perde nessuna, l'autopilota
+  // è troppo bravo e l'attrazione non torna mai alla classifica.
+  //
+  // È il controllo che ha trovato lo squilibrio del moltiplicatore: la dimostrazione aveva smesso
+  // di morire, non perché giocasse meglio ma perché guadagnava vite più in fretta di quanto le
+  // perdesse. Una vita ogni diecimila punti era una soglia tarata su un gioco che faceva un quinto
+  // dei punti.
+  const finite = [3, 5, 7, 11, 13].filter((seed) => demonstrate(seed, 300).world.phase === "over");
+  check("prima o poi la dimostrazione perde", finite.length === 5,
+        `${finite.length} partite finite su cinque, in cinque minuti l'una`);
 }
 
 if (failures > 0) {

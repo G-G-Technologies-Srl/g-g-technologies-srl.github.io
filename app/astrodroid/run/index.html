@@ -55,6 +55,8 @@
     <span class="hud-item"><span class="hud-label" data-t="score"></span><b id="hudScore">0</b></span>
     <span class="hud-item"><span class="hud-label" data-t="wave"></span><b id="hudWave">1</b></span>
     <span class="hud-item lives"><span class="hud-label" data-t="lives"></span><b id="hudLives"></b></span>
+    <span class="hud-item mult" id="hudMult" hidden><b id="hudMultValue">×2</b></span>
+    <span class="hud-item shield" id="hudShield" hidden><span class="hud-label" data-t="shield"></span><b id="hudShieldValue"></b></span>
     <span class="spacer"></span>
     <!-- A pause control, and not only for tidiness: P and Esc exist, and a phone has neither. -->
     <button type="button" id="pauseButton" class="ghost small" data-t="pause"></button>
@@ -101,7 +103,9 @@
             <li data-t="howTouch"></li>
             <li data-t="howInertia"></li>
             <li data-t="howRocks"></li>
-            <li data-t="howHyper"></li>
+            <li data-t="howShield"></li>
+          <li data-t="howHyper"></li>
+          <li data-t="howStreak"></li>
           </ul>
           <p class="small" data-t="a11yNote"></p>
         </div>
@@ -186,6 +190,7 @@
       <button type="button" class="pad" data-action="right" data-t-label="ctrlRight">▶</button>
     </div>
     <div class="pad-group">
+      <button type="button" class="pad" data-action="shield" data-t-label="ctrlShield">◇</button>
       <button type="button" class="pad" data-action="hyperspace" data-t-label="ctrlHyper">✳</button>
       <button type="button" class="pad" data-action="thrust" data-t-label="ctrlThrust">▲</button>
       <button type="button" class="pad wide-pad" data-action="fire" data-t-label="ctrlFire">●</button>

@@ -23,8 +23,8 @@ const IT = {
   start: "Start",
   startHint: "Invio, oppure il pulsante qui sopra",
   howTitle: "Come si gioca",
-  howKeys: "Frecce per ruotare, freccia su per spingere, spazio per sparare, Maiusc per "
-    + "l'iperspazio.",
+  howKeys: "Frecce per ruotare, freccia su per spingere, spazio per sparare, E per lo scudo, "
+    + "Maiusc per l'iperspazio.",
   howTouch: "Sul telefono usa i comandi in fondo allo schermo.",
   howInertia: "Non c'è attrito: se spingi una volta continui ad andare. Per fermarti devi girarti "
     + "e spingere dall'altra parte.",
@@ -32,6 +32,14 @@ const IT = {
     + "male all'arrivo.",
   howRocks: "Una roccia grande si spezza in due medie, una media in due piccole. Le piccole "
     + "valgono di più.",
+  shield: "Scudo",
+  shieldReady: "pronto",
+  shieldOn: "attivo",
+  ctrlShield: "Scudo",
+  howShield: "Lo scudo (tasto E) ti rende intoccabile per un secondo. Poi ci mette dodici "
+    + "secondi a tornare, quindi tienilo per quando non hai altra via.",
+  howStreak: "Colpi a segno di fila alzano il moltiplicatore. Un colpo a vuoto lo azzera, e "
+    + "chiudere un'ondata senza perdere vite vale un bonus.",
   pause: "Pausa",
   paused: "In pausa",
   resume: "Riprendi",
@@ -107,7 +115,8 @@ const EN = {
   start: "Start",
   startHint: "Enter, or the button above",
   howTitle: "How to play",
-  howKeys: "Arrows to turn, up to thrust, space to fire, Shift for hyperspace.",
+  howKeys: "Arrows to turn, up to thrust, space to fire, E for the shield, Shift for "
+    + "hyperspace.",
   howTouch: "On a phone, use the controls along the bottom of the screen.",
   howInertia: "There is no friction: thrust once and you keep going. To stop, turn round and "
     + "thrust the other way.",
@@ -115,6 +124,14 @@ const EN = {
     + "is to go badly on arrival.",
   howRocks: "A large rock breaks into two medium ones, a medium into two small ones. The small "
     + "ones are worth more.",
+  shield: "Shield",
+  shieldReady: "ready",
+  shieldOn: "up",
+  ctrlShield: "Shield",
+  howShield: "The shield (key E) makes you untouchable for a second. It then takes twelve "
+    + "seconds to come back, so keep it for when there is no other way out.",
+  howStreak: "Consecutive hits raise the multiplier. One shot that misses clears it, and "
+    + "finishing a wave without losing a life is worth a bonus.",
   pause: "Pause",
   paused: "Paused",
   resume: "Resume",

@@ -34,7 +34,8 @@ function check(nome, condizione, dettaglio = "") {
 }
 
 const HOLD = (over) => ({
-  left: false, right: false, thrust: false, fire: false, hyperspace: false, ...over,
+  left: false, right: false, thrust: false, fire: false, hyperspace: false, shield: false,
+  ...over,
 });
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -48,17 +49,15 @@ const audio = sorgente("audio.js");
 const emessi = new Set();
 for (const [, nome] of gioco.matchAll(/events\.push\("([^"]+)"\)/g)) emessi.add(nome);
 for (const [, modello] of gioco.matchAll(/events\.push\(`([^`]+)`\)/g)) {
-  if (modello.includes("${rock.size}")) {
-    for (const taglia of ["large", "medium", "small"]) {
-      emessi.add(modello.replace("${rock.size}", taglia));
-    }
-  } else if (modello.includes("${kind}")) {
-    for (const tipo of ["large", "small"]) emessi.add(modello.replace("${kind}", tipo));
-  } else if (modello.includes("${world.ufo.kind}")) {
-    for (const tipo of ["large", "small"]) emessi.add(modello.replace("${world.ufo.kind}", tipo));
-  } else {
-    emessi.add(modello);
-  }
+  // Il segnaposto si espande per quello che nomina, non per come si chiama la variabile: il
+  // controllo è saltato una volta perché `${world.ufo.kind}` era diventato `${colpita.kind}`,
+  // e un test che dipende dal nome di una variabile locale non prova più niente.
+  const segnaposto = modello.match(/\$\{[^}]+\}/);
+  if (!segnaposto) { emessi.add(modello); continue; }
+  const valori = segnaposto[0].includes("size")
+    ? ["large", "medium", "small"]
+    : ["large", "small"];
+  for (const valore of valori) emessi.add(modello.replace(segnaposto[0], valore));
 }
 
 const conVoce = new Set([...audio.matchAll(/case "([^"]+)":/g)].map((m) => m[1]));
@@ -110,14 +109,15 @@ for (const evento of [...conVoce].sort()) {
   mondo.rocks = mondo.rocks.slice(0, 1);
   mondo.ufoIn = 0;
   step(mondo, HOLD());
-  check("il disco volante si può far comparire", mondo.ufo !== null, "nessun disco nel mondo");
-  if (mondo.ufo) {
-    const tipo = mondo.ufo.kind;
-    mondo.shots.push({ x: mondo.ufo.x, y: mondo.ufo.y, vx: 0, vy: 0, life: 1, ship: true });
+  check("il disco volante si può far comparire", mondo.ufos.length > 0, "nessun disco nel mondo");
+  if (mondo.ufos.length > 0) {
+    const disco = mondo.ufos[0];
+    const tipo = disco.kind;
+    mondo.shots.push({ x: disco.x, y: disco.y, vx: 0, vy: 0, life: 1, ship: true });
     step(mondo, HOLD());
     check("abbatterlo dà il suo suono", mondo.events.includes(`ufo-lost-${tipo}`),
           `eventi: ${mondo.events.join(", ") || "nessuno"}`);
-    check("e i suoi punti", mondo.score === (tipo === "small" ? 1000 : 200),
+    check("e i suoi punti", mondo.score >= (tipo === "small" ? 1000 : 200),
           `${mondo.score} punti per un disco ${tipo}`);
   }
 }
@@ -149,8 +149,14 @@ for (const evento of [...conVoce].sort()) {
         "due note alternate con dei timer andrebbero fuori sincrono con l'orologio audio");
   check("distingue le due navette", audio.includes('wanted === "small" ? 330 : 190'),
         "la piccola mira e vale mille punti: è un allarme diverso e va sentito diverso");
-  check("app.js la accende col disco in campo", app.includes("audio.setSiren(running.ufo"),
+  // Il controllo cercava `running.ufo`, cioè il campo singolo di prima. È passato per mesi
+  // — e sempre — mentre la sirena era muta, perché `running.ufo` era `undefined` e la riga
+  // c'era comunque. Un test che cerca una stringa deve cercare quella giusta.
+  check("app.js la accende con le navette in campo",
+        app.includes("running.ufos.find") && app.includes("audio.setSiren(minaccia"),
         "senza questa riga il disco attraversa lo schermo in silenzio");
+  check("e non con il vecchio campo singolo", !app.includes("running.ufo ?"),
+        "`running.ufo` non esiste più: sarebbe sempre undefined, cioè sempre spenta");
   check("e la spegne fuori dalla partita",
         app.includes('audio.setThrust(false); audio.setSiren(null);'),
         "un tono continuo non finisce da sé");
