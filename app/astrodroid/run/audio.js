@@ -19,6 +19,13 @@ let enabled = true;
 let beatAt = 0;
 let beatLow = true;
 
+// The engine. Everything else here is an event — a shot, a rock breaking — and this one is not:
+// thrust is a state that lasts as long as a finger is down, so it cannot be a note that gets
+// played. It is one noise source that runs from the first time it is needed until the tab closes,
+// with a gain that opens and shuts. Restarting a source on every press would click at both ends
+// and would not survive the key being held for a minute.
+let engine = null;
+
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
 // -----------------------------------------------------------------------------------------------------------------
@@ -71,6 +78,36 @@ function _noise({ length = 0.4, gain = 0.3, from = 900, to = 120 }) {
   source.start(at);
 }
 
+/**
+ * A second of noise, looped: the raw material of the engine.
+ *
+ * A second and not a tenth, because a short loop repeats often enough that the ear finds the seam
+ * and the rumble starts to sound like a tone. The band-pass keeps it low and takes off the hiss,
+ * which is what makes it a rocket rather than static.
+ */
+function _buildEngine() {
+  const frames = Math.floor(ctx.sampleRate);
+  const buffer = ctx.createBuffer(1, frames, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < frames; i += 1) data[i] = Math.random() * 2 - 1;
+
+  const source = ctx.createBufferSource();
+  source.buffer = buffer;
+  source.loop = true;
+
+  const filter = ctx.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.value = 340;
+  filter.Q.value = 3.2;
+
+  const amp = ctx.createGain();
+  amp.gain.value = 0.0001;
+
+  source.connect(filter).connect(amp).connect(master);
+  source.start();
+  return { amp, on: false };
+}
+
 // -----------------------------------------------------------------------------------------------------------------
 //  p u b l i c
 // -----------------------------------------------------------------------------------------------------------------
@@ -97,7 +134,33 @@ export function wake() {
 export function setEnabled(value) {
   enabled = Boolean(value);
   if (master) master.gain.value = enabled ? 0.34 : 0;
+  // The engine is the one sound that would otherwise keep running under a muted master: everything
+  // else is a note that ends by itself, this is a loop that does not.
+  if (!enabled) setThrust(false);
   return enabled;
+}
+
+/**
+ * The engine on or off, called every frame with whether the ship is thrusting.
+ *
+ * Ramped and not switched. A gain that jumps to its value clicks, and at sixty frames a second a
+ * player tapping the key would produce a row of clicks rather than a rumble. Down is slower than
+ * up, which is what makes it read as something spinning down instead of being cut.
+ *
+ * The `on` flag means the ramps are only scheduled when the state actually changes: called sixty
+ * times a second with the same value, this does nothing at all.
+ */
+export function setThrust(on) {
+  const wanted = Boolean(on) && enabled;
+  if (!ctx || (!wanted && !engine)) return;
+  if (!engine) engine = _buildEngine();
+  if (engine.on === wanted) return;
+  engine.on = wanted;
+  const now = ctx.currentTime;
+  engine.amp.gain.cancelScheduledValues(now);
+  engine.amp.gain.setValueAtTime(Math.max(0.0001, engine.amp.gain.value), now);
+  engine.amp.gain.exponentialRampToValueAtTime(wanted ? 0.20 : 0.0001,
+                                               now + (wanted ? 0.05 : 0.14));
 }
 
 export function isEnabled() {
@@ -112,6 +175,15 @@ export function isEnabled() {
  */
 export function play(event) {
   if (!ctx || !enabled) return;
+  // `resume()` è asincrona, e finché il contesto è sospeso il suo orologio è fermo. Una nota
+  // programmata in quel momento riceve tempi che al risveglio sono già passati: l'inviluppo
+  // salta alla fine invece di aprirsi, e la nota non si sente. Riguarda esattamente un suono —
+  // il gettone, che è il primo di tutti e quello che apre il contesto.
+  if (ctx.state !== "running") { ctx.resume().then(() => _voice(event)); return; }
+  _voice(event);
+}
+
+function _voice(event) {
   switch (event) {
     case "fire":
       _tone({ type: "square", from: 880, to: 240, length: 0.09, gain: 0.10 });
@@ -156,8 +228,18 @@ export function play(event) {
       _tone({ type: "square", from: 1200, length: 0.05, gain: 0.14 });
       _tone({ type: "square", from: 1800, start: 0.05, length: 0.09, gain: 0.14 });
       break;
+    case "cleared":
+      // Lo schermo si è svuotato. Due note che salgono, corte: è una ricompensa, e arriva un
+      // secondo e mezzo prima di «wave», che invece annuncia l'ondata nuova.
+      _tone({ type: "triangle", from: 440, length: 0.09, gain: 0.13 });
+      _tone({ type: "triangle", from: 660, start: 0.09, length: 0.14, gain: 0.13 });
+      break;
     case "wave":
       _tone({ type: "triangle", from: 330, to: 660, length: 0.2, gain: 0.12 });
+      break;
+    case "respawn":
+      // La nave torna. Sotto tutto il resto come volume: dice «ci sei di nuovo», non festeggia.
+      _tone({ type: "sine", from: 220, to: 440, length: 0.16, gain: 0.10 });
       break;
     default:
       break;

@@ -277,10 +277,15 @@ function _frame(now) {
     }
     if (screen === "playing") {
       audio.heartbeat(pressure(running));
+      // La spinta è uno stato, non un evento: si legge dal mondo a ogni fotogramma invece di
+      // arrivare da `events`. Con la nave distrutta il motore si spegne da sé, perché `ship` è
+      // nullo — altrimenti il rombo continuerebbe sopra l'esplosione.
+      audio.setThrust(running.ship && running.ship.thrusting);
       _paintHud();
     }
   }
 
+  if (screen !== "playing") audio.setThrust(false);
   shake = Math.max(0, shake - elapsed * 40);
   const canvas = el("field");
   render.resize(canvas);
