@@ -886,6 +886,89 @@ console.log("\nlo scudo di fuoco");
 }
 
 {
+  // **Ogni tanto la testa si stacca**, e non sempre: una cosa che succede tutte le volte smette di
+  // essere un evento e diventa l'animazione della morte.
+  //
+  // Il tiro lo fa il generatore del mondo, quindi lo stesso seme stacca le stesse teste — e questo
+  // controllo verifica tutt'e due le cose insieme: che la frequenza sia quella dichiarata, e che
+  // due mondi con lo stesso seme diano lo stesso risultato.
+  let staccate = 0;
+  const primi = [];
+  for (let seme = 1; seme <= 120; seme += 1) {
+    const world = create(seme, 1, ["deriva"]);
+    const io = world.pilots[0];
+    io.shield = SHIELD.lasts;
+    spegni(world, io, world.foes[0]);
+    if (world.teste.length) staccate += 1;
+    if (seme <= 12) primi.push(world.teste.length);
+  }
+  const quota = staccate / 120;
+  check("la testa si stacca circa una volta su tre",
+    Math.abs(quota - SHIELD.behead) < 0.12, `${(quota * 100).toFixed(0)}%`);
+
+  const ancora = [];
+  for (let seme = 1; seme <= 12; seme += 1) {
+    const world = create(seme, 1, ["deriva"]);
+    world.pilots[0].shield = SHIELD.lasts;
+    spegni(world, world.pilots[0], world.foes[0]);
+    ancora.push(world.teste.length);
+  }
+  check("e lo stesso seme stacca le stesse teste",
+    JSON.stringify(primi) === JSON.stringify(ancora), JSON.stringify(primi));
+}
+
+{
+  // Il corpo resta senza, e la testa se ne va per conto suo fino alla colata.
+  let trovato = null;
+  for (let seme = 1; seme <= 40 && !trovato; seme += 1) {
+    const world = create(seme, 1, ["deriva"]);
+    world.pilots[0].shield = SHIELD.lasts;
+    spegni(world, world.pilots[0], world.foes[0]);
+    if (world.teste.length) trovato = world;
+  }
+  check("quando si stacca, il corpo resta senza",
+    trovato !== null && trovato.pyres[0].headless === true);
+
+  const testa = trovato.teste[0];
+  check("e parte per aria, non a piombo", testa.vy < 0 && testa.vx !== 0,
+    `vx=${testa.vx.toFixed(0)} vy=${testa.vy.toFixed(0)}`);
+
+  trovato.pilots[0].x = 5000;
+  let passi = 0;
+  let girata = 0;
+  while (trovato.teste.length && passi < 120 * 12) {
+    step(trovato, [intent()]);
+    passi += 1;
+    girata = Math.max(girata, testa.spin);
+  }
+  check("rotola, affonda nella colata e sparisce",
+    trovato.teste.length === 0 && girata > 1 && passi < 120 * 12,
+    `${girata.toFixed(1)} quarti di giro in ${(passi / 120).toFixed(1)} s`);
+}
+
+{
+  // Da ogni punto del campo, come per i corpi: una testa che si ferma su un ripiano è un pezzo di
+  // gioco che resta in mezzo per sempre.
+  const perse = [];
+  for (let i = 0; i < 20; i += 1) {
+    for (const y of [CEILING + PILOT.h, 300]) {
+      const world = create(3, 1, 0);
+      world.pilots[0].x = 5000;
+      world.teste.push({
+        kind: "deriva", x: (i * FIELD.w) / 20 + 20, y, vx: 0, vy: 0,
+        grounded: false, alive: true, sinking: false, spin: 0, phase: i,
+      });
+      const testa = world.teste[0];
+      let passi = 0;
+      while (!testa.sinking && passi < 120 * 12) { step(world, [intent()]); passi += 1; }
+      if (!testa.sinking) perse.push(`${Math.round(testa.x)},${y}`);
+    }
+  }
+  check("una testa staccata finisce sempre nella colata", perse.length === 0,
+    `rimaste su: ${perse.join(" ")}`);
+}
+
+{
   // E finché brucia l'ondata non finisce.
   const { world, io, lui } = duello(-30);
   io.shield = SHIELD.lasts;

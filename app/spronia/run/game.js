@@ -434,6 +434,24 @@ export const SHIELD = {
   // Rimbalza più di una cella e struscia meno: è un corpo, non un uovo.
   bounce: 0.5,
   drag: 0.7,
+
+  // **Ogni tanto la testa si stacca**, e rotola per conto suo fino alla colata.
+  //
+  // Una volta su tre, non sempre: una cosa che succede tutte le volte smette di essere un evento e
+  // diventa l'animazione della morte. Una su tre è abbastanza rara da far dire «guarda» e
+  // abbastanza frequente da capitare più di una volta a partita.
+  //
+  // Il tiro lo fa il generatore del mondo, non `Math.random`: lo stesso seme deve staccare le
+  // stesse teste, o la dimostrazione e lo screenshot cambierebbero da soli a ogni apertura.
+  behead: 1 / 3,
+  // Il calcio che le dà lo scudo: in su, e di lato dalla parte in cui stava andando il corpo. Una
+  // testa che cade a piombo sembra staccata dopo; una che parte per aria sembra staccata **dal**
+  // colpo, che è quello che è successo.
+  kick: 170,
+  toss: 120,
+  // Quanto gira mentre rotola, in quarti di giro per unità percorsa. Ricavato guardando: a un giro
+  // ogni ottanta unità la testa sembra scivolare, a uno ogni venti sembra un trapano.
+  roll: 1 / 44,
 };
 
 /**
@@ -727,8 +745,10 @@ export function create(seed = 1, players = 1, foes = 0) {
     celle: [],
     // I corpi in fiamme, che non sono più nemici e non sono ancora niente: cadono, rimbalzano e si
     // consumano. Stanno in un elenco a parte perché nessuna regola deve vederli — non combattono,
-    // non si raccolgono, non tornano.
+    // non si raccolgono, non tornano. E le teste che ogni tanto si staccano da loro, che sono la
+    // stessa cosa in piccolo.
     pyres: [],
+    teste: [],
     wave: 0,
     // What the last fight did, for the renderer and the tests. Not a log: one line, overwritten.
     // A history belongs to the phase that has a HUD to show it.
@@ -758,6 +778,7 @@ export function startWave(world, roster = 0) {
   for (const pilot of world.pilots) pilot.ladder = 0;
   world.celle = [];
   world.pyres = [];
+  world.teste = [];
   world.foes = [];
   const list = Array.isArray(roster) ? roster : new Array(roster).fill(KIND_NAMES[0]);
   list.forEach((kind, i) => world.foes.push(makeFoe(i, freePad(world), kind)));
@@ -773,7 +794,8 @@ export function startWave(world, roster = 0) {
 export function cleared(world) {
   return (world.foes || []).every((foe) => foe.done)
     && !(world.celle || []).some((cella) => cella.alive)
-    && !(world.pyres || []).length;
+    && !(world.pyres || []).length
+    && !(world.teste || []).length;
 }
 
 /**
@@ -795,6 +817,17 @@ export function decks(world) {
 
 /** Where the roof is, where the metal starts, how thick a ledge is. The resolver's whole world. */
 export const BOUNDS = { ceiling: CEILING, melt: MELT, deck: DECK };
+
+/**
+ * Il materiale di una testa staccata: piccola, rimbalzina, e come il corpo **non la fermano i
+ * fianchi** — deve arrivare alla colata da dovunque parta.
+ *
+ * Ventotto per ventiquattro unità, cioè il riquadro del disegno della testa arrotondato: il ritaglio
+ * lo misura il convertitore, e questa scatola gli sta dentro come tutte le altre di questo file.
+ */
+export const HEAD = {
+  w: 24, h: 28, restitution: 0.55, ceilingBounce: 0.3, pass: true,
+};
 
 /** Il materiale di un corpo in fiamme: la scatola di un pilota, ma che rimbalza. */
 export const PYRE = {
@@ -834,6 +867,7 @@ export function step(world, intents, dt = STEP) {
   }
   _stepCelle(world, ledges, dt);
   _stepPyres(world, ledges, dt);
+  _stepHeads(world, ledges, dt);
   // After everyone has moved, and never during. Settling a fight inside the movement loop means the
   // body that happens to be stepped first is the one whose position the rule reads — so the same
   // pass would be won or lost depending on the order of an array.
@@ -1370,7 +1404,13 @@ function _burn(world, foe, by) {
   foe.done = true;
   foe.downs += 1;
   if (by && !by.foe) _pay(by, (KINDS[foe.kind] || KINDS.deriva).points);
+  // Il tiro **prima** di costruire il corpo, e sempre: chiamare il generatore solo a volte
+  // renderebbe la sequenza dipendente da quante teste sono già saltate, e due partite con lo
+  // stesso seme divergerebbero al primo scudo.
+  const decapitato = _random(world) < SHIELD.behead;
+
   world.pyres.push({
+    headless: decapitato,
     kind: foe.kind,
     x: foe.x,
     y: foe.y,
@@ -1386,57 +1426,104 @@ function _burn(world, foe, by) {
     // che è il modo più rapido di far sembrare due creature un'animazione sola.
     phase: foe.index * 1.37,
   });
+  if (decapitato) {
+    world.teste.push({
+      kind: foe.kind,
+      x: foe.x,
+      // Parte da dove stava la testa, non dal centro del corpo: la scatola del corpo è alta ottanta
+      // unità e farla nascere in mezzo vorrebbe dire vederla uscire dal petto.
+      y: foe.y - PILOT.h / 4,
+      vx: foe.vx * 0.5 + Math.sign(foe.facing || 1) * SHIELD.toss,
+      vy: Math.min(foe.vy, 0) - SHIELD.kick,
+      grounded: false,
+      alive: true,
+      sinking: false,
+      // Di quanto ha girato, in quarti. Non è un'animazione a tempo: è una funzione di quanta
+      // strada ha fatto, come la camminata del dodo — una testa che gira mentre sta ferma sarebbe
+      // una trottola, e una che non gira mentre corre sarebbe una pietra.
+      spin: 0,
+      phase: foe.index * 0.83,
+    });
+  }
+
   world.last = {
-    kind: "bruciato", at: world.time, classe: foe.kind,
+    kind: "bruciato", at: world.time, classe: foe.kind, testa: decapitato,
     points: (KINDS[foe.kind] || KINDS.deriva).points, who: by ? by.index : null,
   };
 }
 
-/** I corpi in fiamme, mossi di un passo: cadono, rimbalzano, si consumano. */
+/**
+ * Le teste staccate, mosse di un passo.
+ *
+ * Stessa vita di un corpo in fiamme — cade, rimbalza, non si posa, finisce nella colata — e per
+ * questo passa dalla stessa funzione: sono la stessa cosa di misura diversa, e due copie della
+ * stessa fisica sono due cose che possono divergere. Quello che ha in più è che **gira**, e gira
+ * di quanto ha camminato.
+ */
+function _stepHeads(world, ledges, dt) {
+  _fall(world.teste, HEAD, ledges, dt);
+  for (const testa of world.teste) {
+    if (!testa.sinking) testa.spin += Math.abs(testa.vx) * dt * SHIELD.roll;
+  }
+  world.teste = world.teste.filter((testa) => testa.alive);
+}
+
+/** I corpi in fiamme, mossi di un passo: cadono, rimbalzano, non si posano, sprofondano. */
 function _stepPyres(world, ledges, dt) {
-  for (const pyre of world.pyres) {
-    if (pyre.sinking) {
+  _fall(world.pyres, PYRE, ledges, dt);
+  world.pyres = world.pyres.filter((pyre) => pyre.alive);
+}
+
+/**
+ * La caduta di quello che è uscito dal gioco: corpi in fiamme e teste staccate.
+ *
+ * Una funzione sola per tutt'e due, e il motivo non è la brevità: **la garanzia che finiscano
+ * sempre nella colata è una sola**, ed è provata una volta sola. Con due copie, la prossima cosa
+ * che cade prenderebbe quella sbagliata delle due e si fermerebbe su un ripiano — che è
+ * esattamente il difetto da cui questa funzione è nata.
+ */
+function _fall(cosi, profilo, ledges, dt) {
+  for (const cosa of cosi) {
+    if (cosa.sinking) {
       // **Come una cella**, e alla stessa velocità: scende dritto finché non è tutto sotto il pelo
-      // del metallo, e la colata lo copre un pixel alla volta. Il tempo di combustione qui si
-      // ferma — quello che decide quanto dura è l'affondamento, non un secondo orologio che
-      // potrebbe farlo sparire a metà.
-      pyre.y += CELLA.sink * dt;
-      if (pyre.y - PILOT.h / 2 >= MELT) pyre.alive = false;
+      // del metallo, e la colata lo copre un pixel alla volta. Non c'è un secondo orologio che
+      // possa spegnerlo a metà: quello che decide quanto dura è l'affondamento.
+      cosa.y += CELLA.sink * dt;
+      if (cosa.y - profilo.h / 2 >= MELT) cosa.alive = false;
       continue;
     }
 
-    pyre.vy = Math.min(PILOT.maxFall, pyre.vy + PILOT.gravity * dt);
-    pyre.vx -= pyre.vx * Math.min(1, SHIELD.drag * dt);
+    cosa.vy = Math.min(PILOT.maxFall, cosa.vy + PILOT.gravity * dt);
+    cosa.vx -= cosa.vx * Math.min(1, SHIELD.drag * dt);
 
-    const hit = resolve(pyre, PYRE, ledges, BOUNDS, dt);
-    wrapX(pyre);
+    const hit = resolve(cosa, profilo, ledges, BOUNDS, dt);
+    wrapX(cosa);
 
     if (hit.melted) {
-      pyre.sinking = true;
-      pyre.vx = 0;
-      pyre.vy = 0;
+      cosa.sinking = true;
+      cosa.vx = 0;
+      cosa.vy = 0;
       continue;
     }
 
-    // **Non si ferma.** Appoggiato su un ripiano, prende la strada del bordo più vicino e non
+    // **Non si ferma.** Appoggiato su un ripiano prende la strada del bordo più vicino e non
     // smette di essere in caduta: il risolutore lo rimetterà sopra il ripiano a ogni passo, e a
     // ogni passo lui riparte verso il bordo, finché non lo supera. La spinta si riapplica invece
     // di essere data una volta sola perché l'attrito dell'aria la mangerebbe a metà scivolata.
-    if (pyre.grounded) {
-      const deck = groundBelow(pyre, PYRE, ledges, BOUNDS);
+    if (cosa.grounded) {
+      const deck = groundBelow(cosa, profilo, ledges, BOUNDS);
       // Senza un ripiano sotto **si tira dritto**, e non è un caso di ripiego: è il passo in cui ha
       // appena superato il bordo. Il risolutore lo considera ancora appoggiato — la sua sonda
       // guarda dov'era prima di muoversi — mentre qui sotto non c'è più niente, e rispondere
       // «allora vai a destra» lo rimandava indietro sulla piattaforma appena lasciata. Da lì
       // avanti e indietro per sempre: ventitré partenze su sessanta finivano così.
       const verso = deck
-        ? Math.sign(pyre.x - (deck.x + deck.w / 2)) || 1
-        : Math.sign(pyre.vx) || 1;
-      pyre.vx = verso * SHIELD.slide;
-      pyre.grounded = false;
+        ? Math.sign(cosa.x - (deck.x + deck.w / 2)) || 1
+        : Math.sign(cosa.vx) || 1;
+      cosa.vx = verso * SHIELD.slide;
+      cosa.grounded = false;
     }
   }
-  world.pyres = world.pyres.filter((pyre) => pyre.alive);
 }
 
 /**

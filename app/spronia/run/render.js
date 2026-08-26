@@ -30,11 +30,12 @@
 // framed screen reads as a screen, an unframed one reads as a hole in the page.
 
 import {
-  FIELD, CEILING, MELT, DECK, PIXEL, PILOT, SPRITE, PLATFORMS, KINDS, CELLA, SHIELD, PYRE,
+  FIELD, CEILING, MELT, DECK, PIXEL, PILOT, SPRITE, PLATFORMS, KINDS, CELLA, SHIELD, HEAD,
   lanceTip,
 } from "./game.js";
 import {
-  PILOT_SPRITES, PALETTE, TINTE, ALPHABET, EYE, EGG, EGG_SPRITE, EGG_PALETTES, each, tint,
+  PILOT_SPRITES, PALETTE, TINTE, ALPHABET, EYE, EGG, EGG_SPRITE, EGG_PALETTES,
+  measure, each, tint,
 } from "./sprites.js";
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -603,9 +604,11 @@ const FLAME = ["..1..", ".11..", ".111.", "11111", ".111."];
  * verso il centro del campo da tutt'e due i lati, che è anche l'unico modo per cui due file di
  * teste identiche si distinguono a colpo d'occhio.
  */
-function _paintHead(ctx, x, y, flip, tavolozza) {
+function _paintHead(ctx, x, y, flip, tavolozza, giro = 0) {
   const box = PILOT_SPRITES.head;
   const sprite = PILOT_SPRITES.walk[0];
+  const quarto = ((giro % 4) + 4) % 4;
+
   for (let gy = 0; gy < box.h; gy += 1) {
     const row = sprite[box.y + gy] || "";
     for (let gx = 0; gx < box.w; gx += 1) {
@@ -613,9 +616,73 @@ function _paintHead(ctx, x, y, flip, tavolozza) {
       if (!ch || ch === ".") continue;
       const i = ALPHABET.indexOf(ch);
       ctx.fillStyle = tavolozza[i] || PAINT.ink;
-      ctx.fillRect(x + (flip ? box.w - 1 - gx : gx), y + gy, 1, 1);
+
+      // **La rotazione è a quarti di giro, e fatta a mano.** Ruotare il contesto del canvas
+      // avrebbe interpolato — un bordo sfumato su un campo di pixel netti è la cosa che tradisce
+      // tutto il resto — mentre un quarto di giro è una permutazione di coordinate, esatta per
+      // costruzione. Quattro pose per un giro sono poche, e per una testa che rotola bastano: a
+      // questa misura quello che si legge è **che** gira, non di quanto.
+      const sx = flip ? box.w - 1 - gx : gx;
+      let dx = sx;
+      let dy = gy;
+      if (quarto === 1) { dx = box.h - 1 - gy; dy = sx; }
+      else if (quarto === 2) { dx = box.w - 1 - sx; dy = box.h - 1 - gy; }
+      else if (quarto === 3) { dx = gy; dy = box.w - 1 - sx; }
+      ctx.fillRect(x + dx, y + dy, 1, 1);
     }
   }
+}
+
+/** Quanto è larga e alta una testa a questo quarto di giro, e dove va appoggiata. */
+function _headBox(testa) {
+  const box = PILOT_SPRITES.head;
+  const quarto = Math.floor(testa.spin || 0) % 4;
+  const dritta = quarto % 2 === 0;
+  const w = dritta ? box.w : box.h;
+  const h = dritta ? box.h : box.w;
+  return { quarto, w, h };
+}
+
+/**
+ * Una testa staccata, senza il suo fuoco.
+ *
+ * Separata dalle fiamme per la stessa ragione della cella e del corpo: mentre affonda va dipinta
+ * **sotto** la colata, e il fuoco sopra.
+ */
+function _paintHeadOnly(ctx, testa, cx) {
+  const { quarto, w, h } = _headBox(testa);
+  const tavolozza = TINTE[(KINDS[testa.kind] || {}).tinta] || PALETTE;
+  _paintHead(ctx, cx - Math.round(w / 2), px(testa.y) - Math.round(h / 2), false,
+    tavolozza, quarto);
+}
+
+/**
+ * Una testa staccata che rotola in fiamme.
+ *
+ * È la stessa testa della barra delle vite e la stessa che il cavaliere ha in campo — **non un
+ * disegno nuovo**, e non per risparmiare: quello che deve leggersi in un quarto di secondo è che
+ * quella cosa che rotola *era* qualcuno, e un'icona diversa lo direbbe soltanto a chi ha tempo di
+ * guardarla.
+ *
+ * Le fiamme sono tre e piccole: è una cosa piccola che brucia, e lingue alte quanto quelle di un
+ * corpo la coprirebbero del tutto — e allora quello che rotola non si vedrebbe più, che è l'unica
+ * cosa per cui esiste.
+ */
+function _paintRolling(ctx, testa, cx) {
+  const { w, h } = _headBox(testa);
+  const left = cx - Math.round(w / 2);
+  const top = px(testa.y) - Math.round(h / 2);
+
+  // **Le fiamme prima, la testa sopra.** Al contrario è quello che si fa per un corpo — lì il fuoco
+  // deve avvolgerlo — ma una testa è tredici pixel, e tre lingue davanti la coprono del tutto. E
+  // allora quello che rotola non si vede più, che è l'unica cosa per cui questa roba esiste.
+  for (let i = 0; i < 3; i += 1) {
+    const at = i / 2;
+    _flame(ctx, left + Math.round(at * (w - 1)), top + h,
+      i + (testa.phase || 0), h * 0.75 * (0.6 + 0.4 * Math.sin(Math.PI * at)), 4);
+  }
+
+  _paintHeadOnly(ctx, testa, cx);
 }
 
 /**
@@ -1031,13 +1098,20 @@ function _paintPyre(ctx, pyre, cx) {
   const top = px(pyre.y) + PILOT_SPRITES.lift;
   const tavolozza = TINTE[(KINDS[pyre.kind] || {}).tinta] || PALETTE;
 
+  // **Se la testa è saltata via, qui non si disegna.** Lo stesso riquadro che la barra usa per le
+  // vite, tolto invece che copiato: il ritaglio sta in un posto solo, quindi il buco nel corpo e la
+  // testa che rotola non possono finire in due punti diversi del disegno.
+  const buco = pyre.headless ? PILOT_SPRITES.head : null;
+  const larghezza = measure(sprite).w;
+
   each(sprite, flip, (x, y, index) => {
+    if (buco) {
+      const sx = flip ? larghezza - 1 - x : x;
+      if (sx >= buco.x && sx < buco.x + buco.w && y >= buco.y && y < buco.y + buco.h) return;
+    }
     ctx.fillStyle = tavolozza[index] || PAINT.ink;
     ctx.fillRect(left + x, top + y, 1, 1);
   });
-
-  // Cinque lingue lungo il corpo, che partono da sotto la pancia. Si accorciano man mano che il
-  // corpo si consuma, così l'ultimo secondo si vede arrivare invece di finire di colpo.
 }
 
 /**
@@ -1338,8 +1412,10 @@ export function draw(canvas, world) {
   // o passerebbe dietro le piattaforme come un fantasma.
   const celleGiu = (world.celle || []).filter((c) => c.alive && c.sinking);
   const pyresGiu = (world.pyres || []).filter((p) => p.sinking);
+  const testeGiu = (world.teste || []).filter((t) => t.sinking);
   for (const cella of celleGiu) _wrapped(px(cella.x), (x) => _paintCella(ctx, cella, x));
   for (const pyre of pyresGiu) _wrapped(px(pyre.x), (x) => _paintPyre(ctx, pyre, x));
+  for (const testa of testeGiu) _wrapped(px(testa.x), (x) => _paintHeadOnly(ctx, testa, x));
 
   _paintMelt(ctx, world.time || 0);
 
@@ -1353,6 +1429,9 @@ export function draw(canvas, world) {
   }
   for (const pyre of pyresGiu) {
     _wrapped(px(pyre.x), (x) => _paintSinkFire(ctx, x, px(PILOT.w), pyre.phase || 0));
+  }
+  for (const testa of testeGiu) {
+    _wrapped(px(testa.x), (x) => _paintSinkFire(ctx, x, px(HEAD.w), testa.phase || 0));
   }
 
   const gone = world.removed || [];
@@ -1375,6 +1454,11 @@ export function draw(canvas, world) {
       _paintPyre(ctx, pyre, x);
       _paintPyreFlames(ctx, pyre, x);
     });
+  }
+
+  for (const testa of world.teste || []) {
+    if (testa.sinking) continue;
+    _wrapped(px(testa.x), (x) => _paintRolling(ctx, testa, x));
   }
 
   // Foes first, so that when two bodies overlap in a pass the player's own is the one on top and
