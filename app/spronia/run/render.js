@@ -843,42 +843,48 @@ function _paintSinkFire(ctx, cx, largo, seme) {
   }
 
   // ---- 4 · i lapilli ------------------------------------------------------------------------------
-  // Schizzi di metallo buttati in aria e ricaduti. Sono l'unica cosa qui dentro che esce dalla
-  // fascia delle fiamme, e servono a questo: dicono che sotto c'è **impatto**, non solo calore.
+  // Schizzi di metallo buttati in aria e ricaduti, e sono la cosa che si vede da lontano: quando
+  // qualcosa finisce nella colata deve sembrare che la colata **reagisca**, non che accolga.
   //
-  // Una parabola vera, non un puntino che sale e sparisce: `4t(1-t)` vale zero ai due capi e uno a
-  // metà, quindi il lapillo parte dal pelo, culmina e torna esattamente da dove è uscito. La coda è
-  // il fotogramma precedente della stessa parabola, dipinto più spento — costa un pixel e
-  // trasforma un punto in qualcosa che si muove.
+  // Ventidue, e non otto. A otto erano dei puntini sopra le fiamme; a ventidue sono uno scoppio.
+  // Il numero costa poco — cinque rettangoli l'uno, e ce ne sono al più due o tre in campo insieme
+  // — e nessuno di loro è casuale.
   //
-  // Nessun numero casuale: periodo, fase e spinta vengono dall'indice e dal seme, quindi lo stesso
-  // seme rigioca gli stessi schizzi.
-  for (let i = 0; i < 8; i += 1) {
-    const periodo = 0.85 + (i % 4) * 0.23;
-    const ciclo = (((_now + seme * 1.7 + i * 0.37) % periodo) + periodo) % periodo / periodo;
-    const spinta = ((i % 5) - 2) * 7;
-    // Più alti delle lingue, e per forza: un lapillo che non esce dal fuoco è un pixel dentro il
-    // fuoco. Il senso di questi otto è che qualcosa viene **buttato fuori**, e per dirlo devono
-    // arrivare dove il fuoco non arriva.
-    const salita = 16 + (i % 3) * 8;
-    const x0 = cx + ((i % 7) - 3) * Math.round(largo / 7);
+  // **Un ventaglio, non ventidue fontane.** Partono quasi tutti dallo stesso punto e si aprono a
+  // forza diversa: è la differenza fra una cosa che esplode e ventidue cose che schizzano. La
+  // forza decide tutto e in modo coerente con un lancio vero — chi parte piatto va lontano e
+  // basso, chi parte ripido va vicino e alto — e decide anche la grandezza, perché una scheggia
+  // che arriva lontano è una scheggia piccola.
+  //
+  // Le parabole sono vere: `4t(1-t)` vale zero ai due capi e uno a metà, quindi il lapillo parte
+  // dal pelo del metallo, culmina e ricade esattamente da dove è uscito. La coda è la stessa
+  // parabola due e tre fotogrammi indietro, dipinta più spenta — costa due pixel e trasforma un
+  // punto in qualcosa che si muove.
+  const LAPILLI = 22;
+  for (let i = 0; i < LAPILLI; i += 1) {
+    // Periodi primi fra loro a passo irregolare: due lapilli vicini non ripartono mai insieme, e
+    // il getto non pulsa.
+    const periodo = 0.62 + ((i * 7) % 11) * 0.085;
+    const ciclo = (((_now + seme * 1.7 + i * 0.29) % periodo) + periodo) % periodo / periodo;
+    const forza = 0.2 + (((i * 5) % 9) / 8) * 0.8;      // 0,2 piatto e lontano — 1 ripido e alto
+    const lato = i % 2 ? 1 : -1;
+    const spinta = lato * (30 - forza * 22);
+    const salita = 12 + forza * 32;
+    const x0 = cx + (((i * 3) % 5) - 2) * Math.round(largo / 9);
     const arco = (t) => ({
       x: Math.round(x0 + spinta * (t - 0.5) * 2),
       y: Math.round(superficie(x0) - 1 - salita * 4 * t * (1 - t)),
     });
-    const ora = arco(ciclo);
-    // Due fotogrammi di coda invece di uno: a questa scala un solo pixel dietro non è una scia, è
-    // un secondo lapillo.
-    const scia = [
-      [arco(Math.max(0, ciclo - 0.16)), PAINT.meltCrust],
-      [arco(Math.max(0, ciclo - 0.08)), PAINT.meltGlow],
-    ];
-    for (const [dove, colore] of scia) {
+
+    for (const [indietro, colore] of [[0.18, PAINT.meltCrust], [0.09, PAINT.meltGlow]]) {
+      const dove = arco(Math.max(0, ciclo - indietro));
       ctx.fillStyle = colore;
       ctx.fillRect(dove.x, dove.y, 1, 1);
     }
+    const ora = arco(ciclo);
+    const grosso = forza > 0.55 ? 2 : 1;
     ctx.fillStyle = PAINT.meltFlash;
-    ctx.fillRect(ora.x, ora.y, 2, 2);
+    ctx.fillRect(ora.x, ora.y, grosso, grosso);
   }
 }
 
