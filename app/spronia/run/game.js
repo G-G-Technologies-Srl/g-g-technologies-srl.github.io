@@ -1366,7 +1366,13 @@ function _burn(world, foe, by) {
     facing: foe.facing,
     grounded: false,
     alive: true,
+    // Sta affondando nel metallo. Stesso stato e stesso nome della cella, perché è la stessa cosa
+    // che succede e deve avere lo stesso aspetto: scende piano e la colata lo copre.
+    sinking: false,
     left: SHIELD.pyre,
+    // La fase del battito d'ali, così due corpi che bruciano insieme non agonizzano all'unisono —
+    // che è il modo più rapido di far sembrare due creature un'animazione sola.
+    phase: foe.index * 1.37,
   });
   world.last = {
     kind: "bruciato", at: world.time, classe: foe.kind,
@@ -1377,6 +1383,16 @@ function _burn(world, foe, by) {
 /** I corpi in fiamme, mossi di un passo: cadono, rimbalzano, si consumano. */
 function _stepPyres(world, ledges, dt) {
   for (const pyre of world.pyres) {
+    if (pyre.sinking) {
+      // **Come una cella**, e alla stessa velocità: scende dritto finché non è tutto sotto il pelo
+      // del metallo, e la colata lo copre un pixel alla volta. Il tempo di combustione qui si
+      // ferma — quello che decide quanto dura è l'affondamento, non un secondo orologio che
+      // potrebbe farlo sparire a metà.
+      pyre.y += CELLA.sink * dt;
+      if (pyre.y - PILOT.h / 2 >= MELT) pyre.alive = false;
+      continue;
+    }
+
     if (!pyre.grounded) pyre.vy = Math.min(PILOT.maxFall, pyre.vy + PILOT.gravity * dt);
     pyre.vx -= pyre.vx * Math.min(1, SHIELD.drag * dt);
 
@@ -1384,10 +1400,14 @@ function _stepPyres(world, ledges, dt) {
     wrapX(pyre);
 
     pyre.left -= dt;
-    // La colata lo prende subito e senza sprofondare: una cella affonda perché la si sta perdendo e
-    // quella perdita va vista, mentre questo sta già bruciando da quando è caduto. Aggiungere un
-    // secondo tempo di fiamme dentro le fiamme sarebbe la stessa cosa detta due volte.
-    if (hit.melted || pyre.left <= 0) pyre.alive = false;
+    if (hit.melted) {
+      pyre.sinking = true;
+      pyre.vx = 0;
+      pyre.vy = 0;
+    } else if (pyre.left <= 0) {
+      // Consumato prima di arrivare al metallo: succede quando rimbalza e resta su un ripiano.
+      pyre.alive = false;
+    }
   }
   world.pyres = world.pyres.filter((pyre) => pyre.alive);
 }

@@ -911,7 +911,16 @@ function _paintShield(ctx, pilot, cx) {
  * stessa cosa: il fuoco di questo gioco è uno solo.
  */
 function _paintPyre(ctx, pyre, cx) {
-  const sprite = PILOT_SPRITES.fly[0];
+  // **Le ali sbattono.** Un corpo che cade con le ali ferme è un oggetto; un corpo che le muove
+  // ancora è una creatura a cui sta succedendo qualcosa, e la differenza fra le due cose è tutta
+  // qui. Il ciclo è più veloce di un battito vero — undici fotogrammi al secondo contro i dodici
+  // di un battito intero, ma senza le pause fra un battito e l'altro — quindi non legge come volo:
+  // legge come dimenarsi.
+  //
+  // La fase viene dal corpo e non dal tempo soltanto, così due nemici bruciati insieme non
+  // agonizzano all'unisono.
+  const ciclo = PILOT_SPRITES.fly;
+  const sprite = ciclo[Math.floor(_now * 11 + (pyre.phase || 0)) % ciclo.length];
   const flip = pyre.facing < 0;
   const left = cx - px(SPRITE.w) / 2;
   const top = px(pyre.y) + PILOT_SPRITES.lift;
@@ -924,10 +933,25 @@ function _paintPyre(ctx, pyre, cx) {
 
   // Cinque lingue lungo il corpo, che partono da sotto la pancia. Si accorciano man mano che il
   // corpo si consuma, così l'ultimo secondo si vede arrivare invece di finire di colpo.
-  // Alte quanto il corpo, o quasi: fiamme che arrivano alle zampe sono un falò **sotto** un
-  // uccello, e quello che deve leggersi è un uccello che sta bruciando. La misura è la scatola di
-  // collisione, cioè il corpo vero, non il riquadro del disegno che comprende le ali aperte.
-  const resta = Math.max(0, Math.min(1, pyre.left / SHIELD.pyre));
+}
+
+/**
+ * Le fiamme di un corpo che brucia.
+ *
+ * Separate dal corpo per la stessa ragione per cui lo sono quelle della cella: mentre affonda, il
+ * corpo va dipinto **sotto** la colata e le fiamme **sopra**, o il metallo se le mangia e quello
+ * che resta è un uccello che scende senza bruciare.
+ *
+ * Alte quanto il corpo, o quasi: fiamme che arrivano alle zampe sono un falò **sotto** un uccello,
+ * e quello che deve leggersi è un uccello che sta bruciando. La misura è la scatola di collisione,
+ * cioè il corpo vero, non il riquadro del disegno che comprende le ali aperte.
+ */
+function _paintPyreFlames(ctx, pyre, cx) {
+  // Mentre affonda le fiamme restano piene: quello che si accorcia è il corpo che sparisce sotto il
+  // metallo, e due cose che si consumano insieme sono una cosa sola che svanisce.
+  const resta = pyre.sinking
+    ? 1
+    : Math.max(0, Math.min(1, pyre.left / SHIELD.pyre));
   const base = px(pyre.y) + px(PILOT.h) / 2;
   for (let i = 0; i < 7; i += 1) {
     const at = i / 6;
@@ -1186,22 +1210,22 @@ export function draw(canvas, world) {
 
   _paintCeiling(ctx);
 
-  // **Le celle prima del metallo**, e solo per questo: una cella che affonda dev'essere coperta
-  // dalla colata mentre scende. È il metallo che la nasconde, un pixel alla volta, invece di un
-  // ritaglio che la accorcia — che è la differenza fra qualcosa che sprofonda e qualcosa che si
-  // consuma. Sopra la linea non cambia niente: lassù non c'è metallo da coprirle.
-  for (const cella of world.celle || []) {
-    if (!cella.alive) continue;
-    _wrapped(px(cella.x), (x) => _paintCella(ctx, cella, x));
-  }
+  // **Chi sta affondando va dipinto prima del metallo**, e solo per questo: è la colata che lo
+  // nasconde, un pixel alla volta, invece di un ritaglio che lo accorcia — che è la differenza fra
+  // qualcosa che sprofonda e qualcosa che si consuma. Vale per le celle e per i corpi in fiamme, e
+  // vale **solo** per chi affonda: chi sta ancora cadendo si dipinge più sotto, davanti ai ripiani,
+  // o passerebbe dietro le piattaforme come un fantasma.
+  const celleGiu = (world.celle || []).filter((c) => c.alive && c.sinking);
+  const pyresGiu = (world.pyres || []).filter((p) => p.sinking);
+  for (const cella of celleGiu) _wrapped(px(cella.x), (x) => _paintCella(ctx, cella, x));
+  for (const pyre of pyresGiu) _wrapped(px(pyre.x), (x) => _paintPyre(ctx, pyre, x));
 
   _paintMelt(ctx, world.time || 0);
 
-  // E le fiamme dopo, che devono stare **sopra** la colata: sono la colata che si prende la cella.
-  for (const cella of world.celle || []) {
-    if (!cella.alive || !cella.sinking) continue;
-    _wrapped(px(cella.x), (x) => _paintFlames(ctx, cella, x));
-  }
+  // E le fiamme dopo, che devono stare **sopra** la colata: è la colata che si sta prendendo
+  // qualcosa, e le fiamme di quel qualcosa non devono finirci sotto.
+  for (const cella of celleGiu) _wrapped(px(cella.x), (x) => _paintFlames(ctx, cella, x));
+  for (const pyre of pyresGiu) _wrapped(px(pyre.x), (x) => _paintPyreFlames(ctx, pyre, x));
 
   const gone = world.removed || [];
   for (const deck of PLATFORMS) {
@@ -1209,10 +1233,20 @@ export function draw(canvas, world) {
     _paintDeck(ctx, deck);
   }
 
+  // Le celle che stanno ancora cadendo o sono posate, davanti ai ripiani.
+  for (const cella of world.celle || []) {
+    if (!cella.alive || cella.sinking) continue;
+    _wrapped(px(cella.x), (x) => _paintCella(ctx, cella, x));
+  }
+
   // I corpi in fiamme sotto tutti quelli che volano ancora: sono usciti dal gioco, e non devono
   // coprire un nemico vivo nel momento in cui gli voli addosso.
   for (const pyre of world.pyres || []) {
-    _wrapped(px(pyre.x), (x) => _paintPyre(ctx, pyre, x));
+    if (pyre.sinking) continue;
+    _wrapped(px(pyre.x), (x) => {
+      _paintPyre(ctx, pyre, x);
+      _paintPyreFlames(ctx, pyre, x);
+    });
   }
 
   // Foes first, so that when two bodies overlap in a pass the player's own is the one on top and

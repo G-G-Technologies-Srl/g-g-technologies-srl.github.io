@@ -149,26 +149,37 @@ function _resize() {
 }
 
 /**
- * Da che parte sta una pressione: **-1 a sinistra, +1 a destra, 0 in mezzo.**
+ * Che cosa vuol dire una pressione, rispetto al proprio dodo.
  *
- * In mezzo a cosa: al proprio dodo, non allo schermo. Il campo si avvolge in orizzontale, quindi
- * «a destra» è il giro più corto — `deltaX` — e non il confronto fra due ascisse. Premere appena
- * oltre la cucitura, con le metà dello schermo, avrebbe girato il dodo dalla parte lunga.
+ * Restituisce due cose, e **sono due domande diverse** — che è esattamente l'errore che c'era qui.
  *
- * Lo zero è la zona morta, larga mezzo corpo: premendo addosso al proprio uccello si batte e basta.
- * Senza, un tocco che cade un pixel dal lato sbagliato fa fare dietrofront nel momento peggiore.
+ * `lato` è la direzione: -1 a sinistra, +1 a destra, 0 in mezzo. In mezzo **a cosa**: al proprio
+ * dodo, non allo schermo. Il campo si avvolge in orizzontale, quindi «a destra» è il giro più corto
+ * — `deltaX` — e non il confronto fra due ascisse. Lo zero è la zona morta, larga mezzo corpo:
+ * senza, un tocco che cade un pixel dal lato sbagliato fa fare dietrofront nel momento peggiore. E
+ * la zona morta è giustamente **solo orizzontale**: premere venti metri sopra il proprio uccello
+ * vuol dire «vai dritto», non «vai su», perché un comando per salire non esiste.
  *
- * `input.js` non sa niente di tutto questo: riceve un numero e ne guarda il segno. È il motivo per
- * cui questa funzione sta qui, dove il mondo esiste, e non là dentro.
+ * `addosso` è un'altra cosa: se il dito è **sul** dodo. Serve al doppio tocco che accende lo scudo,
+ * e prima non esisteva — il doppio tocco guardava `lato === 0`, cioè la stessa striscia verticale
+ * alta quanto tutto il campo. Due tocchi rapidi in cielo, sopra il proprio uccello, accendevano lo
+ * scudo. Qui la scatola ha due lati, ed è la scatola di collisione allargata di un quarto: un
+ * bersaglio da colpire col pollice deve essere un po' più grande di quello per cui si muore.
  */
 function _side(clientX, clientY) {
-  if (!running || !world) return 0;
+  const fermo = { lato: 0, addosso: false };
+  if (!running || !world) return fermo;
   const me = world.pilots[0];
-  if (!me || !me.alive) return 0;
+  if (!me || !me.alive) return fermo;
   const at = render.where(el("field"), clientX, clientY);
-  if (!at) return 0;
-  const gap = deltaX(me.x, at.x);
-  return Math.abs(gap) < PILOT.w / 2 ? 0 : Math.sign(gap);
+  if (!at) return fermo;
+
+  const dx = deltaX(me.x, at.x);
+  const dy = at.y - me.y;
+  return {
+    lato: Math.abs(dx) < PILOT.w / 2 ? 0 : Math.sign(dx),
+    addosso: Math.abs(dx) < PILOT.w * 0.625 && Math.abs(dy) < PILOT.h * 0.625,
+  };
 }
 
 function _bind() {

@@ -141,10 +141,15 @@ const DOPPIO = 320;
 
 function _bindPointer(field, verso) {
   let giu = null;                                  // il puntatore che sta premendo, uno solo
-  let ultimo = 0;                                  // quando è arrivato il tocco precedente
+  // **Meno infinito, non zero.** `event.timeStamp` conta dal caricamento della pagina, quindi zero
+  // non vuol dire «mai»: vuol dire «all'apertura». Con lo zero, il primo tocco dato entro il terzo
+  // decimo di secondo dal caricamento era un doppio tocco — e accendeva lo scudo da solo.
+  let ultimo = -Infinity;                          // quando è arrivato il tocco precedente
+
+  const dove = (event) => (verso ? verso(event.clientX, event.clientY) : { lato: 0, addosso: false });
 
   const punta = (event) => {
-    const lato = verso ? verso(event.clientX, event.clientY) : 0;
+    const { lato } = dove(event);
     held[0].touch.delete("left");
     held[0].touch.delete("right");
     if (lato < 0) held[0].touch.add("left");
@@ -158,17 +163,18 @@ function _bindPointer(field, verso) {
     giu = event.pointerId;
     event.preventDefault();
 
-    // **Doppio tocco sul proprio dodo: scudo.** Sul proprio, non da qualche parte: il lato zero è
-    // già la zona morta attorno al corpo, cioè il posto in cui premere non vuol dire «vai di là».
-    // Due colpi lì dentro non possono voler dire nient'altro, mentre due colpi in mezzo al campo
-    // vogliono dire due battiti e vanno lasciati stare.
-    const lato = verso ? verso(event.clientX, event.clientY) : 0;
+    // **Doppio tocco sul dodo: scudo.** Sul dodo, non nella sua colonna — e la differenza è tutto
+    // quello che c'era di sbagliato qui. Prima la condizione era `lato === 0`, cioè la zona morta
+    // dello sterzo, che è una **striscia verticale alta quanto il campo**: due tocchi dati in cielo,
+    // trenta metri sopra il proprio uccello, accendevano lo scudo. Adesso lo dice `addosso`, che è
+    // una scatola con due lati.
+    const { addosso } = dove(event);
     const adesso = event.timeStamp || performance.now();
-    if (lato === 0 && adesso - ultimo < DOPPIO) {
+    if (addosso && adesso - ultimo < DOPPIO) {
       shields[0] += 1;
-      ultimo = 0;                                  // un triplo tocco non sono due scudi
+      ultimo = -Infinity;                          // un triplo tocco non sono due scudi
     } else {
-      ultimo = lato === 0 ? adesso : 0;
+      ultimo = addosso ? adesso : -Infinity;
     }
 
     beats[0] += 1;

@@ -867,6 +867,28 @@ console.log("\nlo scudo di fuoco");
   check("e l'ondata non finisce finché sta bruciando", passi > 1);
 }
 
+{
+  // **Nel metallo sprofonda, come un uovo.** Non sparisce sul pelo della colata: scende alla stessa
+  // velocità di una cella, e quello che lo fa finire è l'affondamento, non il suo tempo di
+  // combustione — che si ferma lì apposta.
+  const { world, io, lui } = duello(-30);
+  io.shield = SHIELD.lasts;
+  step(world, [intent()]);
+  const pyre = world.pyres[0];
+  // Già dentro il metallo, e il tempo di combustione a un soffio dalla fine: quello che deve
+  // decidere quanto dura è l'affondamento, non l'orologio.
+  pyre.x = 100; pyre.y = MELT - PILOT.h / 2 + 2; pyre.vx = 0; pyre.vy = 0; pyre.left = 0.2;
+  step(world, [intent()]);
+  check("il corpo che tocca la colata affonda invece di sparire",
+    pyre.sinking && pyre.alive, `affonda=${pyre.sinking} vivo=${pyre.alive}`);
+  const y0 = pyre.y;
+  let passi = 0;
+  while (world.pyres.length && passi < 120 * 5) { step(world, [intent()]); passi += 1; }
+  check("e scende piano, finché non è tutto sotto il pelo del metallo",
+    pyre.y > y0 && pyre.y - PILOT.h / 2 >= MELT && passi > 120,
+    `sceso di ${(pyre.y - y0).toFixed(0)} unità in ${(passi / 120).toFixed(2)} s`);
+}
+
 // -----------------------------------------------------------------------------------------------------------------
 //  l e   v i t e
 // -----------------------------------------------------------------------------------------------------------------
