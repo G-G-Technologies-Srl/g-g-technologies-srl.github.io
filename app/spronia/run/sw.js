@@ -10,7 +10,7 @@
 //  - no skipWaiting and no clients.claim: an update lands at the next start. Swapping files under
 //    a running app means changing the code while somebody is halfway through a game.
 
-const VERSION = '0.40.0';
+const VERSION = '0.41.0';
 const CACHE = `spronia-v${VERSION}`;
 
 // Every file the app is made of, plus the shared modules it borrows. Kept by hand and checked by

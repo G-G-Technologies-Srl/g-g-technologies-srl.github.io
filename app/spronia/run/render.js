@@ -31,7 +31,7 @@
 
 import {
   FIELD, CEILING, MELT, DECK, PIXEL, PILOT, SPRITE, PLATFORMS, KINDS, CELLA, SHIELD, HEAD,
-  lanceTip,
+  INTRUDER, lanceTip, mouth,
 } from "./game.js";
 import {
   PILOT_SPRITES, PALETTE, TINTE, ALPHABET, EYE, EGG, EGG_SPRITE, EGG_PALETTES,
@@ -107,6 +107,14 @@ const PAINT = {
   // is drawn in — present, readable, and not competing with the bird for attention.
   reach: "#34d399",
   reachFoe: "#c3ccdd",
+
+  // L'Intruso. **Nessun colore della fauna**: le cavalcature sono terre e ocra, questo è metallo
+  // freddo con una bocca accesa. Si riconosce prima di essere guardato, ed è quello che deve fare —
+  // arriva quando stai perdendo tempo, e la prima cosa da capire non è che cos'è ma che c'è.
+  hull: "#38455c",
+  hullLit: "#8496b5",
+  hullDark: "#161d2b",
+  intake: "#ffd24a",
 
   // Il cimiero che dà il nome alla classe di un nemico. Un colore solo per tutt'e tre — è la forma
   // che porta l'informazione. Preso dal capo pallido della tavolozza dell'uccello, così legge come
@@ -741,6 +749,32 @@ function _paintGlyph(ctx, glyph, x, y, colour) {
 }
 
 /**
+ * I punteggi che volano via: un numero che sale dal punto in cui è stato guadagnato e sfuma.
+ *
+ * **È l'annuncio, e non è una parola.** Il campo di questo gioco non ha testo — la barra in cima è
+ * cifre e icone apposta, così non ci sono due lingue da tenere allineate dentro l'area di gioco — e
+ * un premio raro ha bisogno di essere annunciato dove è successo, non in un angolo. Un numero che
+ * esce dal punto esatto e sale dice **quanto** e **dove** insieme, in una forma che il giocatore ha
+ * già imparato guardando la barra.
+ *
+ * Sale e non lampeggia. Il lampeggio l'avevamo già escluso per la cella che sta per schiudersi, e
+ * per la stessa ragione: è la cosa che chi ha chiesto meno movimento sta cercando di evitare, e su
+ * un premio di quattro cifre sarebbe pure grosso.
+ *
+ * Sfuma cambiando colore invece che opacità: su un campo a tavolozza fissa una scritta semitrasparente
+ * si mescolerebbe col fondo in colori che non esistono da nessuna parte, ed è esattamente il tipo di
+ * bordo sfumato che tradisce un disegno a pixel.
+ */
+function _paintPops(ctx, world) {
+  for (const pop of world.pops || []) {
+    const t = 1 - Math.max(0, Math.min(1, pop.left / SHIELD.pop));   // 0 appena nato, 1 finito
+    const y = px(pop.y) - Math.round(t * 22);
+    const colore = t < 0.55 ? PAINT.meltFlash : t < 0.8 ? PAINT.meltHot : PAINT.meltCrust;
+    _wrapped(px(pop.x), (x) => _paintNumber(ctx, pop.points, x, y, 2, colore, "centre"));
+  }
+}
+
+/**
  * Punti, vite e ondata, nella fascia sopra il soffitto.
  *
  * **Dentro il campo, non attorno.** La fascia fra il bordo e la linea tratteggiata del soffitto è
@@ -1236,6 +1270,64 @@ function _paintPyreFlames(ctx, pyre, cx) {
   }
 }
 
+/**
+ * L'Intruso: un cuneo di metallo con una bocca accesa davanti.
+ *
+ * **Disegnato in codice, non preso dal foglio degli sprite**, e non per mancanza di un disegno: è
+ * l'unica cosa in campo che non è una creatura, e il modo in cui è fatto deve dirlo prima che si
+ * capisca che cos'è. Le cavalcature sono pixel dipinti a mano con cinquantatré colori; questo è
+ * geometria con quattro.
+ *
+ * La **bocca** è la parte che conta, perché è lì che si abbatte: sta davanti, a metà altezza, ed è
+ * l'unica cosa accesa del disegno. Chi guarda deve poterla mirare senza sapere la regola.
+ *
+ * Il cuneo si assottiglia verso la coda, così il muso si legge da solo e non serve una freccia
+ * appiccicata sopra per dire da che parte guarda. Specchiato quando va a sinistra, come tutto il
+ * resto del gioco.
+ */
+function _paintIntruder(ctx, intruso, cx) {
+  const w = px(INTRUDER.w);
+  const h = px(INTRUDER.h);
+  const midY = px(intruso.y);
+  const verso = intruso.facing < 0 ? -1 : 1;
+  const muso = cx + (w / 2) * verso;
+  const coda = cx - (w / 2) * verso;
+
+  // Lo scafo, colonna per colonna: alto al muso e sottile in coda. `1 - t*t` invece di `1 - t` fa
+  // un cuneo con la pancia, non un triangolo — un triangolo a questa misura legge come una freccia,
+  // e una freccia è un simbolo, non un oggetto.
+  for (let i = 0; i <= w; i += 1) {
+    const t = i / w;                                 // 0 al muso, 1 in coda
+    const alta = Math.max(2, Math.round(h * (1 - t * t * 0.72)));
+    const x = Math.round(muso - verso * i);
+    ctx.fillStyle = PAINT.hull;
+    ctx.fillRect(x, midY - Math.floor(alta / 2), 1, alta);
+    // Un filo chiaro in cima e uno scuro sotto: due righe e il cuneo smette di essere una macchia.
+    ctx.fillStyle = PAINT.hullLit;
+    ctx.fillRect(x, midY - Math.floor(alta / 2), 1, 1);
+    ctx.fillStyle = PAINT.hullDark;
+    ctx.fillRect(x, midY + Math.ceil(alta / 2) - 1, 1, 1);
+  }
+
+  // **La bocca.** Tre pixel di altezza, accesi, esattamente alla quota che la regola confronta: è
+  // il bersaglio, e il bersaglio si vede.
+  ctx.fillStyle = PAINT.intake;
+  ctx.fillRect(muso - (verso > 0 ? 3 : 0), midY - 2, 4, 5);
+  ctx.fillStyle = PAINT.meltFlash;
+  ctx.fillRect(muso - (verso > 0 ? 2 : 0), midY - 1, 2, 3);
+
+  // La scia dietro, che pulsa. Serve a dire **quanto va veloce**: senza, un cuneo che attraversa lo
+  // schermo in tre secondi si legge come un cuneo che scivola.
+  if (!calm) {
+    const soffio = 2 + Math.round(1.5 + 1.5 * Math.sin(_now * 22));
+    ctx.fillStyle = PAINT.meltGlow;
+    ctx.fillRect(coda + (verso > 0 ? 0 : -soffio), midY - 1, soffio, 2);
+    ctx.fillStyle = PAINT.meltHot;
+    ctx.fillRect(coda + (verso > 0 ? 0 : -Math.max(1, soffio - 2)), midY,
+      Math.max(1, soffio - 2), 1);
+  }
+}
+
 function _paintPilot(ctx, pilot, cx) {
   const { rows: sprite, anchor, eye } = _frameOf(pilot);
   const flip = pilot.facing < 0;
@@ -1550,12 +1642,22 @@ export function draw(canvas, world) {
     _wrapped(px(body.x), (x) => _paintPilot(ctx, body, x));
   }
 
+  // Gli Intrusi sopra le cavalcature: attraversano le piattaforme e vanno più veloci di tutto il
+  // resto, e una cosa che passa davanti si legge come una cosa che passa davanti.
+  for (const intruso of world.intrusi || []) {
+    _wrapped(px(intruso.x), (x) => _paintIntruder(ctx, intruso, x));
+  }
+
   // The marks last, over everyone: a rule you cannot read while it happens is unfair with correct
   // code behind it.
   for (const body of [...(world.foes || []), ...world.pilots]) {
     if (!body.alive) continue;
     _wrapped(px(body.x), (x) => _paintReach(ctx, body, x));
   }
+
+  // I premi sopra tutto quello che si muove, e sotto la barra: sono il tramite fra le due cose —
+  // un numero che nasce in campo e finisce nel totale in cima.
+  _paintPops(ctx, world);
 
   _paintHud(ctx, world);
 

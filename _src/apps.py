@@ -609,7 +609,7 @@ APPS = [
         "order": 3,
         "tags": ["svago"],
         "stato": "bozza",
-        "version": "0.40.0",
+        "version": "0.41.0",
         "released": "2026-08-14",
         "updated": "2026-08-14",
         "licence": "Apache-2.0",

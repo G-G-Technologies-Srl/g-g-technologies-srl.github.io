@@ -13,9 +13,10 @@
 
 import {
   FIELD, CEILING, MELT, STEP, PIXEL, PILOT, SPRITE, PLATFORMS, PADS, DECK, BOUNDS, TIE, FOE,
-  KINDS, KIND_NAMES, FRENZY, HUNT, CELLA, CELL_POINTS, DOWNS, PROMOTION, LIVES, EXTRA_FIRST, SHIELD,
+  KINDS, KIND_NAMES, FRENZY, HUNT, CELLA, CELL_POINTS, DOWNS, PROMOTION, LIVES, EXTRA_FIRST,
+  SHIELD, INTRUDER,
   create, newGame, step, decks, deltaX, lanceTip, makePilot, makeFoe, bodies, hunting,
-  startWave, cleared, hatchTime,
+  startWave, cleared, hatchTime, makeIntruder, callAt, mouth,
 } from "../run/game.js";
 import { resolve } from "../run/terrain.js";
 import { WAVE } from "../run/waves.js";
@@ -917,6 +918,160 @@ function svuota(world) {
 }
 
 // -----------------------------------------------------------------------------------------------------------------
+//  l ' i n t r u s o
+// -----------------------------------------------------------------------------------------------------------------
+
+console.log("\nl'Intruso");
+
+{
+  // I due orologi del richiamo: il primo lungo, poi intervalli che si accorciano fino a dieci.
+  check("il primo richiamo è a quarantacinque secondi, trenta dalla terza ondata",
+    callAt(1, 0) === INTRUDER.firstEarly && callAt(2, 0) === INTRUDER.firstEarly
+      && callAt(3, 0) === INTRUDER.firstLate,
+    `${callAt(1, 0)} / ${callAt(3, 0)}`);
+
+  const scarti = [];
+  for (let i = 0; i < 8; i += 1) scarti.push(callAt(5, i + 1) - callAt(5, i));
+  check("poi gli intervalli si accorciano e si fermano a dieci",
+    JSON.stringify(scarti) === JSON.stringify([25, 18, 14, 12, 10, 10, 10, 10]),
+    JSON.stringify(scarti));
+  check("e non risalgono mai",
+    scarti.every((s, i) => i === 0 || s <= scarti[i - 1]));
+}
+
+{
+  // **Arriva davvero, e da sopra.** Un velivolo che entra da un bordo, su un campo che si avvolge,
+  // comparirebbe in mezzo al campo di qualcuno.
+  const world = newGame(11, 1);
+  const io = world.pilots[0];
+  io.x = 300;
+  let quando = 0;
+  while (world.intrusi.length === 0 && quando < 120 * 90) {
+    step(world, [intent()]);
+    quando += 1;
+  }
+  const primo = world.intrusi[0];
+  check("il primo Intruso arriva quando l'orologio lo dice",
+    primo && Math.abs(quando / 120 - callAt(1, 0)) < 0.2, `${(quando / 120).toFixed(1)} s`);
+  check("e arriva dall'alto, lontano da chi gioca",
+    primo && primo.y <= CEILING + INTRUDER.h
+      && Math.abs(deltaX(io.x, primo.x)) > FIELD.w / 3,
+    primo && `y=${primo.y.toFixed(0)}, ${Math.abs(deltaX(io.x, primo.x)).toFixed(0)} unità`);
+}
+
+{
+  // **Lo sperone in bocca.** I due musi contro e le quote pari entro quattro unità: dentro quella
+  // finestra si abbatte, fuori si muore. Ed è una verifica che **precede** la regola dell'altezza.
+  const prova = (scarto, versoMio) => {
+    const world = newGame(11, 1);
+    world.intrusi = [makeIntruder(world, true)];
+    const intruso = world.intrusi[0];
+    const io = world.pilots[0];
+    io.guard = 0; io.alive = true; io.waiting = false; io.x = 400; io.y = 300;
+    io.vx = 0; io.vy = 0; io.grounded = false; io.facing = versoMio;
+    intruso.facing = -versoMio;
+    intruso.x = 400 + 10;
+    // La bocca sta al centro dell'Intruso; la punta dello sperone a `lanceRise` dal corpo.
+    intruso.y = lanceTip(io).y + scarto;
+    // **Un passo infinitesimo.** L'Intruso insegue la quota, quindi un passo intero lo sposta di
+    // quasi un'unità prima che il contatto venga risolto: una prova che mette la bocca a quattro
+    // unità esatte e poi lascia passare otto millesimi di secondo sta misurando 4,875, e accusa il
+    // codice di una tolleranza che ha la prova.
+    step(world, [intent()], 1e-6);
+    return { world, io, intruso };
+  };
+
+  const dentro = prova(0, 1);
+  check("con i musi contro e le quote pari, l'Intruso è abbattuto",
+    dentro.world.intrusi.length === 0 && dentro.io.alive && !dentro.io.waiting);
+  check("e vale duecentocinquanta",
+    dentro.io.score === INTRUDER.points, `${dentro.io.score}`);
+
+  // **Il bordo si prova poco dentro e poco fuori, non esattamente sopra.** Fra il momento in cui la
+  // prova posa i due corpi e il momento in cui il contatto viene risolto, l'Intruso ha inseguito la
+  // quota: la sua velocità verticale è applicata direttamente, quindi anche un passo da un
+  // milionesimo di secondo lo sposta di un decimillesimo. Una prova che pretende quattro unità
+  // esatte misura 4,000105 e boccia il codice per un'aritmetica che è della prova.
+  const dentro2 = prova(INTRUDER.tie - 0.2, 1);
+  check("appena dentro la tolleranza ci sta", dentro2.world.intrusi.length === 0);
+
+  const fuori = prova(INTRUDER.tie + 2, 1);
+  check("appena fuori no: si muore", fuori.world.intrusi.length === 1 && fuori.io.waiting);
+
+  // **Se non lo guardi, non lo colpisci.** E qui va detta una cosa che la prova ha fatto emergere:
+  // l'Intruso si gira **sempre** verso il giocatore più vicino, quindi la condizione dei due musi
+  // contro non è mai lui a romperla — è chi gioca. In pratica la regola dice: vagli incontro
+  // guardandolo, alla sua quota. La condizione sui musi resta scritta perché è quella giusta, non
+  // perché serva a fermare lui.
+  const voltato = prova(0, -1);
+  check("se non lo guardi, non lo colpisci: si muore",
+    voltato.world.intrusi.length === 1 && voltato.io.waiting,
+    `${voltato.world.intrusi.length} intrusi, aspetta=${voltato.io.waiting}`);
+}
+
+{
+  // **Azzera la frenesia.** È la valvola: un campo che si è scaldato si raffredda solo così.
+  const world = newGame(11, 1);
+  world.frenesia = FRENZY.max;
+  world.intrusi = [makeIntruder(world, true)];
+  const intruso = world.intrusi[0];
+  const io = world.pilots[0];
+  io.guard = 0; io.x = 400; io.y = 300; io.vx = 0; io.vy = 0; io.grounded = false; io.facing = 1;
+  intruso.facing = -1; intruso.x = 410; intruso.y = lanceTip(io).y;
+  step(world, [intent()]);
+  check("abbatterlo azzera la frenesia", world.frenesia === 0, `${world.frenesia}`);
+}
+
+{
+  // Il tetto: mai più di tre in volo, e i programmati ne lasciano sempre libero uno.
+  const world = newGame(11, 1);
+  world.intrusi = [makeIntruder(world), makeIntruder(world), makeIntruder(world)];
+  world.waveTime = 10000;
+  const prima = world.intrusi.length;
+  step(world, [intent()]);
+  check("col cielo pieno il richiamo aspetta",
+    world.intrusi.length === prima && world.called === 0, `${world.intrusi.length}`);
+}
+
+{
+  // **Vinta l'ondata se ne vanno**, e l'ondata successiva non comincia finché sono a schermo.
+  const world = newGame(11, 1);
+  world.intrusi = [makeIntruder(world, true)];
+  for (const foe of world.foes) { foe.alive = false; foe.done = true; }
+  world.celle = [];
+  step(world, [intent()]);
+  check("vinta l'ondata l'Intruso se ne va", world.intrusi[0].leaving > 0 || world.intrusi[0].going);
+  check("e l'ondata non è finita finché è a schermo", !cleared(world));
+
+  let passi = 0;
+  while (world.intrusi.length && passi < 120 * 10) { step(world, [intent()]); passi += 1; }
+  check("poi sparisce, e l'ondata è finita",
+    world.intrusi.length === 0 && cleared(world), `${(passi / 120).toFixed(1)} s`);
+}
+
+{
+  // Dopo una morte i **chiamati** se ne vanno entro cinque secondi; i **programmati** restano.
+  const world = newGame(11, 1);
+  world.intrusi = [makeIntruder(world, true), makeIntruder(world, false)];
+  const io = world.pilots[0];
+  io.guard = 0; io.grounded = false; io.x = 300; io.y = MELT - PILOT.h / 2 + 4; io.vy = 200;
+  step(world, [intent()]);
+  check("dopo una morte il chiamato se ne va",
+    world.intrusi[0].leaving > 0 && Math.abs(world.intrusi[0].leaving - INTRUDER.leaveAfterDeath)
+      < 0.05, `${world.intrusi[0].leaving.toFixed(2)} s`);
+  check("e il programmato resta", world.intrusi[1].leaving === 0 && !world.intrusi[1].going);
+}
+
+{
+  // Non lo si semina: è più veloce di una cavalcatura, e di parecchio.
+  check("l'Intruso è più veloce di un dodo a tutta",
+    INTRUDER.speed > PILOT.maxSpeed, `${INTRUDER.speed} contro ${PILOT.maxSpeed}`);
+  // Ma insegue la quota molto più piano: quella lentezza è la finestra per andargli incontro.
+  check("ma insegue la quota molto più piano di quanto si sposti",
+    INTRUDER.climb < INTRUDER.speed / 3, `${INTRUDER.climb} contro ${INTRUDER.speed}`);
+}
+
+// -----------------------------------------------------------------------------------------------------------------
 //  l o   s c u d o   d i   f u o c o
 // -----------------------------------------------------------------------------------------------------------------
 
@@ -1064,6 +1219,17 @@ console.log("\nlo scudo di fuoco");
   }
   check("quando si stacca, il corpo resta senza",
     trovato !== null && trovato.pyres[0].headless === true);
+
+  // **Il colpo netto paga cinquecento**, e li paga a chi l'ha dato. Con l'annuncio: un numero che
+  // vola via dal punto in cui è successo, che è l'unico modo in cui questo gioco dice una cosa
+  // dentro il campo — la barra in cima è cifre e icone, e nel campo non c'è una parola.
+  check("e il colpo netto paga cinquecento",
+    trovato.pilots[0].score === KINDS.deriva.points + SHIELD.bonus,
+    `${trovato.pilots[0].score}`);
+  check("con un numero che vola via dal punto in cui è successo",
+    trovato.pops.length === 1 && trovato.pops[0].points === SHIELD.bonus
+      && Math.abs(trovato.pops[0].x - trovato.pyres[0].x) < 1,
+    `${trovato.pops.length} numeri`);
   check("e dal collo zampilla", trovato.pyres[0].bleeding === true);
 
   const testa = trovato.teste[0];
@@ -1190,6 +1356,11 @@ function muori(world, io) {
     `corpo a ${world.pyres[0].x.toFixed(0)}`);
   check("il corpo non ha una classe: è il cavaliere, non un nemico",
     world.pyres[0].kind === null);
+  // **Perdere la testa nella colata non paga nessuno**, e non è una dimenticanza: sarebbe il gioco
+  // che ti premia per essere morto.
+  check("e se la testa salta a te, nessuno incassa niente",
+    world.pilots[0].score === 0 && world.pops.length === 0,
+    `${world.pilots[0].score} punti, ${world.pops.length} numeri`);
 
   // **Non rientra subito: aspetta.** Rientrare mentre il corpo di prima brucia ancora mette due
   // cavalieri in campo, uno vivo e uno che muore, e non c'è modo di leggerlo come una cosa sola.

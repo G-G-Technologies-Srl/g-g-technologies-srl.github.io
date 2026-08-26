@@ -468,9 +468,82 @@ export const SHIELD = {
   // colpo, che è quello che è successo.
   kick: 170,
   toss: 120,
+  // **Il premio del colpo netto.** Quando lo scudo stacca la testa, chi l'ha dato incassa
+  // cinquecento punti: il doppio di un Intruso, e quanto un'ondata di Sopravvivenza finita senza
+  // morire.
+  //
+  // Che sia tanto è voluto, e regge perché **è raro due volte**: succede solo con lo scudo, che
+  // torna ogni tredici secondi, e dentro a quello una volta su tre. Su un'ondata da novanta secondi
+  // sono due colpi buoni se tutto va bene, cioè un premio che si sente e non una strategia.
+  //
+  // Non si annuncia con una parola. Il campo di questo gioco **non ha testo** — la barra è cifre e
+  // icone apposta, così non ci sono due lingue da tenere allineate — e il punteggio che vola via dal
+  // punto in cui è successo dice la stessa cosa nel vocabolario che il gioco ha già.
+  bonus: 500,
+  // Quanto dura il numero che sale, in secondi.
+  pop: 1.3,
+
   // Quanto gira mentre rotola, in quarti di giro per unità percorsa. Ricavato guardando: a un giro
   // ogni ottanta unità la testa sembra scivolare, a uno ogni venti sembra un trapano.
   roll: 1 / 44,
+};
+
+/**
+ * L'Intruso: il velivolo autonomo che entra quando l'ondata si trascina.
+ *
+ * **Non è un nemico in più, è un orologio.** Gli altri li affronti quando vuoi; questo arriva
+ * perché ci stai mettendo troppo, e arriva sempre più spesso. È l'unica cosa nel gioco che ti
+ * chiede di sbrigarti, e senza di lei un giocatore prudente potrebbe restare in aria a tempo
+ * indeterminato — che è il modo in cui questo genere si rompe.
+ *
+ * **Non è una creatura**, ed è per questo che si disegna in codice invece di venire dal foglio
+ * degli sprite: le cavalcature sono disegnate a mano, questo è geometria. La differenza si vede
+ * prima ancora di capire che cos'è, e dice la cosa giusta — non lo si spegne per fare punti, lo si
+ * toglie di mezzo.
+ *
+ * **Si abbatte con lo sperone in bocca**, e questa verifica **precede** la regola dell'altezza e la
+ * scavalca. Senza, un colpo perfettamente in quota sarebbe insieme un abbattimento e un rimbalzo, e
+ * quale dei due vincesse sarebbe indefinito — cioè deciso dall'ordine di due `if`.
+ */
+export const INTRUDER = {
+  points: 250,
+
+  // Più veloce di una cavalcatura, e di parecchio: 340 è il tetto di un dodo. Non lo si semina, lo
+  // si affronta o lo si evita — che è la differenza fra una minaccia e una tassa.
+  speed: 420,
+  // Quanto insegue in verticale, al secondo. Molto meno di quanto vada in orizzontale: sale e
+  // scende piano, e quella lentezza è la finestra in cui gli si va incontro alla sua quota.
+  climb: 105,
+
+  // La tolleranza dell'abbattimento: la punta dello sperone contro la bocca, entro quattro unità.
+  // È meno della metà della fascia del pari fra due cavalcature, e deve esserlo: quello è un duello
+  // che si può pareggiare, questo è un colpo che si azzecca.
+  tie: 4,
+
+  // La scatola. Largo e basso, come un velivolo: la bocca sta davanti, al centro dell'altezza.
+  w: 96,
+  h: 44,
+
+  // Quanti in volo insieme, programmati compresi. I programmati sono al massimo due, quindi resta
+  // sempre posto per uno di richiamo — ed è quella la valvola della frenesia.
+  most: 3,
+
+  // **I due orologi del richiamo.** Il primo dopo quarantacinque secondi nelle prime due ondate,
+  // trenta dalla terza; poi gli intervalli si accorciano fino a dieci e lì restano.
+  //
+  // I numeri stanno insieme al § 3.10 del piano: con nove nemici la caccia è al completo a centoventi
+  // secondi, ed è lì che gli intervalli sono già scesi a dieci. La forma voluta di un'ondata è
+  // trenta secondi per orientarsi, da trenta a novanta la partita vera, oltre i centoventi una
+  // pressione che ti spinge a chiudere — e questa è la parte di quella pressione che si vede.
+  firstEarly: 45,
+  firstLate: 30,
+  gaps: [25, 18, 14, 12, 10],
+
+  // Dopo una morte i richiamati se ne vanno entro cinque secondi. I programmati restano: sono parte
+  // dell'ondata, non una penale per la lentezza.
+  leaveAfterDeath: 5,
+  // Quanto sale al secondo mentre se ne va, finché non è fuori dal campo.
+  rise: 260,
 };
 
 /**
@@ -724,6 +797,36 @@ export function makeCella(world, foe) {
 }
 
 /**
+ * Un Intruso che entra in campo.
+ *
+ * **Arriva da sopra il soffitto**, non da un bordo. Il campo si avvolge in orizzontale, quindi un
+ * bordo non c'è: entrare «da destra» vorrebbe dire comparire in mezzo al campo di qualcuno. Da
+ * sopra invece si vede arrivare — scende dentro la fascia di volo — e nessuno se lo trova addosso
+ * senza averlo visto scendere.
+ *
+ * E arriva **il più lontano possibile da chi gioca**, per la stessa ragione: la sorpresa non è un
+ * modo onesto di mettere pressione, e la pressione questo velivolo la mette già con l'orologio.
+ */
+export function makeIntruder(world, called = true) {
+  const preda = world.pilots.find((p) => p.alive);
+  const lontano = preda ? (preda.x + FIELD.w / 2) % FIELD.w : FIELD.w / 2;
+  return {
+    x: lontano,
+    y: CEILING - INTRUDER.h,
+    vx: 0,
+    vy: 0,
+    // Il muso, e non la direzione in cui va: la bocca è quella, e l'abbattimento la confronta.
+    facing: 1,
+    alive: true,
+    // Chiamato dall'orologio, o previsto dall'ondata. Cambia solo una cosa, e alla fine: dopo una
+    // morte i chiamati se ne vanno, i programmati restano.
+    called,
+    // Quanti secondi ancora prima di andarsene, o zero se non se ne sta andando.
+    leaving: 0,
+  };
+}
+
+/**
  * A pad with nothing near it, or the fallback.
  *
  * `clear` is generous on purpose: appearing next to something is how a player loses a life to a
@@ -797,6 +900,17 @@ export function create(seed = 1, players = 1, foes = 0) {
     // ondata, che dipende dal tipo.
     plan: null,
     speed: 1,
+    // I punteggi che volano via: numeri che salgono dal punto in cui è successo qualcosa e
+    // sfumano. Non sono corpi e nessuna regola li vede — esistono solo perché un premio che non si
+    // vede è un premio che non c'è.
+    pops: [],
+    // Gli Intrusi in volo, e i due contatori del richiamo: da quanto dura l'ondata, e quanti ne sono
+    // già stati chiamati. Il tempo dell'ondata non è `world.time` — quello non si azzera mai — e la
+    // differenza si vede alla seconda ondata, dove col tempo assoluto il primo richiamo arriverebbe
+    // nell'istante in cui l'ondata comincia.
+    intrusi: [],
+    waveTime: 0,
+    called: 0,
     // I corpi in fiamme, che non sono più nemici e non sono ancora niente: cadono, rimbalzano e si
     // consumano. Stanno in un elenco a parte perché nessuna regola deve vederli — non combattono,
     // non si raccolgono, non tornano. E le teste che ogni tanto si staccano da loro, che sono la
@@ -851,6 +965,10 @@ export function startWave(world, roster) {
   world.pyres = [];
   world.teste = [];
   world.foes = [];
+  world.intrusi = [];
+  world.pops = [];
+  world.waveTime = 0;
+  world.called = 0;
 
   // **Senza elenco decide il generatore.** Con un elenco lo decide chi chiama, ed è come lavorano i
   // controlli: `test/physics.mjs` vuole un campo con dentro esattamente un Segugio, non l'ondata
@@ -866,6 +984,7 @@ export function startWave(world, roster) {
       world.foes.push(makeFoe(i, freePad(world), KIND_NAMES[livello] || KIND_NAMES[0]));
     });
     _seedCells(world, piano.cells);
+    for (let i = 0; i < piano.intruders; i += 1) world.intrusi.push(makeIntruder(world, false));
     return world;
   }
 
@@ -933,10 +1052,10 @@ function _seedCells(world, classi) {
  * questa non è «nessuno vola», è «non resta niente da fare».
  */
 export function cleared(world) {
-  return (world.foes || []).every((foe) => foe.done)
-    && !(world.celle || []).some((cella) => cella.alive)
+  return _won(world)
     && !(world.pyres || []).length
-    && !(world.teste || []).length;
+    && !(world.teste || []).length
+    && !(world.intrusi || []).length;
 }
 
 /**
@@ -1012,18 +1131,34 @@ export function step(world, intents, dt = STEP) {
   _stepCelle(world, ledges, dt);
   _stepPyres(world, ledges, dt);
   _stepHeads(world, ledges, dt);
+  _stepIntruders(world, dt);
+  _stepPops(world, dt);
   _waitOut(world);
   // After everyone has moved, and never during. Settling a fight inside the movement loop means the
   // body that happens to be stepped first is the one whose position the rule reads — so the same
   // pass would be won or lost depending on the order of an array.
   _fights(world);
+  // L'Intruso dopo il duello e prima della raccolta: la sua verifica **scavalca** la regola
+  // dell'altezza, quindi non può stare dentro `_fights` — là dentro sarebbe un caso particolare
+  // dentro la regola che pretende di non averne.
+  _raids(world);
   // La raccolta dopo il duello, e non prima: un passaggio che spegne un nemico lascia una cella
   // **in questo stesso passo**, e quella cella è addosso a chi l'ha appena fatta. Raccogliendo
   // prima, la cella nata da un abbattimento aspetterebbe un passo intero prima di poter essere
   // presa — un sessantesimo di secondo in cui il dodo l'ha già oltrepassata a tutta velocità.
   _collects(world);
   world.celle = world.celle.filter((cella) => cella.alive);
+  // Vinta l'ondata gli Intrusi se ne vanno, e `cleared` li aspetta: l'ondata successiva non deve
+  // cominciare mentre uno di loro è ancora a schermo, o il campo nuovo nascerebbe con dentro un
+  // pezzo di quello vecchio.
+  if (_won(world)) _dismiss(world, false);
   return world;
+}
+
+/** L'ondata è vinta: né nemici né celle. Quello che resta a schermo è scenografia. */
+function _won(world) {
+  return (world.foes || []).every((foe) => foe.done)
+    && !(world.celle || []).some((cella) => cella.alive);
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -1506,6 +1641,7 @@ function _settle(world, a, b) {
     };
   } else {
     _return(world, loser);
+    _dismiss(world, true);
     world.last = { kind: "perso", at: world.time };
   }
 }
@@ -1586,7 +1722,7 @@ function _burn(world, foe, by) {
   foe.done = true;
   foe.downs += 1;
   if (by && !by.foe) _pay(by, (KINDS[foe.kind] || KINDS.deriva).points);
-  _ashes(world, foe, false);
+  _ashes(world, foe, false, by);
   world.last = {
     kind: "bruciato", at: world.time, classe: foe.kind,
     points: (KINDS[foe.kind] || KINDS.deriva).points, who: by ? by.index : null,
@@ -1607,7 +1743,12 @@ function _burn(world, foe, by) {
  * cavaliere, ed è lo stesso motivo per cui in cima allo schermo le vite sono la sua testa: in
  * mezzo a tre nemici, quello che ti riguarda si riconosce senza leggere niente.
  */
-function _ashes(world, body, mio) {
+function _ashes(world, body, mio, by = null) {
+  // Dopo una morte i richiamati se ne vanno entro cinque secondi. I programmati restano: sono parte
+  // dell'ondata, non una penale per la lentezza — e rientrare in un cielo che si è appena svuotato
+  // per compassione sarebbe una compassione che il gioco non ha.
+  if (mio) _dismiss(world, true);
+
   // Il tiro **prima** e sempre, anche quando la testa non salta: chiamare il generatore solo a
   // volte renderebbe la sequenza dipendente da quante teste sono già saltate, e due partite con lo
   // stesso seme divergerebbero al primo scudo.
@@ -1644,6 +1785,16 @@ function _ashes(world, body, mio) {
   });
 
   if (!decapitato) return;
+
+  // **Il premio del colpo netto**, e solo a chi l'ha dato: la testa che salta al giocatore che
+  // affonda nella colata non paga nessuno, e non è una dimenticanza — sarebbe il gioco che ti
+  // premia per essere morto.
+  if (by && !by.foe) {
+    _pay(by, SHIELD.bonus);
+    _pop(world, body.x, body.y - PILOT.h / 2, SHIELD.bonus, by.index);
+    world.last = { kind: "netto", at: world.time, points: SHIELD.bonus, who: by.index };
+  }
+
   world.teste.push({
     mine: mio,
     kind: mio ? null : body.kind,
@@ -1677,6 +1828,17 @@ function _stepHeads(world, ledges, dt) {
     if (!testa.sinking) testa.spin += Math.abs(testa.vx) * dt * SHIELD.roll;
   }
   world.teste = world.teste.filter((testa) => testa.alive);
+}
+
+/** Un punteggio che vola via dal punto in cui è stato guadagnato. */
+function _pop(world, x, y, points, who) {
+  world.pops.push({ x, y, points, who, left: SHIELD.pop });
+}
+
+/** I punteggi che volano via: salgono e si consumano. Nessuna regola li guarda. */
+function _stepPops(world, dt) {
+  for (const pop of world.pops) pop.left -= dt;
+  world.pops = world.pops.filter((pop) => pop.left > 0);
 }
 
 /** I corpi in fiamme, mossi di un passo: cadono, rimbalzano, non si posano, sprofondano. */
@@ -1734,6 +1896,166 @@ function _fall(cosi, profilo, ledges, dt) {
       cosa.vx = verso * SHIELD.slide;
       cosa.grounded = false;
     }
+  }
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  l ' i n t r u s o
+// -----------------------------------------------------------------------------------------------------------------
+
+/** Il giocatore vivo più vicino, senza limite di distanza. */
+function _nearestPilot(world, from) {
+  let best = null;
+  let near = Infinity;
+  for (const pilot of world.pilots) {
+    if (!pilot.alive) continue;
+    const span = Math.hypot(deltaX(from.x, pilot.x), from.y - pilot.y);
+    if (span < near) { near = span; best = pilot; }
+  }
+  return best;
+}
+
+/** Dove sta la bocca di un Intruso: davanti, a metà altezza. È quello che lo sperone deve trovare. */
+export function mouth(intruso) {
+  return { x: intruso.x + (INTRUDER.w / 2) * intruso.facing, y: intruso.y };
+}
+
+/**
+ * Fra quanti secondi dall'inizio dell'ondata arriva il richiamo numero `quanti + 1`.
+ *
+ * Il primo è lungo — quarantacinque secondi, trenta dalla terza ondata — e poi gli intervalli si
+ * accorciano fino a dieci e lì restano. È l'unica cosa nel gioco che accelera da sola.
+ */
+export function callAt(wave, quanti) {
+  const primo = wave <= 2 ? INTRUDER.firstEarly : INTRUDER.firstLate;
+  let quando = primo;
+  for (let i = 0; i < quanti; i += 1) {
+    quando += INTRUDER.gaps[Math.min(i, INTRUDER.gaps.length - 1)];
+  }
+  return quando;
+}
+
+/**
+ * Gli Intrusi, mossi di un passo, e l'orologio del richiamo.
+ *
+ * Il volo è semplice apposta: va dritto verso il giocatore più vicino per la via più corta, e
+ * insegue la sua quota molto più piano di quanto si muova in orizzontale. Quella lentezza verticale
+ * **è** la finestra in cui gli si va incontro alla sua quota, cioè l'unico modo di abbatterlo: un
+ * velivolo che si mettesse subito alla tua altezza non sarebbe affrontabile, sarebbe solo da
+ * schivare.
+ *
+ * Non passa dal risolutore del terreno: **attraversa le piattaforme.** Nascondersi sotto un ripiano
+ * funzionerebbe troppo bene contro la cosa che serve a non farti stare fermo.
+ */
+function _stepIntruders(world, dt) {
+  world.waveTime = (world.waveTime || 0) + dt;
+
+  // Il richiamo. Uno per volta, e mai oltre il tetto: se il cielo è pieno l'orologio aspetta invece
+  // di saltare il turno, o una partita affollata smetterebbe di mettere pressione proprio quando ne
+  // ha più bisogno.
+  if (world.intrusi.length < INTRUDER.most
+      && world.waveTime >= callAt(world.wave, world.called)
+      && world.pilots.some((p) => p.alive)) {
+    world.called += 1;
+    world.intrusi.push(makeIntruder(world, true));
+  }
+
+  for (const intruso of world.intrusi) {
+    if (intruso.leaving > 0) {
+      intruso.leaving = Math.max(0, intruso.leaving - dt);
+      if (intruso.leaving === 0) intruso.going = true;
+    }
+
+    if (intruso.going) {
+      // Se ne va per dove è arrivato, e sparisce sopra il soffitto.
+      intruso.y -= INTRUDER.rise * dt;
+      intruso.x += intruso.vx * dt;
+      wrapX(intruso);
+      if (intruso.y + INTRUDER.h < 0) intruso.alive = false;
+      continue;
+    }
+
+    // **Non usa `_prey`**, che si ferma a `FOE.notice`: un velivolo che ti nota solo da vicino non è
+    // un orologio, è un altro nemico. Questo ti trova da qualunque punto del campo, ed è il punto.
+    const preda = _nearestPilot(world, intruso);
+    if (preda) {
+      const verso = Math.sign(deltaX(intruso.x, preda.x)) || intruso.facing;
+      intruso.facing = verso;
+      intruso.vx = verso * INTRUDER.speed;
+      intruso.vy = Math.sign(preda.y - intruso.y) * INTRUDER.climb;
+    } else {
+      intruso.vx = intruso.facing * INTRUDER.speed;
+      intruso.vy = 0;
+    }
+
+    intruso.x += intruso.vx * dt;
+    intruso.y += intruso.vy * dt;
+    wrapX(intruso);
+    // Dentro la fascia di volo, come tutti: sopra il soffitto e sopra il metallo.
+    intruso.y = Math.max(CEILING + INTRUDER.h / 2,
+      Math.min(MELT - INTRUDER.h / 2, intruso.y));
+  }
+
+  world.intrusi = world.intrusi.filter((i) => i.alive);
+}
+
+/**
+ * L'Intruso contro un giocatore: lo sperone in bocca, o niente.
+ *
+ * **I due musi contro, e le quote pari entro quattro unità.** I musi e non le velocità: si può
+ * abbattere anche stando fermi, se lui arriva dalla parte giusta e tu guardi verso di lui. Quello
+ * che conta è dove punta lo sperone, ed è la stessa cosa che conta in tutto il resto del gioco.
+ *
+ * Fuori da quella finestra il contatto lo vinci mai: il velivolo non ha una quota da confrontare,
+ * ha una bocca. È l'unico punto in cui la regola dell'altezza non decide, insieme allo scudo.
+ */
+function _raids(world) {
+  for (const intruso of world.intrusi) {
+    if (intruso.going || intruso.leaving > 0) continue;
+    for (const pilot of world.pilots) {
+      if (!pilot.alive || pilot.guard > 0) continue;
+      if (Math.abs(deltaX(pilot.x, intruso.x)) >= (PILOT.w + INTRUDER.w) / 2) continue;
+      if (Math.abs(pilot.y - intruso.y) >= (PILOT.h + INTRUDER.h) / 2) continue;
+
+      // Lo scudo di fuoco lo brucia come brucia tutto il resto: è una seconda regola, e vale anche
+      // qui, o sarebbe una seconda regola con un'eccezione.
+      const colpito = pilot.shield > 0
+        || (pilot.facing === -intruso.facing
+          && Math.abs(lanceTip(pilot).y - mouth(intruso).y) <= INTRUDER.tie);
+
+      if (colpito) {
+        intruso.alive = false;
+        _pay(pilot, INTRUDER.points);
+        // **Azzera la frenesia.** È la valvola: un campo che si è scaldato si raffredda soltanto
+        // così, ed è la ragione per cui il tetto di tre lascia sempre un posto libero.
+        world.frenesia = 0;
+        world.last = {
+          kind: "intruso", at: world.time, points: INTRUDER.points, who: pilot.index,
+        };
+      } else {
+        _ashes(world, pilot, true);
+        pilot.alive = false;
+        pilot.waiting = true;
+        world.last = { kind: "perso", at: world.time, who: pilot.index };
+      }
+      break;
+    }
+  }
+  world.intrusi = world.intrusi.filter((i) => i.alive);
+}
+
+/**
+ * Gli Intrusi se ne vanno: quando l'ondata è vinta, e i chiamati dopo una morte.
+ *
+ * «Quando l'ondata è vinta» vuol dire **né nemici né celle**, e non «appena l'ultimo nemico è
+ * spento» — che è impossibile, perché spegnere un nemico produce una cella. Scritta così, la
+ * condizione non si sarebbe verificata mai e la regola sarebbe stata soltanto una descrizione.
+ */
+function _dismiss(world, morte = false) {
+  for (const intruso of world.intrusi) {
+    if (intruso.going || intruso.leaving > 0) continue;
+    if (morte && !intruso.called) continue;
+    intruso.leaving = morte ? INTRUDER.leaveAfterDeath : 0.001;
   }
 }
 
