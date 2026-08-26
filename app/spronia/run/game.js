@@ -489,21 +489,32 @@ export const SHIELD = {
 };
 
 /**
- * L'Intruso: il velivolo autonomo che entra quando l'ondata si trascina.
+ * L'Intruso: la palla di fuoco che sale dalla colata quando l'ondata si trascina.
  *
  * **Non è un nemico in più, è un orologio.** Gli altri li affronti quando vuoi; questo arriva
  * perché ci stai mettendo troppo, e arriva sempre più spesso. È l'unica cosa nel gioco che ti
  * chiede di sbrigarti, e senza di lei un giocatore prudente potrebbe restare in aria a tempo
  * indeterminato — che è il modo in cui questo genere si rompe.
  *
- * **Non è una creatura**, ed è per questo che si disegna in codice invece di venire dal foglio
- * degli sprite: le cavalcature sono disegnate a mano, questo è geometria. La differenza si vede
- * prima ancora di capire che cos'è, e dice la cosa giusta — non lo si spegne per fare punti, lo si
- * toglie di mezzo.
+ * **Era un velivolo, ed è stata la scelta sbagliata.** Una macchina a quarantotto pixel ha bisogno
+ * di dettaglio interno — cabina, pannelli, pinne — e quello lo dà una mano che disegna, non una
+ * formula: quello che usciva era un cuneo grigio-blu dello stesso colore della roccia sotto le
+ * piattaforme, e in partita l'ha detto un giocatore vero, «è uscito un oggetto volante che mi ha
+ * incendiato, non si capisce cosa sia».
  *
- * **Si abbatte con lo sperone in bocca**, e questa verifica **precede** la regola dell'altezza e la
+ * Il fuoco no. Il fuoco è **movimento**, e il movimento è la cosa che il codice fa meglio di un
+ * disegno fermo: le lingue, i lapilli a parabola, la rampa di colori della colata erano già scritti
+ * e già provati. E sta nella finzione invece di esserne un orfano — il pavimento è metallo fuso, e
+ * una cosa che esce dal calore quando perdi tempo appartiene a questo mondo.
+ *
+ * **Si abbatte colpendone il cuore**, e questa verifica **precede** la regola dell'altezza e la
  * scavalca. Senza, un colpo perfettamente in quota sarebbe insieme un abbattimento e un rimbalzo, e
- * quale dei due vincesse sarebbe indefinito — cioè deciso dall'ordine di due `if`.
+ * quale dei due vincesse lo deciderebbe l'ordine di due `if`.
+ *
+ * Il cuore è al centro, ed è metà del motivo per cui la palla è meglio del velivolo: la bocca di un
+ * cuneo era un punto qualunque su una sagoma, e serviva un segno appiccicato sopra per dire che era
+ * quello. Il cuore di una palla di fuoco è dove l'occhio va da solo — e sta esattamente alla quota
+ * che la regola confronta.
  */
 export const INTRUDER = {
   points: 250,
@@ -520,9 +531,11 @@ export const INTRUDER = {
   // che si può pareggiare, questo è un colpo che si azzecca.
   tie: 4,
 
-  // La scatola. Largo e basso, come un velivolo: la bocca sta davanti, al centro dell'altezza.
-  w: 96,
-  h: 44,
+  // La scatola, tonda: cinquantasei per cinquantasei. Il cuneo era novantasei di larghezza, cioè un
+  // bersaglio largo quanto una piattaforma corta e alto la metà di un dodo — si finiva addosso
+  // all'Intruso senza averlo mai puntato. Una palla è più piccola e più onesta.
+  w: 56,
+  h: 56,
 
   // Quanti in volo insieme, programmati compresi. I programmati sono al massimo due, quindi resta
   // sempre posto per uno di richiamo — ed è quella la valvola della frenesia.
@@ -542,7 +555,7 @@ export const INTRUDER = {
   // Dopo una morte i richiamati se ne vanno entro cinque secondi. I programmati restano: sono parte
   // dell'ondata, non una penale per la lentezza.
   leaveAfterDeath: 5,
-  // Quanto sale al secondo mentre se ne va, finché non è fuori dal campo.
+  // Quanto sale al secondo: mentre entra, e mentre se ne va.
   rise: 260,
 };
 
@@ -906,20 +919,24 @@ export function makeCella(world, foe) {
 /**
  * Un Intruso che entra in campo.
  *
- * **Arriva da sopra il soffitto**, non da un bordo. Il campo si avvolge in orizzontale, quindi un
- * bordo non c'è: entrare «da destra» vorrebbe dire comparire in mezzo al campo di qualcuno. Da
- * sopra invece si vede arrivare — scende dentro la fascia di volo — e nessuno se lo trova addosso
- * senza averlo visto scendere.
+ * **Sale dalla colata**, non da un bordo e non dal soffitto. Il campo si avvolge in orizzontale,
+ * quindi un bordo non c'è: entrare «da destra» vorrebbe dire comparire in mezzo al campo di
+ * qualcuno. E dal metallo è il posto giusto per una palla di fuoco — è la cosa che le sta sotto, ed
+ * è quella che si scalda mentre tu perdi tempo.
  *
- * E arriva **il più lontano possibile da chi gioca**, per la stessa ragione: la sorpresa non è un
- * modo onesto di mettere pressione, e la pressione questo velivolo la mette già con l'orologio.
+ * Finché è sotto il pelo del metallo non tocca nessuno e si vede come un punto che si gonfia sulla
+ * superficie: è il preavviso, e costa dieci righe al renderer. Una cosa che compare non si può
+ * evitare; una che si vede salire sì.
+ *
+ * E sale **il più lontano possibile da chi gioca**, per la stessa ragione: la sorpresa non è un
+ * modo onesto di mettere pressione, e la pressione questa palla la mette già con l'orologio.
  */
 export function makeIntruder(world, called = true) {
   const preda = world.pilots.find((p) => p.alive);
   const lontano = preda ? (preda.x + FIELD.w / 2) % FIELD.w : FIELD.w / 2;
   return {
     x: lontano,
-    y: CEILING - INTRUDER.h,
+    y: MELT + INTRUDER.h,
     vx: 0,
     vy: 0,
     // Il muso, e non la direzione in cui va: la bocca è quella, e l'abbattimento la confronta.
@@ -2304,9 +2321,16 @@ function _nearestPilot(world, from) {
   return best;
 }
 
-/** Dove sta la bocca di un Intruso: davanti, a metà altezza. È quello che lo sperone deve trovare. */
-export function mouth(intruso) {
-  return { x: intruso.x + (INTRUDER.w / 2) * intruso.facing, y: intruso.y };
+/**
+ * Il cuore di un Intruso: al centro. È quello che lo sperone deve trovare.
+ *
+ * Al centro e non davanti, e non è una semplificazione: era la bocca di un cuneo, cioè un punto
+ * qualunque su una sagoma, e per farlo capire serviva un segno appiccicato sopra. Il cuore di una
+ * palla di fuoco è la parte più chiara di una cosa che ha un dentro — l'occhio ci va da solo, e sta
+ * esattamente alla quota che questa funzione restituisce.
+ */
+export function core(intruso) {
+  return { x: intruso.x, y: intruso.y };
 }
 
 /**
@@ -2329,8 +2353,8 @@ export function callAt(wave, quanti) {
  *
  * Il volo è semplice apposta: va dritto verso il giocatore più vicino per la via più corta, e
  * insegue la sua quota molto più piano di quanto si muova in orizzontale. Quella lentezza verticale
- * **è** la finestra in cui gli si va incontro alla sua quota, cioè l'unico modo di abbatterlo: un
- * velivolo che si mettesse subito alla tua altezza non sarebbe affrontabile, sarebbe solo da
+ * **è** la finestra in cui gli si va incontro alla sua quota, cioè l'unico modo di abbatterlo: una
+ * palla che si mettesse subito alla tua altezza non sarebbe affrontabile, sarebbe solo da
  * schivare.
  *
  * Non passa dal risolutore del terreno: **attraversa le piattaforme.** Nascondersi sotto un ripiano
@@ -2364,7 +2388,13 @@ function _stepIntruders(world, dt) {
       continue;
     }
 
-    // **Non usa `_prey`**, che si ferma a `FOE.notice`: un velivolo che ti nota solo da vicino non è
+    // Finché è sotto il metallo sale e basta: non insegue, non tocca, si vede gonfiare.
+    if (intruso.y > MELT) {
+      intruso.y -= INTRUDER.rise * dt;
+      continue;
+    }
+
+    // **Non usa `_prey`**, che si ferma a `FOE.notice`: una palla che ti nota solo da vicino non è
     // un orologio, è un altro nemico. Questo ti trova da qualunque punto del campo, ed è il punto.
     const preda = _nearestPilot(world, intruso);
     if (preda) {
@@ -2395,12 +2425,12 @@ function _stepIntruders(world, dt) {
  * abbattere anche stando fermi, se lui arriva dalla parte giusta e tu guardi verso di lui. Quello
  * che conta è dove punta lo sperone, ed è la stessa cosa che conta in tutto il resto del gioco.
  *
- * Fuori da quella finestra il contatto lo vinci mai: il velivolo non ha una quota da confrontare,
+ * Fuori da quella finestra il contatto non lo vinci mai: la palla non ha una quota da confrontare,
  * ha una bocca. È l'unico punto in cui la regola dell'altezza non decide, insieme allo scudo.
  */
 function _raids(world) {
   for (const intruso of world.intrusi) {
-    if (intruso.going || intruso.leaving > 0) continue;
+    if (intruso.going || intruso.leaving > 0 || intruso.y > MELT) continue;
     for (const pilot of world.pilots) {
       if (!pilot.alive || pilot.guard > 0) continue;
       if (Math.abs(deltaX(pilot.x, intruso.x)) >= (PILOT.w + INTRUDER.w) / 2) continue;
@@ -2410,7 +2440,7 @@ function _raids(world) {
       // qui, o sarebbe una seconda regola con un'eccezione.
       const colpito = pilot.shield > 0
         || (pilot.facing === -intruso.facing
-          && Math.abs(lanceTip(pilot).y - mouth(intruso).y) <= INTRUDER.tie);
+          && Math.abs(lanceTip(pilot).y - core(intruso).y) <= INTRUDER.tie);
 
       if (colpito) {
         intruso.alive = false;

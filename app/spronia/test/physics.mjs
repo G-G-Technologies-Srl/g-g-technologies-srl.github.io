@@ -16,7 +16,7 @@ import {
   KINDS, KIND_NAMES, FRENZY, HUNT, CELLA, CELL_POINTS, DOWNS, PROMOTION, LIVES, EXTRA_FIRST,
   SHIELD, INTRUDER, CLAW,
   create, newGame, step, decks, deltaX, lanceTip, makePilot, makeFoe, bodies, hunting,
-  startWave, cleared, hatchTime, makeIntruder, callAt, mouth, clawPull,
+  startWave, cleared, hatchTime, makeIntruder, callAt, core, clawPull,
 } from "../run/game.js";
 import { resolve } from "../run/terrain.js";
 import { WAVE } from "../run/waves.js";
@@ -1147,8 +1147,10 @@ console.log("\nl'Intruso");
 }
 
 {
-  // **Arriva davvero, e da sopra.** Un velivolo che entra da un bordo, su un campo che si avvolge,
-  // comparirebbe in mezzo al campo di qualcuno.
+  // **Arriva davvero, e dal metallo.** Nasce sotto la colata e sale: un oggetto che entra da un
+  // bordo, su un campo che si avvolge, comparirebbe in mezzo al campo di qualcuno. Dal basso invece
+  // il preavviso c'è per costruzione — il punto che si gonfia sul pelo della lava si vede prima
+  // della palla.
   const world = newGame(11, 1);
   const io = world.pilots[0];
   io.x = 300;
@@ -1160,10 +1162,19 @@ console.log("\nl'Intruso");
   const primo = world.intrusi[0];
   check("il primo Intruso arriva quando l'orologio lo dice",
     primo && Math.abs(quando / 120 - callAt(1, 0)) < 0.2, `${(quando / 120).toFixed(1)} s`);
-  check("e arriva dall'alto, lontano da chi gioca",
-    primo && primo.y <= CEILING + INTRUDER.h
-      && Math.abs(deltaX(io.x, primo.x)) > FIELD.w / 3,
-    primo && `y=${primo.y.toFixed(0)}, ${Math.abs(deltaX(io.x, primo.x)).toFixed(0)} unità`);
+  check("e nasce sotto il metallo, lontano da chi gioca",
+    primo && primo.y > MELT && Math.abs(deltaX(io.x, primo.x)) > FIELD.w / 3,
+    primo && `y=${primo.y.toFixed(0)} contro ${MELT}, ${Math.abs(deltaX(io.x, primo.x)).toFixed(0)} unità`);
+
+  // **E finché non ha finito di salire non caccia nessuno.** Una palla che insegue mentre è ancora
+  // dentro la lava sarebbe una cosa che colpisce da un posto in cui non si vede.
+  const partenza = primo.x;
+  for (let i = 0; i < 30 && world.intrusi[0] && world.intrusi[0].y > MELT; i += 1) {
+    step(world, [intent()]);
+  }
+  check("mentre sale non si sposta di lato",
+    world.intrusi[0] && Math.abs(deltaX(partenza, world.intrusi[0].x)) < 1,
+    world.intrusi[0] && `${Math.abs(deltaX(partenza, world.intrusi[0].x)).toFixed(1)} unità`);
 }
 
 {

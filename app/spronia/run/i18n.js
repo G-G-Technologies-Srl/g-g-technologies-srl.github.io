@@ -37,8 +37,8 @@ const IT = {
     + "schiude di una classe più alta.",
   howShield: "Lo scudo brucia chi tocchi, comunque lo tocchi. Dura tre secondi e torna dopo "
     + "dieci.",
-  howIntruder: "Se ci metti troppo arriva un velivolo, e torna sempre più spesso. Si abbatte "
-    + "andandogli incontro alla sua quota: il segno davanti al suo muso è quello che conta.",
+  howIntruder: "Se ci metti troppo, dalla colata sale una palla di fuoco, e torna sempre più "
+    + "spesso. Si abbatte andandole incontro alla quota del suo cuore acceso.",
   howClaw: "Dalla colata esce una pinza che afferra chi vola basso. Per liberarti batti le ali "
     + "molto più in fretta del solito.",
 
@@ -79,8 +79,8 @@ const EN = {
     + "it and it hatches a class higher.",
   howShield: "The shield burns whatever you touch, however you touch it. Three seconds, and it is "
     + "back after ten.",
-  howIntruder: "Take too long and a craft comes for you, more and more often. You bring it down by "
-    + "meeting it head-on at its height: the mark ahead of its nose is the one that counts.",
+  howIntruder: "Take too long and a fireball rises from the molten metal, more and more often. "
+    + "You bring it down by meeting it head-on at the height of its burning core.",
   howClaw: "A claw comes out of the molten metal and grabs whoever flies low. To break free, flap "
     + "much faster than usual.",
 

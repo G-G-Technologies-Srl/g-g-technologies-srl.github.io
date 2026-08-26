@@ -31,7 +31,7 @@
 
 import {
   FIELD, CEILING, MELT, DECK, PIXEL, PILOT, SPRITE, PLATFORMS, KINDS, CELLA, SHIELD, HEAD,
-  INTRUDER, CLAW, IMPACT, lanceTip, mouth,
+  INTRUDER, CLAW, IMPACT, lanceTip,
 } from "./game.js";
 import {
   PILOT_SPRITES, PALETTE, TINTE, ALPHABET, EYE, EGG, EGG_SPRITE, EGG_PALETTES,
@@ -108,13 +108,27 @@ const PAINT = {
   reach: "#34d399",
   reachFoe: "#c3ccdd",
 
-  // L'Intruso. **Nessun colore della fauna**: le cavalcature sono terre e ocra, questo è metallo
-  // freddo con una bocca accesa. Si riconosce prima di essere guardato, ed è quello che deve fare —
-  // arriva quando stai perdendo tempo, e la prima cosa da capire non è che cos'è ma che c'è.
+  // La Pinza: metallo freddo, e l'unica cosa in campo fatta di geometria dura. È giusto che lo sia —
+  // esce dal macchinario che sta sotto la colata, e non somiglia a niente che voli.
   hull: "#38455c",
   hullLit: "#8496b5",
   hullDark: "#161d2b",
-  intake: "#ffd24a",
+
+  // **L'Intruso: una palla di fuoco.** Cinque valori, e il primo è quello che conta di più.
+  //
+  // `ballRim` è più scuro del bordo della colata, e serve a una cosa sola: **tenere la palla
+  // staccata dalla lava.** Il corpo della palla e il corpo della colata sono nella stessa famiglia
+  // di arancioni — devono esserlo, sono la stessa sostanza — e senza un filo scuro la palla
+  // sparirebbe proprio quando scende in basso, cioè dove chi gioca è più in pericolo. Due pixel di
+  // bordo, non uno: a uno si perdeva lo stesso.
+  //
+  // Il corpo è **più chiaro** di quello della colata, per la stessa ragione e in direzione opposta:
+  // due arancioni identici a contatto sono un arancione solo.
+  ballRim: "#4a1004",
+  ballCrust: "#a8300a",
+  ballBody: "#e2560f",
+  ballHot: "#ff9a20",
+  ballCore: "#ffe37a",
 
   // Il cimiero che dà il nome alla classe di un nemico. Un colore solo per tutt'e tre — è la forma
   // che porta l'informazione. Preso dal capo pallido della tavolozza dell'uccello, così legge come
@@ -1281,80 +1295,138 @@ function _paintPyreFlames(ctx, pyre, cx) {
   }
 }
 
+/** Un disco pieno, senza antialias: `arc()` sfumerebbe il bordo, e qui il bordo è tutto. */
+function _disc(ctx, cx, cy, r, colore) {
+  ctx.fillStyle = colore;
+  const rr = r * r;
+  for (let dy = -r; dy <= r; dy += 1) {
+    const dx = Math.floor(Math.sqrt(Math.max(0, rr - dy * dy)));
+    ctx.fillRect(cx - dx, cy + dy, dx * 2 + 1, 1);
+  }
+}
+
 /**
- * L'Intruso: un cuneo di metallo con una bocca accesa davanti.
+ * L'Intruso: una palla di fuoco che sputa lapilli.
  *
- * **Disegnato in codice, non preso dal foglio degli sprite**, e non per mancanza di un disegno: è
- * l'unica cosa in campo che non è una creatura, e il modo in cui è fatto deve dirlo prima che si
- * capisca che cos'è. Le cavalcature sono pixel dipinti a mano con cinquantatré colori; questo è
- * geometria con quattro.
+ * **Era un cuneo di metallo, ed è cambiato per una ragione precisa**, detta da una partita vera: «è
+ * uscito un oggetto volante che mi ha incendiato, non si capisce cosa sia». Il difetto non era il
+ * disegno in sé — era che una macchina a questa misura ha bisogno di dettaglio interno, cabina,
+ * pannelli, pinne, e quello lo dà una mano che disegna, non una formula. Quello che usciva era una
+ * macchia grigio-blu **dello stesso colore della roccia sotto le piattaforme**, e affusolata da
+ * tutt'e due i lati, quindi non diceva nemmeno da che parte guardava.
  *
- * La **bocca** è la parte che conta, perché è lì che si abbatte: sta davanti, a metà altezza, ed è
- * l'unica cosa accesa del disegno. Chi guarda deve poterla mirare senza sapere la regola.
+ * Il fuoco no: il fuoco è **movimento**, ed è la cosa che il codice fa meglio di un disegno fermo.
  *
- * Il cuneo si assottiglia verso la coda, così il muso si legge da solo e non serve una freccia
- * appiccicata sopra per dire da che parte guarda. Specchiato quando va a sinistra, come tutto il
- * resto del gioco.
+ * Quattro strati e un cuore, dal freddo al caldo verso il centro, e un **bordo frastagliato che
+ * respira**: l'ondulazione è funzione dell'angolo e del tempo, tre giri di seno di periodo diverso,
+ * quindi il profilo non si ripete lungo il giro e non c'è una cucitura dove il cerchio si chiude.
+ * Stessa costruzione della corona dello scudo, e per la stessa ragione.
+ *
+ * **Il cuore è il bersaglio**, e sta al centro dell'altezza — cioè esattamente alla quota che la
+ * regola confronta. Non c'è nessun segno appiccicato sopra a dirlo: in una cosa che ha un dentro,
+ * la parte più chiara è dove l'occhio va da solo. È anche il motivo per cui la palla ha smesso di
+ * portare il trattino dei nemici sulla punta: un segno esterno su un oggetto simmetrico dice dove
+ * mirare, un cuore acceso dice **cos'è** e dove mirare insieme.
+ *
+ * I lapilli che sputa vanno **all'indietro**, dalla parte da cui è venuta: sono loro a dire la
+ * direzione, che una palla per conto suo non ha.
  */
 function _paintIntruder(ctx, intruso, cx) {
-  const w = px(INTRUDER.w);
-  const h = px(INTRUDER.h);
-  const midY = px(intruso.y);
+  const cy = px(intruso.y);
+  const r = Math.round(px(INTRUDER.w) / 2) - 1;
   const verso = intruso.facing < 0 ? -1 : 1;
-  const muso = cx + (w / 2) * verso;
-  const coda = cx - (w / 2) * verso;
 
-  // Lo scafo, colonna per colonna: alto al muso e sottile in coda. `1 - t*t` invece di `1 - t` fa
-  // un cuneo con la pancia, non un triangolo — un triangolo a questa misura legge come una freccia,
-  // e una freccia è un simbolo, non un oggetto.
-  for (let i = 0; i <= w; i += 1) {
-    const t = i / w;                                 // 0 al muso, 1 in coda
-    const alta = Math.max(2, Math.round(h * (1 - t * t * 0.72)));
-    const x = Math.round(muso - verso * i);
-    ctx.fillStyle = PAINT.hull;
-    ctx.fillRect(x, midY - Math.floor(alta / 2), 1, alta);
-    // Un filo chiaro in cima e uno scuro sotto: due righe e il cuneo smette di essere una macchia.
-    ctx.fillStyle = PAINT.hullLit;
-    ctx.fillRect(x, midY - Math.floor(alta / 2), 1, 1);
-    ctx.fillStyle = PAINT.hullDark;
-    ctx.fillRect(x, midY + Math.ceil(alta / 2) - 1, 1, 1);
+  // **Mentre sale dal metallo è solo un punto che si gonfia sulla superficie.** È il preavviso, e
+  // vale più della palla: una cosa che compare non si può evitare, una che si vede salire sì.
+  if (intruso.y > MELT) {
+    const quanto = Math.max(0, Math.min(1, (MELT + INTRUDER.h - intruso.y) / INTRUDER.h));
+    const pelo = px(MELT) + _swell(cx, _now);
+    const largo = Math.max(2, Math.round(r * quanto));
+    ctx.fillStyle = PAINT.ballHot;
+    ctx.fillRect(cx - largo, pelo - 2, largo * 2, 3);
+    ctx.fillStyle = PAINT.ballCore;
+    ctx.fillRect(cx - Math.max(1, largo - 3), pelo - 1, Math.max(2, largo * 2 - 6), 1);
+    for (let i = 0; i < 4; i += 1) _flame(ctx, cx + (i - 2) * 4, pelo, i + 5, 10 * quanto, 4);
+    return;
   }
 
-  // **La bocca**, e sopra di lei lo stesso segno che porta la punta dello sperone.
-  //
-  // È la correzione più importante che questo velivolo ha avuto, e viene da una partita vera: «è
-  // uscito un oggetto volante che mi ha incendiato, non si capisce cosa sia». Il problema non era
-  // che fosse brutto — era che **non diceva la sua regola**. Un giocatore che vede un trattino
-  // davanti al proprio muso e lo stesso trattino davanti a quello dell'Intruso capisce, senza
-  // leggere niente, che le due cose si confrontano: è la stessa grammatica che il duello usa da
-  // sempre.
-  //
-  // Il segno è il colore dei nemici, come per gli altri: quello verde è tuo, quello chiaro no.
-  ctx.fillStyle = PAINT.intake;
-  ctx.fillRect(muso - (verso > 0 ? 4 : 0), midY - 3, 5, 7);
-  ctx.fillStyle = PAINT.meltFlash;
-  ctx.fillRect(muso - (verso > 0 ? 3 : 0), midY - 1, 3, 3);
-  ctx.fillStyle = PAINT.reachFoe;
-  ctx.fillRect(muso + (verso > 0 ? 2 : -6), midY, 4, 1);
+  // Il bordo che respira, due pixel di scuro e due di crosta.
+  const passi = Math.max(72, Math.round(2 * Math.PI * r));
+  for (let i = 0; i < passi; i += 1) {
+    const ang = (i / passi) * Math.PI * 2;
+    const onda = Math.sin(ang * 3 + _now * 5.5) * 0.5
+      + Math.sin(ang * 5 - _now * 3.7) * 0.3
+      + Math.sin(ang * 8 + _now * 9.1) * 0.2;
+    const rr = r + onda * 2.2;
+    for (let k = Math.round(rr); k > rr - 4 && k >= 0; k -= 1) {
+      ctx.fillStyle = k > rr - 2 ? PAINT.ballRim : PAINT.ballCrust;
+      ctx.fillRect(Math.round(cx + Math.cos(ang) * k), Math.round(cy + Math.sin(ang) * k), 1, 1);
+    }
+  }
 
-  // **L'ombra che lo precede mentre entra.** Finché è sopra il soffitto — cioè mentre sta scendendo
-  // in campo — sotto di lui corre un segno che dice dove arriverà. Chi gioca guarda in basso, dove
-  // succedono le cose; senza questo, l'Intruso è una cosa che compare, e le cose che compaiono non
-  // si possono evitare.
-  if (intruso.y < px(CEILING) * PIXEL + INTRUDER.h) {
-    ctx.fillStyle = PAINT.hullLit;
+  // I tre anelli. **Non concentrici**: il caldo sta un po' avanti, dalla parte in cui va, come la
+  // fiamma di qualunque cosa che bruci muovendosi. Concentrici erano un bersaglio da tiro a segno,
+  // e per quanto lo si guardasse non dicevano da che parte andava.
+  //
+  // Le tre misure sono state provate: `r-5` per il caldo lasciava un anello di corpo di tre pixel,
+  // cioè la palla leggeva come un disco arancione piatto col cuore in mezzo. A `r-11` i tre anelli
+  // si vedono tutti e tre, ed è quello che li rende una cosa con un dentro.
+  const avanti = verso * 2;
+  _disc(ctx, cx, cy, r - 2, PAINT.ballBody);
+  _disc(ctx, cx + avanti, cy, r - 11, PAINT.ballHot);
+  // Il cuore pulsa: è vivo, ed è il punto che si colpisce.
+  _disc(ctx, cx + avanti, cy, 6 + Math.round(1 + Math.sin(_now * 11)), PAINT.ballCore);
+
+  // **L'ombra che lo precede.** Finché è appena sotto il soffitto, sul soffitto corre il segno di
+  // dove arriverà: chi gioca guarda in basso, dove succedono le cose.
+  if (intruso.y < CEILING + INTRUDER.h) {
+    ctx.fillStyle = PAINT.ballHot;
     for (let i = -3; i <= 3; i += 1) ctx.fillRect(cx + i * 3, px(CEILING) + 6, 2, 1);
   }
 
-  // La scia dietro, che pulsa. Serve a dire **quanto va veloce**: senza, un cuneo che attraversa lo
-  // schermo in tre secondi si legge come un cuneo che scivola.
-  if (!calm) {
-    const soffio = 2 + Math.round(1.5 + 1.5 * Math.sin(_now * 22));
-    ctx.fillStyle = PAINT.meltGlow;
-    ctx.fillRect(coda + (verso > 0 ? 0 : -soffio), midY - 1, soffio, 2);
-    ctx.fillStyle = PAINT.meltHot;
-    ctx.fillRect(coda + (verso > 0 ? 0 : -Math.max(1, soffio - 2)), midY,
-      Math.max(1, soffio - 2), 1);
+  if (calm) return;
+
+  // La coda, dietro: cinque lingue di lunghezza diversa che pulsano. Serve a dire **quanto va
+  // veloce** — senza, una palla che attraversa lo schermo in tre secondi si legge come una palla
+  // che scivola.
+  for (let i = 0; i < 7; i += 1) {
+    const u = i / 6;
+    const onda = Math.sin(_now * 7 + i * 1.7) * 0.5 + Math.sin(_now * 4.3 + i * 3.1) * 0.5;
+    // Più lunga al centro e corta ai bordi: è una fiamma, non una frangia.
+    const lunga = Math.round((22 + onda * 7) * (1 - Math.abs(u - 0.5) * 1.3));
+    const gy = cy + Math.round((u - 0.5) * 22);
+    for (let j = 0; j < lunga; j += 1) {
+      const v = j / Math.max(1, lunga);
+      const spessa = Math.max(1, Math.round(4 * (1 - v)));
+      ctx.fillStyle = v < 0.25 ? PAINT.ballHot
+        : v < 0.55 ? PAINT.ballBody
+          : v < 0.8 ? PAINT.ballCrust : PAINT.ballRim;
+      ctx.fillRect(cx - verso * (r - 3 + j), gy - (spessa >> 1), 1, spessa);
+    }
+  }
+
+  // I lapilli sputati. Più grossi di quelli che escono dalla colata quando qualcosa affonda — due
+  // pixel invece di uno — o «sta arrivando» si confonderebbe con «sta morendo», che in questo gioco
+  // sono due cose molto diverse.
+  for (let i = 0; i < 10; i += 1) {
+    const periodo = 0.5 + (i % 4) * 0.13;
+    const ciclo = ((((_now + i * 0.21) % periodo) + periodo) % periodo) / periodo;
+    const spinta = -verso * (14 + (i % 3) * 10);
+    const salita = 6 + (i % 5) * 4;
+    const x0 = cx - verso * (r - 4);
+    const y0 = cy + ((i % 5) - 2) * 4;
+    const arco = (t) => ({
+      x: Math.round(x0 + spinta * t * 3),
+      y: Math.round(y0 - salita * 4 * t * (1 - t) + t * t * 26),
+    });
+    for (const [indietro, colore] of [[0.22, PAINT.ballRim], [0.11, PAINT.ballHot]]) {
+      const dove = arco(Math.max(0, ciclo - indietro));
+      ctx.fillStyle = colore;
+      ctx.fillRect(dove.x, dove.y, 1, 1);
+    }
+    const ora = arco(ciclo);
+    ctx.fillStyle = PAINT.ballCore;
+    ctx.fillRect(ora.x, ora.y, 2, 2);
   }
 }
 
