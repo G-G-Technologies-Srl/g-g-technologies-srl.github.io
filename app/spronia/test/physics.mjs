@@ -239,6 +239,8 @@ function duello(scartoY, seed = 3) {
   check("chi sta più in basso perde",
     world.last && world.last.kind === "perso" && lui.alive && world.pilots[0].score === primaPunteggio,
     JSON.stringify(world.last));
+  // Il rientro aspetta la fine del rogo: chi perde brucia come chiunque altro.
+  for (let i = 0; i < 120 * 15 && world.pilots[0].waiting; i += 1) step(world, [intent()]);
   check("e chi perde torna protetto",
     world.pilots[0].guard === PILOT.spawnGuard,
     `guard=${world.pilots[0].guard}`);
@@ -378,18 +380,32 @@ function duello(scartoY, seed = 3) {
 }
 
 {
-  // Un gioco in cui l'errore del tuo compagno ti uccide è un altro gioco. E due nemici che si
-  // spengono a vicenda svuoterebbero il campo da soli.
+  // **Due nemici non si spengono a vicenda**, o svuoterebbero il campo da soli. Due giocatori
+  // invece sì, ed è cambiato: per molto tempo qui c'era «chi sta dalla stessa parte non si tocca»,
+  // sul ragionamento che un gioco in cui l'errore del tuo compagno ti uccide è un altro gioco. Vale
+  // per i nemici e non per i piloti — il Duello è uno dei quattro tipi di ondata, e senza il colpo
+  // fra giocatori era ingiocabile.
   const world = create(3, 2, 2);
   for (const b of bodies(world)) { b.guard = 0; b.grounded = false; b.vx = 0; b.vy = 0; }
-  world.pilots[0].x = 200; world.pilots[0].y = 300;
-  world.pilots[1].x = 220; world.pilots[1].y = 330;       // sovrapposti, a quote diverse
+  world.pilots[0].x = 5000; world.pilots[1].x = 5300;      // lontani: qui si guardano i nemici
   world.foes.forEach((f) => inerte(f));
   world.foes[0].x = 900; world.foes[0].y = 300;
   world.foes[1].x = 920; world.foes[1].y = 330;
   step(world, [intent(), intent()]);
-  check("due giocatori non si combattono, e nemmeno due nemici",
-    world.last === null && bodies(world).length === 4, JSON.stringify(world.last));
+  check("due nemici non si combattono fra loro",
+    world.last === null && world.foes.every((f) => f.alive), JSON.stringify(world.last));
+
+  const duo = create(3, 2, 0);
+  for (const b of duo.pilots) { b.guard = 0; b.grounded = false; b.vx = 0; b.vy = 0; }
+  duo.pilots[0].x = 200; duo.pilots[0].y = 300;
+  duo.pilots[1].x = 220; duo.pilots[1].y = 330;            // sovrapposti, a quote diverse
+  step(duo, [intent(), intent()]);
+  check("due giocatori invece sì, e vince chi sta più in alto",
+    duo.last && duo.last.kind === "perso" && duo.pilots[1].waiting && duo.pilots[0].alive,
+    JSON.stringify(duo.last));
+  check("e fuori dal Duello il colpo non paga niente",
+    duo.pilots[0].score === 0 && duo.pops.length === 0,
+    `${duo.pilots[0].score} punti, ${duo.pops.length} numeri`);
 }
 
 {
@@ -483,7 +499,12 @@ function campo(kind, dove = {}) {
   let quota = null;
   let chiuso = false;
   for (let i = 0; i < 120 * 8 && !chiuso; i += 1) {
-    io.x = 300; io.y = 300; io.vx = 0; io.vy = 0;
+    // **Il giocatore va tenuto in vita a mano**, e la protezione è il modo giusto: il Vertice sta
+    // sopra di lui e lo abbatte al primo contatto, e da quando chi muore aspetta la fine del rogo
+    // la preda spariva per due secondi — il Vertice smetteva di scattare e la prova misurava un
+    // ciclo diverso da quello che diceva di misurare. Un corpo protetto non può perdere e non può
+    // vincere, ma resta una preda: è esattamente quello che serve qui.
+    io.x = 300; io.y = 300; io.vx = 0; io.vy = 0; io.guard = 5;
     step(world, [intent()]);
     if (lui.burst > 0) scattato += 1;
     if (lui.spent > 0) {
@@ -1412,10 +1433,14 @@ console.log("\nlo scudo di fuoco");
   check("e il colpo netto paga cinquecento",
     trovato.pilots[0].score === KINDS.deriva.points + SHIELD.bonus,
     `${trovato.pilots[0].score}`);
-  check("con un numero che vola via dal punto in cui è successo",
-    trovato.pops.length === 1 && trovato.pops[0].points === SHIELD.bonus
-      && Math.abs(trovato.pops[0].x - trovato.pyres[0].x) < 1,
-    `${trovato.pops.length} numeri`);
+  // Due numeri e non uno: quello del nemico e quello del colpo netto. Adesso **ogni** evento che
+  // paga ha il suo, ed è il modo in cui la scala delle celle diventa una cosa che si impara
+  // guardando invece che leggendo.
+  check("con due numeri che volano via: il nemico e il colpo netto",
+    trovato.pops.length === 2
+      && trovato.pops.some((q) => q.points === SHIELD.bonus)
+      && trovato.pops.some((q) => q.points === KINDS.deriva.points),
+    trovato.pops.map((q) => q.points).join(", "));
   check("e dal collo zampilla", trovato.pyres[0].bleeding === true);
 
   const testa = trovato.teste[0];
@@ -1843,6 +1868,9 @@ console.log("\nlo sperone e il seme");
 {
   const world = create(11, 2);
   check("due giocatori sono un elenco, non un caso particolare", world.pilots.length === 2);
+  // Lontani l'uno dall'altro: adesso i due si possono abbattere, e due piloti che nascono vicini si
+  // toccherebbero a metà prova — misurerei il duello invece dell'intento.
+  world.pilots[0].x = 200; world.pilots[1].x = 900;
   const before = world.pilots.map((p) => p.x);
   play(world, 120, () => intent({ right: true }));
   // Only the first pilot receives an intent from `play`, so the second must not have moved: the

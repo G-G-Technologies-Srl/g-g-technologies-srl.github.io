@@ -81,6 +81,19 @@ function _frame(now) {
   const intents = input.read();
   let steps = 0;
   while (carried >= STEP && steps < 240) {
+    // **Il fermo-immagine si consuma qui**, saltando il passo invece di farlo: tre o quattro
+    // fotogrammi in cui il mondo non avanza di un millesimo, colata compresa. Sta nel ciclo e non
+    // dentro `step` perché `step` deve continuare a voler dire «avanza di un passo» — una che a
+    // volte non avanza niente rompe ogni controllo che ne chiama una sola e guarda il risultato.
+    //
+    // Si consuma a passi interi e non col tempo vero del browser, così una partita rigiocata dallo
+    // stesso seme salta esattamente gli stessi passi.
+    if (world.hit > 0) {
+      world.hit = Math.max(0, world.hit - STEP);
+      carried -= STEP;
+      steps += 1;
+      continue;
+    }
     step(world, intents);
     carried -= STEP;
     steps += 1;

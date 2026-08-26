@@ -31,7 +31,7 @@
 
 import {
   FIELD, CEILING, MELT, DECK, PIXEL, PILOT, SPRITE, PLATFORMS, KINDS, CELLA, SHIELD, HEAD,
-  INTRUDER, CLAW, lanceTip, mouth,
+  INTRUDER, CLAW, IMPACT, lanceTip, mouth,
 } from "./game.js";
 import {
   PILOT_SPRITES, PALETTE, TINTE, ALPHABET, EYE, EGG, EGG_SPRITE, EGG_PALETTES,
@@ -292,7 +292,7 @@ function _paintCeiling(ctx) {
  * demonstration behind the title comes out the same on every run and the app card's screenshot is
  * the same at every build.
  */
-function _paintMelt(ctx, time) {
+function _paintMelt(ctx, time, calore = 0) {
   const top = px(MELT);
   const deep = BUF.h;
   const t = calm ? 0 : time;
@@ -323,7 +323,7 @@ function _paintMelt(ctx, time) {
     ctx.fillStyle = PAINT.melt;
     ctx.fillRect(x, y, 1, 15 + Math.round(grain * 2.5));
     ctx.fillStyle = PAINT.meltGlow;
-    ctx.fillRect(x, y, 1, 6 + Math.round(grain * 1.5));
+    ctx.fillRect(x, y, 1, 6 + Math.round(grain * 1.5) + Math.round(calore * 12));
   }
 
   // ---- 2 · crust ---------------------------------------------------------------------------------
@@ -341,8 +341,19 @@ function _paintMelt(ctx, time) {
   }
 
   // ---- 3 · bubbles -------------------------------------------------------------------------------
+  // **La frenesia si vede qui, e in nessun altro posto.** Il campo pieno rende i nemici fino al
+  // sessanta per cento più veloci, e finora niente lo diceva: il gioco diventava difficile e il
+  // giocatore non poteva sapere perché, né imparare che svuotare il campo — o abbattere un Intruso
+  // — lo raffredda. Una strategia che esiste e che nessuno può scoprire è una strategia che non
+  // c'è.
+  //
+  // Lo dice la colata, che è il posto giusto: è la cosa che vi sta sotto, ed è già l'orologio
+  // visivo del campo. Le bolle salgono più in fretta e lo strato caldo si alza — niente colori
+  // nuovi, niente scritte, niente che copra il gioco.
+  const fretta = 1 - Math.min(0.6, calore) * 0.55;
+
   for (const vent of VENT) {
-    const cycle = ((t + vent.phase) % vent.period) / vent.period;
+    const cycle = ((t / fretta + vent.phase) % vent.period) / vent.period;
     const surface = top + _swell(vent.x, t);
 
     if (cycle < 0.72) {
@@ -1309,12 +1320,31 @@ function _paintIntruder(ctx, intruso, cx) {
     ctx.fillRect(x, midY + Math.ceil(alta / 2) - 1, 1, 1);
   }
 
-  // **La bocca.** Tre pixel di altezza, accesi, esattamente alla quota che la regola confronta: è
-  // il bersaglio, e il bersaglio si vede.
+  // **La bocca**, e sopra di lei lo stesso segno che porta la punta dello sperone.
+  //
+  // È la correzione più importante che questo velivolo ha avuto, e viene da una partita vera: «è
+  // uscito un oggetto volante che mi ha incendiato, non si capisce cosa sia». Il problema non era
+  // che fosse brutto — era che **non diceva la sua regola**. Un giocatore che vede un trattino
+  // davanti al proprio muso e lo stesso trattino davanti a quello dell'Intruso capisce, senza
+  // leggere niente, che le due cose si confrontano: è la stessa grammatica che il duello usa da
+  // sempre.
+  //
+  // Il segno è il colore dei nemici, come per gli altri: quello verde è tuo, quello chiaro no.
   ctx.fillStyle = PAINT.intake;
-  ctx.fillRect(muso - (verso > 0 ? 3 : 0), midY - 2, 4, 5);
+  ctx.fillRect(muso - (verso > 0 ? 4 : 0), midY - 3, 5, 7);
   ctx.fillStyle = PAINT.meltFlash;
-  ctx.fillRect(muso - (verso > 0 ? 2 : 0), midY - 1, 2, 3);
+  ctx.fillRect(muso - (verso > 0 ? 3 : 0), midY - 1, 3, 3);
+  ctx.fillStyle = PAINT.reachFoe;
+  ctx.fillRect(muso + (verso > 0 ? 2 : -6), midY, 4, 1);
+
+  // **L'ombra che lo precede mentre entra.** Finché è sopra il soffitto — cioè mentre sta scendendo
+  // in campo — sotto di lui corre un segno che dice dove arriverà. Chi gioca guarda in basso, dove
+  // succedono le cose; senza questo, l'Intruso è una cosa che compare, e le cose che compaiono non
+  // si possono evitare.
+  if (intruso.y < px(CEILING) * PIXEL + INTRUDER.h) {
+    ctx.fillStyle = PAINT.hullLit;
+    for (let i = -3; i <= 3; i += 1) ctx.fillRect(cx + i * 3, px(CEILING) + 6, 2, 1);
+  }
 
   // La scia dietro, che pulsa. Serve a dire **quanto va veloce**: senza, un cuneo che attraversa lo
   // schermo in tre secondi si legge come un cuneo che scivola.
@@ -1643,7 +1673,7 @@ export function draw(canvas, world) {
   for (const pyre of pyresGiu) _wrapped(px(pyre.x), (x) => _paintPyre(ctx, pyre, x));
   for (const testa of testeGiu) _wrapped(px(testa.x), (x) => _paintHeadOnly(ctx, testa, x));
 
-  _paintMelt(ctx, world.time || 0);
+  _paintMelt(ctx, world.time || 0, world.frenesia || 0);
 
   // E le fiamme dopo, che devono stare **sopra** la colata: è la colata che si sta prendendo
   // qualcosa, e le fiamme di quel qualcosa non devono finirci sotto.
@@ -1724,8 +1754,25 @@ export function draw(canvas, world) {
   const out = canvas.getContext("2d");
   const frame = _frame(canvas);
 
+  // **La scossa, e solo qui.** Si scuote il fotogramma finito, non quello che c'è dentro: dentro è
+  // tutto su una griglia di numeri interi, e spostare i corpi uno a uno di una frazione di pixel
+  // sarebbe la stessa cosa che ammorbidire i bordi. Fuori invece si sposta l'immagine intera, di
+  // un numero intero di pixel di campo, e il pixel resta un pixel.
+  //
+  // Il tremolio viene da `world.shake`, che scorre col mondo: lo stesso seme trema uguale. E si
+  // spegne con «meno movimento» — è l'unica cosa in questo file che lo fa scomparire del tutto,
+  // perché è l'unica che muove **tutto** lo schermo.
+  let tremaX = 0;
+  let tremaY = 0;
+  if (!calm && world.shake > 0) {
+    const forza = Math.min(1, world.shake / IMPACT.deathShake);
+    tremaX = Math.round(Math.sin(world.shake * 96) * IMPACT.sway * forza) * frame.scale;
+    tremaY = Math.round(Math.cos(world.shake * 71) * IMPACT.sway * forza) * frame.scale;
+  }
+
   out.imageSmoothingEnabled = false;
   out.fillStyle = PAINT.bg;
   out.fillRect(0, 0, canvas.width, canvas.height);
-  out.drawImage(buffer, 0, 0, BUF.w, BUF.h, frame.x, frame.y, frame.w, frame.h);
+  out.drawImage(buffer, 0, 0, BUF.w, BUF.h,
+    frame.x + tremaX, frame.y + tremaY, frame.w, frame.h);
 }

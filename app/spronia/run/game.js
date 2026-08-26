@@ -547,6 +547,55 @@ export const INTRUDER = {
 };
 
 /**
+ * I premi di fine ondata, e la riga a zero punti.
+ *
+ * Sono tre righe del § 3.9 del piano che finora non esistevano: le ondate di Sopravvivenza, Squadra
+ * e Duello venivano generate col loro nome e si comportavano **esattamente come una Normale**. Un
+ * tipo di ondata senza una regola attaccata non è un tipo di ondata, è un'etichetta.
+ *
+ * **La riga a zero chiude una fattoria di punti**, ed è la più importante delle tre. Con un premio
+ * su ogni ondata, due giocatori d'accordo si abbatterebbero a turno e incasserebbero più che
+ * giocando. Il colpo resta possibile — serve nel Duello — ma fuori da lì non paga, e non paga in
+ * un modo che si vede: non compare nessun numero.
+ */
+export const BONUS = {
+  // Sopravvivenza: finita senza morire. Squadra: nessuno dei due ha abbattuto l'altro, e valgono a
+  // testa — un premio che si divide sarebbe un premio per cui conviene che l'altro sbagli.
+  clear: 500,
+  // Duello: al primo che abbatte l'altro. Uno solo, e il primo: se pagasse ogni volta sarebbe la
+  // fattoria di punti con un altro nome.
+  duel: 250,
+};
+
+/**
+ * L'impatto: **il gioco si ferma per un istante quando qualcosa va a segno.**
+ *
+ * Tre o quattro fotogrammi di fermo-immagine e una scossa breve del campo. Sembra la cosa più
+ * superflua della lista ed è quella con il rapporto migliore fra righe scritte e sensazione: i
+ * cabinati lo facevano tutti e nessuno se ne accorgeva, e a toglierlo il gioco sembra di gomma. Un
+ * colpo che non ferma niente non è un colpo, è un cambio di stato.
+ *
+ * **Ferma anche l'orologio del mondo**, non solo i corpi. Se `world.time` continuasse, la colata
+ * continuerebbe a ribollire e le fiamme a muoversi dietro a un campo immobile — cioè metà schermo
+ * congelato e metà no, che è peggio di non fermare niente.
+ *
+ * E resta **riproducibile**: il fermo è un numero sul mondo, consumato dal passo come tutto il
+ * resto, quindi lo stesso seme rigioca la stessa partita fin dentro le pause. Se dipendesse
+ * dall'orologio vero, la dimostrazione e lo screenshot cambierebbero da soli.
+ */
+export const IMPACT = {
+  // Un abbattimento. Sessanta millesimi sono tre o quattro fotogrammi a sessanta hertz: si sente e
+  // non si nota, che è esattamente quello che deve fare.
+  hit: 0.06,
+  shake: 0.16,
+  // Una morte, la tua. Più lunga e più forte, perché è la cosa più importante che ti succede.
+  death: 0.14,
+  deathShake: 0.34,
+  // Di quanti pixel di campo trema, al massimo.
+  sway: 3,
+};
+
+/**
  * La Pinza: il manipolatore che esce dalla colata e afferra chi vola basso.
  *
  * **È l'unica cosa nel gioco che ti prende senza affrontarti**, e la sola risposta è battere le ali
@@ -969,6 +1018,14 @@ export function create(seed = 1, players = 1, foes = 0) {
     intrusi: [],
     waveTime: 0,
     called: 0,
+    // Il conto dell'ondata in corso: chi è morto, chi ha abbattuto l'altro, e se il premio è già
+    // stato pagato. Sta sul mondo e non sui piloti perché è una proprietà **dell'ondata**, e si
+    // azzera con lei.
+    tally: { died: [false, false], hit: [false, false], duel: false, paid: false },
+    // Il fermo-immagine e la scossa, in secondi. Vivono sul mondo e non sull'orologio del browser
+    // perché lo stesso seme deve rigiocare la stessa partita fin dentro le pause.
+    hit: 0,
+    shake: 0,
     // La Pinza: una sola, sempre presente come oggetto e quasi sempre sotto il metallo. Tenerla come
     // stato invece che crearla e distruggerla rende «una sola alla volta» una proprietà della
     // struttura invece di una regola da ricordarsi.
@@ -1031,6 +1088,7 @@ export function startWave(world, roster) {
   world.pops = [];
   world.waveTime = 0;
   world.called = 0;
+  world.tally = { died: [false, false], hit: [false, false], duel: false, paid: false };
 
   // **Senza elenco decide il generatore.** Con un elenco lo decide chi chiama, ed è come lavorano i
   // controlli: `test/physics.mjs` vuole un campo con dentro esattamente un Segugio, non l'ondata
@@ -1174,6 +1232,16 @@ export const PYRE = {
  * to mutate the intent between one step and the next, which is worse and less honest.
  */
 export function step(world, intents, dt = STEP) {
+  // La scossa scorre col mondo. Il **fermo-immagine** invece non è qui: lo consuma il ciclo, in
+  // `app.js`, saltando i passi invece di farli.
+  //
+  // Sembra un dettaglio di dove mettere tre righe e non lo è. `step` vuol dire «avanza il mondo di
+  // un passo», e una `step` che a volte non avanza niente rompe ogni prova che ne chiama una e
+  // guarda il risultato: misurato, sette controlli su duecento sono diventati rossi nel momento in
+  // cui il fermo è finito qui dentro, e nessuno di loro aveva niente a che fare col fermo. Il ciclo
+  // invece è già il posto che decide **quanti** passi fare: saltarne qualcuno è il suo mestiere.
+  if (world.shake > 0) world.shake = Math.max(0, world.shake - dt);
+
   world.time += dt;
   const ledges = decks(world);
   for (let i = 0; i < world.pilots.length; i += 1) {
@@ -1216,8 +1284,43 @@ export function step(world, intents, dt = STEP) {
   // Vinta l'ondata gli Intrusi se ne vanno, e `cleared` li aspetta: l'ondata successiva non deve
   // cominciare mentre uno di loro è ancora a schermo, o il campo nuovo nascerebbe con dentro un
   // pezzo di quello vecchio.
-  if (_won(world)) _dismiss(world, false);
+  if (_won(world)) {
+    _dismiss(world, false);
+    _bonus(world);
+  }
   return world;
+}
+
+/**
+ * Il premio dell'ondata, pagato una volta sola nel momento in cui l'ondata è vinta.
+ *
+ * **Nel momento in cui è vinta, non quando finisce**, e i due momenti sono diversi: fra il primo e
+ * il secondo ci sono i corpi che bruciano e gli Intrusi che se ne vanno. Chi muore in quel
+ * frattempo ha comunque finito l'ondata senza morire, ed è giusto così — l'ondata era già sua.
+ */
+function _bonus(world) {
+  const conto = world.tally;
+  if (!world.plan || conto.paid) return;
+  conto.paid = true;
+  const tipo = world.plan.type;
+
+  if (tipo === "sopravvivenza" && !conto.died[0]) {
+    const io = world.pilots[0];
+    _pay(io, BONUS.clear);
+    _pop(world, io.x, io.y - PILOT.h, BONUS.clear, io.index);
+    world.last = { kind: "ondata", at: world.time, points: BONUS.clear, who: io.index };
+    return;
+  }
+
+  // Squadra: **a testa**, e solo se nessuno dei due ha abbattuto l'altro. A testa e non da
+  // dividere, perché un premio che si divide è un premio per cui conviene che l'altro sbagli.
+  if (tipo === "squadra" && !conto.hit[0] && !conto.hit[1]) {
+    for (const pilot of world.pilots) {
+      _pay(pilot, BONUS.clear);
+      _pop(world, pilot.x, pilot.y - PILOT.h, BONUS.clear, pilot.index);
+    }
+    world.last = { kind: "ondata", at: world.time, points: BONUS.clear, who: null };
+  }
 }
 
 /** L'ondata è vinta: né nemici né celle. Quello che resta a schermo è scenografia. */
@@ -1612,6 +1715,10 @@ function _collect(world, cella, by = null) {
     const worth = CELL_POINTS[Math.min(by.ladder, CELL_POINTS.length - 1)];
     by.ladder += 1;
     _pay(by, worth);
+    // **Il numero che vola via è quello che rende imparabile la scala.** Senza, un giocatore può
+    // raccogliere celle per un'ora senza accorgersi che la seconda di fila vale il doppio della
+    // prima: la meccanica c'è, e l'unico modo di scoprirla è leggere il codice.
+    _pop(world, cella.x, cella.y, worth, by.index);
     world.last = { kind: "cella", at: world.time, points: worth, classe: cella.kind, who: by.index };
   }
   _finish(world, cella);
@@ -1639,13 +1746,17 @@ function _fights(world) {
       // downed twice and paid for twice — which needs two players to happen at all, and would have
       // sat here unnoticed until the phase that adds them.
       if (!a.alive || !b.alive) continue;
-      // Foes ignore each other, and so do two players: a game where your friend's mistake kills you
-      // is a different game, and this one is not it.
+      // **I nemici si ignorano fra loro. I due giocatori no.**
       //
-      // They pass through each other as well, for now. Making bodies on the same side push apart is
-      // a change to how a crowd behaves, and there is no crowd yet — nine foes and a claw arrive in
-      // Fase 5, and that is where it can be judged against something real instead of guessed at.
-      if (a.foe === b.foe) continue;
+      // Per molto tempo qui c'era `a.foe === b.foe`, cioè «chi sta dalla stessa parte non si tocca»,
+      // sul ragionamento che un gioco in cui l'errore del tuo amico ti uccide è un altro gioco. Il
+      // ragionamento vale per i nemici e non per i piloti: il Duello è uno dei quattro tipi di
+      // ondata, e senza questa riga era **ingiocabile** — due giocatori si attraversavano e
+      // l'ondata non poteva finire.
+      //
+      // Che il colpo sia possibile non vuol dire che convenga: fuori dal Duello vale zero punti, e
+      // quella è la riga che impedisce a due giocatori d'accordo di farne una fattoria.
+      if (a.foe && b.foe) continue;
       if (a.bumped > 0 || b.bumped > 0) continue;
       if (!_touching(a, b)) continue;
       _settle(world, a, b);
@@ -1706,14 +1817,31 @@ function _settle(world, a, b) {
     // controllo `a.foe === b.foe` più sopra lo garantisce. Ma il credito si passa lo stesso invece
     // di darlo per scontato, perché è la stessa strada che percorre una cella raccolta d'ufficio.
     _lower(world, loser, winner.foe ? null : winner);
-    if (!winner.foe) _pay(winner, worth);
+    if (!winner.foe) {
+      _pay(winner, worth);
+      _pop(world, loser.x, loser.y, worth, winner.index);
+    }
+    _impact(world, 1);
     world.last = {
       kind: "abbattuto", at: world.time, points: worth, classe: loser.kind, who: winner.index,
     };
   } else {
-    _return(world, loser);
-    _dismiss(world, true);
-    world.last = { kind: "perso", at: world.time };
+    // **Chi abbatte un giocatore prende zero**, tranne il primo colpo di un Duello. E lo zero si
+    // vede perché non compare nessun numero: il silenzio è l'annuncio.
+    if (!winner.foe) {
+      world.tally.hit[winner.index] = true;
+      if (world.plan && world.plan.type === "duello" && !world.tally.duel) {
+        world.tally.duel = true;
+        _pay(winner, BONUS.duel);
+        _pop(world, loser.x, loser.y, BONUS.duel, winner.index);
+      }
+    }
+    // Brucia come chi finisce nella colata: è la stessa cosa che gli succede, e farla succedere in
+    // due modi diversi direbbe che sono due cose.
+    _ashes(world, loser, true);
+    loser.alive = false;
+    loser.waiting = true;
+    world.last = { kind: "perso", at: world.time, who: loser.index };
   }
 }
 
@@ -1792,7 +1920,11 @@ function _burn(world, foe, by) {
   foe.alive = false;
   foe.done = true;
   foe.downs += 1;
-  if (by && !by.foe) _pay(by, (KINDS[foe.kind] || KINDS.deriva).points);
+  if (by && !by.foe) {
+    _pay(by, (KINDS[foe.kind] || KINDS.deriva).points);
+    _pop(world, foe.x, foe.y, (KINDS[foe.kind] || KINDS.deriva).points, by.index);
+  }
+  _impact(world, 1);
   _ashes(world, foe, false, by);
   world.last = {
     kind: "bruciato", at: world.time, classe: foe.kind,
@@ -1815,6 +1947,10 @@ function _burn(world, foe, by) {
  * mezzo a tre nemici, quello che ti riguarda si riconosce senza leggere niente.
  */
 function _ashes(world, body, mio, by = null) {
+  if (mio) {
+    _impact(world, 2);
+    world.tally.died[body.index] = true;
+  }
   // Dopo una morte i richiamati se ne vanno entro cinque secondi. I programmati restano: sono parte
   // dell'ondata, non una penale per la lentezza — e rientrare in un cielo che si è appena svuotato
   // per compassione sarebbe una compassione che il gioco non ha.
@@ -1899,6 +2035,18 @@ function _stepHeads(world, ledges, dt) {
     if (!testa.sinking) testa.spin += Math.abs(testa.vx) * dt * SHIELD.roll;
   }
   world.teste = world.teste.filter((testa) => testa.alive);
+}
+
+/**
+ * Un colpo andato a segno: il campo si ferma e trema.
+ *
+ * `forza` è 1 per un abbattimento e 2 per una morte. Due valori e non una scala continua: sono due
+ * cose diverse, non la stessa cosa più o meno forte, e il giocatore deve poterle distinguere a
+ * occhi chiusi.
+ */
+function _impact(world, forza = 1) {
+  world.hit = Math.max(world.hit, forza > 1 ? IMPACT.death : IMPACT.hit);
+  world.shake = Math.max(world.shake, forza > 1 ? IMPACT.deathShake : IMPACT.shake);
 }
 
 /** Un punteggio che vola via dal punto in cui è stato guadagnato. */
@@ -2267,6 +2415,8 @@ function _raids(world) {
       if (colpito) {
         intruso.alive = false;
         _pay(pilot, INTRUDER.points);
+        _pop(world, intruso.x, intruso.y, INTRUDER.points, pilot.index);
+        _impact(world, 1);
         // **Azzera la frenesia.** È la valvola: un campo che si è scaldato si raffredda soltanto
         // così, ed è la ragione per cui il tetto di tre lascia sempre un posto libero.
         world.frenesia = 0;
