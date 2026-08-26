@@ -624,10 +624,10 @@ APPS = [
         "name": "SPRONIA",
         "order": 3,
         "tags": ["svago"],
-        "stato": "bozza",
-        "version": "0.60.0",
+        "stato": "pronto",
+        "version": "1.0.0",
         "released": "2026-08-14",
-        "updated": "2026-08-14",
+        "updated": "2026-08-26",
         "licence": "Apache-2.0",
         "art": {"shape": "altitude"},
         "it": {

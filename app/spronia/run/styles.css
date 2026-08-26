@@ -112,6 +112,30 @@ main {
 
 .panel.wide { width: min(680px, calc(100% - 2rem)); }
 
+/* **Il pannello di richiamo porta i propri colori**, ed è l'unico che lo fa.
+
+   Tutti gli altri stanno su una `.sheet`, cioè su una superficie che segue il tema: nel tema chiaro
+   sono una scheda chiara appoggiata sul campo, e si leggono. Questo no — sta direttamente sul campo,
+   che ha una **tavolozza fissa** perché è uno schermo dentro l'app. Prendendo `--text` dal tema, nel
+   tema chiaro il titolo diventa inchiostro scuro su un cielo scuro: c'è, e non si vede.
+   
+   È esattamente il difetto che l'app sorella ha avuto, nello stesso punto e per la stessa ragione, e
+   si trova in un modo solo: aprendo il gioco **col tema chiaro già impostato**. Da qui, e non dal
+   pulsante premuto dopo. */
+.panel.attract { color: #e8ecf5; }
+
+.panel.attract .sub,
+.panel.attract .small { color: #aab3c9; }
+
+.panel.attract .title { text-shadow: 0 2px 14px rgba(0, 0, 0, 0.6); }
+
+/* Il gettone e il link alla classifica: verde chiaro fisso, non l'accento del tema. Nel tema chiaro
+   `--accent-text` è un verde scuro, giusto su una pagina bianca e illeggibile su questo cielo. */
+.panel.attract .coin,
+.panel.attract .linkish { color: #6ee7b7; border-color: #34d399; }
+
+.panel.attract .coin { background: rgba(52, 211, 153, 0.12); }
+
 .panel > * { margin: 0; max-width: 100%; }
 
 /* Il contenuto di ogni pannello tranne quello di richiamo sta su una superficie sua.

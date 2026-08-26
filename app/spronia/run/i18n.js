@@ -69,7 +69,6 @@ const IT = {
     + "scudo.",
   howTouch: "Col mouse o col dito: premi il campo dal lato in cui vuoi andare, e ogni pressione è "
     + "un battito. Due tocchi rapidi sul tuo dodo accendono lo scudo.",
-  howKeysCustom: "I tasti si cambiano: apri «Cambia i tasti» qui sotto.",
 
   flightTitle: "Il volo",
   flightLead: "Quando due cavalcature si toccano resta in volo chi ha la punta dello sperone più "
@@ -117,6 +116,7 @@ const IT = {
   newBest: "È il punteggio più alto di questo browser.",
   placed: "Entra in classifica al {place}º posto.",
   notPlaced: "Non entra nei primi dieci. La prossima.",
+  noScore: "Zero punti: non c'è niente da salvare. Rimetti un gettone.",
   nameLabel: "Nome",
   namePlaceholder: "Chi ha giocato",
   nameNote: "Il nome resta qui, in questo browser. Non parte da nessuna parte.",
@@ -218,7 +218,6 @@ const EN = {
   howKeys2: "The second: left and right arrows, right Shift to flap, down arrow for the shield.",
   howTouch: "With the mouse or a finger: press the field on the side you want to go, and every "
     + "press is a flap. Two quick taps on your own dodo light the shield.",
-  howKeysCustom: "The keys can be changed: open “Change the keys” below.",
 
   flightTitle: "Flight",
   flightLead: "When two mounts touch, the one whose spur tip is higher stays in the air. That is "
@@ -257,6 +256,7 @@ const EN = {
   newBest: "It is the highest score in this browser.",
   placed: "It enters the table in place {place}.",
   notPlaced: "It does not make the top ten. Next time.",
+  noScore: "No points: there is nothing to save. Put another coin in.",
   nameLabel: "Name",
   namePlaceholder: "Who played",
   nameNote: "The name stays here, in this browser. It goes nowhere.",

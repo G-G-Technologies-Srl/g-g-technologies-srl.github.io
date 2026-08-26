@@ -156,8 +156,25 @@ function _paintOver() {
       one: num(esito.each[0], 0), two: num(esito.each[1] || 0, 0), wave: num(esito.wave, 0),
     })
     : tf("yourScore", { score: num(esito.score, 0), wave: num(esito.wave, 0) });
+
+  // **Una partita da zero punti non entra in classifica**, ed è una correzione trovata provando:
+  // su una tabella vuota, `placeOf(0)` risponde onestamente «primo», e il pannello annunciava il
+  // primo posto a chi aveva chiuso la partita senza giocarla. Una tabella che comincia con uno zero
+  // in cima non è una tabella.
+  //
+  // Sparisce anche il modulo del nome, e anche quello è deliberato: un campo da compilare che poi
+  // rifiuta di salvare sarebbe peggio di non offrirlo.
+  const nulla = esito.score <= 0;
+  el("nameform").hidden = nulla;
+  el("nameNote").hidden = nulla;
+  el("shareBox").hidden = nulla;
+  if (nulla) {
+    el("overPlace").textContent = t("noScore");
+    return;
+  }
+
   const best = table.length > 0 ? table[0].score : 0;
-  el("overPlace").textContent = esito.score > best && esito.score > 0
+  el("overPlace").textContent = esito.score > best
     ? t("newBest")
     : (esito.place > 0 ? tf("placed", { place: num(esito.place, 0) }) : t("notPlaced"));
   _prepareShare(esito);
@@ -337,7 +354,7 @@ function _prepareShare(finita) {
 let saving = false;
 
 async function _saveScore() {
-  if (!esito || saving) return;
+  if (!esito || saving || esito.score <= 0) return;
   saving = true;
   const name = el("namefield").value;
   try { localStorage.setItem(PREF.name, name); } catch (ignored) { /* solo una comodità */ }

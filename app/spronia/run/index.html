@@ -117,8 +117,8 @@
         <div class="how">
           <h2 data-t="ctrlTitle"></h2>
           <ul>
-            <li id="howKeysRow" data-t="howKeys"></li>
-            <li id="howKeys2Row" data-t="howKeys2"></li>
+            <li data-t="howKeys"></li>
+            <li data-t="howKeys2"></li>
             <li data-t="howTouch"></li>
           </ul>
           <p><button type="button" id="keysButton" class="linkish" data-t="keysTitle"></button></p>
@@ -161,7 +161,7 @@
           <input type="text" id="namefield" maxlength="12" enterkeyhint="done" spellcheck="false">
           <button type="submit" id="saveButton" class="primary" data-t="save"></button>
         </form>
-        <p class="small" data-t="nameNote"></p>
+        <p class="small" id="nameNote" data-t="nameNote"></p>
 
         <!-- La condivisione, e le due regole che la tengono onesta.
              Gli href sono normali: nessuno script di terze parti, come sugli articoli e sulla
@@ -170,7 +170,7 @@
              E puntano alla **scheda**, mai a run/: l'app è noindex e il suo canonical nomina già la
              scheda, quindi un link verso run/ non accumula niente e scarica chi arriva dentro un
              attrezzo senza il testo che spiega cos'è. -->
-        <div class="share">
+        <div class="share" id="shareBox">
           <span class="share-label" data-t="shareTitle"></span>
           <a id="shareLinkedin" class="share-link" rel="noopener" target="_blank" data-t-label="shareOnLinkedin">in</a>
           <a id="shareX" class="share-link" rel="noopener" target="_blank" data-t-label="shareOnX">✕</a>
