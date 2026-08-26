@@ -1756,7 +1756,15 @@ export function fit(canvas) {
   canvas.height = Math.max(1, Math.round(box.height * ratio));
 }
 
-export function draw(canvas, world) {
+/**
+ * Il campo, una volta.
+ *
+ * `dim` è il velo sotto i pannelli, e sta **nel buffer** e non in CSS. In CSS coprirebbe anche la
+ * barra in cima, che non è parte del gioco; e dipinto qui usa il fondo del campo, che ha una
+ * tavolozza fissa — quindi funziona uguale nei due temi. Un velo bianco su un campo bianco è il
+ * difetto che l'app sorella ha avuto, e si vede solo aprendo il gioco col tema chiaro già scelto.
+ */
+export function draw(canvas, world, { dim = 0 } = {}) {
   const ctx = _buffer();
   _now = world.time || 0;
 
@@ -1853,6 +1861,13 @@ export function draw(canvas, world) {
   _paintPops(ctx, world);
 
   _paintHud(ctx, world);
+
+  if (dim > 0) {
+    ctx.globalAlpha = Math.min(1, dim);
+    ctx.fillStyle = PAINT.bg;
+    ctx.fillRect(0, 0, BUF.w, BUF.h);
+    ctx.globalAlpha = 1;
+  }
 
   // ---- and up onto the screen ------------------------------------------------------------------
   const out = canvas.getContext("2d");

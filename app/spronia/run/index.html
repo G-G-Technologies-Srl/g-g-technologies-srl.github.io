@@ -36,6 +36,16 @@
     <span class="spacer"></span>
     <button type="button" id="install" class="ghost small" hidden></button>
     <button type="button" id="lang" class="ghost small"></button>
+    <!-- L'icona cambia con lo stato, non solo l'etichetta: l'onda quando suona, la croce quando no.
+         Un pulsante che resta identico dopo che l'hai premuto non dice di aver fatto niente, e
+         l'aria-label lo sa solo chi usa uno screen reader. -->
+    <button type="button" id="sound" class="ghost small icon" data-t-label="soundOn" data-sound="on">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <path d="M4 9v6h4l5 4V5L8 9H4z"></path>
+        <path class="i-wave" d="M16.5 8.5a5 5 0 0 1 0 7"></path>
+        <path class="i-mute" d="M17 10l4 4M21 10l-4 4"></path>
+      </svg>
+    </button>
     <button type="button" id="theme" class="ghost small icon" data-t-label="themeToLight">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
         <circle cx="12" cy="12" r="4"></circle>
@@ -43,48 +53,195 @@
       </svg>
     </button>
   </div>
+
+  <!-- La seconda altezza, e volutamente magra: punti, vite e ondata stanno **dentro** il campo,
+       disegnati in cifre e teste di cavaliere. Qui resta quello che il campo non può dire senza
+       diventare bilingue — i crediti e un pulsante di pausa, che su un telefono è l'unico modo di
+       fermare una partita. -->
+  <div class="hudbar" id="hud" hidden>
+    <span class="hud-item"><span class="hud-label" data-t="credits"></span><b id="creditsSmall">0</b></span>
+    <span class="spacer"></span>
+    <button type="button" id="pauseButton" class="ghost small" data-t="pause"></button>
+  </div>
+
   <p class="hint" id="installHint" hidden></p>
 </header>
 
 <main id="main">
 
+  <!-- Il campo. Tutto il resto della pagina sta sopra, ed è per questo che il canvas non viene mai
+       nascosto: un cabinato non diventava nero nemmeno lui, e un rettangolo vuoto dietro un pannello
+       si legge come un guasto. -->
   <div class="stage">
     <canvas id="field" aria-hidden="true"></canvas>
 
-    <section class="panel" id="intro">
-      <h1 class="name">SPRONIA</h1>
-      <p class="sub" data-t="flightLead"></p>
-      <p class="final" id="final" hidden></p>
+    <!-- L'annuncio di ondata. Sta qui e non nei pixel del campo perché è testo, e il testo dentro
+         un'immagine è una terza lingua da tenere allineata a mano. Sparisce da solo. -->
+    <div class="herald" id="herald" hidden aria-hidden="true">
+      <span class="herald-wave" id="heraldWave"></span>
+      <strong class="herald-kind" id="heraldKind"></strong>
+      <span class="herald-note" id="heraldNote"></span>
+    </div>
 
-      <div class="choose">
-        <button type="button" id="play1" class="primary" data-t="players1"></button>
-        <button type="button" id="play2" data-t="players2"></button>
+    <!-- richiamo -->
+    <section class="panel attract" data-screen="attract">
+      <h1 class="title">SPRONIA</h1>
+      <p class="sub" data-t="tagline"></p>
+      <button type="button" id="coinButton" class="coin">
+        <span class="coin-mark" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M9.5 12h5M12 9.5v5"></path>
+          </svg>
+        </span>
+        <span data-t="insertCoin"></span>
+      </button>
+      <p class="small" data-t="coinFree"></p>
+      <p><button type="button" id="scoresButton" class="linkish" data-t="scoresTitle"></button></p>
+    </section>
+
+    <!-- credito -->
+    <section class="panel" data-screen="credit">
+      <div class="sheet">
+        <p class="kicker"><span data-t="credits"></span> <b id="creditsBig">1</b></p>
+        <h2 class="title small-title" data-t="pressStart"></h2>
+        <p class="choose">
+          <button type="button" id="play1" class="primary big" data-t="players1"></button>
+          <button type="button" id="play2" class="big" data-t="players2"></button>
+        </p>
+        <p class="small" id="playersNote" data-t="playersNote" hidden></p>
+        <p class="small" data-t="startHint"></p>
+
+        <!-- I comandi per primi. Chi apre un gioco vuole sapere che tasti premere, non che cos'è la
+             regola dell'altezza: quella la impara giocando, i tasti no. -->
+        <div class="how">
+          <h2 data-t="ctrlTitle"></h2>
+          <ul>
+            <li id="howKeysRow" data-t="howKeys"></li>
+            <li id="howKeys2Row" data-t="howKeys2"></li>
+            <li data-t="howTouch"></li>
+          </ul>
+          <p><button type="button" id="keysButton" class="linkish" data-t="keysTitle"></button></p>
+
+          <h2 data-t="flightTitle"></h2>
+          <ul>
+            <li data-t="howBeat"></li>
+            <li data-t="howSkid"></li>
+            <li data-t="howLance"></li>
+            <li data-t="howCells"></li>
+            <li data-t="howShield"></li>
+            <li data-t="howIntruder"></li>
+            <li data-t="howClaw"></li>
+          </ul>
+          <p class="small" data-t="a11yNote"></p>
+        </div>
+        <p><button type="button" id="backFromCredit" class="linkish" data-t="back"></button></p>
       </div>
-      <p class="small" id="playersNote" data-t="playersNote" hidden></p>
+    </section>
 
-      <!-- I comandi per primi. Chi apre un gioco vuole sapere che tasti premere, non che cos'è la
-           regola dell'altezza: quella la impara giocando, i tasti no. -->
-      <h2 data-t="ctrlTitle"></h2>
-      <ul class="how">
-        <li data-t="howKeys"></li>
-        <li data-t="howKeys2"></li>
-        <li data-t="howTouch"></li>
-      </ul>
+    <!-- pausa -->
+    <section class="panel" data-screen="paused">
+      <div class="sheet">
+        <h2 class="title small-title" data-t="paused"></h2>
+        <p>
+          <button type="button" id="resumeButton" class="primary" data-t="resume"></button>
+          <button type="button" id="quitButton" data-t="quit"></button>
+        </p>
+      </div>
+    </section>
 
-      <h2 data-t="flightTitle"></h2>
-      <ul class="how">
-        <li data-t="howBeat"></li>
-        <li data-t="howSkid"></li>
-        <li data-t="howLance"></li>
-        <li data-t="howCells"></li>
-        <li data-t="howShield"></li>
-        <li data-t="howIntruder"></li>
-        <li data-t="howClaw"></li>
-      </ul>
-      <p class="small" data-t="a11yNote"></p>
+    <!-- fine partita -->
+    <section class="panel" data-screen="over">
+      <div class="sheet">
+        <h2 class="title small-title" data-t="gameOver"></h2>
+        <p id="overScore" class="lead"></p>
+        <p id="overPlace" class="small"></p>
+        <form id="nameform" class="nameform" autocomplete="off">
+          <label for="namefield" data-t="nameLabel"></label>
+          <input type="text" id="namefield" maxlength="12" enterkeyhint="done" spellcheck="false">
+          <button type="submit" id="saveButton" class="primary" data-t="save"></button>
+        </form>
+        <p class="small" data-t="nameNote"></p>
+
+        <!-- La condivisione, e le due regole che la tengono onesta.
+             Gli href sono normali: nessuno script di terze parti, come sugli articoli e sulla
+             scheda. Il widget ufficiale di un social porta un tracker, e su un gioco che si vende
+             dicendo di non mandare niente a nessuno sarebbe la contraddizione più visibile.
+             E puntano alla **scheda**, mai a run/: l'app è noindex e il suo canonical nomina già la
+             scheda, quindi un link verso run/ non accumula niente e scarica chi arriva dentro un
+             attrezzo senza il testo che spiega cos'è. -->
+        <div class="share">
+          <span class="share-label" data-t="shareTitle"></span>
+          <a id="shareLinkedin" class="share-link" rel="noopener" target="_blank" data-t-label="shareOnLinkedin">in</a>
+          <a id="shareX" class="share-link" rel="noopener" target="_blank" data-t-label="shareOnX">✕</a>
+          <a id="shareMail" class="share-link" data-t-label="shareByMail">✉</a>
+          <button type="button" id="shareCopy" class="share-link" data-t-label="shareCopy">⧉</button>
+        </div>
+        <p class="small" id="shareNote"></p>
+
+        <p>
+          <button type="button" id="coinAgain" class="linkish" data-t="playAgain"></button>
+          ·
+          <button type="button" id="scoresFromOver" class="linkish" data-t="scoresTitle"></button>
+        </p>
+      </div>
+    </section>
+
+    <!-- la classifica -->
+    <section class="panel wide" data-screen="scores">
+      <div class="sheet">
+        <h2 class="title small-title" data-t="scoresTitle"></h2>
+        <p class="small" data-t="scoresLocal"></p>
+        <p class="small" id="storageNote" hidden data-t="storageOff"></p>
+        <table class="scores">
+          <thead>
+            <tr>
+              <th class="pos" data-t="scoresPos"></th>
+              <th data-t="scoresName"></th>
+              <th class="pts" data-t="scoresScore"></th>
+              <th class="pts" data-t="scoresWave"></th>
+              <th class="when" data-t="scoresDate"></th>
+            </tr>
+          </thead>
+          <tbody id="scoreRows"></tbody>
+        </table>
+        <p class="small" id="scoresEmpty" data-t="scoresEmpty"></p>
+        <p class="totals">
+          <span><b id="statGames">0</b> <span data-t="statsGames"></span></span>
+          <span><b id="statBest">1</b> <span data-t="statsBest"></span></span>
+          <span><b id="statCoins">0</b> <span data-t="statsCoins"></span></span>
+        </p>
+        <p class="small" data-t="exportHint"></p>
+        <p class="io">
+          <button type="button" id="exportButton" class="accent" data-t="export"></button>
+          <button type="button" id="importButton" data-t="import"></button>
+          <button type="button" id="clearButton" data-t="clear"></button>
+          <input type="file" id="importFile" accept="application/json,.json" hidden>
+        </p>
+        <p class="small" id="ioNote"></p>
+        <p><button type="button" id="backFromScores" class="linkish" data-t="back"></button></p>
+      </div>
+    </section>
+
+    <!-- i tasti -->
+    <section class="panel wide" data-screen="keys">
+      <div class="sheet">
+        <h2 class="title small-title" data-t="keysTitle"></h2>
+        <p class="small" data-t="keysIntro"></p>
+        <div class="keymap" id="keymap"></div>
+        <p class="small" id="keysNote"></p>
+        <p class="io">
+          <button type="button" id="keysReset" data-t="keysReset"></button>
+          <button type="button" id="keysDone" class="primary" data-t="keysDone"></button>
+        </p>
+      </div>
     </section>
   </div>
 
+  <!-- Quello che viene detto a uno screen reader. Un gioco in tempo reale non si può raccontare
+       mentre succede; la fine di una partita sì, ed è quello che va qui invece di una telecronaca
+       che nessuno riuscirebbe a seguire. -->
+  <p class="sr-only" id="live" role="status" aria-live="polite"></p>
 </main>
 
 <footer class="foot">

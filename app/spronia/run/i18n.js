@@ -7,6 +7,11 @@
 //
 // The machinery lives in `gg/i18n.js`. What is here is what belongs to this app and to nothing
 // else: the words.
+//
+// **Nessuna parola dentro il campo.** La barra del gioco è cifre e teste di cavaliere, e l'annuncio
+// di ondata è un elemento HTML sopra il canvas, non testo dipinto nei pixel. È una decisione presa
+// per non avere una terza lingua da tenere allineata dentro un'immagine — e si vede in questo file,
+// che è dove finiscono anche le stringhe che sembrerebbero appartenere al gioco.
 
 export * from "gg/i18n.js";
 
@@ -15,15 +20,56 @@ import { configure } from "gg/i18n.js";
 const IT = {
   tagline: "Vince chi vola più alto",
 
-  // La Fase 1 mostra il volo e basta. Le stringhe del cabinato — gettone, crediti, classifica —
-  // arrivano con la fase che le usa: scriverle adesso significherebbe tradurre due volte quello
-  // che ancora non esiste.
+  // -------------------------------------------------------------------------------------------
+  //  i l   c a b i n a t o
+  // -------------------------------------------------------------------------------------------
+
+  insertCoin: "Inserisci il gettone",
+  coinFree: "I gettoni sono finiti nel 1985. Questo è gratis, e ne puoi mettere quanti vuoi.",
+  credits: "Crediti",
+  pressStart: "Scegli in quanti giocate",
+  startHint: "Un tasto qualunque del volo fa la stessa cosa.",
+  players1: "Un giocatore",
+  players2: "Due giocatori",
+  playersNote: "A due giocatori serve una tastiera o un gamepad.",
+  back: "Indietro",
+  pause: "Pausa",
+  paused: "In pausa",
+  resume: "Riprendi",
+  quit: "Chiudi la partita",
+  quitAsk: "Chiudere la partita in corso?",
+
+  score: "Punti",
+  wave: "Ondata",
+  lives: "Vite",
+
+  // L'annuncio che compare all'inizio di ogni ondata. Il tipo di ondata esisteva da tre fasi e non
+  // lo sapeva nessuno: le regole cambiavano — nessun nemico in volo, un premio per chi sopravvive,
+  // due giocatori che non devono toccarsi — e in campo non c'era niente che lo dicesse. Un premio
+  // che non si sa di poter vincere non è un premio, è un numero che ogni tanto compare.
+  waveNumber: "Ondata {n}",
+  waveNormale: "",
+  waveCelle: "Solo celle",
+  waveCelleNote: "Niente nemici in volo. Raccogli prima che si schiudano.",
+  waveSopravvivenza: "Sopravvivenza",
+  waveSopravvivenzaNote: "Finiscila senza morire e vale tremila punti.",
+  waveSquadra: "Squadra",
+  waveSquadraNote: "Nessuno dei due tocca l'altro: tremila punti a testa.",
+  waveDuello: "Duello",
+  waveDuelloNote: "Qui il colpo fra voi due paga. Altrove no.",
+  bonusEarned: "Premio: {points}",
+
+  // -------------------------------------------------------------------------------------------
+  //  c o m e   s i   g i o c a
+  // -------------------------------------------------------------------------------------------
+
   ctrlTitle: "I comandi",
   howKeys: "Un giocatore: A e D per girare, W per battere le ali, S per lo scudo.",
   howKeys2: "Il secondo: frecce sinistra e destra, Maiusc destro per battere, freccia giù per lo "
     + "scudo.",
   howTouch: "Col mouse o col dito: premi il campo dal lato in cui vuoi andare, e ogni pressione è "
     + "un battito. Due tocchi rapidi sul tuo dodo accendono lo scudo.",
+  howKeysCustom: "I tasti si cambiano: apri «Cambia i tasti» qui sotto.",
 
   flightTitle: "Il volo",
   flightLead: "Quando due cavalcature si toccano resta in volo chi ha la punta dello sperone più "
@@ -41,14 +87,89 @@ const IT = {
     + "sempre più spesso. Si abbatte andandole incontro alla quota del suo cuore acceso.",
   howClaw: "Dalla colata esce una pinza che afferra chi vola basso. Per liberarti batti le ali "
     + "molto più in fretta del solito.",
+  a11yNote: "È un gioco d'azione in tempo reale: serve vedere lo schermo.",
 
-  gameOver: "Partita finita. Punteggio:",
+  // -------------------------------------------------------------------------------------------
+  //  i   t a s t i ,   c a m b i a t i
+  // -------------------------------------------------------------------------------------------
+
+  keysTitle: "Cambia i tasti",
+  keysIntro: "Clicca un tasto e premi quello che vuoi al suo posto. Restano in questo browser.",
+  keysPlayer: "Giocatore {n}",
+  keysLeft: "Sinistra",
+  keysRight: "Destra",
+  keysFlap: "Batti le ali",
+  keysShield: "Scudo",
+  keysPress: "Premi un tasto…",
+  keysTaken: "Quel tasto è già di un altro comando.",
+  keysReserved: "Esc, P e Invio servono al cabinato e non si possono assegnare.",
+  keysReset: "Rimetti i tasti di partenza",
+  keysDone: "Fatto",
+
+  // -------------------------------------------------------------------------------------------
+  //  f i n e   p a r t i t a   e   c l a s s i f i c a
+  // -------------------------------------------------------------------------------------------
+
+  gameOver: "Partita finita",
   player: "Giocatore",
+  yourScore: "{score} punti, ondata {wave}.",
+  yourScore2: "Giocatore 1: {one} · Giocatore 2: {two} · ondata {wave}.",
+  newBest: "È il punteggio più alto di questo browser.",
+  placed: "Entra in classifica al {place}º posto.",
+  notPlaced: "Non entra nei primi dieci. La prossima.",
+  nameLabel: "Nome",
+  namePlaceholder: "Chi ha giocato",
+  nameNote: "Il nome resta qui, in questo browser. Non parte da nessuna parte.",
+  save: "Salva in classifica",
+  playAgain: "Un'altra partita",
+  liveGameOver: "Partita finita. {score} punti, ondata {wave}.",
 
-  players1: "Un giocatore",
-  players2: "Due giocatori",
-  playersNote: "A due giocatori serve una tastiera o un gamepad.",
+  scoresTitle: "Classifica",
+  scoresLocal: "È la classifica di questo browser, su questa macchina. Come quella di un cabinato: "
+    + "per batterla si torna qui.",
+  scoresPos: "#",
+  scoresName: "Nome",
+  scoresScore: "Punti",
+  scoresWave: "Ondata",
+  scoresDate: "Quando",
+  scoresEmpty: "Ancora nessuna partita salvata.",
+  storageOff: "Questo browser non lascia salvare niente: la classifica non verrà tenuta.",
+  statsGames: "partite",
+  statsBest: "ondata più alta",
+  statsCoins: "gettoni",
+  exportHint: "Senza un server questa è l'unica copia che esiste. Portala via prima di cambiare "
+    + "computer.",
+  export: "Esporta",
+  import: "Importa",
+  clear: "Svuota",
+  clearAsk: "Cancellare la classifica e i contatori?",
+  exported: "Salvato in {name}.",
+  imported: "Rimesse {n} voci.",
+  importNotJson: "Questo file non è un JSON leggibile.",
+  importNotExport: "Questo file non è un'esportazione di SPRONIA.",
+  importOtherApp: "Questa esportazione viene da un'altra app.",
+  importNewer: "Questa esportazione viene da una versione più recente dell'app.",
+  importNothing: "Nell'esportazione non c'è niente da rimettere.",
 
+  // -------------------------------------------------------------------------------------------
+  //  c o n d i v i s i o n e
+  // -------------------------------------------------------------------------------------------
+
+  shareTitle: "Racconta com'è andata",
+  shareText: "{score} punti su SPRONIA, ondata {wave}.",
+  shareMailSubject: "SPRONIA — {score} punti",
+  shareOnLinkedin: "Condividi su LinkedIn",
+  shareOnX: "Condividi su X",
+  shareByMail: "Manda per email",
+  shareCopy: "Copia il link",
+  shareCopied: "Link copiato.",
+
+  // -------------------------------------------------------------------------------------------
+  //  i l   c o n t o r n o
+  // -------------------------------------------------------------------------------------------
+
+  soundOn: "Spegni il suono",
+  soundOff: "Accendi il suono",
   themeToLight: "Passa al tema chiaro",
   themeToDark: "Passa al tema scuro",
   langSwitch: "Switch to English",
@@ -56,17 +177,48 @@ const IT = {
   installIos: "Per installare: Condividi, poi «Aggiungi a Home».",
   backToPage: "Torna alla scheda",
   sourceLabel: "Codice sorgente",
-  a11yNote: "È un gioco d'azione in tempo reale: serve vedere lo schermo.",
 };
 
 const EN = {
   tagline: "The higher rider wins",
+
+  insertCoin: "Insert coin",
+  coinFree: "Coins ran out in 1985. This one is free, and you can put in as many as you like.",
+  credits: "Credits",
+  pressStart: "Choose how many are playing",
+  startHint: "Any flying key does the same thing.",
+  players1: "One player",
+  players2: "Two players",
+  playersNote: "Two players need a keyboard or a gamepad.",
+  back: "Back",
+  pause: "Pause",
+  paused: "Paused",
+  resume: "Resume",
+  quit: "End this game",
+  quitAsk: "End the game in progress?",
+
+  score: "Score",
+  wave: "Wave",
+  lives: "Lives",
+
+  waveNumber: "Wave {n}",
+  waveNormale: "",
+  waveCelle: "Cells only",
+  waveCelleNote: "Nothing in the air. Collect them before they hatch.",
+  waveSopravvivenza: "Survival",
+  waveSopravvivenzaNote: "Finish it without dying and it is worth three thousand.",
+  waveSquadra: "Team",
+  waveSquadraNote: "Neither of you touches the other: three thousand each.",
+  waveDuello: "Duel",
+  waveDuelloNote: "Here a hit on each other pays. Nowhere else.",
+  bonusEarned: "Bonus: {points}",
 
   ctrlTitle: "The controls",
   howKeys: "One player: A and D to turn, W to flap, S for the shield.",
   howKeys2: "The second: left and right arrows, right Shift to flap, down arrow for the shield.",
   howTouch: "With the mouse or a finger: press the field on the side you want to go, and every "
     + "press is a flap. Two quick taps on your own dodo light the shield.",
+  howKeysCustom: "The keys can be changed: open “Change the keys” below.",
 
   flightTitle: "Flight",
   flightLead: "When two mounts touch, the one whose spur tip is higher stays in the air. That is "
@@ -83,14 +235,73 @@ const EN = {
     + "more often. You bring it down by meeting it head-on at the height of its burning core.",
   howClaw: "A claw comes out of the molten metal and grabs whoever flies low. To break free, flap "
     + "much faster than usual.",
+  a11yNote: "It is a real-time action game: you need to see the screen.",
 
-  gameOver: "Game over. Score:",
+  keysTitle: "Change the keys",
+  keysIntro: "Click a key and press the one you want instead. They stay in this browser.",
+  keysPlayer: "Player {n}",
+  keysLeft: "Left",
+  keysRight: "Right",
+  keysFlap: "Flap",
+  keysShield: "Shield",
+  keysPress: "Press a key…",
+  keysTaken: "That key already belongs to another control.",
+  keysReserved: "Esc, P and Enter belong to the cabinet and cannot be assigned.",
+  keysReset: "Put the starting keys back",
+  keysDone: "Done",
+
+  gameOver: "Game over",
   player: "Player",
+  yourScore: "{score} points, wave {wave}.",
+  yourScore2: "Player 1: {one} · Player 2: {two} · wave {wave}.",
+  newBest: "It is the highest score in this browser.",
+  placed: "It enters the table in place {place}.",
+  notPlaced: "It does not make the top ten. Next time.",
+  nameLabel: "Name",
+  namePlaceholder: "Who played",
+  nameNote: "The name stays here, in this browser. It goes nowhere.",
+  save: "Save to the table",
+  playAgain: "Another game",
+  liveGameOver: "Game over. {score} points, wave {wave}.",
 
-  players1: "One player",
-  players2: "Two players",
-  playersNote: "Two players need a keyboard or a gamepad.",
+  scoresTitle: "High scores",
+  scoresLocal: "This is the table of this browser, on this machine. Like a cabinet's: to beat it "
+    + "you come back here.",
+  scoresPos: "#",
+  scoresName: "Name",
+  scoresScore: "Score",
+  scoresWave: "Wave",
+  scoresDate: "When",
+  scoresEmpty: "No game saved yet.",
+  storageOff: "This browser will not let anything be saved: the table will not be kept.",
+  statsGames: "games",
+  statsBest: "highest wave",
+  statsCoins: "coins",
+  exportHint: "With no server this is the only copy there is. Take it away before you change "
+    + "computer.",
+  export: "Export",
+  import: "Import",
+  clear: "Empty",
+  clearAsk: "Delete the table and the counters?",
+  exported: "Saved as {name}.",
+  imported: "{n} entries put back.",
+  importNotJson: "This file is not readable JSON.",
+  importNotExport: "This file is not a SPRONIA export.",
+  importOtherApp: "This export came from another app.",
+  importNewer: "This export came from a newer version of the app.",
+  importNothing: "There is nothing in the export to put back.",
 
+  shareTitle: "Say how it went",
+  shareText: "{score} points on SPRONIA, wave {wave}.",
+  shareMailSubject: "SPRONIA — {score} points",
+  shareOnLinkedin: "Share on LinkedIn",
+  shareOnX: "Share on X",
+  shareByMail: "Send by email",
+  shareCopy: "Copy the link",
+  shareCopied: "Link copied.",
+
+  soundOn: "Turn the sound off",
+  soundOff: "Turn the sound on",
   themeToLight: "Switch to the light theme",
   themeToDark: "Switch to the dark theme",
   langSwitch: "Passa all'italiano",
@@ -98,7 +309,6 @@ const EN = {
   installIos: "To install: Share, then “Add to Home Screen”.",
   backToPage: "Back to the app page",
   sourceLabel: "Source code",
-  a11yNote: "It is a real-time action game: you need to see the screen.",
 };
 
 // -----------------------------------------------------------------------------------------------------------------

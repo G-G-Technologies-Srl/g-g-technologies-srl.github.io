@@ -14,6 +14,54 @@ main {
   min-height: 0;
 }
 
+/* ---------------------------------------------------------------------------------------------
+   la seconda barra: i crediti e la pausa
+   --------------------------------------------------------------------------------------------- */
+
+/* Magra apposta. Punti, vite e ondata stanno dentro il campo, dove si guarda già: ripeterli qui
+   vorrebbe dire due posti in cui leggere lo stesso numero, e quello in alto è sempre quello che
+   non si guarda. */
+.hudbar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.hudbar .spacer { flex: 1 1 auto; }
+
+.hud-item { display: inline-flex; align-items: baseline; gap: 7px; }
+
+.hud-label {
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+/* Cifre tabulari, o il numero balla di lato ogni volta che cambia — e su un contatore che scatta
+   cento volte al minuto si legge come tutta la barra che oscilla. */
+.hud-item b {
+  font-size: 16px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+/* L'onda o la croce, mai tutte e due. Lo stato sta su un attributo del pulsante invece che su una
+   classe cambiata da JavaScript, così il markup dice da solo in che stato è. */
+#sound[data-sound="on"] .i-mute { display: none; }
+
+#sound[data-sound="off"] .i-wave { display: none; }
+
+#sound[data-sound="off"] { color: var(--faint); }
+
+/* ---------------------------------------------------------------------------------------------
+   il campo, e i pannelli che ci stanno sopra
+   --------------------------------------------------------------------------------------------- */
+
 /* The field, and the panels that sit over it. The canvas is never hidden: an arcade cabinet was
    never dark either, and a black rectangle behind a dialog reads as a crash. */
 .stage {
@@ -29,7 +77,7 @@ main {
    one reads as a hole.
 
    `image-rendering: pixelated` is the whole of the pixel look on this side. The canvas is painted at
-   320 x 180 and blown up by a whole multiple; without this the browser would smooth it back into
+   640 x 360 and blown up by a whole multiple; without this the browser would smooth it back into
    the thing it was drawn small to avoid. */
 #field {
   grid-area: 1 / 1;
@@ -48,108 +96,369 @@ main {
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5) inset;
 }
 
-/* The panels sit over a fixed-palette field, so they cannot borrow the page background and expect
-   to be readable. They carry their own. */
-.panel {
-  background: linear-gradient(170deg, #1b2740, #131c30 60%);
-  color: #e8ecf5;
-  border-color: rgba(255, 255, 255, 0.14);
-}
-
-.panel .sub,
-.panel .how,
-.panel .small {
-  color: #aab3c9;
-}
-
 .panel {
   grid-area: 1 / 1;
   place-self: center;
   width: min(560px, calc(100% - 2rem));
-  padding: 1.4rem 1.5rem 1.6rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: linear-gradient(170deg, var(--panel-2), var(--panel) 60%);
-  position: relative;
-  /* Orizzontale nascosto per tenere il filo dell'accento dentro gli angoli tondi; verticale
-     scorrevole perché **il pannello può essere più alto della finestra**. Succede su un portatile
-     con la finestra bassa e su un telefono in orizzontale, che è come il gioco va tenuto: senza,
-     le istruzioni escono dallo schermo da tutt'e due i lati e i due bottoni di avvio finiscono
-     fuori. Con `place-self: center` non c'è nemmeno un lato da cui recuperarle scorrendo la
-     pagina, perché a traboccare è il riquadro, non il documento. */
-  overflow-x: hidden;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  text-align: center;
   max-height: calc(100% - 1.5rem);
+  overflow-y: auto;
   overscroll-behavior: contain;
 }
 
-/* The 2px filament in the accent along the top edge: the site's mark for a panel that matters. */
-.panel::before {
+.panel.wide { width: min(680px, calc(100% - 2rem)); }
+
+.panel > * { margin: 0; max-width: 100%; }
+
+/* Il contenuto di ogni pannello tranne quello di richiamo sta su una superficie sua.
+
+   La prima versione contava su un velo dipinto sopra il campo dal disegnatore, e funziona nel tema
+   scuro e non fa niente in quello chiaro: lì il velo è bianco su un campo bianco, quindi il gioco
+   fermo si vede a piena forza e un nemico atterra sul titolo. Una superficie sistema tutti e due i
+   temi in un colpo, ed è la forma del sito: pannello, filo di un pixel e i due pixel di accento in
+   cima. */
+.sheet {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  background: linear-gradient(170deg, var(--panel-2), var(--panel) 60%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.4rem 1.5rem 1.2rem;
+  max-width: 100%;
+  width: 100%;
+}
+
+.sheet::before {
   content: "";
   position: absolute;
-  inset: 0 0 auto 0;
+  top: -1px;
+  left: 12%;
+  right: 12%;
   height: 2px;
-  background: linear-gradient(90deg, var(--accent), transparent);
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-text));
 }
 
-.panel .name {
+.sheet > * { margin: 0; max-width: 100%; }
+
+/* Serif qui e in nessun altro punto dell'app. La regola di app/CLAUDE.md: il serif dice «testo da
+   leggere», e gli unici momenti in cui quest'app parla invece di lavorare sono il suo nome e i suoi
+   pannelli. */
+.title {
   font-family: var(--font-display);
-  font-size: clamp(1.7rem, 4vw, 2.3rem);
-  letter-spacing: 0.04em;
+  font-weight: 400;
+  font-size: clamp(30px, 6vw, 46px);
+  letter-spacing: 0.02em;
   margin: 0;
 }
 
-.panel .sub {
-  color: var(--muted);
-  margin: 0.15rem 0 1rem;
+.small-title { font-size: clamp(21px, 4vw, 28px); }
+
+.sub { margin: -4px 0 4px; color: var(--muted); }
+
+.lead { margin: 0; font-size: 17px; color: var(--text); font-variant-numeric: tabular-nums; }
+
+.small { font-size: 12.5px; color: var(--faint); line-height: 1.55; }
+
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--accent-text);
 }
 
-.panel h2 {
-  font-size: 0.95rem;
-  margin: 1.2rem 0 0.4rem;
+.kicker b { font-size: 20px; font-variant-numeric: tabular-nums; }
+
+.linkish {
+  border: none;
+  padding: 2px 0;
+  color: var(--accent-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  background: none;
+  font-size: 13px;
 }
 
-/* Il punteggio dell'ultima partita, sopra i due bottoni. Nell'accento e non nel colore del testo:
-   è l'unica riga del pannello che parla della partita appena giocata invece che di come si gioca,
-   e va trovata senza cercarla. */
-.final {
-  margin: 0 0 0.9rem;
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
-}
+.big { font-size: 16px; padding: 11px 26px; }
 
-.choose {
+.choose { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; }
+
+/* ---------------------------------------------------------------------------------------------
+   l ' a n n u n c i o   d i   o n d a t a
+   --------------------------------------------------------------------------------------------- */
+
+/* Il tipo di ondata esisteva da tre fasi e non lo sapeva nessuno: le regole cambiavano — nessun
+   nemico in volo, un premio per chi sopravvive, due giocatori che non devono toccarsi — e in campo
+   non c'era niente che lo dicesse.
+
+   Sta sopra il canvas e non dentro, perché è testo: dipingerlo nei pixel vorrebbe dire una terza
+   lingua da tenere allineata dentro un'immagine. In alto e non al centro, perché al centro
+   coprirebbe il punto in cui si sta guardando nel momento in cui l'ondata comincia. */
+.herald {
+  grid-area: 1 / 1;
+  place-self: start center;
+  /* Sotto il soffitto e sotto la barra delle vite, non sopra: in cima al campo ci sono già le
+     teste dei cavalieri e il numero dell'ondata dipinti nei pixel, e un riquadro appoggiato lì
+     copre l'unica informazione che si guarda mentre si comincia. */
+  margin-top: clamp(52px, 15vh, 130px);
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  margin: 0.2rem 0 0.6rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 22px;
+  text-align: center;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--panel) 95%, transparent);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  animation: herald-in 0.35s ease-out both;
 }
 
-/* The bullet is a small square in the accent, not the browser's dot. Same vocabulary as the site. */
+.herald-wave {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.herald-kind {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(19px, 3.4vw, 26px);
+  color: var(--accent-text);
+}
+
+.herald-kind:empty { display: none; }
+
+.herald-note { font-size: 12.5px; color: var(--muted); }
+
+.herald-note:empty { display: none; }
+
+/* Il premio incassato usa lo stesso riquadro con l'accento pieno: è la stessa voce che annuncia
+   l'ondata, e alla fine dice com'è andata. */
+.herald[data-kind="bonus"] { border-color: var(--accent); }
+
+.herald[data-kind="bonus"] .herald-kind { color: var(--accent-text); }
+
+@keyframes herald-in {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------------------------------------------------------------------------------------------
+   il gettone
+   --------------------------------------------------------------------------------------------- */
+
+/* L'unico comando della schermata di apertura, e l'idea stessa dell'app. Grande, contornato
+   nell'accento, e lampeggiante — il lampeggio è il cabinato che cita sé stesso, ed è l'unica
+   animazione dell'app che non sia il gioco. */
+.coin {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  padding: 13px 26px;
+  border: 1px solid var(--accent);
+  color: var(--accent-text);
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  animation: blink 1.6s steps(1, end) infinite;
+}
+
+.coin:hover { background: var(--accent-soft); border-color: var(--accent); }
+
+.coin-mark { display: inline-flex; }
+
+@keyframes blink { 0%, 62% { opacity: 1; } 63%, 100% { opacity: 0.45; } }
+
+/* Chi ha chiesto meno movimento ha chiesto meno di esattamente questo. Il gioco non viene
+   rallentato: quello sarebbe cambiare le regole, che non è ciò che la preferenza vuol dire. */
+@media (prefers-reduced-motion: reduce) {
+  .coin { animation: none; }
+  .herald { animation: none; }
+}
+
+/* ---------------------------------------------------------------------------------------------
+   come si gioca, il nome, la tabella
+   --------------------------------------------------------------------------------------------- */
+
 .how {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  color: var(--muted);
-  font-size: 0.92rem;
-  line-height: 1.55;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  padding: 14px 16px;
+  width: 100%;
 }
 
+.how h2 {
+  font-size: 12px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin: 0 0 8px;
+  font-weight: 500;
+}
+
+.how h2 + ul { margin-top: 0; }
+
+.how ul { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 7px; }
+
+/* Il quadratino del sito invece del pallino del browser. */
 .how li {
   position: relative;
-  padding-left: 1.1rem;
-  margin-bottom: 0.35rem;
+  padding-left: 16px;
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.5;
 }
 
 .how li::before {
   content: "";
   position: absolute;
   left: 0;
-  top: 0.55em;
+  top: 7px;
   width: 6px;
   height: 6px;
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent), var(--accent-text));
 }
+
+.nameform {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.nameform label {
+  font-size: 12px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.nameform input {
+  font: inherit;
+  font-size: 16px;              /* sotto i 16px, iOS ingrandisce la pagina quando il campo prende il fuoco */
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  width: 190px;
+}
+
+.scores {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  text-align: left;
+}
+
+.scores th {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+  font-weight: 500;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.scores td { padding: 6px 8px; border-bottom: 1px solid var(--border); color: var(--muted); }
+
+.scores .pos { width: 40px; color: var(--faint); font-variant-numeric: tabular-nums; }
+
+.scores .who { color: var(--text); overflow-wrap: anywhere; }
+
+/* Il segno che quella riga è stata fatta in due. Una sigla e non un colore: due punteggi fatti in
+   condizioni diverse devono distinguersi anche per chi i colori non li separa. */
+.scores .who small {
+  color: var(--faint);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  margin-left: 6px;
+}
+
+.scores .pts { text-align: right; font-variant-numeric: tabular-nums; width: 74px; }
+
+.scores .when { text-align: right; color: var(--faint); white-space: nowrap; }
+
+.totals {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  justify-content: center;
+  font-size: 12.5px;
+  color: var(--faint);
+}
+
+.totals b { color: var(--text); font-variant-numeric: tabular-nums; }
+
+.io { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+
+/* ---------------------------------------------------------------------------------------------
+   i tasti, cambiati
+   --------------------------------------------------------------------------------------------- */
+
+.keymap { display: grid; gap: 14px; width: 100%; }
+
+.keyset { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
+
+.keyset h3 {
+  font-size: 12px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--faint);
+  font-weight: 500;
+  margin: 0 0 8px;
+}
+
+.keyrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+  text-align: left;
+}
+
+.keyrow span { flex: 1 1 auto; font-size: 13.5px; color: var(--muted); }
+
+/* Il pulsante è il tasto: si clicca e si preme quello nuovo. Monospazio, perché quello che c'è
+   scritto dentro è un codice di tastiera e non una parola — e in tondo «KeyW» e «Key W» si
+   confondono. Quarantaquattro pixel di altezza, come ogni comando dell'app. */
+.keycap {
+  min-width: 118px;
+  min-height: 44px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.keycap[data-listening="1"] {
+  border-color: var(--accent);
+  color: var(--accent-text);
+  background: var(--accent-soft);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   il piede, e gli schermi stretti
+   --------------------------------------------------------------------------------------------- */
 
 .foot {
   display: flex;
@@ -161,3 +470,10 @@ main {
 }
 
 .foot .spacer { flex: 1 1 auto; }
+
+@media (max-width: 620px) {
+  .hudbar { gap: 12px; padding: 5px 12px; }
+  .sheet { padding: 1.1rem 1rem 1rem; }
+  .scores .when, .scores th.when { display: none; }
+  .keyrow { flex-wrap: wrap; }
+}

@@ -851,11 +851,16 @@ export function makePilot(index, pad) {
  * Un ciclo e non un `if`: una cella presa a scala piena può scavalcare due soglie in un colpo solo
  * quando le soglie sono ancora basse.
  */
-function _pay(pilot, points) {
+function _pay(pilot, points, world = null) {
   pilot.score += points;
   while (pilot.score >= pilot.extra) {
     pilot.lives += 1;
     pilot.extra *= 2;
+    // La vita in più è l'unica cosa buona che arriva **senza che tu abbia fatto niente in quel
+    // momento**: la soglia si passa mentre stai già facendo altro. Per questo ha un suono suo, e per
+    // questo il mondo arriva fin qui — l'alternativa era che chi paga i punti si ricordasse di
+    // controllare la soglia, cioè otto punti in cui dimenticarsene.
+    if (world) _sound(world, "vita");
   }
 }
 
@@ -1056,6 +1061,16 @@ export function create(seed = 1, players = 1, foes = 0) {
     // perché lo stesso seme deve rigiocare la stessa partita fin dentro le pause.
     hit: 0,
     shake: 0,
+    // **La coda dei suoni**, e non `world.last` con qualcuno che la guarda.
+    //
+    // `last` è una casella sola, riscritta da ogni cosa che dà punti: dentro un passo ci stanno un
+    // nemico abbattuto, una cella raccolta e una vita persa, e chi legge la casella ne sente uno su
+    // tre. Una coda invece dice **tutto quello che è successo**, nell'ordine in cui è successo, e
+    // la svuota chi la usa.
+    //
+    // Vive nel mondo e non in un modulo a parte perché il mondo è l'unica cosa che `step` conosce.
+    // Nessuno è obbligato a leggerla: sotto Node non la legge nessuno e non costa niente.
+    sounds: [],
     // La Pinza: una sola, sempre presente come oggetto e quasi sempre sotto il metallo. Tenerla come
     // stato invece che crearla e distruggerla rende «una sola alla volta» una proprietà della
     // struttura invece di una regola da ricordarsi.
@@ -1136,6 +1151,9 @@ export function startWave(world, roster) {
     _seedCells(world, piano.cells);
     for (let i = 0; i < piano.intruders; i += 1) world.intrusi.push(makeIntruder(world, false));
     world.claw = piano.claw ? makeClaw(world) : null;
+    // L'ondata che comincia. Il suono arriva **dopo** che il campo è pieno, non prima: è il
+    // sipario, e un sipario che si alza su un palco vuoto non è un sipario.
+    if (world.sounds) _sound(world, "ondata");
     return world;
   }
 
@@ -1272,6 +1290,12 @@ export function step(world, intents, dt = STEP) {
   // invece è già il posto che decide **quanti** passi fare: saltarne qualcuno è il suo mestiere.
   if (world.shake > 0) world.shake = Math.max(0, world.shake - dt);
 
+  // **La coda dei suoni si svuota all'inizio del passo, non alla fine.** Svuotandola alla fine,
+  // quello che è successo in questo passo sarebbe già sparito quando il ciclo la legge — e chi
+  // legge sta fuori da `step`, per costruzione. Così invece la coda contiene sempre e solo
+  // l'ultimo passo, e chi non la guarda non paga niente.
+  world.sounds.length = 0;
+
   world.time += dt;
   const ledges = decks(world);
   for (let i = 0; i < world.pilots.length; i += 1) {
@@ -1336,9 +1360,10 @@ function _bonus(world) {
 
   if (tipo === "sopravvivenza" && !conto.died[0]) {
     const io = world.pilots[0];
-    _pay(io, BONUS.clear);
+    _pay(io, BONUS.clear, world);
     _pop(world, io.x, io.y - PILOT.h, BONUS.clear, io.index);
     world.last = { kind: "ondata", at: world.time, points: BONUS.clear, who: io.index };
+    _sound(world, "premio");
     return;
   }
 
@@ -1346,11 +1371,23 @@ function _bonus(world) {
   // dividere, perché un premio che si divide è un premio per cui conviene che l'altro sbagli.
   if (tipo === "squadra" && !conto.hit[0] && !conto.hit[1]) {
     for (const pilot of world.pilots) {
-      _pay(pilot, BONUS.clear);
+      _pay(pilot, BONUS.clear, world);
       _pop(world, pilot.x, pilot.y - PILOT.h, BONUS.clear, pilot.index);
     }
     world.last = { kind: "ondata", at: world.time, points: BONUS.clear, who: null };
+    _sound(world, "premio");
   }
+}
+
+/**
+ * Segna che è successa una cosa che si sente.
+ *
+ * Un nome e basta: la coda dice *che cosa*, non *com'è fatto il suono*. Se qui dentro entrasse una
+ * frequenza, le regole del gioco comincerebbero a sapere di avere un altoparlante — ed è lo stesso
+ * motivo per cui non sanno di avere uno schermo.
+ */
+function _sound(world, name) {
+  if (world.sounds.length < 24) world.sounds.push(name);
 }
 
 /** L'ondata è vinta: né nemici né celle. Quello che resta a schermo è scenografia. */
@@ -1383,6 +1420,15 @@ function _stepPilot(world, pilot, intent, ledges, dt, boost = 1) {
     // Long enough for the four drawn wing frames to be seen as a stroke rather than a flicker. Only
     // the renderer reads it; no rule depends on it.
     pilot.beat = 0.32;
+    // Il battito è **il** suono di questo gioco: è l'unico comando che c'è, e sentirlo è metà del
+    // modo in cui si impara il ritmo. Va in coda una volta per battito, non una per passo.
+    //
+    // **Il tuo e quello degli altri sono due suoni diversi**, e la stessa funzione muove tutti e
+    // due i tipi di corpo — è la ragione per cui questa riga guarda `foe`. Con nove nemici in campo
+    // che battono insieme, distinguere il proprio colpo d'ala è l'unico modo di sapere se il
+    // comando è passato; con un suono solo, l'informazione più utile del gioco finisce dentro lo
+    // stormo.
+    _sound(world, pilot.foe ? "battito" : "battitoMio");
   }
 
   // Lo scudo, e i suoi due orologi. **Un fronte, non uno stato**, esattamente come il battito: un
@@ -1391,7 +1437,10 @@ function _stepPilot(world, pilot, intent, ledges, dt, boost = 1) {
   const chiesto = Math.min(1, intent.shields | 0);
   if (chiesto > 0) {
     intent.shields -= chiesto;
-    if (!pilot.foe && pilot.shield <= 0 && pilot.cool <= 0) pilot.shield = SHIELD.lasts;
+    if (!pilot.foe && pilot.shield <= 0 && pilot.cool <= 0) {
+      pilot.shield = SHIELD.lasts;
+      _sound(world, "scudo");
+    }
   }
   if (pilot.shield > 0) {
     pilot.shield = Math.max(0, pilot.shield - dt);
@@ -1697,6 +1746,7 @@ function _hatch(world, cella) {
   }
 
   cella.alive = false;
+  _sound(world, "schiusa");
   const foe = (world.foes || []).find((f) => f.index === cella.from);
   if (!foe) return;
   const downs = foe.downs;
@@ -1744,12 +1794,13 @@ function _collect(world, cella, by = null) {
   if (by) {
     const worth = CELL_POINTS[Math.min(by.ladder, CELL_POINTS.length - 1)];
     by.ladder += 1;
-    _pay(by, worth);
+    _pay(by, worth, world);
     // **Il numero che vola via è quello che rende imparabile la scala.** Senza, un giocatore può
     // raccogliere celle per un'ora senza accorgersi che la seconda di fila vale il doppio della
     // prima: la meccanica c'è, e l'unico modo di scoprirla è leggere il codice.
     _pop(world, cella.x, cella.y, worth, by.index);
     world.last = { kind: "cella", at: world.time, points: worth, classe: cella.kind, who: by.index };
+    _sound(world, "cella");
   }
   _finish(world, cella);
 }
@@ -1830,6 +1881,7 @@ function _settle(world, a, b) {
   if (Math.abs(ta - tb) <= TIE) {
     _bounce(a, b, PILOT.shove);
     world.last = { kind: "pari", at: world.time };
+    _sound(world, "pari");
     return;
   }
 
@@ -1848,13 +1900,14 @@ function _settle(world, a, b) {
     // di darlo per scontato, perché è la stessa strada che percorre una cella raccolta d'ufficio.
     _lower(world, loser, winner.foe ? null : winner);
     if (!winner.foe) {
-      _pay(winner, worth);
+      _pay(winner, worth, world);
       _pop(world, loser.x, loser.y, worth, winner.index);
     }
     _impact(world, 1);
     world.last = {
       kind: "abbattuto", at: world.time, points: worth, classe: loser.kind, who: winner.index,
     };
+    _sound(world, loser.foe ? "abbattuto" : "abbattutoTu");
   } else {
     // **Chi abbatte un giocatore prende zero**, tranne il primo colpo di un Duello. E lo zero si
     // vede perché non compare nessun numero: il silenzio è l'annuncio.
@@ -1862,7 +1915,7 @@ function _settle(world, a, b) {
       world.tally.hit[winner.index] = true;
       if (world.plan && world.plan.type === "duello" && !world.tally.duel) {
         world.tally.duel = true;
-        _pay(winner, BONUS.duel);
+        _pay(winner, BONUS.duel, world);
         _pop(world, loser.x, loser.y, BONUS.duel, winner.index);
       }
     }
@@ -1872,6 +1925,7 @@ function _settle(world, a, b) {
     loser.alive = false;
     loser.waiting = true;
     world.last = { kind: "perso", at: world.time, who: loser.index };
+    _sound(world, "perso");
   }
 }
 
@@ -1951,7 +2005,7 @@ function _burn(world, foe, by) {
   foe.done = true;
   foe.downs += 1;
   if (by && !by.foe) {
-    _pay(by, (KINDS[foe.kind] || KINDS.deriva).points);
+    _pay(by, (KINDS[foe.kind] || KINDS.deriva).points, world);
     _pop(world, foe.x, foe.y, (KINDS[foe.kind] || KINDS.deriva).points, by.index);
   }
   _impact(world, 1);
@@ -1960,6 +2014,7 @@ function _burn(world, foe, by) {
     kind: "bruciato", at: world.time, classe: foe.kind,
     points: (KINDS[foe.kind] || KINDS.deriva).points, who: by ? by.index : null,
   };
+  _sound(world, "bruciato");
 }
 
 /**
@@ -2027,9 +2082,10 @@ function _ashes(world, body, mio, by = null) {
   // affonda nella colata non paga nessuno, e non è una dimenticanza — sarebbe il gioco che ti
   // premia per essere morto.
   if (by && !by.foe) {
-    _pay(by, SHIELD.bonus);
+    _pay(by, SHIELD.bonus, world);
     _pop(world, body.x, body.y - PILOT.h / 2, SHIELD.bonus, by.index);
     world.last = { kind: "netto", at: world.time, points: SHIELD.bonus, who: by.index };
+    _sound(world, "netto");
   }
 
   world.teste.push({
@@ -2272,6 +2328,7 @@ function _stepClaw(world, dt) {
         preso.strain = 0;
         claw.held = preso.clawId;
         claw.state = "tiene";
+        _sound(world, "pinza");
         claw.left = CLAW.holds;
         return;
       }
@@ -2286,7 +2343,7 @@ function _stepClaw(world, dt) {
   // tiene
   const preso = _heldBody(world);
   if (!preso || claw.left <= 0 || preso.strain > CLAW.escape) {
-    if (preso) { preso.clawId = null; preso.strain = 0; }
+    if (preso) { preso.clawId = null; preso.strain = 0; _sound(world, "liberato"); }
     claw.held = null;
     claw.state = "rientra";
     claw.left = 0;
@@ -2461,7 +2518,7 @@ function _raids(world) {
 
       if (colpito) {
         intruso.alive = false;
-        _pay(pilot, INTRUDER.points);
+        _pay(pilot, INTRUDER.points, world);
         _pop(world, intruso.x, intruso.y, INTRUDER.points, pilot.index);
         _impact(world, 1);
         // **Azzera la frenesia.** È la valvola: un campo che si è scaldato si raffredda soltanto
@@ -2470,11 +2527,13 @@ function _raids(world) {
         world.last = {
           kind: "intruso", at: world.time, points: INTRUDER.points, who: pilot.index,
         };
+        _sound(world, "intruso");
       } else {
         _ashes(world, pilot, true);
         pilot.alive = false;
         pilot.waiting = true;
         world.last = { kind: "perso", at: world.time, who: pilot.index };
+      _sound(world, "perso");
       }
       break;
     }

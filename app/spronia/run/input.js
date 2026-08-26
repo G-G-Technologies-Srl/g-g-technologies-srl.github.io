@@ -24,11 +24,29 @@
 // Lo scudo sta nella posizione «giù» di ognuno dei due set, che era l'unica libera e anche l'unica
 // giusta: la mano è già lì, e il tasto sotto quello che fa salire è quello che si preme senza
 // guardare. `KeyS` per il primo, `ArrowDown` per il secondo.
-const SETS = [
+//
+// **Sono i tasti di partenza, non i tasti.** Da quando esistono la rimappatura e le tastiere che
+// non sono americane, questo è il valore predefinito e basta: quelli veri stanno in `SETS`, che
+// viene riscritto da `loadKeys()` all'avvio se in questo browser c'è una scelta salvata.
+export const DEFAULTS = [
   { left: ["KeyA"], right: ["KeyD"], flap: ["KeyW"], shield: ["KeyS"] },
   { left: ["ArrowLeft"], right: ["ArrowRight"], flap: ["ShiftRight", "ArrowUp"],
     shield: ["ArrowDown"] },
 ];
+
+export const ACTIONS = ["left", "right", "flap", "shield"];
+
+// I tasti del cabinato, che non si possono assegnare a un comando di volo. Sono tre e non uno
+// perché sono tre gesti che devono funzionare **in qualunque schermata**, compresa quella in cui si
+// stanno cambiando i tasti: uscire, mettere in pausa, mettere il gettone. Un giocatore che si
+// assegnasse Esc allo scudo si chiuderebbe fuori dalla propria partita a ogni parata.
+const RESERVED = new Set(["Escape", "KeyP", "Enter", "NumpadEnter"]);
+
+const KEYS_PREF = "gg.spronia.keys";
+
+let SETS = DEFAULTS.map((set) => ({
+  left: [...set.left], right: [...set.right], flap: [...set.flap], shield: [...set.shield],
+}));
 
 // Keys the page would otherwise act on. The arrows scroll, and a game that scrolls the page under
 // itself while you fly is unplayable rather than merely untidy.
@@ -77,10 +95,18 @@ function _bindKeys() {
     }
     if (event.code === "Escape") { onCommand("back"); return; }
     if (event.code === "KeyP") { onCommand("pause"); return; }
+    if (event.code === "Enter" || event.code === "NumpadEnter") { onCommand("coin"); return; }
 
     const found = _who(event.code);
     if (!found) return;
     const [who, action] = found;
+
+    // **Un tasto qualunque del volo avvia una partita che aspetta.** Su un cabinato non dovevi
+    // trovare il pulsante giusto: mettevi il gettone e premevi qualcosa. Vale anche per il secondo
+    // giocatore, e per questo il controllo su `players` viene dopo: chi preme la freccia mentre il
+    // pannello aspetta sta dicendo «gioco anch'io».
+    onCommand("play", who);
+
     if (who >= players) return;
     if (action === "flap") {
       beats[who] += 1;
@@ -163,6 +189,12 @@ function _bindPointer(field, verso) {
     giu = event.pointerId;
     event.preventDefault();
 
+    // **Il campo è anche il gettone.** Su un telefono non ci sono né Invio né tasti di volo, e
+    // pretendere che si trovi il pulsante giusto nel pannello sarebbe chiedere a chi ha appena
+    // aperto un gioco di leggere prima di toccare. Il comando arriva sempre; sta a chi lo riceve
+    // sapere se in questo momento vuol dire «gettone», «via» o niente.
+    onCommand("tap");
+
     // **Doppio tocco sul dodo: scudo.** Sul dodo, non nella sua colonna — e la differenza è tutto
     // quello che c'era di sbagliato qui. Prima la condizione era `lato === 0`, cioè la zona morta
     // dello sterzo, che è una **striscia verticale alta quanto il campo**: due tocchi dati in cielo,
@@ -221,8 +253,90 @@ function _readPads() {
 
 export function setup(field, handler, verso) {
   onCommand = handler || (() => {});
+  loadKeys();
   _bindKeys();
   _bindPointer(field, verso);
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  i   t a s t i ,   c a m b i a t i
+// -----------------------------------------------------------------------------------------------------------------
+
+/**
+ * I tasti in uso adesso, come copia.
+ *
+ * Copia e non riferimento: chi disegna il pannello non deve poter cambiare i comandi scrivendo
+ * dentro l'oggetto che gli è stato dato. È lo stesso principio per cui `read()` restituisce un
+ * intento nuovo a ogni fotogramma invece di riusare il proprio.
+ */
+export function keys() {
+  return SETS.map((set) => ({
+    left: [...set.left], right: [...set.right], flap: [...set.flap], shield: [...set.shield],
+  }));
+}
+
+/** Il primo tasto di un comando: quello che il pannello mostra e che si sostituisce. */
+export function keyOf(who, action) {
+  return (SETS[who] && SETS[who][action] && SETS[who][action][0]) || "";
+}
+
+/**
+ * Prova ad assegnare `code` a un comando.
+ *
+ * Restituisce `"ok"`, `"reserved"` o `"taken"` — tre stringhe e non un booleano, perché i due modi
+ * di fallire vanno spiegati in modo diverso a chi sta premendo. Un pannello che dice solo «no» fa
+ * ripremere lo stesso tasto.
+ *
+ * **Un tasto già assegnato non viene rubato in silenzio.** Scambiarlo sarebbe più furbo e più
+ * pericoloso: chi cambia un tasto sta guardando quella riga, non le altre sette, e si accorgerebbe
+ * dello scambio in mezzo a una partita.
+ */
+export function assign(who, action, code) {
+  if (RESERVED.has(code)) return "reserved";
+  for (let i = 0; i < SETS.length; i += 1) {
+    for (const other of ACTIONS) {
+      if (i === who && other === action) continue;
+      if (SETS[i][other].includes(code)) return "taken";
+    }
+  }
+  SETS[who][action] = [code];
+  _saveKeys();
+  return "ok";
+}
+
+export function resetKeys() {
+  SETS = DEFAULTS.map((set) => ({
+    left: [...set.left], right: [...set.right], flap: [...set.flap], shield: [...set.shield],
+  }));
+  _saveKeys();
+}
+
+/**
+ * Rimette i tasti salvati in questo browser.
+ *
+ * Convalidato voce per voce invece che fidandosi della forma: quello che c'è in `localStorage` può
+ * venire da una versione precedente dell'app, o da qualcuno che ci ha scritto a mano. Una voce che
+ * non torna viene **ignorata**, non fa scartare tutto — perdere la rimappatura intera perché una
+ * riga è storta è la reazione sbagliata, e chi la subisce non ha modo di capire perché.
+ */
+export function loadKeys() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(KEYS_PREF) || "null"); } catch (ignored) { return; }
+  if (!Array.isArray(saved)) return;
+  for (let i = 0; i < SETS.length; i += 1) {
+    const set = saved[i];
+    if (!set) continue;
+    for (const action of ACTIONS) {
+      const code = Array.isArray(set[action]) ? set[action][0] : set[action];
+      if (typeof code === "string" && code && !RESERVED.has(code)) SETS[i][action] = [code];
+    }
+  }
+}
+
+function _saveKeys() {
+  try {
+    localStorage.setItem(KEYS_PREF, JSON.stringify(SETS));
+  } catch (ignored) { /* una comodità, non un requisito */ }
 }
 
 /**
