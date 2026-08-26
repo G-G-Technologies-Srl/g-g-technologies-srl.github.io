@@ -717,6 +717,9 @@ function spegni(world, io, lui) {
   const io = world.pilots[0];
   io.x = 300; io.y = MELT - PILOT.h / 2 + 2; io.vy = 200; io.guard = 0; io.grounded = false;
   step(world, [intent()]);
+  // Il rientro aspetta la fine del rogo, e la scala si azzera **al rientro**: è lì che il pilota
+  // viene ricostruito. Guardarla subito dopo il tuffo la troverebbe ancora com'era.
+  for (let i = 0; i < 120 * 15 && io.waiting; i += 1) step(world, [intent()]);
   check("e morire la azzera anche lei", io.ladder === 0, `scala=${io.ladder}`);
 }
 
@@ -928,14 +931,29 @@ console.log("\nlo scudo di fuoco");
   }
   check("quando si stacca, il corpo resta senza",
     trovato !== null && trovato.pyres[0].headless === true);
-  check("e dal collo zampilla, per un secondo e mezzo",
-    trovato.pyres[0].spurt > SHIELD.spurt - 0.05, `${trovato.pyres[0].spurt.toFixed(2)} s`);
+  check("e dal collo zampilla", trovato.pyres[0].bleeding === true);
 
   const testa = trovato.teste[0];
   check("e parte per aria, non a piombo", testa.vy < 0 && testa.vx !== 0,
     `vx=${testa.vx.toFixed(0)} vy=${testa.vy.toFixed(0)}`);
 
+  // **Zampilla per tutta la caduta, non per il primo pezzo.** Il contatore che c'era prima durava
+  // un secondo e mezzo, e un corpo lasciato cadere da mezz'aria arriva alla colata in poco più di
+  // un secondo: il getto finiva proprio mentre lo si cercava, e sembrava che il sangue uscisse solo
+  // al contatto col metallo.
+  const corpo = trovato.pyres[0];
   trovato.pilots[0].x = 5000;
+  let volando = 0;
+  let sempre = true;
+  while (!corpo.sinking && volando < 120 * 12) {
+    step(trovato, [intent()]);
+    volando += 1;
+    if (!corpo.sinking && !corpo.bleeding) sempre = false;
+  }
+  check("e zampilla per tutta la caduta",
+    sempre && corpo.sinking && volando > 30,
+    `caduta di ${(volando / 120).toFixed(2)} s, sempre=${sempre}`);
+
   let passi = 0;
   let girata = 0;
   while (trovato.teste.length && passi < 120 * 12) {
@@ -943,11 +961,9 @@ console.log("\nlo scudo di fuoco");
     passi += 1;
     girata = Math.max(girata, testa.spin);
   }
-  check("lo zampillo si esaurisce da solo", trovato.pyres.length === 0
-    || trovato.pyres[0].spurt === 0, `${trovato.pyres[0] && trovato.pyres[0].spurt}`);
-  check("rotola, affonda nella colata e sparisce",
+  check("la testa rotola, affonda nella colata e sparisce",
     trovato.teste.length === 0 && girata > 1 && passi < 120 * 12,
-    `${girata.toFixed(1)} quarti di giro in ${(passi / 120).toFixed(1)} s`);
+    `${girata.toFixed(1)} quarti di giro`);
 }
 
 {
@@ -1017,6 +1033,11 @@ function muori(world, io) {
   io.y = MELT - PILOT.h / 2 + 4;
   io.vy = 200;
   step(world, [intent(), intent()]);
+  // **E si aspetta la fine del rogo.** Il rientro non è più immediato: il pilota resta in attesa
+  // finché il metallo non ha finito di prendersi il corpo che era. Un controllo che guardasse le
+  // vite subito dopo il passo le troverebbe intatte, e accuserebbe il gioco di non contarle.
+  let passi = 0;
+  while (io.waiting && passi < 120 * 15) { step(world, [intent(), intent()]); passi += 1; }
 }
 
 {
@@ -1032,18 +1053,22 @@ function muori(world, io) {
   check("il giocatore che tocca la colata lascia un corpo in fiamme",
     world.pyres.length === 1 && world.pyres[0].mine === true,
     `${world.pyres.length} corpi`);
-  check("e il corpo resta dov'era lui, non dove è rientrato",
-    Math.abs(world.pyres[0].x - dove.x) < 1 && Math.abs(io.x - dove.x) > 1,
-    `corpo a ${world.pyres[0].x.toFixed(0)}, io a ${io.x.toFixed(0)}`);
+  check("il corpo resta dov'era lui", Math.abs(world.pyres[0].x - dove.x) < 1,
+    `corpo a ${world.pyres[0].x.toFixed(0)}`);
   check("il corpo non ha una classe: è il cavaliere, non un nemico",
     world.pyres[0].kind === null);
-  check("e intanto il giocatore è rientrato, con una vita in meno",
-    io.alive && io.guard > 0 && io.lives === LIVES - 1, `${io.lives} vite`);
+
+  // **Non rientra subito: aspetta.** Rientrare mentre il corpo di prima brucia ancora mette due
+  // cavalieri in campo, uno vivo e uno che muore, e non c'è modo di leggerlo come una cosa sola.
+  check("e il giocatore non rientra: aspetta che il rogo finisca",
+    io.waiting && !io.alive && io.lives === LIVES, `vive=${io.lives}`);
 
   let passi = 0;
-  while (world.pyres.length && passi < 120 * 12) { step(world, [intent()]); passi += 1; }
-  check("anche il corpo del giocatore finisce nella colata e si spegne",
-    world.pyres.length === 0 && passi < 120 * 12, `${(passi / 120).toFixed(1)} s`);
+  while (io.waiting && passi < 120 * 15) { step(world, [intent()]); passi += 1; }
+  check("quando il corpo è finito, rientra — con una vita in meno",
+    io.alive && io.guard > 0 && io.lives === LIVES - 1 && world.pyres.length === 0,
+    `${io.lives} vite dopo ${(passi / 120).toFixed(1)} s`);
+  check("e ci mette il tempo del rogo, non un istante", passi > 60, `${passi} passi`);
 }
 
 {
@@ -1191,6 +1216,9 @@ console.log("\nil terreno");
   const pilot = world.pilots[0];
   pilot.x = 40; pilot.y = MELT - 40; pilot.grounded = false; pilot.vy = 400;
   play(world, 60);
+  // Il rientro aspetta la fine del rogo, quindi sessanta passi non bastano più: si va avanti
+  // finché non è tornato.
+  for (let i = 0; i < 120 * 15 && pilot.waiting; i += 1) play(world, 1);
   check("la colata rimette in campo altrove",
     pilot.y < MELT - PILOT.h && pilot.guard > 0,
     `y=${pilot.y.toFixed(1)} guardia=${pilot.guard.toFixed(2)}`);

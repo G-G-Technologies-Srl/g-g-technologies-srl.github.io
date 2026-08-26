@@ -449,11 +449,6 @@ export const SHIELD = {
   // colpo, che è quello che è successo.
   kick: 170,
   toss: 120,
-  // Quanto dura lo zampillo dal collo, in secondi. Poco: è la prima cosa che il fuoco si prende, e
-  // un getto che continua per tutta la caduta smetterebbe di essere un istante e diventerebbe una
-  // caratteristica del corpo. Un secondo e mezzo è il tempo di vederlo partire e finire.
-  spurt: 1.5,
-
   // Quanto gira mentre rotola, in quarti di giro per unità percorsa. Ricavato guardando: a un giro
   // ogni ottanta unità la testa sembra scivolare, a uno ogni venti sembra un trapano.
   roll: 1 / 44,
@@ -605,6 +600,11 @@ export function makePilot(index, pad) {
     // Senza più vite: fuori dal campo per il resto della partita. Non è `alive` a metà — un corpo
     // spento torna, questo no.
     out: false,
+
+    // Sta aspettando la fine del proprio rogo. Non è `out` — quello è per sempre — ed è diverso
+    // anche da `alive: false` e basta: è uno stato in cui il pilota **esiste ma non c'è**, e da cui
+    // esce da solo quando il metallo ha finito di prendersi il corpo che era.
+    waiting: false,
 
     // Lo scudo di fuoco: quanti secondi è acceso, e quanti mancano prima di poterlo riaccendere.
     // Due contatori e non uno, perché sono due stati diversi da leggere a colpo d'occhio: acceso è
@@ -873,6 +873,7 @@ export function step(world, intents, dt = STEP) {
   _stepCelle(world, ledges, dt);
   _stepPyres(world, ledges, dt);
   _stepHeads(world, ledges, dt);
+  _waitOut(world);
   // After everyone has moved, and never during. Settling a fight inside the movement loop means the
   // body that happens to be stepped first is the one whose position the rule reads — so the same
   // pass would be won or lost depending on the order of an array.
@@ -961,11 +962,22 @@ function _stepPilot(world, pilot, intent, ledges, dt, boost = 1) {
     //
     // Il giocatore invece **brucia come gli altri**: le ceneri prima del rientro, perché `_return`
     // ricostruisce il pilota sul posto e da lì in poi la sua posizione di un istante fa non c'è più.
+    // Il giocatore **brucia come gli altri, e si aspetta che finisca.**
+    //
+    // Rientrare subito era la cosa più semplice e la peggiore da guardare: il cavaliere nuovo
+    // compariva sulla piazzola mentre quello di prima stava ancora bruciando, e per un paio di
+    // secondi il campo ne conteneva due — uno vivo e uno che moriva. Peggio alla fine della
+    // partita, dove il pannello si apriva sopra la scena invece che dopo.
+    //
+    // Adesso il pilota si mette **in attesa** e ci resta finché il metallo non ha finito. Non c'è un
+    // tempo scritto da nessuna parte: quello che decide è il corpo, ed è provato che il corpo
+    // arriva sempre alla colata.
     if (pilot.foe) {
       _lower(world, pilot);
     } else {
       _ashes(world, pilot, true);
-      _return(world, pilot);
+      pilot.alive = false;
+      pilot.waiting = true;
     }
   }
 }
@@ -1446,6 +1458,9 @@ function _ashes(world, body, mio) {
   world.pyres.push({
     headless: decapitato,
     mine: mio,
+    // Di chi era, quando era di un giocatore. Serve al pilota per sapere quando può rientrare:
+    // aspetta che **il suo** corpo abbia finito, non che il campo sia vuoto.
+    owner: mio ? body.index : null,
     // Il giocatore non ha una classe, e va bene così: senza `kind` il disegno ricade sulla
     // tavolozza del cavaliere, che è esattamente quella che deve avere.
     kind: mio ? null : body.kind,
@@ -1457,9 +1472,16 @@ function _ashes(world, body, mio) {
     grounded: false,
     alive: true,
     sinking: false,
-    // Quanto zampilla ancora dal collo. Zero quando la testa è al suo posto, e cala da sé: il fuoco
-    // se lo prende, ed è il primo pezzo di questa scena a finire.
-    spurt: decapitato ? SHIELD.spurt : 0,
+    // **Zampilla per tutta la caduta**, e smette quando il metallo se lo prende.
+    //
+    // Prima era un contatore da un secondo e mezzo, sull'idea che il fuoco se lo prendesse subito.
+    // Il ragionamento era giusto e il risultato no: un corpo lasciato cadere da mezz'aria arriva
+    // alla colata in poco più di un secondo, quindi il getto finiva proprio mentre lo si cercava,
+    // e a schermo sembrava che il sangue uscisse **solo** quando il corpo toccava il metallo.
+    //
+    // Senza contatore la cosa si racconta da sé: esce finché c'è un corpo che cade, e finisce dove
+    // finisce tutto il resto.
+    bleeding: decapitato,
     phase: body.index * 1.37,
   });
 
@@ -1502,9 +1524,6 @@ function _stepHeads(world, ledges, dt) {
 /** I corpi in fiamme, mossi di un passo: cadono, rimbalzano, non si posano, sprofondano. */
 function _stepPyres(world, ledges, dt) {
   _fall(world.pyres, PYRE, ledges, dt);
-  for (const pyre of world.pyres) {
-    if (pyre.spurt > 0) pyre.spurt = Math.max(0, pyre.spurt - dt);
-  }
   world.pyres = world.pyres.filter((pyre) => pyre.alive);
 }
 
@@ -1557,6 +1576,25 @@ function _fall(cosi, profilo, ledges, dt) {
       cosa.vx = verso * SHIELD.slide;
       cosa.grounded = false;
     }
+  }
+}
+
+/**
+ * I piloti che stavano aspettando la fine del proprio rogo, e adesso possono rientrare.
+ *
+ * Si guarda **il proprio** corpo, non il campo: con due giocatori, uno che brucia non deve tenere
+ * fermo l'altro, e nemmeno essere tenuto fermo da un nemico che brucia dall'altra parte.
+ *
+ * Da qui passa anche la fine della partita, e non per caso: `_return` è il posto in cui si toglie
+ * una vita e in cui si decide che il giocatore è finito, quindi rimandarlo qui rimanda tutto —
+ * l'ultima vita, `world.over`, e il pannello che il guscio apre quando lo legge.
+ */
+function _waitOut(world) {
+  for (const pilot of world.pilots) {
+    if (!pilot.waiting) continue;
+    if ((world.pyres || []).some((pyre) => pyre.owner === pilot.index)) continue;
+    pilot.waiting = false;
+    _return(world, pilot);
   }
 }
 

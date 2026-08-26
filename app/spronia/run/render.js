@@ -1146,9 +1146,10 @@ function _paintPyre(ctx, pyre, cx) {
  * rubinetto. Sono quasi uguali e non identici perché identici darebbero un gruppo solo, che si
  * legge come un unico oggetto che va su e giù.
  *
- * Si spegne da sé insieme al contatore: le gocce si accorciano e diradano, e all'ultimo mezzo
- * secondo ne resta una. Il fuoco è la cosa che se lo prende, e va vista prenderselo invece di
- * trovare il getto sparito fra due fotogrammi.
+ * **Dura tutta la caduta**, e finisce dove finisce il corpo: dentro il metallo. Prima aveva un
+ * contatore da un secondo e mezzo, e il difetto era che un corpo lasciato cadere da mezz'aria
+ * arriva alla colata in poco più di un secondo — quindi il getto si spegneva proprio mentre lo si
+ * cercava, e sembrava che il sangue uscisse *solo* al contatto col metallo.
  *
  * Il collo lo dà **lo stesso riquadro della testa**, sotto: il buco nel corpo, la testa che rotola
  * e il punto da cui esce il sangue sono tre conseguenze di un numero solo, e non possono trovarsi
@@ -1169,8 +1170,7 @@ function _paintNeck(ctx, pyre, cx) {
   const mezzo = box.x + Math.floor(box.w / 2);
   const nx = left + (flip ? w - 1 - mezzo : mezzo);
   const ny = top + box.y + box.h - 1;
-  const resta = Math.max(0, Math.min(1, pyre.spurt / SHIELD.spurt));
-  const gocce = Math.max(1, Math.round(7 * resta));
+  const gocce = 7;
 
   for (let i = 0; i < gocce; i += 1) {
     const periodo = 0.3 + (i % 3) * 0.05;
@@ -1179,7 +1179,7 @@ function _paintNeck(ctx, pyre, cx) {
     const spinta = verso * (4 + (i % 4) * 4);
     // Più in alto delle fiamme, che arrivano a circa un corpo sopra la pancia: una goccia che
     // culmina dentro il fuoco è una goccia che non si vede.
-    const salita = (14 + (i % 3) * 8) * resta;
+    const salita = 14 + (i % 3) * 8;
     const x = Math.round(nx + spinta * ciclo);
     const y = Math.round(ny - salita * 4 * ciclo * (1 - ciclo) + ciclo * 8);
 
@@ -1533,7 +1533,7 @@ export function draw(canvas, world) {
     _wrapped(px(pyre.x), (x) => {
       _paintPyre(ctx, pyre, x);
       _paintPyreFlames(ctx, pyre, x);
-      if (pyre.spurt > 0) _paintNeck(ctx, pyre, x);
+      if (pyre.bleeding) _paintNeck(ctx, pyre, x);
     });
   }
 
