@@ -759,55 +759,126 @@ function _paintCella(ctx, cella, cx) {
 }
 
 /**
- * Le fiamme attorno a una cella che sta affondando.
+ * Il fuoco di qualcosa che il metallo si sta prendendo.
  *
- * Sette lingue, larghe due o tre pixel, che salgono dalla superficie del metallo e ricadono. Ognuna
- * ha il suo passo e la sua fase, presi da funzioni della **posizione della lingua**, così due
- * fiamme accanto non battono mai insieme — che è l'unica cosa che distingue del fuoco da una fila
- * di barre che pulsano.
+ * **Uno solo, per la cella e per il corpo in fiamme.** Sono la stessa cosa che succede — qualcosa
+ * scende dentro la colata e non torna — e disegnarla in due modi avrebbe detto che sono due cose.
+ * Quello che cambia è `largo`, cioè quanto è grosso il buco che sta facendo.
  *
- * **Nessun numero casuale**, come da nessuna parte in questo file: altezza e fase sono funzioni di
- * `world.time` e dell'indice, quindi lo stesso seme rigioca la stessa partita fin nei pixel della
- * colata. È la condizione perché la dimostrazione e lo screenshot escano uguali a ogni build.
+ * Quattro strati, e ognuno risponde a una domanda diversa che chi guarda si fa in mezzo secondo:
  *
- * Il colore va dal cuore al bordo — chiaro sotto, arancione in mezzo, crosta scura in punta — e
- * sono gli stessi tre della colata, non tre nuovi: le fiamme sono il metallo che si prende la
- * cella, non un effetto appoggiato sopra.
+ *  - le **bollicine** dicono che sotto continua, che non è finita sul pelo;
+ *  - la **pozza** attacca il fuoco al metallo invece di lasciarlo appoggiato sopra;
+ *  - le **lingue** sono il fuoco;
+ *  - i **lapilli** dicono che c'è stato un impatto, non solo del calore.
  *
- * Si spengono da sole senza bisogno di saperlo: quando la cella è tutta sotto la superficie
- * sparisce, e con lei questa funzione smette di essere chiamata.
+ * Le bollicine sono le stesse che la colata fa da sé alle sue bocche, e non per risparmio: se qui
+ * fossero di un'altra forma, il campo direbbe che sono due fenomeni diversi.
+ *
+ * **Nessun numero casuale**, come da nessuna parte in questo file: periodi, fasi e spinte vengono
+ * dall'indice e dal seme, quindi lo stesso seme rigioca lo stesso fuoco fino all'ultimo lapillo.
  */
-function _paintFlames(ctx, cella, cx) {
-  const largo = px(CELLA.w);
+function _paintSinkFire(ctx, cx, largo, seme) {
   const span = largo + 10;                    // il metallo si chiude **attorno**, non solo sotto
-  const lingue = 6;
+  const superficie = (x) => px(MELT) + _swell(x, _now);
 
-  // **Le lingue salgono sull'uovo, non sotto di esso.** La prima versione le teneva basse — quattro
-  // pixel di altezza media — e con l'uovo ancora quasi tutto fuori sembravano candeline sotto una
-  // torta. Alte fino a metà cella si sovrappongono al disegno, e allora si legge quello che sta
-  // succedendo: non è un uovo appoggiato sul fuoco, è il metallo che se lo sta prendendo.
+  // ---- 1 · le bollicine ---------------------------------------------------------------------------
+  // Salgono da sotto e scoppiano in superficie, come quelle che la colata fa da sola alle sue
+  // bocche: **è la stessa cosa che succede**, e succede perché lì dentro c'è qualcosa che brucia.
+  // Disegnarle in un altro modo avrebbe detto che è un'altra cosa.
   //
-  // A grappolo e non a palizzata: le lingue di mezzo sono più alte di quelle di bordo, con una
-  // campana sull'indice. Sette barre della stessa altezza sono uno steccato, e uno steccato non
-  // brucia.
-  // **La pozza, prima delle lingue.** Una fascia rovente continua da cui le lingue escono: senza,
-  // sei lingue con un po' di buio fra una e l'altra sono sei candeline sotto una torta, ed è
-  // esattamente quello che sembravano. Il fuoco ha un piede solo.
+  // Prime di tutto il resto, così una bolla passa **sotto** la pozza e le lingue invece di
+  // sedercisi sopra.
+  for (let i = 0; i < 5; i += 1) {
+    const periodo = 1.05 + (i % 3) * 0.37;
+    const ciclo = (((_now + seme + i * 0.61) % periodo) + periodo) % periodo / periodo;
+    const x = cx - largo / 2 + Math.round(((i * 2 + 1) / 10) * largo);
+    const pelo = superficie(x);
+    const fondo = pelo + 22;
+
+    if (ciclo < 0.78) {
+      const salita = ciclo / 0.78;
+      const y = Math.round(fondo - (fondo - pelo - 1) * salita);
+      // Cresce salendo, che è quello che fa una bolla di gas e quello che fa seguire l'occhio
+      // invece di leggerla come un puntino che si sposta. Fino a tre pixel di raggio: a due si
+      // confondeva con i granelli che la colata ha già dentro, e una bolla che si confonde col
+      // fondo non dice niente.
+      const r = Math.max(1, Math.round(1 + 2 * salita));
+      ctx.fillStyle = PAINT.meltHot;
+      ctx.fillRect(x - r, y - r, r * 2, r * 2);
+      // La lumeggiatura in cima alla bolla. Larga almeno un pixel: a raggio uno, `r * 2 - 2` fa
+      // zero, e un `fillRect` largo zero non disegna niente — la bolla appena nata restava senza.
+      ctx.fillStyle = PAINT.meltFlash;
+      ctx.fillRect(x - r + 1, y - r, Math.max(1, r * 2 - 2), 1);
+    } else if (ciclo < 0.88) {
+      const apre = Math.round(((ciclo - 0.78) / 0.1) * 5);
+      ctx.fillStyle = PAINT.meltFlash;
+      ctx.fillRect(x - apre, pelo - 1, 1, 2);
+      ctx.fillRect(x + apre, pelo - 1, 1, 2);
+      ctx.fillRect(x - apre + 1, pelo - 2, apre * 2 - 1, 1);
+    }
+  }
+
+  // ---- 2 · la pozza -------------------------------------------------------------------------------
+  // Una fascia rovente continua da cui le lingue escono: senza, sei lingue con un po' di buio fra
+  // una e l'altra sono sei candeline sotto una torta, ed è esattamente quello che sembravano. Il
+  // fuoco ha un piede solo.
   for (let x = cx - largo / 2 - 2; x <= cx + largo / 2 + 2; x += 1) {
-    const base = px(MELT) + _swell(x, _now);
+    const base = superficie(x);
     ctx.fillStyle = PAINT.meltHot;
     ctx.fillRect(x, base - 2, 1, 2);
     ctx.fillStyle = PAINT.meltFlash;
     ctx.fillRect(x, base - 1, 1, 1);
   }
 
-  // A grappolo e non a palizzata: le lingue di mezzo sono più alte di quelle di bordo. Sei barre
-  // della stessa altezza sono uno steccato, e uno steccato non brucia.
+  // ---- 3 · le lingue ------------------------------------------------------------------------------
+  // A grappolo e non a palizzata: quelle di mezzo sono più alte di quelle di bordo. Sei barre della
+  // stessa altezza sono uno steccato, e uno steccato non brucia.
+  const lingue = 6;
   for (let i = 0; i < lingue; i += 1) {
     const at = i / (lingue - 1);
     const x = cx - span / 2 + Math.round(at * span);
     const campana = 0.45 + 0.55 * Math.sin(Math.PI * at);
-    _flame(ctx, x, px(MELT) + _swell(x, _now), i, 18 * campana, 7);
+    _flame(ctx, x, superficie(x), i + seme, 18 * campana, 7);
+  }
+
+  // ---- 4 · i lapilli ------------------------------------------------------------------------------
+  // Schizzi di metallo buttati in aria e ricaduti. Sono l'unica cosa qui dentro che esce dalla
+  // fascia delle fiamme, e servono a questo: dicono che sotto c'è **impatto**, non solo calore.
+  //
+  // Una parabola vera, non un puntino che sale e sparisce: `4t(1-t)` vale zero ai due capi e uno a
+  // metà, quindi il lapillo parte dal pelo, culmina e torna esattamente da dove è uscito. La coda è
+  // il fotogramma precedente della stessa parabola, dipinto più spento — costa un pixel e
+  // trasforma un punto in qualcosa che si muove.
+  //
+  // Nessun numero casuale: periodo, fase e spinta vengono dall'indice e dal seme, quindi lo stesso
+  // seme rigioca gli stessi schizzi.
+  for (let i = 0; i < 8; i += 1) {
+    const periodo = 0.85 + (i % 4) * 0.23;
+    const ciclo = (((_now + seme * 1.7 + i * 0.37) % periodo) + periodo) % periodo / periodo;
+    const spinta = ((i % 5) - 2) * 7;
+    // Più alti delle lingue, e per forza: un lapillo che non esce dal fuoco è un pixel dentro il
+    // fuoco. Il senso di questi otto è che qualcosa viene **buttato fuori**, e per dirlo devono
+    // arrivare dove il fuoco non arriva.
+    const salita = 16 + (i % 3) * 8;
+    const x0 = cx + ((i % 7) - 3) * Math.round(largo / 7);
+    const arco = (t) => ({
+      x: Math.round(x0 + spinta * (t - 0.5) * 2),
+      y: Math.round(superficie(x0) - 1 - salita * 4 * t * (1 - t)),
+    });
+    const ora = arco(ciclo);
+    // Due fotogrammi di coda invece di uno: a questa scala un solo pixel dietro non è una scia, è
+    // un secondo lapillo.
+    const scia = [
+      [arco(Math.max(0, ciclo - 0.16)), PAINT.meltCrust],
+      [arco(Math.max(0, ciclo - 0.08)), PAINT.meltGlow],
+    ];
+    for (const [dove, colore] of scia) {
+      ctx.fillStyle = colore;
+      ctx.fillRect(dove.x, dove.y, 1, 1);
+    }
+    ctx.fillStyle = PAINT.meltFlash;
+    ctx.fillRect(ora.x, ora.y, 2, 2);
   }
 }
 
@@ -1268,8 +1339,15 @@ export function draw(canvas, world) {
 
   // E le fiamme dopo, che devono stare **sopra** la colata: è la colata che si sta prendendo
   // qualcosa, e le fiamme di quel qualcosa non devono finirci sotto.
-  for (const cella of celleGiu) _wrapped(px(cella.x), (x) => _paintFlames(ctx, cella, x));
-  for (const pyre of pyresGiu) _wrapped(px(pyre.x), (x) => _paintPyreFlames(ctx, pyre, x));
+  // **Lo stesso fuoco per tutt'e due.** Una cella e un corpo che affondano nel metallo stanno
+  // vivendo la stessa cosa, e disegnarla in due modi avrebbe detto che sono due cose. Cambia solo
+  // quanto è largo il buco che stanno facendo.
+  for (const cella of celleGiu) {
+    _wrapped(px(cella.x), (x) => _paintSinkFire(ctx, x, px(CELLA.w), cella.from * 0.7));
+  }
+  for (const pyre of pyresGiu) {
+    _wrapped(px(pyre.x), (x) => _paintSinkFire(ctx, x, px(PILOT.w), pyre.phase || 0));
+  }
 
   const gone = world.removed || [];
   for (const deck of PLATFORMS) {
