@@ -609,7 +609,7 @@ APPS = [
         "order": 3,
         "tags": ["svago"],
         "stato": "bozza",
-        "version": "0.37.0",
+        "version": "0.38.0",
         "released": "2026-08-14",
         "updated": "2026-08-14",
         "licence": "Apache-2.0",
@@ -675,6 +675,10 @@ APPS = [
                          "richieste di rete."),
                 ("Due giocatori", "Sulla stessa tastiera, o con un gamepad. Non sul telefono."),
                 ("Schermo", "Fisso, senza scorrimento. Sul telefono va tenuto in orizzontale."),
+                ("Contenuti", "Si combatte. Chi perde brucia e sprofonda nel metallo fuso, e con "
+                              "lo scudo di fuoco ci scappa il sangue. È tutto disegnato a pixel "
+                              "grossi, ma è bene saperlo prima di darlo a un bambino."),
+
                 ("Senza connessione", "Dopo la prima apertura funziona anche quando sei senza "
                                       "rete."),
                 ("Lingue", "Italiano e inglese, seguono la lingua del browser."),
@@ -776,6 +780,9 @@ APPS = [
                          "network requests."),
                 ("Two players", "On one keyboard, or with a gamepad. Not on a phone."),
                 ("Screen", "Fixed, with no scrolling. On a phone it wants to be held sideways."),
+                ("Content", "There is fighting. Whoever loses burns and sinks into the molten "
+                            "metal, and the fire shield draws blood. It is all drawn in large "
+                            "pixels, but it is worth knowing before handing it to a child."),
                 ("Offline", "After the first visit it works without a connection."),
                 ("Languages", "Italian and English, following the browser's language."),
                 ("Licence", "Apache-2.0. The code is public and reusable, including commercially."),

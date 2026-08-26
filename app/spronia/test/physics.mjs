@@ -928,6 +928,8 @@ console.log("\nlo scudo di fuoco");
   }
   check("quando si stacca, il corpo resta senza",
     trovato !== null && trovato.pyres[0].headless === true);
+  check("e dal collo zampilla, per un secondo e mezzo",
+    trovato.pyres[0].spurt > SHIELD.spurt - 0.05, `${trovato.pyres[0].spurt.toFixed(2)} s`);
 
   const testa = trovato.teste[0];
   check("e parte per aria, non a piombo", testa.vy < 0 && testa.vx !== 0,
@@ -941,6 +943,8 @@ console.log("\nlo scudo di fuoco");
     passi += 1;
     girata = Math.max(girata, testa.spin);
   }
+  check("lo zampillo si esaurisce da solo", trovato.pyres.length === 0
+    || trovato.pyres[0].spurt === 0, `${trovato.pyres[0] && trovato.pyres[0].spurt}`);
   check("rotola, affonda nella colata e sparisce",
     trovato.teste.length === 0 && girata > 1 && passi < 120 * 12,
     `${girata.toFixed(1)} quarti di giro in ${(passi / 120).toFixed(1)} s`);
@@ -1013,6 +1017,33 @@ function muori(world, io) {
   io.y = MELT - PILOT.h / 2 + 4;
   io.vy = 200;
   step(world, [intent(), intent()]);
+}
+
+{
+  // **Il giocatore che finisce nella colata brucia come gli altri.** Non sparisce: lascia un corpo
+  // in fiamme che scivola, affonda e si spegne, e ogni tanto una testa che rotola. La stessa strada
+  // di un nemico bruciato dallo scudo, perché è lo stesso codice — e un giocatore che sparisse dove
+  // un nemico brucia direbbe che il metallo tratta i due in modo diverso.
+  const world = create(3, 1, 0);
+  const io = world.pilots[0];
+  const dove = { x: 300, y: MELT - PILOT.h / 2 + 4 };
+  io.guard = 0; io.grounded = false; io.x = dove.x; io.y = dove.y; io.vy = 200;
+  step(world, [intent()]);
+  check("il giocatore che tocca la colata lascia un corpo in fiamme",
+    world.pyres.length === 1 && world.pyres[0].mine === true,
+    `${world.pyres.length} corpi`);
+  check("e il corpo resta dov'era lui, non dove è rientrato",
+    Math.abs(world.pyres[0].x - dove.x) < 1 && Math.abs(io.x - dove.x) > 1,
+    `corpo a ${world.pyres[0].x.toFixed(0)}, io a ${io.x.toFixed(0)}`);
+  check("il corpo non ha una classe: è il cavaliere, non un nemico",
+    world.pyres[0].kind === null);
+  check("e intanto il giocatore è rientrato, con una vita in meno",
+    io.alive && io.guard > 0 && io.lives === LIVES - 1, `${io.lives} vite`);
+
+  let passi = 0;
+  while (world.pyres.length && passi < 120 * 12) { step(world, [intent()]); passi += 1; }
+  check("anche il corpo del giocatore finisce nella colata e si spegne",
+    world.pyres.length === 0 && passi < 120 * 12, `${(passi / 120).toFixed(1)} s`);
 }
 
 {

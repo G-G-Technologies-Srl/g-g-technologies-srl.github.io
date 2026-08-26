@@ -373,6 +373,36 @@ def _check_precache(problems, key):
                             f"l'app non partirebbe")
 
 
+def _check_card_parity(problems, key, app):
+    """Le due lingue di una scheda hanno **la stessa forma**: stesse chiavi, elenchi lunghi uguali.
+
+    Il testo no — non c'è modo di confrontare due lingue — ma la forma sì, ed è quella che si rompe.
+    Il `CLAUDE.md` alla radice chiama la divergenza fra le due lingue il difetto più frequente di
+    questo progetto, e per le pagine c'è `_check_parity` in `build.py`; per le **schede delle app**
+    non c'era niente, ed era scritto nel piano come debito.
+
+    È servito il giorno stesso in cui è stato scritto: un «Contenuti» aggiunto solo all'inglese,
+    perché uno script si era fermato a metà. Nessun controllo se n'era accorto — la scheda inglese
+    aveva nove voci e quella italiana otto, e tutt'e due si costruivano senza un lamento.
+    """
+    for campo in ("facts", "does", "does_not", "faq", "related"):
+        it = app["it"].get(campo)
+        en = app["en"].get(campo)
+        if (it is None) != (en is None):
+            problems.append(f"{key}: «{campo}» c'è in una lingua sola")
+            continue
+        if it is None:
+            continue
+        if len(it) != len(en):
+            problems.append(f"{key}: «{campo}» ha {len(it)} voci in italiano e {len(en)} in "
+                            f"inglese — una scheda dice una cosa in più dell'altra")
+
+    manca = set(app["it"]) ^ set(app["en"])
+    if manca:
+        problems.append(f"{key}: chiavi di scheda presenti in una lingua sola: "
+                        f"{', '.join(sorted(manca))}")
+
+
 def _check_parses(problems, key):
     """Ogni file JS dell'app **si legge davvero**, cioè è JavaScript valido.
 
@@ -467,6 +497,7 @@ def main():
         _check_lib_imports(problems, key)
         _check_lib_map(problems, key)
         _check_parses(problems, key)
+        _check_card_parity(problems, key, by_key[key])
 
     if problems:
         print("\n".join("  " + p for p in problems))
@@ -476,7 +507,8 @@ def main():
           "     versione in un posto solo, elenco di precache pari alla cartella,\n"
           "     licenza nella cartella e non alla radice, import map verso _lib/,\n"
           "     ogni modulo condiviso davvero in cache, chiavi e id che esistono,\n"
-          "     e ogni file JS si legge davvero come JavaScript.")
+          "     e ogni file JS si legge davvero come JavaScript,\n"
+          "     e le due lingue di ogni scheda hanno la stessa forma.")
 
 
 if __name__ == "__main__":

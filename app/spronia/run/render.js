@@ -84,6 +84,25 @@ const PAINT = {
   hud: "#c3ccdd",
   hudDim: "#5f7392",
 
+  // Lo zampillo dal collo, quando la testa salta. Due rossi che stanno **fuori** dalla famiglia
+  // della colata: quella va sull'arancione, questi virano al viola. Su un campo dove il fuoco è
+  // ovunque, un rosso caldo si sarebbe perso dentro le fiamme del corpo che lo perde.
+  bloodBright: "#e33b52",
+  blood: "#a11226",
+  bloodDark: "#5c0a18",
+
+  // **I lapilli del giocatore, azzurri.** Quando il metallo si prende il tuo cavaliere gli strappa
+  // di dosso il suo colore, non il proprio: le fiamme restano quelle della colata — sono del
+  // metallo e sono uguali per tutti — e cambiano solo gli schizzi.
+  //
+  // È lo stesso motivo per cui in cima allo schermo le vite sono la testa del cavaliere: in mezzo a
+  // tre nemici che bruciano, quello che ti riguarda si riconosce senza leggere niente. E i tre
+  // valori stanno nella famiglia di azzurri del disegno, non accanto: un azzurro qualunque sarebbe
+  // stato un quarto colore su un campo che ne ha tre.
+  sparkMine: "#eef6ff",
+  sparkMineTail: "#4f9bd8",
+  sparkMineSmoke: "#1e3f66",
+
   // The two marks at the lance tips. Yours is the brand accent, a foe's is the same slate the roof
   // is drawn in — present, readable, and not competing with the bird for attention.
   reach: "#34d399",
@@ -823,6 +842,7 @@ function _paintCella(ctx, cella, cx) {
     ctx.fillStyle = tavolozza[index] || PAINT.ink;
     ctx.fillRect(left + x, top + y, 1, 1);
   });
+
 }
 
 /**
@@ -845,7 +865,7 @@ function _paintCella(ctx, cella, cx) {
  * **Nessun numero casuale**, come da nessuna parte in questo file: periodi, fasi e spinte vengono
  * dall'indice e dal seme, quindi lo stesso seme rigioca lo stesso fuoco fino all'ultimo lapillo.
  */
-function _paintSinkFire(ctx, cx, largo, seme) {
+function _paintSinkFire(ctx, cx, largo, seme, mio = false) {
   const span = largo + 10;                    // il metallo si chiude **attorno**, non solo sotto
   const superficie = (x) => px(MELT) + _swell(x, _now);
 
@@ -943,14 +963,17 @@ function _paintSinkFire(ctx, cx, largo, seme) {
       y: Math.round(superficie(x0) - 1 - salita * 4 * t * (1 - t)),
     });
 
-    for (const [indietro, colore] of [[0.18, PAINT.meltCrust], [0.09, PAINT.meltGlow]]) {
+    const coda = mio
+      ? [[0.18, PAINT.sparkMineSmoke], [0.09, PAINT.sparkMineTail]]
+      : [[0.18, PAINT.meltCrust], [0.09, PAINT.meltGlow]];
+    for (const [indietro, colore] of coda) {
       const dove = arco(Math.max(0, ciclo - indietro));
       ctx.fillStyle = colore;
       ctx.fillRect(dove.x, dove.y, 1, 1);
     }
     const ora = arco(ciclo);
     const grosso = forza > 0.55 ? 2 : 1;
-    ctx.fillStyle = PAINT.meltFlash;
+    ctx.fillStyle = mio ? PAINT.sparkMine : PAINT.meltFlash;
     ctx.fillRect(ora.x, ora.y, grosso, grosso);
   }
 }
@@ -1112,6 +1135,63 @@ function _paintPyre(ctx, pyre, cx) {
     ctx.fillStyle = tavolozza[index] || PAINT.ink;
     ctx.fillRect(left + x, top + y, 1, 1);
   });
+
+}
+
+/**
+ * Lo zampillo dal collo, per il primo secondo e mezzo dopo che la testa è saltata.
+ *
+ * Sette gocce a parabola, e **a scatti**: i periodi sono quasi uguali fra loro, quindi le gocce
+ * escono a gruppi invece che in fila regolare — che è la differenza fra uno zampillo e un
+ * rubinetto. Sono quasi uguali e non identici perché identici darebbero un gruppo solo, che si
+ * legge come un unico oggetto che va su e giù.
+ *
+ * Si spegne da sé insieme al contatore: le gocce si accorciano e diradano, e all'ultimo mezzo
+ * secondo ne resta una. Il fuoco è la cosa che se lo prende, e va vista prenderselo invece di
+ * trovare il getto sparito fra due fotogrammi.
+ *
+ * Il collo lo dà **lo stesso riquadro della testa**, sotto: il buco nel corpo, la testa che rotola
+ * e il punto da cui esce il sangue sono tre conseguenze di un numero solo, e non possono trovarsi
+ * in tre posti diversi.
+ *
+ * Si dipinge **dopo le fiamme**, e la prima versione lo faceva prima. Sembrava l'ordine giusto — il
+ * sangue esce dal corpo, il fuoco lo avvolge — e a schermo il fuoco se lo mangiava: le lingue sono
+ * alte quanto il corpo e coprono esattamente la zona da cui esce. Le gocce salgono più in alto
+ * delle fiamme apposta, e adesso ci arrivano sopra invece che dietro.
+ */
+function _paintNeck(ctx, pyre, cx) {
+  const sprite = _pyreFrame(pyre);
+  const flip = pyre.facing < 0;
+  const left = cx - px(SPRITE.w) / 2;
+  const top = px(pyre.y) + PILOT_SPRITES.lift;
+  const box = PILOT_SPRITES.head;
+  const w = measure(sprite).w;
+  const mezzo = box.x + Math.floor(box.w / 2);
+  const nx = left + (flip ? w - 1 - mezzo : mezzo);
+  const ny = top + box.y + box.h - 1;
+  const resta = Math.max(0, Math.min(1, pyre.spurt / SHIELD.spurt));
+  const gocce = Math.max(1, Math.round(7 * resta));
+
+  for (let i = 0; i < gocce; i += 1) {
+    const periodo = 0.3 + (i % 3) * 0.05;
+    const ciclo = (((_now + (pyre.phase || 0) + i * 0.11) % periodo) + periodo) % periodo / periodo;
+    const verso = flip ? -1 : 1;
+    const spinta = verso * (4 + (i % 4) * 4);
+    // Più in alto delle fiamme, che arrivano a circa un corpo sopra la pancia: una goccia che
+    // culmina dentro il fuoco è una goccia che non si vede.
+    const salita = (14 + (i % 3) * 8) * resta;
+    const x = Math.round(nx + spinta * ciclo);
+    const y = Math.round(ny - salita * 4 * ciclo * (1 - ciclo) + ciclo * 8);
+
+    // Due pixel per due sulla testa della goccia, uno per la scia. A un pixel per uno lo zampillo
+    // c'era e non si vedeva: a questa misura, sopra un corpo in fiamme, un pixel solo è rumore.
+    ctx.fillStyle = PAINT.bloodDark;
+    ctx.fillRect(x, y + 2, 2, 1);
+    ctx.fillStyle = PAINT.blood;
+    ctx.fillRect(x, y + 1, 2, 1);
+    ctx.fillStyle = PAINT.bloodBright;
+    ctx.fillRect(x, y, 2, 1);
+  }
 }
 
 /**
@@ -1428,10 +1508,10 @@ export function draw(canvas, world) {
     _wrapped(px(cella.x), (x) => _paintSinkFire(ctx, x, px(CELLA.w), cella.from * 0.7));
   }
   for (const pyre of pyresGiu) {
-    _wrapped(px(pyre.x), (x) => _paintSinkFire(ctx, x, px(PILOT.w), pyre.phase || 0));
+    _wrapped(px(pyre.x), (x) => _paintSinkFire(ctx, x, px(PILOT.w), pyre.phase || 0, pyre.mine));
   }
   for (const testa of testeGiu) {
-    _wrapped(px(testa.x), (x) => _paintSinkFire(ctx, x, px(HEAD.w), testa.phase || 0));
+    _wrapped(px(testa.x), (x) => _paintSinkFire(ctx, x, px(HEAD.w), testa.phase || 0, testa.mine));
   }
 
   const gone = world.removed || [];
@@ -1453,6 +1533,7 @@ export function draw(canvas, world) {
     _wrapped(px(pyre.x), (x) => {
       _paintPyre(ctx, pyre, x);
       _paintPyreFlames(ctx, pyre, x);
+      if (pyre.spurt > 0) _paintNeck(ctx, pyre, x);
     });
   }
 

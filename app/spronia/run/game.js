@@ -449,6 +449,11 @@ export const SHIELD = {
   // colpo, che è quello che è successo.
   kick: 170,
   toss: 120,
+  // Quanto dura lo zampillo dal collo, in secondi. Poco: è la prima cosa che il fuoco si prende, e
+  // un getto che continua per tutta la caduta smetterebbe di essere un istante e diventerebbe una
+  // caratteristica del corpo. Un secondo e mezzo è il tempo di vederlo partire e finire.
+  spurt: 1.5,
+
   // Quanto gira mentre rotola, in quarti di giro per unità percorsa. Ricavato guardando: a un giro
   // ogni ottanta unità la testa sembra scivolare, a uno ogni venti sembra un trapano.
   roll: 1 / 44,
@@ -953,8 +958,15 @@ function _stepPilot(world, pilot, intent, ledges, dt, boost = 1) {
     //
     // A foe goes away and comes back on its own clock, which is the same path a downed foe takes:
     // the metal is not a special case, it is just another way of losing.
-    if (pilot.foe) _lower(world, pilot);
-    else _return(world, pilot);
+    //
+    // Il giocatore invece **brucia come gli altri**: le ceneri prima del rientro, perché `_return`
+    // ricostruisce il pilota sul posto e da lì in poi la sua posizione di un istante fa non c'è più.
+    if (pilot.foe) {
+      _lower(world, pilot);
+    } else {
+      _ashes(world, pilot, true);
+      _return(world, pilot);
+    }
   }
 }
 
@@ -1404,52 +1416,71 @@ function _burn(world, foe, by) {
   foe.done = true;
   foe.downs += 1;
   if (by && !by.foe) _pay(by, (KINDS[foe.kind] || KINDS.deriva).points);
-  // Il tiro **prima** di costruire il corpo, e sempre: chiamare il generatore solo a volte
-  // renderebbe la sequenza dipendente da quante teste sono già saltate, e due partite con lo
+  _ashes(world, foe, false);
+  world.last = {
+    kind: "bruciato", at: world.time, classe: foe.kind,
+    points: (KINDS[foe.kind] || KINDS.deriva).points, who: by ? by.index : null,
+  };
+}
+
+/**
+ * Quello che resta di un corpo: le ceneri, cioè un corpo in fiamme e ogni tanto una testa.
+ *
+ * Una funzione sola per il nemico bruciato dallo scudo e per **il giocatore che finisce nella
+ * colata**, e non per brevità: sono la stessa cosa vista da due parti, e l'unico modo perché
+ * restino la stessa cosa è che siano lo stesso codice. Un giocatore che sparisce dove un nemico
+ * brucia direbbe che il metallo tratta i due in modo diverso, che è falso ed è anche l'opposto di
+ * quello che il gioco promette — la stessa fisica per tutti.
+ *
+ * `mio` cambia una cosa sola: **i lapilli sono azzurri.** Non le fiamme, che sono del metallo e
+ * sono uguali per tutti; gli schizzi, che sono quello che il metallo strappa. È il colore del
+ * cavaliere, ed è lo stesso motivo per cui in cima allo schermo le vite sono la sua testa: in
+ * mezzo a tre nemici, quello che ti riguarda si riconosce senza leggere niente.
+ */
+function _ashes(world, body, mio) {
+  // Il tiro **prima** e sempre, anche quando la testa non salta: chiamare il generatore solo a
+  // volte renderebbe la sequenza dipendente da quante teste sono già saltate, e due partite con lo
   // stesso seme divergerebbero al primo scudo.
   const decapitato = _random(world) < SHIELD.behead;
 
   world.pyres.push({
     headless: decapitato,
-    kind: foe.kind,
-    x: foe.x,
-    y: foe.y,
-    vx: foe.vx,
-    vy: foe.vy,
-    facing: foe.facing,
+    mine: mio,
+    // Il giocatore non ha una classe, e va bene così: senza `kind` il disegno ricade sulla
+    // tavolozza del cavaliere, che è esattamente quella che deve avere.
+    kind: mio ? null : body.kind,
+    x: body.x,
+    y: body.y,
+    vx: body.vx,
+    vy: body.vy,
+    facing: body.facing,
     grounded: false,
     alive: true,
-    // Sta affondando nel metallo. Stesso stato e stesso nome della cella, perché è la stessa cosa
-    // che succede e deve avere lo stesso aspetto: scende piano e la colata lo copre.
     sinking: false,
-    // La fase del battito d'ali, così due corpi che bruciano insieme non agonizzano all'unisono —
-    // che è il modo più rapido di far sembrare due creature un'animazione sola.
-    phase: foe.index * 1.37,
+    // Quanto zampilla ancora dal collo. Zero quando la testa è al suo posto, e cala da sé: il fuoco
+    // se lo prende, ed è il primo pezzo di questa scena a finire.
+    spurt: decapitato ? SHIELD.spurt : 0,
+    phase: body.index * 1.37,
   });
-  if (decapitato) {
-    world.teste.push({
-      kind: foe.kind,
-      x: foe.x,
-      // Parte da dove stava la testa, non dal centro del corpo: la scatola del corpo è alta ottanta
-      // unità e farla nascere in mezzo vorrebbe dire vederla uscire dal petto.
-      y: foe.y - PILOT.h / 4,
-      vx: foe.vx * 0.5 + Math.sign(foe.facing || 1) * SHIELD.toss,
-      vy: Math.min(foe.vy, 0) - SHIELD.kick,
-      grounded: false,
-      alive: true,
-      sinking: false,
-      // Di quanto ha girato, in quarti. Non è un'animazione a tempo: è una funzione di quanta
-      // strada ha fatto, come la camminata del dodo — una testa che gira mentre sta ferma sarebbe
-      // una trottola, e una che non gira mentre corre sarebbe una pietra.
-      spin: 0,
-      phase: foe.index * 0.83,
-    });
-  }
 
-  world.last = {
-    kind: "bruciato", at: world.time, classe: foe.kind, testa: decapitato,
-    points: (KINDS[foe.kind] || KINDS.deriva).points, who: by ? by.index : null,
-  };
+  if (!decapitato) return;
+  world.teste.push({
+    mine: mio,
+    kind: mio ? null : body.kind,
+    x: body.x,
+    // Parte da dove stava la testa, non dal centro del corpo: la scatola è alta ottanta unità e
+    // farla nascere in mezzo vorrebbe dire vederla uscire dal petto.
+    y: body.y - PILOT.h / 4,
+    vx: body.vx * 0.5 + Math.sign(body.facing || 1) * SHIELD.toss,
+    vy: Math.min(body.vy, 0) - SHIELD.kick,
+    grounded: false,
+    alive: true,
+    sinking: false,
+    // Di quanto ha girato, in quarti. Non è un'animazione a tempo: è una funzione di quanta strada
+    // ha fatto, come la camminata del dodo.
+    spin: 0,
+    phase: body.index * 0.83,
+  });
 }
 
 /**
@@ -1471,6 +1502,9 @@ function _stepHeads(world, ledges, dt) {
 /** I corpi in fiamme, mossi di un passo: cadono, rimbalzano, non si posano, sprofondano. */
 function _stepPyres(world, ledges, dt) {
   _fall(world.pyres, PYRE, ledges, dt);
+  for (const pyre of world.pyres) {
+    if (pyre.spurt > 0) pyre.spurt = Math.max(0, pyre.spurt - dt);
+  }
   world.pyres = world.pyres.filter((pyre) => pyre.alive);
 }
 
