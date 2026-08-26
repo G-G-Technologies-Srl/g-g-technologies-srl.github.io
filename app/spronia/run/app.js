@@ -9,7 +9,7 @@
 // its own — two languages, two themes, installable, and a loop that runs a world.
 
 import { t, lang, otherLang, setLang, resolveLang, missingKeys } from "./i18n.js";
-import { create, step, startWave, cleared, STEP, PILOT, deltaX } from "./game.js";
+import { newGame, step, startWave, cleared, STEP, PILOT, deltaX } from "./game.js";
 import * as render from "./render.js";
 import * as input from "./input.js";
 import * as theme from "gg/theme.js";
@@ -18,13 +18,6 @@ import { setup as setupInstall } from "gg/install.js";
 const el = (id) => document.getElementById(id);
 
 const PREF = { players: "gg.spronia.players" };
-
-// Chi c'è in campo a ogni ondata. **Provvisorio, e si vede che lo è**: il generatore di ondate è la
-// Fase 5 e deciderà da sé la miscela, quante piattaforme togliere e con che ritmo. Fino ad allora
-// l'ondata successiva rimette gli stessi tre, il che basta perché le celle abbiano un confine
-// d'ondata su cui appoggiarsi — la schiusa accelera di ondata in ondata e la scala del punteggio si
-// azzera lì.
-const ROSTER = ["deriva", "segugio", "vertice"];
 
 // -----------------------------------------------------------------------------------------------------------------
 //  s t a t e
@@ -99,7 +92,7 @@ function _frame(now) {
   // L'ondata finisce quando non resta niente da fare: nessun nemico in volo e nessuna cella da
   // raccogliere. Prima delle celle non poteva succedere — un nemico abbattuto tornava da solo — e
   // adesso è lo stato normale di fine ondata.
-  if (cleared(world)) startWave(world, ROSTER);
+  if (cleared(world)) startWave(world);
 
   render.draw(el("field"), world);
 
@@ -116,9 +109,7 @@ function _frame(now) {
 function _start(players) {
   input.setPlayers(players);
   input.reset();
-  // One of each class, until the wave generator of Fase 5 decides the mix. Three is also the
-  // smallest field on which the classes can be told apart while playing rather than in a capture.
-  world = create(Date.now() & 0x7fffffff, players, ROSTER);
+  world = newGame(Date.now() & 0x7fffffff, players);
   carried = 0;
   last = performance.now();
   running = true;
@@ -235,7 +226,7 @@ function _boot() {
   });
 
   // A world exists before anybody presses anything, so the field is never an empty rectangle.
-  world = create(1, 1, ROSTER);
+  world = newGame(1, 1);
   render.draw(el("field"), world);
   requestAnimationFrame(_frame);
 

@@ -22,6 +22,7 @@
 //    build or the screenshot changes on its own.
 
 import { resolve, groundBelow } from "./terrain.js";
+import { plan, WAVE } from "./waves.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  m e a s u r e s
@@ -87,8 +88,26 @@ export const PADS = [
 ];
 
 // When no pad is free — up to nine enemies and two pilots for four pads, so it happens — a body
-// appears here instead, airborne and protected.
-export const FALLBACK_PAD = { x: FIELD.w / 2, y: 350 };
+// appears at one of these instead, airborne and protected.
+//
+// **Cinque e non uno**, e questa è una correzione che si è vista solo quando le ondate sono
+// diventate vere. Con un solo posto di ripiego, un'ondata da nove nemici ne metteva quattro sulle
+// piazzole e **cinque nello stesso identico punto**: a schermo un corpo solo, che dopo un secondo
+// si sfaldava in cinque mentre ognuno prendeva la sua strada. Non rompeva niente — i nemici non si
+// urtano fra loro — e per un secondo il campo mentiva su quanti ne aveva dentro.
+//
+// Sono in aria e sparsi, a quote diverse, e nessuno di loro sta sopra la colata più di quanto ci
+// stia una piazzola: sono posti da cui si può battere e restare su.
+export const FALLBACK_PADS = [
+  { x: FIELD.w / 2, y: 350 },
+  { x: 240, y: 300 },
+  { x: 1040, y: 300 },
+  { x: 470, y: 210 },
+  { x: 810, y: 210 },
+];
+
+/** Il primo dei ripieghi, per chi ne vuole uno solo. Tenuto per non cambiare firma a chi lo usa. */
+export const FALLBACK_PAD = FALLBACK_PADS[0];
 
 // The drawn frame, which is **not** the collision box. The artwork is 59 x 50 sprite pixels — a
 // dodo with a rider and a lance sticking out of it — and most of that is not something you should
@@ -712,13 +731,37 @@ export function makeCella(world, foe) {
  */
 export function freePad(world, clear = 150) {
   const taken = bodies(world);
+  const libero = (pad) => !taken.some((body) =>
+    Math.abs(deltaX(body.x, pad.x)) < clear && Math.abs(body.y - pad.y) < clear);
+
   const order = [...PADS].sort(() => (_random(world) < 0.5 ? -1 : 1));
   for (const pad of order) {
-    const busy = taken.some((body) =>
-      Math.abs(deltaX(body.x, pad.x)) < clear && Math.abs(body.y - pad.y) < clear);
-    if (!busy) return pad;
+    if (libero(pad)) return pad;
   }
-  return FALLBACK_PAD;
+  // Poi i ripieghi in aria, e **anche fra questi si cerca quello libero**: metterli tutti sul primo
+  // è esattamente il difetto che i ripieghi dovevano evitare, spostato di un passo.
+  for (const pad of FALLBACK_PADS) {
+    if (libero(pad)) return pad;
+  }
+
+  // E se anche quelli sono pieni, **si cerca un posto**. Con nove nemici e due piloti i posti con un
+  // nome sono nove, e undici corpi in nove posti vuol dire che gli ultimi due finiscono uno sopra
+  // l'altro: misurato, cinque corpi nello stesso punto e dieci coppie sovrapposte all'ondata
+  // diciannove. Un elenco più lungo avrebbe spostato il problema di due ondate.
+  //
+  // La distanza richiesta qui è più corta — sono corpi in aria e protetti, non piazzole da cui
+  // partire — e si scorre il campo in orizzontale su tre quote. Il campo è largo milleduecento e i
+  // corpi sono undici: un posto c'è sempre, e se davvero non ci fosse si torna al primo ripiego,
+  // che è come stavamo prima.
+  const stretto = clear * 0.62;
+  const vicino = (pad) => !taken.some((body) =>
+    Math.abs(deltaX(body.x, pad.x)) < stretto && Math.abs(body.y - pad.y) < stretto);
+  for (const y of [300, 210, 400]) {
+    for (let x = 90; x < FIELD.w - 90; x += 70) {
+      if (vicino({ x, y })) return { x, y };
+    }
+  }
+  return FALLBACK_PADS[0];
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -748,6 +791,12 @@ export function create(seed = 1, players = 1, foes = 0) {
     // Le celle in campo, e a che ondata siamo. L'ondata non ha ancora un generatore — quello è la
     // Fase 5 — ma il numero serve già qui, perché la schiusa accelera di ondata in ondata.
     celle: [],
+    // Il piano dell'ondata in corso — che cosa il generatore ha chiesto di mettere in campo — e
+    // quanto vanno veloci i nemici. Il piano si tiene perché due regole lo interrogano mentre si
+    // gioca: la schiusa a tre per volta, che vale solo nelle ondate di Celle, e il premio di fine
+    // ondata, che dipende dal tipo.
+    plan: null,
+    speed: 1,
     // I corpi in fiamme, che non sono più nemici e non sono ancora niente: cadono, rimbalzano e si
     // consumano. Stanno in un elenco a parte perché nessuna regola deve vederli — non combattono,
     // non si raccolgono, non tornano. E le teste che ogni tanto si staccano da loro, che sono la
@@ -769,6 +818,23 @@ export function create(seed = 1, players = 1, foes = 0) {
 }
 
 /**
+ * Una partita nuova: campo vuoto, poi la **prima ondata dal generatore**.
+ *
+ * Due passaggi e non uno, e la ragione è tutta nei controlli. `create` prende un elenco di nemici
+ * perché quaranta prove chiedono un campo con dentro esattamente quello che serve a loro; se
+ * generasse l'ondata da sé, ogni prova che scrive `create(5, 1, 0)` si troverebbe tre Derive in
+ * volo e fallirebbe per una ragione che non c'entra niente con quello che stava misurando.
+ *
+ * Perciò il guscio passa di qui, e chi prova passa da `create`.
+ */
+export function newGame(seed = 1, players = 1) {
+  const world = create(seed, players, []);
+  world.wave = 0;
+  startWave(world);
+  return world;
+}
+
+/**
  * L'ondata successiva: campo pulito, nemici nuovi, scala azzerata.
  *
  * **Non è il generatore di ondate**, che è la Fase 5 e decide da sé la miscela, quali piattaforme
@@ -778,16 +844,86 @@ export function create(seed = 1, players = 1, foes = 0) {
  *
  * `roster` è o un numero — tutte Derive — o l'elenco delle classi da mettere in aria.
  */
-export function startWave(world, roster = 0) {
+export function startWave(world, roster) {
   world.wave = (world.wave || 0) + 1;
   for (const pilot of world.pilots) pilot.ladder = 0;
   world.celle = [];
   world.pyres = [];
   world.teste = [];
   world.foes = [];
+
+  // **Senza elenco decide il generatore.** Con un elenco lo decide chi chiama, ed è come lavorano i
+  // controlli: `test/physics.mjs` vuole un campo con dentro esattamente un Segugio, non l'ondata
+  // che il gioco metterebbe in quel momento. Le due strade non si mescolano — o il piano, o
+  // l'elenco — perché un generatore che a volte viene scavalcato è un generatore che non si può
+  // provare.
+  if (roster === undefined) {
+    const piano = plan(world.wave, world.players);
+    world.plan = piano;
+    world.removed = piano.removed.slice();
+    world.speed = piano.speed;
+    piano.foes.forEach((livello, i) => {
+      world.foes.push(makeFoe(i, freePad(world), KIND_NAMES[livello] || KIND_NAMES[0]));
+    });
+    _seedCells(world, piano.cells);
+    return world;
+  }
+
+  world.plan = null;
+  world.speed = 1;
   const list = Array.isArray(roster) ? roster : new Array(roster).fill(KIND_NAMES[0]);
   list.forEach((kind, i) => world.foes.push(makeFoe(i, freePad(world), kind)));
   return world;
+}
+
+/**
+ * I posti in cui nascono le celle di un'ondata di Celle.
+ *
+ * Sei, fissi, e **tutti su piattaforme che non spariscono**: una cella che nasce su una piattaforma
+ * tolta nascerebbe a mezz'aria, cadrebbe, e con un po' di sfortuna finirebbe nella colata prima che
+ * il giocatore abbia potuto fare qualcosa — cioè il gioco che si toglie da solo un pezzo
+ * dell'ondata. È la stessa ragione per cui le piazzole stanno sulle piattaforme fisse.
+ */
+const CELL_SPOTS = [
+  { deck: "lunga", at: 0.18 },
+  { deck: "lunga", at: 0.5 },
+  { deck: "lunga", at: 0.82 },
+  { deck: "sinistra", at: 0.32 },
+  { deck: "sinistra", at: 0.72 },
+  { deck: "destra", at: 0.5 },
+];
+
+/**
+ * Le sei celle già posate di un'ondata di Celle.
+ *
+ * Ognuna ha il suo posto in `world.foes`, spento e con **il contatore a uno**: due spegnimenti
+ * residui a testa. Senza quel posto la cella non avrebbe un nemico a cui appartenere, e il tetto
+ * dei tre spegnimenti — che è quello che garantisce la fine di un'ondata — non avrebbe niente da
+ * contare.
+ */
+function _seedCells(world, classi) {
+  classi.forEach((livello, i) => {
+    const posto = CELL_SPOTS[i % CELL_SPOTS.length];
+    const deck = PLATFORMS.find((p) => p.id === posto.deck) || PLATFORMS[0];
+    const x = deck.x + deck.w * posto.at;
+
+    const foe = makeFoe(i, { x, y: deck.y }, KIND_NAMES[livello] || KIND_NAMES[0]);
+    foe.alive = false;
+    foe.downs = 1;
+    world.foes.push(foe);
+
+    world.celle.push({
+      ...makeCella(world, foe),
+      x,
+      y: deck.y - CELLA.h / 2,
+      vx: 0,
+      vy: 0,
+      grounded: true,
+      // Già posate, quindi già raccoglibili: la regola «prima deve toccare terra» esiste perché una
+      // cella nasce addosso a chi l'ha fatta, e queste non le ha fatte nessuno.
+      touched: true,
+    });
+  });
 }
 
 /**
@@ -865,7 +1001,10 @@ export function step(world, intents, dt = STEP) {
   _frenzy(world, dt);
   // Speed only. The frenzy must never touch the beat or gravity: those decide altitude, and
   // altitude is the rule.
-  const boost = 1 + world.frenesia;
+  // La velocità dell'ondata moltiplica quella della frenesia, e come lei **tocca solo la velocità**:
+  // battito e gravità restano quelli di tutti, o il rallentamento della prima ondata sposterebbe la
+  // regola dell'altezza e insegnerebbe un gioco diverso da quello che si gioca dalla seconda.
+  const boost = (1 + world.frenesia) * (world.speed ?? 1);
   for (const foe of world.foes || []) {
     if (!foe.alive) continue;
     _stepPilot(world, foe, _wander(world, foe, dt), ledges, dt, boost);
@@ -1199,6 +1338,25 @@ function _stepCelle(world, ledges, dt) {
  * cade.
  */
 function _hatch(world, cella) {
+  // **Al massimo tre schiuse insieme**, e solo nelle ondate di Celle. Sei celle che si aprono tutte
+  // nello stesso momento sono sei nemici in faccia e un'ondata che si decide nel primo secondo;
+  // tre per volta la rendono una coda da smaltire, che è quello che quel tipo di ondata deve
+  // essere.
+  //
+  // Vale lì e non ovunque, e la differenza non è di gusto: in un'ondata normale le celle vengono da
+  // nemici che stanno già a terra, quindi la schiusa non aggiunge niente al campo — la rimette
+  // com'era. Un tetto generale bloccherebbe le schiuse ogni volta che tre nemici volano, cioè quasi
+  // sempre, e le celle non tornerebbero mai.
+  if (world.plan && world.plan.type === "celle") {
+    const inVolo = (world.foes || []).filter((f) => f.alive).length;
+    if (inVolo >= WAVE.hatchAtOnce) {
+      // Riprova fra poco invece di aspettare un'altra schiusa intera: quello che deve rallentare è
+      // il ritmo, non la vita della cella.
+      cella.hatch = 0.6;
+      return;
+    }
+  }
+
   cella.alive = false;
   const foe = (world.foes || []).find((f) => f.index === cella.from);
   if (!foe) return;

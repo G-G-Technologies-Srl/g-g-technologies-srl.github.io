@@ -14,10 +14,11 @@
 import {
   FIELD, CEILING, MELT, STEP, PIXEL, PILOT, SPRITE, PLATFORMS, PADS, DECK, BOUNDS, TIE, FOE,
   KINDS, KIND_NAMES, FRENZY, HUNT, CELLA, CELL_POINTS, DOWNS, PROMOTION, LIVES, EXTRA_FIRST, SHIELD,
-  create, step, decks, deltaX, lanceTip, makePilot, makeFoe, bodies, hunting,
+  create, newGame, step, decks, deltaX, lanceTip, makePilot, makeFoe, bodies, hunting,
   startWave, cleared, hatchTime,
 } from "../run/game.js";
 import { resolve } from "../run/terrain.js";
+import { WAVE } from "../run/waves.js";
 import {
   PILOT_SPRITES, PALETTE, TINTE, ALPHABET, EYE, CELL, EGG, EGG_SPRITE, EGG_PALETTES,
   measure, each, tint,
@@ -781,6 +782,138 @@ function spegni(world, io, lui) {
     `${hatchTime(1)} poi ${hatchTime(2)}`);
   check("e non scende sotto il minimo",
     hatchTime(500) === CELLA.hatchMin, `${hatchTime(500)}`);
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  l e   o n d a t e ,   m e s s e   i n   c a m p o
+// -----------------------------------------------------------------------------------------------------------------
+
+console.log("\nle ondate, messe in campo");
+
+/** Chiude l'ondata a forza: quello che qui si prova è il montaggio, non la vittoria. */
+function svuota(world) {
+  for (const foe of world.foes) { foe.alive = false; foe.done = true; }
+  world.celle = [];
+  world.pyres = [];
+  world.teste = [];
+}
+
+{
+  const world = newGame(9, 1);
+  check("una partita nuova comincia dall'ondata uno",
+    world.wave === 1 && world.plan && world.plan.type === "normale", `ondata ${world.wave}`);
+  check("con tre Derive, al rallentatore",
+    world.foes.length === 3 && world.foes.every((f) => f.kind === KIND_NAMES[0])
+      && world.speed === WAVE.firstSlow,
+    `${world.foes.length} nemici a ${world.speed}`);
+
+  // Il rallentamento tocca **solo la velocità**: se toccasse il battito o la gravità, la prima
+  // ondata insegnerebbe un gioco diverso da quello che si gioca dalla seconda.
+  const lento = create(4, 1, ["deriva"]);
+  lento.speed = WAVE.firstSlow;
+  const pieno = create(4, 1, ["deriva"]);
+  for (const w of [lento, pieno]) {
+    const io = w.pilots[0];
+    io.guard = 0; io.x = 400; io.y = 200; io.vx = 0; io.vy = 0; io.grounded = false;
+    for (let i = 0; i < 40; i += 1) step(w, [intent({ flaps: i === 0 ? 1 : 0 })]);
+  }
+  check("il rallentamento dell'ondata non tocca il volo del giocatore",
+    near(lento.pilots[0].y, pieno.pilots[0].y, 1e-6),
+    `${lento.pilots[0].y.toFixed(2)} contro ${pieno.pilots[0].y.toFixed(2)}`);
+}
+
+{
+  // **L'ondata di Celle**: nessun nemico in volo, sei celle già posate, e ognuna col contatore a
+  // uno — due spegnimenti residui a testa.
+  const world = newGame(9, 1);
+  while (world.wave < 7) { svuota(world); startWave(world); }
+  check("la settima è l'ondata di Celle", world.plan.type === "celle");
+  check("nessun nemico in volo, sei celle a terra",
+    world.foes.every((f) => !f.alive) && world.celle.length === WAVE.cells,
+    `${world.foes.filter((f) => f.alive).length} in volo, ${world.celle.length} celle`);
+  check("ogni cella è posata su un ripiano, e già raccoglibile",
+    world.celle.every((c) => c.grounded && c.touched
+      && decks(world).some((d) => Math.abs(c.y + CELLA.h / 2 - d.y) < 1)),
+    world.celle.map((c) => c.y.toFixed(0)).join(" "));
+  check("e nasce col contatore a uno: due spegnimenti residui",
+    world.foes.every((f) => f.downs === 1));
+
+  // **Al massimo tre schiuse insieme.** Sei celle che si aprono tutte nello stesso momento sono
+  // sei nemici in faccia e un'ondata decisa nel primo secondo.
+  world.pilots[0].x = 5000;                          // fuori dai piedi, nessuno raccoglie
+  let picco = 0;
+  for (let i = 0; i < 120 * 60; i += 1) {
+    step(world, [intent()]);
+    picco = Math.max(picco, world.foes.filter((f) => f.alive).length);
+  }
+  check("non si schiudono mai più di tre celle insieme",
+    picco <= WAVE.hatchAtOnce, `arrivate a ${picco}`);
+  check("ma qualcuna si schiude davvero", picco > 0);
+}
+
+{
+  // Le piattaforme tolte arrivano davvero in campo, e mai una piazzola resta a mezz'aria: le
+  // piazzole stanno tutte su piattaforme che non spariscono.
+  const world = newGame(9, 1);
+  const viste = new Set();
+  let orfane = 0;
+  for (let n = 1; n <= 30; n += 1) {
+    viste.add(world.removed.slice().sort().join("+"));
+    for (const pad of PADS) {
+      const sotto = decks(world).some((d) => pad.x >= d.x && pad.x <= d.x + d.w
+        && Math.abs(d.y - pad.y) < 1);
+      if (!sotto) orfane += 1;
+    }
+    svuota(world);
+    startWave(world);
+  }
+  check("in trenta ondate si vedono tutte e quattro le mappe", viste.size === 4,
+    [...viste].join(" | "));
+  check("e nessuna piazzola resta mai a mezz'aria", orfane === 0, `${orfane} volte`);
+}
+
+{
+  // **Nessuno nasce dentro qualcun altro.** Con nove nemici e due piloti i posti con un nome sono
+  // nove, e undici corpi in nove posti vuol dire che gli ultimi finiscono uno sopra l'altro:
+  // misurato prima di correggerlo, cinque corpi nello stesso punto e dieci coppie sovrapposte
+  // all'ondata diciannove. Non rompeva niente — i nemici non si urtano fra loro — e per un secondo
+  // il campo mentiva su quanti ne aveva dentro.
+  let peggio = 0;
+  let dove = "";
+  for (let bersaglio = 1; bersaglio <= 40; bersaglio += 1) {
+    for (const giocatori of [1, 2]) {
+      const world = newGame(9, giocatori);
+      while (world.wave < bersaglio) { svuota(world); startWave(world); }
+      const corpi = bodies(world);
+      let sovr = 0;
+      for (let i = 0; i < corpi.length; i += 1) {
+        for (let j = i + 1; j < corpi.length; j += 1) {
+          if (Math.abs(deltaX(corpi[i].x, corpi[j].x)) < PILOT.w / 2
+            && Math.abs(corpi[i].y - corpi[j].y) < PILOT.h / 2) sovr += 1;
+        }
+      }
+      if (sovr > peggio) { peggio = sovr; dove = `ondata ${bersaglio}, ${giocatori}g`; }
+    }
+  }
+  check("in quaranta ondate nessun corpo nasce dentro un altro", peggio === 0,
+    `${peggio} coppie, ${dove}`);
+}
+
+{
+  // Sessanta ondate di fila, montate una dopo l'altra: nessuna esplode, e in nessuna il campo resta
+  // senza niente da fare — che sarebbe un'ondata finita nel fotogramma in cui comincia, e il guscio
+  // ne aprirebbe un'altra all'infinito.
+  for (const giocatori of [1, 2]) {
+    const world = newGame(21, giocatori);
+    let vuote = 0;
+    for (let n = 1; n <= 60; n += 1) {
+      if (cleared(world)) vuote += 1;
+      svuota(world);
+      startWave(world);
+    }
+    check(`sessanta ondate di fila, a ${giocatori === 1 ? "uno" : "due"}: nessuna nasce già finita`,
+      vuote === 0, `${vuote} vuote`);
+  }
 }
 
 // -----------------------------------------------------------------------------------------------------------------
