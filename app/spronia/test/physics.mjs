@@ -13,7 +13,7 @@
 
 import {
   FIELD, CEILING, MELT, STEP, PIXEL, PILOT, SPRITE, PLATFORMS, PADS, DECK, BOUNDS, TIE, FOE,
-  KINDS, KIND_NAMES, FRENZY, HUNT, CELLA, CELL_POINTS, DOWNS, PROMOTION,
+  KINDS, KIND_NAMES, FRENZY, HUNT, CELLA, CELL_POINTS, DOWNS, PROMOTION, LIVES, EXTRA_FIRST, SHIELD,
   create, step, decks, deltaX, lanceTip, makePilot, makeFoe, bodies, hunting,
   startWave, cleared, hatchTime,
 } from "../run/game.js";
@@ -40,7 +40,7 @@ function near(a, b, tol = 1e-9) {
 
 /** An intent object, fresh, because the world consumes the flap count out of it. */
 function intent(over = {}) {
-  return { left: false, right: false, flapHeld: false, flaps: 0, ...over };
+  return { left: false, right: false, flapHeld: false, flaps: 0, shields: 0, ...over };
 }
 
 /** Play `steps` steps, calling `each(i)` to get this step's intent for the single pilot. */
@@ -232,10 +232,10 @@ function duello(scartoY, seed = 3) {
 
 {
   const { world, lui } = duello(-30);                     // il nemico è **sopra**: perdo io
-  const primaPunteggio = world.score;
+  const primaPunteggio = world.pilots[0].score;
   step(world, [intent()]);
   check("chi sta più in basso perde",
-    world.last && world.last.kind === "perso" && lui.alive && world.score === primaPunteggio,
+    world.last && world.last.kind === "perso" && lui.alive && world.pilots[0].score === primaPunteggio,
     JSON.stringify(world.last));
   check("e chi perde torna protetto",
     world.pilots[0].guard === PILOT.spawnGuard,
@@ -247,7 +247,7 @@ function duello(scartoY, seed = 3) {
   step(world, [intent()]);
   check("chi sta più in alto vince",
     world.last && world.last.kind === "abbattuto" && !lui.alive
-    && world.score === KINDS[lui.kind].points,
+    && world.pilots[0].score === KINDS[lui.kind].points,
     JSON.stringify(world.last));
 }
 
@@ -627,20 +627,20 @@ function spegni(world, io, lui) {
   world.pilots[0].x = 700;
   step(world, [intent()]);
   check("una cella che tocca la colata è persa, e non paga niente",
-    cella.sinking && lui.done && world.score === KINDS.deriva.points,
-    `affonda=${cella.sinking} finito=${lui.done} punti=${world.score}`);
+    cella.sinking && lui.done && world.pilots[0].score === KINDS.deriva.points,
+    `affonda=${cella.sinking} finito=${lui.done} punti=${world.pilots[0].score}`);
 
   // **Affonda, e mentre affonda non c'è più niente da fare.** L'esito è deciso quando tocca; quello
   // che resta è il tempo di vederlo. Un giocatore che le si butta addosso non la recupera.
   const y0 = cella.y;
   world.pilots[0].x = cella.x; world.pilots[0].y = cella.y; world.pilots[0].guard = 0;
-  const puntiPrima = world.score;
+  const puntiPrima = world.pilots[0].score;
   let passi = 0;
   while (cella.alive && passi < 120 * 5) { step(world, [intent()]); passi += 1; }
   check("scende invece di sparire, e nessuno la può più prendere",
-    cella.y > y0 && world.score === puntiPrima && passi > 60,
+    cella.y > y0 && world.pilots[0].score === puntiPrima && passi > 60,
     `scesa di ${(cella.y - y0).toFixed(0)} unità in ${(passi / 120).toFixed(2)} s, `
-    + `${world.score - puntiPrima} punti`);
+    + `${world.pilots[0].score - puntiPrima} punti`);
   check("e quando è tutta sotto la superficie sparisce",
     !cella.alive && world.celle.length === 0 && cella.y - CELLA.h / 2 >= MELT,
     `viva=${cella.alive}, y=${cella.y.toFixed(0)}`);
@@ -653,13 +653,13 @@ function spegni(world, io, lui) {
   io.guard = 0; io.x = 400; io.y = 300; io.vx = 0; io.vy = 0; io.grounded = false;
   const presi = [];
   for (let i = 0; i < 5; i += 1) {
-    const prima = world.score;
+    const prima = world.pilots[0].score;
     world.celle.push({
       from: 90 + i, kind: "deriva", x: io.x, y: io.y,
       vx: 0, vy: 0, grounded: false, alive: true, hatch: 99, touched: true,
     });
     step(world, [intent()]);
-    presi.push(world.score - prima);
+    presi.push(world.pilots[0].score - prima);
   }
   check("la scala delle celle è 25, 50, 100, 200 e poi 200",
     JSON.stringify(presi) === JSON.stringify([25, 50, 100, 200, 200]), JSON.stringify(presi));
@@ -679,14 +679,14 @@ function spegni(world, io, lui) {
   });
   step(world, [intent()]);
   check("una cella che non ha ancora toccato non si raccoglie",
-    world.score === 0 && world.celle.length === 1,
-    `${world.score} punti, ${world.celle.length} celle`);
+    world.pilots[0].score === 0 && world.celle.length === 1,
+    `${world.pilots[0].score} punti, ${world.celle.length} celle`);
 
   world.celle[0].touched = true;
   step(world, [intent()]);
   check("e appena ha toccato, sì",
-    world.score === CELL_POINTS[0] && world.celle.length === 0,
-    `${world.score} punti, ${world.celle.length} celle`);
+    world.pilots[0].score === CELL_POINTS[0] && world.celle.length === 0,
+    `${world.pilots[0].score} punti, ${world.celle.length} celle`);
 }
 
 {
@@ -701,23 +701,23 @@ function spegni(world, io, lui) {
     if (world.celle.length !== 1) viva = false;
   }
   check("la cella appena nata non viene raccolta da chi l'ha fatta",
-    viva && world.score === KINDS.deriva.points, `punti=${world.score}`);
+    viva && world.pilots[0].score === KINDS.deriva.points, `punti=${world.pilots[0].score}`);
 }
 
 {
   // Il contatore si azzera dove deve: all'inizio dell'ondata e a ogni morte.
   const world = create(3, 1, ["deriva"]);
-  world.ladder = 3;
+  world.pilots[0].ladder = 3;
   startWave(world, ["deriva"]);
   check("l'ondata nuova azzera la scala e pulisce il campo",
-    world.ladder === 0 && world.celle.length === 0 && world.wave === 2,
-    `scala=${world.ladder} celle=${world.celle.length} ondata=${world.wave}`);
+    world.pilots[0].ladder === 0 && world.celle.length === 0 && world.wave === 2,
+    `scala=${world.pilots[0].ladder} celle=${world.celle.length} ondata=${world.wave}`);
 
-  world.ladder = 3;
+  world.pilots[0].ladder = 3;
   const io = world.pilots[0];
   io.x = 300; io.y = MELT - PILOT.h / 2 + 2; io.vy = 200; io.guard = 0; io.grounded = false;
   step(world, [intent()]);
-  check("e morire la azzera anche lei", world.ladder === 0, `scala=${world.ladder}`);
+  check("e morire la azzera anche lei", io.ladder === 0, `scala=${io.ladder}`);
 }
 
 {
@@ -763,12 +763,12 @@ function spegni(world, io, lui) {
   const world = create(3, 1, ["vertice"]);
   const lui = world.foes[0];
   lui.downs = DOWNS - 1;
-  const prima = world.score;
+  const prima = world.pilots[0].score;
   spegni(world, world.pilots[0], lui);
   check("la cella del terzo spegnimento è raccolta d'ufficio, al valore semplice",
     lui.done && world.celle.length === 0
-      && world.score - prima === KINDS.vertice.points + CELL_POINTS[0],
-    `${world.score - prima} punti, celle=${world.celle.length}`);
+      && world.pilots[0].score - prima === KINDS.vertice.points + CELL_POINTS[0],
+    `${world.pilots[0].score - prima} punti, celle=${world.celle.length}`);
 }
 
 {
@@ -778,6 +778,188 @@ function spegni(world, io, lui) {
     `${hatchTime(1)} poi ${hatchTime(2)}`);
   check("e non scende sotto il minimo",
     hatchTime(500) === CELLA.hatchMin, `${hatchTime(500)}`);
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  l o   s c u d o   d i   f u o c o
+// -----------------------------------------------------------------------------------------------------------------
+
+console.log("\nlo scudo di fuoco");
+
+{
+  const world = create(3, 1, 0);
+  const io = world.pilots[0];
+  step(world, [intent({ shields: 1 })]);
+  check("lo scudo si accende", io.shield > 0 && io.cool === 0, `${io.shield.toFixed(2)}`);
+
+  // Un fronte solo, e poi niente: lo scudo dura quello che deve durare.
+  //
+  // Il primo controllo scritto qui mandava `shields: 1` a **ogni passo** e si aspettava tre secondi,
+  // e ne misurava cinque. Aveva ragione il codice: milleottocento pressioni separate non sono un
+  // tasto tenuto premuto, e al tredicesimo secondo la millesima riaccendeva lo scudo com'era giusto.
+  // Che tenere premuto valga una pressione sola lo garantisce `input.js`, che scarta la ripetizione
+  // del sistema operativo — ed è lì che va provato, non qui.
+  let acceso = 0;
+  for (let i = 0; i < 120 * 5; i += 1) {
+    step(world, [intent()]);
+    if (io.shield > 0) acceso += 1;
+  }
+  check("dura tre secondi", Math.abs(acceso / 120 - SHIELD.lasts) < 0.05,
+    `${(acceso / 120).toFixed(2)} s`);
+}
+
+{
+  const world = create(3, 1, 0);
+  const io = world.pilots[0];
+  step(world, [intent({ shields: 1 })]);
+  for (let i = 0; i < 120 * SHIELD.lasts + 2; i += 1) step(world, [intent()]);
+  check("finito lo scudo comincia la ricarica, e dura dieci secondi",
+    io.shield === 0 && Math.abs(io.cool - SHIELD.cools) < 0.05, `${io.cool.toFixed(2)}`);
+
+  step(world, [intent({ shields: 1 })]);
+  check("in ricarica non si riaccende", io.shield === 0, `${io.shield}`);
+
+  for (let i = 0; i < 120 * SHIELD.cools + 2; i += 1) step(world, [intent()]);
+  step(world, [intent({ shields: 1 })]);
+  check("finita la ricarica, sì", io.shield > 0, `${io.shield.toFixed(2)}`);
+}
+
+{
+  // **Lo scudo sospende la regola dell'altezza**, ed è l'unico punto del gioco in cui succede.
+  // Provato dal lato peggiore: il nemico è sopra, quindi senza scudo la partita la perdo io.
+  const { world, io, lui } = duello(-30);
+  io.shield = SHIELD.lasts;
+  const prima = io.score;
+  step(world, [intent()]);
+  check("con lo scudo si vince anche stando più in basso",
+    !lui.alive && lui.done && io.alive && io.lives === LIVES,
+    `nemico vivo=${lui.alive}, mie vite=${io.lives}`);
+  check("e vale i punti della sua classe",
+    io.score - prima === KINDS[lui.kind].points, `${io.score - prima}`);
+  check("chi brucia non lascia una cella",
+    world.celle.length === 0 && world.pyres.length === 1,
+    `${world.celle.length} celle, ${world.pyres.length} corpi in fiamme`);
+}
+
+{
+  // La protezione batte lo scudo. Se non fosse così, il modo più redditizio di giocare sarebbe
+  // aspettare le piazzole — cioè l'opposto di quello che il gioco chiede.
+  const { world, io, lui } = duello(-30);
+  io.shield = SHIELD.lasts;
+  lui.guard = 1;
+  step(world, [intent()]);
+  check("lo scudo non passa sopra la protezione",
+    lui.alive && world.pyres.length === 0, `vivo=${lui.alive}`);
+}
+
+{
+  // Il corpo in fiamme cade, rimbalza e si consuma: non resta niente in mezzo al campo.
+  const { world, io, lui } = duello(-30);
+  io.shield = SHIELD.lasts;
+  step(world, [intent()]);
+  const pyre = world.pyres[0];
+  const y0 = pyre.y;
+  let passi = 0;
+  while (world.pyres.length && passi < 120 * 10) { step(world, [intent()]); passi += 1; }
+  check("il corpo in fiamme cade e si consuma",
+    pyre.y > y0 && world.pyres.length === 0 && passi <= 120 * (SHIELD.pyre + 0.2),
+    `sceso di ${(pyre.y - y0).toFixed(0)} unità, sparito dopo ${(passi / 120).toFixed(2)} s`);
+  check("e l'ondata non finisce finché sta bruciando", passi > 1);
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  l e   v i t e
+// -----------------------------------------------------------------------------------------------------------------
+
+console.log("\nle vite");
+
+/** Butta il pilota nel metallo, che è il modo più corto di morire. */
+function muori(world, io) {
+  io.guard = 0;
+  io.grounded = false;
+  io.x = 300;
+  io.y = MELT - PILOT.h / 2 + 4;
+  io.vy = 200;
+  step(world, [intent(), intent()]);
+}
+
+{
+  const world = create(3, 1, 0);
+  const io = world.pilots[0];
+  check("si comincia con quattro vite", io.lives === LIVES, `${io.lives}`);
+
+  io.score = 1234;
+  muori(world, io);
+  check("morire toglie una vita", io.lives === LIVES - 1, `${io.lives}`);
+  check("ma non il punteggio: quello è della partita, non del corpo",
+    io.score === 1234, `${io.score}`);
+  check("e si torna protetti, su una piazzola", io.alive && io.guard > 0 && !io.out);
+}
+
+{
+  const world = create(3, 1, 0);
+  const io = world.pilots[0];
+  for (let i = 0; i < LIVES; i += 1) muori(world, io);
+  check("finite le vite il pilota esce dal campo",
+    io.out && !io.alive && io.lives === 0, `fuori=${io.out} vive=${io.lives}`);
+  check("e la partita è finita", world.over === true);
+  check("un pilota uscito non è più in campo",
+    !bodies(world).includes(io), `${bodies(world).length} corpi`);
+}
+
+{
+  // **La vita in più a ventimila, e poi al doppio.** La soglia raddoppia perché una soglia fissa,
+  // con i punteggi di questo gioco, dà tre vite per ondata: cioè una partita che non può finire.
+  const world = create(3, 1, 0);
+  const io = world.pilots[0];
+  check("la prima soglia è ventimila", io.extra === EXTRA_FIRST, `${io.extra}`);
+
+  const lui = makeFoe(0, { x: 0, y: 0 }, "deriva");
+  world.foes.push(lui);
+  io.score = EXTRA_FIRST - KINDS.deriva.points;
+  spegni(world, io, lui);
+  check("passare la soglia dà una vita",
+    io.lives === LIVES + 1 && io.score === EXTRA_FIRST, `${io.lives} vite, ${io.score} punti`);
+  check("e la soglia successiva è il doppio",
+    io.extra === EXTRA_FIRST * 2, `${io.extra}`);
+}
+
+{
+  // Una cella presa a scala piena può scavalcare **due** soglie in un colpo solo, quando le soglie
+  // sono ancora basse: perciò è un ciclo e non un `if`. Provato con soglie finte, piccole.
+  const world = create(3, 1, 0);
+  const io = world.pilots[0];
+  io.guard = 0; io.x = 400; io.y = 300; io.vx = 0; io.vy = 0; io.grounded = false;
+  io.extra = 60;
+  io.ladder = CELL_POINTS.length - 1;                    // la prossima cella vale 200
+  world.celle.push({
+    from: 90, kind: "deriva", x: io.x, y: io.y,
+    vx: 0, vy: 0, grounded: false, alive: true, sinking: false, hatch: 99, touched: true,
+  });
+  step(world, [intent()]);
+  check("un solo incasso può valere più di una vita",
+    io.lives === LIVES + 2 && io.extra === 240,
+    `${io.lives} vite, prossima soglia ${io.extra}, punti ${io.score}`);
+}
+
+{
+  // **Due giocatori sono due partite dentro la stessa.** Un punteggio fatto in due non si confronta
+  // con uno fatto da soli, quindi i due non possono riempire lo stesso secchio.
+  const world = create(3, 2, 0);
+  const uno = world.pilots[0];
+  const due = world.pilots[1];
+  const lui = makeFoe(0, { x: 0, y: 0 }, "segugio");
+  world.foes.push(lui);
+  spegni(world, uno, lui);
+  check("il punteggio va a chi ha abbattuto, e all'altro no",
+    uno.score === KINDS.segugio.points && due.score === 0,
+    `${uno.score} contro ${due.score}`);
+
+  uno.ladder = 2;
+  due.ladder = 0;
+  muori(world, due);
+  check("e la morte di uno non azzera la scala dell'altro",
+    uno.ladder === 2 && due.ladder === 0, `${uno.ladder} e ${due.ladder}`);
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -1660,6 +1842,27 @@ function lanceTipOf(rows) {
   check("ogni classe ha l'uovo della sua tinta", mancano.length === 0, mancano.join(", "));
   check("e l'oro c'è, e non è di nessuna classe",
     !!EGG_PALETTES.oro && !KIND_NAMES.some((k) => KINDS[k].tinta === "oro"));
+
+  // **La testa del cavaliere sta dentro il fotogramma, e non è vuota.** Il riquadro è ancorato al
+  // pennone, quindi un elmo ridisegnato lo sposta: senza questo controllo, uno spostamento in su
+  // farebbe uscire il ritaglio dal disegno e la barra mostrerebbe delle vite invisibili.
+  const testa = PILOT_SPRITES.head;
+  const posa = PILOT_SPRITES.walk[0];
+  const misuraPosa = measure(posa);
+  check("il riquadro della testa sta dentro il fotogramma",
+    testa.x >= 0 && testa.y >= 0
+      && testa.x + testa.w <= misuraPosa.w && testa.y + testa.h <= misuraPosa.h,
+    `${testa.x},${testa.y} ${testa.w}x${testa.h} su ${misuraPosa.w}x${misuraPosa.h}`);
+  let dentro = 0;
+  for (let gy = 0; gy < testa.h; gy += 1) {
+    for (let gx = 0; gx < testa.w; gx += 1) {
+      const ch = (posa[testa.y + gy] || "")[testa.x + gx];
+      if (ch && ch !== ".") dentro += 1;
+    }
+  }
+  // Metà riquadro pieno: sotto, il ritaglio ha preso aria invece della testa.
+  check("e contiene davvero una testa", dentro > testa.w * testa.h * 0.5,
+    `${dentro} pixel su ${testa.w * testa.h}`);
 
   // Un pezzo solo: un uovo con un frammento staccato è un errore di conversione, non un disegno.
   const pieno = EGG_SPRITE.map((row) => [...row].map((ch) => ch !== "."));

@@ -30,10 +30,11 @@
 // framed screen reads as a screen, an unframed one reads as a hole in the page.
 
 import {
-  FIELD, CEILING, MELT, DECK, PIXEL, PILOT, SPRITE, PLATFORMS, KINDS, CELLA, lanceTip,
+  FIELD, CEILING, MELT, DECK, PIXEL, PILOT, SPRITE, PLATFORMS, KINDS, CELLA, SHIELD, PYRE,
+  lanceTip,
 } from "./game.js";
 import {
-  PILOT_SPRITES, PALETTE, TINTE, EYE, EGG, EGG_SPRITE, EGG_PALETTES, each, tint,
+  PILOT_SPRITES, PALETTE, TINTE, ALPHABET, EYE, EGG, EGG_SPRITE, EGG_PALETTES, each, tint,
 } from "./sprites.js";
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -76,6 +77,11 @@ const PAINT = {
   smokeFar: "#2e211c",
 
   ceiling: "#2a3550",     // the roof line, and the underside of a ledge
+
+  // La barra in alto. Chiara ma non bianca: sta in un campo scuro e deve leggersi senza diventare
+  // la cosa più luminosa dello schermo, che è e resta la linea di metallo che ti uccide.
+  hud: "#c3ccdd",
+  hudDim: "#5f7392",
 
   // The two marks at the lance tips. Yours is the brand accent, a foe's is the same slate the roof
   // is drawn in — present, readable, and not competing with the bird for attention.
@@ -549,6 +555,187 @@ function _paintBlink(ctx, pilot, sprite, eye, left, top, flip) {
  * Il dondolio invece resta, perché è piccolo e perché è l'unica cosa che dice «sta per muoversi da
  * sé»: un pixel a destra e uno a sinistra, spento quando il movimento è ridotto.
  */
+// -----------------------------------------------------------------------------------------------------------------
+//  l a   b a r r a
+// -----------------------------------------------------------------------------------------------------------------
+
+/**
+ * Le dieci cifre, tre per cinque.
+ *
+ * **Nessuna parola, mai.** Il gioco esiste in due lingue e ogni stringa a schermo è una stringa da
+ * tenere allineata fra le due: una barra fatta di numeri e di icone non ha questo problema, e non
+ * ha nemmeno il problema di stare dentro una larghezza che cambia da una lingua all'altra. È anche
+ * quello che facevano i cabinati, e per la stessa ragione pratica.
+ *
+ * Tre pixel per cinque è la misura più piccola in cui una cifra resta una cifra: sotto, il 6 e l'8
+ * diventano lo stesso disegno. In campo si dipingono al doppio, che su un fondo di 640 x 360 è
+ * l'altezza di una scritta da cabinato.
+ */
+const DIGITS = [
+  ["111", "101", "101", "101", "111"],
+  [".1.", "11.", ".1.", ".1.", "111"],
+  ["111", "..1", "111", "100", "111"],
+  ["111", "..1", "111", "..1", "111"],
+  ["101", "101", "111", "..1", "..1"],
+  ["111", "100", "111", "..1", "111"],
+  ["111", "100", "111", "101", "111"],
+  ["111", "..1", ".1.", ".1.", ".1."],
+  ["111", "101", "111", "101", "111"],
+  ["111", "101", "111", "..1", "111"],
+];
+
+// Lo scudo, nella barra. Una goccia di fiamma larga cinque: piena quando è pronta, spenta mentre
+// si ricarica, e con una barretta sotto che dice quanto manca.
+const FLAME = ["..1..", ".11..", ".111.", "11111", ".111."];
+
+/**
+ * Una vita rimasta: **la testa del cavaliere**, ritagliata dal disegno.
+ *
+ * Non un cuore, non un pallino e nemmeno uno sperone stilizzato. Un'icona inventata è una cosa da
+ * imparare, e in cima allo schermo di un gioco d'azione non si impara niente: si riconosce. La
+ * testa che sta lassù è la stessa che sta in campo, nello stesso colore, quindi non c'è niente da
+ * associare — quelle sono le volte che puoi ancora rientrare.
+ *
+ * Il riquadro lo misura il convertitore e lo esporta in `PILOT_SPRITES.head`, ancorato al pennone:
+ * un elmo ridisegnato si porta dietro il ritaglio invece di lasciare la barra a mostrare una spalla.
+ *
+ * Il secondo giocatore ce l'ha **specchiata**, come è specchiato il suo dodo quando parte: guarda
+ * verso il centro del campo da tutt'e due i lati, che è anche l'unico modo per cui due file di
+ * teste identiche si distinguono a colpo d'occhio.
+ */
+function _paintHead(ctx, x, y, flip, tavolozza) {
+  const box = PILOT_SPRITES.head;
+  const sprite = PILOT_SPRITES.walk[0];
+  for (let gy = 0; gy < box.h; gy += 1) {
+    const row = sprite[box.y + gy] || "";
+    for (let gx = 0; gx < box.w; gx += 1) {
+      const ch = row[box.x + gx];
+      if (!ch || ch === ".") continue;
+      const i = ALPHABET.indexOf(ch);
+      ctx.fillStyle = tavolozza[i] || PAINT.ink;
+      ctx.fillRect(x + (flip ? box.w - 1 - gx : gx), y + gy, 1, 1);
+    }
+  }
+}
+
+/**
+ * Un numero, dipinto.
+ *
+ * `align` esiste perché il punteggio del secondo giocatore cresce verso sinistra: allineato a
+ * sinistra, la cifra delle unità si sposterebbe a ogni punto preso, e un numero le cui cifre
+ * ballano è un numero che non si legge di sfuggita — che è l'unico modo in cui si legge una barra
+ * mentre si gioca.
+ */
+function _paintNumber(ctx, value, x, y, scale, colour, align = "left") {
+  const text = String(Math.max(0, Math.round(value)));
+  const pitch = 4 * scale;                       // tre di cifra più uno d'aria
+  const width = text.length * pitch - scale;
+  const left = align === "right" ? x - width : align === "centre" ? x - Math.round(width / 2) : x;
+
+  ctx.fillStyle = colour;
+  for (let i = 0; i < text.length; i += 1) {
+    const glyph = DIGITS[text.charCodeAt(i) - 48];
+    if (!glyph) continue;
+    for (let gy = 0; gy < glyph.length; gy += 1) {
+      for (let gx = 0; gx < 3; gx += 1) {
+        if (glyph[gy][gx] !== "1") continue;
+        ctx.fillRect(left + i * pitch + gx * scale, y + gy * scale, scale, scale);
+      }
+    }
+  }
+}
+
+function _paintGlyph(ctx, glyph, x, y, colour) {
+  ctx.fillStyle = colour;
+  for (let gy = 0; gy < glyph.length; gy += 1) {
+    for (let gx = 0; gx < glyph[gy].length; gx += 1) {
+      if (glyph[gy][gx] === "1") ctx.fillRect(x + gx, y + gy, 1, 1);
+    }
+  }
+}
+
+/**
+ * Punti, vite e ondata, nella fascia sopra il soffitto.
+ *
+ * **Dentro il campo, non attorno.** La fascia fra il bordo e la linea tratteggiata del soffitto è
+ * aria in cui non si vola — trenta pixel che finora non servivano a niente — quindi la barra non
+ * toglie un solo pixel di gioco e viene ingrandita insieme al campo, con la stessa grana. Fuori dal
+ * canvas sarebbe stata testo del browser: nitido, di un'altra epoca, e con due lingue da tenere
+ * allineate.
+ *
+ * Il punteggio del primo giocatore a sinistra e quello del secondo a destra, come su un cabinato;
+ * l'ondata in mezzo, più piccola e più spenta, perché è la cosa che si guarda meno spesso.
+ *
+ * Le vite si contano guardandole finché sono poche, e diventano un numero quando sono tante: sei
+ * speroni in fila si contano ancora, dodici no, e la vita in più raddoppiando arriva a farne dodici.
+ */
+function _paintHud(ctx, world) {
+  const RIGA1 = 2;
+  const RIGA2 = 14;
+  const MARGINE = 8;
+  const box = PILOT_SPRITES.head;
+  const PASSO = box.w + 2;
+
+  world.pilots.forEach((pilot, i) => {
+    const destra = i === 1;
+    const x = destra ? BUF.w - MARGINE : MARGINE;
+    _paintNumber(ctx, pilot.score, x, RIGA1, 2, PAINT.hud, destra ? "right" : "left");
+
+    // **La stessa testa per tutt'e due**, nel colore che il cavaliere ha in campo. Il secondo
+    // giocatore l'aveva d'oro per distinguerlo, ed era sbagliato due volte: l'oro in questo gioco
+    // vuol già dire «questa cella sta per schiudersi», e in campo il secondo dodo è azzurro come il
+    // primo — quindi la barra prometteva un cavaliere che non esiste. A dire di chi è la fila
+    // bastano l'angolo in cui sta e il verso in cui guarda.
+    const tavolozza = PALETTE;
+    const quante = Math.max(0, pilot.lives);
+    const mostrate = Math.min(quante, 5);
+    for (let n = 0; n < mostrate; n += 1) {
+      _paintHead(ctx, destra ? x - box.w - n * PASSO : x + n * PASSO, RIGA2, destra, tavolozza);
+    }
+    // Oltre le cinque diventa un numero: cinque teste si contano ancora con un'occhiata, dieci no,
+    // e la vita in più raddoppiando ci arriva.
+    if (quante > mostrate) {
+      const dopo = mostrate * PASSO;
+      _paintNumber(ctx, quante, destra ? x - dopo - 2 : x + dopo + 2, RIGA2 + 4, 1,
+        PAINT.hud, destra ? "right" : "left");
+    }
+
+    // Lo scudo in fondo alla fila, sulla stessa riga: sotto ci sta lo stato del giocatore, e lo
+    // scudo è stato del giocatore quanto le vite.
+    const fondo = mostrate * PASSO + (quante > mostrate ? 12 : 4);
+    _paintShieldGauge(ctx, pilot, destra ? x - fondo : x + fondo, RIGA2 + 4, destra);
+  });
+
+  _paintNumber(ctx, world.wave || 1, BUF.w / 2, RIGA2, 1, PAINT.hudDim, "centre");
+}
+
+/**
+ * Lo stato dello scudo, accanto alle vite.
+ *
+ * Tre stati e tre letture, e nessuna parola: **acceso** è una fiamma chiara con una barretta che si
+ * accorcia, **in ricarica** è una fiamma spenta con una barretta che si riempie, **pronto** è una
+ * fiamma accesa e nessuna barretta. La barretta che manca è l'informazione più importante delle
+ * tre, ed è quella che costa meno pixel: niente barra vuol dire che puoi premere adesso.
+ *
+ * Le due barrette vanno nello stesso verso — da vuota a piena — apposta: una che si accorcia e una
+ * che si allunga sono due movimenti opposti che dicono la stessa cosa, «il tempo passa», e chi
+ * guarda per mezzo secondo non ha modo di sapere quale delle due sta guardando. Qui la barra
+ * **cala** in tutti e due i casi, e quello che cambia è il colore.
+ */
+function _paintShieldGauge(ctx, pilot, x, y, destra) {
+  const acceso = pilot.shield > 0;
+  const carica = pilot.cool > 0;
+  const colore = acceso ? PAINT.meltFlash : carica ? PAINT.hudDim : PAINT.meltHot;
+  const ax = destra ? x - 5 : x;
+  _paintGlyph(ctx, FLAME, ax, y, colore);
+
+  if (!acceso && !carica) return;
+  const quanto = acceso ? pilot.shield / SHIELD.lasts : pilot.cool / SHIELD.cools;
+  const largo = Math.max(1, Math.round(5 * quanto));
+  ctx.fillStyle = colore;
+  ctx.fillRect(destra ? ax + 5 - largo : ax, y + 6, largo, 1);
+}
+
 function _paintCella(ctx, cella, cx) {
   // Una cella che affonda non avvisa più di niente: tiene il colore della sua classe fino
   // all'ultimo pixel visibile. L'oro dice «sta per schiudersi», e questa non si schiuderà.
@@ -614,39 +801,140 @@ function _paintFlames(ctx, cella, cx) {
     ctx.fillRect(x, base - 1, 1, 1);
   }
 
-  // **Riga per riga, non un rettangolo.** Una lingua disegnata come una barra è una barra, e sei
-  // barre accanto sono un pettine: era la prima versione, e si vedeva. Qui ogni lingua si assottiglia
-  // salendo e si piega di un pixel o due, con la piega che cresce verso la punta — è la base che sta
-  // ferma sul metallo e la cima che si muove, come si muove il fuoco.
+  // A grappolo e non a palizzata: le lingue di mezzo sono più alte di quelle di bordo. Sei barre
+  // della stessa altezza sono uno steccato, e uno steccato non brucia.
   for (let i = 0; i < lingue; i += 1) {
     const at = i / (lingue - 1);
     const x = cx - span / 2 + Math.round(at * span);
-    const base = px(MELT) + _swell(x, _now);
-    // Tre seni di periodo diverso, come per la superficie del metallo: due lingue vicine non
-    // possono essere in fase, perché i loro periodi non lo consentono.
-    const onda = Math.sin(_now * 7.3 + i * 2.1) * 0.5
-      + Math.sin(_now * 4.1 + i * 5.7) * 0.35
-      + Math.sin(_now * 11.7 + i) * 0.15;
     const campana = 0.45 + 0.55 * Math.sin(Math.PI * at);
-    const alta = Math.max(3, Math.round((18 + onda * 6) * campana));
-    const piede = 7;
-
-    for (let k = 0; k < alta; k += 1) {
-      const su = k / alta;                          // 0 alla base, 1 in punta
-      const w = Math.max(1, Math.round(piede * (1 - su ** 1.4)));
-      const piega = Math.round(Math.sin(_now * 5.2 + i * 1.7 + su * 2.4) * su * 2);
-      // Il chiaro sta **in basso**, dove la fiamma è attaccata al metallo, e si spegne salendo: è
-      // il verso giusto e quello che nessuno disegna al primo tentativo, perché sulla pagina
-      // sembra più naturale il contrario.
-      ctx.fillStyle = su < 0.15 ? PAINT.meltFlash : su < 0.55 ? PAINT.meltHot : PAINT.meltGlow;
-      ctx.fillRect(x - (w >> 1) + piega, base - 1 - k, w, 1);
-    }
-    // La punta scura: è il fumo che comincia dove la fiamma finisce, e le dà un capo invece di un
-    // taglio netto.
-    ctx.fillStyle = PAINT.meltCrust;
-    ctx.fillRect(x + Math.round(Math.sin(_now * 5.2 + i * 1.7 + 2.4) * 2), base - 1 - alta, 1, 1);
+    _flame(ctx, x, px(MELT) + _swell(x, _now), i, 18 * campana, 7);
   }
+}
 
+/**
+ * Una lingua di fuoco, dal basso verso l'alto.
+ *
+ * In una funzione sola perché il fuoco in questo gioco compare in tre posti — la cella che affonda,
+ * il corpo che brucia, lo scudo acceso — e tre fuochi disegnati in tre modi sarebbero tre cose
+ * diverse a schermo. È la stessa ragione per cui la tavolozza del campo è una sola.
+ *
+ * **Riga per riga, non un rettangolo.** Una lingua disegnata come una barra è una barra, e sei
+ * barre accanto sono un pettine: era la prima versione, e si vedeva. Qui la lingua si assottiglia
+ * salendo e si piega, con la piega che cresce verso la punta — la base sta ferma, la cima si muove.
+ *
+ * `seme` distingue una lingua dall'altra: tre seni di periodo diverso, come per la superficie del
+ * metallo, così due lingue vicine non possono essere in fase.
+ */
+function _flame(ctx, x, base, seme, altezza, piede) {
+  const onda = Math.sin(_now * 7.3 + seme * 2.1) * 0.5
+    + Math.sin(_now * 4.1 + seme * 5.7) * 0.35
+    + Math.sin(_now * 11.7 + seme) * 0.15;
+  const alta = Math.max(3, Math.round(altezza + onda * 6));
+
+  for (let k = 0; k < alta; k += 1) {
+    const su = k / alta;                            // 0 alla base, 1 in punta
+    const w = Math.max(1, Math.round(piede * (1 - su ** 1.4)));
+    const piega = Math.round(Math.sin(_now * 5.2 + seme * 1.7 + su * 2.4) * su * 2);
+    // Il chiaro sta **in basso**, dov'è attaccata, e si spegne salendo: è il verso giusto e quello
+    // che nessuno disegna al primo tentativo, perché sulla pagina sembra naturale il contrario.
+    ctx.fillStyle = su < 0.15 ? PAINT.meltFlash : su < 0.55 ? PAINT.meltHot : PAINT.meltGlow;
+    ctx.fillRect(x - (w >> 1) + piega, base - 1 - k, w, 1);
+  }
+  // La punta scura: è il fumo che comincia dove la fiamma finisce, e le dà un capo invece di un
+  // taglio netto.
+  ctx.fillStyle = PAINT.meltCrust;
+  ctx.fillRect(x + Math.round(Math.sin(_now * 5.2 + seme * 1.7 + 2.4) * 2), base - 1 - alta, 1, 1);
+}
+
+/**
+ * Lo scudo di fuoco, attorno al dodo.
+ *
+ * Una corona di lingue rivolte in fuori, sulla circonferenza dove sta già l'anello della
+ * protezione. Non è una scelta di comodo: sono le due cose che dicono «adesso non puoi essere
+ * toccato», e metterle nello stesso posto vuol dire che si impara una forma sola. Quello che le
+ * distingue è il colore — verde chi è appena rientrato, fuoco chi ha acceso lo scudo — e il fatto
+ * che una è ferma e l'altra si muove.
+ *
+ * **Una corona continua, non delle lingue contate.** Il primo tentativo metteva diciotto fiamme a
+ * intervalli regolari sulla circonferenza, e a schermo erano diciotto scintille sparse: sulla
+ * diagonale i punti di due fiamme vicine non si toccano, e quello che si vede sono i buchi. Qui si
+ * percorre **ogni pixel** del cerchio e per ognuno si dà uno spessore che ondeggia — così il fuoco
+ * è una cosa sola che respira, e non un cerchio di cose.
+ *
+ * L'onda è in funzione dell'**angolo**, non dell'indice: tre giri di seno con periodi diversi,
+ * quindi il profilo non si ripete lungo il giro e non c'è una cucitura dove il cerchio si chiude.
+ * E gira, lentamente, perché una corona ferma con dentro del movimento sembra un'animazione
+ * appiccicata, mentre una che ruota sembra una cosa che succede.
+ */
+function _paintShield(ctx, pilot, cx) {
+  const midX = cx;
+  const midY = px(pilot.y);
+  // **Un'ellisse sul bordo del disegno**, non un cerchio attorno al corpo. Provata prima stretta
+  // sulla scatola di collisione, e a schermo si vedevano quattro scintille: la corona era tutta
+  // lì, ma **dietro il dodo** — un uccello con le ali aperte è largo sessantadue pixel e ne
+  // copriva l'intero giro. Quello che si vedeva erano i pezzi che sbucavano di lato, cioè
+  // esattamente i buchi.
+  //
+  // L'anello della protezione resta un cerchio largo, calcolato sulla diagonale: le due forme non
+  // si possono confondere, una gira al largo e ferma, questa sta sul contorno e brucia.
+  const rx = px(SPRITE.w) / 2 + 1;
+  const ry = px(SPRITE.h) / 2 + 1;
+  const passi = Math.max(96, Math.round(Math.PI * (rx + ry)));
+
+  for (let i = 0; i < passi; i += 1) {
+    const ang = (i / passi) * Math.PI * 2 + _now * 0.7;
+    const dx = Math.cos(ang);
+    const dy = Math.sin(ang);
+    const onda = Math.sin(ang * 5 + _now * 6.1) * 0.5
+      + Math.sin(ang * 8 - _now * 4.3) * 0.3
+      + Math.sin(ang * 13 + _now * 9.7) * 0.2;
+    const alta = Math.max(2, Math.round(5 + onda * 4));
+
+    // Da due pixel **dentro** il contorno verso fuori: la parte interna è il filo continuo che
+    // tiene insieme la corona, quella esterna è la fiamma che si muove.
+    for (let k = -2; k < alta; k += 1) {
+      const su = (k + 2) / (alta + 2);
+      ctx.fillStyle = su < 0.3 ? PAINT.meltFlash : su < 0.65 ? PAINT.meltHot : PAINT.meltGlow;
+      ctx.fillRect(Math.round(midX + dx * (rx + k)), Math.round(midY + dy * (ry + k)), 1, 1);
+    }
+  }
+}
+
+/**
+ * Un corpo in fiamme che cade.
+ *
+ * È il nemico che era, con lo stesso disegno e lo stesso colore: perché si capisca **chi** ha preso
+ * fuoco, e perché una sagoma nuova al posto di quella conosciuta si legge come «è successo qualcosa
+ * che non capisco» invece di «quello lì è finito».
+ *
+ * Le fiamme escono da sotto e lo avvolgono salendo, e sono le stesse della colata perché è la
+ * stessa cosa: il fuoco di questo gioco è uno solo.
+ */
+function _paintPyre(ctx, pyre, cx) {
+  const sprite = PILOT_SPRITES.fly[0];
+  const flip = pyre.facing < 0;
+  const left = cx - px(SPRITE.w) / 2;
+  const top = px(pyre.y) + PILOT_SPRITES.lift;
+  const tavolozza = TINTE[(KINDS[pyre.kind] || {}).tinta] || PALETTE;
+
+  each(sprite, flip, (x, y, index) => {
+    ctx.fillStyle = tavolozza[index] || PAINT.ink;
+    ctx.fillRect(left + x, top + y, 1, 1);
+  });
+
+  // Cinque lingue lungo il corpo, che partono da sotto la pancia. Si accorciano man mano che il
+  // corpo si consuma, così l'ultimo secondo si vede arrivare invece di finire di colpo.
+  // Alte quanto il corpo, o quasi: fiamme che arrivano alle zampe sono un falò **sotto** un
+  // uccello, e quello che deve leggersi è un uccello che sta bruciando. La misura è la scatola di
+  // collisione, cioè il corpo vero, non il riquadro del disegno che comprende le ali aperte.
+  const resta = Math.max(0, Math.min(1, pyre.left / SHIELD.pyre));
+  const base = px(pyre.y) + px(PILOT.h) / 2;
+  for (let i = 0; i < 7; i += 1) {
+    const at = i / 6;
+    const x = cx - px(PILOT.w) / 2 + Math.round(at * px(PILOT.w));
+    const campana = 0.55 + 0.45 * Math.sin(Math.PI * at);
+    _flame(ctx, x, base, i + 3, px(PILOT.h) * 0.85 * campana * resta, 7);
+  }
 }
 
 function _paintPilot(ctx, pilot, cx) {
@@ -712,6 +1000,13 @@ function _paintPilot(ctx, pilot, cx) {
   });
 
   _paintBlink(ctx, pilot, sprite, eye, left, top, flip);
+
+  // **Lo scudo sopra il dodo, non dietro.** Dietro sembrava la scelta giusta — «il personaggio deve
+  // restare leggibile» — e a schermo dava l'effetto opposto: un uccello con le ali aperte è largo
+  // quanto l'ellisse, quindi ne copriva quasi tutto il giro e quello che si vedeva erano i quattro
+  // pezzi che sbucavano ai lati. Sopra, la corona si vede intera e copre soltanto il contorno, che
+  // è la parte del disegno che porta meno informazione.
+  if (pilot.shield > 0) _paintShield(ctx, pilot, cx);
 
   // No mark is painted over the lance. There was a green tick here — a cross at the tip, meant to
   // show the height the fight compares — and it was wrong twice: it sat on top of hand-drawn art in
@@ -914,6 +1209,12 @@ export function draw(canvas, world) {
     _paintDeck(ctx, deck);
   }
 
+  // I corpi in fiamme sotto tutti quelli che volano ancora: sono usciti dal gioco, e non devono
+  // coprire un nemico vivo nel momento in cui gli voli addosso.
+  for (const pyre of world.pyres || []) {
+    _wrapped(px(pyre.x), (x) => _paintPyre(ctx, pyre, x));
+  }
+
   // Foes first, so that when two bodies overlap in a pass the player's own is the one on top and
   // still readable. Which of the two is drawn over the other decides what you can see at exactly
   // the moment the only rule of the game is being applied.
@@ -928,6 +1229,8 @@ export function draw(canvas, world) {
     if (!body.alive) continue;
     _wrapped(px(body.x), (x) => _paintReach(ctx, body, x));
   }
+
+  _paintHud(ctx, world);
 
   // ---- and up onto the screen ------------------------------------------------------------------
   const out = canvas.getContext("2d");

@@ -609,7 +609,7 @@ APPS = [
         "order": 3,
         "tags": ["svago"],
         "stato": "bozza",
-        "version": "0.29.0",
+        "version": "0.31.0",
         "released": "2026-08-14",
         "updated": "2026-08-14",
         "licence": "Apache-2.0",
@@ -668,8 +668,9 @@ APPS = [
             "facts": [
                 ("Stato", "In lavorazione. Si vola, si duella e si raccolgono le celle: le "
                           "ondate, il punteggio a schermo e il suono arrivano più avanti."),
-                ("Comandi", "Due direzioni e un battito: da tastiera, oppure premendo il campo "
-                            "dal lato in cui vuoi andare. Non esiste un comando per salire."),
+                ("Comandi", "Due direzioni, un battito e lo scudo di fuoco: da tastiera, oppure "
+                            "premendo il campo dal lato in cui vuoi andare. Non esiste un comando "
+                            "per salire."),
                 ("Dati", "Restano sul tuo computer. Dopo il caricamento della pagina l'app non fa "
                          "richieste di rete."),
                 ("Due giocatori", "Sulla stessa tastiera, o con un gamepad. Non sul telefono."),
@@ -768,8 +769,9 @@ APPS = [
             "facts": [
                 ("Status", "In progress. You fly, you joust and you collect the cells: waves, "
                            "the score on screen and the sound come later."),
-                ("Controls", "Two directions and one flap: from the keyboard, or by pressing "
-                             "the field on the side you want to go. There is no command for up."),
+                ("Controls", "Two directions, one flap and the fire shield: from the keyboard, "
+                             "or by pressing the field on the side you want to go. There is no "
+                             "command for up."),
                 ("Data", "Stays on your computer. After the page has loaded the app makes no "
                          "network requests."),
                 ("Two players", "On one keyboard, or with a gamepad. Not on a phone."),

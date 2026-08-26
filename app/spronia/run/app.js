@@ -34,6 +34,9 @@ let world = null;
 let carried = 0;                        // leftover time between frames, in seconds
 let last = 0;
 let running = false;
+// I punteggi dell'ultima partita finita, uno per giocatore. Vivono qui e non nel mondo: il mondo
+// viene buttato via alla partita successiva, e questo deve restare finché qualcuno lo legge.
+let esiti = [];
 
 // -----------------------------------------------------------------------------------------------------------------
 //  t e x t
@@ -51,6 +54,15 @@ function _applyText() {
   el("theme").setAttribute("aria-label",
     theme.current() === "light" ? t("themeToDark") : t("themeToLight"));
   el("install").textContent = t("installButton");
+
+  // La riga del punteggio finale si riscrive a ogni cambio di lingua, come tutto il resto: è
+  // l'unica stringa della pagina che ha dentro un numero, e per questo non può stare in un
+  // `data-t` come le altre.
+  if (!el("final").hidden) {
+    el("final").textContent = esiti.length > 1
+      ? `${t("gameOver")} ${esiti.map((n, i) => `${t("player")} ${i + 1}: ${n}`).join(" · ")}`
+      : `${t("gameOver")} ${esiti[0] || 0}`;
+  }
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -81,7 +93,7 @@ function _frame(now) {
     steps += 1;
     // The beat was an edge: it belongs to the first step of this frame and to no other. Left in the
     // intent, a single key press would be taken again by every step of a slow frame.
-    for (const intent of intents) intent.flaps = 0;
+    for (const intent of intents) { intent.flaps = 0; intent.shields = 0; }
   }
 
   // L'ondata finisce quando non resta niente da fare: nessun nemico in volo e nessuna cella da
@@ -90,6 +102,11 @@ function _frame(now) {
   if (cleared(world)) startWave(world, ROSTER);
 
   render.draw(el("field"), world);
+
+  // E la partita finisce quando finiscono le vite. Il disegno viene **prima**: l'ultimo fotogramma
+  // della partita è quello in cui la barra segna zero vite, e fermarsi senza dipingerlo lascerebbe
+  // a schermo lo stato di un istante prima — con una vita che sembra ancora esserci.
+  if (world.over) _stop();
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -106,12 +123,24 @@ function _start(players) {
   last = performance.now();
   running = true;
   el("intro").hidden = true;
+  el("final").hidden = true;
   try { localStorage.setItem(PREF.players, String(players)); } catch (ignored) { /* fine */ }
 }
 
 function _stop() {
   running = false;
   el("intro").hidden = false;
+
+  // Il punteggio finale sopravvive al pannello che torna, e in due lingue: la parola sta in
+  // `i18n.js`, il numero lo mette qui `_applyText` a ogni cambio di lingua. Un solo giocatore ha
+  // una riga, due ne hanno due — e sono due punteggi separati, non una somma, perché una partita
+  // in due produce due voci e non una.
+  const finale = el("final");
+  finale.hidden = !world || !world.over;
+  if (!finale.hidden) {
+    esiti = world.pilots.map((p) => p.score);
+    _applyText();
+  }
 }
 
 function _resize() {

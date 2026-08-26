@@ -21,8 +21,9 @@ const IT = {
   flightTitle: "Il volo",
   flightLead: "Non c'è un comando per salire. Si sale battendo le ali, e più in fretta batti più "
     + "sali.",
-  howKeys: "A e D per la direzione, W per battere le ali.",
-  howKeys2: "Secondo giocatore: frecce per la direzione, Maiusc destro per battere.",
+  howKeys: "A e D per la direzione, W per battere le ali, S per lo scudo di fuoco.",
+  howKeys2: "Secondo giocatore: frecce per la direzione, Maiusc destro per battere, freccia "
+    + "giù per lo scudo.",
   howTouch: "Col dito o col mouse: premi il campo dal lato in cui vuoi andare. Ogni pressione è un battito."
     + " Tenendo premuto la direzione resta.",
   howBeat: "Tenere premuto vale un battito solo. Per restare in quota ne servono circa tre al "
@@ -30,8 +31,13 @@ const IT = {
   howSkid: "In aria non c'è presa: per tornare indietro devi girarti e battere dall'altra parte.",
   howMelt: "Il fondo è metallo fuso. Toccarlo ti riporta in campo altrove.",
   howLance: "Il trattino davanti al muso è la punta dello sperone: è quella quota che conta.",
+  howShield: "Lo scudo di fuoco brucia chi tocchi, comunque lo tocchi. Dura tre secondi e "
+    + "torna dopo dieci. Col dito: due tocchi rapidi sul tuo dodo.",
   howCells: "Chi abbatti lascia una cella: si prende dopo che ha toccato terra. Se non la "
     + "raccogli si schiude, e torna di una classe più alta.",
+
+  gameOver: "Partita finita. Punteggio:",
+  player: "Giocatore",
 
   players1: "Un giocatore",
   players2: "Due giocatori",
@@ -54,8 +60,9 @@ const EN = {
   flightTitle: "Flight",
   flightLead: "There is no button for up. You climb by flapping, and the faster you flap the "
     + "higher you go.",
-  howKeys: "A and D to steer, W to flap.",
-  howKeys2: "Second player: arrow keys to steer, right Shift to flap.",
+  howKeys: "A and D to steer, W to flap, S for the fire shield.",
+  howKeys2: "Second player: arrow keys to steer, right Shift to flap, down arrow for the "
+    + "shield.",
   howTouch: "With a finger or the mouse: press the field on the side you want to go. Each press is one"
     + " flap. Hold to keep the direction.",
   howBeat: "Holding the key down counts as one flap. Holding your height takes about three a "
@@ -63,8 +70,13 @@ const EN = {
   howSkid: "There is no grip in the air: to go back you have to turn and flap the other way.",
   howMelt: "The floor is molten metal. Touching it puts you back somewhere else.",
   howLance: "The dash ahead of the nose is the tip of the spur: that is the height that counts.",
+  howShield: "The fire shield burns whatever you touch, however you touch it. It lasts three "
+    + "seconds and comes back after ten. By touch: two quick taps on your own dodo.",
   howCells: "Whatever you unseat leaves a cell: you can take it once it has touched down. Leave "
     + "it and it hatches, a class higher than before.",
+
+  gameOver: "Game over. Score:",
+  player: "Player",
 
   players1: "One player",
   players2: "Two players",

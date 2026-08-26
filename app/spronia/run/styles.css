@@ -100,6 +100,15 @@ main {
   margin: 1.2rem 0 0.4rem;
 }
 
+/* Il punteggio dell'ultima partita, sopra i due bottoni. Nell'accento e non nel colore del testo:
+   è l'unica riga del pannello che parla della partita appena giocata invece che di come si gioca,
+   e va trovata senza cercarla. */
+.final {
+  margin: 0 0 0.9rem;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
 .choose {
   display: flex;
   flex-wrap: wrap;

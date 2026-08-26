@@ -21,9 +21,13 @@
 //  s t a t e
 // -----------------------------------------------------------------------------------------------------------------
 
+// Lo scudo sta nella posizione «giù» di ognuno dei due set, che era l'unica libera e anche l'unica
+// giusta: la mano è già lì, e il tasto sotto quello che fa salire è quello che si preme senza
+// guardare. `KeyS` per il primo, `ArrowDown` per il secondo.
 const SETS = [
-  { left: ["KeyA"], right: ["KeyD"], flap: ["KeyW"] },
-  { left: ["ArrowLeft"], right: ["ArrowRight"], flap: ["ShiftRight", "ArrowUp"] },
+  { left: ["KeyA"], right: ["KeyD"], flap: ["KeyW"], shield: ["KeyS"] },
+  { left: ["ArrowLeft"], right: ["ArrowRight"], flap: ["ShiftRight", "ArrowUp"],
+    shield: ["ArrowDown"] },
 ];
 
 // Keys the page would otherwise act on. The arrows scroll, and a game that scrolls the page under
@@ -36,6 +40,7 @@ const held = [
   { key: new Set(), touch: new Set(), pad: new Set() },
 ];
 const beats = [0, 0];
+const shields = [0, 0];                // anche lo scudo è un fronte, non uno stato
 const padBeat = [false, false];        // last frame's gamepad button, to find its edge
 
 let onCommand = () => {};
@@ -55,6 +60,7 @@ function _who(code) {
     if (set.left.includes(code)) return [i, "left"];
     if (set.right.includes(code)) return [i, "right"];
     if (set.flap.includes(code)) return [i, "flap"];
+    if (set.shield.includes(code)) return [i, "shield"];
   }
   return null;
 }
@@ -79,6 +85,8 @@ function _bindKeys() {
     if (action === "flap") {
       beats[who] += 1;
       held[who].key.add("flapHeld");
+    } else if (action === "shield") {
+      shields[who] += 1;
     } else {
       held[who].key.add(action);
     }
@@ -89,6 +97,7 @@ function _bindKeys() {
     const found = _who(event.code);
     if (!found) return;
     const [who, action] = found;
+    if (action === "shield") return;                  // è un fronte: non c'è niente da rilasciare
     held[who].key.delete(action === "flap" ? "flapHeld" : action);
   });
 
@@ -124,8 +133,15 @@ function _bindKeys() {
  *
  * Trascinando col dito giù la direzione si aggiorna, così si può correggere senza staccare.
  */
+// Quanto vicini devono essere due tocchi perché siano un doppio tocco. Lo stesso ordine di
+// grandezza del doppio clic di un sistema operativo: sotto i duecento millisecondi due colpi
+// distinti diventano difficili da dare apposta, sopra i quattrocento due colpi separati diventano
+// un doppio per sbaglio.
+const DOPPIO = 320;
+
 function _bindPointer(field, verso) {
   let giu = null;                                  // il puntatore che sta premendo, uno solo
+  let ultimo = 0;                                  // quando è arrivato il tocco precedente
 
   const punta = (event) => {
     const lato = verso ? verso(event.clientX, event.clientY) : 0;
@@ -141,6 +157,20 @@ function _bindPointer(field, verso) {
     if (giu !== null) return;
     giu = event.pointerId;
     event.preventDefault();
+
+    // **Doppio tocco sul proprio dodo: scudo.** Sul proprio, non da qualche parte: il lato zero è
+    // già la zona morta attorno al corpo, cioè il posto in cui premere non vuol dire «vai di là».
+    // Due colpi lì dentro non possono voler dire nient'altro, mentre due colpi in mezzo al campo
+    // vogliono dire due battiti e vanno lasciati stare.
+    const lato = verso ? verso(event.clientX, event.clientY) : 0;
+    const adesso = event.timeStamp || performance.now();
+    if (lato === 0 && adesso - ultimo < DOPPIO) {
+      shields[0] += 1;
+      ultimo = 0;                                  // un triplo tocco non sono due scudi
+    } else {
+      ultimo = lato === 0 ? adesso : 0;
+    }
+
     beats[0] += 1;
     held[0].touch.add("flapHeld");
     punta(event);
@@ -206,6 +236,8 @@ export function reset() {
   }
   beats[0] = 0;
   beats[1] = 0;
+  shields[0] = 0;
+  shields[1] = 0;
 }
 
 export function setPlayers(count) {
@@ -235,8 +267,10 @@ export function read() {
       right: has("right"),
       flapHeld: has("flapHeld"),
       flaps: beats[i],
+      shields: shields[i],
     });
     beats[i] = 0;
+    shields[i] = 0;
   }
   return out;
 }

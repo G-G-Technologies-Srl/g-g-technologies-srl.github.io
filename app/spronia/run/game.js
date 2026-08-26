@@ -391,6 +391,60 @@ export const CELL_POINTS = [25, 50, 100, 200];
  */
 export const DOWNS = 3;
 
+/**
+ * Lo scudo di fuoco: tre secondi in cui non si perde, e in cui **si vince ovunque**.
+ *
+ * Va detto in chiaro perché è il cambiamento più grosso da quando il gioco esiste: fino a qui la
+ * regola dell'altezza era **l'unica** regola, e uno scudo che uccide chiunque tocchi, comunque lo
+ * tocchi, è una seconda regola che la sospende. Non è un potenziamento fra tanti — è l'eccezione, e
+ * per questo ha tre difese, tutte e tre necessarie.
+ *
+ * **Dura poco.** Tre secondi sono un passaggio, non una fase: il tempo di puntare un nemico e
+ * arrivarci, non quello di ripulire il campo.
+ *
+ * **Costa tanto.** Dieci secondi di ricarica, che partono **quando lo scudo si spegne**, non quando
+ * si accende: il ciclo intero è tredici secondi, e ne passi tre in vantaggio e dieci come tutti.
+ * Contati sul ritmo dell'ondata del § 3.10 — la partita vera sta fra i trenta e i novanta secondi,
+ * quindi in un'ondata lo scudo si usa quattro o cinque volte, non venti.
+ *
+ * **Non passa sopra la protezione.** Un nemico appena rientrato è protetto, e lo scudo non lo
+ * tocca: se lo facesse, il modo più redditizio di giocare sarebbe aspettare le piazzole, che è
+ * l'opposto di quello che il gioco chiede.
+ *
+ * Chi viene preso non lascia una cella: **prende fuoco e cade**, rimbalzando, e la colata se lo
+ * prende. Quel nemico è finito. È la differenza fra lo scudo e lo sperone detta in una cosa che si
+ * vede: lo sperone lascia una scelta a terra, lo scudo non lascia niente.
+ */
+export const SHIELD = {
+  lasts: 3,
+  cools: 10,
+  // Quanto brucia un corpo prima di consumarsi, se la colata non lo prende prima. Serve perché un
+  // corpo in fiamme che si posa su un ripiano e ci resta sarebbe un cadavere in mezzo al campo:
+  // qualcosa che il gioco disegna e con cui non si può fare niente.
+  pyre: 4,
+  // Rimbalza più di una cella e struscia meno: è un corpo, non un uovo.
+  bounce: 0.5,
+  drag: 0.7,
+};
+
+/**
+ * Quante vite, e quando se ne guadagna una.
+ *
+ * Quattro, e la prima vita in più a ventimila punti — poi **ogni volta al doppio della soglia
+ * precedente**: 20.000, 40.000, 80.000, 160.000.
+ *
+ * La soglia raddoppia per una ragione che il gioco da cui viene questo motore ha già pagato: una
+ * soglia fissa tarata su punteggi bassi smette di essere un premio e diventa un rubinetto. Con una
+ * soglia fissa a diecimila, un'ondata tarda di questo gioco vale piu di trentamila punti — tre vite
+ * per ondata, cioè una partita che non può più finire. Raddoppiando, la vita in più arriva ogni due
+ * ondate all'inizio e ogni sette più avanti.
+ *
+ * **Va ricontato appena i punteggi si muovono.** Non è una costante di gusto: è il rapporto fra
+ * quanto rende un'ondata e quanto costa una vita, e se uno dei due cambia questo numero mente.
+ */
+export const LIVES = 4;
+export const EXTRA_FIRST = 20000;
+
 /** La classe sale allo spegnimento. Il Vertice è il capolinea: non c'è niente sopra. */
 export const PROMOTION = { deriva: "segugio", segugio: "vertice", vertice: "vertice" };
 
@@ -501,7 +555,55 @@ export function makePilot(index, pad) {
     // the field always exists: a rule that asks `a.foe === b.foe` must never compare two undefineds
     // and conclude they are on the same side.
     foe: false,
+
+    // **Il punteggio è del pilota, non del mondo**, e con lui la scala delle celle, le vite e la
+    // prossima soglia per la vita in più.
+    //
+    // Era una cifra sola sul mondo, e a un giocatore la differenza non si vede. A due sì: una
+    // partita in due produce **due voci** in classifica, non una, perché un punteggio fatto in due
+    // non si confronta con uno fatto da soli. Tenendolo sul mondo, i due giocatori avrebbero
+    // riempito lo stesso secchio e la classifica avrebbe confrontato cose diverse fingendo di no.
+    //
+    // La scala sta qui per lo stesso motivo, più uno suo: si azzera **a ogni morte**, e la morte è
+    // di uno dei due.
+    score: 0,
+    ladder: 0,
+    lives: LIVES,
+    extra: EXTRA_FIRST,
+    // Senza più vite: fuori dal campo per il resto della partita. Non è `alive` a metà — un corpo
+    // spento torna, questo no.
+    out: false,
+
+    // Lo scudo di fuoco: quanti secondi è acceso, e quanti mancano prima di poterlo riaccendere.
+    // Due contatori e non uno, perché sono due stati diversi da leggere a colpo d'occhio: acceso è
+    // un vantaggio, in ricarica è un'attesa, e l'indicatore in cima deve poterli distinguere.
+    //
+    // **Si azzerano alla morte**, come tutto il resto del corpo: `_return` ricostruisce il pilota da
+    // `makePilot`, quindi chi muore con lo scudo a metà ricarica ricomincia con lo scudo pronto. È
+    // il verso giusto — la morte costa già una vita, e farle costare anche l'attesa vorrebbe dire
+    // punire due volte lo stesso errore.
+    shield: 0,
+    cool: 0,
   };
+}
+
+/**
+ * Punti a un pilota, e la vita in più se ha passato la soglia.
+ *
+ * Un posto solo per la somma, perché è l'unico posto in cui la soglia può essere controllata. Con
+ * due `score +=` sparsi — uno per il duello, uno per la cella — la vita in più sarebbe arrivata da
+ * una delle due strade e non dall'altra, e sarebbe stato invisibile: nessuno conta le vite che non
+ * ha ricevuto.
+ *
+ * Un ciclo e non un `if`: una cella presa a scala piena può scavalcare due soglie in un colpo solo
+ * quando le soglie sono ancora basse.
+ */
+function _pay(pilot, points) {
+  pilot.score += points;
+  while (pilot.score >= pilot.extra) {
+    pilot.lives += 1;
+    pilot.extra *= 2;
+  }
 }
 
 /**
@@ -591,7 +693,9 @@ export function freePad(world, clear = 150) {
 //  p u b l i c
 // -----------------------------------------------------------------------------------------------------------------
 
-export const NO_INTENT = Object.freeze({ left: false, right: false, flapHeld: false, flaps: 0 });
+export const NO_INTENT = Object.freeze({
+  left: false, right: false, flapHeld: false, flaps: 0, shields: 0,
+});
 
 // `foes` defaults to none, and deliberately: every test written for the flight model asks for a
 // world and expects to be alone in it. A default of one would have quietly put a second body into
@@ -604,16 +708,19 @@ export function create(seed = 1, players = 1, foes = 0) {
     players,
     pilots: [],
     foes: [],
-    score: 0,
     // How wound up the field is. Zero at the start, and it earns its way up.
     frenesia: 0,
+    // Quando tutti i piloti hanno finito le vite. Il mondo continua a esistere — il campo resta
+    // dipinto dietro il pannello — ma non c'è più niente da giocarci.
+    over: false,
     // Le celle in campo, e a che ondata siamo. L'ondata non ha ancora un generatore — quello è la
     // Fase 5 — ma il numero serve già qui, perché la schiusa accelera di ondata in ondata.
     celle: [],
+    // I corpi in fiamme, che non sono più nemici e non sono ancora niente: cadono, rimbalzano e si
+    // consumano. Stanno in un elenco a parte perché nessuna regola deve vederli — non combattono,
+    // non si raccolgono, non tornano.
+    pyres: [],
     wave: 0,
-    // A che punto è la scala delle celle: quante ne hai raccolte di fila in questa ondata e con
-    // questa vita. Zero vuol dire che la prossima vale venticinque.
-    ladder: 0,
     // What the last fight did, for the renderer and the tests. Not a log: one line, overwritten.
     // A history belongs to the phase that has a HUD to show it.
     last: null,
@@ -639,8 +746,9 @@ export function create(seed = 1, players = 1, foes = 0) {
  */
 export function startWave(world, roster = 0) {
   world.wave = (world.wave || 0) + 1;
-  world.ladder = 0;
+  for (const pilot of world.pilots) pilot.ladder = 0;
   world.celle = [];
+  world.pyres = [];
   world.foes = [];
   const list = Array.isArray(roster) ? roster : new Array(roster).fill(KIND_NAMES[0]);
   list.forEach((kind, i) => world.foes.push(makeFoe(i, freePad(world), kind)));
@@ -655,7 +763,8 @@ export function startWave(world, roster = 0) {
  */
 export function cleared(world) {
   return (world.foes || []).every((foe) => foe.done)
-    && !(world.celle || []).some((cella) => cella.alive);
+    && !(world.celle || []).some((cella) => cella.alive)
+    && !(world.pyres || []).length;
 }
 
 /**
@@ -677,6 +786,11 @@ export function decks(world) {
 
 /** Where the roof is, where the metal starts, how thick a ledge is. The resolver's whole world. */
 export const BOUNDS = { ceiling: CEILING, melt: MELT, deck: DECK };
+
+/** Il materiale di un corpo in fiamme: la scatola di un pilota, ma che rimbalza. */
+export const PYRE = {
+  w: PILOT.w, h: PILOT.h, restitution: SHIELD.bounce, ceilingBounce: PILOT.ceilingBounce,
+};
 
 /**
  * One step.
@@ -706,6 +820,7 @@ export function step(world, intents, dt = STEP) {
     _stepPilot(world, foe, _wander(world, foe, dt), ledges, dt, boost);
   }
   _stepCelle(world, ledges, dt);
+  _stepPyres(world, ledges, dt);
   // After everyone has moved, and never during. Settling a fight inside the movement loop means the
   // body that happens to be stepped first is the one whose position the rule reads — so the same
   // pass would be won or lost depending on the order of an array.
@@ -743,6 +858,23 @@ function _stepPilot(world, pilot, intent, ledges, dt, boost = 1) {
     // Long enough for the four drawn wing frames to be seen as a stroke rather than a flicker. Only
     // the renderer reads it; no rule depends on it.
     pilot.beat = 0.32;
+  }
+
+  // Lo scudo, e i suoi due orologi. **Un fronte, non uno stato**, esattamente come il battito: un
+  // booleano letto centoventi volte al secondo non dice «acceso adesso», dice «acceso» per sempre,
+  // e riaccenderebbe lo scudo da solo appena finita la ricarica.
+  const chiesto = Math.min(1, intent.shields | 0);
+  if (chiesto > 0) {
+    intent.shields -= chiesto;
+    if (!pilot.foe && pilot.shield <= 0 && pilot.cool <= 0) pilot.shield = SHIELD.lasts;
+  }
+  if (pilot.shield > 0) {
+    pilot.shield = Math.max(0, pilot.shield - dt);
+    // La ricarica parte **quando si spegne**, non quando si accende: dieci secondi dopo, non dieci
+    // secondi in tutto. Il ciclo intero è tredici.
+    if (pilot.shield === 0) pilot.cool = SHIELD.cools;
+  } else if (pilot.cool > 0) {
+    pilot.cool = Math.max(0, pilot.cool - dt);
   }
 
   // Facing is a state of its own, separate from motion: standing still and looking right is a
@@ -1019,7 +1151,7 @@ function _collects(world) {
       if (!cella.touched) continue;
       if (Math.abs(deltaX(pilot.x, cella.x)) >= (PILOT.w + CELLA.w) / 2) continue;
       if (Math.abs(pilot.y - cella.y) >= (PILOT.h + CELLA.h) / 2) continue;
-      _collect(world, cella);
+      _collect(world, cella, pilot);
     }
   }
 }
@@ -1033,13 +1165,20 @@ function _collects(world) {
  * Ci passa anche la raccolta d'ufficio del terzo spegnimento, che non è una raccolta ma una
  * scrittura contabile — e siccome la scala è l'unica cosa che moltiplica, non c'è più nessun modo
  * per cui una scrittura contabile possa pagare come una manovra.
+ *
+ * `by` è chi la incassa, e **può non esserci**: una cella si chiude anche quando il metallo se la
+ * prende, o quando il nemico che la conteneva è annegato per conto suo. In quel caso la cella
+ * sparisce e il nemico è finito, ma nessuno guadagna niente — e nessuna scala avanza, perché la
+ * scala è di un giocatore e lì non c'è nessun giocatore.
  */
-function _collect(world, cella) {
+function _collect(world, cella, by = null) {
   cella.alive = false;
-  const worth = CELL_POINTS[Math.min(world.ladder, CELL_POINTS.length - 1)];
-  world.ladder += 1;
-  world.score += worth;
-  world.last = { kind: "cella", at: world.time, points: worth, classe: cella.kind };
+  if (by) {
+    const worth = CELL_POINTS[Math.min(by.ladder, CELL_POINTS.length - 1)];
+    by.ladder += 1;
+    _pay(by, worth);
+    world.last = { kind: "cella", at: world.time, points: worth, classe: cella.kind, who: by.index };
+  }
   _finish(world, cella);
 }
 
@@ -1099,6 +1238,16 @@ function _settle(world, a, b) {
     return;
   }
 
+  // **Lo scudo, prima dell'altezza.** È l'unico punto del gioco in cui la regola dell'altezza non
+  // decide, e sta qui — subito dopo la protezione e prima di tutto il resto — perché è così che si
+  // legge: prima chi non può essere toccato, poi chi vince comunque, poi la regola.
+  const acceso = !a.foe && a.shield > 0 ? a : (!b.foe && b.shield > 0 ? b : null);
+  if (acceso) {
+    const altro = acceso === a ? b : a;
+    _burn(world, altro, acceso);
+    return;
+  }
+
   const ta = lanceTip(a).y;
   const tb = lanceTip(b).y;
 
@@ -1118,9 +1267,14 @@ function _settle(world, a, b) {
 
   if (loser.foe) {
     const worth = (KINDS[loser.kind] || KINDS.deriva).points;
-    _lower(world, loser);
-    world.score += worth;
-    world.last = { kind: "abbattuto", at: world.time, points: worth, classe: loser.kind };
+    // Il vincitore di un nemico è sempre un giocatore: due nemici non si combattono fra loro, e il
+    // controllo `a.foe === b.foe` più sopra lo garantisce. Ma il credito si passa lo stesso invece
+    // di darlo per scontato, perché è la stessa strada che percorre una cella raccolta d'ufficio.
+    _lower(world, loser, winner.foe ? null : winner);
+    if (!winner.foe) _pay(winner, worth);
+    world.last = {
+      kind: "abbattuto", at: world.time, points: worth, classe: loser.kind, who: winner.index,
+    };
   } else {
     _return(world, loser);
     world.last = { kind: "perso", at: world.time };
@@ -1187,6 +1341,58 @@ function _recoil(winner, from) {
 }
 
 /**
+ * Un nemico preso dallo scudo: prende fuoco e cade.
+ *
+ * **Niente cella.** È la differenza fra lo scudo e lo sperone, ed è quello che tiene lo scudo dal
+ * diventare semplicemente il modo migliore di giocare: lo sperone lascia a terra una scelta — la
+ * raccogli o la lasci tornare più forte — mentre lo scudo cancella il nemico e basta. Vale i punti
+ * della sua classe e finisce lì.
+ *
+ * Il corpo però non sparisce: **si vede bruciare.** Eredita posizione, velocità e verso, e da quel
+ * momento non è più un nemico — non combatte, non si raccoglie, non torna. Cade rimbalzando finché
+ * la colata non se lo prende, o finché non si consuma.
+ */
+function _burn(world, foe, by) {
+  foe.alive = false;
+  foe.done = true;
+  foe.downs += 1;
+  if (by && !by.foe) _pay(by, (KINDS[foe.kind] || KINDS.deriva).points);
+  world.pyres.push({
+    kind: foe.kind,
+    x: foe.x,
+    y: foe.y,
+    vx: foe.vx,
+    vy: foe.vy,
+    facing: foe.facing,
+    grounded: false,
+    alive: true,
+    left: SHIELD.pyre,
+  });
+  world.last = {
+    kind: "bruciato", at: world.time, classe: foe.kind,
+    points: (KINDS[foe.kind] || KINDS.deriva).points, who: by ? by.index : null,
+  };
+}
+
+/** I corpi in fiamme, mossi di un passo: cadono, rimbalzano, si consumano. */
+function _stepPyres(world, ledges, dt) {
+  for (const pyre of world.pyres) {
+    if (!pyre.grounded) pyre.vy = Math.min(PILOT.maxFall, pyre.vy + PILOT.gravity * dt);
+    pyre.vx -= pyre.vx * Math.min(1, SHIELD.drag * dt);
+
+    const hit = resolve(pyre, PYRE, ledges, BOUNDS, dt);
+    wrapX(pyre);
+
+    pyre.left -= dt;
+    // La colata lo prende subito e senza sprofondare: una cella affonda perché la si sta perdendo e
+    // quella perdita va vista, mentre questo sta già bruciando da quando è caduto. Aggiungere un
+    // secondo tempo di fiamme dentro le fiamme sarebbe la stessa cosa detta due volte.
+    if (hit.melted || pyre.left <= 0) pyre.alive = false;
+  }
+  world.pyres = world.pyres.filter((pyre) => pyre.alive);
+}
+
+/**
  * Un nemico spento: sparisce dal campo e lascia una cella al suo posto.
  *
  * Non torna più da solo. Prima aspettava un secondo e mezzo e rientrava com'era, e abbatterlo era
@@ -1197,28 +1403,45 @@ function _recoil(winner, from) {
  * punteggio, e quel nemico è finito qualunque classe portasse. Senza questa uscita un'ondata può
  * non finire mai, perché il Vertice si promuove in sé stesso.
  */
-function _lower(world, foe) {
+function _lower(world, foe, by = null) {
   foe.alive = false;
   foe.downs += 1;
   const cella = makeCella(world, foe);
   if (foe.downs >= DOWNS) {
-    _collect(world, cella);
+    _collect(world, cella, by);
     return;
   }
   world.celle.push(cella);
 }
 
 /**
- * A player put back: a fresh body on a free pad, protected.
+ * A player put back: a fresh body on a free pad, protected. E una vita in meno.
  *
- * E la scala delle celle torna a venticinque. È il secondo dei due azzeramenti — l'altro è
+ * Il corpo è nuovo di zecca — `makePilot` da capo, così non resta niente della corsa precedente,
+ * né la velocità né la protezione consumata — ma **tre cose sopravvivono alla morte**: il
+ * punteggio, la prossima soglia per la vita in più, e quante vite restano. Sono le tre cose che
+ * appartengono alla partita e non al corpo.
+ *
+ * La scala delle celle no: torna a venticinque. È il secondo dei due azzeramenti — l'altro è
  * l'inizio dell'ondata — e sta qui per la stessa ragione per cui l'altro sta là: la scala è un
  * premio per come stai giocando adesso, e una scala che sopravvive a chi l'ha guadagnata premia
  * l'ondata invece del giocatore.
+ *
+ * Finite le vite il pilota **esce**, e non torna: `out` lo dice, `alive` resta falso, e da lì in
+ * poi nessuna regola lo vede — non vola, non combatte, non raccoglie. Quando sono usciti tutti la
+ * partita è finita, e chi lo decide è qui e non la scorza: `app.js` guarda `world.over` e smette
+ * di far girare il ciclo.
  */
 function _return(world, pilot) {
-  pilot.alive = false;
+  const { index, score, extra } = pilot;
+  const lives = pilot.lives - 1;
   const pad = freePad(world);
-  Object.assign(pilot, makePilot(pilot.index, pad));
-  world.ladder = 0;
+  Object.assign(pilot, makePilot(index, pad), { score, extra, lives });
+
+  if (lives <= 0) {
+    pilot.alive = false;
+    pilot.out = true;
+    pilot.lives = 0;
+    world.over = world.pilots.every((p) => p.out);
+  }
 }
