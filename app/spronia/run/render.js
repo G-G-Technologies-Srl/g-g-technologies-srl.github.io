@@ -1336,20 +1336,59 @@ function _paintIntruder(ctx, intruso, cx) {
   const r = Math.round(px(INTRUDER.w) / 2) - 1;
   const verso = intruso.facing < 0 ? -1 : 1;
 
-  // **Mentre sale dal metallo è solo un punto che si gonfia sulla superficie.** È il preavviso, e
-  // vale più della palla: una cosa che compare non si può evitare, una che si vede salire sì.
+  // **Mentre sale dal metallo, la superficie la annuncia e la palla emerge tagliata.**
+  //
+  // Non è un dettaglio scenografico: una cosa che compare non si può evitare, una che si vede
+  // arrivare sì. E siccome ora esce **di traverso**, il punto acceso sul pelo della lava non sta
+  // fermo — si trascina dietro una scia che dice da dove viene e dove sta andando, un secondo
+  // prima che ci sia una palla da guardare.
   if (intruso.y > MELT) {
     const quanto = Math.max(0, Math.min(1, (MELT + INTRUDER.h - intruso.y) / INTRUDER.h));
-    const pelo = px(MELT) + _swell(cx, _now);
     const largo = Math.max(2, Math.round(r * quanto));
+
+    // La scia, dietro: si spegne allontanandosi, e non è una funzione del caso — è la stessa `x`
+    // di qualche fotogramma fa, ricavata dalla velocità con cui è stata sputata.
+    const passo = (INTRUDER.launch / PIXEL) * 0.05;
+    for (let i = 8; i > 0; i -= 1) {
+      const sx = Math.round(cx - Math.sign(intruso.vx || 1) * passo * i);
+      const sw = Math.max(1, Math.round(largo * (1 - i / 9)));
+      ctx.fillStyle = i > 5 ? PAINT.ballRim : i > 2 ? PAINT.ballCrust : PAINT.ballBody;
+      ctx.fillRect(sx - sw, px(MELT) + _swell(sx, _now) - 1, sw * 2, 2);
+    }
+
+    const pelo = px(MELT) + _swell(cx, _now);
     ctx.fillStyle = PAINT.ballHot;
     ctx.fillRect(cx - largo, pelo - 2, largo * 2, 3);
     ctx.fillStyle = PAINT.ballCore;
     ctx.fillRect(cx - Math.max(1, largo - 3), pelo - 1, Math.max(2, largo * 2 - 6), 1);
     for (let i = 0; i < 4; i += 1) _flame(ctx, cx + (i - 2) * 4, pelo, i + 5, 10 * quanto, 4);
+
+    // E la calotta che spunta, ritagliata sul pelo della lava. Senza, la palla compare tutta intera
+    // nel fotogramma in cui supera il metallo: un salto che si vede, e che butta via il preavviso
+    // proprio nell'istante in cui serviva.
+    if (cy - r < px(MELT)) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, BUF.w, px(MELT));
+      ctx.clip();
+      _paintBall(ctx, cx, cy, r, verso);
+      ctx.restore();
+    }
     return;
   }
 
+  _paintBall(ctx, cx, cy, r, verso);
+
+  // **L'ombra che lo precede.** Appena sotto il soffitto, sul soffitto corre il segno di dove
+  // arriverà: chi gioca guarda in basso, dove succedono le cose.
+  if (intruso.y < CEILING + INTRUDER.h) {
+    ctx.fillStyle = PAINT.ballHot;
+    for (let i = -3; i <= 3; i += 1) ctx.fillRect(cx + i * 3, px(CEILING) + 6, 2, 1);
+  }
+}
+
+/** La palla e basta: bordo, anelli, cuore, coda, lapilli. Serve due volte, tagliata e intera. */
+function _paintBall(ctx, cx, cy, r, verso) {
   // Il bordo che respira, due pixel di scuro e due di crosta.
   const passi = Math.max(72, Math.round(2 * Math.PI * r));
   for (let i = 0; i < passi; i += 1) {
@@ -1376,13 +1415,6 @@ function _paintIntruder(ctx, intruso, cx) {
   _disc(ctx, cx + avanti, cy, r - 11, PAINT.ballHot);
   // Il cuore pulsa: è vivo, ed è il punto che si colpisce.
   _disc(ctx, cx + avanti, cy, 6 + Math.round(1 + Math.sin(_now * 11)), PAINT.ballCore);
-
-  // **L'ombra che lo precede.** Finché è appena sotto il soffitto, sul soffitto corre il segno di
-  // dove arriverà: chi gioca guarda in basso, dove succedono le cose.
-  if (intruso.y < CEILING + INTRUDER.h) {
-    ctx.fillStyle = PAINT.ballHot;
-    for (let i = -3; i <= 3; i += 1) ctx.fillRect(cx + i * 3, px(CEILING) + 6, 2, 1);
-  }
 
   if (calm) return;
 

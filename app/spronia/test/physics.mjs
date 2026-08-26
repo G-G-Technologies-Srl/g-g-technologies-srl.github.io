@@ -1166,15 +1166,26 @@ console.log("\nl'Intruso");
     primo && primo.y > MELT && Math.abs(deltaX(io.x, primo.x)) > FIELD.w / 3,
     primo && `y=${primo.y.toFixed(0)} contro ${MELT}, ${Math.abs(deltaX(io.x, primo.x)).toFixed(0)} unità`);
 
-  // **E finché non ha finito di salire non caccia nessuno.** Una palla che insegue mentre è ancora
-  // dentro la lava sarebbe una cosa che colpisce da un posto in cui non si vede.
+  // **Esce di traverso, non verticale.** Mentre sale viaggia già di lato, alla velocità con cui è
+  // stata sputata e nel verso in cui è rivolta: è quello che rende il preavviso una scia invece che
+  // una bolla. E viaggia **senza inseguire** — la rotta cambia solo quando è fuori dal metallo,
+  // altrimenti sarebbe una cosa che ti punta da un posto in cui non si vede.
   const partenza = primo.x;
-  for (let i = 0; i < 30 && world.intrusi[0] && world.intrusi[0].y > MELT; i += 1) {
+  const versoPartenza = primo.facing;
+  let passi = 0;
+  while (world.intrusi[0] && world.intrusi[0].y > MELT && passi < 200) {
     step(world, [intent()]);
+    passi += 1;
   }
-  check("mentre sale non si sposta di lato",
-    world.intrusi[0] && Math.abs(deltaX(partenza, world.intrusi[0].x)) < 1,
-    world.intrusi[0] && `${Math.abs(deltaX(partenza, world.intrusi[0].x)).toFixed(1)} unità`);
+  const uscito = world.intrusi[0];
+  const percorso = uscito ? deltaX(partenza, uscito.x) : 0;
+  check("mentre sale viaggia anche di lato",
+    uscito && Math.abs(percorso) > INTRUDER.launch * 0.1,
+    uscito && `${percorso.toFixed(0)} unità in ${(passi / 120).toFixed(2)} s`);
+  check("e va dalla parte in cui è rivolta, alla velocità del lancio",
+    uscito && Math.sign(percorso) === versoPartenza
+      && Math.abs(Math.abs(percorso) / (passi / 120) - INTRUDER.launch) < 2,
+    uscito && `${(Math.abs(percorso) / (passi / 120)).toFixed(0)} contro ${INTRUDER.launch}`);
 }
 
 {

@@ -557,6 +557,15 @@ export const INTRUDER = {
   leaveAfterDeath: 5,
   // Quanto sale al secondo: mentre entra, e mentre se ne va.
   rise: 260,
+
+  // **Quanto viaggia di lato mentre esce.** Una palla che salisse verticale sarebbe una bolla: si
+  // gonfia, sale, e nel frattempo non è successo niente. Sputata di traverso invece è già in
+  // viaggio mentre buca il metallo — e la macchia che si gonfia sul pelo della lava diventa una
+  // scia che attraversa, che dice da dove arriva e dove sta andando prima che si veda la palla.
+  //
+  // Metà della velocità di volo, non tutta: mentre emerge è ancora una cosa da guardare, e a
+  // quattrocentoventi il preavviso durerebbe meno del tempo di accorgersene.
+  launch: 210,
 };
 
 /**
@@ -934,13 +943,17 @@ export function makeCella(world, foe) {
 export function makeIntruder(world, called = true) {
   const preda = world.pilots.find((p) => p.alive);
   const lontano = preda ? (preda.x + FIELD.w / 2) % FIELD.w : FIELD.w / 2;
+  // **Nasce già rivolta da qualche parte, e da quella parte esce.** Il verso è quello del giocatore,
+  // per la via più corta: nasce all'antipodo, quindi le due vie sono lunghe uguali e la scelta
+  // sarebbe arbitraria — ma arbitraria a caso no, che qui non si tira mai un dado.
+  const verso = preda ? (Math.sign(deltaX(lontano, preda.x)) || 1) : 1;
   return {
     x: lontano,
     y: MELT + INTRUDER.h,
-    vx: 0,
+    vx: verso * INTRUDER.launch,
     vy: 0,
-    // Il muso, e non la direzione in cui va: la bocca è quella, e l'abbattimento la confronta.
-    facing: 1,
+    // Il muso, e non la direzione in cui va: il cuore è quello, e l'abbattimento lo confronta.
+    facing: verso,
     alive: true,
     // Chiamato dall'orologio, o previsto dall'ondata. Cambia solo una cosa, e alla fine: dopo una
     // morte i chiamati se ne vanno, i programmati restano.
@@ -2388,9 +2401,13 @@ function _stepIntruders(world, dt) {
       continue;
     }
 
-    // Finché è sotto il metallo sale e basta: non insegue, non tocca, si vede gonfiare.
+    // Finché è sotto il metallo **sale e viaggia, ma non insegue e non tocca.** La rotta è quella
+    // con cui è stata sputata: cambia solo quando è fuori. È la differenza fra un preavviso e una
+    // minaccia — mentre emerge si può ancora decidere da che parte stare.
     if (intruso.y > MELT) {
       intruso.y -= INTRUDER.rise * dt;
+      intruso.x += intruso.vx * dt;
+      wrapX(intruso);
       continue;
     }
 
