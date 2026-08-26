@@ -1,0 +1,19 @@
+{
+  "id": "/app/spronia/run/",
+  "name": "SPRONIA",
+  "short_name": "SPRONIA",
+  "description": "A flying joust in the arcade tradition. Runs entirely in your browser, sends nothing anywhere.",
+  "start_url": "/app/spronia/run/",
+  "scope": "/app/spronia/run/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "lang": "en",
+  "dir": "ltr",
+  "theme_color": "#0d1220",
+  "background_color": "#0d1220",
+  "icons": [
+    { "src": "/app/spronia/run/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/app/spronia/run/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/app/spronia/run/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

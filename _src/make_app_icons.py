@@ -120,6 +120,52 @@ def _astrodroid(size, inset, rounded):
     return img
 
 
+def _spronia(size, inset=0.74, rounded=True):
+    """Two riders, two heights, and the higher one wins.
+
+    The scheda's drawing asked for a square keeps two squares, two lances and two rules across the
+    panel — nine shapes, and at 48 px the two rules turn into grey mush behind everything else. So
+    this keeps the motif and throws the rest away: two blocks, two short lances, nothing else. The
+    height difference is the whole subject, so it is exaggerated well past what the banner uses —
+    at this size a subtle difference is no difference.
+
+    Deliberately not the game's ornithopter. A winged machine at 48 px is a smudge with a smudge
+    attached, and an icon that cannot be told from another app's on a home screen is the one failure
+    an icon does not recover from.
+    """
+    img = Image.new("RGB", (size, size), INK)
+    draw = ImageDraw.Draw(img)
+
+    if rounded:
+        draw.rounded_rectangle([0, 0, size - 1, size - 1], radius=int(0.22 * size), fill=INK)
+
+    box = inset * size
+    ox = oy = (size - box) / 2
+    draw.rounded_rectangle([ox, oy, ox + box, oy + box], radius=int(0.14 * box), fill=PANEL)
+
+    # The filament along the top edge, the same mark every app icon here carries.
+    thin = max(2, round(0.055 * box))
+    draw.rounded_rectangle([ox + 0.16 * box, oy - thin / 2, ox + 0.84 * box, oy + thin / 2],
+                           radius=thin // 2, fill=EMERALD)
+
+    lance = max(2, round(0.075 * box))
+    block = round(0.230 * box)
+
+    # The winner, high and left, in the accent, with its lance pointing right.
+    hx, hy = ox + 0.15 * box, oy + 0.24 * box
+    draw.rectangle([hx + block, hy + block / 2 - lance / 2,
+                    hx + block + 0.30 * box, hy + block / 2 + lance / 2], fill=EMERALD)
+    draw.rectangle([hx, hy, hx + block, hy + block], fill=EMERALD)
+
+    # The loser, low and right, muted, lance pointing left. Same size — the rule is about height,
+    # not about distance, and two different sizes would say the wrong thing.
+    lx, ly = ox + 0.85 * box - block, oy + 0.62 * box
+    draw.rectangle([lx - 0.30 * box, ly + block / 2 - lance / 2,
+                    lx, ly + block / 2 + lance / 2], fill=MUTED)
+    draw.rectangle([lx, ly, lx + block, ly + block], fill=MUTED)
+    return img
+
+
 def _blend(colour, opacity, over):
     return tuple(round(over[i] + (colour[i] - over[i]) * opacity) for i in range(3))
 
@@ -134,6 +180,7 @@ def _blend(colour, opacity, over):
 ICONS = {
     "csv-scope": _csv_scope,
     "astrodroid": _astrodroid,
+    "spronia": _spronia,
 }
 
 

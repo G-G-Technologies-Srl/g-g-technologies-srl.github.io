@@ -1,0 +1,20 @@
+SPRONIA
+Copyright 2026 G&G Technologies S.r.l.
+
+This product includes software developed by G&G Technologies S.r.l.
+(https://ggtechnologies.sm).
+
+Licensed under the Apache License, Version 2.0. See the LICENSE file in this
+directory for the full text.
+
+SPRONIA is an original game in the tradition of the flying-joust arcade games of
+the early 1980s. The map, the numbers, the artwork and the code are its own. It
+is not affiliated with, endorsed by or derived from any earlier game, and no
+third-party name or mark is used in it or in its source.
+
+This licence covers the contents of this directory only. The rest of the
+repository — the pages of ggtechnologies.sm, the articles under /insights, the
+brand and its marks — is not covered and remains all rights reserved.
+
+No third-party code is bundled: the app has no dependencies and loads nothing
+from outside this repository.

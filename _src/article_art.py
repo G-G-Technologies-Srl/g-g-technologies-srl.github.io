@@ -528,6 +528,71 @@ def fracture(w=BANNER_W, h=BANNER_H):
     return shapes
 
 
+def altitude(w=BANNER_W, h=BANNER_H):
+    """Two of the same thing at two heights, and the line that decides between them.
+
+    The drawing for the flying joust, and it is the game's one rule: at the moment of contact the
+    higher lance wins. Nothing about wings or machines — a machine would illustrate the subject,
+    and this site's drawings state a mechanism.
+
+    It reuses the vocabulary instead of inventing one. The square is already the site's mark for a
+    single thing; here two squares face each other across an enclosure, each with a filament for a
+    lance, and the two lances sit at two different heights. The higher one is in the accent, and it
+    is the only thing in the drawing that is.
+
+    The contrast with `fracture` is worth keeping in view, since both are drawings for games. There
+    one thing becomes many and the many are the reward. Here there are two things and only their
+    *relative height* matters — same language, a different statement.
+
+    Same rules as the rest: no text, no random numbers, parametric on width and height.
+    """
+    box_x, box_y = 0.040 * w, 0.157 * h
+    box_w, box_h = 0.920 * w, 0.686 * h
+
+    shapes = [
+        {"role": GLOW, "cx": 0.50 * w, "cy": 0.44 * h, "rx": 0.34 * w, "ry": 0.50 * h},
+        {"role": PANEL, "x": box_x, "y": box_y, "w": box_w, "h": box_h, "r": 0.052 * h},
+        {"role": EDGE, "x1": box_x + 0.057 * box_w, "y1": box_y,
+         "x2": box_x + 0.943 * box_w, "y2": box_y},
+    ]
+
+    # How square the enclosure is, 0 on the card band and 1 on a square rendition. Everything that
+    # has to change with the proportion reads this one number, so a banner and a square come out as
+    # the same drawing rather than one being a squashed copy of the other.
+    tall = min(1.0, box_h / (0.42 * w))
+    body = min(0.185 * box_h, 0.042 * w * (1.0 + 1.2 * tall))
+
+    # The two riders, and the whole point is that they are the *same* shape at *different* heights.
+    # Drawing them at different sizes was the first attempt and it says the wrong thing: it reads as
+    # near and far, and the rule is not about distance.
+    high_y = box_y + 0.360 * box_h
+    low_y = box_y + 0.640 * box_h
+    left_x = box_x + 0.235 * box_w
+    right_x = box_x + 0.765 * box_w
+    reach = 0.115 * box_w
+
+    # The two heights, carried across the enclosure as faint rules, drawn *before* the riders so the
+    # riders sit on top of them. Without these the drawing is two squares in a box; with them it is
+    # a comparison, which is the mechanism.
+    #
+    # MARK and not EDGE, and it is not interchangeable: EDGE renders as a rect with no opacity
+    # attribute at all, so two rules at two strengths would come out identical and the drawing would
+    # lose the thing it is about.
+    for y, weight in ((high_y, 0.34), (low_y, 0.15)):
+        shapes.append({"role": MARK, "x": box_x + 0.070 * box_w, "y": y - 1,
+                       "w": 0.860 * box_w, "h": 2, "opacity": weight})
+
+    for x, y, sign, winner in ((left_x, high_y, 1, True), (right_x, low_y, -1, False)):
+        # The lance, then the body on top of it.
+        shapes.append({"role": EDGE,
+                       "x1": x + sign * body * 0.5, "y1": y,
+                       "x2": x + sign * (body * 0.5 + reach), "y2": y})
+        shapes.append({"role": PACKET, "x": x - body / 2, "y": y - body / 2,
+                       "size": body, "opacity": 0.92 if winner else 0.38})
+
+    return shapes
+
+
 # The registry the renderers read. A new article needs a drawing here and an "art" entry with
 # title and desc in content.py — build.py stops if it finds one without the other.
 ARTICLE_ART = {
@@ -550,4 +615,5 @@ ARTICLE_ART = {
 APP_ART = {
     "csv-scope": signal,
     "astrodroid": fracture,
+    "spronia": altitude,
 }

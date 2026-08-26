@@ -596,4 +596,222 @@ APPS = [
             },
         },
     },
+    {
+        # The third app, and the second game. A game is the most linked app from outside and the
+        # least representative of what the company does, which is why `order` is decided by hand.
+        #
+        # The name is coined on purpose. The previous candidate was an ordinary noun in three
+        # European languages, which is a crowded register and a weak mark; this one has an Italian
+        # root — sprone, spronare — without being a valid inflected form, so it stays inventable and
+        # registrable. The genre is named on the scheda; no earlier title is, anywhere.
+        "key": "spronia",
+        "name": "SPRONIA",
+        "order": 3,
+        "tags": ["svago"],
+        "stato": "bozza",
+        "version": "0.29.0",
+        "released": "2026-08-14",
+        "updated": "2026-08-14",
+        "licence": "Apache-2.0",
+        "art": {"shape": "altitude"},
+        "it": {
+            "slug": "app/spronia",
+            "short": "SPRONIA",
+            "title": "SPRONIA — giostra in volo nel browser | G&G Technologies",
+            "description": "Si vola battendo le ali e vince chi al contatto è più in alto. "
+                           "Gira nel browser: niente account, niente server, la classifica resta "
+                           "su questo computer.",
+            "kicker": "App gratuita e open source",
+            "h1": "Non c'è un tasto per salire: <span class=\"grad-text\">si batte "
+                  "le ali</span>.",
+            "lead": "Due direzioni e un pulsante. Più in fretta batti, più sali — e al contatto "
+                    "vince chi ha lo sperone più in alto. Sotto c'è metallo fuso.",
+            "summary": "Si vola a battiti d'ala e vince chi è più in alto. Gira nel browser, "
+                       "senza server.",
+            "intro_title": "Perché un secondo gioco",
+            "intro_h2": "Una regola sola, e <span class=\"grad-text\">si vede tutta</span>.",
+            "intro": [
+                "Le app che pubblichiamo hanno in comune un vincolo tecnico, non un argomento: "
+                "girano sulla macchina di chi le apre e non mandano niente da nessuna parte. Un "
+                "gioco lo dimostra a chi non aprirà mai un file di misure.",
+                "Qui la regola del gioco è una sola, e sta in una riga: quando due piloti si "
+                "toccano, quello con lo sperone più in alto resta in volo e l'altro no. Tutto il "
+                "resto — l'inerzia, le piattaforme, il metallo sul fondo — serve a rendere "
+                "difficile arrivare più in alto al momento giusto.",
+                "Il volo funziona come quello di una macchina che batte le ali: non c'è un comando "
+                "per salire, c'è la frequenza con cui batti. È la meccanica che rende il genere "
+                "riconoscibile, ed è anche il motivo per cui si impara in dieci secondi e non si "
+                "padroneggia in dieci minuti.",
+            ],
+            "does_title": "Cosa fa",
+            "does": [
+                "Si vola battendo le ali: nessun tasto sale da solo, e tenerlo premuto vale un "
+                "battito solo.",
+                "Al contatto vince chi ha lo sperone più in alto. A pari quota si rimbalza.",
+                "Sei piattaforme a sei quote diverse, sopra un fondo di metallo fuso.",
+                "Il campo si richiude su sé stesso in orizzontale: esci a destra e rientri a "
+                "sinistra.",
+                "Due giocatori sulla stessa tastiera, o uno alla tastiera e uno al gamepad.",
+                "Funziona senza connessione dopo la prima apertura.",
+                "Italiano e inglese, tema chiaro e scuro, si installa come un'applicazione.",
+            ],
+            "does_not_title": "Cosa non fa",
+            "does_not": [
+                "Non manda niente da nessuna parte: nessun account, nessun punteggio su un "
+                "server nostro.",
+                "Non ha una classifica mondiale, per la stessa ragione.",
+                "A due giocatori serve una tastiera o un gamepad: sul tocco non ci stanno "
+                "quattro pollici.",
+                "Non ha acquisti né pubblicità.",
+            ],
+            "facts_title": "In breve",
+            "facts": [
+                ("Stato", "In lavorazione. Si vola, si duella e si raccolgono le celle: le "
+                          "ondate, il punteggio a schermo e il suono arrivano più avanti."),
+                ("Comandi", "Due direzioni e un battito: da tastiera, oppure premendo il campo "
+                            "dal lato in cui vuoi andare. Non esiste un comando per salire."),
+                ("Dati", "Restano sul tuo computer. Dopo il caricamento della pagina l'app non fa "
+                         "richieste di rete."),
+                ("Due giocatori", "Sulla stessa tastiera, o con un gamepad. Non sul telefono."),
+                ("Schermo", "Fisso, senza scorrimento. Sul telefono va tenuto in orizzontale."),
+                ("Senza connessione", "Dopo la prima apertura funziona anche quando sei senza "
+                                      "rete."),
+                ("Lingue", "Italiano e inglese, seguono la lingua del browser."),
+                ("Licenza", "Apache-2.0. Il codice è pubblico e riusabile, anche in un lavoro "
+                            "commerciale."),
+            ],
+            "faq_title": "Domande frequenti",
+            "faq": [
+                ("Perché non c'è un tasto per salire?",
+                 "Perché è la meccanica del gioco. La quota dipende da quanto in fretta batti le "
+                 "ali, quindi restare fermo in aria è una cosa che stai facendo, non uno stato in "
+                 "cui sei. Con un tasto tenuto premuto la regola dell'altezza diventerebbe banale, "
+                 "ed è l'unica regola che c'è."),
+                ("È la conversione di un gioco già esistente?",
+                 "No. È un gioco originale, scritto da noi, nella tradizione delle giostre in volo "
+                 "dei primi anni Ottanta. Le meccaniche di un genere si ritrovano in decine di "
+                 "giochi e non appartengono a nessuno; la mappa, i numeri, il disegno e il codice "
+                 "sono nostri, e nomi o marchi altrui qui non compaiono."),
+                ("Perché la classifica non è condivisa?",
+                 "Perché una classifica condivisa richiede un server che riceva i punteggi, e "
+                 "queste app non ne hanno uno. È la stessa scelta che rende il gioco utilizzabile "
+                 "senza connessione e senza account."),
+                ("Si può giocare in due?",
+                 "Sì, sulla stessa tastiera o con un gamepad. I due set di tasti stanno in zone "
+                 "lontane perché molte tastiere non registrano troppi tasti premuti insieme, e "
+                 "se la tua non regge la combinazione li puoi rimappare."),
+            ],
+            "cta_title": "Ti serve qualcosa che gira in locale?",
+            "cta_text": "Se hai un caso in cui i dati non devono uscire dalla macchina di chi li "
+                        "usa, raccontacelo. Ti risponde una persona del team, non un messaggio "
+                        "automatico.",
+            "mail_subject": "SPRONIA — applicazioni che girano in locale",
+            "related": ["onprem", "robotics", "digisense"],
+            "art": {
+                "title": "Due piloti a due quote, e la quota che decide",
+                "desc": "Dentro un riquadro chiuso, due quadrati uguali stanno a due altezze "
+                        "diverse, ciascuno con un filo orizzontale davanti a sé. Due righe "
+                        "sottili attraversano il riquadro alle due altezze; il quadrato più in "
+                        "alto è acceso, quello più in basso è spento.",
+            },
+        },
+        "en": {
+            "slug": "en/app/spronia",
+            "short": "SPRONIA",
+            "title": "SPRONIA — a flying joust in the browser | G&G Technologies",
+            "description": "You fly by flapping, and on contact the higher rider wins. It runs in "
+                           "the browser: no account, no server, and the high score table stays on "
+                           "this computer.",
+            "kicker": "Free and open source",
+            "h1": "There is no button for up: <span class=\"grad-text\">you flap</span>.",
+            "lead": "Two directions and one button. The faster you flap the higher you go — and on "
+                    "contact the higher spur wins. Below there is molten metal.",
+            "summary": "You fly by flapping and the higher rider wins. Runs in the browser, with "
+                       "no server.",
+            "intro_title": "Why a second game",
+            "intro_h2": "One rule, and <span class=\"grad-text\">you can see all of it</span>.",
+            "intro": [
+                "The apps we publish share a technical constraint rather than a subject: they run "
+                "on the machine of whoever opens them and send nothing anywhere. A game "
+                "demonstrates that to everybody who will never open a file of measurements.",
+                "Here the game has one rule and it fits on a line: when two riders touch, the one "
+                "whose spur is higher stays airborne and the other does not. Everything else — the "
+                "inertia, the ledges, the metal on the floor — exists to make being higher at the "
+                "right moment difficult.",
+                "Flight works the way a flapping machine flies: there is no command for up, there "
+                "is the rate at which you beat. It is the mechanic that makes the genre "
+                "recognisable, and it is also why it takes ten seconds to learn and rather longer "
+                "to master.",
+            ],
+            "does_title": "What it does",
+            "does": [
+                "You fly by flapping: no key climbs on its own, and holding one down counts as a "
+                "single beat.",
+                "On contact the higher spur wins. Level with each other, both bounce away.",
+                "Six ledges at six different heights, over a floor of molten metal.",
+                "The field wraps horizontally: leave on the right and you come back on the left.",
+                "Two players on one keyboard, or one on the keyboard and one on a gamepad.",
+                "Works without a connection after the first visit.",
+                "Italian and English, light and dark themes, installable as an application.",
+            ],
+            "does_not_title": "What it does not do",
+            "does_not": [
+                "It sends nothing anywhere: no account, and no score on a server of ours.",
+                # Not "leaderboard": the banned-phrase list matches «leader» inside it, and it is
+                # right to — the word is on the list because of the marketing sense, and a check
+                # that let it through inside a compound would let the marketing sense through too.
+                "There is no worldwide high score table, for the same reason.",
+                "Two players need a keyboard or a gamepad: four thumbs do not fit on a phone.",
+                "There are no purchases and no advertising.",
+            ],
+            "facts_title": "In brief",
+            "facts": [
+                ("Status", "In progress. You fly, you joust and you collect the cells: waves, "
+                           "the score on screen and the sound come later."),
+                ("Controls", "Two directions and one flap: from the keyboard, or by pressing "
+                             "the field on the side you want to go. There is no command for up."),
+                ("Data", "Stays on your computer. After the page has loaded the app makes no "
+                         "network requests."),
+                ("Two players", "On one keyboard, or with a gamepad. Not on a phone."),
+                ("Screen", "Fixed, with no scrolling. On a phone it wants to be held sideways."),
+                ("Offline", "After the first visit it works without a connection."),
+                ("Languages", "Italian and English, following the browser's language."),
+                ("Licence", "Apache-2.0. The code is public and reusable, including commercially."),
+            ],
+            "faq_title": "Frequently asked questions",
+            "faq": [
+                ("Why is there no button for up?",
+                 "Because that is the mechanic. Your height depends on how fast you beat your "
+                 "wings, so hovering is something you are doing rather than a state you are in. "
+                 "With a key you could hold, the height rule would become trivial — and the height "
+                 "rule is the only rule there is."),
+                ("Is this a port of an existing game?",
+                 "No. It is an original game, written by us, in the tradition of the flying-joust "
+                 "arcade games of the early 1980s. The mechanics of a genre appear in dozens of "
+                 "games and belong to nobody; the map, the numbers, the artwork and the code are "
+                 "ours, and no third-party name or mark appears here."),
+                ("Why is the high score table not shared?",
+                 "Because a shared table needs a server to receive the scores, and these apps do "
+                 "not have one. It is the same choice that makes the game usable with no "
+                 "connection and no account."),
+                ("Can two people play?",
+                 "Yes, on one keyboard or with a gamepad. The two sets of keys sit far apart "
+                 "because many keyboards will not register too many keys held at once, and if "
+                 "yours will not take the combination you can remap them."),
+            ],
+            "cta_title": "Need something that runs locally?",
+            "cta_text": "If you have a case where the data must not leave the machine using it, "
+                        "tell us about it. A person from the team answers you, not an automated "
+                        "reply.",
+            "mail_subject": "SPRONIA — applications that run locally",
+            "related": ["onprem", "robotics", "digisense"],
+            "art": {
+                "title": "Two riders at two heights, and the height that decides",
+                "desc": "Inside an enclosed panel, two identical squares sit at two different "
+                        "heights, each with a horizontal filament ahead of it. Two thin rules "
+                        "cross the panel at the two heights; the upper square is lit and the "
+                        "lower one is dim.",
+            },
+        },
+    },
 ]

@@ -1,0 +1,1224 @@
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+
+// The world and one step of it. No canvas, no DOM, no audio, no timers.
+//
+// That boundary is what makes a real-time game testable at all: everything here is a function of a
+// state and a set of intents, so `test/physics.mjs` can play thousands of steps under Node and
+// check that holding the flap key gains no altitude, or that a body leaving the right edge comes
+// back on the left at the same height. None of that is checkable through a canvas.
+//
+// Three rules hold the file together.
+//
+//  - **The field has its own measurements**, 1280 x 720 units, whatever the window is doing. If the
+//    playfield stretched to fit, a wide monitor would hand out more room to manoeuvre than a phone,
+//    and the high score table would be comparing different games. The renderer letterboxes; the
+//    physics never hears about it.
+//  - **The wrap is horizontal only.** This is the single easiest defect to introduce in this
+//    project, because it is introduced by copying code that works: the sister game's field has no
+//    edges at all and wraps on both axes. Here there is a ceiling and there is molten metal. No
+//    function in this file may treat `FIELD.h` as a period.
+//  - **The chance is seeded, and the seed lives on the world.** Not in a closure: a world has to be
+//    copyable and replayable, and the attract-mode demonstration has to come out the same at every
+//    build or the screenshot changes on its own.
+
+import { resolve } from "./terrain.js";
+
+// -----------------------------------------------------------------------------------------------------------------
+//  m e a s u r e s
+// -----------------------------------------------------------------------------------------------------------------
+
+export const FIELD = { w: 1280, h: 720 };
+
+// The field is drawn into a 640 x 360 buffer and blown up by whole multiples, so **every
+// measurement in this file is a multiple of two**. It is not a detail: a ledge at an odd coordinate
+// lands between two pixels, and the renderer either rounds it — putting the drawn edge somewhere the
+// rules say it is not — or draws it soft, which on a pixel field looks like a mistake rather than a
+// style. `test/physics.mjs` refuses any measurement that is not.
+//
+// It started at four, for a 320 x 180 buffer, which is about what a cabinet of the early eighties
+// had. That is also, exactly, what made the characters unreadable: at four units per pixel a rider
+// is fourteen pixels wide and there is nowhere to put a rider. Halving it quadruples the detail on
+// every body **without touching a single rule** — the world is still 1280 x 720 units, the flight is
+// unchanged, the map is unchanged. What it costs is the era: this is the resolution of 1991, not of
+// 1982. That is a deliberate trade, and it is the honest one to make, because "a prettier character"
+// and "an authentic 1982 look" are the same argument pulling in two directions.
+export const PIXEL = 2;
+
+// The ceiling is solid and the molten metal is a threshold. Between them there are 580 units of
+// flying room, 1280 wide: a ratio of 2.2, which is roughly a phone held sideways, so the letterbox
+// bands stay thin on the screens this is actually played on.
+export const CEILING = 60;
+export const MELT = 640;
+
+// A fixed step, and a small one. The simulation advances in whole steps and the renderer
+// interpolates, so the game runs identically on a 60 Hz laptop and a 144 Hz monitor. Tied to the
+// frame rate instead, a faster screen would mean stronger gravity — the oldest bug in the genre.
+export const STEP = 1 / 120;
+
+// Six platforms, six different heights, and no two of them mirror images. A symmetric map is
+// learned once; here the left and the right are two different problems.
+//
+// Nothing touches the wrap seam: the lowest x is 90 and the highest 1200, so there are 170 units of
+// clear air across it. A surface straddling the seam is either one platform with an invisible hole
+// in the middle of it, or a special case in the resolver that only some waves exercise — and a
+// special case exercised by wave 1 and never again is the worst possible test profile.
+export const PLATFORMS = [
+  { id: "lunga",    x: 380, y: 560, w: 520, removable: false },
+  { id: "sinistra", x: 88,  y: 440, w: 232, removable: false },
+  { id: "destra",   x: 960, y: 380, w: 240, removable: false },
+  { id: "centro",   x: 544, y: 252, w: 192, removable: true },
+  { id: "alta-sx",  x: 148, y: 168, w: 240, removable: true },
+  { id: "alta-dx",  x: 888, y: 216, w: 272, removable: true },
+];
+
+// How thick a platform is drawn and resolved. Four pixels: thin enough to read as a ledge, thick
+// enough that a body moving at full speed cannot be inside one for a whole step without the sweep
+// noticing.
+export const DECK = 16;
+
+// The spawn pads, all on platforms that are never removed. A pad on a removable platform is a pad
+// in mid-air the moment that platform goes, and in a game whose only lift is a discrete flap that
+// means appearing and falling.
+export const PADS = [
+  { x: 500, y: 560 },
+  { x: 780, y: 560 },
+  { x: 204, y: 440 },
+  { x: 1080, y: 380 },
+];
+
+// When no pad is free — up to nine enemies and two pilots for four pads, so it happens — a body
+// appears here instead, airborne and protected.
+export const FALLBACK_PAD = { x: FIELD.w / 2, y: 350 };
+
+// The drawn frame, which is **not** the collision box. The artwork is 59 x 50 sprite pixels — a
+// dodo with a rider and a lance sticking out of it — and most of that is not something you should
+// die for touching. The lance reaches past the body, the tail hangs behind, the feet dangle.
+//
+// A hitbox smaller than the drawing is the right way round: a near miss should be a miss. The one
+// thing that must be exact is the lance tip, because that is what the fight compares.
+//
+// These numbers follow the artwork rather than the other way round, and the converter refuses to
+// write sprites.js if they disagree with the sheet. That is deliberate: the drawing arrived on its
+// own grid, painted at its own size, and rescaling it to fit a constant would have thrown away the
+// one thing that made it worth using — that every colour and every pixel is the author's.
+export const SPRITE = { w: 124, h: 108 };
+
+export const PILOT = {
+  // Il corpo della cavalcatura, e **si misura sul disegno**: non è un numero di gusto, è la scatola
+  // che tiene la parte di dodo per cui è giusto morire.
+  //
+  // Era 56 x 56 quando il disegno era 96 x 80 unità, cioè il 72% della larghezza del corpo e il 76%
+  // dell'altezza: la scatola più stretta del disegno, che è il verso giusto — uno sfioro deve essere
+  // uno sfioro. Poi il disegno è cresciuto a 124 x 108 e questi due numeri sono rimasti fermi, e la
+  // proporzione si è rotta in silenzio: misurato, la scatola teneva il **57%** del corpo. A schermo
+  // sono due dodi che si attraversano sovrapposti per mezzo corpo senza che succeda niente.
+  //
+  // 78 x 80 rimette la proporzione di prima sul corpo di adesso — il nucleo disegnato in tutti e
+  // otto i fotogrammi, tolta la lancia, è 108 x 102 unità, e la scatola ne tiene il 72% e il 78%.
+  //
+  // Il contatto avviene prima di quanto avvenisse con 56 x 56, e questo **cambia il tatto del
+  // duello**: non è una cosa che si dimostri qui. È stata giocata, e va bene così — il che vuol
+  // dire che questi due numeri adesso sono tarati, non provvisori. Chi li muove sta cambiando il
+  // gioco, non correggendo un disegno.
+  //
+  // L'altezza è 80 e non 78 perché **dev'essere un multiplo di quattro**: metà scatola, in pixel di
+  // schermo, è dove lo sprite appoggia i piedi, e con 78 quella metà cade fra due pixel — il
+  // personaggio verrebbe disegnato a mezzo pixel, cioè sfocato su un campo dove tutto il resto ha
+  // il bordo netto. C'è un controllo che lo dice.
+  w: 78,
+  h: 80,
+
+  // Gravity and the flap, and the only relationship in the file worth reading twice: a hover costs
+  // `gravity / flap` beats per second, which at these values is about 3.2. That is a tapping rate a
+  // hand can hold for a while and not for ever, which is the whole feel of the genre.
+  gravity: 900,
+  flap: 280,               // an instant change to vy, not a force: a beat is an impulse
+
+  maxFall: 620,
+  maxClimb: 400,
+
+  // On the ground there is grip; in the air there is not. The gap between the two is the skid, and
+  // the skid is what makes turning around a decision instead of a keystroke.
+  airAccel: 420,
+  groundAccel: 900,
+  airDrag: 0.6,            // per second
+  groundDrag: 4.5,
+  maxSpeed: 340,
+
+  // Hitting the ceiling is not free, and not fatal. Bouncing off at a third of the speed reads as
+  // a bump; stopping dead reads as a bug.
+  ceilingBounce: 0.33,
+
+  spawnGuard: 2.0,         // seconds of protection after appearing
+
+  // What a contact does. Two numbers, because a contact means two different things.
+  //
+  // `shove` is for a pass nobody won: level lances, or one of the two still protected. Both riders
+  // are thrown apart hard enough to be clear of each other before they can touch again, which is
+  // what stops a drawn pass from becoming two birds grinding through one another.
+  //
+  // `recoil` is for a pass somebody won. The loser is gone, so only the winner is moved, and only a
+  // little: enough to say that something was hit, not enough to take the win away from whoever
+  // aimed it. **Horizontal only** — a vertical kick would change the winner's altitude, and
+  // altitude is the currency of the only rule in the game.
+  shove: 0.55,             // of maxSpeed
+  // The knock-back after a win, as a bounce rather than a brake: a fixed part, so that even a kill
+  // made from a standstill is felt, plus a share of the speed the winner came in with, so that a
+  // dive is thrown back further than a drift. Capped, or a full-speed pass would fling the winner
+  // across a third of the field.
+  //
+  // The fixed part is 0.30 because 0.22 was measured on the screen and lost: a kill made from a
+  // standstill moved the winner ten screen pixels over a third of a second, which is there and is
+  // not seen. At 0.30 it is fourteen, which reads without throwing anybody off course.
+  //
+  // The bounce follows the line of the contact, so dropping onto a foe from directly above throws
+  // the winner **up**, hard. An earlier version pushed sideways whatever the approach had been, and
+  // a dive that ended in a small horizontal nudge was the least convincing thing on the field: the
+  // one moment where the game clearly failed to notice what had just happened.
+  recoil: 0.30,            // the fixed part, of maxSpeed
+  recoilBack: 0.45,        // of the speed the winner was closing at
+  recoilCap: 0.6,          // sideways, of maxSpeed
+  // Upwards the ceiling is the wingbeat's own: a bounce that could throw you higher than your own
+  // flying would be a way of gaining altitude that has nothing to do with flying.
+  recoilRise: 1.0,         // of maxClimb
+  // A contact does not repeat while the two are still pulling apart: without this the same pass
+  // fires every step for as long as the boxes overlap, and what should be one bump becomes a buzz.
+  bumpFor: 0.25,           // seconds
+
+  // The lance sits ahead of the nose. The height rule compares the tip, not the body centre, so
+  // where the tip is has to be declared once here rather than guessed twice later.
+  // Read off the artwork rather than chosen: the drawn lance tip sits here in the flying frames.
+  //
+  // The walking frames put it two pixels higher and three shorter, and the rules take **one**
+  // position regardless of which frame is showing. They have to: a rule that moved with the wing
+  // phase would make the same approach win or lose depending on the animation, which is the game
+  // cheating in a way nobody could see. The flying value wins because that is where the fighting
+  // happens. `test/physics.mjs` holds the drawing to it.
+  //
+  // I due numeri **vengono dal disegno**, e sono cambiati insieme quando è cambiato il disegno: la
+  // lancia del cavaliere azzurro è disegnata 4 pixel di sprite sopra il centro del riquadro e con
+  // la punta 28 a destra, dove quella di prima stava a 8 e 22. Il convertitore li rilegge da qui e
+  // si ferma se la punta disegnata non ci cade — su un foglio pulito controlla, non ridisegna.
+  lanceReach: 54,
+  // **`lanceRise` discende da dove lo sprite è appoggiato**, e per questo è cambiato da -10 a -22
+  // senza che il disegno si muovesse di un pixel. Lo sprite non è più centrato sul corpo: è posato
+  // per i piedi sul fondo della scatola, quindi la lancia disegnata si trova più in alto rispetto
+  // al centro di quanto si trovasse prima. Il duello non cambia — confronta due punte, e tutt'e due
+  // si spostano insieme — ma il numero sì, e il convertitore si ferma se i due non tornano.
+  lanceRise: -22,
+};
+
+// The whole of the combat rule, in one number. Two lance tips within this many units of each other
+// are level, and both riders bounce away; outside it, the higher one wins.
+//
+// Ten units is 1.7% of the flying band. Narrower and the game reads as random — you lose a pass you
+// were sure you had won, because nobody can see six units. Wider and every pass ends in a bounce,
+// which turns the one rule of the game into a coin that mostly lands on its edge.
+//
+// **This number is tuned by playing, not by arguing**, and it is the most important one in the file
+// after gravity. It is exported so a test can state the outcomes in terms of it rather than
+// repeating the value, which is how the two would drift apart.
+export const TIE = 10;
+
+// What every foe shares, whatever it is.
+export const FOE = {
+  // The wander, in seconds: how long a whim lasts before the next one is drawn.
+  whimShort: 0.6,
+  whimLong: 2.0,
+  // How far a foe notices a player, along x. Wider than a screenful would make the whole field one
+  // room and the three classes indistinguishable, because everything would always be reacting.
+  notice: 420,
+};
+
+// -----------------------------------------------------------------------------------------------------------------
+//  t h e   t h r e e   c l a s s e s
+// -----------------------------------------------------------------------------------------------------------------
+
+/**
+ * Three ways of flying the same body.
+ *
+ * Nothing here touches gravity, the beat or the lance: a class that flew by different physics would
+ * turn the one rule of the game into a table of special cases, and the height rule would stop being
+ * checkable. What a class owns is **what it wants** — where it aims, when it reacts — plus how fast
+ * it may beat and what it is worth.
+ *
+ * They are told apart by silhouette, never by colour. The class decides whether you can take a foe
+ * on, so a player who cannot separate two hues would be reading a coin. See `_paintCrest`.
+ *
+ * `beats` is the ceiling on its beating rate, per second. A hover costs `gravity / flap`, about 3.2,
+ * so everything here can climb; how much above 3.2 is how urgently it climbs.
+ */
+// `tinta` è il nome di un uovo in `app/spronia/art/uova/`, e da lì il convertitore ricava la
+// tavolozza della classe ruotando i blu del cavaliere sulla tinta dominante di quell'uovo. È il
+// nome, non il colore: il colore si misura sul disegno, così ridisegnare un uovo ricolora i suoi
+// nemici e le due cose non possono divergere.
+//
+// **Il colore non porta l'informazione della classe**, la raddoppia. A dirla resta la forma del
+// cimiero — una gobba, due corna, una punta — perché chi non separa due tinte deve poter decidere
+// se quel nemico lo può affrontare, e la classe è esattamente quella decisione. Un colore in più
+// che dice la stessa cosa è un aiuto; un colore che la dice da solo sarebbe una monetina.
+//
+// L'uovo d'oro non è di nessuna classe. È il quarto disegnato, e aspetta la fase delle celle: un
+// uovo lasciato a terra troppo a lungo dovrà valere di più, e quello è il suo posto.
+export const KINDS = {
+  // Flies almost at random and reacts to almost nothing — but it is not scenery. Pass above it and
+  // it comes up after you, which is what stops the cheap tactic of parking over the drifting ones.
+  deriva: { points: 50, beats: 5, chases: false, wakes: true, tinta: "verde" },
+
+  // Hunts, and hunts your altitude rather than your position: it wants to be level with you, and a
+  // rider who is level with you has to climb to win. Do that often enough and the roof is behind
+  // you. That is the whole threat — it does not need to be fast.
+  segugio: { points: 100, beats: 5.5, chases: true, matches: 12, tinta: "rosso" },
+
+  // Fast, flies in the upper half, and bursts upward when you come near.
+  //
+  // The burst is a **window, not a state**, and that correction is the reason the game is winnable.
+  // Written as "climbs faster than your best beat" with no limit, and combined with a late game made
+  // of nothing but Vertici, it made the game unwinnable by arithmetic: no action of the player could
+  // ever put a Vertice below them, and height is the only rule there is. No invariant of the wave
+  // generator would have noticed.
+  //
+  // So: it out-climbs you for `burst` seconds, and then for `spent` seconds it cannot gain altitude
+  // at all. That window is how it is beaten, and it has to be visible — see `_paintCrest` and the
+  // wing rhythm, which slows on its own because the beating does.
+  vertice: {
+    points: 200, beats: 7, chases: true, high: true,
+    burst: 2.0, spent: 3.0, near: 260, tinta: "viola",
+  },
+};
+
+/** The kinds, in the order a wave should introduce them. */
+export const KIND_NAMES = Object.keys(KINDS);
+
+// -----------------------------------------------------------------------------------------------------------------
+//  l e   c e l l e
+// -----------------------------------------------------------------------------------------------------------------
+
+/**
+ * La cella: quello che resta di un nemico spento, e il meccanismo che rende il gioco più profondo
+ * di quanto sembri.
+ *
+ * Fino a qui un nemico abbattuto tornava da solo dopo un secondo e mezzo, e abbatterlo era un
+ * punteggio senza conseguenze. Adesso l'abbattimento è **metà** di una cosa: lascia una cella che
+ * eredita la sua velocità, cade e rimbalza. Se la raccogli, quel nemico è finito. Se la lasci lì,
+ * si schiude e il nemico torna **di una classe più alta** — Deriva diventa Segugio, Segugio
+ * diventa Vertice. Ogni nemico che non raccogli torna più forte.
+ *
+ * Il corpo è più piccolo del dodo e cade con la stessa gravità di tutti: **una fisica sola.** Il
+ * solo materiale che una cella ha e un pilota no è il rimbalzo, e per un buon motivo — un dodo che
+ * rimbalzasse sui ripiani sarebbe ingovernabile, mentre una cella che si ferma dove cade sarebbe
+ * un sasso, e un sasso non fa scegliere niente. Il rimbalzo è il tempo che hai per arrivarci.
+ */
+export const CELLA = {
+  // **Si misurano sul disegno**, come per il pilota: il disegno dell'uovo è 20 x 27 pixel d'arte,
+  // cioè 40 x 54 unità. La larghezza è quella del disegno e l'altezza due unità in meno, perché
+  // dev'essere un multiplo di quattro — mezza scatola, in pixel di schermo, dev'essere intera o la
+  // cella verrebbe disegnata a mezzo pixel.
+  //
+  // E qui la scatola è **generosa**, dove quella del pilota è avara: uno sfioro contro una lancia
+  // deve essere uno sfioro, ma una cella che ti passa attraverso senza essere raccolta è il gioco
+  // che ti toglie una cosa che avevi preso. I due versi sono opposti perché lo sono le due
+  // conseguenze.
+  w: 40,
+  h: 52,
+
+  // Il rimbalzo, e quanto la cella striscia. Ne servono tre o quattro prima che si posi: abbastanza
+  // per attraversare mezzo campo, che è la distanza da cui una cella si può ancora prendere al volo.
+  restitution: 0.46,
+  // Contro il soffitto quasi niente: una cella scagliata in su ci arriva di rado, e quando ci arriva
+  // deve ricadere, non restarci appesa.
+  ceilingBounce: 0.2,
+  // L'attrito dell'aria, al secondo. Più forte di quello di un dodo in volo, perché una cella non
+  // ha ali per tenere la rotta: eredita una velocità e la perde.
+  drag: 1.1,
+  maxFall: 620,
+
+  // **La schiusa**, in secondi: quindici nella prima ondata, meno quattro decimi a ogni ondata, mai
+  // sotto i cinque. È l'orologio più lento dei quattro del gioco, e va guardato insieme agli altri
+  // tre — con nove nemici che tornano più forti, una schiusa troppo corta rende la raccolta
+  // impossibile invece che difficile.
+  hatchFirst: 15,
+  hatchLess: 0.4,
+  hatchMin: 5,
+
+  // **Quanto scende al secondo dentro il metallo**, una volta che ci è caduta.
+  //
+  // Sprofondare invece di sparire non è decorazione: il metallo è l'unico posto del campo dove una
+  // cella si perde per sempre, e prima quella perdita durava un fotogramma. Una cosa che sparisce
+  // non si impara — una che affonda sì, e la si guarda affondare la prima volta che capita.
+  //
+  // Quaranta unità al secondo sono poco più di un secondo per la cella intera, che è il tempo
+  // giusto: abbastanza per vederla, non tanto da restare a guardare un uovo che brucia mentre il
+  // campo va avanti. **L'esito però è deciso quando tocca**, non quando finisce di affondare: non
+  // si raccoglie più, non si schiude più, e il nemico che ci stava dentro è già perso. Quello che
+  // resta è il fatto, non una seconda occasione.
+  sink: 40,
+
+  // Quanto dura l'avviso prima che si schiuda. La cella diventa d'oro: è il quarto uovo disegnato,
+  // e questo è il suo posto. **Non vale di più** — vale il suo turno di scala come tutte — perché
+  // due premi che si sommano su una cosa sola sono il modo più rapido di rendere una regola
+  // illeggibile. Dice una cosa e una sola: questa sta per andarsene.
+  warn: 3,
+};
+
+/**
+ * Quanto vale una cella: **25, 50, 100, 200, e poi 200.**
+ *
+ * A scalare dentro la stessa ondata e la stessa vita, il che vuol dire che la seconda cella di
+ * fila vale il doppio della prima. È il premio per aver ripulito invece di aver fatto punti: chi
+ * abbatte e va oltre ricomincia sempre da venticinque.
+ *
+ * Il contatore si azzera in due posti, e sono due regole diverse messe insieme: all'inizio di ogni
+ * ondata, perché la scala è un premio per come giochi *quell'*ondata; e a ogni morte, perché
+ * altrimenti la scala sopravvivrebbe a chi l'ha guadagnata.
+ *
+ * **Il raddoppio della presa al volo non c'è più**, ed è caduto giocando invece che discutendo. Il
+ * piano lo dava come premio a una manovra — prendere la cella prima che tocchi qualcosa — e la
+ * manovra non esisteva: la cella nasce **addosso** a chi ha appena speronato il nemico, quindi
+ * veniva raccolta nello stesso passo in cui compariva. A schermo era un uovo che appariva e
+ * spariva, e il doppio era un premio per non aver fatto niente. Adesso una cella si prende dopo
+ * che ha toccato, e la sola cosa che moltiplica è la scala.
+ */
+export const CELL_POINTS = [25, 50, 100, 200];
+
+/**
+ * Quante volte si può spegnere lo stesso nemico prima che sparisca per sempre.
+ *
+ * **Senza questa regola un'ondata può non finire mai**: il Vertice è l'ultimo gradino della
+ * promozione, quindi una cella di Vertice lasciata schiudere torna Vertice, e così all'infinito.
+ * Al terzo spegnimento la cella viene raccolta d'ufficio, col suo punteggio, e quel nemico è
+ * finito — qualunque sia la sua classe.
+ */
+export const DOWNS = 3;
+
+/** La classe sale allo spegnimento. Il Vertice è il capolinea: non c'è niente sopra. */
+export const PROMOTION = { deriva: "segugio", segugio: "vertice", vertice: "vertice" };
+
+/** Quanto ci mette a schiudersi una cella nata in questa ondata. */
+export function hatchTime(wave) {
+  return Math.max(CELLA.hatchMin, CELLA.hatchFirst - CELLA.hatchLess * (Math.max(1, wave) - 1));
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  t h e   f r e n z y
+// -----------------------------------------------------------------------------------------------------------------
+
+// An accumulation, not a ceiling: it grows with the bodies on the field, multiplies how fast foes
+// move, tops out, and **falls on its own** when the field empties.
+//
+// The decay is the correction. Without it the thing is a loop that feeds itself — more bodies,
+// faster foes, more deaths, more eggs, more bodies — and the only valve was one that closed itself
+// halfway through the game. It rises faster than it falls, so a crowded field is felt at once and
+// the relief afterwards is earned rather than instant.
+//
+// It multiplies **speed only**. Multiplying the beat or gravity would move the height rule, and the
+// height rule is the game.
+export const FRENZY = {
+  per: 0.09,               // added to the target for each body past the first
+  max: 0.6,
+  rise: 0.9,               // per second, towards the target
+  fall: 0.35,
+};
+
+// How many foes actually give chase, and how that grows. One at the start, one more every fifteen
+// seconds: with nine on the field the hunt is complete at two minutes, which is where § 3.10 wants
+// the pressure to become the thing that pushes you to finish.
+export const HUNT = { first: 1, every: 15 };
+
+// -----------------------------------------------------------------------------------------------------------------
+//  c h a n c e
+// -----------------------------------------------------------------------------------------------------------------
+
+/**
+ * mulberry32: thirty-two bits of state, enough for spawn choices and drift.
+ *
+ * The state lives on the world rather than in a closure so a world can be copied, replayed or
+ * written down. A generator hidden in a closure makes the same game unreproducible the moment
+ * anything wants to save it.
+ */
+function _random(world) {
+  world.rng = (world.rng + 0x6d2b79f5) | 0;
+  let t = world.rng;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  s p a c e
+// -----------------------------------------------------------------------------------------------------------------
+
+/**
+ * The shortest way from `a` to `b` along x, on a field whose left and right edges are the same
+ * edge.
+ *
+ * There is deliberately no `y` counterpart. A pilot just under the ceiling and one just above the
+ * metal are 580 units apart, not 140, and under a rule that decides a fight by height the wrong
+ * answer is a kill at the wrong end of the field — which reads as the game cheating.
+ */
+export function deltaX(a, b) {
+  let d = b - a;
+  if (d > FIELD.w / 2) d -= FIELD.w;
+  if (d < -FIELD.w / 2) d += FIELD.w;
+  return d;
+}
+
+export function wrapX(body) {
+  if (body.x < 0) body.x += FIELD.w;
+  else if (body.x >= FIELD.w) body.x -= FIELD.w;
+}
+
+/** Where the tip of the lance is, which is the only height the fight rule ever compares. */
+export function lanceTip(pilot) {
+  return {
+    x: pilot.x + PILOT.lanceReach * pilot.facing,
+    y: pilot.y + PILOT.lanceRise,
+  };
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  b o d i e s
+// -----------------------------------------------------------------------------------------------------------------
+
+export function makePilot(index, pad) {
+  return {
+    index,
+    x: pad.x,
+    y: pad.y - PILOT.h / 2 - DECK / 2,
+    vx: 0,
+    vy: 0,
+    facing: index === 0 ? 1 : -1,       // 1 looks right, -1 looks left
+    grounded: false,
+    guard: PILOT.spawnGuard,
+    alive: true,
+    // Both kept for the renderer, and read by no rule: how long ago the last beat was, and how far
+    // this body has walked. A walk cycle driven by distance rather than by time is what stops the
+    // feet sliding when the mount is moving slowly.
+    beat: 0,
+    stride: 0,
+    bumped: 0,           // seconds left before this body can be in another contact
+    // Says which side of the height rule this body is on. Written here as well as in `makeFoe` so
+    // the field always exists: a rule that asks `a.foe === b.foe` must never compare two undefineds
+    // and conclude they are on the same side.
+    foe: false,
+  };
+}
+
+/**
+ * A foe. Same body, same physics, same lance as a player — and that is the point.
+ *
+ * The height rule is the only rule of the game, so the moment a foe flies by different numbers the
+ * rule stops being a rule and becomes a table of special cases. What differs is who supplies the
+ * intent: a player's comes from the keys, a foe's from `_wander`.
+ */
+export function makeFoe(index, pad, kind = "deriva") {
+  return {
+    ...makePilot(index, pad),
+    foe: true,
+    kind,
+    // The wander's state. Held on the body rather than in a closure for the same reason the seed is
+    // held on the world: a game that cannot be copied cannot be replayed.
+    whim: 0,
+    lean: 0,
+    aim: pad.y,
+    since: 0,
+    // Quante volte è stato spento, e se è finito. Fuori da `makeFoe` quando un nemico torna dalla
+    // sua cella, perché **il conto non riparte**: sono tre spegnimenti in tutto, non tre per
+    // classe, o il Vertice sarebbe l'unica classe senza uscita.
+    downs: 0,
+    done: false,
+    // The Vertice's window. `burst` counts down while it is out-climbing you; `spent` counts down
+    // afterwards, while it cannot gain altitude; `hold` is the height it may not go above during
+    // that time. Zero on every other class, and read by the renderer to show the window.
+    burst: 0,
+    spent: 0,
+    hold: 0,
+  };
+}
+
+/**
+ * La cella lasciata da un nemico spento.
+ *
+ * **Eredita la velocità**, non solo la posizione: un nemico speronato a tutta velocità lascia una
+ * cella che continua per la sua strada, e quella è l'unica cella che si può ancora prendere al
+ * volo. Ereditare solo il posto avrebbe fatto cadere tutto a piombo, e la presa al volo sarebbe
+ * stata una regola che non si può usare.
+ *
+ * `kind` è già la classe promossa: è quello che uscirà se la lasci schiudere, ed è quello che la
+ * cella mostra col suo colore. Chi la vede sa che cosa sta lasciando lì.
+ */
+export function makeCella(world, foe) {
+  return {
+    from: foe.index,
+    kind: PROMOTION[foe.kind] || KIND_NAMES[0],
+    x: foe.x,
+    y: foe.y,
+    vx: foe.vx,
+    vy: foe.vy,
+    grounded: false,
+    alive: true,
+    // Se sta affondando nel metallo. È uno stato a parte e non `alive` a metà, perché una cella che
+    // affonda non fa più niente di quello che fa una cella: non cade, non rimbalza, non si schiude,
+    // non si raccoglie. Esiste solo per essere vista finire.
+    sinking: false,
+    hatch: hatchTime(world.wave),
+    // Se ha toccato qualcosa di solido: un ripiano, il soffitto, il fianco di una piattaforma.
+    // **Finché è falso la cella non si può raccogliere**, e questa è la regola che rende visibile
+    // tutto il meccanismo — la cella cade sotto i tuoi occhi, e nel frattempo decidi dove andare a
+    // prenderla e se ci arrivi prima che il metallo se la mangi.
+    touched: false,
+  };
+}
+
+/**
+ * A pad with nothing near it, or the fallback.
+ *
+ * `clear` is generous on purpose: appearing next to something is how a player loses a life to a
+ * decision they were never offered.
+ */
+export function freePad(world, clear = 150) {
+  const taken = bodies(world);
+  const order = [...PADS].sort(() => (_random(world) < 0.5 ? -1 : 1));
+  for (const pad of order) {
+    const busy = taken.some((body) =>
+      Math.abs(deltaX(body.x, pad.x)) < clear && Math.abs(body.y - pad.y) < clear);
+    if (!busy) return pad;
+  }
+  return FALLBACK_PAD;
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  p u b l i c
+// -----------------------------------------------------------------------------------------------------------------
+
+export const NO_INTENT = Object.freeze({ left: false, right: false, flapHeld: false, flaps: 0 });
+
+// `foes` defaults to none, and deliberately: every test written for the flight model asks for a
+// world and expects to be alone in it. A default of one would have quietly put a second body into
+// forty checks about landing, drag and the ceiling, and the failures would have looked like physics.
+export function create(seed = 1, players = 1, foes = 0) {
+  const world = {
+    rng: seed | 0,
+    seed: seed | 0,
+    time: 0,
+    players,
+    pilots: [],
+    foes: [],
+    score: 0,
+    // How wound up the field is. Zero at the start, and it earns its way up.
+    frenesia: 0,
+    // Le celle in campo, e a che ondata siamo. L'ondata non ha ancora un generatore — quello è la
+    // Fase 5 — ma il numero serve già qui, perché la schiusa accelera di ondata in ondata.
+    celle: [],
+    wave: 0,
+    // A che punto è la scala delle celle: quante ne hai raccolte di fila in questa ondata e con
+    // questa vita. Zero vuol dire che la prossima vale venticinque.
+    ladder: 0,
+    // What the last fight did, for the renderer and the tests. Not a log: one line, overwritten.
+    // A history belongs to the phase that has a HUD to show it.
+    last: null,
+    // Which removable platforms are gone this wave. Empty until the wave generator arrives.
+    removed: [],
+  };
+  for (let i = 0; i < players; i += 1) {
+    world.pilots.push(makePilot(i, freePad(world)));
+  }
+  startWave(world, foes);
+  return world;
+}
+
+/**
+ * L'ondata successiva: campo pulito, nemici nuovi, scala azzerata.
+ *
+ * **Non è il generatore di ondate**, che è la Fase 5 e decide da sé la miscela, quali piattaforme
+ * togliere e con che ritmo. Questo mette in campo l'elenco che gli viene passato, e serve perché
+ * due cose che la Fase 4 introduce hanno bisogno di un confine d'ondata per esistere: la schiusa,
+ * che accelera di ondata in ondata, e la scala del punteggio, che si azzera lì.
+ *
+ * `roster` è o un numero — tutte Derive — o l'elenco delle classi da mettere in aria.
+ */
+export function startWave(world, roster = 0) {
+  world.wave = (world.wave || 0) + 1;
+  world.ladder = 0;
+  world.celle = [];
+  world.foes = [];
+  const list = Array.isArray(roster) ? roster : new Array(roster).fill(KIND_NAMES[0]);
+  list.forEach((kind, i) => world.foes.push(makeFoe(i, freePad(world), kind)));
+  return world;
+}
+
+/**
+ * L'ondata è finita: nessun nemico in campo, nessuna cella da raccogliere.
+ *
+ * Un nemico chiuso in una cella **non** è finito — è la cella che decide se torna o no — quindi
+ * questa non è «nessuno vola», è «non resta niente da fare».
+ */
+export function cleared(world) {
+  return (world.foes || []).every((foe) => foe.done)
+    && !(world.celle || []).some((cella) => cella.alive);
+}
+
+/**
+ * Everyone in the air, players and foes together.
+ *
+ * Almost everything that is not the flight model wants this list and not one of the two: who is
+ * where, who is protected, who may be fought. Keeping the two arrays and joining them here — rather
+ * than keeping one array and filtering it — means the intent loop cannot accidentally hand a foe a
+ * player's keys.
+ */
+export function bodies(world) {
+  return [...world.pilots, ...(world.foes || [])].filter((b) => b.alive);
+}
+
+/** The platforms actually present, which is what the resolver has to be handed. */
+export function decks(world) {
+  return PLATFORMS.filter((p) => !world.removed.includes(p.id));
+}
+
+/** Where the roof is, where the metal starts, how thick a ledge is. The resolver's whole world. */
+export const BOUNDS = { ceiling: CEILING, melt: MELT, deck: DECK };
+
+/**
+ * One step.
+ *
+ * `intents` is an array, one entry per pilot, **even when there is one pilot**. Turning a singular
+ * into a list later is not a phase: it is a signature change that touches every collision, every
+ * score, the spawn, the HUD, the sound and the autopilot.
+ *
+ * The flap count is consumed here, by this function, rather than by the caller. The alternative
+ * looked tidier — it kept `step` free of side effects on its argument — and it required the caller
+ * to mutate the intent between one step and the next, which is worse and less honest.
+ */
+export function step(world, intents, dt = STEP) {
+  world.time += dt;
+  const ledges = decks(world);
+  for (let i = 0; i < world.pilots.length; i += 1) {
+    const pilot = world.pilots[i];
+    if (!pilot.alive) continue;
+    _stepPilot(world, pilot, intents[i] || NO_INTENT, ledges, dt);
+  }
+  _frenzy(world, dt);
+  // Speed only. The frenzy must never touch the beat or gravity: those decide altitude, and
+  // altitude is the rule.
+  const boost = 1 + world.frenesia;
+  for (const foe of world.foes || []) {
+    if (!foe.alive) continue;
+    _stepPilot(world, foe, _wander(world, foe, dt), ledges, dt, boost);
+  }
+  _stepCelle(world, ledges, dt);
+  // After everyone has moved, and never during. Settling a fight inside the movement loop means the
+  // body that happens to be stepped first is the one whose position the rule reads — so the same
+  // pass would be won or lost depending on the order of an array.
+  _fights(world);
+  // La raccolta dopo il duello, e non prima: un passaggio che spegne un nemico lascia una cella
+  // **in questo stesso passo**, e quella cella è addosso a chi l'ha appena fatta. Raccogliendo
+  // prima, la cella nata da un abbattimento aspetterebbe un passo intero prima di poter essere
+  // presa — un sessantesimo di secondo in cui il dodo l'ha già oltrepassata a tutta velocità.
+  _collects(world);
+  world.celle = world.celle.filter((cella) => cella.alive);
+  return world;
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  p r i v a t e
+// -----------------------------------------------------------------------------------------------------------------
+
+function _stepPilot(world, pilot, intent, ledges, dt, boost = 1) {
+  if (pilot.guard > 0) pilot.guard = Math.max(0, pilot.guard - dt);
+  if (pilot.beat > 0) pilot.beat = Math.max(0, pilot.beat - dt);
+  if (pilot.bumped > 0) pilot.bumped = Math.max(0, pilot.bumped - dt);
+
+  // A beat is an edge, and at most one lands in a step. Without the clamp a dropped frame is a
+  // triple-height jump and a tab coming back from the background is a jump of two hundred: the
+  // fixed-step loop can run up to 240 steps in one frame, and every one of them would take the
+  // whole count.
+  const beats = Math.min(1, intent.flaps | 0);
+  if (beats > 0) {
+    // Guarded, and not for tidiness: `NO_INTENT` is frozen and is what a pilot without a controller
+    // is handed, so an unconditional decrement throws the moment a second pilot exists without a
+    // second set of keys. Found by the test, which is the only place two pilots existed at first.
+    intent.flaps -= beats;
+    pilot.vy = Math.max(-PILOT.maxClimb, pilot.vy - PILOT.flap);
+    pilot.grounded = false;
+    // Long enough for the four drawn wing frames to be seen as a stroke rather than a flicker. Only
+    // the renderer reads it; no rule depends on it.
+    pilot.beat = 0.32;
+  }
+
+  // Facing is a state of its own, separate from motion: standing still and looking right is a
+  // legal position, and it is the one the height rule is fought from.
+  if (intent.left && !intent.right) pilot.facing = -1;
+  else if (intent.right && !intent.left) pilot.facing = 1;
+
+  const push = (intent.right ? 1 : 0) - (intent.left ? 1 : 0);
+  const accel = pilot.grounded ? PILOT.groundAccel : PILOT.airAccel;
+  const drag = pilot.grounded ? PILOT.groundDrag : PILOT.airDrag;
+
+  const top = PILOT.maxSpeed * boost;
+  if (push !== 0) pilot.vx += push * accel * boost * dt;
+  else pilot.vx -= pilot.vx * Math.min(1, drag * dt);
+  pilot.vx = Math.max(-top, Math.min(top, pilot.vx));
+
+  if (!pilot.grounded) {
+    pilot.vy = Math.min(PILOT.maxFall, pilot.vy + PILOT.gravity * dt);
+  }
+
+  const hit = resolve(pilot, PILOT, ledges, BOUNDS, dt);
+  wrapX(pilot);
+
+  pilot.stride = pilot.grounded ? pilot.stride + Math.abs(pilot.vx) * dt : 0;
+
+  if (hit.melted) {
+    // For now the metal simply puts you back. Lives, the score and the wave belong to a later
+    // phase, and inventing them here would mean writing them twice.
+    //
+    // A foe goes away and comes back on its own clock, which is the same path a downed foe takes:
+    // the metal is not a special case, it is just another way of losing.
+    if (pilot.foe) _lower(world, pilot);
+    else _return(world, pilot);
+  }
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  t h e   w a n d e r
+// -----------------------------------------------------------------------------------------------------------------
+
+/**
+ * A foe's intent for this step. Drift: it goes where it feels like and reacts to nothing.
+ *
+ * Two things it is not. It is not a path — it produces the same `{left, right, flaps}` a player
+ * produces, so it flies by the flight model and cannot cheat by construction. And it is not random
+ * per step: it draws from the world's generator, so a seed replays exactly, which is what the
+ * attract loop and the app card's screenshot both stand on.
+ *
+ * It also holds an altitude rather than a climb rate. That sounds like a detail and is the reason
+ * it never drowns: a foe beating at a fixed rate sinks whenever the rate is a little under a hover,
+ * and 'a little under' is most of the range.
+ */
+function _wander(world, foe, dt) {
+  const breed = KINDS[foe.kind] || KINDS.deriva;
+  const prey = _prey(world, foe);
+  const chasing = prey && breed.chases && foe.index < _hunting(world);
+
+  foe.whim -= dt;
+  if (foe.whim <= 0) {
+    foe.whim = FOE.whimShort + _random(world) * (FOE.whimLong - FOE.whimShort);
+    foe.lean = Math.floor(_random(world) * 3) - 1;               // -1, 0 or 1
+    // Never within a body's height of the metal, and never right under the roof: both are places
+    // where the height rule stops being a choice for whoever is at the other end of it.
+    const low = CEILING + PILOT.h;
+    const high = MELT - PILOT.h * 2;
+    const band = breed.high ? (low + high) / 2 : high;           // the Vertice lives up top
+    foe.aim = low + _random(world) * (band - low);
+  }
+
+  // **Deriva wakes up if you fly over it.** Its one reaction, and it exists to close the cheapest
+  // tactic in the game: park above the ones that ignore you and pick them off at leisure.
+  if (breed.wakes && prey && prey.y < foe.y - PILOT.h
+      && Math.abs(deltaX(foe.x, prey.x)) < PILOT.w * 1.5) {
+    foe.aim = Math.min(foe.aim, prey.y - PILOT.h / 2);
+    foe.lean = Math.sign(deltaX(foe.x, prey.x));
+  }
+
+  if (chasing) {
+    foe.lean = Math.sign(deltaX(foe.x, prey.x)) || foe.lean;
+    // Level with you, or a shade above: level means you have to climb to win, and doing that often
+    // enough puts the roof behind you. A shade, because dead level is inside the tie band, and a
+    // hunter that only ever draws is not a hunter.
+    if (breed.matches) foe.aim = prey.y - breed.matches;
+    if (breed.high) foe.aim = Math.min(foe.aim, prey.y - PILOT.h / 2);
+  }
+
+  _burst(world, foe, breed, prey, dt);
+  if (foe.spent > 0) foe.aim = Math.max(foe.aim, foe.hold);      // may hold and sink, never rise
+
+  // **It beats for where it is going, not for where it is**, and that is the difference between a
+  // foe that holds a height and one that drowns.
+  //
+  // Worked out rather than guessed. Beating only once below the aim, a foe falling at the terminal
+  // 620 units a second needs about six beats to stop — 1.2 seconds at the rate above, during which
+  // it falls close to four hundred units. From an aim in the lower half of the band that is straight
+  // through the metal, and it would have happened perhaps once a minute: often enough to look like
+  // the game killing its own foes, rare enough to survive a short test.
+  //
+  // Looking half a second ahead bounds the fall instead: the beating starts far enough above the aim
+  // that the speed at that point can never be the terminal one, because there was not enough room
+  // left to reach it.
+  const LOOK = 0.55;
+  const rate = foe.burst > 0 ? breed.beats * 1.5 : breed.beats;
+  // While it is spent it may beat to stop a fall, and never once it is back where it started. The
+  // aim alone was not enough: the look-ahead beats *before* reaching the target, so a Vertice
+  // dropping fast climbed a few units past its ceiling — three, measured, which is a third of the
+  // tie band and therefore able to decide a pass in the window that is supposed to be its weakness.
+  const pinned = foe.spent > 0 && foe.y <= foe.hold;
+  foe.since += dt;
+  let flaps = 0;
+  if (!pinned && foe.y + foe.vy * LOOK > foe.aim && foe.since >= 1 / rate) {
+    foe.since = 0;
+    flaps = 1;
+  }
+  return { left: foe.lean < 0, right: foe.lean > 0, flapHeld: false, flaps };
+}
+
+/**
+ * The Vertice's window, opened and closed.
+ *
+ * Nothing here needs to be shown by a separate marker: the wings are drawn from `beat`, so a foe
+ * beating half again as fast **looks** it, and one that has stopped climbing glides. The rule
+ * announces itself by being played.
+ */
+function _burst(world, foe, breed, prey, dt) {
+  if (!breed.burst) return;
+
+  if (foe.burst > 0) {
+    foe.burst = Math.max(0, foe.burst - dt);
+    if (foe.burst === 0) {
+      foe.spent = breed.spent;
+      foe.hold = foe.y;                    // from here it may sink, and may not rise
+    }
+    return;
+  }
+  if (foe.spent > 0) {
+    foe.spent = Math.max(0, foe.spent - dt);
+    return;
+  }
+  if (prey && Math.abs(deltaX(foe.x, prey.x)) < breed.near
+      && Math.abs(foe.y - prey.y) < breed.near) {
+    foe.burst = breed.burst;
+  }
+}
+
+/** The nearest living player, or null when there is nobody to react to. */
+function _prey(world, foe) {
+  let best = null;
+  let near = Infinity;
+  for (const pilot of world.pilots) {
+    if (!pilot.alive) continue;
+    const span = Math.hypot(deltaX(foe.x, pilot.x), foe.y - pilot.y);
+    if (span < near && span < FOE.notice) { near = span; best = pilot; }
+  }
+  return best;
+}
+
+/** How many foes are hunting by now. */
+export function hunting(world) {
+  return _hunting(world);
+}
+
+function _hunting(world) {
+  return HUNT.first + Math.floor((world.time || 0) / HUNT.every);
+}
+
+/**
+ * The frenzy, moved one step towards where the field says it should be.
+ *
+ * Up faster than down, so a crowd is felt at once and the quiet afterwards has to be earned.
+ */
+function _frenzy(world, dt) {
+  const crowd = Math.max(0, bodies(world).length - 1);
+  const target = Math.min(FRENZY.max, crowd * FRENZY.per);
+  const rate = target > world.frenesia ? FRENZY.rise : FRENZY.fall;
+  const stride = rate * dt;
+  world.frenesia += Math.max(-stride, Math.min(stride, target - world.frenesia));
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  l e   c e l l e
+// -----------------------------------------------------------------------------------------------------------------
+
+/**
+ * Le celle, mosse di un passo: cadono, rimbalzano, si posano, e prima o poi si schiudono.
+ *
+ * Stessa gravità dei piloti e stesso risolutore. Quello che una cella ha in più è il rimbalzo, che
+ * sta nel materiale passato al risolutore e non in un ramo scritto qui: il terreno non deve sapere
+ * che cos'è una cella, deve sapere che questo corpo rimbalza e quello no.
+ */
+function _stepCelle(world, ledges, dt) {
+  for (const cella of world.celle) {
+    if (!cella.alive) continue;
+
+    if (cella.sinking) {
+      // Scende e basta, dritta, finché non è tutta sotto la superficie. Niente gravità e niente
+      // risolutore: sotto il metallo non c'è terreno da risolvere, c'è metallo.
+      cella.y += CELLA.sink * dt;
+      if (cella.y - CELLA.h / 2 >= MELT) cella.alive = false;
+      continue;
+    }
+
+    if (!cella.grounded) {
+      cella.vy = Math.min(CELLA.maxFall, cella.vy + PILOT.gravity * dt);
+    }
+    cella.vx -= cella.vx * Math.min(1, CELLA.drag * dt);
+
+    const hit = resolve(cella, CELLA, ledges, BOUNDS, dt);
+    wrapX(cella);
+
+    // **Toccato è toccato**, qualunque cosa abbia toccato. Il raddoppio premia una presa in aria
+    // pulita, e una cella che ha rimbalzato una volta sul soffitto e sta ancora volando non è più
+    // quella cosa lì. Il risolutore distingue il posarsi dal rimbalzare proprio per poterlo dire.
+    if (hit.landed || hit.bounced || hit.hitCeiling || hit.hitSide) cella.touched = true;
+
+    if (hit.melted) {
+      // Persa, e il conto è chiuso qui: il nemico che ci stava dentro non torna e non paga niente a
+      // nessuno. È anche il modo in cui un nemico che finisce nella colata sparisce senza un ramo
+      // apposta — lascia la sua cella dentro il metallo, e il metallo se la prende.
+      //
+      // Quello che resta è solo da vedere. La cella passa ad affondare, che è uno stato in cui non
+      // fa più niente: l'esito non dipende da quanto ci mette.
+      cella.sinking = true;
+      cella.vx = 0;
+      cella.vy = 0;
+      _finish(world, cella);
+      continue;
+    }
+
+    cella.hatch -= dt;
+    if (cella.hatch <= 0) _hatch(world, cella);
+  }
+}
+
+/**
+ * Una cella che si schiude: il nemico torna, **di una classe più alta**, dove la cella stava.
+ *
+ * Dove stava, e non su una piazzola libera: la cella si è posata lì sotto i tuoi occhi, e farla
+ * riapparire dall'altra parte del campo toglierebbe il senso a tutto il meccanismo — la cella è
+ * una cosa che sai dov'è e che stai decidendo se andare a prendere.
+ *
+ * **`downs` sopravvive alla schiusa.** È il conto degli spegnimenti di quel nemico, non della
+ * classe che porta adesso: senza, promuovere azzererebbe il contatore e il tetto dei tre non
+ * arriverebbe mai.
+ *
+ * E quello che esce è **il cavaliere già in sella**, non un pilota a piedi da recuperare. Il piano
+ * prevedeva il passaggio intermedio — un cavaliere disarcionato, un ornitottero senza padrone che
+ * entra a riprenderlo, e la finestra per arrivarci prima tu — ed è stato tolto: sono due pose in
+ * più da disegnare e da mantenere, un secondo tipo di corpo con la sua fisica e la sua rotta, per
+ * una finestra che dura un paio di secondi. La cella dà già la scelta che serve, e la dà mentre
+ * cade.
+ */
+function _hatch(world, cella) {
+  cella.alive = false;
+  const foe = (world.foes || []).find((f) => f.index === cella.from);
+  if (!foe) return;
+  const downs = foe.downs;
+  Object.assign(foe, makeFoe(foe.index, { x: cella.x, y: cella.y + CELLA.h / 2 }, cella.kind));
+  foe.downs = downs;
+}
+
+/** Ogni cella addosso a un giocatore, raccolta. */
+function _collects(world) {
+  for (const pilot of world.pilots) {
+    if (!pilot.alive) continue;
+    for (const cella of world.celle) {
+      if (!cella.alive) continue;
+      // Una cella che sta affondando non si prende: il metallo l'ha già presa, e quello che si vede
+      // è il fatto, non una finestra per rimediare.
+      if (cella.sinking) continue;
+      // **In volo non si prende.** Una cella nasce dove stava il nemico, cioè addosso a chi l'ha
+      // appena speronato: senza questo cancello veniva raccolta nel passo stesso in cui compariva,
+      // e di tutto il meccanismo si vedeva un uovo che lampeggiava una volta.
+      if (!cella.touched) continue;
+      if (Math.abs(deltaX(pilot.x, cella.x)) >= (PILOT.w + CELLA.w) / 2) continue;
+      if (Math.abs(pilot.y - cella.y) >= (PILOT.h + CELLA.h) / 2) continue;
+      _collect(world, cella);
+    }
+  }
+}
+
+/**
+ * Una cella raccolta, e quanto vale.
+ *
+ * Una moltiplicazione sola, la scala, e premia il ripulire: la seconda cella di fila vale il doppio
+ * della prima, e chi abbatte e tira dritto ricomincia sempre da venticinque.
+ *
+ * Ci passa anche la raccolta d'ufficio del terzo spegnimento, che non è una raccolta ma una
+ * scrittura contabile — e siccome la scala è l'unica cosa che moltiplica, non c'è più nessun modo
+ * per cui una scrittura contabile possa pagare come una manovra.
+ */
+function _collect(world, cella) {
+  cella.alive = false;
+  const worth = CELL_POINTS[Math.min(world.ladder, CELL_POINTS.length - 1)];
+  world.ladder += 1;
+  world.score += worth;
+  world.last = { kind: "cella", at: world.time, points: worth, classe: cella.kind };
+  _finish(world, cella);
+}
+
+/** Il nemico che stava in questa cella non torna più: raccolto, o perso nella colata. */
+function _finish(world, cella) {
+  const foe = (world.foes || []).find((f) => f.index === cella.from);
+  if (foe) foe.done = true;
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  t h e   h e i g h t   r u l e
+// -----------------------------------------------------------------------------------------------------------------
+
+/** Every pair that is touching, settled once each. */
+function _fights(world) {
+  const all = bodies(world);
+  for (let i = 0; i < all.length; i += 1) {
+    for (let j = i + 1; j < all.length; j += 1) {
+      const a = all[i];
+      const b = all[j];
+      // The list was taken before the first pair was settled, so by now it can hold a body that has
+      // just been put out. Without this, a foe caught between two players in the same step would be
+      // downed twice and paid for twice — which needs two players to happen at all, and would have
+      // sat here unnoticed until the phase that adds them.
+      if (!a.alive || !b.alive) continue;
+      // Foes ignore each other, and so do two players: a game where your friend's mistake kills you
+      // is a different game, and this one is not it.
+      //
+      // They pass through each other as well, for now. Making bodies on the same side push apart is
+      // a change to how a crowd behaves, and there is no crowd yet — nine foes and a claw arrive in
+      // Fase 5, and that is where it can be judged against something real instead of guessed at.
+      if (a.foe === b.foe) continue;
+      if (a.bumped > 0 || b.bumped > 0) continue;
+      if (!_touching(a, b)) continue;
+      _settle(world, a, b);
+    }
+  }
+}
+
+/** Two hitboxes overlapping, measured the short way round the field. */
+function _touching(a, b) {
+  return Math.abs(deltaX(a.x, b.x)) < PILOT.w && Math.abs(a.y - b.y) < PILOT.h;
+}
+
+/**
+ * One pass, decided.
+ *
+ * The heights compared are the two lance tips and nothing else — not the body centres, which differ
+ * from the tips by `lanceRise` and would quietly shift every outcome by sixteen units.
+ */
+function _settle(world, a, b) {
+  // A body still protected cannot lose and cannot win — but it is not a ghost. Before this, the two
+  // slid straight through one another, which is the one thing on the field that looks like a defect
+  // rather than a rule: everything else in the game stops when it meets something.
+  if (a.guard > 0 || b.guard > 0) {
+    _bounce(a, b, PILOT.shove);
+    return;
+  }
+
+  const ta = lanceTip(a).y;
+  const tb = lanceTip(b).y;
+
+  if (Math.abs(ta - tb) <= TIE) {
+    _bounce(a, b, PILOT.shove);
+    world.last = { kind: "pari", at: world.time };
+    return;
+  }
+
+  // Down the screen is up the numbers, so the smaller y is the higher rider.
+  const winner = ta < tb ? a : b;
+  const loser = winner === a ? b : a;
+
+  // The winner is knocked back before the loser is taken off the field, because the direction of
+  // the knock is read from where the loser was.
+  _recoil(winner, loser);
+
+  if (loser.foe) {
+    const worth = (KINDS[loser.kind] || KINDS.deriva).points;
+    _lower(world, loser);
+    world.score += worth;
+    world.last = { kind: "abbattuto", at: world.time, points: worth, classe: loser.kind };
+  } else {
+    _return(world, loser);
+    world.last = { kind: "perso", at: world.time };
+  }
+}
+
+/** Both riders thrown apart, level for level: nobody won this one. */
+function _bounce(a, b, strength) {
+  const side = Math.sign(deltaX(a.x, b.x)) || 1;
+  const speed = PILOT.maxSpeed * strength;
+  a.vx = -side * speed;
+  b.vx = side * speed;
+  a.grounded = false;
+  b.grounded = false;
+  a.bumped = PILOT.bumpFor;
+  b.bumped = PILOT.bumpFor;
+}
+
+/**
+ * The winner knocked back from what it hit.
+ *
+ * The first version halved the winner's speed and added a small push the other way, on the argument
+ * that reversing a fast rider would punish the best-aimed pass. Watched on the screen, that reading
+ * was wrong twice over. A rider who dives in at three hundred and comes out at seventy-five is
+ * still going the same way, so **nothing happens that the eye can catch** — and the argument does
+ * not hold either, because the foe is already down and the points already counted. Being thrown
+ * back off something you have just speared is not a punishment; it is the evidence that you speared
+ * it.
+ *
+ * So it is a bounce, with the shape a bounce has: a fixed part, felt even from a standstill, plus a
+ * share of the closing speed, so that the harder the pass the further it throws. Capped, because at
+ * full speed the uncapped version threw the winner across a third of the field.
+ *
+ * And it goes back along the line between the two bodies, which is what makes a drop onto a foe's
+ * head throw the winner upward instead of sideways. Since winning means being the higher of the
+ * two, that line always points somewhat up: every kill lifts a little, a kill made by falling
+ * straight down lifts a lot.
+ *
+ * That upward part is bought altitude, and altitude is what the game is about — so it is worth
+ * saying what the trade is rather than pretending there is none. It is capped at the wingbeat's own
+ * climb, so it can never take a rider higher than flying would; it decays, because gravity is still
+ * there; and it is only paid to somebody who was already above a foe and dived on it, which is the
+ * one approach the height rule already rewards. An earlier version refused any vertical component
+ * at all, on the strength of a *fixed* hop that was either invisible or rule-breaking. A bounce
+ * shaped by the approach is a different thing, and it is earned.
+ */
+function _recoil(winner, from) {
+  // The line from what was hit to whoever hit it. Below a pixel apart there is no line to speak of,
+  // and straight up is the answer that matches how the two got there.
+  let nx = deltaX(from.x, winner.x);
+  let ny = winner.y - from.y;
+  const span = Math.hypot(nx, ny);
+  if (span < 1) { nx = 0; ny = -1; } else { nx /= span; ny /= span; }
+
+  const closing = Math.max(0, -(winner.vx * nx + winner.vy * ny));
+  const push = PILOT.maxSpeed * PILOT.recoil + closing * PILOT.recoilBack;
+
+  const sideways = PILOT.maxSpeed * PILOT.recoilCap;
+  const rise = PILOT.maxClimb * PILOT.recoilRise;
+  winner.vx = Math.max(-sideways, Math.min(sideways, nx * push));
+  winner.vy = Math.max(-rise, Math.min(PILOT.maxFall, ny * push));
+  if (winner.vy < 0) winner.grounded = false;
+  winner.bumped = PILOT.bumpFor;
+}
+
+/**
+ * Un nemico spento: sparisce dal campo e lascia una cella al suo posto.
+ *
+ * Non torna più da solo. Prima aspettava un secondo e mezzo e rientrava com'era, e abbatterlo era
+ * un punteggio senza conseguenze; adesso quello che succede dopo lo decidi tu, andando a prendere
+ * la cella o lasciandola schiudere.
+ *
+ * Al terzo spegnimento la cella non arriva mai a terra: viene **raccolta d'ufficio**, col suo
+ * punteggio, e quel nemico è finito qualunque classe portasse. Senza questa uscita un'ondata può
+ * non finire mai, perché il Vertice si promuove in sé stesso.
+ */
+function _lower(world, foe) {
+  foe.alive = false;
+  foe.downs += 1;
+  const cella = makeCella(world, foe);
+  if (foe.downs >= DOWNS) {
+    _collect(world, cella);
+    return;
+  }
+  world.celle.push(cella);
+}
+
+/**
+ * A player put back: a fresh body on a free pad, protected.
+ *
+ * E la scala delle celle torna a venticinque. È il secondo dei due azzeramenti — l'altro è
+ * l'inizio dell'ondata — e sta qui per la stessa ragione per cui l'altro sta là: la scala è un
+ * premio per come stai giocando adesso, e una scala che sopravvive a chi l'ha guadagnata premia
+ * l'ondata invece del giocatore.
+ */
+function _return(world, pilot) {
+  pilot.alive = false;
+  const pad = freePad(world);
+  Object.assign(pilot, makePilot(pilot.index, pad));
+  world.ladder = 0;
+}

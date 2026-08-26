@@ -26,3 +26,11 @@ _src/fonti/
 # Profilo temporaneo di Chrome, creato e cancellato da make_screenshots.py. Compare solo se lo
 # script si interrompe a metà.
 /_src/.chrome-profile/
+
+# I fogli di SPRONIA che non sono stati usati: quattro tentativi generati da un modello, tutti
+# scartati, 9,5 MB di JPEG. Il metodo è cambiato — si disegna una posa per volta su fondo
+# trasparente, e il foglio lo monta uno script — quindi questi non sono la fonte di niente e non
+# tornano nel giro. Restano sul disco come promemoria di cosa non ha funzionato; in git sarebbero
+# 9,5 MB che ogni clone paga per sempre, in un repository servito da Pages.
+# `archivio/cavaliere-posa.png` invece resta tracciato: è la posa da cui viene il cavaliere di oggi.
+/app/spronia/art/archivio/*.jpeg

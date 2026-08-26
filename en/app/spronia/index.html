@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SPRONIA — a flying joust in the browser | G&amp;G Technologies</title>
+  <meta name="description" content="You fly by flapping, and on contact the higher rider wins. It runs in the browser: no account, no server, and the high score table stays on this computer.">
+  <meta name="author" content="G&amp;G Technologies Srl">
+  <meta name="robots" content="noindex, follow">
+  <meta name="theme-color" content="#0d1220">
+  <link rel="canonical" href="https://ggtechnologies.sm/en/app/spronia/">
+  <link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/app/spronia/">
+  <link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/app/spronia/">
+  <link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/app/spronia/">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="G&amp;G Technologies">
+  <meta property="og:title" content="SPRONIA — a flying joust in the browser | G&amp;G Technologies">
+  <meta property="og:description" content="You fly by flapping, and on contact the higher rider wins. It runs in the browser: no account, no server, and the high score table stays on this computer.">
+  <meta property="og:url" content="https://ggtechnologies.sm/en/app/spronia/">
+  <meta property="og:image" content="https://ggtechnologies.sm/assets/og-app-spronia-en.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="en_GB">
+  <meta property="og:locale:alternate" content="it_IT">
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SPRONIA — a flying joust in the browser | G&amp;G Technologies">
+  <meta name="twitter:description" content="You fly by flapping, and on contact the higher rider wins. It runs in the browser: no account, no server, and the high score table stays on this computer.">
+  <meta name="twitter:image" content="https://ggtechnologies.sm/assets/og-app-spronia-en.jpg">
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../../../assets/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../../../assets/favicon-32.png">
+  <script>
+    (function () {
+      var theme = '';
+      try { theme = localStorage.getItem('gg-theme') || ''; } catch (ignored) { /* unavailable */ }
+      if (theme !== 'light' && theme !== 'dark') {
+        theme = (window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+      }
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.classList.add('js');
+    })();
+  </script>
+  <link rel="stylesheet" href="../../../assets/site.css?v=009.fcec0e10">
+  <script type="application/ld+json">
+[
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "SPRONIA",
+    "url": "https://ggtechnologies.sm/en/app/spronia/",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Any (web browser)",
+    "softwareVersion": "0.29.0",
+    "datePublished": "2026-08-14",
+    "dateModified": "2026-08-14",
+    "license": "https://www.apache.org/licenses/LICENSE-2.0",
+    "description": "You fly by flapping, and on contact the higher rider wins. It runs in the browser: no account, no server, and the high score table stays on this computer.",
+    "inLanguage": "en",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "EUR"
+    },
+    "publisher": {
+      "@id": "https://ggtechnologies.sm/#organization"
+    }
+  }
+]
+  </script>
+</head>
+<body>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs><linearGradient id="icoGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#10b981"/></linearGradient></defs></svg>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs><linearGradient id="artEdge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent-strong)"/></linearGradient><linearGradient id="artPanel" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="var(--panel-2)"/><stop offset="0.6" stop-color="var(--panel)"/></linearGradient><radialGradient id="artGlow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="var(--glow-a)"/><stop offset="1" stop-color="var(--glow-a)" stop-opacity="0"/></radialGradient></defs></svg>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <nav class="nav" aria-label="Main navigation">
+      <a href="/en/" class="brand">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><defs><linearGradient id="ggMark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5eecab"/><stop offset="1" stop-color="#10b981"/></linearGradient><mask id="ggWire"><path d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="#fff" stroke-width="13"/><path d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="#000" stroke-width="10"/></mask></defs><rect class="wire" width="100" height="100" mask="url(#ggWire)"/><path class="lit" d="M66 50 H86 A36 36 0 1 1 50 14" fill="none" stroke="url(#ggMark)" stroke-width="13" stroke-linecap="round"/><circle class="click" cx="50" cy="50" r="9" fill="none" stroke="#34d399" stroke-width="2"/><circle class="led" cx="50" cy="50" r="9"/></svg></span>
+        <span class="brand-text">
+          <span class="brand-name">G&amp;G Technologies</span>
+          <span class="brand-payoff">Powering the future</span>
+        </span>
+      </a>
+
+      <div class="nav-links" id="navLinks">
+        <a href="/en/#services">Services</a>
+        <a href="/en/podz-ai/">Podz.AI</a>
+        <a href="/en/insights/">Insights</a>
+        <a href="/en/app/">Apps</a>
+        <a href="/en/about/">About</a>
+        <a href="/en/#contact">Contact</a>
+      </div>
+
+      <div class="nav-actions">
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Tema chiaro/scuro · Light/dark theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2"/>
+            <path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.2 14.5A8.3 8.3 0 0 1 9.5 3.8a8.3 8.3 0 1 0 10.7 10.7Z"/>
+          </svg>
+        </button>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <span class="current">EN</span>
+          <a href="https://ggtechnologies.sm/app/spronia/" hreflang="it" lang="it">IT</a>
+        </div>
+        <a class="btn btn-primary nav-cta" href="mailto:info@ggtechnologies.sm?subject=Information%20request">Talk to us</a>
+        <button class="menu-toggle" id="menuToggle" aria-label="Menu" aria-expanded="false" aria-controls="navLinks"><span></span></button>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero page-hero">
+      <div class="hero-bg" aria-hidden="true">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+      </div>
+
+      <div class="container">
+        <div>
+          <nav class="breadcrumb" aria-label="Breadcrumb"><ol><li><a href="/en/">Home</a></li><li><a href="/en/app/">Apps</a></li><li aria-current="page">SPRONIA</li></ol></nav>
+          <div class="kicker">Free and open source</div>
+          <h1>There is no button for up: <span class="grad-text">you flap</span>.</h1>
+          <p class="hero-sub">Two directions and one button. The faster you flap the higher you go — and on contact the higher spur wins. Below there is molten metal.</p>
+          <p class="article-tags"><span class="tag-label">Category</span><a class="tag" href="/en/app/?tag=svago">Games</a></p>
+          <div class="hero-ctas">
+            <a class="btn btn-primary" href="/app/spronia/run/">Open the app</a>
+            <a class="btn btn-ghost" href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/spronia" rel="noopener">
+              Source code</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="article-body">
+      <div class="container">
+        <figure class="article-art app-art reveal">
+          <svg viewBox="0 0 1000 340" role="img"
+               aria-labelledby="appsproniaT appsproniaD">
+            <title id="appsproniaT">Two riders at two heights, and the height that decides</title>
+            <desc id="appsproniaD">Inside an enclosed panel, two identical squares sit at two different heights, each with a horizontal filament ahead of it. Two thin rules cross the panel at the two heights; the upper square is lit and the lower one is dim.</desc>
+            <ellipse cx="500" cy="150" rx="340" ry="170" fill="url(#artGlow)"/><rect x="40" y="53" width="920" height="233" rx="18" fill="url(#artPanel)" stroke="var(--border)"/><rect x="92.4" y="52.4" width="815.1" height="2.0" rx="1" fill="url(#artEdge)"/><rect x="104" y="136" width="791" height="2" rx="4" fill="url(#artEdge)" opacity="0.34"/><rect x="104" y="202" width="791" height="2" rx="4" fill="url(#artEdge)" opacity="0.15"/><rect x="277.8" y="136.3" width="105.8" height="2.0" rx="1" fill="url(#artEdge)"/><rect x="235" y="116" width="43.1" height="43.1" rx="2" fill="url(#artEdge)" opacity="0.92"/><rect x="616.4" y="201.7" width="105.8" height="2.0" rx="1" fill="url(#artEdge)"/><rect x="722" y="181" width="43.1" height="43.1" rx="2" fill="url(#artEdge)" opacity="0.38"/>
+          </svg>
+        </figure>
+
+        <div class="kicker">Why a second game</div>
+        <h2>One rule, and <span class="grad-text">you can see all of it</span>.</h2>
+        <div class="about-text reveal">
+          <p>The apps we publish share a technical constraint rather than a subject: they run on the machine of whoever opens them and send nothing anywhere. A game demonstrates that to everybody who will never open a file of measurements.</p>
+          <p>Here the game has one rule and it fits on a line: when two riders touch, the one whose spur is higher stays airborne and the other does not. Everything else — the inertia, the ledges, the metal on the floor — exists to make being higher at the right moment difficult.</p>
+          <p>Flight works the way a flapping machine flies: there is no command for up, there is the rate at which you beat. It is the mechanic that makes the genre recognisable, and it is also why it takes ten seconds to learn and rather longer to master.</p>
+        </div>
+        <div class="app-lists">
+          <div class="app-list does">
+            <h3>What it does</h3>
+            <ul class="ticks">
+              <li>You fly by flapping: no key climbs on its own, and holding one down counts as a single beat.</li>
+              <li>On contact the higher spur wins. Level with each other, both bounce away.</li>
+              <li>Six ledges at six different heights, over a floor of molten metal.</li>
+              <li>The field wraps horizontally: leave on the right and you come back on the left.</li>
+              <li>Two players on one keyboard, or one on the keyboard and one on a gamepad.</li>
+              <li>Works without a connection after the first visit.</li>
+              <li>Italian and English, light and dark themes, installable as an application.</li>
+            </ul>
+          </div>
+          <div class="app-list does-not">
+            <h3>What it does not do</h3>
+            <ul class="ticks">
+              <li>It sends nothing anywhere: no account, and no score on a server of ours.</li>
+              <li>There is no worldwide high score table, for the same reason.</li>
+              <li>Two players need a keyboard or a gamepad: four thumbs do not fit on a phone.</li>
+              <li>There are no purchases and no advertising.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="kicker">In brief</div>
+        <div class="about-facts page-facts reveal">
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Status</h4>
+              <p>In progress. You fly, you joust and you collect the cells: waves, the score on screen and the sound come later.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Controls</h4>
+              <p>Two directions and one flap: from the keyboard, or by pressing the field on the side you want to go. There is no command for up.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Data</h4>
+              <p>Stays on your computer. After the page has loaded the app makes no network requests.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Two players</h4>
+              <p>On one keyboard, or with a gamepad. Not on a phone.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Screen</h4>
+              <p>Fixed, with no scrolling. On a phone it wants to be held sideways.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Offline</h4>
+              <p>After the first visit it works without a connection.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Languages</h4>
+              <p>Italian and English, following the browser's language.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Licence</h4>
+              <p>Apache-2.0. The code is public and reusable, including commercially.</p>
+            </div>
+          </div>
+        </div>
+        <p class="app-meta"><span><b>Version</b> 0.29.0</span><span><b>Updated</b> 14 August 2026</span><span><b>Licence</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/spronia" rel="noopener">Source code</a></p>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="kicker">FAQ</div>
+        <h2>Frequently asked questions</h2>
+        <div class="faq-list">
+          <details class="faq-item reveal">
+            <summary>Why is there no button for up?</summary>
+            <p>Because that is the mechanic. Your height depends on how fast you beat your wings, so hovering is something you are doing rather than a state you are in. With a key you could hold, the height rule would become trivial — and the height rule is the only rule there is.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>Is this a port of an existing game?</summary>
+            <p>No. It is an original game, written by us, in the tradition of the flying-joust arcade games of the early 1980s. The mechanics of a genre appear in dozens of games and belong to nobody; the map, the numbers, the artwork and the code are ours, and no third-party name or mark appears here.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>Why is the high score table not shared?</summary>
+            <p>Because a shared table needs a server to receive the scores, and these apps do not have one. It is the same choice that makes the game usable with no connection and no account.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>Can two people play?</summary>
+            <p>Yes, on one keyboard or with a gamepad. The two sets of keys sit far apart because many keyboards will not register too many keys held at once, and if yours will not take the combination you can remap them.</p>
+          </details>
+        </div>
+        <!-- Same four buttons as an article, and they point at *this* page and not at run/. The
+             running app is noindex and its canonical already names the scheda: a link passed
+             around to a page that asks not to be indexed collects nothing. -->
+        <div class="share">
+          <span class="share-label">Share</span>
+          <a class="share-btn" href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fggtechnologies.sm%2Fen%2Fapp%2Fspronia%2F" title="Share on LinkedIn" aria-label="Share on LinkedIn" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9h4v12H3zM10 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.77-1.95 4.03 0 4.78 2.5 4.78 5.75V21h-4v-5.6c0-1.34-.03-3.06-1.9-3.06-1.9 0-2.2 1.46-2.2 2.96V21h-4z"/></svg><span>LinkedIn</span></a><a class="share-btn" href="https://x.com/intent/post?url=https%3A%2F%2Fggtechnologies.sm%2Fen%2Fapp%2Fspronia%2F&amp;text=SPRONIA%20%E2%80%94%20a%20flying%20joust%20in%20the%20browser" title="Share on X" aria-label="Share on X" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.3 3h3.1l-6.8 7.75L21.6 21h-6.3l-4.9-6.4L4.8 21H1.7l7.25-8.3L1.9 3h6.45l4.45 5.9Zm-1.1 16.1h1.7L7.9 4.8H6.05Z"/></svg><span>X</span></a><a class="share-btn" href="mailto:?subject=SPRONIA%20%E2%80%94%20a%20flying%20joust%20in%20the%20browser&amp;body=https%3A%2F%2Fggtechnologies.sm%2Fen%2Fapp%2Fspronia%2F" title="Send by email" aria-label="Send by email"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm9 8.1L20 7.2V6.6L12 12 4 6.6v.6Z"/></svg><span>Email</span></a>
+          <button class="share-btn" type="button" data-share-copy="https://ggtechnologies.sm/en/app/spronia/"
+                  data-share-done="Link copied"
+                  title="Copy the link" aria-label="Copy the link">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10.6 13.4a1 1 0 0 1 0-1.4l1.4-1.4a1 1 0 0 1 1.4 1.4l-1.4 1.4a1 1 0 0 1-1.4 0Zm-3.3 5.4a4.5 4.5 0 0 1 0-6.4l2.6-2.6 1.4 1.4-2.6 2.6a2.5 2.5 0 0 0 3.5 3.5l2.6-2.6 1.4 1.4-2.6 2.6a4.5 4.5 0 0 1-6.3 0Zm4-11.2 2.6-2.6a4.5 4.5 0 0 1 6.4 6.4l-2.6 2.6-1.4-1.4 2.6-2.6a2.5 2.5 0 0 0-3.5-3.5l-2.6 2.6Z"/></svg><span>Copy the link</span></button>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="cta-band">
+      <div class="container">
+        <h2>Need something that runs locally?</h2>
+        <p class="section-intro">If you have a case where the data must not leave the machine using it, tell us about it. A person from the team answers you, not an automated reply.</p>
+        <div class="cta-buttons">
+          <a class="btn btn-primary" href="mailto:info@ggtechnologies.sm?subject=SPRONIA%20%E2%80%94%20applications%20that%20run%20locally">Email us</a>
+          <a class="btn btn-ghost" href="tel:+3780549900824">Call us</a>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="related-grid">
+          <a class="related-card reveal" href="/en/services/on-premise-ai/">
+            <h3>On-premise AI</h3>
+            <p>How to choose between fully local, hybrid and cloud, starting from your data.</p>
+          </a>
+          <a class="related-card reveal" href="/en/services/robotics-automation/">
+            <h3>Robotics &amp; Automation</h3>
+            <p>Automation at the machine, integration with your systems, downtime measured.</p>
+          </a>
+          <a class="related-card reveal" href="/en/digisense/">
+            <h3>DigiSense®</h3>
+            <p>What sits underneath, and why your project does not start from scratch.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a href="/en/" class="brand">
+            <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><rect class="wire" width="100" height="100" mask="url(#ggWire)"/><path class="lit" d="M66 50 H86 A36 36 0 1 1 50 14" fill="none" stroke="url(#ggMark)" stroke-width="13" stroke-linecap="round"/><circle class="click" cx="50" cy="50" r="9" fill="none" stroke="#34d399" stroke-width="2"/><circle class="led" cx="50" cy="50" r="9"/></svg></span>
+            G&amp;G Technologies
+          </a>
+          <p>We design and build technology: medical wearables, robotics and artificial intelligence. Podz.AI is built on our DigiSense® framework.</p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Services</h4>
+          <ul>
+            <li><a href="/en/services/medical-wearables/">Medical wearables</a></li>
+            <li><a href="/en/services/robotics-automation/">Robotics &amp; Automation</a></li>
+            <li><a href="/en/services/artificial-intelligence/">Artificial Intelligence</a></li>
+            <li><a href="/en/services/on-premise-ai/">On-premise AI</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Products and research</h4>
+          <ul>
+            <li><a href="/en/podz-ai/">Podz.AI</a></li>
+            <li><a href="/en/projects/home-care-robot/">Home care robot</a></li>
+            <li><a href="/en/digisense/">DigiSense®</a></li>
+            <li><a href="/en/insights/">Insights</a></li>
+            <li><a href="/en/app/">Free apps</a></li>
+            <li><a href="https://ggtechnologies.sm/digisense-releases/" target="_blank" rel="noopener">Official website</a></li>
+            <li><a href="https://ggtechnologies.sm/digisense-releases/download.html" target="_blank" rel="noopener">Download</a></li>
+            <li><a href="https://github.com/G-G-Technologies-Srl/digisense-releases/releases" target="_blank" rel="noopener">Releases</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contact</h4>
+          <ul>
+            <li><a href="/en/about/">About</a></li>
+            <li><a href="mailto:info@ggtechnologies.sm">info@ggtechnologies.sm</a></li>
+            <li><a href="tel:+3780549900824">+378 0549 900824</a></li>
+            <li><a href="https://www.linkedin.com/company/gg-technologies-srl" target="_blank" rel="noopener">LinkedIn</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-legal">
+        <span>© <span id="year">2026</span> G&amp;G Technologies Srl · Via Marino Moretti 23, 47899 Serravalle (RSM) · C.O.E./VAT SM29141</span>
+        <span>DigiSense® is a registered trademark. This site uses no cookies or trackers.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../../../assets/site.js?v=001.e222d9a6" defer></script>
+</body>
+</html>

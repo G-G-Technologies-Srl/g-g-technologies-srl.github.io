@@ -1,0 +1,145 @@
+/* Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0 */
+
+/* What this app shapes differently from the shared sheet. The palette, the buttons and the app bar
+   come from `_lib/base.css`; nothing here redeclares them.
+
+   Two rules from app/CLAUDE.md that show up in this file rather than in prose:
+   headings inside a tool are sans, because nobody reads a toolbar — the serif is kept for the app's
+   own name, which is the one moment the app speaks instead of working. And a control is never
+   smaller than 44px on touch. */
+
+main {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* The field, and the panels that sit over it. The canvas is never hidden: an arcade cabinet was
+   never dark either, and a black rectangle behind a dialog reads as a crash. */
+.stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+}
+
+/* The field has a fixed palette — it is a screen inside the app, and a screen has its own colours —
+   while everything around it follows the site's two themes. What that costs is a dark rectangle
+   sitting in a light page, so the field gets a bezel: a framed screen reads as a screen, an unframed
+   one reads as a hole.
+
+   `image-rendering: pixelated` is the whole of the pixel look on this side. The canvas is painted at
+   320 x 180 and blown up by a whole multiple; without this the browser would smooth it back into
+   the thing it was drawn small to avoid. */
+#field {
+  grid-area: 1 / 1;
+  /* Il campo è il comando, quindi il browser non deve interpretare il dito da sé: senza questa
+     riga un tocco trascinato scorre la pagina e uno doppio la ingrandisce, e in tutt'e due i casi
+     il gioco perde il dito a metà manovra. */
+  touch-action: none;
+  width: 100%;
+  height: 100%;
+  min-height: 46vh;
+  display: block;
+  image-rendering: pixelated;
+  border: 3px solid var(--border-strong);
+  border-radius: 6px;
+  background: #0b0f1a;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5) inset;
+}
+
+/* The panels sit over a fixed-palette field, so they cannot borrow the page background and expect
+   to be readable. They carry their own. */
+.panel {
+  background: linear-gradient(170deg, #1b2740, #131c30 60%);
+  color: #e8ecf5;
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.panel .sub,
+.panel .how,
+.panel .small {
+  color: #aab3c9;
+}
+
+.panel {
+  grid-area: 1 / 1;
+  place-self: center;
+  width: min(560px, calc(100% - 2rem));
+  padding: 1.4rem 1.5rem 1.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: linear-gradient(170deg, var(--panel-2), var(--panel) 60%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* The 2px filament in the accent along the top edge: the site's mark for a panel that matters. */
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+}
+
+.panel .name {
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 4vw, 2.3rem);
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.panel .sub {
+  color: var(--muted);
+  margin: 0.15rem 0 1rem;
+}
+
+.panel h2 {
+  font-size: 0.95rem;
+  margin: 1.2rem 0 0.4rem;
+}
+
+.choose {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0.2rem 0 0.6rem;
+}
+
+/* The bullet is a small square in the accent, not the browser's dot. Same vocabulary as the site. */
+.how {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.how li {
+  position: relative;
+  padding-left: 1.1rem;
+  margin-bottom: 0.35rem;
+}
+
+.how li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.foot .spacer { flex: 1 1 auto; }
