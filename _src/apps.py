@@ -214,6 +214,10 @@ APPS = [
                          "fa richieste di rete."),
                 ("Dimensione", "Provata su un file da 12 MB e centomila righe: si apre in poco "
                                "più di un secondo."),
+                ("Classifica", "Resta in questo browser, su questo computer, come quella di un "
+                               "cabinato. La puoi esportare in un file e rimetterla altrove."),
+                ("Suono", "Lo genera il browser mentre giochi: non c'è nessun file audio da "
+                          "scaricare. Si spegne dalla barra in alto."),
                 ("Senza connessione", "Dopo la prima apertura funziona anche quando sei senza "
                                       "rete."),
                 ("Installazione", "Facoltativa. Si apre nel browser, e dove il sistema lo "
@@ -322,6 +326,10 @@ APPS = [
                          "network requests."),
                 ("Size", "Tested on a 12 MB file of a hundred thousand rows: it opens in a "
                          "little over a second."),
+                ("High scores", "They stay in this browser, on this computer, like a cabinet's. "
+                                "You can export them to a file and put them back elsewhere."),
+                ("Sound", "The browser generates it as you play: there is no audio file to "
+                          "download. It switches off from the bar at the top."),
                 ("Offline", "After the first visit it works without a connection."),
                 ("Installation", "Optional. It opens in the browser, and where the system allows "
                                  "it, installs like any other app."),
@@ -449,6 +457,10 @@ APPS = [
                 ("Audio", "Sintetizzato dall'app: non c'è nessun file audio da scaricare."),
                 ("Accessibilità", "Si gioca interamente da tastiera. È un gioco d'azione in tempo "
                                   "reale: serve vedere lo schermo."),
+                ("Classifica", "Resta in questo browser, su questo computer, come quella di un "
+                               "cabinato. La puoi esportare in un file e rimetterla altrove."),
+                ("Suono", "Lo genera il browser mentre giochi: non c'è nessun file audio da "
+                          "scaricare. Si spegne dalla barra in alto."),
                 ("Senza connessione", "Dopo la prima apertura funziona anche quando sei senza "
                                       "rete."),
                 ("Lingue", "Italiano e inglese, seguono la lingua del browser."),
@@ -555,6 +567,10 @@ APPS = [
                 ("Sound", "Synthesised by the app: there is no audio file to download."),
                 ("Accessibility", "It plays entirely from the keyboard. It is a real-time action "
                                   "game: you need to see the screen."),
+                ("High scores", "They stay in this browser, on this computer, like a cabinet's. "
+                                "You can export them to a file and put them back elsewhere."),
+                ("Sound", "The browser generates it as you play: there is no audio file to "
+                          "download. It switches off from the bar at the top."),
                 ("Offline", "After the first visit it works without a connection."),
                 ("Languages", "Italian and English, following your browser language."),
                 ("Licence", "Apache-2.0. The code is public and reusable, commercial work "
@@ -651,6 +667,18 @@ APPS = [
                 "Sei piattaforme a sei quote diverse, sopra un fondo di metallo fuso.",
                 "Il campo si richiude su sé stesso in orizzontale: esci a destra e rientri a "
                 "sinistra.",
+                "Chi abbatti lascia una cella: la raccogli quando ha toccato terra, oppure si "
+                "schiude e torna in volo di una classe più alta.",
+                "Uno scudo di fuoco che brucia chi tocchi, comunque lo tocchi: tre secondi, e "
+                "torna dopo dieci.",
+                "Ondate con regole diverse — solo celle, sopravvivenza, squadra, duello — "
+                "annunciate all'inizio.",
+                "Due cose escono dal metallo fuso quando ci metti troppo: una pinza che afferra "
+                "chi vola basso e una palla di fuoco che ti viene incontro.",
+                "Gettone, crediti e classifica come su un cabinato da sala giochi, con i punteggi "
+                "che restano in questo browser e si possono esportare.",
+                "Suono generato dal browser, senza nessun file audio da scaricare.",
+                "I tasti si possono cambiare, per le tastiere che non reggono la combinazione.",
                 "Due giocatori sulla stessa tastiera, o uno alla tastiera e uno al gamepad.",
                 "Funziona senza connessione dopo la prima apertura.",
                 "Italiano e inglese, tema chiaro e scuro, si installa come un'applicazione.",
@@ -666,8 +694,9 @@ APPS = [
             ],
             "facts_title": "In breve",
             "facts": [
-                ("Stato", "In lavorazione. Si vola, si duella e si raccolgono le celle: le "
-                          "ondate, il punteggio a schermo e il suono arrivano più avanti."),
+                ("Stato", "Finito e giocabile per intero: ondate, punteggio, vite, classifica "
+                          "e suono. Che ognuna delle prime sessanta ondate si possa svuotare è "
+                          "verificato da un controllo che sta nel codice, non a occhio."),
                 ("Comandi", "Due direzioni, un battito e lo scudo di fuoco: da tastiera, oppure "
                             "premendo il campo dal lato in cui vuoi andare. Non esiste un comando "
                             "per salire."),
@@ -679,6 +708,10 @@ APPS = [
                               "lo scudo di fuoco ci scappa il sangue. È tutto disegnato a pixel "
                               "grossi, ma è bene saperlo prima di darlo a un bambino."),
 
+                ("Classifica", "Resta in questo browser, su questo computer, come quella di un "
+                               "cabinato. La puoi esportare in un file e rimetterla altrove."),
+                ("Suono", "Lo genera il browser mentre giochi: non c'è nessun file audio da "
+                          "scaricare. Si spegne dalla barra in alto."),
                 ("Senza connessione", "Dopo la prima apertura funziona anche quando sei senza "
                                       "rete."),
                 ("Lingue", "Italiano e inglese, seguono la lingua del browser."),
@@ -705,6 +738,21 @@ APPS = [
                  "Sì, sulla stessa tastiera o con un gamepad. I due set di tasti stanno in zone "
                  "lontane perché molte tastiere non registrano troppi tasti premuti insieme, e "
                  "se la tua non regge la combinazione li puoi rimappare."),
+                ("Che cosa cambia da un'ondata all'altra?",
+                 "Il numero e la classe dei nemici, quali piattaforme ci sono, e ogni tanto la "
+                 "regola. Un'ondata di sole celle non ha nemici in volo: sono tutte a terra e si "
+                 "schiudono se le lasci lì. Una di sopravvivenza paga chi la finisce senza morire. "
+                 "In due c'è anche il duello, che è l'unico momento in cui colpire l'altro "
+                 "giocatore vale punti. L'ondata dice all'inizio quale delle quattro è."),
+                ("Il gettone serve a qualcosa?",
+                 "A due cose. È il gesto che un browser pretende prima di lasciar uscire un suono, "
+                 "quindi il gioco non ha bisogno di una fascia «clicca per attivare l'audio» "
+                 "incollata sopra. E conta le partite giocate su questa macchina, che è l'unico "
+                 "numero che un cabinato ha sempre saputo di sé stesso. I gettoni sono illimitati."),
+                ("Posso portare via la classifica?",
+                 "Sì. Dalla schermata della classifica esporti un file JSON leggibile e lo "
+                 "reimporti dove vuoi. Senza un server quella è l'unica copia che esiste, quindi "
+                 "vale la pena farlo prima di cambiare computer o di svuotare i dati del sito."),
             ],
             "cta_title": "Ti serve qualcosa che gira in locale?",
             "cta_text": "Se hai un caso in cui i dati non devono uscire dalla macchina di chi li "
@@ -755,6 +803,18 @@ APPS = [
                 "On contact the higher spur wins. Level with each other, both bounce away.",
                 "Six ledges at six different heights, over a floor of molten metal.",
                 "The field wraps horizontally: leave on the right and you come back on the left.",
+                "Whatever you unseat leaves a cell: collect it once it has touched down, or it "
+                "hatches and comes back a class higher.",
+                "A fire shield that burns whatever you touch, however you touch it: three "
+                "seconds, and back after ten.",
+                "Waves with rules of their own — cells only, survival, team, duel — announced as "
+                "they begin.",
+                "Two things come out of the molten metal when you take too long: a claw that "
+                "grabs whoever flies low, and a fireball that comes for you.",
+                "A high score table, counters and a coin slot as on a cabinet, with the scores "
+                "kept in this browser and exportable.",
+                "Sound generated by the browser, with no audio file to download.",
+                "The keys can be changed, for keyboards that will not take the combination.",
                 "Two players on one keyboard, or one on the keyboard and one on a gamepad.",
                 "Works without a connection after the first visit.",
                 "Italian and English, light and dark themes, installable as an application.",
@@ -771,8 +831,9 @@ APPS = [
             ],
             "facts_title": "In brief",
             "facts": [
-                ("Status", "In progress. You fly, you joust and you collect the cells: waves, "
-                           "the score on screen and the sound come later."),
+                ("Status", "Finished and playable throughout: waves, score, lives, high scores "
+                           "and sound. That each of the first sixty waves can be emptied is "
+                           "verified by a check that lives in the code, not by eye."),
                 ("Controls", "Two directions, one flap and the fire shield: from the keyboard, "
                              "or by pressing the field on the side you want to go. There is no "
                              "command for up."),
@@ -783,6 +844,10 @@ APPS = [
                 ("Content", "There is fighting. Whoever loses burns and sinks into the molten "
                             "metal, and the fire shield draws blood. It is all drawn in large "
                             "pixels, but it is worth knowing before handing it to a child."),
+                ("High scores", "They stay in this browser, on this computer, like a cabinet's. "
+                                "You can export them to a file and put them back elsewhere."),
+                ("Sound", "The browser generates it as you play: there is no audio file to "
+                          "download. It switches off from the bar at the top."),
                 ("Offline", "After the first visit it works without a connection."),
                 ("Languages", "Italian and English, following the browser's language."),
                 ("Licence", "Apache-2.0. The code is public and reusable, including commercially."),
@@ -807,6 +872,22 @@ APPS = [
                  "Yes, on one keyboard or with a gamepad. The two sets of keys sit far apart "
                  "because many keyboards will not register too many keys held at once, and if "
                  "yours will not take the combination you can remap them."),
+                ("What changes from one wave to the next?",
+                 "The number and class of the enemies, which ledges are there, and every so often "
+                 "the rule itself. A cells-only wave has nothing in the air: they are all on the "
+                 "ground and they hatch if you leave them. A survival wave pays whoever finishes "
+                 "it without dying. With two players there is also the duel, the one moment when "
+                 "hitting the other player is worth points. Each wave says which of the four it "
+                 "is as it begins."),
+                ("Does the coin do anything?",
+                 "Two things. It is the gesture a browser requires before it will let any sound "
+                 "out, so the game needs no “click to enable audio” banner pasted over it. And it "
+                 "counts the games played on this machine, which is the one number a cabinet "
+                 "always knew about itself. Coins are unlimited."),
+                ("Can I take the high score table away?",
+                 "Yes. From the table screen you export a readable JSON file and import it "
+                 "wherever you like. With no server that is the only copy there is, so it is "
+                 "worth doing before you change computer or clear the site's data."),
             ],
             "cta_title": "Need something that runs locally?",
             "cta_text": "If you have a case where the data must not leave the machine using it, "
