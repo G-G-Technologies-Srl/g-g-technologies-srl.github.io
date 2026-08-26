@@ -150,19 +150,27 @@ export function resolve(body, profile, decks, bounds, dt) {
   // standing on with its final height, not the one it had mid-fall.
   body.x += body.vx * dt;
 
+  // **`pass` salta i fianchi**, e ce l'ha una cosa sola: un corpo in fiamme, che deve arrivare alla
+  // colata da qualunque punto del campo e non può permettersi di restare incastrato contro il
+  // fianco di una piattaforma. Non è una scorciatoia — è la differenza fra una cosa che gioca e una
+  // che sta finendo di succedere: il primo si ferma contro i muri perché deve poterci contare, il
+  // secondo cade e basta. Misurato prima di scriverlo: senza, ventitré partenze su sessanta si
+  // fermavano appese a un bordo, e ci restavano.
   const top = body.y - half.h;
   const bottom = body.y + half.h;
-  for (const rect of rects) {
-    if (!_overlapsY(top, bottom, rect)) continue;
-    if (!_overlapsX(body.x - half.w, body.x + half.w, rect)) continue;
-    // Standing on the deck is not hitting its side: without this a body at rest is pushed sideways
-    // out of the platform it is standing on, one step at a time, until it falls off.
-    if (Math.abs(bottom - rect.top) < 1.0) continue;
+  if (!profile.pass) {
+    for (const rect of rects) {
+      if (!_overlapsY(top, bottom, rect)) continue;
+      if (!_overlapsX(body.x - half.w, body.x + half.w, rect)) continue;
+      // Standing on the deck is not hitting its side: without this a body at rest is pushed
+      // sideways out of the platform it is standing on, one step at a time, until it falls off.
+      if (Math.abs(bottom - rect.top) < 1.0) continue;
 
-    if (body.vx > 0) body.x = rect.left - half.w;
-    else if (body.vx < 0) body.x = rect.right + half.w;
-    body.vx = 0;
-    out.hitSide = true;
+      if (body.vx > 0) body.x = rect.left - half.w;
+      else if (body.vx < 0) body.x = rect.right + half.w;
+      body.vx = 0;
+      out.hitSide = true;
+    }
   }
 
   // ---- the metal --------------------------------------------------------------------------------

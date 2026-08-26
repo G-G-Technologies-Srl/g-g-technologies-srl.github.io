@@ -910,6 +910,35 @@ function _paintShield(ctx, pilot, cx) {
  * Le fiamme escono da sotto e lo avvolgono salendo, e sono le stesse della colata perché è la
  * stessa cosa: il fuoco di questo gioco è uno solo.
  */
+/**
+ * Il profilo inferiore di un fotogramma: per ogni colonna, la riga più bassa disegnata.
+ *
+ * Serve alle fiamme, e il risultato si tiene in cache perché i fotogrammi sono quattro e non
+ * cambiano mai: calcolarlo a ogni corpo e a ogni fotogramma sarebbe tremila confronti per niente.
+ */
+const _profili = new Map();
+
+function _bottomProfile(rows) {
+  let found = _profili.get(rows);
+  if (found) return found;
+  const w = Math.max(...rows.map((row) => row.length));
+  found = new Array(w).fill(-1);
+  for (let y = 0; y < rows.length; y += 1) {
+    const row = rows[y];
+    for (let x = 0; x < row.length; x += 1) {
+      if (row[x] !== ".") found[x] = y;
+    }
+  }
+  _profili.set(rows, found);
+  return found;
+}
+
+/** Quale fotogramma di volo mostra un corpo che brucia. Uno solo, letto da due funzioni. */
+function _pyreFrame(pyre) {
+  const ciclo = PILOT_SPRITES.fly;
+  return ciclo[Math.floor(_now * 11 + (pyre.phase || 0)) % ciclo.length];
+}
+
 function _paintPyre(ctx, pyre, cx) {
   // **Le ali sbattono.** Un corpo che cade con le ali ferme è un oggetto; un corpo che le muove
   // ancora è una creatura a cui sta succedendo qualcosa, e la differenza fra le due cose è tutta
@@ -919,8 +948,7 @@ function _paintPyre(ctx, pyre, cx) {
   //
   // La fase viene dal corpo e non dal tempo soltanto, così due nemici bruciati insieme non
   // agonizzano all'unisono.
-  const ciclo = PILOT_SPRITES.fly;
-  const sprite = ciclo[Math.floor(_now * 11 + (pyre.phase || 0)) % ciclo.length];
+  const sprite = _pyreFrame(pyre);
   const flip = pyre.facing < 0;
   const left = cx - px(SPRITE.w) / 2;
   const top = px(pyre.y) + PILOT_SPRITES.lift;
@@ -947,17 +975,33 @@ function _paintPyre(ctx, pyre, cx) {
  * cioè il corpo vero, non il riquadro del disegno che comprende le ali aperte.
  */
 function _paintPyreFlames(ctx, pyre, cx) {
-  // Mentre affonda le fiamme restano piene: quello che si accorcia è il corpo che sparisce sotto il
-  // metallo, e due cose che si consumano insieme sono una cosa sola che svanisce.
-  const resta = pyre.sinking
-    ? 1
-    : Math.max(0, Math.min(1, pyre.left / SHIELD.pyre));
-  const base = px(pyre.y) + px(PILOT.h) / 2;
-  for (let i = 0; i < 7; i += 1) {
-    const at = i / 6;
-    const x = cx - px(PILOT.w) / 2 + Math.round(at * px(PILOT.w));
-    const campana = 0.55 + 0.45 * Math.sin(Math.PI * at);
-    _flame(ctx, x, base, i + 3, px(PILOT.h) * 0.85 * campana * resta, 7);
+  const sprite = _pyreFrame(pyre);
+  const flip = pyre.facing < 0;
+  const left = cx - px(SPRITE.w) / 2;
+  const top = px(pyre.y) + PILOT_SPRITES.lift;
+  const profilo = _bottomProfile(sprite);
+  const w = profilo.length;
+
+  // **Ogni fiamma parte dal punto della sagoma che ha sotto**, non da una riga sola.
+  //
+  // Prima erano sette lingue tutte appoggiate al fondo della scatola di collisione, e il difetto
+  // era esattamente lì: un bordo inferiore dritto. Un falò ha una base piatta perché sotto ha il
+  // terreno; un corpo avvolto dalle fiamme no — il fuoco lo prende dalla pancia, dalla coda, dalle
+  // zampe, che stanno a tre altezze diverse. Ricalcando il profilo del disegno la base sparisce, e
+  // quello che resta è una creatura dentro il fuoco invece che sopra.
+  //
+  // Una colonna ogni quattro: più fitto il fuoco chiude la sagoma e non si capisce più **chi** sta
+  // bruciando — che è metà dell'informazione — più rado torna a essere un pettine.
+  for (let gx = 1; gx < w; gx += 4) {
+    const col = flip ? w - 1 - gx : gx;
+    const gy = profilo[col];
+    if (gy < 0) continue;
+
+    // Alte quanto il corpo, e più alte al centro: le fiamme devono superare il dorso, o si legge
+    // come un uccello che passa sopra un incendio invece che come un uccello che brucia.
+    const at = gx / (w - 1);
+    const campana = 0.5 + 0.5 * Math.sin(Math.PI * at);
+    _flame(ctx, left + gx, top + gy + 1, gx * 0.7, px(PILOT.h) * 0.8 * campana, 5);
   }
 }
 

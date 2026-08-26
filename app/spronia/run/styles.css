@@ -71,7 +71,16 @@ main {
   border-radius: var(--radius);
   background: linear-gradient(170deg, var(--panel-2), var(--panel) 60%);
   position: relative;
-  overflow: hidden;
+  /* Orizzontale nascosto per tenere il filo dell'accento dentro gli angoli tondi; verticale
+     scorrevole perché **il pannello può essere più alto della finestra**. Succede su un portatile
+     con la finestra bassa e su un telefono in orizzontale, che è come il gioco va tenuto: senza,
+     le istruzioni escono dallo schermo da tutt'e due i lati e i due bottoni di avvio finiscono
+     fuori. Con `place-self: center` non c'è nemmeno un lato da cui recuperarle scorrendo la
+     pagina, perché a traboccare è il riquadro, non il documento. */
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: calc(100% - 1.5rem);
+  overscroll-behavior: contain;
 }
 
 /* The 2px filament in the accent along the top edge: the site's mark for a panel that matters. */

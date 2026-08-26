@@ -13,7 +13,10 @@ Usage:  python3 _src/check_apps.py
 
 import json
 import re
+import shutil
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -370,6 +373,37 @@ def _check_precache(problems, key):
                             f"l'app non partirebbe")
 
 
+def _check_parses(problems, key):
+    """Ogni file JS dell'app **si legge davvero**, cioè è JavaScript valido.
+
+    Sembra il controllo più inutile della lista, ed è quello che è servito per primo: una virgola
+    dimenticata in fondo a una stringa del dizionario ha fatto passare tutti gli altri controlli —
+    chiavi italiane e inglesi allineate, id che esistono, precache pari alla cartella — e ha
+    lasciato l'app con **il pannello vuoto e il campo nero**. Nessuno di quei controlli legge il
+    file come codice: lo leggono come testo, con delle espressioni regolari.
+
+    Si copia in un `.mjs` temporaneo perché `node --check` decide se un file è un modulo
+    dall'estensione, e questi sono `.js` dentro una pagina che li carica come moduli. Costa una
+    decina di millisecondi a file e chiude una famiglia intera di difetti.
+
+    Se `node` non c'è, il controllo si salta invece di fallire: gira anche sulle macchine che
+    servono solo a pubblicare il sito.
+    """
+    if not shutil.which("node"):
+        return
+    for path in sorted((ROOT / "app" / key).rglob("*.js")):
+        with tempfile.TemporaryDirectory() as tmp:
+            copia = Path(tmp) / (path.stem + ".mjs")
+            copia.write_text(path.read_text(encoding="utf-8"), encoding="utf-8")
+            done = subprocess.run(["node", "--check", str(copia)],
+                                  capture_output=True, text=True)
+        if done.returncode != 0:
+            prima = (done.stderr.strip().splitlines() or ["errore di sintassi"])
+            dettaglio = next((r for r in prima if "SyntaxError" in r), prima[-1])
+            problems.append(f"{key}: {path.relative_to(ROOT)} non è JavaScript valido — "
+                            f"{dettaglio.strip()}")
+
+
 def _check_lib_map(problems, key):
     """The import map exists, points at the library, and is the only way in."""
     path = APP_DIR / key / "run" / "index.html"
@@ -432,6 +466,7 @@ def main():
         _check_licence(problems, key)
         _check_lib_imports(problems, key)
         _check_lib_map(problems, key)
+        _check_parses(problems, key)
 
     if problems:
         print("\n".join("  " + p for p in problems))
@@ -440,7 +475,8 @@ def main():
           "     nessuna richiesta di rete, chiavi IT/EN allineate, manifest e icone,\n"
           "     versione in un posto solo, elenco di precache pari alla cartella,\n"
           "     licenza nella cartella e non alla radice, import map verso _lib/,\n"
-          "     ogni modulo condiviso davvero in cache, chiavi e id che esistono.")
+          "     ogni modulo condiviso davvero in cache, chiavi e id che esistono,\n"
+          "     e ogni file JS si legge davvero come JavaScript.")
 
 
 if __name__ == "__main__":

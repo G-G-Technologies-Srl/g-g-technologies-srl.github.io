@@ -21,7 +21,7 @@
 //    copyable and replayable, and the attract-mode demonstration has to come out the same at every
 //    build or the screenshot changes on its own.
 
-import { resolve } from "./terrain.js";
+import { resolve, groundBelow } from "./terrain.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  m e a s u r e s
@@ -418,10 +418,19 @@ export const DOWNS = 3;
 export const SHIELD = {
   lasts: 3,
   cools: 10,
-  // Quanto brucia un corpo prima di consumarsi, se la colata non lo prende prima. Serve perché un
-  // corpo in fiamme che si posa su un ripiano e ci resta sarebbe un cadavere in mezzo al campo:
-  // qualcosa che il gioco disegna e con cui non si può fare niente.
-  pyre: 4,
+  // **Un corpo in fiamme non si posa.** Toccato un ripiano scivola verso il bordo più vicino e ci
+  // cade oltre, e lo rifà a ogni ripiano che incontra, finché non arriva al metallo. Non c'è un
+  // tempo di combustione che lo spenga per strada: **finisce sempre nella colata**, e lì sprofonda.
+  //
+  // Prima si consumava dopo quattro secondi ovunque fosse, ed è sbagliato in un modo che si vede
+  // giocando: un nemico bruciato che si ferma su una piattaforma e sparisce lì è un finale che
+  // capita a metà strada. La caduta fa parte di quello che è successo, e va guardata fino in fondo.
+  //
+  // Centosessanta unità al secondo sono meno di metà della velocità di volo: si vede scivolare, e
+  // il ripiano più largo del campo lo perde in un secondo e mezzo. Che ci arrivi davvero non è un
+  // ragionamento, è un controllo: `test/physics.mjs` lo fa partire da tutto il campo e verifica che
+  // ogni volta finisca nel metallo.
+  slide: 160,
   // Rimbalza più di una cella e struscia meno: è un corpo, non un uovo.
   bounce: 0.5,
   drag: 0.7,
@@ -790,6 +799,10 @@ export const BOUNDS = { ceiling: CEILING, melt: MELT, deck: DECK };
 /** Il materiale di un corpo in fiamme: la scatola di un pilota, ma che rimbalza. */
 export const PYRE = {
   w: PILOT.w, h: PILOT.h, restitution: SHIELD.bounce, ceilingBounce: PILOT.ceilingBounce,
+  // Passa davanti ai fianchi delle piattaforme: vedi `pass` in terrain.js. Un corpo che sta
+  // finendo di succedere non ha bisogno di essere fermato da un muro, ha bisogno di arrivare in
+  // fondo — e ogni muro contro cui si può incastrare è un finale che non arriva.
+  pass: true,
 };
 
 /**
@@ -1369,7 +1382,6 @@ function _burn(world, foe, by) {
     // Sta affondando nel metallo. Stesso stato e stesso nome della cella, perché è la stessa cosa
     // che succede e deve avere lo stesso aspetto: scende piano e la colata lo copre.
     sinking: false,
-    left: SHIELD.pyre,
     // La fase del battito d'ali, così due corpi che bruciano insieme non agonizzano all'unisono —
     // che è il modo più rapido di far sembrare due creature un'animazione sola.
     phase: foe.index * 1.37,
@@ -1393,20 +1405,35 @@ function _stepPyres(world, ledges, dt) {
       continue;
     }
 
-    if (!pyre.grounded) pyre.vy = Math.min(PILOT.maxFall, pyre.vy + PILOT.gravity * dt);
+    pyre.vy = Math.min(PILOT.maxFall, pyre.vy + PILOT.gravity * dt);
     pyre.vx -= pyre.vx * Math.min(1, SHIELD.drag * dt);
 
     const hit = resolve(pyre, PYRE, ledges, BOUNDS, dt);
     wrapX(pyre);
 
-    pyre.left -= dt;
     if (hit.melted) {
       pyre.sinking = true;
       pyre.vx = 0;
       pyre.vy = 0;
-    } else if (pyre.left <= 0) {
-      // Consumato prima di arrivare al metallo: succede quando rimbalza e resta su un ripiano.
-      pyre.alive = false;
+      continue;
+    }
+
+    // **Non si ferma.** Appoggiato su un ripiano, prende la strada del bordo più vicino e non
+    // smette di essere in caduta: il risolutore lo rimetterà sopra il ripiano a ogni passo, e a
+    // ogni passo lui riparte verso il bordo, finché non lo supera. La spinta si riapplica invece
+    // di essere data una volta sola perché l'attrito dell'aria la mangerebbe a metà scivolata.
+    if (pyre.grounded) {
+      const deck = groundBelow(pyre, PYRE, ledges, BOUNDS);
+      // Senza un ripiano sotto **si tira dritto**, e non è un caso di ripiego: è il passo in cui ha
+      // appena superato il bordo. Il risolutore lo considera ancora appoggiato — la sua sonda
+      // guarda dov'era prima di muoversi — mentre qui sotto non c'è più niente, e rispondere
+      // «allora vai a destra» lo rimandava indietro sulla piattaforma appena lasciata. Da lì
+      // avanti e indietro per sempre: ventitré partenze su sessanta finivano così.
+      const verso = deck
+        ? Math.sign(pyre.x - (deck.x + deck.w / 2)) || 1
+        : Math.sign(pyre.vx) || 1;
+      pyre.vx = verso * SHIELD.slide;
+      pyre.grounded = false;
     }
   }
   world.pyres = world.pyres.filter((pyre) => pyre.alive);

@@ -853,18 +853,45 @@ console.log("\nlo scudo di fuoco");
 }
 
 {
-  // Il corpo in fiamme cade, rimbalza e si consuma: non resta niente in mezzo al campo.
+  // **Un corpo in fiamme finisce sempre nella colata**, da qualunque parte del campo parta.
+  //
+  // Non è un dettaglio di gusto: prima si consumava dopo quattro secondi ovunque fosse, e su un
+  // ripiano largo si fermava e spariva lì — un finale a metà strada. Adesso non si posa, scivola
+  // verso il bordo e cade, e questo controllo è l'unica cosa che garantisce che la scivolata
+  // funzioni su tutte le piattaforme invece che su quella con cui è stata provata.
+  //
+  // Sessanta partenze: venti posizioni lungo il campo per tre quote, comprese quelle che cadono
+  // esattamente sopra un ripiano.
+  let peggio = 0;
+  const perse = [];
+  for (let i = 0; i < 20; i += 1) {
+    for (const y of [CEILING + PILOT.h, 300, MELT - PILOT.h]) {
+      const world = create(3, 1, 0);
+      world.pilots[0].x = 5000;                          // fuori dai piedi
+      world.pyres.push({
+        kind: "deriva", x: (i * FIELD.w) / 20 + 20, y, vx: 0, vy: 0, facing: 1,
+        grounded: false, alive: true, sinking: false, phase: i,
+      });
+      const pyre = world.pyres[0];
+      let passi = 0;
+      while (!pyre.sinking && passi < 120 * 12) { step(world, [intent()]); passi += 1; }
+      if (!pyre.sinking) perse.push(`${Math.round(pyre.x)},${y}`);
+      else peggio = Math.max(peggio, passi);
+    }
+  }
+  check("un corpo in fiamme finisce sempre nella colata, da ogni punto del campo",
+    perse.length === 0, `rimasti su: ${perse.join(" ")}`);
+  check("e ci arriva in pochi secondi", peggio < 120 * 6,
+    `il più lento ${(peggio / 120).toFixed(2)} s`);
+}
+
+{
+  // E finché brucia l'ondata non finisce.
   const { world, io, lui } = duello(-30);
   io.shield = SHIELD.lasts;
   step(world, [intent()]);
-  const pyre = world.pyres[0];
-  const y0 = pyre.y;
-  let passi = 0;
-  while (world.pyres.length && passi < 120 * 10) { step(world, [intent()]); passi += 1; }
-  check("il corpo in fiamme cade e si consuma",
-    pyre.y > y0 && world.pyres.length === 0 && passi <= 120 * (SHIELD.pyre + 0.2),
-    `sceso di ${(pyre.y - y0).toFixed(0)} unità, sparito dopo ${(passi / 120).toFixed(2)} s`);
-  check("e l'ondata non finisce finché sta bruciando", passi > 1);
+  check("l'ondata non finisce finché un corpo sta bruciando",
+    world.pyres.length === 1 && !cleared(world));
 }
 
 {

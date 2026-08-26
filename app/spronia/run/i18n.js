@@ -18,23 +18,25 @@ const IT = {
   // La Fase 1 mostra il volo e basta. Le stringhe del cabinato — gettone, crediti, classifica —
   // arrivano con la fase che le usa: scriverle adesso significherebbe tradurre due volte quello
   // che ancora non esiste.
+  ctrlTitle: "I comandi",
+  howKeys: "Un giocatore: A e D per girare, W per battere le ali, S per lo scudo.",
+  howKeys2: "Il secondo: frecce sinistra e destra, Maiusc destro per battere, freccia giù per lo "
+    + "scudo.",
+  howTouch: "Col mouse o col dito: premi il campo dal lato in cui vuoi andare, e ogni pressione è "
+    + "un battito. Due tocchi rapidi sul tuo dodo accendono lo scudo.",
+
   flightTitle: "Il volo",
-  flightLead: "Non c'è un comando per salire. Si sale battendo le ali, e più in fretta batti più "
-    + "sali.",
-  howKeys: "A e D per la direzione, W per battere le ali, S per lo scudo di fuoco.",
-  howKeys2: "Secondo giocatore: frecce per la direzione, Maiusc destro per battere, freccia "
-    + "giù per lo scudo.",
-  howTouch: "Col dito o col mouse: premi il campo dal lato in cui vuoi andare. Ogni pressione è un battito."
-    + " Tenendo premuto la direzione resta.",
-  howBeat: "Tenere premuto vale un battito solo. Per restare in quota ne servono circa tre al "
+  flightLead: "Quando due cavalcature si toccano resta in volo chi ha la punta dello sperone più "
+    + "in alto. È l'unica regola — o quasi.",
+  howBeat: "Non c'è un comando per salire. Per restare in quota servono circa tre battiti al "
     + "secondo.",
   howSkid: "In aria non c'è presa: per tornare indietro devi girarti e battere dall'altra parte.",
-  howMelt: "Il fondo è metallo fuso. Toccarlo ti riporta in campo altrove.",
-  howLance: "Il trattino davanti al muso è la punta dello sperone: è quella quota che conta.",
-  howShield: "Lo scudo di fuoco brucia chi tocchi, comunque lo tocchi. Dura tre secondi e "
-    + "torna dopo dieci. Col dito: due tocchi rapidi sul tuo dodo.",
-  howCells: "Chi abbatti lascia una cella: si prende dopo che ha toccato terra. Se non la "
-    + "raccogli si schiude, e torna di una classe più alta.",
+  howLance: "Il trattino davanti al muso è la punta dello sperone: guarda quella. Il fondo è "
+    + "metallo fuso, e toccarlo costa una vita.",
+  howCells: "Chi abbatti lascia una cella: si prende dopo che ha toccato terra. Se la lasci, si "
+    + "schiude di una classe più alta.",
+  howShield: "Lo scudo brucia chi tocchi, comunque lo tocchi. Dura tre secondi e torna dopo "
+    + "dieci.",
 
   gameOver: "Partita finita. Punteggio:",
   player: "Giocatore",
@@ -50,30 +52,29 @@ const IT = {
   installIos: "Per installare: Condividi, poi «Aggiungi a Home».",
   backToPage: "Torna alla scheda",
   sourceLabel: "Codice sorgente",
-  a11yNote: "Si gioca interamente da tastiera, e in alternativa col tocco o col mouse. È un "
-    + "gioco d'azione in tempo reale: serve vedere lo schermo.",
+  a11yNote: "È un gioco d'azione in tempo reale: serve vedere lo schermo.",
 };
 
 const EN = {
   tagline: "The higher rider wins",
 
+  ctrlTitle: "The controls",
+  howKeys: "One player: A and D to turn, W to flap, S for the shield.",
+  howKeys2: "The second: left and right arrows, right Shift to flap, down arrow for the shield.",
+  howTouch: "With the mouse or a finger: press the field on the side you want to go, and every "
+    + "press is a flap. Two quick taps on your own dodo light the shield.",
+
   flightTitle: "Flight",
-  flightLead: "There is no button for up. You climb by flapping, and the faster you flap the "
-    + "higher you go.",
-  howKeys: "A and D to steer, W to flap, S for the fire shield.",
-  howKeys2: "Second player: arrow keys to steer, right Shift to flap, down arrow for the "
-    + "shield.",
-  howTouch: "With a finger or the mouse: press the field on the side you want to go. Each press is one"
-    + " flap. Hold to keep the direction.",
-  howBeat: "Holding the key down counts as one flap. Holding your height takes about three a "
-    + "second.",
+  flightLead: "When two mounts touch, the one whose spur tip is higher stays in the air. That is "
+    + "the only rule — almost.",
+  howBeat: "There is no button for up. Holding your height takes about three flaps a second.",
   howSkid: "There is no grip in the air: to go back you have to turn and flap the other way.",
-  howMelt: "The floor is molten metal. Touching it puts you back somewhere else.",
-  howLance: "The dash ahead of the nose is the tip of the spur: that is the height that counts.",
-  howShield: "The fire shield burns whatever you touch, however you touch it. It lasts three "
-    + "seconds and comes back after ten. By touch: two quick taps on your own dodo.",
+  howLance: "The dash ahead of the nose is the spur tip: watch that one. The floor is molten "
+    + "metal, and touching it costs a life.",
   howCells: "Whatever you unseat leaves a cell: you can take it once it has touched down. Leave "
-    + "it and it hatches, a class higher than before.",
+    + "it and it hatches a class higher.",
+  howShield: "The shield burns whatever you touch, however you touch it. Three seconds, and it is "
+    + "back after ten.",
 
   gameOver: "Game over. Score:",
   player: "Player",
@@ -89,8 +90,7 @@ const EN = {
   installIos: "To install: Share, then “Add to Home Screen”.",
   backToPage: "Back to the app page",
   sourceLabel: "Source code",
-  a11yNote: "It plays entirely from the keyboard, or else by touch or with the mouse. It is a "
-    + "real-time action game: you need to see the screen.",
+  a11yNote: "It is a real-time action game: you need to see the screen.",
 };
 
 // -----------------------------------------------------------------------------------------------------------------
