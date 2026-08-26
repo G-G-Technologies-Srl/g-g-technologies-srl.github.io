@@ -547,6 +547,64 @@ export const INTRUDER = {
 };
 
 /**
+ * La Pinza: il manipolatore che esce dalla colata e afferra chi vola basso.
+ *
+ * **È l'unica cosa nel gioco che ti prende senza affrontarti**, e la sola risposta è battere le ali
+ * — forte e in fretta, molto più in fretta di quanto serva a restare in quota. Per questo esiste:
+ * mette in gioco l'unica cosa che il giocatore controlla davvero, e la mette in gioco al limite.
+ *
+ * **Trascina a velocità costante, non con un'accelerazione.** La differenza non è un dettaglio:
+ * dalla soglia alla colata sono centosessanta unità, e con un'accelerazione normale si percorrono in
+ * meno di un secondo — il tetto dei dieci secondi non si sarebbe potuto raggiungere, e la regola che
+ * il piano chiamava la sua unica garanzia sarebbe stata decorazione. A quaranta unità al secondo ci
+ * mette **quattro secondi**: il tempo di reagire, non di rassegnarsi.
+ *
+ * **Molla dopo dieci secondi, chiunque stia tenendo.** Nessuno stato in cui qualcosa resta fermo per
+ * sempre: né tu, né un nemico.
+ */
+export const CLAW = {
+  // Quanto lontano arriva, e quanto in basso bisogna essere per finirci dentro. Sotto 480 unità c'è
+  // un quarto della fascia di volo: prende chi vola basso, non chi vola.
+  reach: 120,
+  below: 480,
+
+  // Il trascinamento, in unità al secondo. Quaranta alla terza ondata, e si rinforza andando avanti
+  // — la presa non diventa più larga né più frequente, diventa più difficile da spezzare. È il modo
+  // di far crescere una minaccia senza cambiare la regola con cui la si affronta.
+  pull: 40,
+  perWave: 2.5,
+  pullMax: 90,
+
+  // **La fuga.** `strain` è la somma dei battiti recenti, e la presa si spezza quando supera questa
+  // soglia. I due numeri vanno letti insieme: con `fade` a settecento al secondo, battere al ritmo
+  // che tiene la quota — tre volte al secondo — fa convergere `strain` intorno a 470 e non la
+  // spezza mai; battere a otto o nove al secondo ci arriva in mezzo secondo.
+  //
+  // È la differenza fra «continua a fare quello che facevi» e «fai una cosa che non stavi facendo»,
+  // ed è l'unica ragione per cui questa soglia è una somma con memoria invece che una velocità
+  // istantanea. Con una soglia sulla velocità, un battito solo bastava o non bastava mai — e in
+  // mezzo non c'era niente, cioè non c'era la lotta.
+  escape: 700,
+  // Novecentocinquanta, e il numero è tarato contro il battito che tiene la quota. A settecento
+  // sbagliava: il ritmo del volo normale — tre battiti al secondo — fa decadere 219 e ne aggiunge
+  // 280, cioè **cresce**, e la presa si spezzava da sola stando semplicemente in aria. A 950 quel
+  // ritmo decade di 297 contro 280 e converge, mentre otto o nove battiti al secondo ci arrivano in
+  // mezzo secondo. Fra i due c'è una fascia in cui battere più forte del solito funziona ma ci
+  // mette un secondo e mezzo, che è il tempo che la Pinza toglie trascinando.
+  fade: 950,
+
+  // Quanto tiene, quanto resta fuori a cercare, quanto sta sotto fra un tentativo e l'altro.
+  holds: 10,
+  hunts: 6,
+  rest: 7,
+  // Con che velocità esce e rientra, in unità al secondo.
+  rise: 380,
+  // Quanto è larga la ganascia, per il disegno e per il posto in cui può uscire. La presa la decide
+  // `reach`, che è un'altra cosa e più larga.
+  w: 44,
+};
+
+/**
  * Quante vite, e quando se ne guadagna una.
  *
  * Quattro, e la prima vita in più a ventimila punti — poi **ogni volta al doppio della soglia
@@ -911,6 +969,10 @@ export function create(seed = 1, players = 1, foes = 0) {
     intrusi: [],
     waveTime: 0,
     called: 0,
+    // La Pinza: una sola, sempre presente come oggetto e quasi sempre sotto il metallo. Tenerla come
+    // stato invece che crearla e distruggerla rende «una sola alla volta» una proprietà della
+    // struttura invece di una regola da ricordarsi.
+    claw: null,
     // I corpi in fiamme, che non sono più nemici e non sono ancora niente: cadono, rimbalzano e si
     // consumano. Stanno in un elenco a parte perché nessuna regola deve vederli — non combattono,
     // non si raccolgono, non tornano. E le teste che ogni tanto si staccano da loro, che sono la
@@ -985,11 +1047,13 @@ export function startWave(world, roster) {
     });
     _seedCells(world, piano.cells);
     for (let i = 0; i < piano.intruders; i += 1) world.intrusi.push(makeIntruder(world, false));
+    world.claw = piano.claw ? makeClaw(world) : null;
     return world;
   }
 
   world.plan = null;
   world.speed = 1;
+  world.claw = null;
   const list = Array.isArray(roster) ? roster : new Array(roster).fill(KIND_NAMES[0]);
   list.forEach((kind, i) => world.foes.push(makeFoe(i, freePad(world), kind)));
   return world;
@@ -1132,6 +1196,7 @@ export function step(world, intents, dt = STEP) {
   _stepPyres(world, ledges, dt);
   _stepHeads(world, ledges, dt);
   _stepIntruders(world, dt);
+  _stepClaw(world, dt);
   _stepPops(world, dt);
   _waitOut(world);
   // After everyone has moved, and never during. Settling a fight inside the movement loop means the
@@ -1221,6 +1286,12 @@ function _stepPilot(world, pilot, intent, ledges, dt, boost = 1) {
   if (!pilot.grounded) {
     pilot.vy = Math.min(PILOT.maxFall, pilot.vy + PILOT.gravity * dt);
   }
+
+  // **La presa della Pinza, dopo che il corpo ha fatto quello che voleva.** Il battito è già stato
+  // contato, quindi la lotta si misura su quello che il giocatore ha davvero premuto; e la velocità
+  // si sovrascrive **prima** del risolutore, o il corpo si muoverebbe di un passo per conto suo
+  // dentro una presa che dice che non può.
+  _clawHold(world, pilot, beats, dt);
 
   const hit = resolve(pilot, PILOT, ledges, BOUNDS, dt);
   wrapX(pilot);
@@ -1900,6 +1971,176 @@ function _fall(cosi, profilo, ledges, dt) {
 }
 
 // -----------------------------------------------------------------------------------------------------------------
+//  l a   p i n z a
+// -----------------------------------------------------------------------------------------------------------------
+
+/** Quanto trascina la Pinza a questa ondata. Si rinforza, e ha un tetto. */
+export function clawPull(wave) {
+  return Math.min(CLAW.pullMax, CLAW.pull + Math.max(0, wave - WAVE.clawFrom) * CLAW.perWave);
+}
+
+/**
+ * Dove può uscire la Pinza: **dove la strada fino alla colata è libera.**
+ *
+ * Esce dal metallo e tira in basso, quindi un ripiano fra la sua ganascia e la colata sarebbe un
+ * pavimento su cui il corpo trascinato si posa — e la Pinza diventerebbe innocua proprio sopra la
+ * piattaforma più grande della mappa, che è dove si sta di più. Non è un caso da gestire: è un
+ * posto da non scegliere.
+ *
+ * Si guarda `decks(world)` e non `PLATFORMS`, così quando un'ondata toglie una piattaforma la Pinza
+ * se ne accorge da sola.
+ */
+function _clawSpots(world) {
+  const ostacoli = decks(world).filter((d) => d.y > CLAW.below && d.y < MELT);
+  const posti = [];
+  for (let x = CLAW.w; x < FIELD.w - CLAW.w; x += 40) {
+    const bloccato = ostacoli.some((d) => x > d.x - CLAW.w && x < d.x + d.w + CLAW.w);
+    if (!bloccato) posti.push(x);
+  }
+  return posti;
+}
+
+/** Una Pinza nuova, sotto il metallo, che aspetta il suo turno. */
+export function makeClaw(world) {
+  return {
+    x: FIELD.w / 2,
+    // La quota della ganascia. Parte dal pelo del metallo e sale quando esce.
+    y: MELT,
+    // "sotto" aspetta, "cerca" è fuori e cerca, "tiene" ha preso qualcuno, "rientra" torna giù.
+    state: "sotto",
+    // Il contatore dello stato in corso: quanto manca prima del prossimo.
+    left: CLAW.rest,
+    // Chi sta tenendo, se sta tenendo qualcuno.
+    held: null,
+  };
+}
+
+/**
+ * Molla il corpo, se la Pinza lo stava tenendo.
+ *
+ * Sta in una funzione perché va chiamata da ogni strada per cui un corpo esce di scena — spento,
+ * bruciato, annegato, rientrato — e dimenticarne una lascerebbe la Pinza attaccata a un fantasma
+ * per dieci secondi, cioè un turno intero sprecato senza che niente lo spieghi.
+ */
+function _release(world, body) {
+  const claw = world.claw;
+  if (!claw || body.clawId == null) return;
+  if (claw.held === body.clawId) {
+    claw.held = null;
+    claw.state = "rientra";
+    claw.left = 0;
+  }
+  body.clawId = null;
+  body.strain = 0;
+}
+
+/** Il corpo che la Pinza sta tenendo, se c'è ancora ed è ancora in campo. */
+function _heldBody(world) {
+  const claw = world.claw;
+  if (!claw || claw.held === null) return null;
+  const tutti = bodies(world);
+  return tutti.find((b) => b.clawId === claw.held) || null;
+}
+
+/**
+ * La Pinza, mossa di un passo.
+ *
+ * Quattro stati e nessun modo di restarci dentro per sempre: **ogni stato ha il suo contatore**, e
+ * `tiene` ce l'ha per una ragione che il piano chiama la sua unica garanzia — dopo dieci secondi
+ * molla chiunque stia tenendo. Un gioco in cui qualcosa può restare fermo all'infinito è un gioco
+ * che può non finire, e questo ne ha già abbastanza di modi per non finire.
+ */
+function _stepClaw(world, dt) {
+  const claw = world.claw;
+  if (!claw) return;
+  claw.left -= dt;
+
+  if (claw.state === "sotto") {
+    claw.y = MELT;
+    if (claw.left > 0) return;
+    const posti = _clawSpots(world);
+    // **Se non c'è un posto buono, resta sotto.** Il ripiego di uscire in mezzo al campo era peggio
+    // del problema che risolveva: il centro è sopra la piattaforma più grande della mappa, cioè
+    // esattamente il posto in cui la Pinza non può funzionare. Meglio un turno saltato che una
+    // Pinza che esce e non prende niente per costruzione.
+    if (!posti.length) {
+      claw.left = CLAW.rest;
+      return;
+    }
+    claw.x = posti[Math.floor(_random(world) * posti.length)];
+    claw.state = "cerca";
+    claw.left = CLAW.hunts;
+    return;
+  }
+
+  if (claw.state === "rientra") {
+    claw.y = Math.min(MELT, claw.y + CLAW.rise * dt);
+    if (claw.y >= MELT) {
+      claw.state = "sotto";
+      claw.left = CLAW.rest;
+    }
+    return;
+  }
+
+  if (claw.state === "cerca") {
+    claw.y = Math.max(CLAW.below, claw.y - CLAW.rise * dt);
+    // **Afferra chi è a tiro e sta abbastanza in basso.** I nemici come te: la Pinza non distingue,
+    // e un nemico trascinato nel metallo è un nemico che hai perso — la sua cella affonda con lui.
+    if (claw.y <= CLAW.below) {
+      const preso = bodies(world).find((b) => b.guard <= 0 && b.y >= CLAW.below
+        && Math.abs(deltaX(claw.x, b.x)) <= CLAW.reach);
+      if (preso) {
+        preso.clawId = (world.rng >>> 0) + 1;
+        preso.strain = 0;
+        claw.held = preso.clawId;
+        claw.state = "tiene";
+        claw.left = CLAW.holds;
+        return;
+      }
+    }
+    if (claw.left <= 0) {
+      claw.state = "rientra";
+      claw.left = 0;
+    }
+    return;
+  }
+
+  // tiene
+  const preso = _heldBody(world);
+  if (!preso || claw.left <= 0 || preso.strain > CLAW.escape) {
+    if (preso) { preso.clawId = null; preso.strain = 0; }
+    claw.held = null;
+    claw.state = "rientra";
+    claw.left = 0;
+    return;
+  }
+  // La ganascia segue il corpo, così quello che si vede è una presa e non due cose vicine.
+  claw.y = preso.y;
+  claw.x = preso.x;
+}
+
+/**
+ * Quello che succede a un corpo mentre la Pinza lo tiene.
+ *
+ * Chiamato **dentro** il passo del corpo, subito dopo che il corpo ha fatto quello che voleva fare:
+ * il battito è già stato contato, quindi `strain` misura davvero quanto sta lottando. Poi la
+ * velocità viene sovrascritta — orizzontale a zero, verticale al trascinamento — perché la presa è
+ * una presa: finché tiene, non si va da nessuna parte se non giù.
+ */
+function _clawHold(world, body, beats, dt) {
+  const claw = world.claw;
+  if (!claw || claw.state !== "tiene" || body.clawId !== claw.held) return false;
+
+  body.strain = Math.max(0, (body.strain || 0) - CLAW.fade * dt) + beats * PILOT.flap;
+  if (body.strain > CLAW.escape) return false;
+
+  body.vx = 0;
+  body.vy = clawPull(world.wave);
+  body.grounded = false;
+  return true;
+}
+
+// -----------------------------------------------------------------------------------------------------------------
 //  l ' i n t r u s o
 // -----------------------------------------------------------------------------------------------------------------
 
@@ -2090,6 +2331,7 @@ function _waitOut(world) {
  * non finire mai, perché il Vertice si promuove in sé stesso.
  */
 function _lower(world, foe, by = null) {
+  _release(world, foe);
   foe.alive = false;
   foe.downs += 1;
   const cella = makeCella(world, foe);
@@ -2119,6 +2361,7 @@ function _lower(world, foe, by = null) {
  * di far girare il ciclo.
  */
 function _return(world, pilot) {
+  _release(world, pilot);
   const { index, score, extra } = pilot;
   const lives = pilot.lives - 1;
   const pad = freePad(world);

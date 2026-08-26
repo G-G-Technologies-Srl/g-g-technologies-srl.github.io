@@ -14,9 +14,9 @@
 import {
   FIELD, CEILING, MELT, STEP, PIXEL, PILOT, SPRITE, PLATFORMS, PADS, DECK, BOUNDS, TIE, FOE,
   KINDS, KIND_NAMES, FRENZY, HUNT, CELLA, CELL_POINTS, DOWNS, PROMOTION, LIVES, EXTRA_FIRST,
-  SHIELD, INTRUDER,
+  SHIELD, INTRUDER, CLAW,
   create, newGame, step, decks, deltaX, lanceTip, makePilot, makeFoe, bodies, hunting,
-  startWave, cleared, hatchTime, makeIntruder, callAt, mouth,
+  startWave, cleared, hatchTime, makeIntruder, callAt, mouth, clawPull,
 } from "../run/game.js";
 import { resolve } from "../run/terrain.js";
 import { WAVE } from "../run/waves.js";
@@ -915,6 +915,192 @@ function svuota(world) {
     check(`sessanta ondate di fila, a ${giocatori === 1 ? "uno" : "due"}: nessuna nasce già finita`,
       vuote === 0, `${vuote} vuote`);
   }
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  l a   p i n z a
+// -----------------------------------------------------------------------------------------------------------------
+
+console.log("\nla Pinza");
+
+/** Un mondo all'ondata `n`, con la Pinza appena uscita e pronta ad afferrare. */
+function conPinza(n = 5) {
+  const world = newGame(31, 1);
+  while (world.wave < n) { svuota(world); startWave(world); }
+  world.foes.forEach((f) => { f.alive = false; f.done = true; });
+  // **Si lascia uscire da sola.** Forzarle lo stato senza farle scegliere il posto la lascia
+  // all'ascissa con cui nasce — il centro del campo — che è sopra la piattaforma più grande della
+  // mappa: la prova misurava una Pinza che tirava un corpo contro un pavimento, e accusava il
+  // trascinamento di non funzionare.
+  world.pilots[0].y = 200;                        // in alto, fuori dalla sua portata mentre esce
+  const claw = world.claw;
+  claw.state = "sotto";
+  claw.left = -1;
+  step(world, [intent()]);
+  claw.y = CLAW.below;
+  claw.left = CLAW.hunts;
+  return { world, claw };
+}
+
+{
+  check("la Pinza non c'è nelle prime due ondate, e c'è dalla terza",
+    newGame(31, 1).claw === null && conPinza(3).claw !== null);
+
+  // **La presa si rinforza con la partita**: non diventa più larga né più frequente, diventa più
+  // difficile da spezzare. È il modo di far crescere una minaccia senza cambiare la regola con cui
+  // la si affronta.
+  check("il trascinamento cresce con l'ondata, e ha un tetto",
+    clawPull(3) === CLAW.pull && clawPull(10) > clawPull(3)
+      && clawPull(1000) === CLAW.pullMax,
+    `${clawPull(3)} → ${clawPull(10)} → ${clawPull(1000)}`);
+  check("e alla terza ondata ci mette quattro secondi ad arrivare al metallo",
+    Math.abs((MELT - CLAW.below) / clawPull(3) - 4) < 0.01,
+    `${((MELT - CLAW.below) / clawPull(3)).toFixed(2)} s`);
+}
+
+{
+  // Afferra chi vola basso e a tiro, e non chi sta sopra la soglia.
+  const { world, claw } = conPinza(5);
+  const io = world.pilots[0];
+  io.guard = 0; io.x = claw.x; io.y = CLAW.below - 60; io.vx = 0; io.vy = 0; io.grounded = false;
+  step(world, [intent()]);
+  check("chi vola alto non lo prende", claw.state === "cerca" && !io.clawId);
+
+  io.y = CLAW.below + 40;
+  step(world, [intent()]);
+  check("chi vola basso e a tiro sì", claw.state === "tiene" && io.clawId,
+    `stato ${claw.state}`);
+  // La presa si applica **dal passo dopo**: la Pinza si muove dopo i corpi, quindi quello in cui
+  // afferra è già stato mosso. Guardare la velocità nello stesso passo la trova com'era.
+  step(world, [intent()]);
+  check("e dal passo dopo la presa azzera la velocità orizzontale e trascina",
+    io.vx === 0 && io.vy === clawPull(world.wave),
+    `vx=${io.vx} vy=${io.vy}`);
+}
+
+{
+  // Fuori tiro non prende: centoventi unità, non tutto il campo.
+  const { world, claw } = conPinza(5);
+  const io = world.pilots[0];
+  io.guard = 0; io.x = claw.x + CLAW.reach + 40; io.y = CLAW.below + 40;
+  io.vx = 0; io.vy = 0; io.grounded = false;
+  step(world, [intent()]);
+  check("oltre il raggio non arriva", claw.state === "cerca" && !io.clawId);
+}
+
+{
+  // **Battendo forte e in fretta ci si libera. Battendo per stare in quota, no.** È la differenza
+  // fra «continua a fare quello che facevi» e «fai una cosa che non stavi facendo».
+  const prova = (ritmo) => {
+    const { world, claw } = conPinza(5);
+    const io = world.pilots[0];
+    io.guard = 0; io.x = claw.x; io.y = CLAW.below + 40; io.vx = 0; io.vy = 0; io.grounded = false;
+    step(world, [intent()]);
+    let passi = 0;
+    let scatto = 0;
+    while (claw.state === "tiene" && passi < 120 * 6) {
+      scatto += 1;
+      const batte = scatto >= Math.round(120 / ritmo);
+      if (batte) scatto = 0;
+      step(world, [intent({ flaps: batte ? 1 : 0 })]);
+      // **La quota si tiene ferma a mano**, e senza questo la prova misurava un'altra cosa: la
+      // Pinza trascina a quarantacinque unità al secondo, quindi da qui al metallo ci sono meno di
+      // due secondi, e la presa «si spezzava» perché il giocatore annegava. Qui si prova la fuga,
+      // non la caduta — che è provata due controlli più sotto.
+      io.y = CLAW.below + 40;
+      passi += 1;
+    }
+    return { libero: claw.state !== "tiene" && !io.waiting && passi < 120 * 6, passi, io };
+  };
+
+  const quota = prova(3.2);                      // il ritmo che tiene la quota
+  check("battendo al ritmo che tiene la quota, la presa non si spezza",
+    !quota.libero, `si è liberato in ${(quota.passi / 120).toFixed(1)} s`);
+
+  const forte = prova(9);                        // forte e in fretta
+  check("battendo forte e in fretta, sì",
+    forte.libero && forte.passi < 120 * 2, `${(forte.passi / 120).toFixed(2)} s`);
+}
+
+{
+  // **Dopo dieci secondi molla, chiunque stia tenendo.** È l'unica garanzia del piano contro uno
+  // stato in cui qualcosa resta fermo per sempre, e va scritta in un test — lo dice il piano.
+  const { world, claw } = conPinza(5);
+  const io = world.pilots[0];
+  io.guard = 0; io.x = claw.x; io.y = CLAW.below + 20; io.vx = 0; io.vy = 0; io.grounded = false;
+  // Lo si tiene lontano dal metallo a mano, o annegherebbe prima del tetto: quello che si prova qui
+  // è il tetto, non la caduta.
+  step(world, [intent()]);
+  let passi = 0;
+  while (claw.state === "tiene" && passi < 120 * 20) {
+    io.y = CLAW.below + 20;
+    step(world, [intent()]);
+    passi += 1;
+  }
+  check("dopo dieci secondi la Pinza molla comunque",
+    claw.state !== "tiene" && Math.abs(passi / 120 - CLAW.holds) < 0.2,
+    `${(passi / 120).toFixed(2)} s`);
+  check("e il corpo torna libero", !io.clawId && io.strain === 0);
+}
+
+{
+  // Afferra i nemici come te, e un nemico trascinato nel metallo è un nemico perso: la sua cella
+  // affonda con lui.
+  const preso = (lotta) => {
+    const { world, claw } = conPinza(5);
+    world.foes = [makeFoe(0, { x: claw.x, y: CLAW.below + 40 }, "deriva")];
+    const lui = world.foes[0];
+    lui.guard = 0; lui.y = CLAW.below + 40; lui.grounded = false;
+    // `inerte` mette la mira a un miliardo, quindi il nemico non batte **mai**: è quello che serve
+    // per provare il trascinamento da solo. Chi si dibatte invece resta com'è e vola per conto suo,
+    // e batte al ritmo della sua classe — cinque volte al secondo per una Deriva, che è più di
+    // quanto le serva per stare in quota.
+    if (!lotta) inerte(lui);
+    world.pilots[0].x = 5000;
+    step(world, [intent()]);
+    return { world, claw, lui };
+  };
+
+  const fermo = preso(false);
+  check("afferra i nemici come te", fermo.claw.state === "tiene" && fermo.lui.clawId,
+    `stato ${fermo.claw.state}`);
+  let passi = 0;
+  while (fermo.lui.alive && passi < 120 * 12) { step(fermo.world, [intent()]); passi += 1; }
+  check("e un nemico che non si dibatte finisce nel metallo",
+    !fermo.lui.alive && passi < 120 * 6, `${(passi / 120).toFixed(1)} s`);
+
+  // **Ma i nemici si dibattono**, e a cinque battiti al secondo si liberano — che è più di quanto
+  // serva loro per stare in quota, e infatti mentre vengono trascinati battono al massimo. È una
+  // conseguenza e non una regola scritta: la Pinza è una minaccia per chi gioca, e per i nemici è
+  // soprattutto una scocciatura.
+  const vivo = preso(true);
+  let altri = 0;
+  while (vivo.claw.state === "tiene" && altri < 120 * 12) {
+    step(vivo.world, [intent()]);
+    // Anche qui la quota si tiene ferma: quello che si prova è che si dibatte abbastanza da
+    // spezzare la presa, non che nuota più in fretta di quanto venga tirato.
+    vivo.lui.y = CLAW.below + 40;
+    altri += 1;
+  }
+  check("un nemico che si dibatte invece si libera",
+    vivo.lui.alive && altri < 120 * 6, `${(altri / 120).toFixed(1)} s`);
+}
+
+{
+  // Non esce mai dove un ripiano le taglierebbe la strada: sarebbe una Pinza innocua proprio sopra
+  // la piattaforma più grande della mappa, che è dove si sta di più.
+  const world = newGame(31, 1);
+  while (world.wave < 3) { svuota(world); startWave(world); }
+  const sotto = decks(world).filter((d) => d.y > CLAW.below && d.y < MELT);
+  let brutte = 0;
+  for (let giro = 0; giro < 200; giro += 1) {
+    world.claw.state = "sotto";
+    world.claw.left = -1;
+    world.claw.held = null;
+    step(world, [intent()]);
+    if (sotto.some((d) => world.claw.x > d.x && world.claw.x < d.x + d.w)) brutte += 1;
+  }
+  check("non esce mai sotto un ripiano", brutte === 0, `${brutte} volte su 200`);
 }
 
 // -----------------------------------------------------------------------------------------------------------------

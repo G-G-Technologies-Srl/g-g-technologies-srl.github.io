@@ -31,7 +31,7 @@
 
 import {
   FIELD, CEILING, MELT, DECK, PIXEL, PILOT, SPRITE, PLATFORMS, KINDS, CELLA, SHIELD, HEAD,
-  INTRUDER, lanceTip, mouth,
+  INTRUDER, CLAW, lanceTip, mouth,
 } from "./game.js";
 import {
   PILOT_SPRITES, PALETTE, TINTE, ALPHABET, EYE, EGG, EGG_SPRITE, EGG_PALETTES,
@@ -1328,6 +1328,60 @@ function _paintIntruder(ctx, intruso, cx) {
   }
 }
 
+/**
+ * La Pinza: un braccio che esce dal metallo e una ganascia che si apre e si chiude.
+ *
+ * **Il braccio parte sempre dal pelo della colata**, e la sua lunghezza è la distanza fino alla
+ * ganascia: così quello che si vede è una cosa sola che esce, non una ganascia che vola con un
+ * bastone sotto. Segue anche il gonfiore della superficie, perché il punto da cui esce è metallo
+ * liquido e non un pavimento.
+ *
+ * La ganascia si **chiude quando prende**. È l'unico modo che ha per dire che ti ha preso prima che
+ * tu senta di non poterti muovere: aperta cerca, chiusa tiene, e la differenza si legge da lontano
+ * quanto la differenza fra un'ala alzata e una abbassata.
+ */
+function _paintClaw(ctx, claw, cx) {
+  const base = px(MELT) + _swell(cx, _now);
+  const cima = px(claw.y);
+  if (cima >= base) return;
+
+  const tiene = claw.state === "tiene";
+  const mezzo = Math.round(px(CLAW.w) / 2);
+
+  // Il braccio: due colonne di metallo con un filo chiaro fra loro. Due e non una, perché una sola
+  // a questa scala è un filo e un filo non tira niente.
+  for (let y = cima; y < base; y += 1) {
+    ctx.fillStyle = PAINT.hullDark;
+    ctx.fillRect(cx - 3, y, 6, 1);
+    ctx.fillStyle = PAINT.hull;
+    ctx.fillRect(cx - 2, y, 4, 1);
+    ctx.fillStyle = PAINT.hullLit;
+    ctx.fillRect(cx - 1, y, 1, 1);
+  }
+
+  // Le due ganasce, che si aprono e si chiudono. Aperte puntano in fuori, chiuse si toccano.
+  const apertura = tiene ? 2 : mezzo;
+  for (const verso of [-1, 1]) {
+    for (let i = 0; i < 9; i += 1) {
+      const alto = Math.round(i * 0.9);
+      const x = cx + verso * (1 + Math.round((apertura * i) / 8));
+      // Un contorno scuro attorno a ogni segmento: la ganascia si chiude **sopra** un corpo
+      // disegnato a mano, e senza un bordo si perde dentro le piume. È lo stesso motivo per cui il
+      // metallo ha un filo scuro sul pelo.
+      ctx.fillStyle = PAINT.hullDark;
+      ctx.fillRect(x - 1, cima - alto - 4, 4, 5);
+      ctx.fillStyle = i > 5 ? PAINT.hullLit : PAINT.hull;
+      ctx.fillRect(x, cima - alto - 3, 2, 3);
+    }
+  }
+
+  // Il punto da cui esce, rovente: il metallo si apre per farla passare.
+  ctx.fillStyle = PAINT.meltHot;
+  ctx.fillRect(cx - 5, base - 2, 10, 2);
+  ctx.fillStyle = PAINT.meltFlash;
+  ctx.fillRect(cx - 3, base - 1, 6, 1);
+}
+
 function _paintPilot(ctx, pilot, cx) {
   const { rows: sprite, anchor, eye } = _frameOf(pilot);
   const flip = pilot.facing < 0;
@@ -1640,6 +1694,11 @@ export function draw(canvas, world) {
   for (const body of [...(world.foes || []), ...world.pilots]) {
     if (!body.alive) continue;
     _wrapped(px(body.x), (x) => _paintPilot(ctx, body, x));
+  }
+
+  // La Pinza sopra i corpi: tiene qualcuno, e una presa dietro a chi tiene non è una presa.
+  if (world.claw && world.claw.state !== "sotto") {
+    _wrapped(px(world.claw.x), (x) => _paintClaw(ctx, world.claw, x));
   }
 
   // Gli Intrusi sopra le cavalcature: attraversano le piattaforme e vanno più veloci di tutto il
