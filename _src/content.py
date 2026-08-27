@@ -594,9 +594,12 @@ CHROME = {
                 ("DigiSense®", "/digisense/"),
                 ("Insights", "/insights/"),
                 ("App gratuite", "/app/"),
-                ("Sito ufficiale", PODZ_SITE + "/"),
-                ("Download", PODZ_SITE + "/download.html"),
-                ("Release", "https://github.com/G-G-Technologies-Srl/digisense-releases/releases"),
+                # Each one names the product. A footer is scanned, not read in order, so a label
+                # that leans on the line above it to be understood is a label that says nothing:
+                # «Sito ufficiale» on its own reads as this site, the one already open.
+                ("Sito ufficiale Podz.AI", PODZ_SITE + "/"),
+                ("Scarica Podz.AI", PODZ_SITE + "/download.html"),
+                ("Release Podz.AI", "https://github.com/G-G-Technologies-Srl/digisense-releases/releases"),
             ]),
             ("Contatti", [
                 ("Chi siamo", "/chi-siamo/"),
@@ -625,7 +628,10 @@ CHROME = {
         "stats": [
             ("1997", "il primo progetto"),
             ("18", "anni nella manifattura"),
-            ("900", "operatori monitorati"),
+            # Non «monitorati»: accanto a «il primo progetto» e «anni nella manifattura» si leggeva
+            # come «monitorati da noi», mentre G&G è una delle affiliazioni dello studio. Il numero
+            # è esatto, l'attribuzione no. Stessa etichetta scritta a mano anche in _src/home.html.
+            ("900", "operatori nello studio"),
         ],
         "breadcrumb_home": "Home",
         "breadcrumb_services": "Servizi",
@@ -672,9 +678,9 @@ CHROME = {
                 ("DigiSense®", "/en/digisense/"),
                 ("Insights", "/en/insights/"),
                 ("Free apps", "/en/app/"),
-                ("Official website", PODZ_SITE + "/"),
-                ("Download", PODZ_SITE + "/download.html"),
-                ("Releases", "https://github.com/G-G-Technologies-Srl/digisense-releases/releases"),
+                ("Podz.AI official website", PODZ_SITE + "/"),
+                ("Download Podz.AI", PODZ_SITE + "/download.html"),
+                ("Podz.AI releases", "https://github.com/G-G-Technologies-Srl/digisense-releases/releases"),
             ]),
             ("Contact", [
                 ("About", "/en/about/"),
@@ -689,7 +695,7 @@ CHROME = {
         "stats": [
             ("1997", "the first project"),
             ("18", "years in manufacturing"),
-            ("900", "workers monitored"),
+            ("900", "workers in the study"),
         ],
         "breadcrumb_home": "Home",
         "breadcrumb_services": "Services",
@@ -721,6 +727,12 @@ BANNED = {
         ("leader", "superlativo vietato"),
         ("all'avanguardia", "superlativo vietato"),
         ("soluzione unica", "superlativo vietato"),
+        ("efficientamento", "burocratese: di' cosa fai — «dove il processo perde tempo»"),
+        ("asservimento", "gergo di reparto: usa «carico e scarico della macchina»"),
+        ("privacy by design", "locuzione inglese non tradotta né spiegata in una pagina italiana"),
+        # Vietata la *promessa*, non la parola: l'articolo sull'AI Act usa «dati al sicuro» per
+        # descrivere la scelta binaria che il mercato offriva, ed è un uso legittimo.
+        ("tuoi dati al sicuro", "vago come promessa: di' cosa succede — «restano lì», «non escono»"),
     ],
     "en": [
         ("biovital", "calco dall'italiano, nessuno lo cerca: usa vital signs"),
@@ -739,6 +751,9 @@ BANNED = {
         ("leader", "superlativo vietato"),
         ("cutting-edge", "superlativo vietato"),
         ("unique solution", "superlativo vietato"),
+        ("the company's", "terza persona: il lettore è l'azienda, dagli del your"),
+        ("never leaves your machine", "garanzia assoluta: l'anonimizzazione manda dati al cloud"),
+        ("data kept safe", "vago come promessa: di' cosa succede — «stays put», «does not leave»"),
     ],
 }
 
@@ -791,10 +806,13 @@ PAGES = [
                     "segue in continuo l'elettrocardiogramma e il respiro di paramedici e operatori sanitari "
                     "mentre lavorano, e porta gli allarmi a una centrale in tempo reale.",
                     "Sono stati seguiti 900 fra paramedici e operatori dell'emergenza, per dodici mesi. "
-                    "G&amp;G Technologies è una delle affiliazioni dello studio, insieme al CNR, "
-                    "all'Università di Bologna, alla Johns Hopkins University e all'Università Politecnica "
-                    "delle Marche. Il nostro amministratore delegato, <strong>Gian Angelo "
-                    "Geminiani</strong>, ne è il secondo autore.",
+                    # «Fra cui», non un elenco chiuso: home e Chi siamo dicono «quattro università», e
+                    # qui se ne leggevano tre. Chi contava trovava una contraddizione. Quando la quarta
+                    # è confermata sul paper, si aggiunge qui e l'elenco torna completo.
+                    "G&amp;G Technologies è una delle affiliazioni dello studio, insieme al CNR e a "
+                    "quattro università, fra cui l'Università di Bologna, la Johns Hopkins University e "
+                    "l'Università Politecnica delle Marche. Il nostro amministratore delegato, "
+                    "<strong>Gian Angelo Geminiani</strong>, ne è il secondo autore.",
                     "Un'altra affiliazione è AccYouRate Group, che progetta, brevetta e produce i "
                     "dispositivi indossabili: lì Geminiani è stato direttore "
                     "tecnico per quasi cinque anni, dal 2020 al 2024. La competenza su questa pagina "
@@ -822,14 +840,14 @@ PAGES = [
                   "Avvisi su soglie e anomalie",
                   "Interfacce per operatore e per paziente"]),
                 ("data", "Elaborazione dei segnali fisiologici",
-                 "I segnali biologici sono rumorosi e voluminosi. Li filtriamo, li normalizziamo e li "
-                 "rendiamo interrogabili.",
+                 "I segnali biologici sono rumorosi e voluminosi. Li ripuliamo, li riportiamo tutti alla "
+                 "stessa scala, così sono confrontabili, e li archiviamo in modo che si possano cercare.",
                  ["Pulizia e normalizzazione del segnale",
                   "Archiviazione di serie temporali",
                   "Analisi e modelli sui dati raccolti"]),
                 ("gauge", "Monitoraggio ambientale",
-                 "Non tutto si indossa. Sensori in casa che seguono l'ambiente e le abitudini di "
-                 "pazienti fragili e anziani, senza chiedere loro di ricordarsi di nulla.",
+                 "Alcune misure stanno nell'ambiente. Sensori in casa che seguono l'ambiente e le abitudini di "
+                 "pazienti fragili e anziani, e che funzionano da soli.",
                  ["Sensori ambientali e domestici",
                   "Rilevazione di anomalie nelle abitudini",
                   "Avvisi a familiari e personale di assistenza"]),
@@ -838,7 +856,7 @@ PAGES = [
             "steps_intro": "Il parametro viene prima. La tecnologia viene per ultima.",
             "steps": [
                 ("Definire il parametro", "Quale dato serve davvero, ogni quanto e chi lo legge. Sbagliare "
-                                          "qui non si corregge dopo senza rifare la scheda."),
+                                          "qui si corregge solo rifacendo la scheda."),
                 ("Progettare il dispositivo", "Sensore, consumo, forma e piattaforma dati vengono scelti insieme: sono "
                                "vincoli che si condizionano a vicenda."),
                 ("Prototipare e provare sul campo", "Prototipo, firmware, piattaforma e prove sul campo con chi userà il "
@@ -870,9 +888,9 @@ PAGES = [
                 # the boundary explicitly is worth more than leaving it to be guessed: it says what we
                 # do, what we do not, and that we know where the line is.
                 ("Il dispositivo diventa un dispositivo medico certificato?",
-                 "Non da noi, e la distinzione conta. Progettiamo l'elettronica, il firmware e la "
-                 "piattaforma; la marcatura come dispositivo medico è un percorso a sé, con un "
-                 "organismo notificato che valuta e firma. Quello che facciamo è progettare sapendo "
+                 "La marcatura la firma un organismo notificato, ed è un percorso a sé: la "
+                 "distinzione conta. Noi progettiamo l'elettronica, il firmware e la "
+                 "piattaforma. Quello che facciamo è progettare sapendo "
                  "dove porta quel percorso — la classificazione del dispositivo, la documentazione "
                  "che servirà, lo sviluppo software secondo la norma di settore — e dirti dove si "
                  "colloca il tuo caso prima che tu abbia speso in una direzione sbagliata. Se il "
@@ -922,9 +940,9 @@ PAGES = [
                     "raises alarm events to a control centre in real time.",
                     "900 paramedics and emergency workers were followed for twelve months. "
                     "G&amp;G Technologies is one of the affiliations on the study, alongside the Italian "
-                    "National Research Council, the University of Bologna, Johns Hopkins University and "
-                    "Università Politecnica delle Marche. Our chief executive, <strong>Gian Angelo "
-                    "Geminiani</strong>, is its second author.",
+                    "National Research Council and four universities, among them the University of "
+                    "Bologna, Johns Hopkins University and Università Politecnica delle Marche. Our "
+                    "chief executive, <strong>Gian Angelo Geminiani</strong>, is its second author.",
                     "Another affiliation is AccYouRate Group, which designs, patents and manufactures the "
                     "wearable devices themselves: Geminiani was its chief technology officer "
                     "for almost five years, from 2020 to 2024. The expertise on this page comes from "
@@ -952,14 +970,14 @@ PAGES = [
                   "Threshold and anomaly alerts",
                   "Interfaces for operators and for patients"]),
                 ("data", "Physiological signal processing",
-                 "Biological signals are noisy and voluminous. We filter them, normalise them and make "
-                 "them queryable.",
+                 "Biological signals are noisy and voluminous. We clean them up, bring them all to the "
+                 "same scale so they can be compared, and store them so they can be searched.",
                  ["Signal cleaning and normalisation",
                   "Time-series storage",
                   "Analysis and models on the collected data"]),
                 ("gauge", "Ambient monitoring",
-                 "Not everything is worn. Sensors in the home that follow the environment and the "
-                 "routines of frail and elderly patients, without asking them to remember anything.",
+                 "Some measurements live in the room. Sensors in the home that follow the environment and the "
+                 "routines of frail and elderly patients, and that work on their own.",
                  ["Ambient and home sensors",
                   "Detection of changes in daily routine",
                   "Alerts to family and care staff"]),
@@ -968,7 +986,7 @@ PAGES = [
             "steps_intro": "The parameter comes first. The technology comes last.",
             "steps": [
                 ("Define the parameter", "Which reading you actually need, how often, and who reads it. Get this "
-                                         "wrong and it cannot be fixed later without redoing the board."),
+                                         "wrong and the fix later is a new board."),
                 ("Design the device", "Sensor, power budget, form factor and data platform are chosen together: they "
                            "constrain each other."),
                 ("Prototype and field-test", "Prototype, firmware, platform and field trials with the people who will use the "
@@ -998,9 +1016,9 @@ PAGES = [
                  "data usable, or the firmware needs reworking to cut power draw. We start from what is "
                  "already there."),
                 ("Does the device end up certified as a medical device?",
-                 "Not by us, and the distinction matters. We design the electronics, the firmware and "
-                 "the platform; marking a device as a medical device is a separate path, with a "
-                 "notified body that assesses it and signs. What we do is design in the knowledge of "
+                 "A notified body signs the marking, and it is a path of its own: the distinction "
+                 "matters. We design the electronics, the firmware and the platform. What we do is "
+                 "design in the knowledge of "
                  "where that path leads — how the device would be classified, the documentation it "
                  "will need, software development to the relevant standard — and tell you where your "
                  "case sits before you have spent money going the wrong way. If the device does not "
@@ -1069,7 +1087,8 @@ PAGES = [
                            "in pochi click.",
                 "body": [
                     "Vendere un infisso vuol dire tenere insieme due linguaggi. Quello tecnico — "
-                    "trasmittanza termica, stratigrafia, prestazioni — e quello commerciale, il prezzo. "
+                    "la trasmittanza termica, gli strati di cui è fatto il vetro, le prestazioni — e quello "
+                    "commerciale, il prezzo. "
                     "Chi sta davanti al cliente deve rispondere su tutti e due, e spesso deve chiamare "
                     "l'ufficio tecnico e richiamare il giorno dopo.",
                     "Per <strong>Brighi Infissi</strong> abbiamo costruito un configuratore di prodotto "
@@ -1092,7 +1111,7 @@ PAGES = [
             "cards": [
                 ("robot", "Automazione bordo macchina",
                  "Robotizzazione di operazioni manuali ripetitive e gestione del flusso attorno alla macchina.",
-                 ["Asservimento e manipolazione",
+                 ["Carico e scarico della macchina",
                   "Logiche di controllo e sicurezza",
                   "Pannello operatore in italiano, con gli allarmi scritti in chiaro"]),
                 ("chip", "Integrazione con sistemi embedded",
@@ -1100,7 +1119,7 @@ PAGES = [
                  ["Comunicazione fra macchina e linea",
                   "Raccolta dati di produzione",
                   "Integrazione con i gestionali esistenti"]),
-                ("gauge", "Efficientamento dei processi",
+                ("gauge", "Dove il processo perde tempo",
                  "Misurare prima di intervenire: dove sono davvero i fermi, gli scarti e i tempi morti.",
                  ["Analisi dei tempi e dei fermi",
                   "Tracciabilità di lotto e pezzo",
@@ -1108,7 +1127,7 @@ PAGES = [
                 ("pulse", "Robotica di servizio e assistenza domiciliare",
                  "Robot che stanno in casa, non in fabbrica: progettati per assistere persone fragili e "
                  "anziane, e comandati a voce invece che da un pannello.",
-                 ["Interazione vocale, senza schermi né comandi",
+                 ["Si comanda parlando, a voce",
                   "Integrazione con i sensori ambientali di casa",
                   "Progettazione elettronica e firmware in casa nostra"]),
             ],
@@ -1133,14 +1152,14 @@ PAGES = [
             ],
             "faq_title": "Domande frequenti",
             "faq": [
-                ("Da dove cominciamo se non sappiamo cosa automatizzare?",
+                ("Da dove si comincia, se non so cosa automatizzare?",
                  "Dalla misura. Prima si guarda dove il processo perde tempo o genera scarti: spesso il "
                  "collo di bottiglia non è dove ci si aspetta, e l'intervento giusto costa meno di quello "
                  "che si stava per comprare."),
                 # The advice was sound and unsupported: the reader had no reason to take our word for
                 # it. The closing clause is the credential that makes it a judgement instead of an
                 # opinion — see the 1997-2002 entry on the homepage timeline.
-                ("Dobbiamo cambiare il gestionale?",
+                ("Devo cambiare il gestionale?",
                  "Quasi mai. L'automazione si innesta sui flussi e sui sistemi già in uso. Sostituire il "
                  "gestionale è un progetto a sé: se serve lo diciamo, ma non è un prerequisito — e lo "
                  "diciamo sapendo cosa costa, perché il nostro amministratore delegato ha messo in "
@@ -1178,7 +1197,7 @@ PAGES = [
                  "lavoro sui wearable è dentro uno studio con revisione paritaria, con un identificatore "
                  "permanente. E di quello che abbiamo fatto in fabbrica parliamo "
                  "volentieri: descrivendo i problemi, non i nomi."),
-                ("Quanto dura un intervento come il nostro?",
+                ("Quanto dura un intervento del genere?",
                  "Dipende dal processo, e una stima a scatola chiusa non varrebbe niente. L'analisi è la "
                  "prima fase, ha una durata concordata prima di partire e finisce con un documento: cosa "
                  "automatizzare, in che ordine e con che spesa. Da lì il preventivo è sul tuo processo, "
@@ -1222,7 +1241,8 @@ PAGES = [
                            "in a few clicks.",
                 "body": [
                     "Selling a window means holding two languages together. The technical one — thermal "
-                    "transmittance, layers, performance — and the commercial one, the price. Whoever is "
+                    "transmittance, the layers the glazing is made of, performance — and the commercial one, "
+                    "the price. Whoever is "
                     "sitting in front of the customer has to answer on both, and often has to call the "
                     "technical office and come back the next day.",
                     "For <strong>Brighi Infissi</strong> we built a product configurator for the sales "
@@ -1245,7 +1265,7 @@ PAGES = [
             "cards": [
                 ("robot", "Automation at the machine",
                  "Handing repetitive manual operations to robots, and managing the flow around the machine.",
-                 ["Machine tending and handling",
+                 ["Loading and unloading the machine",
                   "Control and safety logic",
                   "Operator panel in plain language, with alarms spelled out"]),
                 ("chip", "Integration with embedded systems",
@@ -1253,7 +1273,7 @@ PAGES = [
                  ["Machine-to-line communication",
                   "Production data collection",
                   "Integration with existing ERP systems"]),
-                ("gauge", "Process efficiency",
+                ("gauge", "Where the process loses time",
                  "Measure before acting: where the stoppages, scrap and idle time actually are.",
                  ["Cycle-time and downtime analysis",
                   "Batch and part traceability",
@@ -1261,7 +1281,7 @@ PAGES = [
                 ("pulse", "Service robots and home care",
                  "Robots that live in a house, not in a factory: designed to assist frail and elderly "
                  "people, and driven by voice rather than by a control panel.",
-                 ["Voice interaction, no screens or controls",
+                 ["Driven by voice, spoken aloud",
                   "Integration with the home's ambient sensors",
                   "Electronics and firmware designed in-house"]),
             ],
@@ -1272,7 +1292,7 @@ PAGES = [
                                "leads, not just management."),
                 ("Decide what to build", "Technology chosen for the goal, not for fashion. Sometimes the answer "
                                          "is not a robot."),
-                ("Install", "Development, integration with what exists and rollout without stopping the plant "
+                ("Install", "Development, integration with what exists and rollout with the shortest line stop "
                           "more than necessary."),
                 ("Train and maintain", "Maintenance, operator training and evolution over time."),
             ],
@@ -1286,11 +1306,11 @@ PAGES = [
             ],
             "faq_title": "Frequently asked questions",
             "faq": [
-                ("Where do we start if we don't know what to automate?",
+                ("Where do I start if I do not know what to automate?",
                  "With measurement. First we look at where the process loses time or generates scrap: the "
                  "bottleneck is often not where you expect, and the right intervention costs less than the "
                  "one you were about to buy."),
-                ("Do we have to replace our ERP?",
+                ("Do I have to replace my ERP?",
                  "Almost never. Automation sits on top of the systems and flows you already run. Replacing the "
                  "ERP is a project in its own right: if it is needed we will say so, but it is not a "
                  "prerequisite — and we say it knowing what it costs, because our chief executive put an "
@@ -1303,9 +1323,9 @@ PAGES = [
                  "Whoever builds it or places it on the market: the risk assessment and the marking "
                  "stay with them, and that is not a formality you delegate to software. We do the "
                  "control, the integration and the data, and we work with whoever signs so that the "
-                 "logic respects what the assessment established. If we told you the safety side was "
-                 "anybody who offers to take on the safety side in the builder's place is promising you "
-                 "something they cannot deliver."),
+                 "logic respects what the assessment established. Anybody who offers to take on the "
+                 "safety side in the builder's place is promising you something they cannot "
+                 "deliver."),
                 ("Who owns the code at the end of the project?",
                  "The code written for your project is yours, and it is handed over. What stays ours "
                  "is <a href=\"/en/digisense/\">DigiSense®</a>, the framework underneath, licensed to "
@@ -1377,8 +1397,7 @@ PAGES = [
                     "Ne abbiamo scritto per esteso, appoggiandoci a una vulnerabilità con un "
                     "identificatore pubblico — <strong>CVE-2025-32711</strong> — che chiunque può "
                     "andare a leggere per conto suo, con la sua data e le sue valutazioni di gravità. "
-                    "Non è un'opinione sul rischio: è un caso documentato, e l'articolo elenca le "
-                    "fonti in fondo alla pagina.",
+                    "È un caso documentato, e l'articolo elenca le fonti in fondo alla pagina.",
                     "Prova una cosa sola, ed è quella che conta prima di firmare: il ragionamento è "
                     "stato fatto, ed è pubblico. Puoi controllarlo da solo, invece di fidarti. "
                     "<a href=\"/insights/agenti-autonomi-perimetro/\">Leggi l'articolo</a>.",
@@ -1402,15 +1421,15 @@ PAGES = [
                   "Chi decide vede su cosa sta decidendo",
                   "Un indicatore concordato prima di partire, misurato dopo"]),
                 ("data", "Analisi e trasformazione dati",
-                 "Estrazione, normalizzazione e lettura di dati non strutturati: documenti, log, archivi.",
+                 "Estrazione e lettura di dati che non stanno in una tabella: documenti, registri di sistema, archivi.",
                  ["Lettura di documenti e archivi storici",
                   "Normalizzazione di dati sparsi",
                   "Ricerca semantica sui documenti (RAG)"]),
                 ("plug", "Integrazione nei processi esistenti",
-                 "L'AI si innesta sui gestionali e sui flussi già in uso, senza rifare tutto da capo.",
+                 "L'AI si innesta sui gestionali e sui flussi già in uso, e quelli restano come sono.",
                  ["Integrazione con ERP e gestionali in uso",
                   "Automazione dei passaggi ripetitivi",
-                  "Nessuna migrazione: i dati restano dove sono"]),
+                  "I dati restano dove sono"]),
             ],
             "steps_title": "Come lavoriamo",
             "steps_intro": "Prima capiamo il processo, poi scegliamo la tecnologia. Mai il contrario.",
@@ -1437,11 +1456,11 @@ PAGES = [
             ],
             "faq_title": "Domande frequenti",
             "faq": [
-                ("Dobbiamo avere i dati in ordine prima di chiamarvi?",
+                ("Devo avere i dati in ordine prima di chiamarvi?",
                  "No, ed è raro che lo siano. Rendere leggibili i dati che oggi stanno in documenti, "
                  "archivi e log è parte del lavoro. Quello che serve è sapere quale decisione quei dati "
                  "devono supportare."),
-                ("I nostri documenti finiscono in un modello di terze parti?",
+                ("I miei documenti finiscono in un modello di terze parti?",
                  "Solo se lo decidi tu. Realizziamo architetture in cui i modelli girano sul tuo "
                  "server e i documenti non escono. Quando serve la potenza del cloud, i dati personali "
                  "possono essere mascherati prima dell'invio."),
@@ -1452,8 +1471,11 @@ PAGES = [
                 # Same substance as the version on the robotics page, but here the argument is stronger:
                 # a firm that proposes keeping your data in-house and then parades client logos is
                 # contradicting its own pitch. The constraint becomes evidence of the thing we sell.
-                ("Non avete casi da mostrare?",
-                 "Pochi, e per un motivo che dovrebbe interessarti. Quasi tutti i lavori sono coperti da "
+                ("Che prove posso controllare prima di parlare con voi?",
+                 "Tre, e si controllano da fuori: Podz.AI si scarica e si prova, gli articoli elencano "
+                 "le fonti in fondo a ciascuno, e lo studio sui wearable ha un identificatore "
+                 "permanente. I nomi dei clienti restano fuori, e il motivo dovrebbe interessarti: "
+                 "quasi tutti i lavori sono coperti da "
                  "accordi di riservatezza, e chi ti mostra i nomi degli altri clienti un giorno "
                  "mostrerà il tuo: sarebbe una scelta strana da parte nostra, che ti proponiamo di "
                  "tenere i dati in casa. Quello che si "
@@ -1485,8 +1507,11 @@ PAGES = [
             "lead": "Agents that read your documents and query your systems. AI does the heavy lifting, "
                     "the decision stays with whoever answers for it.",
             "intro": [
-                "Demos always work. AI projects stall afterwards, when the model meets the company's real "
-                "data: incomplete, badly written, scattered across five different systems.",
+                # Ripeteva l'h2 parola per parola — «Demos always work. Projects stall afterwards» —
+                # e poi passava alla terza persona, dove l'italiano dà del tu: «I tuoi sono
+                # incompleti». Questa è la struttura italiana portata in inglese.
+                "The model in the demo works on clean data. Yours is incomplete, badly written and "
+                "scattered across five different systems: that is where the project stalls.",
                 "So we start from the process: where time is lost, where mistakes happen, where a piece of "
                 "data already exists but nobody reads it. Then we build agents that do one defined job, "
                 "integrate language models (LLMs) into the systems you already run and — when the data "
@@ -1502,9 +1527,8 @@ PAGES = [
                     "mailbox or the business system an architecture decision rather than a setting.",
                     "We have written it up at length, resting the argument on a vulnerability with a "
                     "public identifier — <strong>CVE-2025-32711</strong> — that anybody can go and "
-                    "read for themselves, with its date and its severity ratings. It is not an "
-                    "opinion about risk: it is a documented case, and the article lists its sources "
-                    "at the foot of the page.",
+                    "read for themselves, with its date and its severity ratings. It is a documented case, "
+                    "and the article lists its sources at the foot of the page.",
                     "It proves one thing only, and it is the thing that matters before you sign: the "
                     "reasoning has been done, and it is public. You can check it yourself instead of "
                     "taking our word for it. "
@@ -1528,15 +1552,15 @@ PAGES = [
                   "The person deciding sees what they are deciding on",
                   "One agreed indicator, set before we start and measured after"]),
                 ("data", "Data analysis and transformation",
-                 "Extraction, normalisation and reading of unstructured data: documents, logs, archives.",
+                 "Extraction and reading of data that does not sit in a table: documents, logs, archives.",
                  ["Reading documents and historical archives",
                   "Normalising scattered data",
                   "Semantic search over your documents (RAG)"]),
                 ("plug", "Integration into existing processes",
-                 "AI plugs into the ERP and the flows you already run. Nothing gets rebuilt.",
+                 "AI plugs into the ERP and the flows you already run, and they stay as they are.",
                  ["Plugs into your ERP and the systems you already run",
                   "Automating repetitive steps",
-                  "No migration: the data stays where it is"]),
+                  "The data stays where it is"]),
             ],
             "steps_title": "How we work",
             "steps_intro": "First we understand the process, then we choose the technology.",
@@ -1559,11 +1583,11 @@ PAGES = [
             ],
             "faq_title": "Frequently asked questions",
             "faq": [
-                ("Does our data have to be clean before we start?",
+                ("Does my data have to be in order before I call you?",
                  "No — it almost never is. Cleaning it up is part of the job: the data sits in documents, "
                  "archives and logs today, and making it readable is what we do first. What you do need "
                  "is to know which decision the data has to support."),
-                ("Do our documents end up in a third-party model?",
+                ("Do my documents end up in a third-party model?",
                  "Only if you choose to. We build architectures where models run on your own server and "
                  "documents do not leave. When cloud power is needed, personal data can be masked before "
                  "it is sent."),
@@ -1571,8 +1595,11 @@ PAGES = [
                  "A chatbot answers. An agent performs a task: it reads a document, queries a system, "
                  "produces a verifiable result. The practical difference is that an agent's outcome can be "
                  "measured."),
-                ("Do you not have case studies to show?",
-                 "Few, and for a reason that should matter to you. Almost all of it is covered by "
+                ("What proof can I check before talking to you?",
+                 "Three things, and all of them from outside: Podz.AI can be downloaded and tried, the "
+                 "articles list their sources at the foot of each one, and the wearable study has a "
+                 "permanent identifier. Client names stay out of it, and the reason should matter to "
+                 "you: almost all of it is covered by "
                  "confidentiality agreements, and a firm that shows you other clients' names will one "
                  "day show yours — an odd choice for us, of all people, since we propose keeping your "
                  "data in-house. What can be checked "
@@ -1616,18 +1643,18 @@ PAGES = [
                     "prepara il lavoro, e lascia a te la firma. Costruita sul framework DigiSense®.",
             "intro": [
                 "Podz.AI è un'unica applicazione che si installa sul computer e lavora con i documenti di chi "
-                "la usa, senza mandarli a nessuno. Il cloud è una scelta, non il default.",
-                "Nessuno ce l'ha ordinato: l'abbiamo costruito prima di tutto per noi, sul framework "
+                "la usa, e li lascia dove sono. Il cloud è una scelta, non il default.",
+                "L'abbiamo costruito prima di tutto per noi, sul framework "
                 "DigiSense®, per rispondere a una domanda che ci arrivava da anni — come si usa l'AI "
                 "su documenti che non possono uscire dallo studio o dall'azienda.",
             ],
-            "cards_title": "Come funziona, in breve",
+            "cards_title": "Tre scelte di progetto",
             "cards_intro": "Locale come impostazione. Mascherato prima di uscire. Specialisti che installi.",
             "cards": [
                 ("shield", "Local-first e privacy",
                  "Conversazioni e documenti restano sulla macchina di chi lavora, in un database cifrato, in "
                  "una cartella che resta sua.",
-                 ["Nessun account obbligatorio",
+                 ["L'account è facoltativo",
                   "Database locale cifrato",
                   "Funziona anche offline con il motore locale"]),
                 ("mask", "Anonimizzazione integrata",
@@ -1711,8 +1738,8 @@ PAGES = [
                     "documents, prepares the work, and leaves the sign-off to you. Built on DigiSense®.",
             "intro": [
                 "Podz.AI is a single application you install on your computer that works with your documents "
-                "without sending them to anyone. The cloud is a choice, not the default.",
-                "Nobody commissioned it. We built it for ourselves first, on the DigiSense® framework, to "
+                "and leaves them where they are. The cloud is a choice, not the default.",
+                "We built it for ourselves first, on the DigiSense® framework, to "
                 "answer a question clients have been asking us for years: how do you use AI on documents "
                 "that cannot leave the firm?",
             ],
@@ -1722,7 +1749,7 @@ PAGES = [
                 ("shield", "Local-first and private",
                  "Conversations and documents stay on your machine, in an encrypted database, in a folder "
                  "that remains yours.",
-                 ["No mandatory account",
+                 ["The account is optional",
                   "Encrypted local database",
                   "Works offline with the local engine"]),
                 ("mask", "Built-in anonymiser",
@@ -1734,7 +1761,7 @@ PAGES = [
                 ("spark", "One-click specialists",
                  "Expertise you install like an app: Legal Assistant, Web Researcher, CV Screening.",
                  ["You always talk to one assistant",
-                  "Podz brings in the right specialist",
+                  "Podz.AI brings in the right specialist",
                   "Three specialists available today, more on the way"]),
             ],
             "steps_title": "Who we built it for",
@@ -1746,8 +1773,11 @@ PAGES = [
                                       "recruiter's own computer."),
                 ("SMEs with sensitive data", "Quotations, bookkeeping, customer and supplier records: the "
                                              "AI works where the data already lives."),
+                # Non «never leaves your machine»: la card dell'anonimizzazione, sulla stessa pagina,
+                # dice che un lavoro può passare dal cloud con i dati mascherati. Era la stessa garanzia
+                # assoluta che BANNED vieta già nella forma «never sees the real data».
                 ("Consultants", "Research with sources you can check, and summaries you can send. Client "
-                                "data never leaves your machine."),
+                                "data stays under your control."),
             ],
             "facts_title": "In short",
             "facts": [
@@ -1819,7 +1849,7 @@ PAGES = [
                 "documenti — poggia sullo stesso strato di tecnologia. Quello strato ha un nome: "
                 "<strong>DigiSense\u00ae</strong>, il nostro framework, marchio registrato di G&amp;G "
                 "Technologies S.r.l.",
-                "Non lo vendiamo a scaffale: lo usiamo per costruire il tuo progetto. È nato perché gli stessi problemi "
+                "Lo usiamo per costruire il tuo progetto. È nato perché gli stessi problemi "
                 "tornavano in settori diversi: prendere un dato da un sensore, ripulirlo, farlo leggere a un "
                 "modello, far agire una macchina. Risolti una volta e bene, si riusano ovunque.",
             ],
@@ -1827,8 +1857,8 @@ PAGES = [
             "cards_intro": "Tre strati che tornano in ogni progetto, dal sensore alla decisione.",
             "cards": [
                 ("data", "Acquisizione ed elaborazione dati",
-                 "Segnali da sensori e dispositivi: raccolta continua, pulizia, normalizzazione e "
-                 "archiviazione interrogabile.",
+                 "Segnali da sensori e dispositivi: raccolti in continuo, ripuliti, riportati alla stessa "
+                 "scala e archiviati in modo che si possano cercare.",
                  ["Integrazione dei sensori",
                   "Pulizia e normalizzazione del segnale",
                   "Archiviazione di serie temporali"]),
@@ -1837,7 +1867,7 @@ PAGES = [
                  "personali vengono mascherati prima.",
                  ["Modelli aperti in esecuzione on-premise",
                   "Mascheramento dei dati personali",
-                  "Nessun documento usato per addestrare modelli"]),
+                  "I tuoi documenti servono a rispondere alle tue domande"]),
                 ("robot", "Controllo di macchine e robot",
                  "Lo stesso strato che legge i dati comanda l'automazione: logiche di controllo, sicurezza "
                  "e dialogo con la linea.",
@@ -1905,7 +1935,7 @@ PAGES = [
                 "Everything we deliver — a medical wearable, a robotic cell, an AI that reads documents — "
                 "sits on the same layer of technology. That layer has a name: <strong>DigiSense\u00ae</strong>, "
                 "our framework, a registered trademark of G&amp;G Technologies S.r.l.",
-                "We did not build it to sell it. We built it because the same problems kept coming back in "
+                "We built it because the same problems kept coming back in "
                 "different sectors: take a reading from a sensor, clean it, let a model read it, make a "
                 "machine act on it. Solved once and properly, they can be reused anywhere.",
             ],
@@ -1913,8 +1943,8 @@ PAGES = [
             "cards_intro": "Three layers that recur in every project, from sensor to decision.",
             "cards": [
                 ("data", "Data acquisition and processing",
-                 "Signals from sensors and devices: continuous collection, cleaning, normalisation and "
-                 "queryable storage.",
+                 "Signals from sensors and devices: collected continuously, cleaned, brought to the same "
+                 "scale and stored so they can be searched.",
                  ["Sensor integration",
                   "Signal cleaning and normalisation",
                   "Time-series storage"]),
@@ -1923,7 +1953,7 @@ PAGES = [
                  "masked first.",
                  ["Open models running on-premise",
                   "Masking of personal data",
-                  "Your documents never train a model of ours"]),
+                  "Your documents serve to answer your questions"]),
                 ("robot", "Machine and robot control",
                  "The same layer that reads the data drives the automation: control logic, safety and "
                  "dialogue with the line.",
@@ -1963,7 +1993,7 @@ PAGES = [
                  "sectors. Keeping them in-house lets us work on the whole chain, instead of stopping at "
                  "the boundary of somebody else's product."),
                 ("Can we build something together on DigiSense\u00ae?",
-                 "Yes, we are interested. If you have a problem that touches sensors, data and automation, "
+                 "Yes. If you have a problem that touches sensors, data and automation, "
                  "write to us: the first conversation is about finding out whether there is common ground."),
             ],
             "cta_title": "Do you have a project that touches sensors, data or automation?",
@@ -1996,7 +2026,7 @@ PAGES = [
             "description": "AI on-premise e LLM self-hosted: i modelli girano sui tuoi server e i documenti "
                            "non lasciano l'infrastruttura. Progettazione europea, da San Marino.",
             "kicker": "AI on-premise",
-            "h1": "L'AI può lavorare <span class=\"grad-text\">senza portare via i dati</span>.",
+            "h1": "L'AI lavora <span class=\"grad-text\">dove stanno già i tuoi dati</span>.",
             "lead": "Modelli che girano sulla tua macchina o sul tuo server. I documenti restano dove sono "
                     "già, e chi decide resti chi decideva prima.",
             "intro": [
@@ -2019,7 +2049,7 @@ PAGES = [
                     "infrastruttura, i documenti che non la lasciano, i dati personali mascherati quando "
                     "serve il cloud — è già dentro un programma che puoi installare.",
                     "Si chiama <strong>Podz.AI</strong>, è il nostro prodotto, e la prova dura trenta "
-                    "giorni. Non serve una riunione: lo scarichi, gli dai i tuoi documenti e guardi cosa "
+                    "giorni. Lo scarichi, gli dai i tuoi documenti e guardi cosa "
                     "fa. Se qualcuno ti racconta l'AI on-premise, provare quello che ha costruito è il "
                     "modo più rapido di capire se sa costruirla.",
                     "Anche lo <a href=\"https://github.com/G-G-Technologies-Srl/digisense-releases/"
@@ -2032,10 +2062,10 @@ PAGES = [
                            "serve.",
             "cards": [
                 ("shield", "Tutto on-premise",
-                 "Modelli e dati sulla stessa macchina o sullo stesso server. Nessuna connessione necessaria "
-                 "per l'elaborazione.",
-                 ["Nessun dato lascia l'infrastruttura",
-                  "Modelli aperti, self-hosted, senza chiavi verso terzi",
+                 "Modelli e dati sulla stessa macchina o sullo stesso server. L'elaborazione funziona anche "
+                 "a rete staccata.",
+                 ["I dati restano nella tua infrastruttura",
+                  "Modelli aperti, self-hosted, chiavi in casa tua",
                   "Il limite è la GPU che hai a disposizione"]),
                 ("mask", "Ibrido: anonimizzazione prima del cloud",
                  "L'elaborazione resta on-premise. Quando serve la potenza del cloud, i dati personali "
@@ -2044,10 +2074,9 @@ PAGES = [
                   "I campi mascherati sono sostituiti prima di uscire dalla macchina",
                   "Si decide caso per caso cosa può uscire"]),
                 ("plug", "Integrazione con i sistemi in uso",
-                 "L'AI legge i documenti e i gestionali dove stanno già, senza copiarli in una piattaforma "
-                 "esterna.",
+                 "L'AI legge i documenti e i gestionali dove stanno già, e lì restano.",
                  ["Accesso controllato agli archivi",
-                  "Nessuna migrazione di dati verso terzi",
+                  "I dati restano nei tuoi archivi",
                   "Tracciabilità di chi ha chiesto cosa"]),
             ],
             "steps_title": "Come lavoriamo",
@@ -2069,7 +2098,7 @@ PAGES = [
             ],
             "faq_title": "Domande frequenti",
             "faq": [
-                ("Che macchina ci serve per far girare l'AI on-premise?",
+                ("Che macchina serve per far girare l'AI on-premise?",
                  "Dipende dalla dimensione del modello e dal carico, e in pratica dipende dalla memoria "
                  "della GPU. Per un uso personale bastano un Mac con chip Apple Silicon o un PC con GPU "
                  "dedicata; per un uso aziendale continuo serve un server con GPU. Il dimensionamento "
@@ -2081,13 +2110,26 @@ PAGES = [
                  "Su compiti generici, i modelli di frontiera in cloud restano più potenti. Su un compito "
                  "definito — leggere un tipo di documento, estrarre certi campi — la differenza si assottiglia "
                  "molto, e il vantaggio della riservatezza pesa di più."),
-                ("Possiamo partire on-premise e aprire al cloud dopo?",
+                ("Posso partire on-premise e aprire al cloud dopo?",
                  "Sì, è la configurazione più comune. Si parte con tutto on-premise e si apre al cloud solo "
                  "per i passaggi che lo richiedono, con i dati personali mascherati prima dell'invio."),
                 ("L'anonimizzazione è sufficiente per la conformità?",
                  "No, e nessuno può dirlo al posto tuo: ai fini del GDPR la valutazione di conformità resta "
-                 "del titolare del trattamento. Quello che documentiamo è il meccanismo — quali campi "
-                 "vengono mascherati, cosa esce davvero e come lo verifichi."),
+                 "del titolare del trattamento, cioè di te che decidi perché e come quei dati vengono "
+                 "usati. Quello che documentiamo è il meccanismo — quali campi vengono mascherati, "
+                 "cosa esce davvero e come lo verifichi."),
+                # Qui l'obiezione arriva prima che altrove: è la pagina in cui il lettore sta già
+                # pensando a dove finiscono i suoi dati. La versione lunga sta su Chi siamo.
+                # La domanda era «Siete a San Marino, che non è nell'UE. È un problema?»: una domanda
+                # che chiede di difendersi ottiene una difesa. Questa chiede un'informazione, e la
+                # risposta è un fatto tecnico che gioca a favore dell'architettura.
+                ("Dove vengono elaborati i miei dati, se siete a San Marino?",
+                 "Sui tuoi server. In un'architettura on-premise il modello gira dentro la tua "
+                 "infrastruttura: il luogo del trattamento è il tuo, e la sede del fornitore incide "
+                 "sul contratto, non sul percorso dei dati. È la differenza con un servizio in "
+                 "cloud, dove quel percorso passa per forza dal fornitore. Quando è un servizio "
+                 "nostro a elaborare dati per conto tuo, legge applicabile e luogo del trattamento "
+                 "stanno nel contratto, prima di cominciare."),
             ],
             "cta_title": "Hai dati che non possono uscire e un lavoro che l'AI potrebbe fare?",
             "cta_text": "Descrivici il compito e il tipo di dati. Da lì si capisce se serve tutto in "
@@ -2106,7 +2148,9 @@ PAGES = [
             "description": "On-premise AI and self-hosted LLMs: models run on your own servers and "
                            "documents never leave your infrastructure. Built in Europe, from San Marino.",
             "kicker": "On-premise AI",
-            "h1": "On-premise AI: the work gets done, <span class=\"grad-text\">the data never leaves</span>.",
+            # Nessun altro h1 del sito comincia con l'etichetta della pagina: quel lavoro lo fa già il
+            # <title>, che dice «On-premise AI: self-hosted LLM on your servers». Nell'h1 costava il tono.
+            "h1": "AI that works <span class=\"grad-text\">where your data already is</span>.",
             "lead": "Models that run on your machine or on your server. The documents stay where they "
                     "already are, and the person deciding stays the person who decided before.",
             "intro": [
@@ -2126,7 +2170,7 @@ PAGES = [
                     "documents that never leave it, personal data masked when the cloud is needed — is "
                     "already inside a program you can install today.",
                     "It is called <strong>Podz.AI</strong>, it is our own product, and the trial runs for "
-                    "thirty days. No meeting required: you download it, give it your documents and watch "
+                    "thirty days. You download it, give it your documents and watch "
                     "what it does. If somebody tells you about on-premise AI, trying what they built is "
                     "the quickest way to find out whether they can build it.",
                     "The <a href=\"https://github.com/G-G-Technologies-Srl/digisense-releases/releases\">"
@@ -2139,9 +2183,9 @@ PAGES = [
                            "is needed.",
             "cards": [
                 ("shield", "Fully local",
-                 "Models and data on the same machine or server. No connection needed for processing.",
-                 ["No data leaves the infrastructure",
-                  "Open, self-hosted models, no third-party keys",
+                 "Models and data on the same machine or server. Processing works with the network unplugged.",
+                 ["The data stays inside your infrastructure",
+                  "Open, self-hosted models, keys kept in-house",
                   "The limit is the GPU you have available"]),
                 ("mask", "Hybrid with anonymisation",
                  "The processing stays on-premise. When cloud power is needed, personal data is masked "
@@ -2150,10 +2194,10 @@ PAGES = [
                   "Masked fields are replaced before the request leaves your machine",
                   "What may leave is decided case by case"]),
                 ("plug", "Integration with systems in use",
-                 "AI reads documents and business systems where they already are, without copying them into "
-                 "an external platform.",
+                 "AI reads documents and business systems where they already are, and there they "
+                 "stay.",
                  ["Controlled access to archives",
-                  "No data migration to third parties",
+                  "The data stays in your own archives",
                   "Traceability of who asked for what"]),
             ],
             "steps_title": "How we work",
@@ -2167,7 +2211,7 @@ PAGES = [
                                        "with the people who will use it."),
                 ("Maintain", "Maintenance, model updates and evolution over time."),
             ],
-            "facts_title": "Who we are",
+            "facts_title": "In short",
             "facts": [
                 ("Based in", "Via Marino Moretti 23, 47899 Serravalle, Republic of San Marino."),
                 ("Development", "Software designed and developed entirely in Europe."),
@@ -2175,7 +2219,7 @@ PAGES = [
             ],
             "faq_title": "Frequently asked questions",
             "faq": [
-                ("What machine do you need to run AI locally?",
+                ("What machine does it take to run AI on-premise?",
                  "It depends on model size and load, and in practice on how much GPU memory you have. For "
                  "one person, a Mac with Apple Silicon or a PC with a dedicated GPU. For continuous "
                  "business use, a server with a GPU. Exact sizing we do together, before any quote. It is "
@@ -2186,13 +2230,21 @@ PAGES = [
                  "On generic tasks, frontier cloud models remain more powerful. On a defined task — reading "
                  "one type of document, extracting certain fields — the gap narrows considerably, and the "
                  "confidentiality advantage weighs more."),
-                ("Can we start local and open up to the cloud later?",
+                ("Can I start on-premise and open up to the cloud later?",
                  "Yes, that is the most common setup. You start fully in-house and open to the cloud only "
                  "for the steps that need it, with personal data masked before sending."),
                 ("Is anonymisation enough for compliance?",
                  "No, and nobody can answer that for you: for GDPR purposes the compliance assessment "
-                 "remains with the data controller. What we document is the mechanism — which fields "
-                 "are masked, what actually leaves, and how you verify it."),
+                 "remains with the data controller — that is, with you, who decide why and how that "
+                 "data is used. What we document is the mechanism — which fields are masked, what "
+                 "actually leaves, and how you verify it."),
+                ("Where does my data get processed, if you are in San Marino?",
+                 "On your own servers. In an on-premise architecture the model runs inside your own "
+                 "infrastructure: the place of processing is yours, and our home country bears on "
+                 "the contract rather than on the path the data takes. That is the difference from "
+                 "a cloud service, where that path runs through the supplier by design. Where a "
+                 "service of ours processes data on your behalf, the applicable law and the place "
+                 "of processing sit in the contract, before anything starts."),
             ],
             "cta_title": "Do you have data that cannot leave and work AI could do?",
             "cta_text": "Describe the task and the kind of data. From there we can tell whether you need "
@@ -2228,14 +2280,14 @@ PAGES = [
             "lead": "Progettiamo e realizziamo tecnologia dalla Repubblica di San Marino. Alla guida "
                     "c'è Gian Angelo Geminiani, che fa questo mestiere dal 1997.",
             "intro_title": "Come siamo fatti",
-            "intro_h2": "Non tre reparti. "
-                        "<span class=\"grad-text\">Una rete, e una base sola</span>.",
+            "intro_h2": "Una rete di specialisti, "
+                        "<span class=\"grad-text\">e una base sola</span>.",
             "intro": [
                 "Attorno all'amministratore delegato lavora una rete di collaboratori e partner "
                 "tecnologici in più paesi: architetti software, progettisti elettronici, "
                 "sistemisti, scelti in base al progetto. È il modo in cui una struttura piccola "
                 "tiene insieme elettronica, "
-                "robotica e intelligenza artificiale senza fingere di avere tre reparti.",
+                "robotica e intelligenza artificiale: una competenza per volta, scelta sul progetto.",
                 "Quello che rende la cosa possibile è che non ripartiamo da zero ogni volta. "
                 "Acquisizione dei dati, esecuzione dei modelli e controllo macchina stanno sotto "
                 "ogni progetto, risolti una volta, in <a href=\"/digisense/\">DigiSense®</a>: il "
@@ -2243,7 +2295,7 @@ PAGES = [
                 "sull'impalcatura.",
             ],
             "cards_title": "Cosa puoi verificare da fuori",
-            "cards_intro": "Non i nomi dei clienti. Le cose che puoi controllare da solo.",
+            "cards_intro": "Tre cose che puoi controllare da solo, prima di scriverci.",
             "cards": [
                 ("data", "Uno studio con revisione paritaria",
                  "Novecento operatori dell'emergenza seguiti per dodici mesi, in uno studio pubblicato "
@@ -2253,7 +2305,7 @@ PAGES = [
                   "<a href=\"/servizi/wearable-medicale/\">La pagina che lo racconta</a>"]),
                 ("shield", "Un prodotto che si scarica",
                  "Podz.AI è nostro, si installa e si prova per trenta giorni. Il modo più rapido di "
-                 "giudicare il nostro lavoro senza parlare con noi.",
+                 "giudicare il nostro lavoro, prima ancora di scriverci.",
                  ["Windows, macOS e Linux, con build firmate",
                   "Listino e storico delle release pubblici",
                   "<a href=\"/podz-ai/\">Com'è fatto</a>"]),
@@ -2262,7 +2314,7 @@ PAGES = [
                  "ciascuno, e due si appoggiano a un identificatore esterno che chiunque può "
                  "controllare.",
                  ["Norme citate per esteso, non riassunte",
-                  "Nessun cliente nominato: solo problemi",
+                  "I problemi descritti per esteso",
                   "<a href=\"/insights/\">Leggi gli articoli</a>"]),
             ],
             "steps_title": "Da dove viene la competenza",
@@ -2306,17 +2358,37 @@ PAGES = [
             "faq": [
                 ("Quante persone siete?",
                  "Il nucleo è piccolo, la rete attorno è ampia: collaboratori e partner scelti in "
-                 "base al progetto, in più paesi. Preferiamo dirlo prima. Se cerchi un fornitore da "
-                 "cento persone, non siamo noi. Se vuoi che a risponderti sia chi progetta, e non un "
-                 "commerciale, siamo noi."),
+                 "base al progetto, in più paesi. Preferiamo dirlo prima, perché è anche il motivo "
+                 "per cui a risponderti è chi progetta. Se il tuo lavoro ha bisogno di un fornitore "
+                 "da cento persone, il posto giusto è un altro; se ha bisogno di parlare con chi "
+                 "costruisce, siamo qui."),
+                # L'ultima frase diceva della giurisdizione in forma obliqua, ed è diventata
+                # ridondante il giorno in cui la domanda dopo ha cominciato a rispondere per nome.
                 ("Lavorate solo a San Marino?",
-                 "No. La sede è a Serravalle e i clienti sono anche in Italia; i collaboratori sono "
-                 "in più paesi. Resta europeo quello che conta per la giurisdizione: dove il "
-                 "software è progettato e dove i dati vengono elaborati."),
+                 "No. La sede è a Serravalle, i clienti sono anche in Italia e i collaboratori sono "
+                 "in più paesi. Il software è progettato e sviluppato in Europa."),
+                # La domanda che il sito girava due volte senza affrontarla. Tutto quello che vendiamo
+                # ruota attorno alla giurisdizione dei dati, quindi il lettore attento ci arriva da
+                # solo — e se non gliela rispondiamo qui va a cercarla altrove, senza il contesto.
+                # La risposta è migliore della domanda, ed era ferma in cantina.
+                # Scritta in positivo, e non è una preferenza di stile. La prima stesura apriva con
+                # «No» e proseguiva con «non arrivano a noi», «cambia poco», «invece di lasciartelo
+                # scoprire»: quattro negazioni e una giustificazione, che messe insieme suggeriscono
+                # una cosa da nascondere anche quando dicono il contrario. Qui si afferma un fatto —
+                # dove i dati vengono elaborati e chi ne risponde — e il fatto è a nostro favore.
+                ("San Marino è nell'Unione Europea?",
+                 "San Marino è uno Stato indipendente, fuori dall'Unione Europea. La domanda "
+                 "pratica, per i tuoi dati, è dove vengono elaborati e chi ne risponde: in "
+                 "un'installazione on-premise l'elaborazione avviene sui tuoi server, nel tuo "
+                 "paese, e chi ne risponde sei tu — lo verifichi dal traffico della tua rete. "
+                 "Quando invece è un servizio nostro a elaborare dati per conto tuo, legge "
+                 "applicabile e luogo del trattamento li fissiamo nel contratto, prima di "
+                 "cominciare."),
                 ("Chi risponde se scrivo?",
-                 "Una persona del team, non un form, entro un giorno lavorativo. La prima "
-                 "conversazione serve a capire se siamo le persone giuste per il tuo problema: se "
-                 "non lo siamo, è più veloce dirlo subito."),
+                 "Chi progetta. Ti risponde la stessa persona che "
+                 "firma il codice, il preventivo e il paper — entro un giorno lavorativo, e non un "
+                 "form. La prima conversazione serve a capire se siamo le persone giuste per il tuo "
+                 "problema: se non lo siamo, è più veloce dirlo subito."),
                 ("Perché non ci sono i loghi dei clienti?",
                  "Perché quasi tutti i lavori sono coperti da accordi di riservatezza, e non li aggiriamo: chi ti "
                  "mostra i nomi degli altri, un giorno mostrerà il tuo. Sarebbe anche una scelta "
@@ -2344,21 +2416,21 @@ PAGES = [
             "lead": "We design and build technology from the Republic of San Marino. It is led by "
                     "Gian Angelo Geminiani, who has worked in this trade since 1997.",
             "intro_title": "How we are put together",
-            "intro_h2": "Not three departments. "
-                        "<span class=\"grad-text\">A network, and one shared base</span>.",
+            "intro_h2": "A network of specialists, "
+                        "<span class=\"grad-text\">and one shared base</span>.",
             "intro": [
                 "Around the chief executive works a network of collaborators and technology partners "
                 "across several countries: software architects, electronics designers, system "
                 "engineers, chosen for the project in hand. It is how a small firm keeps "
                 "electronics, robotics and artificial intelligence "
-                "together without pretending to have three departments.",
+                "together: one skill at a time, picked for the project.",
                 "What makes that possible is that we do not start from scratch each time. Data "
                 "acquisition, running the models and machine control sit under every project, "
                 "solved once, in <a href=\"/en/digisense/\">DigiSense®</a>: our framework, a "
                 "registered trademark. The work goes on your problem, not on the scaffolding.",
             ],
             "cards_title": "What you can check from outside",
-            "cards_intro": "Not client names. The things you can check for yourself.",
+            "cards_intro": "Three things you can check for yourself, before writing to us.",
             "cards": [
                 ("data", "A peer-reviewed study",
                  "Nine hundred emergency workers followed for twelve months, in a study published in "
@@ -2369,7 +2441,7 @@ PAGES = [
                   "<a href=\"/en/services/medical-wearables/\">The page that tells it</a>"]),
                 ("shield", "A product you can download",
                  "Podz.AI is ours, it installs and it runs for a thirty-day trial. The quickest way "
-                 "to judge our work without speaking to us.",
+                 "to judge our work, before you even write to us.",
                  ["Windows, macOS and Linux, with signed builds",
                   "Public price list and release history",
                   "<a href=\"/en/podz-ai/\">How it is built</a>"]),
@@ -2377,7 +2449,7 @@ PAGES = [
                  "The <a href=\"/en/insights/\">Insights</a> articles list their sources at the "
                  "foot of each page, and two rest on an external identifier anybody can look up.",
                  ["Regulations cited in full, not summarised",
-                  "No client named: problems only",
+                  "The problems described in full",
                   "<a href=\"/en/insights/\">Read the articles</a>"]),
             ],
             "steps_title": "Where the expertise comes from",
@@ -2422,19 +2494,28 @@ PAGES = [
             "faq": [
                 ("How many of you are there?",
                  "The core is small and the network around it is wide: collaborators and partners "
-                 "chosen for the project, across several countries. We would rather say so upfront. "
-                 "If you want a hundred-person supplier, we are not it. If you want the person who "
-                 "does the designing to be the one who answers you, rather than a salesperson, we "
-                 "are."),
+                 "chosen for the project, across several countries. We would rather say so upfront, "
+                 "because it is also why the person who answers you is the one who designs. If your "
+                 "work needs a hundred-person supplier, the right place is elsewhere; if it needs to "
+                 "talk to whoever builds it, this is the place."),
                 ("Do you only work in San Marino?",
-                 "No. The office is in Serravalle and clients are in Italy too; the collaborators "
-                 "are spread across several countries. What stays European is where the software is "
-                 "designed and where the data is processed, which is the part that matters for "
-                 "jurisdiction."),
+                 "No. The office is in Serravalle, clients are in Italy too, and the collaborators "
+                 "are spread across several countries. The software is designed and developed in "
+                 "Europe."),
+                ("Is San Marino in the European Union?",
+                 "San Marino is an independent state, outside the European Union. The practical "
+                 "question for your data is where it gets processed and who answers for it: in an "
+                 "on-premise installation the processing happens on your own servers, in your own "
+                 "country, and the one who answers for it is you — you can verify that from your "
+                 "own network traffic. Where a service of ours processes data on your behalf, the "
+                 "applicable law and the place of processing are fixed in the contract, before "
+                 "anything starts."),
                 ("Who answers if I write?",
-                 "A person from the team, not a form, within one working day. The first "
-                 "conversation is about whether we are the right people for your problem: if we are "
-                 "not, saying so quickly is faster for everyone."),
+                 "The person who does the designing. The reply comes from the same person who signs "
+                 "the code, the quote and the paper — within "
+                 "one working day, and not a form. The first conversation is about whether we are "
+                 "the right people for your problem: if we are not, saying so quickly is faster for "
+                 "everyone."),
                 ("Why are there no client logos?",
                  "Because our work sits under confidentiality agreements and we do not work around "
                  "them: a firm that shows you other people's names will one day show yours. It "
@@ -2505,11 +2586,11 @@ PAGES = [
                  "da zero: il lavoro va sulle capacità.",
                  ["Piattaforma robotica open source",
                   "Modifiche hardware documentate",
-                  "Nessun vincolo a un fornitore unico"]),
+                  "Hardware e fornitori restano sostituibili"]),
                 ("spark", "Voce e modello a bordo",
                  "Modulo vocale e LLM interno: si parla al robot con parole normali e la risposta si forma "
-                 "sulla macchina, senza chiedere niente a internet.",
-                 ["Interazione vocale, senza schermi",
+                 "sulla macchina, che se la cava da sola.",
+                 ["Si comanda parlando",
                   "LLM in esecuzione locale",
                   "Funziona anche con la rete assente"]),
                 ("pulse", "Percezione dell'ambiente",
@@ -2552,10 +2633,11 @@ PAGES = [
                  "robot può ascoltare e guardare, e chi riceve gli avvisi. È il primo punto di ogni prova "
                  "sul campo, prima della tecnica."),
                 ("Rileva le cadute?",
-                 "Non lo diciamo, ed è una distinzione che conta. Stiamo addestrando il microfono a "
-                 "riconoscere rumori che possono indicare una caduta o una richiesta d'aiuto: è un aiuto, "
-                 "non un sistema di sicurezza su cui fare affidamento. Un dispositivo che promette di "
-                 "rilevare le cadute è un'altra cosa, con altri obblighi."),
+                 "Diciamo una cosa più precisa, ed è una distinzione che conta: stiamo addestrando "
+                 "il microfono a riconoscere rumori che possono indicare una caduta o una richiesta "
+                 "d'aiuto. È un aiuto, e va trattato come tale: la sicurezza di chi vive in casa "
+                 "resta affidata a quello che c'era prima. Un dispositivo che promette di rilevare "
+                 "le cadute è un'altra cosa, con altri obblighi."),
                 ("Le immagini e l'audio dove finiscono?",
                  "In casa. Il modello gira a bordo del robot e il riconoscimento avviene lì: non c'è un "
                  "server che riceve il flusso della telecamera o del microfono. È il motivo per cui abbiamo "
@@ -2618,11 +2700,11 @@ PAGES = [
                  "from scratch: the work goes into the capabilities.",
                  ["Open-source robotic platform",
                   "Hardware changes documented",
-                  "No lock-in to a single supplier"]),
+                  "Hardware and suppliers stay replaceable"]),
                 ("spark", "Voice and model on board",
                  "A voice module and an internal LLM: you talk to the robot in plain words and the answer is "
-                 "formed on the machine, without asking the internet for anything.",
-                 ["Voice interaction, no screens",
+                 "formed on the machine, which manages on its own.",
+                 ["Driven by voice",
                   "LLM running locally",
                   "Works even with the network down"]),
                 ("pulse", "Sensing the environment",
@@ -2666,10 +2748,11 @@ PAGES = [
                  "what the robot may listen to and look at, and who receives the alerts. It is the first "
                  "point of every field trial, before any engineering."),
                 ("Does it detect falls?",
-                 "We do not say that, and the distinction matters. We are training the microphone to "
-                 "recognise sounds that may indicate a fall or a call for help: it is an aid, not a safety "
-                 "system to rely on. A device that promises to detect falls is a different thing, with "
-                 "different obligations."),
+                 "We say something more precise, and the distinction matters: we are training the "
+                 "microphone to recognise sounds that may indicate a fall or a call for help. It is "
+                 "an aid and should be treated as one — the safety of the person living there stays "
+                 "with whatever was already in place. A device that promises to detect falls is a "
+                 "different thing, with different obligations."),
                 ("Where do the images and the audio end up?",
                  "In the house. The model runs on board the robot and the recognition happens there: no "
                  "server receives the camera or microphone stream. That is why we chose this architecture "

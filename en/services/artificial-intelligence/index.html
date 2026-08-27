@@ -103,7 +103,7 @@
     "mainEntity": [
       {
         "@type": "Question",
-        "name": "Does our data have to be clean before we start?",
+        "name": "Does my data have to be in order before I call you?",
         "acceptedAnswer": {
           "@type": "Answer",
           "text": "No — it almost never is. Cleaning it up is part of the job: the data sits in documents, archives and logs today, and making it readable is what we do first. What you do need is to know which decision the data has to support."
@@ -111,7 +111,7 @@
       },
       {
         "@type": "Question",
-        "name": "Do our documents end up in a third-party model?",
+        "name": "Do my documents end up in a third-party model?",
         "acceptedAnswer": {
           "@type": "Answer",
           "text": "Only if you choose to. We build architectures where models run on your own server and documents do not leave. When cloud power is needed, personal data can be masked before it is sent."
@@ -127,10 +127,10 @@
       },
       {
         "@type": "Question",
-        "name": "Do you not have case studies to show?",
+        "name": "What proof can I check before talking to you?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Few, and for a reason that should matter to you. Almost all of it is covered by confidentiality agreements, and a firm that shows you other clients' names will one day show yours — an odd choice for us, of all people, since we propose keeping your data in-house. What can be checked from outside is all there: Podz.AI can be downloaded and tried, the articles list their sources at the foot of the page, and the wearable study has a permanent identifier. About the rest we talk by describing the problems, not the names."
+          "text": "Three things, and all of them from outside: Podz.AI can be downloaded and tried, the articles list their sources at the foot of each one, and the wearable study has a permanent identifier. Client names stay out of it, and the reason should matter to you: almost all of it is covered by confidentiality agreements, and a firm that shows you other clients' names will one day show yours — an odd choice for us, of all people, since we propose keeping your data in-house. What can be checked from outside is all there: Podz.AI can be downloaded and tried, the articles list their sources at the foot of the page, and the wearable study has a permanent identifier. About the rest we talk by describing the problems, not the names."
         }
       },
       {
@@ -216,7 +216,7 @@
             </div>
             <div class="stat">
               <div class="num">900</div>
-              <div class="label">workers monitored</div>
+              <div class="label">workers in the study</div>
             </div>
           </div>
         </div>
@@ -241,7 +241,7 @@
         </div>
         <div class="about-grid">
           <div class="about-text reveal">
-            <p>Demos always work. AI projects stall afterwards, when the model meets the company's real data: incomplete, badly written, scattered across five different systems.</p><p>So we start from the process: where time is lost, where mistakes happen, where a piece of data already exists but nobody reads it. Then we build agents that do one defined job, integrate language models (LLMs) into the systems you already run and — when the data is confidential — keep it inside the company.</p>
+            <p>The model in the demo works on clean data. Yours is incomplete, badly written and scattered across five different systems: that is where the project stalls.</p><p>So we start from the process: where time is lost, where mistakes happen, where a piece of data already exists but nobody reads it. Then we build agents that do one defined job, integrate language models (LLMs) into the systems you already run and — when the data is confidential — keep it inside the company.</p>
           </div>
         <div class="about-facts page-facts reveal">
           <div class="fact">
@@ -270,7 +270,7 @@
         <aside class="research case reveal">
           <div class="kicker">The proof · the reasoning, written down</div>
           <h3>On agents, the hard question <span class="grad-text">we have already asked ourselves</span>.</h3>
-          <p>An AI agent cannot tell the data it reads from the instructions it receives: to it they are the same text. That is what makes connecting an assistant to the mailbox or the business system an architecture decision rather than a setting.</p><p>We have written it up at length, resting the argument on a vulnerability with a public identifier — <strong>CVE-2025-32711</strong> — that anybody can go and read for themselves, with its date and its severity ratings. It is not an opinion about risk: it is a documented case, and the article lists its sources at the foot of the page.</p><p>It proves one thing only, and it is the thing that matters before you sign: the reasoning has been done, and it is public. You can check it yourself instead of taking our word for it. <a href="/en/insights/autonomous-agents-boundaries/">Read the article</a>.</p>
+          <p>An AI agent cannot tell the data it reads from the instructions it receives: to it they are the same text. That is what makes connecting an assistant to the mailbox or the business system an architecture decision rather than a setting.</p><p>We have written it up at length, resting the argument on a vulnerability with a public identifier — <strong>CVE-2025-32711</strong> — that anybody can go and read for themselves, with its date and its severity ratings. It is a documented case, and the article lists its sources at the foot of the page.</p><p>It proves one thing only, and it is the thing that matters before you sign: the reasoning has been done, and it is public. You can check it yourself instead of taking our word for it. <a href="/en/insights/autonomous-agents-boundaries/">Read the article</a>.</p>
         </aside>
       </div>
     </section>
@@ -298,14 +298,14 @@
           <article class="card reveal">
             <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="7.5" ry="3"/><path d="M4.5 5.5v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/><path d="M4.5 11.5v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/></svg></div>
             <h3>Data analysis and transformation</h3>
-            <p>Extraction, normalisation and reading of unstructured data: documents, logs, archives.</p>
+            <p>Extraction and reading of data that does not sit in a table: documents, logs, archives.</p>
             <ul><li>Reading documents and historical archives</li><li>Normalising scattered data</li><li>Semantic search over your documents (RAG)</li></ul>
           </article>
           <article class="card reveal">
             <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3v5M15 3v5"/><path d="M6 8h12v3a6 6 0 0 1-6 6 6 6 0 0 1-6-6Z"/><path d="M12 17v4"/></svg></div>
             <h3>Integration into existing processes</h3>
-            <p>AI plugs into the ERP and the flows you already run. Nothing gets rebuilt.</p>
-            <ul><li>Plugs into your ERP and the systems you already run</li><li>Automating repetitive steps</li><li>No migration: the data stays where it is</li></ul>
+            <p>AI plugs into the ERP and the flows you already run, and they stay as they are.</p>
+            <ul><li>Plugs into your ERP and the systems you already run</li><li>Automating repetitive steps</li><li>The data stays where it is</li></ul>
           </article>
         </div>
       </div>
@@ -348,11 +348,11 @@
         </div>
         <div class="faq-list">
           <details class="faq-item reveal">
-            <summary>Does our data have to be clean before we start?</summary>
+            <summary>Does my data have to be in order before I call you?</summary>
             <p>No — it almost never is. Cleaning it up is part of the job: the data sits in documents, archives and logs today, and making it readable is what we do first. What you do need is to know which decision the data has to support.</p>
           </details>
           <details class="faq-item reveal">
-            <summary>Do our documents end up in a third-party model?</summary>
+            <summary>Do my documents end up in a third-party model?</summary>
             <p>Only if you choose to. We build architectures where models run on your own server and documents do not leave. When cloud power is needed, personal data can be masked before it is sent.</p>
           </details>
           <details class="faq-item reveal">
@@ -360,8 +360,8 @@
             <p>A chatbot answers. An agent performs a task: it reads a document, queries a system, produces a verifiable result. The practical difference is that an agent's outcome can be measured.</p>
           </details>
           <details class="faq-item reveal">
-            <summary>Do you not have case studies to show?</summary>
-            <p>Few, and for a reason that should matter to you. Almost all of it is covered by confidentiality agreements, and a firm that shows you other clients' names will one day show yours — an odd choice for us, of all people, since we propose keeping your data in-house. What can be checked from outside is all there: Podz.AI can be downloaded and tried, the articles list their sources at the foot of the page, and the wearable study has a permanent identifier. About the rest we talk by describing the problems, not the names.</p>
+            <summary>What proof can I check before talking to you?</summary>
+            <p>Three things, and all of them from outside: Podz.AI can be downloaded and tried, the articles list their sources at the foot of each one, and the wearable study has a permanent identifier. Client names stay out of it, and the reason should matter to you: almost all of it is covered by confidentiality agreements, and a firm that shows you other clients' names will one day show yours — an odd choice for us, of all people, since we propose keeping your data in-house. What can be checked from outside is all there: Podz.AI can be downloaded and tried, the articles list their sources at the foot of the page, and the wearable study has a permanent identifier. About the rest we talk by describing the problems, not the names.</p>
           </details>
           <details class="faq-item reveal">
             <summary>How do you tell whether an AI project is worth it?</summary>
@@ -431,9 +431,9 @@
             <li><a href="/en/digisense/">DigiSense®</a></li>
             <li><a href="/en/insights/">Insights</a></li>
             <li><a href="/en/app/">Free apps</a></li>
-            <li><a href="https://ggtechnologies.sm/digisense-releases/" target="_blank" rel="noopener">Official website</a></li>
-            <li><a href="https://ggtechnologies.sm/digisense-releases/download.html" target="_blank" rel="noopener">Download</a></li>
-            <li><a href="https://github.com/G-G-Technologies-Srl/digisense-releases/releases" target="_blank" rel="noopener">Releases</a></li>
+            <li><a href="https://ggtechnologies.sm/digisense-releases/" target="_blank" rel="noopener">Podz.AI official website</a></li>
+            <li><a href="https://ggtechnologies.sm/digisense-releases/download.html" target="_blank" rel="noopener">Download Podz.AI</a></li>
+            <li><a href="https://github.com/G-G-Technologies-Srl/digisense-releases/releases" target="_blank" rel="noopener">Podz.AI releases</a></li>
           </ul>
         </div>
         <div class="footer-col">

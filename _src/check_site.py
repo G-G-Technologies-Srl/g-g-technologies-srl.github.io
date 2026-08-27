@@ -440,6 +440,87 @@ def _check_sitemap(problems, canonical):
     return len(listed)
 
 
+def _check_hero_stats_agree(problems):
+    """I tre numeri dell'hero stanno in due posti, e devono dire la stessa cosa.
+
+    Settima variante della trappola: `stats` in content.py serve le pagine interne, e _src/home.html
+    riscrive gli stessi tre numeri a mano. Correggerne uno solo non rompe niente — nessun controllo
+    se ne accorgeva — e il sito mostra due etichette diverse per lo stesso dato a seconda della
+    pagina. È già successo con «operatori monitorati», corretto sulla home e rimasto sulle interne.
+    """
+    home_src = ROOT / "_src" / "home.html"
+    if not home_src.exists():
+        return
+    text = home_src.read_text(encoding="utf-8")
+    found = re.findall(
+        r'<div class="num">(.*?)</div>\s*'
+        r'<div class="label"><span class="it">(.*?)</span><span class="en">(.*?)</span></div>',
+        text, re.S)
+    if not found:
+        problems.append("_src/home.html: non trovo i tre numeri dell'hero — il markup è cambiato, "
+                        "e con lui va aggiornato _check_hero_stats_agree")
+        return
+    for i, (num, it_label, en_label) in enumerate(found):
+        for lang, label in (("it", it_label), ("en", en_label)):
+            expected = CHROME[lang]["stats"]
+            if i >= len(expected):
+                problems.append(f"_src/home.html: l'hero ha più numeri di «stats» in content.py")
+                continue
+            want_num, want_label = expected[i]
+            if _strip(num) != want_num or _strip(label) != want_label:
+                problems.append(
+                    f"_src/home.html: il numero {i + 1} dell'hero dice «{_strip(num)} "
+                    f"{_strip(label)}» in {lang}, in content.py è «{want_num} {want_label}» — "
+                    f"sono due copie dello stesso dato, vanno cambiate insieme")
+
+
+def _check_faq_voice(problems):
+    """Nelle FAQ il lettore parla di sé al singolare e dà del voi all'azienda.
+
+    La regola è nel CLAUDE.md: la domanda è «Potete adattarlo?», la risposta è «Se ti serve…».
+    Sette domande su ventidue facevano un'altra cosa — parlavano al plurale dell'azienda **del
+    lettore**: «Dobbiamo cambiare il gestionale?», «Che macchina ci serve?». Non è pedanteria: le
+    due forme convivevano nella stessa lista, e il lettore cambiava identità fra una domanda e
+    l'altra.
+
+    Cerca solo nel testo della domanda. Nella risposta «vi» e «ci» sono legittimi, perché lì a
+    parlare è l'azienda.
+    """
+    plural = re.compile(r"\b(dobbiamo|possiamo|cominciamo|sappiamo|abbiamo|ci serve|ci servono|"
+                        r"nostri|nostro|nostra|nostre)\b", re.I)
+    for page in PAGES:
+        for question, _ in page["it"].get("faq", []):
+            found = plural.search(_strip(question))
+            if found:
+                problems.append(
+                    f"{page.get('key')}: la domanda «{_strip(question)}» parla al plurale "
+                    f"dell'azienda del lettore («{found.group()}»). Nelle FAQ il lettore parla di sé "
+                    f"al singolare e dà del voi a noi")
+
+
+def _check_faq_contractions(problems):
+    """Le FAQ inglesi scrivono per esteso, come il resto delle pagine.
+
+    Il sito dice «do not», «cannot», «it is» ovunque; una sola FAQ diceva «we don't know», e in una
+    lista dove tutte le altre domande scrivono per esteso si sentiva. Il controllo sta sulle FAQ e
+    non su tutta la pagina di proposito: nell'invito dei contatti — «Let's talk about your next
+    project» — la contrazione scalda, ed è una scelta, non una svista.
+    """
+    contraction = re.compile(r"\b\w+(?:n't|'re|'ve|'ll|'d)\b")
+    for page in PAGES:
+        for question, answer in page["en"].get("faq", []):
+            for text in (question, answer):
+                found = contraction.search(_strip(text))
+                if found:
+                    problems.append(
+                        f"{page.get('key')}: «{found.group()}» in una FAQ inglese — qui il sito "
+                        f"scrive per esteso: {_strip(text)[:70]}…")
+
+
+def _strip(text):
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", text)).strip()
+
+
 # -----------------------------------------------------------------------------------------------------------------
 #  m a i n
 # -----------------------------------------------------------------------------------------------------------------
@@ -453,6 +534,9 @@ def main():
     _check_lang_switch_styled(problems)
     _check_footers_agree(problems)
     _check_home_bullets_agree(problems)
+    _check_hero_stats_agree(problems)
+    _check_faq_voice(problems)
+    _check_faq_contractions(problems)
     _check_reachable(problems)
     _check_banned(problems)
     _check_redirects(problems)
@@ -464,7 +548,8 @@ def main():
     print(f"OK — {len(canonical)} pagine, {urls} URL nella sitemap.\n"
           "     HTML, id, h1, & codificati, lingue separate, canonical, hreflang, JSON-LD,\n"
           "     link, immagini con alt, switch di lingua stilizzato, footer e bullet allineati,\n"
-          "     raggiungibilità dalla home, frasi vietate, card social, stub, sitemap.")
+          "     voce delle FAQ e contrazioni inglesi, raggiungibilità dalla home, frasi vietate,\n"
+          "     card social, stub, sitemap.")
 
 
 if __name__ == "__main__":
