@@ -1,0 +1,329 @@
+AI SCOPE — le domande del nucleo
+edizione 1 · lingua it · foglio per la prova su persone vere
+==============================================================================================
+
+CHI CONDUCE, PRIMA DI COMINCIARE
+----------------------------------------------------------------------------------------------
+Leggi la domanda ad alta voce, poi le opzioni, e taci. Non spiegare, non aiutare, non
+riformulare: se la domanda ha bisogno di essere spiegata, quello È il risultato della prova.
+Non dire che c'è un punteggio. Se ti chiede quanto manca, dillo — la stima onesta del tempo
+fa parte dello strumento.
+
+Se la situazione varia, la regola è rispondere sul caso più frequente. Dilla una volta
+all'inizio, non a ogni domanda.
+
+COSA GUARDARE MENTRE RISPONDE
+----------------------------------------------------------------------------------------------
+  · Quanto ci mette a rispondere. Oltre una decina di secondi la domanda non è ancorata a un
+    fatto che ha in mente: è la prova che l'ancoraggio non funziona.
+  · Se rilegge la domanda. Una rilettura è ambiguità, e va segnata anche se poi risponde
+    bene.
+  · Se dice «dipende» o «un po' tutte». Vuol dire che le opzioni si sovrappongono, o che non
+    ha capito se rispondere sul caso tipico o sul peggiore.
+  · Se chiede cosa significa una parola. Ogni termine da spiegare è gergo rimasto lì.
+  · Se una domanda sembra un giudizio. Si vede in faccia prima che nella risposta.
+  · Se nessuno sceglie mai un'opzione. Un'opzione che non sceglie nessuno o è scritta male o
+    descrive una situazione che non esiste.
+
+==============================================================================================
+
+— PER COMINCIARE —
+
+q001
+Quante persone lavorano nella tua azienda?
+
+   [ ] Meno di 10
+   [ ] Da 10 a 49
+   [ ] Da 50 a 249
+   [ ] 250 o piu'
+
+   cosa è successo: .........................................................................
+   ........................................................................................
+
+q002
+Da quanto tempo esiste?
+
+   [ ] Meno di un anno
+   [ ] Da 1 a 3 anni
+   [ ] Da 3 a 10 anni
+   [ ] Piu' di 10 anni
+
+   cosa è successo: .........................................................................
+   ........................................................................................
+
+q003
+Che ruolo hai?
+
+   [ ] Guido l'azienda o ne sono socio
+   [ ] Dirigo un'area o un reparto
+   [ ] Mi occupo di sistemi informativi o tecnologia
+   [ ] Altro
+
+   cosa è successo: .........................................................................
+   ........................................................................................
+
+
+— CASI D'USO E VALORE —
+
+q004
+Lo strumento AI piu' usato nella tua azienda: com'e' entrato?
+  Vale anche se lo gestisce un fornitore per te: conta che faccia parte del tuo lavoro, non
+  chi preme i tasti.
+
+   [ ] Non ne usiamo nessuno
+   [ ] L'ha portato qualcuno per conto suo, e si e' diffuso cosi'
+   [ ] L'abbiamo scelto e introdotto come azienda
+   [ ] L'abbiamo scelto, e c'e' una persona che ne risponde
+
+   cosa è successo: .........................................................................
+   ........................................................................................
+
+q005
+L'ultima volta che hai misurato cosa ti ha fatto risparmiare o guadagnare uno strumento AI,
+quando e' stato?
+
+   [ ] Mai
+   [ ] Ci siamo fatti un'idea, senza misurare
+   [ ] Piu' di un anno fa
+   [ ] Negli ultimi sei mesi, e i numeri sono scritti da qualche parte
+
+   cosa è successo: .........................................................................
+   ........................................................................................
+
+q006
+L'ultima cosa nuova che hai provato con l'AI: che fine ha fatto?
+
+   [ ] Non abbiamo provato niente di nuovo nell'ultimo anno
+   [ ] L'abbiamo lasciata perdere, senza una decisione vera
+   [ ] L'abbiamo scartata per una ragione precisa
+   [ ] E' in uso oggi
+
+   cosa è successo: .........................................................................
+   ........................................................................................
+
+
+— DATI —
+
+q007
+Se domani ti servisse l'elenco completo dei tuoi ordini degli ultimi tre anni in un unico
+file, quanto ci metteresti?
+
+  [se q002 = «Meno di un anno» oppure «Da 1 a 3 anni», leggi invece:]
+  Se domani ti servisse l'elenco completo di tutti i tuoi clienti e di cosa hanno comprato in
+  un unico file, quanto ci metteresti?
+
+   [ ] Non saprei da dove partire
+   [ ] Qualche giorno, chiedendo a piu' persone
+   [ ] Qualche ora
+   [ ] Lo esporto adesso
+   [ ] Non abbiamo ancora clienti   (solo se q002 = «Meno di un anno» oppure «Da 1 a 3 anni»)
+
+   cosa è successo: .........................................................................
+   ........................................................................................
+
+q008
+L'ultima volta che un numero e' risultato sbagliato - un totale che non tornava, una giacenza
+diversa dal magazzino, due sistemi in disaccordo: cosa e' cambiato dopo?
+
+   [ ] Niente: e' capitato di nuovo
+   [ ] L'abbiamo corretto a mano, quella volta
+   [ ] Abbiamo trovato da dove veniva
+   [ ] Abbiamo cambiato il modo in cui quel dato si tiene, e non e' piu' successo
+
+   cosa è successo: .........................................................................
+   ........................................................................................
+
+q009
+I documenti che servirebbero a rispondere a una domanda di un cliente - offerte fatte,
+manuali, storico - dove stanno?
+
+   [ ] Ognuno ha i suoi, sul proprio computer o nella propria posta
+   [ ] In cartelle condivise, ma bisogna sapere dove guardare
+   [ ] In un posto solo, organizzati
+   [ ] In un posto solo, e si trovano cercando
+
+   cosa è successo: .........................................................................
+   ........................................................................................
+
+
+— PROCESSI —
+
+q010
+L'ultima persona entrata nel ruolo piu' operativo della tua azienda: come ha imparato il
+lavoro?
+
+   [ ] Guardando i colleghi, e sbagliando
+   [ ] Affiancata da qualcuno, con i suoi appunti
+   [ ] Con del materiale scritto, piu' l'affiancamento
+   [ ] Con una procedura scritta, che usa ancora adesso
+   [ ] Non e' mai entrato nessuno: siamo gli stessi dall'inizio
+
+   cosa è successo: .........................................................................
+   ........................................................................................
+
+q011
+La procedura scritta del processo che ti porta piu' fatturato: quando e' stata aggiornata
+l'ultima volta?
+
+   [ ] Non ne esiste una
+   [ ] Esiste, non saprei dire quando
+   [ ] Piu' di due anni fa
+   [ ] Nell'ultimo anno
+
+   cosa è successo: .........................................................................
+   ........................................................................................
+
+q012
+L'ultima volta che qualcosa e' andato storto nel processo che ti porta piu' fatturato - un
+ordine sbagliato, una consegna saltata, un lavoro da rifare - chi se n'e' accorto per primo?
+
+   [ ] Il cliente
+   [ ] Noi, ma a cose fatte: sui conti, o rifacendo il lavoro
+   [ ] Chi ci stava lavorando, mentre succedeva
+   [ ] Un controllo automatico, prima che facesse danni
+
+   cosa è successo: .........................................................................
+   ........................................................................................
+
+
+— COMPETENZE E PERSONE —
+
+q013
+Delle persone che usano l'AI nel lavoro, quante hanno fatto almeno mezza giornata di
+formazione sull'AI negli ultimi dodici mesi?
+
+   [ ] Nessuna
+   [ ] Poche
+   [ ] Piu' della meta'
+   [ ] Tutte, o quasi
+
+   cosa è successo: .........................................................................
+   ........................................................................................
+
+q014
+C'e' qualcuno a cui gli altri chiedono, quando hanno un dubbio sull'uso dell'AI?
+
+   [ ] No
+   [ ] Si', ma e' un'iniziativa sua: nessuno gliel'ha chiesto
+   [ ] Si', e fa parte di quello che ci si aspetta da quella persona
+   [ ] Si', ed e' parte del suo ruolo, con del tempo dedicato
+
+   cosa è successo: .........................................................................
+   ........................................................................................
+
+q015
+L'ultima volta che uno strumento AI ti ha dato una risposta sbagliata: come ve ne siete
+accorti?
+
+   [ ] Non ricordo che sia successo
+   [ ] Per caso, quando il danno era fatto
+   [ ] Se n'e' accorto chi lo stava usando, controllando il risultato
+   [ ] Controlliamo sempre quello che esce, prima di usarlo
+
+   cosa è successo: .........................................................................
+   ........................................................................................
+
+
+— TECNOLOGIA E CONTROLLO —
+
+q016
+Nell'ultimo mese, dati di clienti sono finiti in un servizio AI pubblico - cioe' un servizio
+online dove quello che scrivi arriva sui server del fornitore?
+
+   [ ] Si', succede
+   [ ] Probabilmente si', ma non lo sappiamo
+   [ ] No: c'e' una regola scritta, e ne abbiamo parlato con tutti
+   [ ] No: c'e' una regola, e abbiamo controllato che regga davvero
+
+   cosa è successo: .........................................................................
+   ........................................................................................
+
+q017
+I dati che metti negli strumenti AI: sai in che paese vengono elaborati?
+
+   [ ] Non ce lo siamo mai chiesti
+   [ ] Sappiamo il nome del servizio, non dove lavora
+   [ ] Sappiamo in che paese: l'abbiamo letto nel contratto
+   [ ] Lavorano su macchine nostre, o da un fornitore scelto anche per questo
+
+   cosa è successo: .........................................................................
+   ........................................................................................
+
+q018
+L'ultima volta che avete esportato i vostri dati da un servizio che usate - il gestionale, il
+cloud, uno strumento AI - per averne una copia vostra o portarli altrove: quando e' stato?
+
+   [ ] Mai, e non sapremmo da dove cominciare
+   [ ] Mai, ma sappiamo che si puo': l'abbiamo letto nel contratto
+   [ ] Almeno una volta, quando e' servito
+   [ ] Lo facciamo regolarmente: una copia dei nostri dati e' sempre nostra
+
+   cosa è successo: .........................................................................
+   ........................................................................................
+
+
+— GOVERNO E RESPONSABILITA' —
+
+q019
+Esiste una regola scritta su cosa si puo' e non si puo' fare con l'AI?
+
+   [ ] No
+   [ ] Ne abbiamo parlato, ma non e' scritto
+   [ ] C'e', in una mail o in un documento
+   [ ] C'e', e' stata comunicata, e chi la deve seguire sa dov'e'
+
+   cosa è successo: .........................................................................
+   ........................................................................................
+
+q020
+Se domani un cliente ti chiedesse quali strumenti AI usi sui suoi dati, quanto ci metteresti
+a rispondere?
+
+   [ ] Dovrei chiedere in giro e non sono sicuro di sapere tutto
+   [ ] Qualche giorno
+   [ ] So dirlo, ma non e' scritto da nessuna parte
+   [ ] C'e' un elenco aggiornato
+
+   cosa è successo: .........................................................................
+   ........................................................................................
+
+q021
+L'ultimo strumento nuovo entrato in azienda - AI o no: chi ha detto si'?
+
+   [ ] Nessuno: chi lo voleva ha cominciato a usarlo
+   [ ] Il reparto che lo voleva, da solo
+   [ ] Qualcuno l'ha approvato, ma dipende da chi chiede
+   [ ] C'e' un passaggio, ed e' lo stesso per tutti
+
+   cosa è successo: .........................................................................
+   ........................................................................................
+
+
+— UN'ULTIMA COSA —
+
+q022
+Nell'ultimo anno un cliente ti ha mandato un questionario sulla sicurezza informatica, o ti
+ha chiesto di firmare clausole su notifica degli incidenti e diritto di verifica?
+
+   [ ] No, mai
+   [ ] Si', una volta
+   [ ] Si', e capita sempre piu' spesso
+   [ ] Non lo so: se ne occupa qualcun altro
+   [ ] Non abbiamo ancora clienti   (solo se q002 = «Meno di un anno» oppure «Da 1 a 3 anni»)
+
+   cosa è successo: .........................................................................
+   ........................................................................................
+
+==============================================================================================
+
+DOPO, A CALDO — tre righe, prima di dimenticare
+----------------------------------------------------------------------------------------------
+Quale domanda ha funzionato peggio, e cosa ha detto esattamente?
+   ........................................................................................
+
+Quale opzione non ha scelto nessuno?
+   ........................................................................................
+
+Quanto è durata davvero la compilazione?
+   ........................................................................................
+
