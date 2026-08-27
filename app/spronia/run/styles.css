@@ -8,6 +8,41 @@
    own name, which is the one moment the app speaks instead of working. And a control is never
    smaller than 44px on touch. */
 
+/* **Niente si seleziona, e su un telefono non è una rifinitura.**
+
+   Il campo è il comando: si tocca in fretta e molte volte di seguito, e una serie di tocchi ravvicinati
+   il browser la interpreta come un doppio o triplo clic — cioè come «seleziona». Il risultato è il
+   canvas evidenziato in azzurro a metà partita, con la maniglia di selezione sotto il pollice, e da
+   lì in poi ogni tocco fa due cose.
+
+   `touch-action: none` sul campo, che c'era già, ferma lo scorrimento e lo zoom: sono un'altra cosa.
+   Qui serve la selezione, e serve **su tutto** — la barra in cima e i pannelli si toccano anche
+   loro, e un pannello mezzo evidenziato è la stessa scortesia in un posto meno importante.
+
+   Con due eccezioni, e sono eccezioni vere: il campo del nome, dove non poter selezionare vuol dire
+   non poter correggere quello che si è scritto; e la tabella dei punteggi, che è l'unica cosa della
+   pagina che qualcuno potrebbe voler copiare. */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  /* Il lampo grigio che Chrome su Android disegna sotto ogni tocco. Su un pulsante dice «premuto»;
+     su un campo di gioco grande quanto lo schermo è un flash a ogni battito d'ali. */
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nameform input,
+.scores {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* E il menù che iOS apre tenendo premuto su un'immagine — «salva», «copia» — che una canvas si
+   prende come se fosse una fotografia. In un gioco in cui si tiene premuto per andare a sinistra,
+   comparirebbe di continuo. */
+#field {
+  -webkit-touch-callout: none;
+}
+
 main {
   display: flex;
   flex-direction: column;
@@ -485,6 +520,57 @@ main {
 }
 
 /* ---------------------------------------------------------------------------------------------
+   a tutto schermo
+   --------------------------------------------------------------------------------------------- */
+
+/* **Due meccanismi in uno, e servono tutt'e due.**
+   L'API `requestFullscreen` toglie la cornice del browser; questo attributo toglie la barra dell'app
+   e il piede, che il browser non sa che ci sono. Dove l'API non esiste — su iPhone non c'è, e non è
+   un caso di nicchia: è metà dei telefoni — resta comunque questo, e il campo guadagna lo spazio di
+   due barre, che su uno schermo alto quattrocento pixel è un terzo di tutto.
+
+   Sono attributi su `<html>`, non classi: lo stato si legge dall'ispettore senza aprire il codice. */
+:root[data-full="1"] header,
+:root[data-full="1"] .foot { display: none; }
+
+/* `vh` prima e `dvh` dopo, e non è ridondanza: su iOS `vh` conta la barra del browser come se non
+   ci fosse, quindi da solo lascia il fondo del campo sotto il bordo dello schermo. `dvh` misura
+   quello che si vede davvero — ma non lo conoscono le versioni di Safari su cui questo meccanismo è
+   l'**unico** che funziona, perché lì l'API del tutto schermo non esiste. Chi capisce la seconda
+   riga la usa, gli altri restano sulla prima. */
+:root[data-full="1"] main { height: 100vh; height: 100dvh; }
+
+/* La cornice del campo sparisce con la pagina intorno: incornicia uno schermo dentro una pagina, e
+   a tutto schermo la pagina non c'è più. */
+:root[data-full="1"] #field {
+  border: 0;
+  border-radius: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  box-shadow: none;
+}
+
+/* L'uscita: nella griglia dello stage come l'annuncio, così non serve posizionarla in assoluto.
+   Quarantaquattro pixel, come ogni comando dell'app, e appena visibile — deve trovarsi quando la si
+   cerca e sparire quando non la si cerca. */
+.full-exit {
+  grid-area: 1 / 1;
+  place-self: start end;
+  margin: 10px calc(10px + env(safe-area-inset-right)) 0 0;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--panel) 70%, transparent);
+  color: var(--muted);
+}
+
+.full-exit:hover { color: var(--accent-text); border-color: var(--accent); }
+
+/* ---------------------------------------------------------------------------------------------
    il piede, e gli schermi stretti
    --------------------------------------------------------------------------------------------- */
 
@@ -504,4 +590,22 @@ main {
   .sheet { padding: 1.1rem 1rem 1rem; }
   .scores .when, .scores th.when { display: none; }
   .keyrow { flex-wrap: wrap; }
+}
+
+/* **Un telefono in orizzontale**, che è come questo gioco va tenuto e quindi il caso normale e non
+   quello limite. Lì l'altezza è tutto: su uno schermo alto quattrocento pixel, il `min-height: 46vh`
+   del campo vale centottantaquattro pixel, e le due barre più il piede si prendono il resto.
+
+   Quindi il minimo sparisce — al campo basta lo spazio che avanza, e ce n'è di più — e tutto quello
+   che sta intorno si stringe. È il modo di guadagnare uno schermo senza chiedere niente a nessuno,
+   e il pulsante del tutto schermo resta per quando anche questo non basta. */
+@media (orientation: landscape) and (max-height: 560px) {
+  #field { min-height: 0; }
+  .appbar { padding-top: 4px; padding-bottom: 4px; }
+  .hudbar { padding: 2px 12px; }
+  .foot { padding-top: 0.3rem; font-size: 0.78rem; }
+  .panel { gap: 0.35rem; }
+  .sheet { padding: 0.8rem 1rem 0.7rem; gap: 0.4rem; }
+  .title { font-size: clamp(24px, 5vw, 34px); }
+  .small-title { font-size: clamp(18px, 3.4vw, 22px); }
 }

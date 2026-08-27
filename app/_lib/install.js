@@ -65,10 +65,26 @@ export function setup(button, hint, { storageKey, iosText }) {
     return;
   }
 
-  window.addEventListener("beforeinstallprompt", (event) => {
-    event.preventDefault();             // hold it, so the invitation appears where it belongs
+  const offer = (event) => {
     deferred = event;
     button.hidden = false;
+  };
+
+  // **Quello che è già arrivato, e quello che deve ancora arrivare.**
+  //
+  // `beforeinstallprompt` non aspetta nessuno: alla seconda visita, con il service worker già
+  // attivo, Chrome lo manda prima che un modulo abbia finito di caricarsi. Chi si registra qui e
+  // basta non lo vede mai — e il difetto si presenta **solo su un telefono**, perché su un computer
+  // l'app si apre una volta, l'evento arriva tardi e il pulsante compare.
+  //
+  // Per questo ogni pagina che usa questo modulo lo cattura in uno script inline in testa e lo
+  // lascia in `window.__ggInstallPrompt`. Le due strade servono tutt'e due: questa per l'evento già
+  // passato, il listener qui sotto per quello che deve ancora arrivare.
+  if (window.__ggInstallPrompt) offer(window.__ggInstallPrompt);
+
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();             // hold it, so the invitation appears where it belongs
+    offer(event);
   });
 
   button.addEventListener("click", async () => {
@@ -76,10 +92,15 @@ export function setup(button, hint, { storageKey, iosText }) {
     button.hidden = true;
     const prompt = deferred;
     deferred = null;
+    window.__ggInstallPrompt = null;
     prompt.prompt();
     await prompt.userChoice;
     _dismiss(storageKey);
   });
 
-  window.addEventListener("appinstalled", () => { button.hidden = true; _dismiss(storageKey); });
+  window.addEventListener("appinstalled", () => {
+    button.hidden = true;
+    window.__ggInstallPrompt = null;
+    _dismiss(storageKey);
+  });
 }

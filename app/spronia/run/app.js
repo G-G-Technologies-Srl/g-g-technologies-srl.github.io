@@ -101,6 +101,8 @@ function _applyText() {
   el("theme").setAttribute("aria-label",
     theme.current() === "light" ? t("themeToDark") : t("themeToLight"));
   el("install").textContent = t("installButton");
+  el("full").setAttribute("aria-label",
+    document.documentElement.dataset.full ? t("fullOff") : t("fullOn"));
   el("sound").setAttribute("aria-label", audio.isEnabled() ? t("soundOn") : t("soundOff"));
   el("sound").dataset.sound = audio.isEnabled() ? "on" : "off";
   _paintCredits();
@@ -580,6 +582,9 @@ function _command(name, who = 0) {
     return;
   }
   if (name === "back") {
+    // Il tutto schermo esce per primo, e solo se c'è: Esc è il gesto universale per «indietro di un
+    // livello», e il livello più esterno è quello.
+    if (document.documentElement.dataset.full) { _fullscreen(false); return; }
     if (screen === "playing") { _show("paused"); input.reset(); }
     else if (screen === "paused" || screen === "scores" || screen === "credit"
              || screen === "keys") _toAttract();
@@ -605,6 +610,47 @@ async function _import(file) {
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
 // -----------------------------------------------------------------------------------------------------------------
+
+/**
+ * A tutto schermo, o no.
+ *
+ * **Due meccanismi in uno, e servono tutt'e due.** `requestFullscreen` toglie la cornice del
+ * browser; l'attributo su `<html>` toglie la barra dell'app e il piede, che il browser non sa che
+ * esistono. Dove l'API non c'è — su iPhone non c'è, e non è un caso di nicchia — resta comunque il
+ * secondo, e il campo guadagna lo spazio di due barre: su uno schermo alto quattrocento pixel è un
+ * terzo di tutto.
+ *
+ * L'orientamento si prova a bloccare in orizzontale, perché è come questo gioco va tenuto, e si può
+ * fare **solo** a tutto schermo. Il tentativo fallisce su un computer e su qualche browser, e il
+ * fallimento non è un errore da mostrare: la promessa viene raccolta e buttata, che è diverso dal
+ * non chiamarla — una promessa rifiutata e lasciata cadere finisce nella console di chi gioca.
+ */
+function _fullscreen(voluto) {
+  const root = document.documentElement;
+  if (voluto) root.dataset.full = "1";
+  else delete root.dataset.full;
+  el("fullExit").hidden = !voluto;
+  _applyText();
+
+  if (voluto && root.requestFullscreen && !document.fullscreenElement) {
+    root.requestFullscreen().catch(() => { /* niente da fare: l'attributo basta da solo */ });
+  }
+  if (!voluto && document.fullscreenElement && document.exitFullscreen) {
+    document.exitFullscreen().catch(() => { /* già uscito */ });
+  }
+
+  try {
+    const schermo = window.screen && window.screen.orientation;
+    if (voluto && schermo && schermo.lock) {
+      const esito = schermo.lock("landscape");
+      if (esito && esito.catch) esito.catch(() => { /* non si può, e va bene */ });
+    } else if (!voluto && schermo && schermo.unlock) {
+      schermo.unlock();
+    }
+  } catch (ignored) { /* nessun browser è obbligato ad avere questa API */ }
+
+  _resize();
+}
 
 function _resize() {
   render.fit(el("field"));
@@ -666,6 +712,15 @@ function _bind() {
   for (const id of ["coinButton", "coinAgain"]) el(id).addEventListener("click", () => _coin());
   el("play1").addEventListener("click", () => _start(1));
   el("play2").addEventListener("click", () => _start(2));
+  el("full").addEventListener("click", () => _fullscreen(!document.documentElement.dataset.full));
+  el("fullExit").addEventListener("click", () => _fullscreen(false));
+  // Chi esce col gesto del sistema, o con Esc, non passa dai due pulsanti: senza questa riga la
+  // pagina resterebbe senza barra dell'app dentro una finestra normale.
+  document.addEventListener("fullscreenchange", () => {
+    if (!document.fullscreenElement && document.documentElement.dataset.full) _fullscreen(false);
+    else _resize();
+  });
+
   el("pauseButton").addEventListener("click", () => _command("pause"));
   el("resumeButton").addEventListener("click", () => _show("playing"));
   el("quitButton").addEventListener("click", () => {

@@ -626,7 +626,7 @@ APPS = [
         "order": 3,
         "tags": ["svago"],
         "stato": "pronto",
-        "version": "1.2.0",
+        "version": "1.4.0",
         "released": "2026-08-14",
         "updated": "2026-08-27",
         "licence": "Apache-2.0",

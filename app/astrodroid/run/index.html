@@ -25,6 +25,23 @@
       document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f6f8fc');
     }
   } catch (ignored) {}
+
+  // **L'invito a installare, preso al volo.**
+  //
+  // `beforeinstallprompt` è un evento che non aspetta: Chrome lo manda appena riconosce l'app come
+  // installabile, e alla seconda visita — con il service worker già attivo e il manifesto già
+  // letto — quel momento arriva **prima che un modulo abbia finito di caricarsi**. Il modulo si
+  // registrava dopo, non lo vedeva mai, e il pulsante non compariva.
+  //
+  // Si vedeva solo su un telefono, ed è per questo che è rimasto in piedi: su un computer, dove le
+  // app si aprono una volta e si guardano, l'evento arrivava tardi e il pulsante c'era.
+  //
+  // Qui è uno script inline in testa alla pagina: gira prima di qualunque modulo, mette l'evento da
+  // parte, e `gg/install.js` lo ritrova quando è pronto.
+  window.addEventListener('beforeinstallprompt', function (event) {
+    event.preventDefault();
+    window.__ggInstallPrompt = event;
+  });
 </script>
 </head>
 <body>

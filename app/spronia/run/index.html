@@ -25,6 +25,23 @@
       document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f6f8fc');
     }
   } catch (ignored) {}
+
+  // **L'invito a installare, preso al volo.**
+  //
+  // `beforeinstallprompt` è un evento che non aspetta: Chrome lo manda appena riconosce l'app come
+  // installabile, e alla seconda visita — con il service worker già attivo e il manifesto già
+  // letto — quel momento arriva **prima che un modulo abbia finito di caricarsi**. Il modulo si
+  // registrava dopo, non lo vedeva mai, e il pulsante non compariva.
+  //
+  // Si vedeva solo su un telefono, ed è per questo che è rimasto in piedi: su un computer, dove le
+  // app si aprono una volta e si guardano, l'evento arrivava tardi e il pulsante c'era.
+  //
+  // Qui è uno script inline in testa alla pagina: gira prima di qualunque modulo, mette l'evento da
+  // parte, e `gg/install.js` lo ritrova quando è pronto.
+  window.addEventListener('beforeinstallprompt', function (event) {
+    event.preventDefault();
+    window.__ggInstallPrompt = event;
+  });
 </script>
 </head>
 <body>
@@ -44,6 +61,14 @@
         <path d="M4 9v6h4l5 4V5L8 9H4z"></path>
         <path class="i-wave" d="M16.5 8.5a5 5 0 0 1 0 7"></path>
         <path class="i-mute" d="M17 10l4 4M21 10l-4 4"></path>
+      </svg>
+    </button>
+    <!-- **A tutto schermo**, e sta accanto agli altri due invece che dentro il campo: è una
+         preferenza dell'app come il suono e il tema, non un comando del gioco. Quello per uscire
+         invece sta sopra il campo, perché a tutto schermo questa barra non c'è più. -->
+    <button type="button" id="full" class="ghost small icon" data-t-label="fullOn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path>
       </svg>
     </button>
     <button type="button" id="theme" class="ghost small icon" data-t-label="themeToLight">
@@ -74,6 +99,14 @@
        si legge come un guasto. -->
   <div class="stage">
     <canvas id="field" aria-hidden="true"></canvas>
+
+    <!-- L'uscita dal tutto schermo. Un solo comando sopra il campo, in un angolo, e non di più:
+         tutto quello che si appoggia lì copre la cosa che si era voluto ingrandire. -->
+    <button type="button" id="fullExit" class="full-exit" data-t-label="fullOff" hidden>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"></path>
+      </svg>
+    </button>
 
     <!-- L'annuncio di ondata. Sta qui e non nei pixel del campo perché è testo, e il testo dentro
          un'immagine è una terza lingua da tenere allineata a mano. Sparisce da solo. -->

@@ -176,6 +176,8 @@ const IT = {
   // coppia che prima o poi qualcuno scambia leggendo solo il nome.
   soundOn: "Spegni il suono",
   soundOff: "Accendi il suono",
+  fullOn: "Passa a tutto schermo",
+  fullOff: "Esci da tutto schermo",
   themeToLight: "Passa al tema chiaro",
   themeToDark: "Passa al tema scuro",
   langSwitch: "Switch to English",
@@ -311,6 +313,8 @@ const EN = {
 
   soundOn: "Turn the sound off",
   soundOff: "Turn the sound on",
+  fullOn: "Go full screen",
+  fullOff: "Leave full screen",
   themeToLight: "Switch to the light theme",
   themeToDark: "Switch to the dark theme",
   langSwitch: "Passa all'italiano",
