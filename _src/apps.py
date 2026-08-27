@@ -631,6 +631,15 @@ APPS = [
         "updated": "2026-08-27",
         "licence": "Apache-2.0",
         "art": {"shape": "altitude"},
+
+        # **La card social viene dallo screenshot, non da un disegno.** È l'unica app che lo chiede,
+        # ed è un gioco: una card di sola tipografia dice che esiste un prodotto, e di un gioco non
+        # dice niente — quello che un gioco ha da far vedere è come si vede.
+        #
+        # Se lo screenshot manca, `make_og_cards.py` torna alla card disegnata invece di fermarsi:
+        # `make_screenshots.py` ha bisogno di un Chrome sulla macchina e va lanciato a mano.
+        "og_from_shot": True,
+
         "it": {
             "slug": "app/spronia",
             "short": "SPRONIA",

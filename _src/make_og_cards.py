@@ -178,6 +178,78 @@ def _article_card(article, lang, bold, regular, out):
     return name, (out / name).stat().st_size
 
 
+def _field_top(src):
+    """La riga in cui comincia il campo di gioco, dentro lo screenshot di un'app.
+
+    Il campo ha una cornice di tre pixel in `--border-strong`, che su un fondo scuro è di gran lunga
+    la riga più chiara del quinto superiore dell'immagine. Trovarla vuol dire trovare il confine fra
+    l'interfaccia e il gioco **senza sapere quanto è alta la barra in cima** — cioè senza un numero
+    che smette di essere vero il giorno in cui la barra cambia.
+    """
+    limite = int(src.height * 0.2)
+    migliore, dove = -1, int(src.height * 0.04)
+    for y in range(limite):
+        riga = [src.getpixel((x, y)) for x in range(0, src.width, 40)]
+        luce = sum(sum(p) for p in riga) / len(riga)
+        if luce > migliore:
+            migliore, dove = luce, y
+    # Appena sotto la cornice, non sopra: la cornice è dell'interfaccia, non del gioco.
+    return min(dove + 3, int(src.height * 0.1))
+
+
+def _shot_card(app, lang, regular, out):
+    """La card di un'app **ritagliata dal suo screenshot**, invece che disegnata.
+
+    Vale per le app che lo chiedono con `og_from_shot` nell'anagrafica, e oggi ne chiede una sola:
+    un gioco. Una card di sola tipografia dice che esiste un prodotto; di un gioco non dice niente,
+    perché quello che un gioco ha da far vedere è come si vede.
+
+    **Ritagliata e non incollata**, e questa è la parte che conta. Lo screenshot è 1600 × 1000, cioè
+    1,6 : 1; le anteprime dei social ritagliano a 1,91 : 1 per conto loro, e ritagliando da sole
+    tolgono una fetta sopra e una sotto — dove stanno la barra dell'app e i due link del piede, cioè
+    le uniche due parti che in un feed non servono a nessuno. Tanto vale toglierle qui, dove si può
+    scegliere **quale** fetta tenere invece di subirla.
+
+    Dove tagliare lo decide **la fotografia**, non una percentuale: `_field_top` cerca la cornice del
+    campo. Una percentuale scritta a mano è giusta finché la barra in cima ha l'altezza che aveva il
+    giorno in cui è stata scelta — al primo tentativo era il 6% e tagliava a metà le cifre del
+    punteggio, che stanno appena sotto. Il resto è una riduzione a 1200 × 630, la misura che
+    LinkedIn, X e le anteprime dei messaggi ritagliano meglio.
+
+    Se lo screenshot non c'è, la card torna a essere quella disegnata invece di far fallire il giro:
+    `make_screenshots.py` ha bisogno di un Chrome sulla macchina e non gira in automatico.
+    """
+    shot = out / f"shot-{app['key']}-{lang}.png"
+    if not shot.is_file():
+        return None
+
+    src = Image.open(shot).convert("RGB")
+    utile = src.crop((0, _field_top(src), src.width, src.height))
+
+    # Il ritaglio a 1,91 : 1 si prende la fascia **alta** della parte utile, non quella centrale: il
+    # titolo del gioco e la barra dei punti stanno in alto, la colata sta in fondo e da sola non
+    # racconta niente.
+    voluta = round(utile.width * H / W)
+    if utile.height > voluta:
+        utile = utile.crop((0, 0, utile.width, voluta))
+
+    img = utile.resize((W, H), Image.LANCZOS)
+
+    # **Due segni, e non uno di più.** Una fotografia che gira in un feed accanto alle altre card
+    # del sito deve dire da dove viene, o è un'immagine qualunque; ma tutto quello che si aggiunge
+    # sopra il campo copre la cosa che si voleva far vedere. Restano il filo di accento in cima —
+    # che ce l'hanno tutte — e il dominio nell'angolo, sul cielo, dove non c'è niente da coprire.
+    draw = ImageDraw.Draw(img)
+    draw.line([0, 0, W, 0], fill=EMERALD, width=8)
+    small = ImageFont.truetype(str(regular), 24)
+    domain = "ggtechnologies.sm" + ("/en" if lang == "en" else "")
+    draw.text((W - 40 - draw.textlength(domain, font=small), 34), domain, font=small, fill=MUTED)
+
+    name = f"og-app-{app['key']}-{lang}.jpg"
+    img.save(out / name, "JPEG", quality=86, optimize=True, progressive=True)
+    return name, (out / name).stat().st_size
+
+
 def _app_card(app, lang, bold, regular, out):
     """An app card. Same furniture as an article card, with the product name in place of the h1.
 
@@ -314,7 +386,8 @@ def main():
         if app["key"] not in article_art.APP_ART:
             continue
         for lang in ("it", "en"):
-            made.append(_app_card(app, lang, bold, regular, ASSETS))
+            dalla_foto = app.get("og_from_shot") and _shot_card(app, lang, regular, ASSETS)
+            made.append(dalla_foto or _app_card(app, lang, bold, regular, ASSETS))
 
     for name, size in made:
         print(f"  {name:<34} {size / 1024:5.0f} KB")
