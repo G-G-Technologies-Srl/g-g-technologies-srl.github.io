@@ -770,9 +770,22 @@ async function main() {
       step(demo, autopilot(demo));
       if (cleared(demo)) startWave(demo);
     }
+    // **E poi ancora, finché nessuno è appena nato.** Un numero fisso di passi cade dove capita, e
+    // dove capita può essere il primo secondo di un'ondata: tutti fermi dentro il loro cerchio di
+    // protezione, cioè la fotografia di un gioco che non sta succedendo. Cambiando la mappa quel
+    // rischio è già capitato una volta, e la fotografia era finita sulla scheda.
+    //
+    // La condizione guarda il mondo e non l'orologio, quindi resta riproducibile: dallo stesso seme
+    // si ferma sempre allo stesso passo.
+    let extra = 0;
+    while (extra < 900 && [...demo.pilots, ...demo.foes].some((b) => b.alive && b.guard > 0)) {
+      step(demo, autopilot(demo));
+      if (cleared(demo)) startWave(demo);
+      extra += 1;
+    }
     _show("attract");
     render.fit(el("field"));
-    render.draw(el("field"), demo, { dim: 0.35 });
+    render.draw(el("field"), demo, { dim: ATTRACT_DIM });
   }
 
   last = performance.now();

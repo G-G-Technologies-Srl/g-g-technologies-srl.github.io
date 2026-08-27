@@ -20,7 +20,7 @@
 // colata, e perdere. Un pilota automatico che non perdesse sarebbe un difetto: la schermata di
 // richiamo mostrerebbe una partita che non finisce mai, e nessuno la guarderebbe fino in fondo.
 
-import { CEILING, MELT, STEP, PILOT, TIE, deltaX, lanceTip, core } from "./game.js";
+import { CEILING, MELT, STEP, PILOT, TIE, decks, deltaX, lanceTip, core } from "./game.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  l e   m i s u r e
@@ -163,9 +163,21 @@ export function autopilot(world) {
 
     const intento = _nulla();
 
-    // **La colata prima di tutto.** Sopra il metallo si sale, punto: nessun bersaglio, nessuna
-    // manovra. È l'unica priorità che non si negozia, perché è l'unico errore che non si corregge.
-    const affoga = me.y > MELT - PILOTA.paura;
+    // **Ha qualcosa sotto?** È la domanda che la mappa nuova ha reso necessaria. La fascia bassa non
+    // è più un pavimento continuo: in mezzo c'è un varco di quattrocentosessanta unità sopra il
+    // metallo, e volare bassi lì dentro è un'altra cosa dal volare bassi sopra un ripiano.
+    //
+    // Senza questa distinzione il pilota automatico faceva due errori opposti allo stesso tempo:
+    // non scendeva **mai** abbastanza da raccogliere una cella posata — la soglia della paura è più
+    // alta del ripiano su cui le celle stanno — e nel varco scendeva lo stesso, perché la soglia
+    // era la stessa in tutti e due i posti.
+    const appoggio = decks(world).some((d) => d.y > me.y
+      && me.x + PILOT.w / 2 > d.x && me.x - PILOT.w / 2 < d.x + d.w);
+
+    // **La colata prima di tutto.** Sopra il metallo scoperto si sale, punto: nessun bersaglio,
+    // nessuna manovra. È l'unica priorità che non si negozia, perché è l'unico errore che non si
+    // corregge.
+    const affoga = !appoggio && me.y > MELT - PILOTA.paura;
     const bersaglio = _bersaglio(world, me);
 
     // **La Pinza è la seconda**, e sta prima della colata per un motivo aritmetico: mentre tiene,
@@ -192,7 +204,10 @@ export function autopilot(world) {
       // metallo e lontano dal soffitto.
       quota = (CEILING + MELT) / 2;
     }
-    quota = Math.max(CEILING + PILOTA.tetto, Math.min(MELT - PILOTA.paura, quota));
+    // Il fondo a cui può scendere dipende da cosa ha sotto: sopra un ripiano è il ripiano, sopra il
+    // varco è la soglia della paura. Il tetto invece è sempre lo stesso.
+    const fondo = appoggio ? MELT - PILOT.h : MELT - PILOTA.paura;
+    quota = Math.max(CEILING + PILOTA.tetto, Math.min(fondo, quota));
 
     // **E poi guarda chi ha intorno.** Mirare sopra il bersaglio non basta: si muore contro il
     // nemico che non si stava guardando, arrivato di lato mentre si scendeva su un altro. Quindi la

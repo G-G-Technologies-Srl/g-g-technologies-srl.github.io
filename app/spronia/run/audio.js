@@ -135,26 +135,53 @@ function _tone({ type = "square", from, to = from, start = 0, length, gain = 0.2
   osc.stop(at + length + 0.02);
 }
 
-/** Rumore bianco dentro un passa-banda: uno schianto, che nessun oscillatore da solo può essere. */
-function _noise({ length = 0.4, gain = 0.3, from = 900, to = 120, start = 0 }) {
+/**
+ * Un secondo di rumore, fatto una volta sola e riusato da tutti.
+ *
+ * Prima ogni schianto si costruiva il proprio: un `createBuffer` e un ciclo di `Math.random` a ogni
+ * nota. Su uno schianto ogni tanto non si nota; sul **battito d'ali** sì — con nove nemici che
+ * battono cinque volte al secondo sono quarantacinque buffer al secondo da riempire e da buttare
+ * via, e il battito è il suono che deve costare meno di tutti perché è quello che suona sempre.
+ */
+let din = null;
+
+function _din() {
+  if (!din) {
+    const frames = Math.floor(ctx.sampleRate);
+    din = ctx.createBuffer(1, frames, ctx.sampleRate);
+    const data = din.getChannelData(0);
+    for (let i = 0; i < frames; i += 1) data[i] = Math.random() * 2 - 1;
+  }
+  return din;
+}
+
+/**
+ * Rumore dentro un filtro: uno schianto, o un soffio d'aria.
+ *
+ * `type` è quello che separa le due cose. Un **passa-banda** che scende da mille a cento è uno
+ * schianto: tiene una banda stretta e la trascina in basso. Un **passa-basso** che fa la stessa
+ * corsa è aria che passa, perché lascia tutto quello che sta sotto la frequenza di taglio invece di
+ * ritagliarne una fetta.
+ *
+ * Il taglio parte da un punto qualunque dell'anello: due battiti di fila che partono dallo stesso
+ * campione suonano identici, e identici a quella velocità si sentono come un suono solo ripetuto.
+ */
+function _noise({ length = 0.4, gain = 0.3, from = 900, to = 120, start = 0,
+  type = "bandpass", q = 1.1 }) {
   if (!ctx) return;
   const at = ctx.currentTime + start;
-  const frames = Math.floor(ctx.sampleRate * length);
-  const buffer = ctx.createBuffer(1, frames, ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < frames; i += 1) data[i] = Math.random() * 2 - 1;
   const source = ctx.createBufferSource();
-  source.buffer = buffer;
+  source.buffer = _din();
   const filter = ctx.createBiquadFilter();
-  filter.type = "bandpass";
-  filter.Q.value = 1.1;
+  filter.type = type;
+  filter.Q.value = q;
   filter.frequency.setValueAtTime(from, at);
   filter.frequency.exponentialRampToValueAtTime(Math.max(1, to), at + length);
   const amp = ctx.createGain();
   amp.gain.setValueAtTime(gain, at);
   amp.gain.exponentialRampToValueAtTime(0.0001, at + length);
   source.connect(filter).connect(amp).connect(master);
-  source.start(at);
+  source.start(at, (at * 7.3) % 0.8, length + 0.02);
 }
 
 /**
@@ -298,14 +325,23 @@ function _voice(event) {
   _take(event);
 
   switch (event) {
-    // **Il battito.** Corto, secco, e appena diverso fra il tuo e quello degli altri: il tuo è una
-    // quinta sopra. Non è decorazione — con nove nemici in campo, distinguere il proprio colpo
-    // d'ala da quelli dello stormo è l'unico modo di sapere se il comando è passato.
+    // **Il battito, ed è aria.**
+    //
+    // Prima era un'onda quadra che scendeva da trecento a centosettanta in sei centesimi di secondo,
+    // e a quella misura una quadra che scende **gracida**: sembrava una rana, non un'ala. Il difetto
+    // non era l'altezza né il volume — era che un colpo d'ala non ha un'altezza. È aria spostata,
+    // cioè rumore che si apre e si chiude, e il modo di farlo è un passa-basso che scende.
+    //
+    // Il tuo e quello degli altri restano due suoni diversi, ed è la cosa che non si può perdere:
+    // con nove nemici in campo, distinguere il proprio colpo d'ala è l'unico modo di sapere che il
+    // comando è passato. Ma la differenza adesso è **di corpo, non di nota**: il tuo è più aperto e
+    // ha sotto un tonfo basso, quello dello stormo è più scuro, più corto e più lontano.
     case "battitoMio":
-      _tone({ type: "square", from: 300, to: 170, length: 0.06, gain: 0.085 });
+      _noise({ type: "lowpass", q: 0.9, from: 1900, to: 380, length: 0.14, gain: 0.14 });
+      _tone({ type: "sine", from: 155, to: 82, length: 0.09, gain: 0.05 });
       break;
     case "battito":
-      _tone({ type: "square", from: 200, to: 118, length: 0.055, gain: 0.045 });
+      _noise({ type: "lowpass", q: 0.9, from: 1100, to: 260, length: 0.11, gain: 0.055 });
       break;
 
     // Il contatto vinto: una discesa netta, perché è qualcuno che cade.

@@ -64,7 +64,34 @@ export const STEP = 1 / 120;
 // in the middle of it, or a special case in the resolver that only some waves exercise — and a
 // special case exercised by wave 1 and never again is the worst possible test profile.
 export const PLATFORMS = [
-  { id: "lunga",    x: 380, y: 560, w: 520, removable: false },
+  // **La fascia bassa è spezzata in due, con un varco in mezzo**, e non è una scelta estetica.
+  //
+  // Era una piattaforma sola larga 520 — il quaranta per cento del campo — appoggiata proprio sopra
+  // la colata. Due conseguenze, e la seconda si è vista giocando. La prima: volare basso non
+  // costava niente, perché sotto di te c'era un pavimento. La seconda: **la Pinza non serviva a
+  // niente.** Esce solo dove non c'è un ripiano sopra di lei, quindi quella piattaforma le toglieva
+  // seicento unità di campo su milleduecentottanta, e le lasciava i due bordi — cioè i due posti in
+  // cui non si vola mai.
+  //
+  // Adesso la fascia bassa misura in tutto trecentosessantaquattro unità invece di cinquecentoventi
+  // — un terzo in meno — e sta **al centro**, così il metallo scoperto è ai lati.
+  //
+  // Ai lati e non «ai bordi»: **il campo si avvolge**, quindi da 900 a 396 passando per lo zero è
+  // una sola distesa continua di settecentosettantasei unità, ed è quella che si attraversa più
+  // spesso di qualunque altra. Più il varco di centoquaranta in mezzo alle due. In tutto il
+  // settanta per cento della fascia bassa è metallo aperto, contro il quaranta di prima.
+  //
+  // E c'è una seconda cosa che questa disposizione sistema, meno visibile: **ognuna delle due ha
+  // una colonna di cielo libero sopra di sé.** Prima erano tutte incastrate sotto quelle alte,
+  // quindi non esisteva un punto della mappa da cui lasciar cadere qualcosa e vederlo arrivare in
+  // fondo — e tre prove del terreno vivevano su quella colonna.
+  //
+  // **Le due non sono speculari**, e la cosa va detta perché costa uno sforzo tenerla vera: larghezze
+  // diverse, e il varco spostato a sinistra del centro. Una mappa simmetrica si gioca uguale nelle
+  // due metà, e togliere l'asimmetria alla fascia bassa avrebbe tolto metà del motivo per cui si
+  // sceglie da che parte andare. C'è un controllo che lo verifica.
+  { id: "bassa-sx", x: 396, y: 560, w: 204, removable: false },
+  { id: "bassa-dx", x: 740, y: 560, w: 160, removable: false },
   { id: "sinistra", x: 88,  y: 440, w: 232, removable: false },
   { id: "destra",   x: 960, y: 380, w: 240, removable: false },
   { id: "centro",   x: 544, y: 252, w: 192, removable: true },
@@ -81,8 +108,8 @@ export const DECK = 16;
 // in mid-air the moment that platform goes, and in a game whose only lift is a discrete flap that
 // means appearing and falling.
 export const PADS = [
-  { x: 500, y: 560 },
-  { x: 780, y: 560 },
+  { x: 498, y: 560 },
+  { x: 820, y: 560 },
   { x: 204, y: 440 },
   { x: 1080, y: 380 },
 ];
@@ -1174,11 +1201,11 @@ export function startWave(world, roster) {
  * dell'ondata. È la stessa ragione per cui le piazzole stanno sulle piattaforme fisse.
  */
 const CELL_SPOTS = [
-  { deck: "lunga", at: 0.18 },
-  { deck: "lunga", at: 0.5 },
-  { deck: "lunga", at: 0.82 },
-  { deck: "sinistra", at: 0.32 },
-  { deck: "sinistra", at: 0.72 },
+  { deck: "bassa-sx", at: 0.3 },
+  { deck: "bassa-sx", at: 0.72 },
+  { deck: "bassa-dx", at: 0.3 },
+  { deck: "bassa-dx", at: 0.72 },
+  { deck: "sinistra", at: 0.5 },
   { deck: "destra", at: 0.5 },
 ];
 
@@ -2293,10 +2320,13 @@ function _stepClaw(world, dt) {
     claw.y = MELT;
     if (claw.left > 0) return;
     const posti = _clawSpots(world);
-    // **Se non c'è un posto buono, resta sotto.** Il ripiego di uscire in mezzo al campo era peggio
-    // del problema che risolveva: il centro è sopra la piattaforma più grande della mappa, cioè
-    // esattamente il posto in cui la Pinza non può funzionare. Meglio un turno saltato che una
-    // Pinza che esce e non prende niente per costruzione.
+    // **Se non c'è un posto buono, resta sotto.** Il ripiego di uscire in un punto fisso era peggio
+    // del problema che risolveva: un punto scelto una volta sola può capitare sotto un ripiano, cioè
+    // esattamente dove la Pinza non può funzionare. Meglio un turno saltato che una Pinza che esce e
+    // non prende niente per costruzione.
+    //
+    // Con la fascia bassa spezzata questo caso è diventato raro: il varco centrale è sempre libero,
+    // e sono le tre piattaforme rimovibili — che stanno tutte in alto — a non entrarci mai.
     if (!posti.length) {
       claw.left = CLAW.rest;
       return;

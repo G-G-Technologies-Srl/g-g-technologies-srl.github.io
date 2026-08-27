@@ -625,7 +625,7 @@ APPS = [
         "order": 3,
         "tags": ["svago"],
         "stato": "pronto",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "released": "2026-08-14",
         "updated": "2026-08-26",
         "licence": "Apache-2.0",
@@ -664,7 +664,8 @@ APPS = [
                 "Si vola battendo le ali: nessun tasto sale da solo, e tenerlo premuto vale un "
                 "battito solo.",
                 "Al contatto vince chi ha lo sperone più in alto. A pari quota si rimbalza.",
-                "Sei piattaforme a sei quote diverse, sopra un fondo di metallo fuso.",
+                "Sette piattaforme su sei quote, e in basso due tronconi con in mezzo il metallo "
+                "fuso scoperto: volare bassi è una scelta, non un riposo.",
                 "Il campo si richiude su sé stesso in orizzontale: esci a destra e rientri a "
                 "sinistra.",
                 "Chi abbatti lascia una cella: la raccogli quando ha toccato terra, oppure si "
@@ -801,7 +802,8 @@ APPS = [
                 "You fly by flapping: no key climbs on its own, and holding one down counts as a "
                 "single beat.",
                 "On contact the higher spur wins. Level with each other, both bounce away.",
-                "Six ledges at six different heights, over a floor of molten metal.",
+                "Seven ledges across six heights, and down at the bottom two stumps with bare "
+                "molten metal between them: flying low is a choice, not a rest.",
                 "The field wraps horizontally: leave on the right and you come back on the left.",
                 "Whatever you unseat leaves a cell: collect it once it has touched down, or it "
                 "hatches and comes back a class higher.",

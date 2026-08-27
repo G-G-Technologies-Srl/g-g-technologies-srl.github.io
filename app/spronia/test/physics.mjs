@@ -617,12 +617,12 @@ function spegni(world, io, lui) {
   // cella che si ferma dove cade non fa scegliere niente.
   const world = create(3, 1, 0);
   world.pilots[0].x = 100; world.pilots[0].y = 120;       // lontano, o la raccoglie lui
-  const deck = PLATFORMS.find((p) => p.id === "lunga");
-  // Sopra il ripiano lungo e **fuori da quello centrale**, che sta a mezz'aria proprio sopra: da
-  // lì la caduta sarebbe di ventisei unità, cioè meno di quante ne servono per rimbalzare, e il
-  // controllo avrebbe accusato la cella di non rimbalzare mentre stava misurando la mappa.
+  const deck = PLATFORMS.find((p) => p.id === "bassa-sx");
+  // Sopra il ripiano basso e **in una colonna libera**: da sotto un altro ripiano la caduta sarebbe
+  // corta, e il controllo avrebbe accusato la cella di non rimbalzare mentre stava misurando la
+  // mappa. È successo davvero, il giorno in cui la fascia bassa si è spezzata in due.
   world.celle.push({
-    from: 99, kind: "deriva", x: deck.x + 60, y: 100,
+    from: 99, kind: "deriva", x: clearOn(deck, CELLA.w), y: 100,
     vx: 0, vy: 0, grounded: false, alive: true, hatch: 99, touched: false,
   });
   const cella = world.celle[0];
@@ -1477,9 +1477,15 @@ console.log("\nlo scudo di fuoco");
   trovato.pilots[0].x = 5000;
   let volando = 0;
   let sempre = true;
+  // **Il giro si misura da qui, non dal ciclo dopo.** La testa e il corpo cadono per conto loro, e
+  // quale dei due tocca il metallo per primo dipende dalla mappa: da quando la fascia bassa ha un
+  // varco in mezzo, la testa può affondare mentre il corpo sta ancora scendendo. Misurandolo dopo,
+  // si misurava una testa che non c'era già più — zero giri, e sembrava che non rotolasse.
+  let girata = 0;
   while (!corpo.sinking && volando < 120 * 12) {
     step(trovato, [intent()]);
     volando += 1;
+    girata = Math.max(girata, testa.spin);
     if (!corpo.sinking && !corpo.bleeding) sempre = false;
   }
   check("e zampilla per tutta la caduta",
@@ -1487,7 +1493,6 @@ console.log("\nlo scudo di fuoco");
     `caduta di ${(volando / 120).toFixed(2)} s, sempre=${sempre}`);
 
   let passi = 0;
-  let girata = 0;
   while (trovato.teste.length && passi < 120 * 12) {
     step(trovato, [intent()]);
     passi += 1;
@@ -1687,6 +1692,26 @@ function muori(world, io) {
     uno.ladder === 2 && due.ladder === 0, `${uno.ladder} e ${due.ladder}`);
 }
 
+/**
+ * Una colonna sopra `deck` con **niente in mezzo**, larga quanto il corpo che ci si lascia cadere.
+ *
+ * Serve a tre prove che fanno cadere qualcosa e guardano dove si posa. Prima era un `deck.x + 60`
+ * scritto a mano, e ha smesso di funzionare il giorno in cui la fascia bassa si è spezzata in due:
+ * la colonna scelta finiva sotto un altro ripiano, la cosa si posava lassù, e il controllo accusava
+ * il risolutore di un difetto mentre stava misurando la mappa.
+ *
+ * Calcolarla invece di sceglierla vuol dire che la prova sopravvive alla prossima mappa.
+ */
+function clearOn(deck, larghezza = PILOT.w) {
+  const mezzo = larghezza / 2;
+  for (let x = deck.x + mezzo; x <= deck.x + deck.w - mezzo; x += 2) {
+    const coperto = PLATFORMS.some((p) => p !== deck && p.y < deck.y
+      && x + mezzo > p.x && x - mezzo < p.x + p.w);
+    if (!coperto) return x;
+  }
+  return null;
+}
+
 // -----------------------------------------------------------------------------------------------------------------
 //  i l   t e r r e n o
 // -----------------------------------------------------------------------------------------------------------------
@@ -1694,10 +1719,10 @@ function muori(world, io) {
 console.log("\nil terreno");
 
 {
-  const deck = PLATFORMS.find((p) => p.id === "lunga");
+  const deck = PLATFORMS.find((p) => p.id === "bassa-sx");
   const world = create(7);
   const pilot = world.pilots[0];
-  pilot.x = deck.x + deck.w / 2; pilot.y = deck.y - 200; pilot.grounded = false; pilot.vy = 0;
+  pilot.x = clearOn(deck); pilot.y = deck.y - 200; pilot.grounded = false; pilot.vy = 0;
   play(world, 240);
   check("si cade e ci si posa su un ripiano",
     pilot.grounded && near(pilot.y, deck.y - PILOT.h / 2, 0.5),
@@ -1708,10 +1733,10 @@ console.log("\nil terreno");
   // A body at rest must stay at rest. The first version of the resolver pushed a standing body
   // sideways out of the platform it was standing on, a fraction of a unit per step, and it took
   // about four seconds of watching to notice it drifting off the edge on its own.
-  const deck = PLATFORMS.find((p) => p.id === "lunga");
+  const deck = PLATFORMS.find((p) => p.id === "bassa-sx");
   const world = create(7);
   const pilot = world.pilots[0];
-  pilot.x = deck.x + deck.w / 2; pilot.y = deck.y - PILOT.h / 2; pilot.grounded = true;
+  pilot.x = clearOn(deck); pilot.y = deck.y - PILOT.h / 2; pilot.grounded = true;
   const restX = pilot.x;
   play(world, 600);
   check("fermo su un ripiano resta fermo",
@@ -1847,8 +1872,44 @@ console.log("\nla mappa");
 }
 
 {
+  // **Una quota per ripiano, tranne la fascia bassa**, che è un ripiano solo spezzato in due — e
+  // quella eccezione è il motivo per cui il controllo è scritto così invece che con un conteggio.
+  // Due ripiani alla stessa quota altrove sarebbero due posti che si giocano uguale; questi due
+  // sono i due lati dello stesso varco.
   const heights = new Set(PLATFORMS.map((p) => p.y));
-  check("sei ripiani, sei quote diverse", heights.size === PLATFORMS.length);
+  const bassa = PLATFORMS.filter((p) => p.id.startsWith("bassa-"));
+  check("una quota per ripiano, tranne la fascia bassa che è una sola spezzata in due",
+    heights.size === PLATFORMS.length - (bassa.length - 1)
+      && new Set(bassa.map((p) => p.y)).size === 1,
+    `${heights.size} quote per ${PLATFORMS.length} ripiani`);
+
+  // **Quanto metallo resta scoperto nella fascia bassa**, ed è la misura che decide se la Pinza
+  // serve a qualcosa: esce solo dove non ha un ripiano sopra la testa.
+  //
+  // Si conta **contando l'avvolgimento**, e non è pignoleria — è dove sta la distesa più lunga: da
+  // destra a sinistra passando per lo zero è un tratto solo, ed è quello che si attraversa più
+  // spesso di qualunque altro. Contandolo come due pezzi separati si concluderebbe che la mappa è
+  // più chiusa di quanto sia.
+  const ordinati = bassa.slice().sort((a, b) => a.x - b.x);
+  const vuoti = ordinati.map((p, i) => {
+    const dopo = ordinati[(i + 1) % ordinati.length];
+    const inizio = dopo.x + (i + 1 === ordinati.length ? FIELD.w : 0);
+    return inizio - (p.x + p.w);
+  });
+  const coperto = ordinati.reduce((somma, p) => somma + p.w, 0);
+  check("la fascia bassa copre meno di un terzo del campo",
+    coperto < FIELD.w / 3, `${coperto} su ${FIELD.w}`);
+  check("e la distesa di metallo scoperto più lunga vale più di un terzo del campo",
+    Math.max(...vuoti) > FIELD.w / 3, `${Math.max(...vuoti)} unità`);
+  check("ogni varco è abbastanza largo perché la Pinza ci esca",
+    Math.min(...vuoti) > CLAW.w * 2, `il più stretto è ${Math.min(...vuoti)}`);
+
+  // E ognuna delle due ha una colonna di cielo libera sopra: è quello che permette di lasciar
+  // cadere qualcosa e vederlo arrivare in fondo, ed è la proprietà da cui dipendono tre prove del
+  // terreno qui sotto.
+  const cieche = bassa.filter((p) => clearOn(p) === null).map((p) => p.id);
+  check("e tutt'e due hanno una colonna di cielo libera sopra",
+    cieche.length === 0, cieche.join(", "));
   const mirrored = PLATFORMS.filter((a) => PLATFORMS.some((b) =>
     a !== b && near(a.y, b.y) && near(a.w, b.w)
     && near(a.x + a.w / 2, FIELD.w - (b.x + b.w / 2), 1)));
