@@ -25,10 +25,12 @@ const IT = {
   // -------------------------------------------------------------------------------------------
 
   insertCoin: "Inserisci il gettone",
-  coinFree: "I gettoni sono finiti nel 1985. Questo è gratis, e ne puoi mettere quanti vuoi.",
+  coinFree: "Nelle sale giochi il gettone era l'unica cosa che costava. Qui è gratis, e ne puoi "
+    + "mettere quanti vuoi.",
   credits: "Crediti",
-  pressStart: "Scegli in quanti giocate",
-  startHint: "Un tasto qualunque del volo fa la stessa cosa.",
+  pressStart: "In quanti giocate?",
+  startHint: "Oppure premi un tasto del volo: quelli del primo giocatore avviano una partita a "
+    + "uno, quelli del secondo una a due.",
   players1: "Un giocatore",
   players2: "Due giocatori",
   playersNote: "A due giocatori serve una tastiera o un gamepad.",
@@ -52,11 +54,11 @@ const IT = {
   waveCelle: "Solo celle",
   waveCelleNote: "Niente nemici in volo. Raccogli prima che si schiudano.",
   waveSopravvivenza: "Sopravvivenza",
-  waveSopravvivenzaNote: "Finiscila senza morire e vale tremila punti.",
+  waveSopravvivenzaNote: "Finiscila senza morire e c'è un premio.",
   waveSquadra: "Squadra",
-  waveSquadraNote: "Nessuno dei due tocca l'altro: tremila punti a testa.",
+  waveSquadraNote: "Nessuno dei due tocca l'altro, e il premio è a testa.",
   waveDuello: "Duello",
-  waveDuelloNote: "Qui il colpo fra voi due paga. Altrove no.",
+  waveDuelloNote: "Solo qui abbattere l'altro giocatore paga. In tutte le altre ondate vale zero.",
   bonusEarned: "Premio: {points}",
 
   // -------------------------------------------------------------------------------------------
@@ -68,24 +70,24 @@ const IT = {
   howKeys2: "Il secondo: frecce sinistra e destra, Maiusc destro per battere, freccia giù per lo "
     + "scudo.",
   howTouch: "Col mouse o col dito: premi il campo dal lato in cui vuoi andare, e ogni pressione è "
-    + "un battito. Due tocchi rapidi sul tuo dodo accendono lo scudo.",
+    + "un battito. Due tocchi rapidi sulla tua cavalcatura accendono lo scudo.",
 
   flightTitle: "Il volo",
-  flightLead: "Quando due cavalcature si toccano resta in volo chi ha la punta dello sperone più "
-    + "in alto. È l'unica regola — o quasi.",
+  flightLead: "Quando due cavalcature si toccano resta in volo chi ha lo sperone — il trattino "
+    + "davanti al muso — più in alto. È l'unica regola, o quasi.",
   howBeat: "Non c'è un comando per salire. Per restare in quota servono circa tre battiti al "
     + "secondo.",
   howSkid: "In aria non c'è presa: per tornare indietro devi girarti e battere dall'altra parte.",
-  howLance: "Il trattino davanti al muso è la punta dello sperone: guarda quella. Il fondo è "
-    + "metallo fuso, e toccarlo costa una vita.",
+  howLance: "Guarda il trattino, non il cavaliere: è quello che decide il contatto. E il fondo è "
+    + "metallo fuso: toccarlo costa una vita.",
   howCells: "Chi abbatti lascia una cella: si prende dopo che ha toccato terra. Se la lasci, si "
     + "schiude di una classe più alta.",
   howShield: "Lo scudo brucia chi tocchi, comunque lo tocchi. Dura tre secondi e torna dopo "
     + "dieci.",
-  howIntruder: "Se ci metti troppo, dalla colata esce di traverso una palla di fuoco, e torna "
+  howIntruder: "Se ci metti troppo, dal metallo fuso esce di traverso una palla di fuoco, e torna "
     + "sempre più spesso. Si abbatte andandole incontro alla quota del suo cuore acceso.",
-  howClaw: "Dalla colata esce una pinza che afferra chi vola basso. Per liberarti batti le ali "
-    + "molto più in fretta del solito.",
+  howClaw: "Dal metallo fuso esce una pinza che afferra chi vola basso. Per liberarti batti le "
+    + "ali molto più in fretta del solito.",
   a11yNote: "È un gioco d'azione in tempo reale: serve vedere lo schermo.",
 
   // -------------------------------------------------------------------------------------------
@@ -101,7 +103,8 @@ const IT = {
   keysShield: "Scudo",
   keysPress: "Premi un tasto…",
   keysTaken: "Quel tasto è già di un altro comando.",
-  keysReserved: "Esc, P e Invio servono al cabinato e non si possono assegnare.",
+  keysReserved: "Esc, P e Invio comandano la macchina — uscire, pausa, gettone — e non si "
+    + "possono assegnare.",
   keysReset: "Rimetti i tasti di partenza",
   keysDone: "Fatto",
 
@@ -183,10 +186,12 @@ const EN = {
   tagline: "The higher rider wins",
 
   insertCoin: "Insert coin",
-  coinFree: "Coins ran out in 1985. This one is free, and you can put in as many as you like.",
+  coinFree: "In an arcade the coin was the only thing that cost anything. Here it is free, and "
+    + "you can put in as many as you like.",
   credits: "Credits",
-  pressStart: "Choose how many are playing",
-  startHint: "Any flying key does the same thing.",
+  pressStart: "How many are playing?",
+  startHint: "Or press a flying key: the first player's keys start a one-player game, the "
+    + "second player's a two-player one.",
   players1: "One player",
   players2: "Two players",
   playersNote: "Two players need a keyboard or a gamepad.",
@@ -206,26 +211,27 @@ const EN = {
   waveCelle: "Cells only",
   waveCelleNote: "Nothing in the air. Collect them before they hatch.",
   waveSopravvivenza: "Survival",
-  waveSopravvivenzaNote: "Finish it without dying and it is worth three thousand.",
+  waveSopravvivenzaNote: "Finish it without dying and there is a bonus.",
   waveSquadra: "Team",
-  waveSquadraNote: "Neither of you touches the other: three thousand each.",
+  waveSquadraNote: "Neither of you touches the other, and the bonus is each.",
   waveDuello: "Duel",
-  waveDuelloNote: "Here a hit on each other pays. Nowhere else.",
+  waveDuelloNote: "Only here does unseating the other player pay. In every other wave it is "
+    + "worth nothing.",
   bonusEarned: "Bonus: {points}",
 
   ctrlTitle: "The controls",
   howKeys: "One player: A and D to turn, W to flap, S for the shield.",
   howKeys2: "The second: left and right arrows, right Shift to flap, down arrow for the shield.",
   howTouch: "With the mouse or a finger: press the field on the side you want to go, and every "
-    + "press is a flap. Two quick taps on your own dodo light the shield.",
+    + "press is a flap. Two quick taps on your own mount light the shield.",
 
   flightTitle: "Flight",
-  flightLead: "When two mounts touch, the one whose spur tip is higher stays in the air. That is "
-    + "the only rule — almost.",
+  flightLead: "When two mounts touch, the one whose spur — the dash ahead of the nose — is "
+    + "higher stays in the air. That is the only rule, almost.",
   howBeat: "There is no button for up. Holding your height takes about three flaps a second.",
   howSkid: "There is no grip in the air: to go back you have to turn and flap the other way.",
-  howLance: "The dash ahead of the nose is the spur tip: watch that one. The floor is molten "
-    + "metal, and touching it costs a life.",
+  howLance: "Watch the dash, not the rider: that is what decides a contact. And the floor is "
+    + "molten metal: touching it costs a life.",
   howCells: "Whatever you unseat leaves a cell: you can take it once it has touched down. Leave "
     + "it and it hatches a class higher.",
   howShield: "The shield burns whatever you touch, however you touch it. Three seconds, and it is "
@@ -245,7 +251,7 @@ const EN = {
   keysShield: "Shield",
   keysPress: "Press a key…",
   keysTaken: "That key already belongs to another control.",
-  keysReserved: "Esc, P and Enter belong to the cabinet and cannot be assigned.",
+  keysReserved: "Esc, P and Enter run the machine — quit, pause, coin — and cannot be assigned.",
   keysReset: "Put the starting keys back",
   keysDone: "Done",
 

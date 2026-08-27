@@ -339,6 +339,10 @@ main {
 
 .how ul { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 7px; }
 
+/* La regola del gioco, sopra l'elenco delle sue conseguenze. Nel colore del testo e non in quello
+   attenuato: è l'unica riga del pannello che va letta per forza. */
+.how .rule { font-size: 13.5px; color: var(--text); line-height: 1.5; margin: 0 0 10px; }
+
 /* Il quadratino del sito invece del pallino del browser. */
 .how li {
   position: relative;

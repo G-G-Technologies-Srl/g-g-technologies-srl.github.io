@@ -492,7 +492,7 @@ APPS = [
                  "leggero; nei progetti su misura è lo stesso ragionamento su dati che non "
                  "vogliamo far uscire."),
             ],
-            "cta_title": "Ti serve qualcosa che gira in locale?",
+            "cta_title": "Ti serve qualcosa che giri in locale?",
             "cta_text": "Se hai un caso in cui i dati non devono uscire dalla macchina di chi li "
                         "usa, raccontacelo. Ti risponde una persona del team, non un messaggio "
                         "automatico.",
@@ -625,9 +625,9 @@ APPS = [
         "order": 3,
         "tags": ["svago"],
         "stato": "pronto",
-        "version": "1.1.0",
+        "version": "1.1.1",
         "released": "2026-08-14",
-        "updated": "2026-08-26",
+        "updated": "2026-08-27",
         "licence": "Apache-2.0",
         "art": {"shape": "altitude"},
         "it": {
@@ -640,8 +640,9 @@ APPS = [
             "kicker": "App gratuita e open source",
             "h1": "Non c'è un tasto per salire: <span class=\"grad-text\">si batte "
                   "le ali</span>.",
-            "lead": "Due direzioni e un pulsante. Più in fretta batti, più sali — e al contatto "
-                    "vince chi ha lo sperone più in alto. Sotto c'è metallo fuso.",
+            "lead": "Due direzioni, un battito e uno scudo. Più in fretta batti, più sali — e al "
+                    "contatto vince chi ha lo sperone, la punta davanti al muso, più in alto. "
+                    "Sotto c'è metallo fuso.",
             "summary": "Si vola a battiti d'ala e vince chi è più in alto. Gira nel browser, "
                        "senza server.",
             "intro_title": "Perché un secondo gioco",
@@ -664,8 +665,8 @@ APPS = [
                 "Si vola battendo le ali: nessun tasto sale da solo, e tenerlo premuto vale un "
                 "battito solo.",
                 "Al contatto vince chi ha lo sperone più in alto. A pari quota si rimbalza.",
-                "Sette piattaforme su sei quote, e in basso due tronconi con in mezzo il metallo "
-                "fuso scoperto: volare bassi è una scelta, non un riposo.",
+                "Sette piattaforme su sei quote, e le due più basse sono corte: fra loro c'è "
+                "soltanto metallo fuso, quindi volare bassi è una scelta e non un riposo.",
                 "Il campo si richiude su sé stesso in orizzontale: esci a destra e rientri a "
                 "sinistra.",
                 "Chi abbatti lascia una cella: la raccogli quando ha toccato terra, oppure si "
@@ -679,10 +680,10 @@ APPS = [
                 "Gettone, crediti e classifica come su un cabinato da sala giochi, con i punteggi "
                 "che restano in questo browser e si possono esportare.",
                 "Suono generato dal browser, senza nessun file audio da scaricare.",
-                "I tasti si possono cambiare, per le tastiere che non reggono la combinazione.",
-                "Due giocatori sulla stessa tastiera, o uno alla tastiera e uno al gamepad.",
-                "Funziona senza connessione dopo la prima apertura.",
-                "Italiano e inglese, tema chiaro e scuro, si installa come un'applicazione.",
+                "In due si gioca sulla stessa tastiera, o uno alla tastiera e uno al gamepad, e "
+                "i tasti si cambiano se la tua tastiera non regge la combinazione.",
+                "Dopo la prima apertura funziona senza connessione, in italiano e in inglese, con "
+                "tema chiaro e scuro, e si installa come un'applicazione.",
             ],
             "does_not_title": "Cosa non fa",
             "does_not": [
@@ -705,9 +706,10 @@ APPS = [
                          "richieste di rete."),
                 ("Due giocatori", "Sulla stessa tastiera, o con un gamepad. Non sul telefono."),
                 ("Schermo", "Fisso, senza scorrimento. Sul telefono va tenuto in orizzontale."),
-                ("Contenuti", "Si combatte. Chi perde brucia e sprofonda nel metallo fuso, e con "
-                              "lo scudo di fuoco ci scappa il sangue. È tutto disegnato a pixel "
-                              "grossi, ma è bene saperlo prima di darlo a un bambino."),
+                ("Contenuti", "Si combatte. Chi perde brucia e sprofonda nel metallo fuso, e lo "
+                              "scudo di fuoco ogni tanto stacca una testa, con il sangue che si "
+                              "vede. È tutto disegnato a pixel grossi, ma è bene saperlo prima di "
+                              "darlo a un bambino."),
 
                 ("Classifica", "Resta in questo browser, su questo computer, come quella di un "
                                "cabinato. La puoi esportare in un file e rimetterla altrove."),
@@ -744,7 +746,7 @@ APPS = [
                  "regola. Un'ondata di sole celle non ha nemici in volo: sono tutte a terra e si "
                  "schiudono se le lasci lì. Una di sopravvivenza paga chi la finisce senza morire. "
                  "In due c'è anche il duello, che è l'unico momento in cui colpire l'altro "
-                 "giocatore vale punti. L'ondata dice all'inizio quale delle quattro è."),
+                 "giocatore vale punti. Quale sia, l'ondata lo annuncia quando comincia."),
                 ("Il gettone serve a qualcosa?",
                  "A due cose. È il gesto che un browser pretende prima di lasciar uscire un suono, "
                  "quindi il gioco non ha bisogno di una fascia «clicca per attivare l'audio» "
@@ -755,7 +757,7 @@ APPS = [
                  "reimporti dove vuoi. Senza un server quella è l'unica copia che esiste, quindi "
                  "vale la pena farlo prima di cambiare computer o di svuotare i dati del sito."),
             ],
-            "cta_title": "Ti serve qualcosa che gira in locale?",
+            "cta_title": "Ti serve qualcosa che giri in locale?",
             "cta_text": "Se hai un caso in cui i dati non devono uscire dalla macchina di chi li "
                         "usa, raccontacelo. Ti risponde una persona del team, non un messaggio "
                         "automatico.",
@@ -778,8 +780,9 @@ APPS = [
                            "this computer.",
             "kicker": "Free and open source",
             "h1": "There is no button for up: <span class=\"grad-text\">you flap</span>.",
-            "lead": "Two directions and one button. The faster you flap the higher you go — and on "
-                    "contact the higher spur wins. Below there is molten metal.",
+            "lead": "Two directions, a flap and a shield. The faster you flap the higher you go "
+                    "— and on contact the higher spur wins. The spur is the dash ahead of the "
+                    "nose. Below there is molten metal.",
             "summary": "You fly by flapping and the higher rider wins. Runs in the browser, with "
                        "no server.",
             "intro_title": "Why a second game",
@@ -802,8 +805,8 @@ APPS = [
                 "You fly by flapping: no key climbs on its own, and holding one down counts as a "
                 "single beat.",
                 "On contact the higher spur wins. Level with each other, both bounce away.",
-                "Seven ledges across six heights, and down at the bottom two stumps with bare "
-                "molten metal between them: flying low is a choice, not a rest.",
+                "Seven ledges across six heights, and the two lowest are short: between them "
+                "there is nothing but molten metal, so flying low is a choice and not a rest.",
                 "The field wraps horizontally: leave on the right and you come back on the left.",
                 "Whatever you unseat leaves a cell: collect it once it has touched down, or it "
                 "hatches and comes back a class higher.",
@@ -816,10 +819,10 @@ APPS = [
                 "A high score table, counters and a coin slot as on a cabinet, with the scores "
                 "kept in this browser and exportable.",
                 "Sound generated by the browser, with no audio file to download.",
-                "The keys can be changed, for keyboards that will not take the combination.",
-                "Two players on one keyboard, or one on the keyboard and one on a gamepad.",
-                "Works without a connection after the first visit.",
-                "Italian and English, light and dark themes, installable as an application.",
+                "Two play on one keyboard, or one on the keyboard and one on a gamepad, and the "
+                "keys can be changed if yours will not take the combination.",
+                "After the first visit it works with no connection, in Italian and English, with "
+                "light and dark themes, and installs as an application.",
             ],
             "does_not_title": "What it does not do",
             "does_not": [
@@ -844,8 +847,9 @@ APPS = [
                 ("Two players", "On one keyboard, or with a gamepad. Not on a phone."),
                 ("Screen", "Fixed, with no scrolling. On a phone it wants to be held sideways."),
                 ("Content", "There is fighting. Whoever loses burns and sinks into the molten "
-                            "metal, and the fire shield draws blood. It is all drawn in large "
-                            "pixels, but it is worth knowing before handing it to a child."),
+                            "metal, and the fire shield sometimes takes a head off, blood and "
+                            "all. It is all drawn in large pixels, but it is worth knowing "
+                            "before handing it to a child."),
                 ("High scores", "They stay in this browser, on this computer, like a cabinet's. "
                                 "You can export them to a file and put them back elsewhere."),
                 ("Sound", "The browser generates it as you play: there is no audio file to "
@@ -879,8 +883,8 @@ APPS = [
                  "the rule itself. A cells-only wave has nothing in the air: they are all on the "
                  "ground and they hatch if you leave them. A survival wave pays whoever finishes "
                  "it without dying. With two players there is also the duel, the one moment when "
-                 "hitting the other player is worth points. Each wave says which of the four it "
-                 "is as it begins."),
+                 "hitting the other player is worth points. Whichever it is, the wave says so "
+                 "as it begins."),
                 ("Does the coin do anything?",
                  "Two things. It is the gesture a browser requires before it will let any sound "
                  "out, so the game needs no “click to enable audio” banner pasted over it. And it "

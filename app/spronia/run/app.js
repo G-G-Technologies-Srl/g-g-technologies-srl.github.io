@@ -756,14 +756,17 @@ async function main() {
 
   _toAttract();
 
-  db = await scores.connect();
-  if (!db) el("storageNote").hidden = false;
-  else { table = await scores.table(db); totals = await scores.stats(db); }
-  _paintScores();
-
-  // `?demo=1` è lo screenshot, ed è anche un link diretto alla dimostrazione. Tutto quello che
-  // serve viene fatto **prima** dell'evento `load`, perché è il momento in cui Chrome senza
-  // interfaccia scatta la fotografia.
+  // `?demo=1` è lo screenshot, ed è anche un link diretto alla dimostrazione.
+  //
+  // **Sta prima del `await` sul database, e la posizione è tutta la faccenda.** Chrome senza
+  // interfaccia scatta la fotografia al `load`, e un `await` che non si risolve prima di quel
+  // momento lascia questo blocco non eseguito: sul campo resta il mondo appena nato di
+  // `_toAttract`, cioè quattro corpi fermi dentro il loro cerchio di protezione e il punteggio a
+  // zero. La fotografia di un gioco che non sta succedendo.
+  //
+  // È successo davvero, ed è il tipo di difetto che non si vede provando a mano: in un browser
+  // normale IndexedDB risponde in pochi millisecondi e il blocco fa in tempo. In headless, con un
+  // profilo nuovo e il tempo virtuale, no.
   if (new URLSearchParams(location.search).get("demo") === "1") {
     demo = newGame(20260826, 1);
     for (let i = 0; i < 1400; i += 1) {
@@ -787,6 +790,11 @@ async function main() {
     render.fit(el("field"));
     render.draw(el("field"), demo, { dim: ATTRACT_DIM });
   }
+
+  db = await scores.connect();
+  if (!db) el("storageNote").hidden = false;
+  else { table = await scores.table(db); totals = await scores.stats(db); }
+  _paintScores();
 
   last = performance.now();
   requestAnimationFrame(_frame);
