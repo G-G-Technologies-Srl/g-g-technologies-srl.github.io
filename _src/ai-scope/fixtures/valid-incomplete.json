@@ -1,0 +1,18 @@
+{
+  "schema": "1.0",
+  "tool": "ai-scope",
+  "tool_version": "1.0.0",
+  "questionnaire_edition": 1,
+  "questionnaire_digest": "sha256:6e30319dc855e59a36aa58f5fd789573fd247537d7eb386f879ed4ffcdf495fd",
+  "lang": "it",
+  "complete": false,
+  "answered_at": "2026-08-27",
+  "exported_at": "2026-08-27",
+  "answers": {
+    "q001": 0, "q002": 1, "q003": 2,
+    "q004": 1, "q005": 0, "q006": 1,
+    "q007": 1, "q008": 0
+  },
+  "skipped": [],
+  "not_applicable": []
+}

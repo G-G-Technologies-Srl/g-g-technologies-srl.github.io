@@ -126,8 +126,8 @@
         <div>
           <nav class="breadcrumb" aria-label="Breadcrumb"><ol><li><a href="/en/">Home</a></li><li><a href="/en/app/">Apps</a></li><li aria-current="page">CSV Scope</li></ol></nav>
           <div class="kicker">Free and open source</div>
-          <h1>Your CSV files, read <span class="grad-text">without uploading</span> them anywhere.</h1>
-          <p class="hero-sub">Drop the file in and read it: as a table row by row, and as a chart where there are numbers. There is no server to send it to, so it stays put.</p>
+          <h1>Your CSV files, read <span class="grad-text">where they already are</span>.</h1>
+          <p class="hero-sub">Drop the file in and read it: as a table row by row, and as a chart where there are numbers. The app reads it on your own computer, and there it stays.</p>
           <p class="article-tags"><span class="tag-label">Category</span><a class="tag" href="/en/app/?tag=dati">Data</a></p>
           <div class="hero-ctas">
             <a class="btn btn-primary" href="/app/csv-scope/run/">Open the app</a>
@@ -150,11 +150,11 @@
         </figure>
 
         <div class="kicker">The starting point</div>
-        <h2>A file of measurements has no reason to <span class="grad-text">leave your computer</span>.</h2>
+        <h2>A file of measurements is read <span class="grad-text">where it already sits</span>.</h2>
         <div class="about-text reveal">
           <p>To look at a CSV of a few dozen megabytes there are usually two roads: a spreadsheet that slows to a halt, or an online service you upload the file to. The first makes you wait; the second hands your measurements to somebody else, and often you cannot tell how long they keep them.</p>
-          <p>CSV Scope does a third thing. The browser reads the file where it already sits and draws the chart locally. There is no server because none is needed: once the page has loaded, the app makes no further network request.</p>
-          <p>The case we started from is an electrocardiogram. It is the kind of file our work on <a href="/en/services/medical-wearables/">medical wearables</a> runs on, and it is also what puts a viewer to the test: hundreds of samples a second, often a single column, and detail that matters at every millisecond. The example inside the app is a synthetic ECG, drawn by the app itself: it is nobody's recording.</p>
+          <p>CSV Scope does a third thing. The browser reads the file where it already sits and draws the chart locally. Once the page has loaded, the app makes no further network request: you can watch that in your browser's developer tools.</p>
+          <p>The case we started from is an electrocardiogram. It is the kind of file our work on <a href="/en/services/medical-wearables/">medical wearables</a> runs on, and it is also what puts a viewer to the test: hundreds of samples a second, often a single column, and detail that matters at every millisecond. The example inside the app is a synthetic ECG, drawn by the app itself.</p>
         </div>
       <figure class="app-shot reveal">
         <img src="/assets/shot-csv-scope-en.png" width="1600" height="1000" loading="lazy" decoding="async"
@@ -179,7 +179,6 @@
           <div class="app-list does-not">
             <h3>What it does not do</h3>
             <ul class="ticks">
-              <li>It does not send the file anywhere, and we receive no copy of it.</li>
               <li>It does no signal filtering and no statistical analysis: it is for looking, not for processing.</li>
               <li>It does not open proprietary datalogger formats. Export them to CSV first.</li>
               <li>It does not sync across devices: what you open here stays here.</li>
@@ -205,20 +204,6 @@
             <div>
               <h4>Size</h4>
               <p>Tested on a 12 MB file of a hundred thousand rows: it opens in a little over a second.</p>
-            </div>
-          </div>
-          <div class="fact">
-            <span class="f-dot" aria-hidden="true"></span>
-            <div>
-              <h4>High scores</h4>
-              <p>They stay in this browser, on this computer, like an arcade cabinet's. You can export them to a file and put them back elsewhere.</p>
-            </div>
-          </div>
-          <div class="fact">
-            <span class="f-dot" aria-hidden="true"></span>
-            <div>
-              <h4>Sound</h4>
-              <p>The browser generates it as you play: there is no audio file to download. It switches off from the bar at the top.</p>
             </div>
           </div>
           <div class="fact">
@@ -274,7 +259,7 @@
         <h2>Frequently asked questions</h2>
         <div class="faq-list">
           <details class="faq-item reveal">
-            <summary>How can I be sure the file is not uploaded?</summary>
+            <summary>How do I verify the file stays on my computer?</summary>
             <p>You can check it yourself. Open your browser's developer tools, the Network tab, and use the app: after the page has loaded no request appears. The code is public too, so you can read what it does.</p>
           </details>
           <details class="faq-item reveal">
@@ -286,8 +271,8 @@
             <p>Preferences stay, the file does not: it is read from where it sits every time. If you need to keep a range, export it — the file lands on your disk like any other.</p>
           </details>
           <details class="faq-item reveal">
-            <summary>Why give it away?</summary>
-            <p>Because it is the most direct way to show how we work. The same choices — processing on your machine, no data leaving it — are the ones we apply in custom projects, where the context is a different matter.</p>
+            <summary>How does this app relate to your work?</summary>
+            <p>It is the same way of building, on a small case. Processing on the machine of whoever uses the software, and data that stays where it already is: those are the choices we apply in custom projects, where the stakes are higher.</p>
           </details>
         </div>
         <!-- Same four buttons as an article, and they point at *this* page and not at run/. The

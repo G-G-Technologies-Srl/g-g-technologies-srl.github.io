@@ -126,8 +126,8 @@
         <div>
           <nav class="breadcrumb" aria-label="Percorso"><ol><li><a href="/">Home</a></li><li><a href="/app/">App</a></li><li aria-current="page">CSV Scope</li></ol></nav>
           <div class="kicker">App gratuita e open source</div>
-          <h1>I tuoi file CSV, letti <span class="grad-text">senza caricarli</span> da nessuna parte.</h1>
-          <p class="hero-sub">Trascini il file e lo leggi: in tabella riga per riga, e in grafico dove ci sono numeri. Non c'è un server a cui mandarlo, quindi resta dov'è.</p>
+          <h1>I tuoi file CSV, letti <span class="grad-text">dove sono già</span>.</h1>
+          <p class="hero-sub">Trascini il file e lo leggi: in tabella riga per riga, e in grafico dove ci sono numeri. L'app lo legge sul tuo computer, e lì resta.</p>
           <p class="article-tags"><span class="tag-label">Categoria</span><a class="tag" href="/app/?tag=dati">Dati</a></p>
           <div class="hero-ctas">
             <a class="btn btn-primary" href="/app/csv-scope/run/">Apri l'app</a>
@@ -150,11 +150,11 @@
         </figure>
 
         <div class="kicker">Il punto di partenza</div>
-        <h2>Un file di misure non ha motivo di <span class="grad-text">uscire dal tuo computer</span>.</h2>
+        <h2>Un file di misure si legge <span class="grad-text">dove si trova già</span>.</h2>
         <div class="about-text reveal">
           <p>Per guardare un CSV di qualche decina di megabyte le strade sono di solito due: un foglio di calcolo che rallenta fino a fermarsi, oppure un servizio online a cui carichi il file. Nel primo caso aspetti; nel secondo consegni le tue misure a qualcun altro, e spesso non sai per quanto tempo le tiene.</p>
-          <p>CSV Scope fa la terza cosa. Il browser legge il file dove già si trova e disegna il grafico in locale. Non c'è un server perché non serve: dopo che la pagina si è caricata, l'app non fa più una sola richiesta di rete.</p>
-          <p>Il caso da cui siamo partiti è un elettrocardiogramma. È il tipo di file che incontriamo nel nostro lavoro sui <a href="/servizi/wearable-medicale/">wearable medicali</a>, ed è anche quello che mette alla prova un visualizzatore: centinaia di campioni al secondo, spesso una colonna sola, e un dettaglio che conta a ogni millisecondo. L'esempio che trovi nell'app è un ECG sintetico, disegnato dall'app stessa: non è la registrazione di nessuno.</p>
+          <p>CSV Scope fa la terza cosa. Il browser legge il file dove già si trova e disegna il grafico in locale. Dopo che la pagina si è caricata, l'app non fa più una sola richiesta di rete: puoi verificarlo dagli strumenti per sviluppatori del browser.</p>
+          <p>Il caso da cui siamo partiti è un elettrocardiogramma. È il tipo di file che incontriamo nel nostro lavoro sui <a href="/servizi/wearable-medicale/">wearable medicali</a>, ed è anche quello che mette alla prova un visualizzatore: centinaia di campioni al secondo, spesso una colonna sola, e un dettaglio che conta a ogni millisecondo. L'esempio che trovi nell'app è un ECG sintetico, disegnato dall'app stessa.</p>
         </div>
       <figure class="app-shot reveal">
         <img src="/assets/shot-csv-scope-it.png" width="1600" height="1000" loading="lazy" decoding="async"
@@ -179,7 +179,6 @@
           <div class="app-list does-not">
             <h3>Cosa non fa</h3>
             <ul class="ticks">
-              <li>Non manda il file da nessuna parte, e noi non ne riceviamo copia.</li>
               <li>Non fa filtraggio del segnale né analisi statistica: serve a guardare, non a elaborare.</li>
               <li>Non apre i formati proprietari dei datalogger. Esportali prima in CSV.</li>
               <li>Non sincronizza fra dispositivi: quello che apri qui resta qui.</li>
@@ -205,20 +204,6 @@
             <div>
               <h4>Dimensione</h4>
               <p>Provata su un file da 12 MB e centomila righe: si apre in poco più di un secondo.</p>
-            </div>
-          </div>
-          <div class="fact">
-            <span class="f-dot" aria-hidden="true"></span>
-            <div>
-              <h4>Classifica</h4>
-              <p>Resta in questo browser, su questo computer, come quella di un cabinato. La puoi esportare in un file e rimetterla altrove.</p>
-            </div>
-          </div>
-          <div class="fact">
-            <span class="f-dot" aria-hidden="true"></span>
-            <div>
-              <h4>Suono</h4>
-              <p>Lo genera il browser mentre giochi: non c'è nessun file audio da scaricare. Si spegne dalla barra in alto.</p>
             </div>
           </div>
           <div class="fact">
@@ -274,7 +259,7 @@
         <h2>Domande frequenti</h2>
         <div class="faq-list">
           <details class="faq-item reveal">
-            <summary>Come faccio a essere sicuro che il file non venga caricato?</summary>
+            <summary>Come verifico che il file resti sul mio computer?</summary>
             <p>Puoi guardarlo tu. Apri gli strumenti per sviluppatori del browser, scheda «Rete», e usa l'app: dopo il caricamento della pagina non compare nessuna richiesta. Il codice è pubblico, quindi puoi anche leggere cosa fa.</p>
           </details>
           <details class="faq-item reveal">
@@ -286,8 +271,8 @@
             <p>Le preferenze restano, il file no: viene letto ogni volta da dove si trova. Se ti serve conservare un intervallo, usa l'esportazione — il file esce sul tuo disco, come qualsiasi altro.</p>
           </details>
           <details class="faq-item reveal">
-            <summary>Perché la regalate?</summary>
-            <p>Perché è il modo più diretto di mostrare come lavoriamo. Le stesse scelte — elaborazione in locale, niente dati che escono — sono quelle che applichiamo nei progetti su misura, dove però il contesto è un altro.</p>
+            <summary>Che rapporto c'è fra questa app e il vostro lavoro?</summary>
+            <p>È lo stesso modo di costruire, su un caso piccolo. Elaborazione sulla macchina di chi usa il software e dati che restano dove sono già: sono le scelte che applichiamo nei progetti su misura, dove la posta in gioco è più alta.</p>
           </details>
         </div>
         <!-- Same four buttons as an article, and they point at *this* page and not at run/. The

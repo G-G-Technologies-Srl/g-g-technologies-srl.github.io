@@ -841,9 +841,9 @@ PAGES = [
                     "Johns Hopkins University. Il nostro amministratore delegato, "
                     "<strong>Gian Angelo Geminiani</strong>, ne è il secondo autore.",
                     "Un'altra affiliazione è AccYouRate Group, che progetta, brevetta e produce i "
-                    "dispositivi indossabili: lì Geminiani è stato direttore "
-                    "tecnico per quasi cinque anni, dal 2020 al 2024. La competenza su questa pagina "
-                    "viene da lì prima che da qualsiasi altra parte.",
+                    "dispositivi indossabili dello studio — certificati come dispositivi medici di "
+                    "classe IIa. Lì Geminiani è stato direttore tecnico per quasi cinque anni, dal "
+                    "2020 al 2024.",
                 ],
                 "citation": "Orro A., <strong>Geminiani G.A.</strong>, Sicurello F., Modica M., Pegreffi F., "
                             "Neri L., Augello A., Botteghi M., <em>A Cloud Infrastructure for Health "
@@ -915,14 +915,11 @@ PAGES = [
                 # the boundary explicitly is worth more than leaving it to be guessed: it says what we
                 # do, what we do not, and that we know where the line is.
                 ("Il dispositivo diventa un dispositivo medico certificato?",
-                 "La marcatura la firma un organismo notificato, ed è un percorso a sé: la "
-                 "distinzione conta. Noi progettiamo l'elettronica, il firmware e la "
-                 "piattaforma. Quello che facciamo è progettare sapendo "
-                 "dove porta quel percorso — la classificazione del dispositivo, la documentazione "
-                 "che servirà, lo sviluppo software secondo la norma di settore — e dirti dove si "
-                 "colloca il tuo caso prima che tu abbia speso in una direzione sbagliata. Se il "
-                 "dispositivo non deve essere un dispositivo medico, si risparmia molto: è la prima "
-                 "cosa da chiarire."),
+                 "La marcatura la firma un organismo notificato, e il percorso comincia dalla classe del "
+                 "dispositivo. Progettiamo elettronica, firmware e piattaforma dentro quel "
+                 "percorso: classificazione, documentazione, sviluppo software secondo la norma di "
+                 "settore. La prima cosa che ti diciamo è in che classe ricade il tuo caso — spesso "
+                 "resta fuori dal perimetro medico, e il preventivo cambia di conseguenza."),
                 ("I dati dei pazienti dove finiscono?",
                  "Dove decidi tu. Realizziamo anche architetture in cui l'elaborazione resta sui tuoi server "
                  "e i dati non escono dalla tua infrastruttura: è lo stesso principio su cui abbiamo "
@@ -971,9 +968,9 @@ PAGES = [
                     "Enna, Università Politecnica delle Marche and Johns Hopkins University. Our "
                     "chief executive, <strong>Gian Angelo Geminiani</strong>, is its second author.",
                     "Another affiliation is AccYouRate Group, which designs, patents and manufactures the "
-                    "wearable devices themselves: Geminiani was its chief technology officer "
-                    "for almost five years, from 2020 to 2024. The expertise on this page comes from "
-                    "there before it comes from anywhere else.",
+                    "wearable devices used in the study — certified as class IIa medical devices. "
+                    "Geminiani was its chief technology officer there for almost five years, from "
+                    "2020 to 2024.",
                 ],
                 "citation": "Orro A., <strong>Geminiani G.A.</strong>, Sicurello F., Modica M., Pegreffi F., "
                             "Neri L., Augello A., Botteghi M., <em>A Cloud Infrastructure for Health "
@@ -1043,14 +1040,11 @@ PAGES = [
                  "data usable, or the firmware needs reworking to cut power draw. We start from what is "
                  "already there."),
                 ("Does the device end up certified as a medical device?",
-                 "A notified body signs the marking, and it is a path of its own: the distinction "
-                 "matters. We design the electronics, the firmware and the platform. What we do is "
-                 "design in the knowledge of "
-                 "where that path leads — how the device would be classified, the documentation it "
-                 "will need, software development to the relevant standard — and tell you where your "
-                 "case sits before you have spent money going the wrong way. If the device does not "
-                 "have to be a medical device, that saves a great deal: it is the first thing to "
-                 "settle."),
+                 "A notified body signs the marking, and the path starts from the device class. We "
+                 "design the electronics, the firmware and the platform inside that path: "
+                 "classification, documentation, software development to the relevant standard. The "
+                 "first thing we tell you is which class your case falls into — often it sits "
+                 "outside the medical perimeter altogether, and the quote changes accordingly."),
                 ("Where does patient data end up?",
                  "Wherever you decide. We also build architectures where processing stays on your own "
                  "servers and the data never leaves your infrastructure — the same principle Podz.AI is "
@@ -1188,9 +1182,9 @@ PAGES = [
                 # opinion — see the 1997-2002 entry on the homepage timeline.
                 ("Devo cambiare il gestionale?",
                  "Quasi mai. L'automazione si innesta sui flussi e sui sistemi già in uso. Sostituire il "
-                 "gestionale è un progetto a sé: se serve lo diciamo, ma non è un prerequisito — e lo "
-                 "diciamo sapendo cosa costa, perché il nostro amministratore delegato ha messo in "
-                 "produzione un ERP da responsabile dei sistemi informativi."),
+                 "gestionale è un progetto a sé: se serve te lo diciamo, con la stima di cosa "
+                 "comporta — il nostro amministratore delegato ne ha messo uno in produzione da "
+                 "responsabile dei sistemi informativi."),
                 ("Cosa vuol dire Industria 5.0 in pratica?",
                  "Che la macchina è al servizio della persona che ci lavora, non il contrario: automazione "
                  "dove l'operazione è ripetitiva o pericolosa, e dati leggibili dove serve una decisione "
@@ -1203,20 +1197,17 @@ PAGES = [
                 # wonders who signs the risk assessment. Drawing the boundary is the answer, and it is
                 # the sort of thing that gets asked in the first meeting anyway.
                 ("Chi risponde della sicurezza della macchina?",
-                 "Chi la costruisce o la mette sul mercato: la valutazione dei rischi e la marcatura "
-                 "restano sue, e non è una formalità che si delega al software. Noi facciamo il "
-                 "controllo, l'integrazione e i dati, e lavoriamo con chi firma perché le logiche "
-                 "rispettino quello che la valutazione ha stabilito. Chi ti promette di prendersi in "
-                 "carico anche la sicurezza al posto del costruttore ti sta promettendo una cosa che "
-                 "non può mantenere."),
+                 "Il costruttore, o chi la mette sul mercato: la valutazione dei rischi e la marcatura "
+                 "sono sue. Noi facciamo il controllo, l'integrazione e i dati, e le logiche le "
+                 "scriviamo su quello che la valutazione ha stabilito, insieme a chi la firma. È "
+                 "così che la macchina resta conforme anche dopo che l'abbiamo automatizzata."),
                 ("Di chi è il codice a fine progetto?",
-                 "Il codice scritto per il tuo progetto è tuo, e ti viene consegnato. Resta nostro "
-                 "<a href=\"/digisense/\">DigiSense®</a>, il framework che sta sotto: te lo "
-                 "concediamo in licenza, perché è la parte che riusiamo su ogni progetto e venderla "
-                 "come esclusiva non sarebbe onesto. Chi possiede cosa si scrive in offerta, prima "
-                 "di cominciare."),
+                 "Il codice scritto per il tuo progetto è tuo e ti viene consegnato. "
+                 "<a href=\"/digisense/\">DigiSense®</a>, il framework che sta sotto, resta nostro "
+                 "e te lo concediamo in licenza: è la parte che riusiamo su ogni progetto. Chi "
+                 "possiede cosa si scrive in offerta, prima di cominciare."),
                 ("Posso parlare con un vostro cliente?",
-                 "Quasi tutti i lavori sono coperti da accordi di riservatezza, e non li aggiriamo: chi ti "
+                 "Quasi tutti i lavori sono coperti da accordi di riservatezza, e li rispettiamo: chi ti "
                  "mostra i nomi "
                  "degli altri, un giorno mostrerà il tuo. Quello che possiamo darti si controlla meglio "
                  "di una telefonata. Il software che vendiamo si scarica e si prova per trenta giorni. "
@@ -1338,29 +1329,26 @@ PAGES = [
                  "bottleneck is often not where you expect, and the right intervention costs less than the "
                  "one you were about to buy."),
                 ("Do I have to replace my ERP?",
-                 "Almost never. Automation sits on top of the systems and flows you already run. Replacing the "
-                 "ERP is a project in its own right: if it is needed we will say so, but it is not a "
-                 "prerequisite — and we say it knowing what it costs, because our chief executive put an "
-                 "ERP into production as head of information systems."),
+                 "Almost never. Automation sits on top of the systems and flows you already run. Replacing "
+                 "the ERP is a project in its own right: if it is needed we say so, with an estimate "
+                 "of what it involves — our chief executive put one into production as head of "
+                 "information systems."),
                 ("What does Industry 5.0 mean in practice?",
                  "That the machine serves the person working with it, not the other way round: automation "
                  "where the operation is repetitive or dangerous, and readable data where a human decision "
                  "is needed."),
                 ("Who answers for the machine's safety?",
-                 "Whoever builds it or places it on the market: the risk assessment and the marking "
-                 "stay with them, and that is not a formality you delegate to software. We do the "
-                 "control, the integration and the data, and we work with whoever signs so that the "
-                 "logic respects what the assessment established. Anybody who offers to take on the "
-                 "safety side in the builder's place is promising you something they cannot "
-                 "deliver."),
+                 "The builder, or whoever places it on the market: the risk assessment and the marking "
+                 "are theirs. We do the control, the integration and the data, and we write the "
+                 "logic on what the assessment established, alongside whoever signs it. That is "
+                 "how the machine stays compliant once we have automated it."),
                 ("Who owns the code at the end of the project?",
-                 "The code written for your project is yours, and it is handed over. What stays ours "
-                 "is <a href=\"/en/digisense/\">DigiSense®</a>, the framework underneath, licensed to "
-                 "you so you can run what we built together: it is the part we reuse across every "
-                 "project, and selling it as exclusive would not be honest. The split is written into "
-                 "the proposal, before anything starts."),
+                 "The code written for your project is yours and it is handed over. "
+                 "<a href=\"/en/digisense/\">DigiSense®</a>, the framework underneath, stays ours "
+                 "and is licensed to you: it is the part we reuse across every project. Who owns "
+                 "what is written into the proposal, before anything starts."),
                 ("Can I speak to one of your clients?",
-                 "Our work sits under confidentiality agreements and we do not work around them: a "
+                 "Our work sits under confidentiality agreements and we keep them: a "
                  "supplier who shows you other people's names will one day show yours. What we can give "
                  "you is easier to check than a phone call. The software we sell can be downloaded and "
                  "tried for thirty days. The method is written out in our articles, with the sources "
@@ -1489,7 +1477,7 @@ PAGES = [
                  "devono supportare."),
                 ("I miei documenti finiscono in un modello di terze parti?",
                  "Solo se lo decidi tu. Realizziamo architetture in cui i modelli girano sul tuo "
-                 "server e i documenti non escono. Quando serve la potenza del cloud, i dati personali "
+                 "server e i documenti restano lì. Quando serve la potenza del cloud, i dati personali "
                  "possono essere mascherati prima dell'invio."),
                 ("Che differenza c'è fra un agente AI e un chatbot?",
                  "Il chatbot risponde. L'agente esegue un compito: legge un documento, interroga un "
@@ -1501,11 +1489,9 @@ PAGES = [
                 ("Che prove posso controllare prima di parlare con voi?",
                  "Tre, e si controllano da fuori: Podz.AI si scarica e si prova, gli articoli elencano "
                  "le fonti in fondo a ciascuno, e lo studio sui wearable ha un identificatore "
-                 "permanente. I nomi dei clienti restano fuori, e il motivo dovrebbe interessarti: "
-                 "quasi tutti i lavori sono coperti da "
-                 "accordi di riservatezza, e chi ti mostra i nomi degli altri clienti un giorno "
-                 "mostrerà il tuo: sarebbe una scelta strana da parte nostra, che ti proponiamo di "
-                 "tenere i dati in casa. Quello che si "
+                 "permanente. I nomi dei clienti restano fuori: quasi tutti i lavori sono coperti da "
+                 "accordi di riservatezza, e chi ti mostra i nomi degli altri un giorno mostrerà il "
+                 "tuo. È la stessa scelta che ti proponiamo per i tuoi dati. Quello che si "
                  "controlla da fuori invece lo trovi: Podz.AI si scarica e si prova, gli articoli hanno "
                  "le fonti in fondo, e lo studio sui wearable ha un identificatore permanente. Del resto "
                  "parliamo descrivendo i problemi, non i nomi."),
@@ -1616,8 +1602,8 @@ PAGES = [
                  "is to know which decision the data has to support."),
                 ("Do my documents end up in a third-party model?",
                  "Only if you choose to. We build architectures where models run on your own server and "
-                 "documents do not leave. When cloud power is needed, personal data can be masked before "
-                 "it is sent."),
+                 "the documents stay there. When cloud power is needed, personal data can be masked "
+                 "before it is sent."),
                 ("What is the difference between an AI agent and a chatbot?",
                  "A chatbot answers. An agent performs a task: it reads a document, queries a system, "
                  "produces a verifiable result. The practical difference is that an agent's outcome can be "
@@ -1625,11 +1611,10 @@ PAGES = [
                 ("What proof can I check before talking to you?",
                  "Three things, and all of them from outside: Podz.AI can be downloaded and tried, the "
                  "articles list their sources at the foot of each one, and the wearable study has a "
-                 "permanent identifier. Client names stay out of it, and the reason should matter to "
-                 "you: almost all of it is covered by "
-                 "confidentiality agreements, and a firm that shows you other clients' names will one "
-                 "day show yours — an odd choice for us, of all people, since we propose keeping your "
-                 "data in-house. What can be checked "
+                 "permanent identifier. Client names stay out of it: almost all of it is covered by "
+                 "confidentiality agreements, and a firm that shows you other people's names will "
+                 "one day show yours. It is the same choice we propose for your data. What can be "
+                 "checked "
                  "from outside is all there: Podz.AI can be downloaded and tried, the articles list their "
                  "sources at the foot of the page, and the wearable study has a permanent identifier. "
                  "About the rest we talk by describing the problems, not the names."),
@@ -2141,10 +2126,10 @@ PAGES = [
                  "Sì, è la configurazione più comune. Si parte con tutto on-premise e si apre al cloud solo "
                  "per i passaggi che lo richiedono, con i dati personali mascherati prima dell'invio."),
                 ("L'anonimizzazione è sufficiente per la conformità?",
-                 "No, e nessuno può dirlo al posto tuo: ai fini del GDPR la valutazione di conformità resta "
-                 "del titolare del trattamento, cioè di te che decidi perché e come quei dati vengono "
-                 "usati. Quello che documentiamo è il meccanismo — quali campi vengono mascherati, "
-                 "cosa esce davvero e come lo verifichi."),
+                 "Da sola no, ed è una distinzione tecnica: ai fini del GDPR la valutazione di conformità è "
+                 "del titolare del trattamento, cioè di chi decide perché e come quei dati vengono "
+                 "usati. Quello che serve per farla lo documentiamo noi: quali campi vengono "
+                 "mascherati, cosa esce davvero e come lo verifichi."),
                 # Qui l'obiezione arriva prima che altrove: è la pagina in cui il lettore sta già
                 # pensando a dove finiscono i suoi dati. La versione lunga sta su Chi siamo.
                 # La domanda era «Siete a San Marino, che non è nell'UE. È un problema?»: una domanda
@@ -2261,10 +2246,10 @@ PAGES = [
                  "Yes, that is the most common setup. You start fully in-house and open to the cloud only "
                  "for the steps that need it, with personal data masked before sending."),
                 ("Is anonymisation enough for compliance?",
-                 "No, and nobody can answer that for you: for GDPR purposes the compliance assessment "
-                 "remains with the data controller — that is, with you, who decide why and how that "
-                 "data is used. What we document is the mechanism — which fields are masked, what "
-                 "actually leaves, and how you verify it."),
+                 "On its own, no, and the distinction is a technical one: for GDPR purposes the compliance "
+                 "assessment belongs to the data controller — whoever decides why and how that data "
+                 "is used. What you need in order to make it, we document: which fields are masked, "
+                 "what actually leaves, and how you verify it."),
                 ("Where does my data get processed, if you are in San Marino?",
                  "On your own servers. In an on-premise architecture the model runs inside your own "
                  "infrastructure: the place of processing is yours, and our home country bears on "
@@ -2321,8 +2306,8 @@ PAGES = [
                 "nostro framework, marchio registrato. Il lavoro si concentra sul tuo problema, non "
                 "sull'impalcatura.",
             ],
-            "cards_title": "Cosa puoi verificare da fuori",
-            "cards_intro": "Tre cose che puoi controllare da solo, prima di scriverci.",
+            "cards_title": "Il lavoro pubblico",
+            "cards_intro": "Uno studio con revisione paritaria, un prodotto che si scarica, sei articoli.",
             "cards": [
                 ("data", "Uno studio con revisione paritaria",
                  "Novecento operatori dell'emergenza seguiti per dodici mesi, in uno studio pubblicato "
@@ -2331,17 +2316,20 @@ PAGES = [
                   "Accesso aperto, licenza CC BY",
                   "<a href=\"/servizi/wearable-medicale/\">La pagina che lo racconta</a>"]),
                 ("shield", "Un prodotto che si scarica",
-                 "Podz.AI è nostro, si installa e si prova per trenta giorni. Il modo più rapido di "
-                 "giudicare il nostro lavoro, prima ancora di scriverci.",
+                 # Cinque righe come la card degli articoli: sotto, i due elenchi puntati si
+                 # disallineano. Misurato sulla pagina.
+                 "Podz.AI è la nostra workstation AI personale. Si installa in un minuto e si prova "
+                 "per trenta giorni, con tutte le funzionalità: legge i tuoi documenti sul tuo "
+                 "computer.",
                  ["Windows, macOS e Linux, con build firmate",
                   "Listino e storico delle release pubblici",
                   "<a href=\"/podz-ai/\">Com'è fatto</a>"]),
-                ("spark", "Il ragionamento, per scritto",
-                 "Gli articoli di <a href=\"/insights/\">Insights</a> elencano le fonti in fondo a "
-                 "ciascuno, e due si appoggiano a un identificatore esterno che chiunque può "
-                 "controllare.",
-                 ["Norme citate per esteso, non riassunte",
-                  "I problemi descritti per esteso",
+                ("spark", "I nostri articoli",
+                 "Dove passa il confine di un agente AI, cosa distingue un numero da una misura, "
+                 "quanto dura un dispositivo che nessuno aggiorna: le domande che vengono prima "
+                 "della tecnologia.",
+                 ["Sei articoli, in italiano e in inglese",
+                  "Le fonti in fondo a ciascuno",
                   "<a href=\"/insights/\">Leggi gli articoli</a>"]),
             ],
             "steps_title": "Da dove viene la competenza",
@@ -2384,8 +2372,8 @@ PAGES = [
             "faq": [
                 ("Quante persone siete?",
                  "Il nucleo è piccolo, la rete attorno è ampia: collaboratori e partner scelti in "
-                 "base al progetto, in più paesi. Preferiamo dirlo prima, perché è anche il motivo "
-                 "per cui a risponderti è chi progetta. Se il tuo lavoro ha bisogno di un fornitore "
+                 "base al progetto, in più paesi. Ed è il motivo per cui a risponderti è chi progetta: "
+                 "in mezzo non c'è nessun altro. Se il tuo lavoro ha bisogno di un fornitore "
                  "da cento persone, il posto giusto è un altro; se ha bisogno di parlare con chi "
                  "costruisce, siamo qui."),
                 # L'ultima frase diceva della giurisdizione in forma obliqua, ed è diventata
@@ -2416,9 +2404,9 @@ PAGES = [
                  "form. La prima conversazione serve a capire se siamo le persone giuste per il tuo "
                  "problema: se non lo siamo, è più veloce dirlo subito."),
                 ("Perché non ci sono i loghi dei clienti?",
-                 "Perché quasi tutti i lavori sono coperti da accordi di riservatezza, e non li aggiriamo: chi ti "
-                 "mostra i nomi degli altri, un giorno mostrerà il tuo. Sarebbe anche una scelta "
-                 "strana da parte nostra, che ti proponiamo di tenere i dati in casa. Quello che si controlla da "
+                 "Perché quasi tutti i lavori sono coperti da accordi di riservatezza, e li "
+                 "rispettiamo: chi ti mostra i nomi degli altri, un giorno mostrerà il tuo. È la "
+                 "stessa scelta che ti proponiamo per i tuoi dati. Quello che si controlla da "
                  "fuori lo trovi in questa pagina, e dei progetti parliamo volentieri descrivendo "
                  "i problemi, non i nomi."),
             ],
@@ -2455,8 +2443,8 @@ PAGES = [
                 "solved once, in <a href=\"/en/digisense/\">DigiSense®</a>: our framework, a "
                 "registered trademark. The work goes on your problem, not on the scaffolding.",
             ],
-            "cards_title": "What you can check from outside",
-            "cards_intro": "Three things you can check for yourself, before writing to us.",
+            "cards_title": "Published work",
+            "cards_intro": "A peer-reviewed study, a product you can download, six articles.",
             "cards": [
                 ("data", "A peer-reviewed study",
                  "Nine hundred emergency workers followed for twelve months, in a study published in "
@@ -2466,16 +2454,18 @@ PAGES = [
                   "Open access, CC BY licence",
                   "<a href=\"/en/services/medical-wearables/\">The page that tells it</a>"]),
                 ("shield", "A product you can download",
-                 "Podz.AI is ours, it installs and it runs for a thirty-day trial. The quickest way "
-                 "to judge our work, before you even write to us.",
+                 "Podz.AI is our own personal AI workstation. It installs in a minute and runs for "
+                 "a thirty-day trial, with every feature: it reads your documents on your own "
+                 "computer.",
                  ["Windows, macOS and Linux, with signed builds",
                   "Public price list and release history",
                   "<a href=\"/en/podz-ai/\">How it is built</a>"]),
-                ("spark", "The reasoning, written down",
-                 "The <a href=\"/en/insights/\">Insights</a> articles list their sources at the "
-                 "foot of each page, and two rest on an external identifier anybody can look up.",
-                 ["Regulations cited in full, not summarised",
-                  "The problems described in full",
+                ("spark", "Our articles",
+                 "Where the boundary of an AI agent falls, what separates a number from a "
+                 "measurement, how long a device lasts when nobody updates it: the questions that "
+                 "come before the technology.",
+                 ["Six articles, in Italian and English",
+                  "Sources at the foot of each one",
                   "<a href=\"/en/insights/\">Read the articles</a>"]),
             ],
             "steps_title": "Where the expertise comes from",
@@ -2519,8 +2509,8 @@ PAGES = [
             "faq": [
                 ("How many of you are there?",
                  "The core is small and the network around it is wide: collaborators and partners "
-                 "chosen for the project, across several countries. We would rather say so upfront, "
-                 "because it is also why the person who answers you is the one who designs. If your "
+                 "chosen for the project, across several countries. It is also why the person who answers "
+                 "you is the one who designs, with nobody in between. If your "
                  "work needs a hundred-person supplier, the right place is elsewhere; if it needs to "
                  "talk to whoever builds it, this is the place."),
                 ("Do you only work in San Marino?",
@@ -2542,11 +2532,11 @@ PAGES = [
                  "the right people for your problem: if we are not, saying so quickly is faster for "
                  "everyone."),
                 ("Why are there no client logos?",
-                 "Because our work sits under confidentiality agreements and we do not work around "
-                 "them: a firm that shows you other people's names will one day show yours. It "
-                 "would also be an odd choice for somebody proposing to keep your data in-house. "
-                 "What can be checked from outside is on this page, and we will gladly talk about "
-                 "projects by describing the problems, not the names."),
+                 "Because our work sits under confidentiality agreements and we keep them: a firm "
+                 "that shows you other people's names will one day show yours. It is the same "
+                 "choice we propose for your data. What can be checked from outside is on this "
+                 "page, and we will gladly talk about projects by describing the problems, not the "
+                 "names."),
             ],
             "cta_title": "Want to find out whether we are the right people?",
             "cta_text": "Tell us the problem, not the solution you have in mind. A person from the "

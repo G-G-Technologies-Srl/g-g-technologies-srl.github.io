@@ -21,6 +21,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import article_art                                            # noqa: E402
+import ai_scope_data                                          # noqa: E402
 from apps import APPS                                         # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -461,6 +462,31 @@ def _check_licence(problems, key):
                         f"agli articoli e al marchio. La licenza sta in app/<key>/LICENSE")
 
 
+def _check_ai_scope(problems):
+    """AI Scope's data contract, checked here because here is what already gets run.
+
+    It is the one check in this file that looks outside `app/`, and that is deliberate. The
+    questionnaire lives in `_src/ai-scope/` because the app does not exist yet — `_check_registry`
+    refuses a folder under `app/` that is not in APPS, and rightly so — but the thing it guards is
+    the app's content, and it has to be guarded *before* the strings are written rather than after.
+
+    The reason is a specific one. `_check_i18n` above reads `run/i18n.js` and nothing else, so the
+    roughly thousand strings of questions, options and recommendations would have sat outside every
+    guard in this repository. Italian and English drifting apart is what the root CLAUDE.md calls
+    the most frequent defect here, and it has reached production twice. A file that big, unwatched,
+    was going to make it three.
+
+    When the app ships, this keeps working unchanged: the questionnaire stays the source and the
+    app reads it.
+
+    It returns its notes instead of printing them, and that is not tidiness: `test_apps_guard.py`
+    reads this script's output to decide whether a check fired, so a line printed from inside a
+    check attaches itself to the reason of every case it runs. Notes belong to the summary, which
+    only prints when there is nothing to report.
+    """
+    return ai_scope_data.check_all(problems)
+
+
 def _check_lib_imports(problems, key):
     """Imports into the shared library go through the import map, never up the tree.
 
@@ -482,6 +508,7 @@ def main():
     problems = []
     _check_registry(problems)
     _check_lib(problems)
+    notes = _check_ai_scope(problems)
 
     by_key = {app["key"]: app for app in APPS}
     checked = [key for key in _apps_on_disk() if key in by_key]
@@ -508,7 +535,11 @@ def main():
           "     licenza nella cartella e non alla radice, import map verso _lib/,\n"
           "     ogni modulo condiviso davvero in cache, chiavi e id che esistono,\n"
           "     e ogni file JS si legge davvero come JavaScript,\n"
-          "     e le due lingue di ogni scheda hanno la stessa forma.")
+          "     e le due lingue di ogni scheda hanno la stessa forma,\n"
+          "     e il contratto dati di AI Scope: parità delle lingue nel questionario,\n"
+          "     id contigui, punteggi ricalcolati sulle fixture.")
+    for note in notes:
+        print(f"\n  · {note}")
 
 
 if __name__ == "__main__":

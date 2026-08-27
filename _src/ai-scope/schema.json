@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ggtechnologies.sm/app/ai-scope/schema-1.json",
+  "title": "AI Scope — result file, schema 1.x",
+  "description": "The shape of the file AI Scope exports. This document covers structure only; the invariants a structure cannot express — that every question sits in exactly one list, that an incomplete file carries no scores, that counts agrees with the arrays, that the scores are the ones the answers produce — live in _src/ai_scope_data.py and are part of the same contract. A reader has to verify both.",
+
+  "type": "object",
+  "required": ["schema", "tool", "tool_version", "questionnaire_edition",
+               "questionnaire_digest", "lang", "complete", "answered_at",
+               "exported_at", "answers", "skipped", "not_applicable"],
+  "additionalProperties": false,
+
+  "properties": {
+    "schema": {
+      "type": "string",
+      "pattern": "^1\\.[0-9]+$",
+      "description": "Version of the format, not of the app. A reader that understands 1.x must refuse a 2.0 outright rather than try and produce wrong numbers quietly."
+    },
+    "tool": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Who wrote the file. A fork declares itself here."
+    },
+    "tool_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "questionnaire_edition": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "An integer that grows. A string such as 2026.10 would sort before 2026.9."
+    },
+    "questionnaire_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Fingerprint of the question set. Defends against the one fork that breaks an aggregator silently: same tool name, same edition number, different questions."
+    },
+    "lang": { "enum": ["it", "en"] },
+    "complete": {
+      "type": "boolean",
+      "description": "False when the questionnaire was abandoned part way. An incomplete file carries no scores, and an aggregator counts it separately instead of adding it in."
+    },
+    "answered_at": { "type": "string", "format": "date", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "exported_at": { "type": "string", "format": "date", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "label": {
+      "type": "string",
+      "maxLength": 120,
+      "description": "Free text, empty by default. The only field that can hold anything the respondent types, so the interface has to say plainly that it ends up in the file."
+    },
+
+    "answers": {
+      "type": "object",
+      "propertyNames": { "pattern": "^q[0-9]{3}$" },
+      "additionalProperties": { "type": "integer", "minimum": 0 },
+      "description": "Index of the chosen option, as an integer — not the points. Points are derived from the edition, so changing the formula does not make an archive unreadable. There is deliberately no upper bound here: how many options a question has is the questionnaire's business, and check_data verifies the index against the actual question. An upper bound in this file would be the same knowledge in two places, and the copy would be the one that goes stale the day a question gains an option."
+    },
+    "skipped": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^q[0-9]{3}$" },
+      "uniqueItems": true,
+      "description": "Not asked because an earlier answer made them pointless. They count as zero and stay in the denominator."
+    },
+    "not_applicable": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^q[0-9]{3}$" },
+      "uniqueItems": true,
+      "description": "Meaningless for this company. They leave the denominator."
+    },
+
+    "scores": {
+      "type": "object",
+      "required": ["overall", "level", "dimensions", "counts"],
+      "additionalProperties": false,
+      "properties": {
+        "overall": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "level": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "dimensions": {
+          "type": "object",
+          "propertyNames": { "pattern": "^d[0-9]+$" },
+          "additionalProperties": { "type": "integer", "minimum": 0, "maximum": 100 }
+        },
+        "counts": {
+          "type": "object",
+          "propertyNames": { "pattern": "^d[0-9]+$" },
+          "additionalProperties": {
+            "type": "object",
+            "required": ["asked", "scored", "not_applicable"],
+            "additionalProperties": false,
+            "properties": {
+              "asked": { "type": "integer", "minimum": 0 },
+              "scored": { "type": "integer", "minimum": 0 },
+              "not_applicable": { "type": "integer", "minimum": 0 }
+            }
+          },
+          "description": "Always present, for every dimension. Requiring it only when the denominator changed would be undecidable for a reader: knowing whether its absence means the normal denominator would require already knowing the normal denominator."
+        }
+      }
+    },
+
+    "compliance": {
+      "type": "object",
+      "propertyNames": { "pattern": "^c[0-9]{3}$" },
+      "additionalProperties": { "enum": ["yes", "no", "unknown", "not_relevant"] },
+      "description": "The checklist produces no score: an obligation left uncovered is not offset by one that is met."
+    }
+  },
+
+  "allOf": [
+    {
+      "if": { "properties": { "complete": { "const": false } } },
+      "then": {
+        "not": { "required": ["scores"] },
+        "description": "An unfinished file carries no scores: a score over half a questionnaire is a number that looks comparable and is not."
+      }
+    },
+    {
+      "if": { "properties": { "complete": { "const": true } } },
+      "then": { "required": ["scores"] }
+    }
+  ]
+}

@@ -158,30 +158,28 @@ APPS = [
                            "nel browser: il file resta sul tuo computer e non viene caricato "
                            "da nessuna parte.",
             "kicker": "App gratuita e open source",
-            "h1": "I tuoi file CSV, letti <span class=\"grad-text\">senza caricarli</span> da "
-                  "nessuna parte.",
+            "h1": "I tuoi file CSV, letti <span class=\"grad-text\">dove sono già</span>.",
             "lead": "Trascini il file e lo leggi: in tabella riga per riga, e in grafico dove ci "
-                    "sono numeri. Non c'è un server a cui mandarlo, quindi resta dov'è.",
+                    "sono numeri. L'app lo legge sul tuo computer, e lì resta.",
             # One line in the card on /app/. Under SUMMARY_MAX.
-            "summary": "Apre un CSV, lo mostra in tabella e ne disegna i canali numerici. "
-                       "Niente viene caricato.",
+            "summary": "Apre un CSV, lo mostra in tabella e ne disegna i canali numerici, sul tuo "
+                       "computer.",
             "intro_title": "Il punto di partenza",
-            "intro_h2": "Un file di misure non ha motivo di <span class=\"grad-text\">uscire dal "
-                        "tuo computer</span>.",
+            "intro_h2": "Un file di misure si legge <span class=\"grad-text\">dove si trova già</span>.",
             "intro": [
                 "Per guardare un CSV di qualche decina di megabyte le strade sono di solito due: "
                 "un foglio di calcolo che rallenta fino a fermarsi, oppure un servizio online a "
                 "cui carichi il file. Nel primo caso aspetti; nel secondo consegni le tue misure "
                 "a qualcun altro, e spesso non sai per quanto tempo le tiene.",
                 "CSV Scope fa la terza cosa. Il browser legge il file dove già si trova e disegna "
-                "il grafico in locale. Non c'è un server perché non serve: dopo che la pagina si è "
-                "caricata, l'app non fa più una sola richiesta di rete.",
+                "il grafico in locale. Dopo che la pagina si è caricata, l'app non fa più una sola "
+                "richiesta di rete: puoi verificarlo dagli strumenti per sviluppatori del browser.",
                 "Il caso da cui siamo partiti è un elettrocardiogramma. È il tipo di file che "
                 "incontriamo nel nostro lavoro sui <a href=\"/servizi/wearable-medicale/\">wearable "
                 "medicali</a>, ed è anche quello che mette alla prova un visualizzatore: centinaia "
                 "di campioni al secondo, spesso una colonna sola, e un dettaglio che conta a ogni "
                 "millisecondo. L'esempio che trovi nell'app è un ECG sintetico, disegnato dall'app "
-                "stessa: non è la registrazione di nessuno.",
+                "stessa.",
             ],
             "does_title": "Cosa fa",
             "does": [
@@ -202,7 +200,6 @@ APPS = [
             ],
             "does_not_title": "Cosa non fa",
             "does_not": [
-                "Non manda il file da nessuna parte, e noi non ne riceviamo copia.",
                 "Non fa filtraggio del segnale né analisi statistica: serve a guardare, non a "
                 "elaborare.",
                 "Non apre i formati proprietari dei datalogger. Esportali prima in CSV.",
@@ -214,10 +211,6 @@ APPS = [
                          "fa richieste di rete."),
                 ("Dimensione", "Provata su un file da 12 MB e centomila righe: si apre in poco "
                                "più di un secondo."),
-                ("Classifica", "Resta in questo browser, su questo computer, come quella di un "
-                               "cabinato. La puoi esportare in un file e rimetterla altrove."),
-                ("Suono", "Lo genera il browser mentre giochi: non c'è nessun file audio da "
-                          "scaricare. Si spegne dalla barra in alto."),
                 ("Senza connessione", "Dopo la prima apertura funziona anche quando sei senza "
                                       "rete."),
                 ("Installazione", "Facoltativa. Si apre nel browser, e dove il sistema lo "
@@ -232,7 +225,7 @@ APPS = [
             ],
             "faq_title": "Domande frequenti",
             "faq": [
-                ("Come faccio a essere sicuro che il file non venga caricato?",
+                ("Come verifico che il file resti sul mio computer?",
                  "Puoi guardarlo tu. Apri gli strumenti per sviluppatori del browser, scheda "
                  "«Rete», e usa l'app: dopo il caricamento della pagina non compare nessuna "
                  "richiesta. Il codice è pubblico, quindi puoi anche leggere cosa fa."),
@@ -244,10 +237,10 @@ APPS = [
                  "Le preferenze restano, il file no: viene letto ogni volta da dove si trova. Se "
                  "ti serve conservare un intervallo, usa l'esportazione — il file esce sul tuo "
                  "disco, come qualsiasi altro."),
-                ("Perché la regalate?",
-                 "Perché è il modo più diretto di mostrare come lavoriamo. Le stesse scelte — "
-                 "elaborazione in locale, niente dati che escono — sono quelle che applichiamo "
-                 "nei progetti su misura, dove però il contesto è un altro."),
+                ("Che rapporto c'è fra questa app e il vostro lavoro?",
+                 "È lo stesso modo di costruire, su un caso piccolo. Elaborazione sulla macchina "
+                 "di chi usa il software e dati che restano dove sono già: sono le scelte che "
+                 "applichiamo nei progetti su misura, dove la posta in gioco è più alta."),
             ],
             "cta_title": "Ti serve la stessa cosa, su misura?",
             "cta_text": "Se hai un flusso di misure da leggere o da elaborare e questa app non "
@@ -272,28 +265,26 @@ APPS = [
                            "in the browser: the file stays on your computer and is never "
                            "uploaded anywhere.",
             "kicker": "Free and open source",
-            "h1": "Your CSV files, read <span class=\"grad-text\">without uploading</span> them "
-                  "anywhere.",
+            "h1": "Your CSV files, read <span class=\"grad-text\">where they already are</span>.",
             "lead": "Drop the file in and read it: as a table row by row, and as a chart where "
-                    "there are numbers. There is no server to send it to, so it stays put.",
-            "summary": "Opens a CSV, shows it as a table and plots the numeric columns. Nothing "
-                       "is uploaded.",
+                    "there are numbers. The app reads it on your own computer, and there it stays.",
+            "summary": "Opens a CSV, shows it as a table and plots the numeric columns, on your own "
+                       "computer.",
             "intro_title": "The starting point",
-            "intro_h2": "A file of measurements has no reason to <span class=\"grad-text\">leave "
-                        "your computer</span>.",
+            "intro_h2": "A file of measurements is read <span class=\"grad-text\">where it already sits</span>.",
             "intro": [
                 "To look at a CSV of a few dozen megabytes there are usually two roads: a "
                 "spreadsheet that slows to a halt, or an online service you upload the file to. "
                 "The first makes you wait; the second hands your measurements to somebody else, "
                 "and often you cannot tell how long they keep them.",
                 "CSV Scope does a third thing. The browser reads the file where it already sits "
-                "and draws the chart locally. There is no server because none is needed: once the "
-                "page has loaded, the app makes no further network request.",
+                "and draws the chart locally. Once the page has loaded, the app makes no further network "
+                "request: you can watch that in your browser's developer tools.",
                 "The case we started from is an electrocardiogram. It is the kind of file our work "
                 "on <a href=\"/en/services/medical-wearables/\">medical wearables</a> runs on, and "
                 "it is also what puts a viewer to the test: hundreds of samples a second, often a "
                 "single column, and detail that matters at every millisecond. The example inside "
-                "the app is a synthetic ECG, drawn by the app itself: it is nobody's recording.",
+                "the app is a synthetic ECG, drawn by the app itself.",
             ],
             "does_title": "What it does",
             "does": [
@@ -314,7 +305,6 @@ APPS = [
             ],
             "does_not_title": "What it does not do",
             "does_not": [
-                "It does not send the file anywhere, and we receive no copy of it.",
                 "It does no signal filtering and no statistical analysis: it is for looking, not "
                 "for processing.",
                 "It does not open proprietary datalogger formats. Export them to CSV first.",
@@ -326,11 +316,6 @@ APPS = [
                          "network requests."),
                 ("Size", "Tested on a 12 MB file of a hundred thousand rows: it opens in a "
                          "little over a second."),
-                ("High scores", "They stay in this browser, on this computer, like an arcade "
-                                "cabinet's. You can export them to a file and put them back "
-                                "elsewhere."),
-                ("Sound", "The browser generates it as you play: there is no audio file to "
-                          "download. It switches off from the bar at the top."),
                 ("Offline", "After the first visit it works without a connection."),
                 ("Installation", "Optional. It opens in the browser, and where the system allows "
                                  "it, installs like any other app."),
@@ -345,7 +330,7 @@ APPS = [
             ],
             "faq_title": "Frequently asked questions",
             "faq": [
-                ("How can I be sure the file is not uploaded?",
+                ("How do I verify the file stays on my computer?",
                  "You can check it yourself. Open your browser's developer tools, the Network "
                  "tab, and use the app: after the page has loaded no request appears. The code is "
                  "public too, so you can read what it does."),
@@ -357,10 +342,10 @@ APPS = [
                  "Preferences stay, the file does not: it is read from where it sits every time. "
                  "If you need to keep a range, export it — the file lands on your disk like any "
                  "other."),
-                ("Why give it away?",
-                 "Because it is the most direct way to show how we work. The same choices — "
-                 "processing on your machine, no data leaving it — are the ones we apply in "
-                 "custom projects, where the context is a different matter."),
+                ("How does this app relate to your work?",
+                 "It is the same way of building, on a small case. Processing on the machine of "
+                 "whoever uses the software, and data that stays where it already is: those are "
+                 "the choices we apply in custom projects, where the stakes are higher."),
             ],
             "cta_title": "Need the same thing, built for you?",
             "cta_text": "If you have a stream of measurements to read or process and this app is "
@@ -423,9 +408,9 @@ APPS = [
                 "terrebbe su un server, con un account e una registrazione. Questo la tiene nel "
                 "browser, come la teneva il cabinato in sala giochi — era la classifica di quella "
                 "macchina, e per batterla ci tornavi.",
-                "Il gettone è lo stesso ragionamento. Non serve a limitare le partite, che sono "
-                "infinite: serve a dire che quello che stai per fare comincia adesso. È anche il "
-                "gesto che serve al browser per far partire l'audio, quindi il rito si paga da sé.",
+                "Il gettone è lo stesso ragionamento. Le partite sono infinite: serve a dire che "
+                "quello che stai per fare comincia adesso. È anche il gesto che serve al browser "
+                "per far partire l'audio, quindi il rito si paga da sé.",
             ],
             "does_title": "Cosa fa",
             "does": [
@@ -450,18 +435,14 @@ APPS = [
             ],
             "facts_title": "In breve",
             "facts": [
-                ("Classifica", "È di questo browser. Non ce n'è una mondiale, perché non c'è un "
-                               "server a cui mandare i punteggi. La esporti quando vuoi."),
+                ("Classifica", "È di questo browser, come quella di un cabinato: i punteggi "
+                               "restano qui, e li esporti quando vuoi."),
                 ("Dati", "Restano sul tuo computer. Dopo il caricamento della pagina l'app non fa "
                          "richieste di rete."),
                 ("Gettoni", "Infiniti e gratuiti. Il gettone è il rito d'avvio, non un limite."),
                 ("Audio", "Sintetizzato dall'app: non c'è nessun file audio da scaricare."),
                 ("Accessibilità", "Si gioca interamente da tastiera. È un gioco d'azione in tempo "
                                   "reale: serve vedere lo schermo."),
-                ("Classifica", "Resta in questo browser, su questo computer, come quella di un "
-                               "cabinato. La puoi esportare in un file e rimetterla altrove."),
-                ("Suono", "Lo genera il browser mentre giochi: non c'è nessun file audio da "
-                          "scaricare. Si spegne dalla barra in alto."),
                 ("Senza connessione", "Dopo la prima apertura funziona anche quando sei senza "
                                       "rete."),
                 ("Lingue", "Italiano e inglese, seguono la lingua del browser."),
@@ -476,22 +457,22 @@ APPS = [
                  "senza connessione e senza account. Se ti serve confrontare i punteggi con "
                  "qualcuno, esporta il file: contiene la classifica in chiaro."),
                 ("Che succede ai miei punteggi se pulisco il browser?",
-                 "Si perdono. È la conseguenza di non avere un server, e per questo l'esportazione "
-                 "è dentro l'app fin dalla prima versione: un file sul tuo disco, che si reimporta "
-                 "quando vuoi."),
+                 "Vivono nei dati del sito, quindi svuotarli li porta via. Per questo l'esportazione è "
+                 "dentro l'app fin dalla prima versione: un file sul tuo disco, che rimetti dove "
+                 "vuoi e quando vuoi."),
                 # La domanda resta, il marchio no. Nominare il titolo del 1979 per dire «non
                 # siamo quello» crea comunque l'accostamento, e su un dominio aziendale il modo
                 # più pulito di stare lontani da un marchio è non scriverlo.
-                ("È la conversione di un gioco già esistente?",
-                 "No. È un gioco originale, scritto da noi, nella tradizione degli sparatutto "
-                 "vettoriali di fine anni Settanta. Le meccaniche di quel genere si ritrovano in "
-                 "decine di giochi e non appartengono a nessuno; i nomi e i marchi di quei "
-                 "giochi appartengono a chi li ha registrati, e qui non ne compare nessuno."),
-                ("Perché la regalate?",
-                 "Perché mostra in due minuti quello che scriviamo nelle pagine: che molte cose "
-                 "che oggi passano da un server non hanno bisogno di passarci. Qui il caso è "
-                 "leggero; nei progetti su misura è lo stesso ragionamento su dati che non "
-                 "vogliamo far uscire."),
+                ("Da dove viene il gioco?",
+                 "È originale, scritto da noi, nella tradizione degli sparatutto vettoriali di "
+                 "fine anni Settanta. Le meccaniche di quel genere si ritrovano in decine di "
+                 "giochi e appartengono al genere; i nomi e i marchi appartengono a chi li ha "
+                 "registrati, e qui compaiono solo i nostri."),
+                ("Che rapporto c'è fra un gioco e il vostro lavoro?",
+                 "Mostra in due minuti quello che le pagine spiegano: che molte cose che oggi "
+                 "passano da un server possono restare sulla macchina di chi le usa. Qui il caso "
+                 "è leggero; nei progetti su misura è lo stesso ragionamento applicato a dati "
+                 "che restano in casa."),
             ],
             "cta_title": "Ti serve qualcosa che giri in locale?",
             "cta_text": "Se hai un caso in cui i dati non devono uscire dalla macchina di chi li "
@@ -532,10 +513,9 @@ APPS = [
                 "would keep it on a server, behind an account and a sign-up. This one keeps it in "
                 "the browser, the way the cabinet in an arcade did — it was that machine's table, "
                 "and you went back to that machine to beat it.",
-                "The token is the same reasoning. It is not there to ration games, which are "
-                "unlimited: it is there to say that what you are about to do starts now. It is "
-                "also the gesture a browser needs before it will play any sound, so the ritual "
-                "pays for itself.",
+                "The token is the same reasoning. Games are unlimited: the token is there to say "
+                "that what you are about to do starts now. It is also the gesture a browser needs "
+                "before it will play any sound, so the ritual pays for itself.",
             ],
             "does_title": "What it does",
             "does": [
@@ -560,18 +540,14 @@ APPS = [
             ],
             "facts_title": "At a glance",
             "facts": [
-                ("High scores", "This browser's table. There is no worldwide one, because there "
-                                "is no server to send the scores to. Export it whenever you want."),
+                ("High scores", "This browser's table, like a cabinet's: the scores stay here, "
+                                "and you export them whenever you want."),
                 ("Data", "Stays on your computer. Once the page has loaded the app makes no "
                          "network requests."),
                 ("Tokens", "Unlimited and free. The token is the starting ritual, not a limit."),
                 ("Sound", "Synthesised by the app: there is no audio file to download."),
                 ("Accessibility", "It plays entirely from the keyboard. It is a real-time action "
                                   "game: you need to see the screen."),
-                ("High scores", "They stay in this browser, on this computer, like a cabinet's. "
-                                "You can export them to a file and put them back elsewhere."),
-                ("Sound", "The browser generates it as you play: there is no audio file to "
-                          "download. It switches off from the bar at the top."),
                 ("Offline", "After the first visit it works without a connection."),
                 ("Languages", "Italian and English, following your browser language."),
                 ("Licence", "Apache-2.0. The code is public and reusable, commercial work "
@@ -585,19 +561,19 @@ APPS = [
                  "connection and without an account. If you want to compare scores with somebody, "
                  "export the file: it holds the table in plain text."),
                 ("What happens to my scores if I clear my browser?",
-                 "They are lost. That is the consequence of having no server, which is why the "
-                 "export is inside the app from the first version: a file on your own disk, put "
-                 "back whenever you want."),
-                ("Is this a conversion of an existing game?",
-                 "No. It is an original game, written by us, in the tradition of the vector "
-                 "shooters of the late 1970s. The mechanics of that genre turn up in dozens of "
-                 "games and belong to nobody; the names and marks of those games belong to "
-                 "whoever registered them, and none of them appears here."),
-                ("Why give it away?",
-                 "Because in two minutes it shows what our pages argue: that a good deal of what "
-                 "goes through a server today has no need to. Here the case is a light one; in "
-                 "custom projects it is the same reasoning applied to data we would rather not "
-                 "let out."),
+                 "They live in the site's data, so clearing it takes them away. That is why the export "
+                 "has been inside the app since the first version: a file on your own disk, put "
+                 "back wherever and whenever you want."),
+                ("Where does the game come from?",
+                 "It is original, written by us, in the tradition of the vector shooters of the "
+                 "late 1970s. The mechanics of that genre turn up in dozens of games and belong "
+                 "to the genre; names and marks belong to whoever registered them, and the only "
+                 "ones here are ours."),
+                ("How does a game relate to your work?",
+                 "In two minutes it shows what the pages argue: that a good deal of what goes "
+                 "through a server today can stay on the machine using it. Here the case is a "
+                 "light one; in custom projects it is the same reasoning applied to data that "
+                 "stays in-house."),
             ],
             "cta_title": "Need something that runs locally?",
             "cta_text": "If you have a case where the data must not leave the machine using it, "
@@ -648,8 +624,7 @@ APPS = [
                            "Gira nel browser: niente account, niente server, la classifica resta "
                            "su questo computer.",
             "kicker": "App gratuita e open source",
-            "h1": "Non c'è un tasto per salire: <span class=\"grad-text\">si batte "
-                  "le ali</span>.",
+            "h1": "Si sale <span class=\"grad-text\">battendo le ali</span>.",
             "lead": "Due direzioni, un battito e uno scudo. Più in fretta batti, più sali — e al "
                     "contatto vince chi ha lo sperone, la punta davanti al muso, più in alto. "
                     "Sotto c'è metallo fuso.",
@@ -707,15 +682,15 @@ APPS = [
             ],
             "facts_title": "In breve",
             "facts": [
-                ("Stato", "Finito: ondate, punteggio, vite, classifica e suono ci sono tutti. "
-                          "Che ognuna delle prime sessanta ondate si possa svuotare è verificato "
-                          "da un controllo che sta nel codice, non a occhio."),
+                ("Stato", "Completo, dalla prima ondata alla sessantesima: che ognuna si possa "
+                          "svuotare lo verifica un controllo che gira nel codice a ogni "
+                          "modifica."),
                 ("Comandi", "A e D per girare, W per battere le ali, S per lo scudo — oppure "
                             "premi il campo dal lato in cui vuoi andare, e ogni pressione è un "
                             "battito. I tasti si possono cambiare."),
                 ("Dati", "Restano sul tuo computer. Dopo il caricamento della pagina l'app non fa "
                          "richieste di rete."),
-                ("Due giocatori", "Sulla stessa tastiera, o con un gamepad. Non sul telefono."),
+                ("Due giocatori", "Sulla stessa tastiera, o con un gamepad."),
                 ("Schermo", "Fisso, senza scorrimento. Sul telefono va tenuto in orizzontale."),
                 ("Contenuti", "Si combatte. Chi perde brucia e sprofonda nel metallo fuso, e lo "
                               "scudo di fuoco ogni tanto stacca una testa, con il sangue che si "
@@ -734,7 +709,7 @@ APPS = [
             ],
             "faq_title": "Domande frequenti",
             "faq": [
-                ("Perché non c'è un tasto per salire?",
+                ("Come si prende quota?",
                  "Perché è la meccanica del gioco. La quota dipende da quanto in fretta batti le "
                  "ali, quindi restare fermo in aria è una cosa che stai facendo, non uno stato in "
                  "cui sei. Con un tasto tenuto premuto la regola dell'altezza diventerebbe banale, "
@@ -806,7 +781,7 @@ APPS = [
                            "the browser: no account, no server, and the high score table stays on "
                            "this computer.",
             "kicker": "Free and open source",
-            "h1": "There is no button for up: <span class=\"grad-text\">you flap</span>.",
+            "h1": "You climb <span class=\"grad-text\">by flapping</span>.",
             "lead": "Two directions, a flap and a shield. The faster you flap the higher you go "
                     "— and on contact the higher spur wins. The spur is the dash ahead of the "
                     "nose. Below there is molten metal.",
@@ -864,15 +839,15 @@ APPS = [
             ],
             "facts_title": "In brief",
             "facts": [
-                ("Status", "Finished: waves, score, lives, high scores and sound are all there. "
-                           "That each of the first sixty waves can be emptied is verified by a "
-                           "check that lives in the code, not by eye."),
+                ("Status", "Complete, from the first wave to the sixtieth: that each one can be "
+                           "emptied is verified by a check that runs in the code on every "
+                           "change."),
                 ("Controls", "A and D to turn, W to flap, S for the shield — or press the field "
                              "on the side you want to go, and every press is a flap. The keys can "
                              "be changed."),
                 ("Data", "Stays on your computer. After the page has loaded the app makes no "
                          "network requests."),
-                ("Two players", "On one keyboard, or with a gamepad. Not on a phone."),
+                ("Two players", "On one keyboard, or with a gamepad."),
                 ("Screen", "Fixed, with no scrolling. On a phone it wants to be held sideways."),
                 ("Content", "There is fighting. Whoever loses burns and sinks into the molten "
                             "metal, and the fire shield sometimes takes a head off, blood and "
@@ -888,7 +863,7 @@ APPS = [
             ],
             "faq_title": "Frequently asked questions",
             "faq": [
-                ("Why is there no button for up?",
+                ("How do you gain height?",
                  "Because that is the mechanic. Your height depends on how fast you beat your "
                  "wings, so hovering is something you are doing rather than a state you are in. "
                  "With a key you could hold, the height rule would become trivial — and the height "

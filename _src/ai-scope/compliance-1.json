@@ -1,0 +1,133 @@
+{
+  "edition": 1,
+  "status": "draft",
+  "verified_on": "2026-08-27",
+  "valid_until": "2026-11-25",
+  "warn_days": 30,
+  "note": "Compliance checklist, edition 1, rewritten after the adversarial review of 2026-08-27 which found two rows outright false. Rules: no row ever states whether the reader is compliant - it names the obligation, the date it starts and the source, and leaves the verb to whoever can answer; every row carries applies_from; a row with a known future change carries changes_on, and valid_until must not outlive the earliest of them. Field names and keys are English like everywhere else; only text under it/en is content. Sources: for the AI Act, the article pages of the Commission service desk and of artificialintelligenceact.eu, which quote the enacted text; for the GDPR, the consolidated text on EUR-Lex with the article named in the label, because EUR-Lex has no stable per-article anchor.",
+
+  "scope": {
+    "it": "Queste voci riguardano il diritto dell'Unione europea. Un'impresa sammarinese non vi è soggetta per territorio, ma l'AI Act la raggiunge lo stesso se l'output del sistema viene usato nell'Unione o se vende a clienti europei; sul dato personale a San Marino vale la Legge 171/2018, con il proprio Garante. Se lavori solo dentro San Marino, leggi queste righe come la domanda che ti farà il primo cliente europeo."
+  },
+
+  "answers": [
+    { "id": "yes", "text": { "it": "Sì, ce l'abbiamo" } },
+    { "id": "no", "text": { "it": "No" } },
+    { "id": "unknown", "text": { "it": "Non lo so" } },
+    { "id": "not_relevant", "text": { "it": "Non facciamo questa cosa" } }
+  ],
+
+  "items": [
+    {
+      "id": "c001",
+      "applies_from": "2025-02-02",
+      "enforced_from": "2025-08-02",
+      "changes_on": "2026-12-02",
+      "question": { "it": "Qualcuno ha verificato che nessuno dei vostri usi dell'AI rientri fra le pratiche vietate?" },
+      "obligation": { "it": "L'AI Act vieta alcuni usi in assoluto: fra questi dedurre le emozioni delle persone sul posto di lavoro, attribuire un punteggio sociale, e il riconoscimento biometrico per dedurre caratteristiche protette. Il divieto vale dal 2 febbraio 2025; le sanzioni nazionali e le autorità che le applicano sono operative dal 2 agosto 2025. Dal 2 dicembre 2026 si aggiungono due divieti su immagini intime non consensuali e materiale pedopornografico." },
+      "source": { "label": "AI Act, art. 5 e art. 99", "url": "https://artificialintelligenceact.eu/article/5/" }
+    },
+    {
+      "id": "c002",
+      "applies_from": "2025-02-02",
+      "question": { "it": "Chi usa l'AI nel suo lavoro ha ricevuto qualcosa che lo aiuti a usarla meglio — una formazione, una guida, delle istruzioni scritte?" },
+      "obligation": { "it": "L'art. 4 chiede di adottare misure che sostengano l'alfabetizzazione del personale sull'AI. Il Digital Omnibus di luglio 2026 lo ha riscritto: l'obbligo è adottare le misure, non garantire un livello per singola persona. Per chi usa sistemi ad alto rischio ci sono obblighi formativi più precisi nell'art. 26, che si applicano dal 2 dicembre 2027." },
+      "source": { "label": "AI Act, art. 4, come modificato dal Reg. (UE) 2026/1744", "url": "https://eur-lex.europa.eu/eli/reg/2026/1744/oj/eng" }
+    },
+    {
+      "id": "c003",
+      "applies_from": "2026-08-02",
+      "question": { "it": "Se un vostro assistente automatico parla con i clienti, il contratto col fornitore dice chi deve dichiarare che si tratta di AI?" },
+      "obligation": { "it": "L'obbligo di far sapere alla persona che sta interagendo con un'AI è del fornitore del sistema, non di chi lo usa — a meno che tu non lo metta sul mercato col tuo marchio, e allora il fornitore diventi tu. Per un'impresa che compra un chatbot la cosa da verificare è quindi contrattuale: che il fornitore lo faccia, e che il vostro modo di presentarlo non lo nasconda." },
+      "source": { "label": "AI Act, art. 50(1)", "url": "https://artificialintelligenceact.eu/article/50/" },
+      "when": { "q004": [1, 2, 3] }
+    },
+    {
+      "id": "c004",
+      "applies_from": "2026-08-02",
+      "question": { "it": "I contenuti che pubblicate generati o modificati con l'AI — immagini di persone, video, testi su temi di interesse pubblico — sono dichiarati come tali?" },
+      "obligation": { "it": "È un obbligo di chi usa il sistema, non del fornitore, e si applica dal 2 agosto 2026 senza periodo transitorio: i deepfake vanno dichiarati, e così i testi pubblicati per informare il pubblico su temi di interesse generale quando non c'è stata una revisione umana. La proroga al 2 dicembre 2026 di cui si parla altrove riguarda un'altra cosa — vedi la voce successiva — e non questa." },
+      "source": { "label": "AI Act, art. 50(4)", "url": "https://artificialintelligenceact.eu/article/50/" }
+    },
+    {
+      "id": "c005",
+      "applies_from": "2026-08-02",
+      "changes_on": "2026-12-02",
+      "question": { "it": "Se costruite e distribuite voi uno strumento che genera testi, immagini o audio, le sue uscite sono marcate in modo che una macchina le riconosca?" },
+      "obligation": { "it": "La marcatura leggibile da una macchina è obbligo di chi fornisce il sistema generativo. Per i sistemi già sul mercato prima del 2 agosto 2026 c'è tempo fino al 2 dicembre 2026. Se acquistate lo strumento da altri, l'obbligo è del fornitore: la domanda utile diventa se il vostro contratto ve lo garantisce." },
+      "source": { "label": "AI Act, art. 50(2); proroga dal Reg. (UE) 2026/1744", "url": "https://artificialintelligenceact.eu/article/50/" }
+    },
+    {
+      "id": "c006",
+      "applies_from": "2024-08-01",
+      "question": { "it": "Sapete se, per gli strumenti AI che usate, siete utilizzatori o fornitori?" },
+      "obligation": { "it": "Un'impresa che usa uno strumento di terzi è un deployer. Diventa provider — con obblighi molto più pesanti — se lo mette sul mercato col proprio marchio, se ne cambia la finalità in modo sostanziale, o se lo trasforma in un sistema ad alto rischio. Chi integra un modello di terzi in un prodotto che vende ricade nel secondo caso." },
+      "source": { "label": "AI Act, art. 25", "url": "https://artificialintelligenceact.eu/article/25/" }
+    },
+    {
+      "id": "c007",
+      "applies_from": "2018-05-25",
+      "changes_on": "2027-12-02",
+      "question": { "it": "Usate l'AI per selezionare candidati, valutare il personale o decidere su promozioni?" },
+      "obligation": { "it": "Sono usi ad alto rischio secondo l'Allegato III, con obblighi che si applicano dal 2 dicembre 2027. Ma diverse regole valgono già oggi: l'art. 22 del GDPR limita le decisioni puramente automatizzate, con eccezioni per contratto, consenso esplicito o legge, e la Corte di giustizia nel caso SCHUFA ha esteso quel limite anche al punteggio calcolato prima della decisione umana. In Italia si aggiungono l'informativa al lavoratore sui sistemi decisionali automatizzati e gli obblighi verso i sindacati." },
+      "source": { "label": "AI Act, Allegato III; GDPR, art. 22; Corte di giustizia C-634/21 (SCHUFA)", "url": "https://curia.europa.eu/juris/liste.jsf?num=C-634/21" }
+    },
+    {
+      "id": "c008",
+      "applies_from": "2018-05-25",
+      "question": { "it": "Quando dati di persone finiscono in uno strumento AI, sapete su quale base giuridica lo state facendo?" },
+      "obligation": { "it": "Un testo che contiene dati personali e viene inviato a un servizio esterno è un trattamento a tutti gli effetti: serve una delle basi giuridiche dell'art. 6, e vanno rispettati i principi dell'art. 5 — fra cui raccogliere solo quello che serve. Non è un adempimento formale: è la domanda che decide se quella cosa si può fare." },
+      "source": { "label": "GDPR, artt. 5 e 6 (testo consolidato)", "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj" }
+    },
+    {
+      "id": "c009",
+      "applies_from": "2018-05-25",
+      "question": { "it": "L'uso dell'AI su dati di persone è stato accompagnato da una valutazione d'impatto?" },
+      "obligation": { "it": "L'art. 35 chiede una valutazione d'impatto quando il trattamento presenta un rischio elevato: nuove tecnologie su larga scala, valutazione sistematica di aspetti personali, monitoraggio. Il momento previsto è prima di cominciare — e se l'uso è già avviato, farla adesso resta la cosa utile: serve a decidere come continuare, non a sanare il passato." },
+      "source": { "label": "GDPR, art. 35 (testo consolidato)", "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj" }
+    },
+    {
+      "id": "c010",
+      "applies_from": "2018-05-25",
+      "question": { "it": "Col fornitore del vostro strumento AI c'è un contratto che dice dove stanno i dati e se vengono usati per addestrare i modelli?" },
+      "obligation": { "it": "Se il fornitore tratta dati personali per conto vostro serve un contratto ai sensi dell'art. 28, che stabilisca finalità, durata, misure di sicurezza e destino dei dati alla fine. È anche il posto in cui verificare se quello che scrivete alimenta l'addestramento." },
+      "source": { "label": "GDPR, art. 28 (testo consolidato)", "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj" }
+    },
+    {
+      "id": "c011",
+      "applies_from": "2018-05-25",
+      "question": { "it": "Sapete a chi il vostro fornitore AI si appoggia a sua volta, e cosa avete in mano per verificarlo?" },
+      "obligation": { "it": "Il parere EDPB 22/2024 chiarisce che il titolare deve conoscere l'intera catena dei responsabili e sub-responsabili, verificare che ciascuno offra garanzie sufficienti, e che la responsabilità verso le persone resta sua anche quando a sbagliare è un anello che non ha scelto. Per una piccola impresa questo di solito significa una clausola contrattuale e le attestazioni del fornitore, non un audit." },
+      "source": { "label": "EDPB, Opinion 22/2024 su responsabili e sub-responsabili", "url": "https://www.edpb.europa.eu/our-work-tools/our-documents/opinion-board-art-64/opinion-222024-certain-obligations-following_en" }
+    },
+    {
+      "id": "c012",
+      "applies_from": "2018-05-25",
+      "question": { "it": "Sapete se i dati che entrano nei vostri strumenti AI escono dall'Unione europea, e con quale copertura?" },
+      "obligation": { "it": "Un trasferimento fuori dall'Unione ha bisogno di un titolo: una decisione di adeguatezza, oppure clausole contrattuali tipo accompagnate da una valutazione del paese di destinazione. Gli Stati Uniti hanno una decisione di adeguatezza in vigore dal luglio 2023, valida per i fornitori che aderiscono al Data Privacy Framework — quindi la verifica pratica è se il vostro fornitore vi aderisce davvero." },
+      "source": { "label": "GDPR, artt. 44-49; decisione di adeguatezza UE-USA", "url": "https://commission.europa.eu/law/law-topic/data-protection/international-dimension-data-protection/adequacy-decisions_en" }
+    },
+    {
+      "id": "c013",
+      "applies_from": "2018-05-25",
+      "question": { "it": "Esiste un elenco scritto degli strumenti AI che usate, di chi li usa e su quali dati?" },
+      "obligation": { "it": "Il registro dei trattamenti dell'art. 30 è un obbligo, e l'esenzione sotto i 250 dipendenti quasi mai si applica, perché vale solo per trattamenti occasionali e senza dati particolari. Un elenco degli strumenti AI in uso non coincide con quel registro, ma è la cosa da cui si parte: senza, non si può classificare il rischio, né dire a un cliente cosa tocca i suoi dati, né accorgersi di uno strumento entrato per conto suo." },
+      "source": { "label": "GDPR, art. 30 (testo consolidato)", "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj" }
+    },
+    {
+      "id": "c014",
+      "applies_from": "2018-05-25",
+      "question": { "it": "Quando l'AI è entrata in un'attività che facevate già, l'informativa alle persone è stata aggiornata?" },
+      "obligation": { "it": "Se cambiano le modalità del trattamento, i destinatari dei dati o i trasferimenti fuori dall'Unione, gli artt. 13 e 14 chiedono che chi è interessato lo sappia. È un passaggio che si perde facilmente, perché lo strumento cambia in silenzio mentre l'attività resta la stessa." },
+      "source": { "label": "GDPR, artt. 13 e 14 (testo consolidato)", "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj" }
+    }
+  ],
+
+  "disclaimer": {
+    "it": "Questa non è una consulenza legale, e nessuna riga qui sopra dice se la tua azienda sia in regola: dicono quale obbligo esiste, da quando, e dove leggerlo. Quello che vedi accanto a ogni voce è la risposta che hai dato tu, non un giudizio nostro. Le norme sono state verificate il 27 agosto 2026; l'AI Act è in evoluzione e alcune date sono già cambiate una volta."
+  },
+
+  "disclaimer_for_distributors": {
+    "it": "Se distribuisci questo strumento alle imprese che segui, sappi che le voci qui dentro hanno una data di verifica e una di scadenza, e che dopo quella data il report lo dichiara. Non sono un parere legale né una certificazione, e chi le rilegge periodicamente sei tu insieme a chi ti assiste."
+  }
+}

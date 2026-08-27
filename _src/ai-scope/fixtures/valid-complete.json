@@ -1,0 +1,37 @@
+{
+  "schema": "1.0",
+  "tool": "ai-scope",
+  "tool_version": "1.0.0",
+  "questionnaire_edition": 1,
+  "questionnaire_digest": "sha256:6e30319dc855e59a36aa58f5fd789573fd247537d7eb386f879ed4ffcdf495fd",
+  "lang": "it",
+  "complete": true,
+  "answered_at": "2026-08-27",
+  "exported_at": "2026-08-27",
+  "label": "",
+  "answers": {
+    "q001": 1, "q002": 2, "q003": 0,
+    "q004": 2, "q005": 1, "q006": 2,
+    "q007": 2, "q008": 1, "q009": 1,
+    "q010": 1, "q011": 1, "q012": 1,
+    "q013": 1, "q014": 1, "q015": 1,
+    "q016": 1, "q017": 2, "q018": 1,
+    "q019": 1, "q020": 2, "q021": 1,
+    "q022": 1
+  },
+  "skipped": [],
+  "not_applicable": [],
+  "scores": {
+    "overall": 42,
+    "level": 1,
+    "dimensions": { "d1": 56, "d2": 44, "d3": 33, "d4": 33, "d5": 44, "d6": 44 },
+    "counts": {
+      "d1": { "asked": 3, "scored": 3, "not_applicable": 0 },
+      "d2": { "asked": 3, "scored": 3, "not_applicable": 0 },
+      "d3": { "asked": 3, "scored": 3, "not_applicable": 0 },
+      "d4": { "asked": 3, "scored": 3, "not_applicable": 0 },
+      "d5": { "asked": 3, "scored": 3, "not_applicable": 0 },
+      "d6": { "asked": 3, "scored": 3, "not_applicable": 0 }
+    }
+  }
+}
