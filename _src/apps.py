@@ -647,7 +647,7 @@ APPS = [
             "summary": "Si vola a battiti d'ala e vince chi è più in alto. Gira nel browser, "
                        "senza server.",
             "intro_title": "Perché un secondo gioco",
-            "intro_h2": "Una regola sola, e <span class=\"grad-text\">si vede tutta</span>.",
+            "intro_h2": "Una regola sola, e <span class=\"grad-text\">la vedi succedere</span>.",
             "intro": [
                 "Le app che pubblichiamo hanno in comune un vincolo tecnico, non un argomento: "
                 "girano sulla macchina di chi le apre e non mandano niente da nessuna parte. Un "
@@ -787,7 +787,7 @@ APPS = [
             "summary": "You fly by flapping and the higher rider wins. Runs in the browser, with "
                        "no server.",
             "intro_title": "Why a second game",
-            "intro_h2": "One rule, and <span class=\"grad-text\">you can see all of it</span>.",
+            "intro_h2": "One rule, and <span class=\"grad-text\">you watch it happen</span>.",
             "intro": [
                 "The apps we publish share a technical constraint rather than a subject: they run "
                 "on the machine of whoever opens them and send nothing anywhere. A game "
