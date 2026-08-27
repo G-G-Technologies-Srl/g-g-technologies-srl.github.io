@@ -66,9 +66,9 @@ const IT = {
   // -------------------------------------------------------------------------------------------
 
   ctrlTitle: "I comandi",
-  howKeys: "Un giocatore: A e D per girare, W per battere le ali, S per lo scudo.",
-  howKeys2: "Il secondo: frecce sinistra e destra, Maiusc destro per battere, freccia giù per lo "
-    + "scudo.",
+  howKeys: "Primo giocatore: A e D per girare, W per battere le ali, S per lo scudo.",
+  howKeys2: "Secondo giocatore: frecce sinistra e destra, Maiusc destro per battere, freccia giù "
+    + "per lo scudo.",
   howTouch: "Col mouse o col dito: premi il campo dal lato in cui vuoi andare, e ogni pressione è "
     + "un battito. Due tocchi rapidi sulla tua cavalcatura accendono lo scudo.",
 
@@ -113,12 +113,11 @@ const IT = {
   // -------------------------------------------------------------------------------------------
 
   gameOver: "Partita finita",
-  player: "Giocatore",
   yourScore: "{score} punti, ondata {wave}.",
   yourScore2: "Giocatore 1: {one} · Giocatore 2: {two} · ondata {wave}.",
   newBest: "È il punteggio più alto di questo browser.",
   placed: "Entra in classifica al {place}º posto.",
-  notPlaced: "Non entra nei primi dieci. La prossima.",
+  notPlaced: "Non entra nei primi dieci. Sarà per la prossima.",
   noScore: "Zero punti: non c'è niente da salvare. Rimetti un gettone.",
   nameLabel: "Nome",
   namePlaceholder: "Chi ha giocato",
@@ -128,15 +127,15 @@ const IT = {
   liveGameOver: "Partita finita. {score} punti, ondata {wave}.",
 
   scoresTitle: "Classifica",
-  scoresLocal: "È la classifica di questo browser, su questa macchina. Come quella di un cabinato: "
-    + "per batterla si torna qui.",
+  scoresLocal: "È la classifica di questo browser, su questa macchina. Come quella di un cabinato "
+    + "da sala giochi: per batterla si torna qui.",
   scoresPos: "#",
   scoresName: "Nome",
   scoresScore: "Punti",
   scoresWave: "Ondata",
   scoresDate: "Quando",
   scoresEmpty: "Ancora nessuna partita salvata.",
-  storageOff: "Questo browser non lascia salvare niente: la classifica non verrà tenuta.",
+  storageOff: "Questo browser non lascia salvare niente: la classifica non resta.",
   statsGames: "partite",
   statsBest: "ondata più alta",
   statsCoins: "gettoni",
@@ -146,7 +145,7 @@ const IT = {
   import: "Importa",
   clear: "Svuota",
   clearAsk: "Cancellare la classifica e i contatori?",
-  exported: "Salvato in {name}.",
+  exported: "Salvato come {name}.",
   imported: "Rimesse {n} voci.",
   importNotJson: "Questo file non è un JSON leggibile.",
   importNotExport: "Questo file non è un'esportazione di SPRONIA.",
@@ -171,6 +170,9 @@ const IT = {
   //  i l   c o n t o r n o
   // -------------------------------------------------------------------------------------------
 
+  // Le due chiavi portano il nome dello **stato**, non dell'azione: `soundOn` è l'etichetta che
+  // compare **mentre** il suono è acceso, e dice quindi «spegni». Scritto qui perché è il tipo di
+  // coppia che prima o poi qualcuno scambia leggendo solo il nome.
   soundOn: "Spegni il suono",
   soundOff: "Accendi il suono",
   themeToLight: "Passa al tema chiaro",
@@ -219,9 +221,10 @@ const EN = {
     + "worth nothing.",
   bonusEarned: "Bonus: {points}",
 
-  ctrlTitle: "The controls",
-  howKeys: "One player: A and D to turn, W to flap, S for the shield.",
-  howKeys2: "The second: left and right arrows, right Shift to flap, down arrow for the shield.",
+  ctrlTitle: "Controls",
+  howKeys: "First player: A and D to turn, W to flap, S for the shield.",
+  howKeys2: "Second player: left and right arrows, right Shift to flap, down arrow for the "
+    + "shield.",
   howTouch: "With the mouse or a finger: press the field on the side you want to go, and every "
     + "press is a flap. Two quick taps on your own mount light the shield.",
 
@@ -256,7 +259,6 @@ const EN = {
   keysDone: "Done",
 
   gameOver: "Game over",
-  player: "Player",
   yourScore: "{score} points, wave {wave}.",
   yourScore2: "Player 1: {one} · Player 2: {two} · wave {wave}.",
   newBest: "It is the highest score in this browser.",
@@ -271,8 +273,8 @@ const EN = {
   liveGameOver: "Game over. {score} points, wave {wave}.",
 
   scoresTitle: "High scores",
-  scoresLocal: "This is the table of this browser, on this machine. Like a cabinet's: to beat it "
-    + "you come back here.",
+  scoresLocal: "This is the table of this browser, on this machine. Like an arcade cabinet's: to "
+    + "beat it you come back here.",
   scoresPos: "#",
   scoresName: "Name",
   scoresScore: "Score",

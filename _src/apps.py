@@ -326,8 +326,9 @@ APPS = [
                          "network requests."),
                 ("Size", "Tested on a 12 MB file of a hundred thousand rows: it opens in a "
                          "little over a second."),
-                ("High scores", "They stay in this browser, on this computer, like a cabinet's. "
-                                "You can export them to a file and put them back elsewhere."),
+                ("High scores", "They stay in this browser, on this computer, like an arcade "
+                                "cabinet's. You can export them to a file and put them back "
+                                "elsewhere."),
                 ("Sound", "The browser generates it as you play: there is no audio file to "
                           "download. It switches off from the bar at the top."),
                 ("Offline", "After the first visit it works without a connection."),
@@ -600,8 +601,8 @@ APPS = [
             ],
             "cta_title": "Need something that runs locally?",
             "cta_text": "If you have a case where the data must not leave the machine using it, "
-                        "tell us about it. A person from the team answers you, not an automated "
-                        "reply.",
+                        "tell us about it. A person from the team replies, not an automated "
+                        "message.",
             "mail_subject": "AstroDroid — applications that run locally",
             "related": ["onprem", "ai", "digisense"],
             "art": {
@@ -625,7 +626,7 @@ APPS = [
         "order": 3,
         "tags": ["svago"],
         "stato": "pronto",
-        "version": "1.1.1",
+        "version": "1.1.2",
         "released": "2026-08-14",
         "updated": "2026-08-27",
         "licence": "Apache-2.0",
@@ -696,12 +697,12 @@ APPS = [
             ],
             "facts_title": "In breve",
             "facts": [
-                ("Stato", "Finito e giocabile per intero: ondate, punteggio, vite, classifica "
-                          "e suono. Che ognuna delle prime sessanta ondate si possa svuotare è "
-                          "verificato da un controllo che sta nel codice, non a occhio."),
-                ("Comandi", "Due direzioni, un battito e lo scudo di fuoco: da tastiera, oppure "
-                            "premendo il campo dal lato in cui vuoi andare. Non esiste un comando "
-                            "per salire."),
+                ("Stato", "Finito: ondate, punteggio, vite, classifica e suono ci sono tutti. "
+                          "Che ognuna delle prime sessanta ondate si possa svuotare è verificato "
+                          "da un controllo che sta nel codice, non a occhio."),
+                ("Comandi", "A e D per girare, W per battere le ali, S per lo scudo — oppure "
+                            "premi il campo dal lato in cui vuoi andare, e ogni pressione è un "
+                            "battito. I tasti si possono cambiare."),
                 ("Dati", "Restano sul tuo computer. Dopo il caricamento della pagina l'app non fa "
                          "richieste di rete."),
                 ("Due giocatori", "Sulla stessa tastiera, o con un gamepad. Non sul telefono."),
@@ -796,15 +797,15 @@ APPS = [
                 "inertia, the ledges, the metal on the floor — exists to make being higher at the "
                 "right moment difficult.",
                 "Flight works the way a flapping machine flies: there is no command for up, there "
-                "is the rate at which you beat. It is the mechanic that makes the genre "
+                "is the rate at which you flap. It is the mechanic that makes the genre "
                 "recognisable, and it is also why it takes ten seconds to learn and rather longer "
                 "to master.",
             ],
             "does_title": "What it does",
             "does": [
                 "You fly by flapping: no key climbs on its own, and holding one down counts as a "
-                "single beat.",
-                "On contact the higher spur wins. Level with each other, both bounce away.",
+                "single flap.",
+                "On contact the higher spur wins. Level with each other and both bounce away.",
                 "Seven ledges across six heights, and the two lowest are short: between them "
                 "there is nothing but molten metal, so flying low is a choice and not a rest.",
                 "The field wraps horizontally: leave on the right and you come back on the left.",
@@ -816,8 +817,8 @@ APPS = [
                 "they begin.",
                 "Two things come out of the molten metal when you take too long: a claw that "
                 "grabs whoever flies low, and a fireball that comes for you.",
-                "A high score table, counters and a coin slot as on a cabinet, with the scores "
-                "kept in this browser and exportable.",
+                "A high score table, counters and a coin slot as on an arcade cabinet, with the "
+                "scores kept in this browser and exportable.",
                 "Sound generated by the browser, with no audio file to download.",
                 "Two play on one keyboard, or one on the keyboard and one on a gamepad, and the "
                 "keys can be changed if yours will not take the combination.",
@@ -836,12 +837,12 @@ APPS = [
             ],
             "facts_title": "In brief",
             "facts": [
-                ("Status", "Finished and playable throughout: waves, score, lives, high scores "
-                           "and sound. That each of the first sixty waves can be emptied is "
-                           "verified by a check that lives in the code, not by eye."),
-                ("Controls", "Two directions, one flap and the fire shield: from the keyboard, "
-                             "or by pressing the field on the side you want to go. There is no "
-                             "command for up."),
+                ("Status", "Finished: waves, score, lives, high scores and sound are all there. "
+                           "That each of the first sixty waves can be emptied is verified by a "
+                           "check that lives in the code, not by eye."),
+                ("Controls", "A and D to turn, W to flap, S for the shield — or press the field "
+                             "on the side you want to go, and every press is a flap. The keys can "
+                             "be changed."),
                 ("Data", "Stays on your computer. After the page has loaded the app makes no "
                          "network requests."),
                 ("Two players", "On one keyboard, or with a gamepad. Not on a phone."),
@@ -897,8 +898,8 @@ APPS = [
             ],
             "cta_title": "Need something that runs locally?",
             "cta_text": "If you have a case where the data must not leave the machine using it, "
-                        "tell us about it. A person from the team answers you, not an automated "
-                        "reply.",
+                        "tell us about it. A person from the team replies, not an automated "
+                        "message.",
             "mail_subject": "SPRONIA — applications that run locally",
             "related": ["onprem", "robotics", "digisense"],
             "art": {
