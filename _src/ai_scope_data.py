@@ -48,6 +48,17 @@ OPTION_POINTS = [0, 1, 2, 3]
 # a placeholder shipped to a reader.
 PLACEHOLDER = re.compile(r"\b(TODO|TBD|XXX|FIXME|lorem ipsum)\b|\.\.\.$|…$", re.I)
 
+# An apostrophe standing in for an accent — `piu'` for `più`. It creeps in when a file is written
+# defensively, as if JSON could not hold accented characters, and it survives every technical check
+# because the string is valid and the meaning is clear. It stops being invisible the moment the
+# text is read out loud: the first printed sheet for the live test said "250 o piu'", and that is
+# the only place it could have been caught. Elisions — `l'`, `un'`, `dell'` — are correct Italian
+# and are not in this list.
+FAKE_ACCENT = re.compile(
+    r"\b(piu|puo|e|E|si|Si|cosi|perche|gia|meta|cioe|ne|finche|poiche|"
+    r"citta|qualita|attivita|novita|liberta|verita|societa|universita|responsabilita)'"
+    r"(?=[\s,.:;!?»)]|$)")
+
 # Phrasings that tell the reader they are compliant, or that they are not. The compliance module is
 # only defensible because it never does this: it says which obligation exists, from when, and where
 # to read it, and leaves the verb to whoever can actually answer. A row that asserts a status is a
@@ -437,6 +448,12 @@ def _check_parity(questionnaire, problems, name, status):
                                 f"una mancante: sembra tradotta")
             elif PLACEHOLDER.search(text.strip()):
                 problems.append(f"{name}/{where}: «{lang}» sembra un segnaposto: {text.strip()!r}")
+            elif lang == "it":
+                fake = FAKE_ACCENT.search(text)
+                if fake:
+                    problems.append(f"{name}/{where}: «{fake.group(0)}» usa l'apostrofo al posto "
+                                    f"dell'accento. Questo testo viene letto ad alta voce e "
+                                    f"stampato: si scrive con l'accento")
 
 
 # -----------------------------------------------------------------------------------------------------------------

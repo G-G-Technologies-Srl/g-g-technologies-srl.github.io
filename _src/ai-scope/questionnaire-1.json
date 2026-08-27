@@ -8,13 +8,13 @@
     { "id": "d3", "text": { "it": "Processi" } },
     { "id": "d4", "text": { "it": "Competenze e persone" } },
     { "id": "d5", "text": { "it": "Tecnologia e controllo" } },
-    { "id": "d6", "text": { "it": "Governo e responsabilita'" } }
+    { "id": "d6", "text": { "it": "Governo e responsabilità" } }
   ],
   "bands": [
     { "from": 0, "to": 24, "text": { "it": "Non hai ancora cominciato" } },
     { "from": 25, "to": 49, "text": { "it": "Stai provando" } },
-    { "from": 50, "to": 74, "text": { "it": "Qualcosa e' in produzione" } },
-    { "from": 75, "to": 100, "text": { "it": "L'AI e' nel modo in cui lavori" } }
+    { "from": 50, "to": 74, "text": { "it": "Qualcosa è in produzione" } },
+    { "from": 75, "to": 100, "text": { "it": "L'AI è nel modo in cui lavori" } }
   ],
   "questions": [
     {
@@ -26,7 +26,7 @@
         { "points": 0, "text": { "it": "Meno di 10" } },
         { "points": 1, "text": { "it": "Da 10 a 49" } },
         { "points": 2, "text": { "it": "Da 50 a 249" } },
-        { "points": 3, "text": { "it": "250 o piu'" } }
+        { "points": 3, "text": { "it": "250 o più" } }
       ]
     },
     {
@@ -38,7 +38,7 @@
         { "points": 0, "text": { "it": "Meno di un anno" } },
         { "points": 1, "text": { "it": "Da 1 a 3 anni" } },
         { "points": 2, "text": { "it": "Da 3 a 10 anni" } },
-        { "points": 3, "text": { "it": "Piu' di 10 anni" } }
+        { "points": 3, "text": { "it": "Più di 10 anni" } }
       ]
     },
     {
@@ -57,24 +57,24 @@
       "id": "q004",
       "dimension": "d1",
       "scored": true,
-      "text": { "it": "Lo strumento AI piu' usato nella tua azienda: com'e' entrato?" },
+      "text": { "it": "Lo strumento AI più usato nella tua azienda: com'è entrato?" },
       "hint": { "it": "Vale anche se lo gestisce un fornitore per te: conta che faccia parte del tuo lavoro, non chi preme i tasti." },
       "options": [
         { "points": 0, "text": { "it": "Non ne usiamo nessuno" } },
-        { "points": 1, "text": { "it": "L'ha portato qualcuno per conto suo, e si e' diffuso cosi'" } },
+        { "points": 1, "text": { "it": "L'ha portato qualcuno per conto suo, e si è diffuso così" } },
         { "points": 2, "text": { "it": "L'abbiamo scelto e introdotto come azienda" } },
-        { "points": 3, "text": { "it": "L'abbiamo scelto, e c'e' una persona che ne risponde" } }
+        { "points": 3, "text": { "it": "L'abbiamo scelto, e c'è una persona che ne risponde" } }
       ]
     },
     {
       "id": "q005",
       "dimension": "d1",
       "scored": true,
-      "text": { "it": "L'ultima volta che hai misurato cosa ti ha fatto risparmiare o guadagnare uno strumento AI, quando e' stato?" },
+      "text": { "it": "L'ultima volta che hai misurato cosa ti ha fatto risparmiare o guadagnare uno strumento AI, quando è stato?" },
       "options": [
         { "points": 0, "text": { "it": "Mai" } },
         { "points": 1, "text": { "it": "Ci siamo fatti un'idea, senza misurare" } },
-        { "points": 2, "text": { "it": "Piu' di un anno fa" } },
+        { "points": 2, "text": { "it": "Più di un anno fa" } },
         { "points": 3, "text": { "it": "Negli ultimi sei mesi, e i numeri sono scritti da qualche parte" } }
       ]
     },
@@ -87,7 +87,7 @@
         { "points": 0, "text": { "it": "Non abbiamo provato niente di nuovo nell'ultimo anno" } },
         { "points": 1, "text": { "it": "L'abbiamo lasciata perdere, senza una decisione vera" } },
         { "points": 2, "text": { "it": "L'abbiamo scartata per una ragione precisa" } },
-        { "points": 3, "text": { "it": "E' in uso oggi" } }
+        { "points": 3, "text": { "it": "È in uso oggi" } }
       ]
     },
     {
@@ -101,7 +101,7 @@
       },
       "options": [
         { "points": 0, "text": { "it": "Non saprei da dove partire" } },
-        { "points": 1, "text": { "it": "Qualche giorno, chiedendo a piu' persone" } },
+        { "points": 1, "text": { "it": "Qualche giorno, chiedendo a più persone" } },
         { "points": 2, "text": { "it": "Qualche ora" } },
         { "points": 3, "text": { "it": "Lo esporto adesso" } }
       ],
@@ -114,12 +114,12 @@
       "id": "q008",
       "dimension": "d2",
       "scored": true,
-      "text": { "it": "L'ultima volta che un numero e' risultato sbagliato - un totale che non tornava, una giacenza diversa dal magazzino, due sistemi in disaccordo: cosa e' cambiato dopo?" },
+      "text": { "it": "L'ultima volta che un numero è risultato sbagliato - un totale che non tornava, una giacenza diversa dal magazzino, due sistemi in disaccordo: cosa è cambiato dopo?" },
       "options": [
-        { "points": 0, "text": { "it": "Niente: e' capitato di nuovo" } },
+        { "points": 0, "text": { "it": "Niente: è capitato di nuovo" } },
         { "points": 1, "text": { "it": "L'abbiamo corretto a mano, quella volta" } },
         { "points": 2, "text": { "it": "Abbiamo trovato da dove veniva" } },
-        { "points": 3, "text": { "it": "Abbiamo cambiato il modo in cui quel dato si tiene, e non e' piu' successo" } }
+        { "points": 3, "text": { "it": "Abbiamo cambiato il modo in cui quel dato si tiene, e non è più successo" } }
       ]
     },
     {
@@ -138,27 +138,27 @@
       "id": "q010",
       "dimension": "d3",
       "scored": true,
-      "text": { "it": "L'ultima persona entrata nel ruolo piu' operativo della tua azienda: come ha imparato il lavoro?" },
+      "text": { "it": "L'ultima persona entrata nel ruolo più operativo della tua azienda: come ha imparato il lavoro?" },
       "options": [
         { "points": 0, "text": { "it": "Guardando i colleghi, e sbagliando" } },
         { "points": 1, "text": { "it": "Affiancata da qualcuno, con i suoi appunti" } },
-        { "points": 2, "text": { "it": "Con del materiale scritto, piu' l'affiancamento" } },
+        { "points": 2, "text": { "it": "Con del materiale scritto, più l'affiancamento" } },
         { "points": 3, "text": { "it": "Con una procedura scritta, che usa ancora adesso" } }
       ],
       "not_applicable": {
         "when": true,
-        "text": { "it": "Non e' mai entrato nessuno: siamo gli stessi dall'inizio" }
+        "text": { "it": "Non è mai entrato nessuno: siamo gli stessi dall'inizio" }
       }
     },
     {
       "id": "q011",
       "dimension": "d3",
       "scored": true,
-      "text": { "it": "La procedura scritta del processo che ti porta piu' fatturato: quando e' stata aggiornata l'ultima volta?" },
+      "text": { "it": "La procedura scritta del processo che ti porta più fatturato: quando è stata aggiornata l'ultima volta?" },
       "options": [
         { "points": 0, "text": { "it": "Non ne esiste una" } },
         { "points": 1, "text": { "it": "Esiste, non saprei dire quando" } },
-        { "points": 2, "text": { "it": "Piu' di due anni fa" } },
+        { "points": 2, "text": { "it": "Più di due anni fa" } },
         { "points": 3, "text": { "it": "Nell'ultimo anno" } }
       ]
     },
@@ -166,7 +166,7 @@
       "id": "q012",
       "dimension": "d3",
       "scored": true,
-      "text": { "it": "L'ultima volta che qualcosa e' andato storto nel processo che ti porta piu' fatturato - un ordine sbagliato, una consegna saltata, un lavoro da rifare - chi se n'e' accorto per primo?" },
+      "text": { "it": "L'ultima volta che qualcosa è andato storto nel processo che ti porta più fatturato - un ordine sbagliato, una consegna saltata, un lavoro da rifare - chi se n'è accorto per primo?" },
       "options": [
         { "points": 0, "text": { "it": "Il cliente" } },
         { "points": 1, "text": { "it": "Noi, ma a cose fatte: sui conti, o rifacendo il lavoro" } },
@@ -182,7 +182,7 @@
       "options": [
         { "points": 0, "text": { "it": "Nessuna" } },
         { "points": 1, "text": { "it": "Poche" } },
-        { "points": 2, "text": { "it": "Piu' della meta'" } },
+        { "points": 2, "text": { "it": "Più della metà" } },
         { "points": 3, "text": { "it": "Tutte, o quasi" } }
       ]
     },
@@ -190,12 +190,12 @@
       "id": "q014",
       "dimension": "d4",
       "scored": true,
-      "text": { "it": "C'e' qualcuno a cui gli altri chiedono, quando hanno un dubbio sull'uso dell'AI?" },
+      "text": { "it": "C'è qualcuno a cui gli altri chiedono, quando hanno un dubbio sull'uso dell'AI?" },
       "options": [
         { "points": 0, "text": { "it": "No" } },
-        { "points": 1, "text": { "it": "Si', ma e' un'iniziativa sua: nessuno gliel'ha chiesto" } },
-        { "points": 2, "text": { "it": "Si', e fa parte di quello che ci si aspetta da quella persona" } },
-        { "points": 3, "text": { "it": "Si', ed e' parte del suo ruolo, con del tempo dedicato" } }
+        { "points": 1, "text": { "it": "Sì, ma è un'iniziativa sua: nessuno gliel'ha chiesto" } },
+        { "points": 2, "text": { "it": "Sì, e fa parte di quello che ci si aspetta da quella persona" } },
+        { "points": 3, "text": { "it": "Sì, ed è parte del suo ruolo, con del tempo dedicato" } }
       ]
     },
     {
@@ -206,7 +206,7 @@
       "options": [
         { "points": 0, "text": { "it": "Non ricordo che sia successo" } },
         { "points": 1, "text": { "it": "Per caso, quando il danno era fatto" } },
-        { "points": 2, "text": { "it": "Se n'e' accorto chi lo stava usando, controllando il risultato" } },
+        { "points": 2, "text": { "it": "Se n'è accorto chi lo stava usando, controllando il risultato" } },
         { "points": 3, "text": { "it": "Controlliamo sempre quello che esce, prima di usarlo" } }
       ]
     },
@@ -214,12 +214,12 @@
       "id": "q016",
       "dimension": "d5",
       "scored": true,
-      "text": { "it": "Nell'ultimo mese, dati di clienti sono finiti in un servizio AI pubblico - cioe' un servizio online dove quello che scrivi arriva sui server del fornitore?" },
+      "text": { "it": "Nell'ultimo mese, dati di clienti sono finiti in un servizio AI pubblico - cioè un servizio online dove quello che scrivi arriva sui server del fornitore?" },
       "options": [
-        { "points": 0, "text": { "it": "Si', succede" } },
-        { "points": 1, "text": { "it": "Probabilmente si', ma non lo sappiamo" } },
-        { "points": 2, "text": { "it": "No: c'e' una regola scritta, e ne abbiamo parlato con tutti" } },
-        { "points": 3, "text": { "it": "No: c'e' una regola, e abbiamo controllato che regga davvero" } }
+        { "points": 0, "text": { "it": "Sì, succede" } },
+        { "points": 1, "text": { "it": "Probabilmente sì, ma non lo sappiamo" } },
+        { "points": 2, "text": { "it": "No: c'è una regola scritta, e ne abbiamo parlato con tutti" } },
+        { "points": 3, "text": { "it": "No: c'è una regola, e abbiamo controllato che regga davvero" } }
       ]
     },
     {
@@ -238,24 +238,24 @@
       "id": "q018",
       "dimension": "d5",
       "scored": true,
-      "text": { "it": "L'ultima volta che avete esportato i vostri dati da un servizio che usate - il gestionale, il cloud, uno strumento AI - per averne una copia vostra o portarli altrove: quando e' stato?" },
+      "text": { "it": "L'ultima volta che avete esportato i vostri dati da un servizio che usate - il gestionale, il cloud, uno strumento AI - per averne una copia vostra o portarli altrove: quando è stato?" },
       "options": [
         { "points": 0, "text": { "it": "Mai, e non sapremmo da dove cominciare" } },
-        { "points": 1, "text": { "it": "Mai, ma sappiamo che si puo': l'abbiamo letto nel contratto" } },
-        { "points": 2, "text": { "it": "Almeno una volta, quando e' servito" } },
-        { "points": 3, "text": { "it": "Lo facciamo regolarmente: una copia dei nostri dati e' sempre nostra" } }
+        { "points": 1, "text": { "it": "Mai, ma sappiamo che si può: l'abbiamo letto nel contratto" } },
+        { "points": 2, "text": { "it": "Almeno una volta, quando è servito" } },
+        { "points": 3, "text": { "it": "Lo facciamo regolarmente: una copia dei nostri dati è sempre nostra" } }
       ]
     },
     {
       "id": "q019",
       "dimension": "d6",
       "scored": true,
-      "text": { "it": "Esiste una regola scritta su cosa si puo' e non si puo' fare con l'AI?" },
+      "text": { "it": "Esiste una regola scritta su cosa si può e non si può fare con l'AI?" },
       "options": [
         { "points": 0, "text": { "it": "No" } },
-        { "points": 1, "text": { "it": "Ne abbiamo parlato, ma non e' scritto" } },
-        { "points": 2, "text": { "it": "C'e', in una mail o in un documento" } },
-        { "points": 3, "text": { "it": "C'e', e' stata comunicata, e chi la deve seguire sa dov'e'" } }
+        { "points": 1, "text": { "it": "Ne abbiamo parlato, ma non è scritto" } },
+        { "points": 2, "text": { "it": "C'è, in una mail o in un documento" } },
+        { "points": 3, "text": { "it": "C'è, è stata comunicata, e chi la deve seguire sa dov'è" } }
       ]
     },
     {
@@ -266,20 +266,20 @@
       "options": [
         { "points": 0, "text": { "it": "Dovrei chiedere in giro e non sono sicuro di sapere tutto" } },
         { "points": 1, "text": { "it": "Qualche giorno" } },
-        { "points": 2, "text": { "it": "So dirlo, ma non e' scritto da nessuna parte" } },
-        { "points": 3, "text": { "it": "C'e' un elenco aggiornato" } }
+        { "points": 2, "text": { "it": "So dirlo, ma non è scritto da nessuna parte" } },
+        { "points": 3, "text": { "it": "C'è un elenco aggiornato" } }
       ]
     },
     {
       "id": "q021",
       "dimension": "d6",
       "scored": true,
-      "text": { "it": "L'ultimo strumento nuovo entrato in azienda - AI o no: chi ha detto si'?" },
+      "text": { "it": "L'ultimo strumento nuovo entrato in azienda - AI o no: chi ha detto sì?" },
       "options": [
         { "points": 0, "text": { "it": "Nessuno: chi lo voleva ha cominciato a usarlo" } },
         { "points": 1, "text": { "it": "Il reparto che lo voleva, da solo" } },
         { "points": 2, "text": { "it": "Qualcuno l'ha approvato, ma dipende da chi chiede" } },
-        { "points": 3, "text": { "it": "C'e' un passaggio, ed e' lo stesso per tutti" } }
+        { "points": 3, "text": { "it": "C'è un passaggio, ed è lo stesso per tutti" } }
       ]
     },
     {
@@ -289,8 +289,8 @@
       "text": { "it": "Nell'ultimo anno un cliente ti ha mandato un questionario sulla sicurezza informatica, o ti ha chiesto di firmare clausole su notifica degli incidenti e diritto di verifica?" },
       "options": [
         { "points": 0, "text": { "it": "No, mai" } },
-        { "points": 1, "text": { "it": "Si', una volta" } },
-        { "points": 2, "text": { "it": "Si', e capita sempre piu' spesso" } },
+        { "points": 1, "text": { "it": "Sì, una volta" } },
+        { "points": 2, "text": { "it": "Sì, e capita sempre più spesso" } },
         { "points": 3, "text": { "it": "Non lo so: se ne occupa qualcun altro" } }
       ],
       "not_applicable": {

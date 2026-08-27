@@ -714,11 +714,11 @@ APPS = [
                  "ali, quindi restare fermo in aria è una cosa che stai facendo, non uno stato in "
                  "cui sei. Con un tasto tenuto premuto la regola dell'altezza diventerebbe banale, "
                  "ed è l'unica regola che c'è."),
-                ("È la conversione di un gioco già esistente?",
-                 "No. È un gioco originale, scritto da noi, nella tradizione delle giostre in volo "
-                 "dei primi anni Ottanta. Le meccaniche di un genere si ritrovano in decine di "
-                 "giochi e non appartengono a nessuno; la mappa, i numeri, il disegno e il codice "
-                 "sono nostri, e nomi o marchi altrui qui non compaiono."),
+                ("Da dove viene il gioco?",
+                 "È originale, scritto da noi, nella tradizione delle giostre in volo dei primi "
+                 "anni Ottanta. Le meccaniche di un genere si ritrovano in decine di giochi e "
+                 "appartengono al genere; la mappa, i numeri, il disegno e il codice sono nostri, "
+                 "e i marchi che compaiono qui sono i nostri."),
                 ("Perché la classifica non è condivisa?",
                  "Perché una classifica condivisa richiede un server che riceva i punteggi, e "
                  "queste app non ne hanno uno. È la stessa scelta che rende il gioco utilizzabile "
@@ -868,11 +868,11 @@ APPS = [
                  "wings, so hovering is something you are doing rather than a state you are in. "
                  "With a key you could hold, the height rule would become trivial — and the height "
                  "rule is the only rule there is."),
-                ("Is this a port of an existing game?",
-                 "No. It is an original game, written by us, in the tradition of the flying-joust "
-                 "arcade games of the early 1980s. The mechanics of a genre appear in dozens of "
-                 "games and belong to nobody; the map, the numbers, the artwork and the code are "
-                 "ours, and no third-party name or mark appears here."),
+                ("Where does the game come from?",
+                 "It is original, written by us, in the tradition of the flying-joust arcade games "
+                 "of the early 1980s. The mechanics of a genre appear in dozens of games and belong "
+                 "to the genre; the map, the numbers, the artwork and the code are ours, and the "
+                 "only marks here are ours."),
                 ("Why is the high score table not shared?",
                  "Because a shared table needs a server to receive the scores, and these apps do "
                  "not have one. It is the same choice that makes the game usable with no "

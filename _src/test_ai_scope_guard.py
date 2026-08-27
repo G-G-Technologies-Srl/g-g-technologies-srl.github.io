@@ -111,6 +111,16 @@ def _placeholder(questionnaire):
     _question(questionnaire, "q004")["options"][0]["text"]["it"] = "TODO scrivere l'opzione"
 
 
+def _apostrophe_for_accent(questionnaire):
+    """L'apostrofo al posto dell'accento: valido come JSON, sbagliato come italiano.
+
+    È passato inosservato attraverso ogni controllo tecnico e si è visto solo sul primo foglio
+    stampato per la prova dal vivo, dove c'era scritto «250 o piu'». Un testo che qualcuno leggerà
+    ad alta voce non può avere quella forma.
+    """
+    _question(questionnaire, "q001")["options"][3]["text"]["it"] = "250 o piu'"
+
+
 def _renumbered_id(questionnaire):
     _question(questionnaire, "q012")["id"] = "q112"
 
@@ -176,6 +186,8 @@ QUESTIONNAIRE_BREAKS = [
     ("l'inglese manca in un'edizione pubblicata", _drop_english, "manca «en»"),
     ("una stringa è fatta di soli spazi", _empty_string, "è vuoto"),
     ("un'opzione è rimasta un segnaposto", _placeholder, "sembra un segnaposto"),
+    ("un testo usa l'apostrofo al posto dell'accento", _apostrophe_for_accent,
+     "al posto dell'accento"),
     ("un id è stato rinumerato", _renumbered_id, "gli id sono contigui"),
     ("due domande hanno lo stesso id", _duplicate_id, "lo stesso id"),
     ("una dimensione ha quattro domande invece di tre", _four_questions_in_a_dimension,
