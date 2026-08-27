@@ -84,8 +84,9 @@ const IT = {
     + "schiude di una classe più alta.",
   howShield: "Lo scudo brucia chi tocchi, comunque lo tocchi. Dura tre secondi e torna dopo "
     + "dieci.",
-  howIntruder: "Se ci metti troppo, dal metallo fuso esce di traverso una palla di fuoco, e torna "
-    + "sempre più spesso. Si abbatte andandole incontro alla quota del suo cuore acceso.",
+  howIntruder: "Se ci metti troppo, dal metallo fuso viene sputata una palla di fuoco: sale, "
+    + "ricade, rimbalza una volta e affonda. Si abbatte andandole incontro alla quota del suo "
+    + "cuore acceso.",
   howClaw: "Dal metallo fuso esce una pinza che afferra chi vola basso. Per liberarti batti le "
     + "ali molto più in fretta del solito.",
   a11yNote: "È un gioco d'azione in tempo reale: serve vedere lo schermo.",
@@ -239,8 +240,8 @@ const EN = {
     + "it and it hatches a class higher.",
   howShield: "The shield burns whatever you touch, however you touch it. Three seconds, and it is "
     + "back after ten.",
-  howIntruder: "Take too long and a fireball is spat sideways out of the molten metal, more and "
-    + "more often. You bring it down by meeting it head-on at the height of its burning core.",
+  howIntruder: "Take too long and the molten metal spits out a fireball: it rises, falls, bounces "
+    + "once and sinks. You bring it down by meeting it head-on at the height of its burning core.",
   howClaw: "A claw comes out of the molten metal and grabs whoever flies low. To break free, flap "
     + "much faster than usual.",
   a11yNote: "It is a real-time action game: you need to see the screen.",

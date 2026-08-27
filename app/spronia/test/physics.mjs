@@ -1295,9 +1295,57 @@ console.log("\nl'Intruso");
   // Non lo si semina: è più veloce di una cavalcatura, e di parecchio.
   check("l'Intruso è più veloce di un dodo a tutta",
     INTRUDER.speed > PILOT.maxSpeed, `${INTRUDER.speed} contro ${PILOT.maxSpeed}`);
-  // Ma insegue la quota molto più piano: quella lentezza è la finestra per andargli incontro.
-  check("ma insegue la quota molto più piano di quanto si sposti",
-    INTRUDER.climb < INTRUDER.speed / 3, `${INTRUDER.climb} contro ${INTRUDER.speed}`);
+  // **L'arco sta dentro la fascia di volo**, e ci sta con margine. Un lancio che sbatte contro il
+  // soffitto a ogni giro sarebbe una parabola sulla carta e una riga orizzontale a schermo.
+  const vertice = (INTRUDER.lift * (1 + INTRUDER.spread / 2)) ** 2 / (2 * INTRUDER.gravity);
+  check("il lancio più forte resta sotto il soffitto",
+    vertice < MELT - CEILING - INTRUDER.h,
+    `${vertice.toFixed(0)} contro ${MELT - CEILING - INTRUDER.h}`);
+
+  // E dura abbastanza da poterlo attraversare. Sotto i tre secondi l'arco sarebbe una comparsa:
+  // il tempo per accorgersene, salire alla sua quota e andargli incontro non ci starebbe.
+  const volo = 2 * INTRUDER.lift / INTRUDER.gravity;
+  check("e il volo dura abbastanza da andargli incontro",
+    volo > 3, `${volo.toFixed(1)} s`);
+
+  // **Invertire le costa più di un secondo**, ed è tutta la correzione: prima la rotta era il segno
+  // di una differenza, ricalcolato centoventi volte al secondo, e la palla poteva capovolgersi in un
+  // passo — due volte per giro, perché il campo si avvolge e anche l'antipodo è un punto in cui il
+  // «giro più corto» cambia lato.
+  const inversione = 2 * INTRUDER.speed / INTRUDER.steer;
+  check("e per invertire ci mette più di un secondo",
+    inversione > 1, `${inversione.toFixed(1)} s`);
+}
+
+{
+  // **L'arco, giocato davvero.** Una palla lasciata uscire senza nessuno da inseguire deve salire,
+  // rallentare, tornare giù e sparire dentro il metallo — senza mai invertire il verso in aria.
+  const world = newGame(11, 1);
+  world.pilots[0].alive = false;
+  world.intrusi = [makeIntruder(world, true)];
+  const palla = world.intrusi[0];
+  const partenza = palla.vx;
+  let piuAlto = MELT;
+  let inversioni = 0;
+  let precedente = 0;
+  let passi = 0;
+  while (world.intrusi.length && passi < 120 * 20) {
+    step(world, [intent()]);
+    passi += 1;
+    if (!palla.rising) {
+      piuAlto = Math.min(piuAlto, palla.y);
+      const verso = Math.sign(palla.vx);
+      if (precedente !== 0 && verso !== 0 && verso !== precedente) inversioni += 1;
+      precedente = verso;
+    }
+  }
+  check("l'arco sale sopra la metà del campo", piuAlto < (CEILING + MELT) / 2,
+    `vertice a ${piuAlto.toFixed(0)}`);
+  check("e finisce dentro il metallo da solo", world.intrusi.length === 0,
+    `${(passi / 120).toFixed(1)} s`);
+  check("senza invertire il verso nemmeno una volta", inversioni === 0,
+    `${inversioni} inversioni`);
+  check("e mantiene il verso con cui è stata sputata", Math.sign(partenza) !== 0);
 }
 
 // -----------------------------------------------------------------------------------------------------------------

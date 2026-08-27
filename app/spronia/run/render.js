@@ -1336,6 +1336,16 @@ function _paintIntruder(ctx, intruso, cx) {
   const r = Math.round(px(INTRUDER.w) / 2) - 1;
   const verso = intruso.facing < 0 ? -1 : 1;
 
+  // **Il verso del moto, non il verso del muso**, e da quando la palla cade i due sono cose diverse.
+  // Coda e lapilli vanno all'indietro rispetto a dove sta andando: su un arco vuol dire in diagonale,
+  // e una coda orizzontale su una palla che scende a picco è la cosa che tradisce subito che dietro
+  // non c'è una fisica ma un disegno.
+  const vx = intruso.vx || verso;
+  const vy = intruso.rising ? 0 : (intruso.vy || 0);
+  const modulo = Math.hypot(vx, vy) || 1;
+  const dx = vx / modulo;
+  const dy = vy / modulo;
+
   // **Mentre sale dal metallo, la superficie la annuncia e la palla emerge tagliata.**
   //
   // Non è un dettaglio scenografico: una cosa che compare non si può evitare, una che si vede
@@ -1371,13 +1381,13 @@ function _paintIntruder(ctx, intruso, cx) {
       ctx.beginPath();
       ctx.rect(0, 0, BUF.w, px(MELT));
       ctx.clip();
-      _paintBall(ctx, cx, cy, r, verso);
+      _paintBall(ctx, cx, cy, r, dx, dy);
       ctx.restore();
     }
     return;
   }
 
-  _paintBall(ctx, cx, cy, r, verso);
+  _paintBall(ctx, cx, cy, r, dx, dy);
 
   // **L'ombra che lo precede.** Appena sotto il soffitto, sul soffitto corre il segno di dove
   // arriverà: chi gioca guarda in basso, dove succedono le cose.
@@ -1387,8 +1397,15 @@ function _paintIntruder(ctx, intruso, cx) {
   }
 }
 
-/** La palla e basta: bordo, anelli, cuore, coda, lapilli. Serve due volte, tagliata e intera. */
-function _paintBall(ctx, cx, cy, r, verso) {
+/**
+ * La palla e basta: bordo, anelli, cuore, coda, lapilli. Serve due volte, tagliata e intera.
+ *
+ * `dx` e `dy` sono il verso del moto, già normalizzato. Tutto quello che sta dietro alla palla —
+ * gli anelli spostati in avanti, la coda, i lapilli sputati — si costruisce su quei due numeri e
+ * sulla loro perpendicolare `(-dy, dx)`, così l'intero disegno ruota con l'arco senza che ci sia
+ * una rotazione da nessuna parte.
+ */
+function _paintBall(ctx, cx, cy, r, dx, dy) {
   // Il bordo che respira, due pixel di scuro e due di crosta.
   const passi = Math.max(72, Math.round(2 * Math.PI * r));
   for (let i = 0; i < passi; i += 1) {
@@ -1410,11 +1427,12 @@ function _paintBall(ctx, cx, cy, r, verso) {
   // Le tre misure sono state provate: `r-5` per il caldo lasciava un anello di corpo di tre pixel,
   // cioè la palla leggeva come un disco arancione piatto col cuore in mezzo. A `r-11` i tre anelli
   // si vedono tutti e tre, ed è quello che li rende una cosa con un dentro.
-  const avanti = verso * 2;
+  const ax = Math.round(dx * 2);
+  const ay = Math.round(dy * 2);
   _disc(ctx, cx, cy, r - 2, PAINT.ballBody);
-  _disc(ctx, cx + avanti, cy, r - 11, PAINT.ballHot);
+  _disc(ctx, cx + ax, cy + ay, r - 11, PAINT.ballHot);
   // Il cuore pulsa: è vivo, ed è il punto che si colpisce.
-  _disc(ctx, cx + avanti, cy, 6 + Math.round(1 + Math.sin(_now * 11)), PAINT.ballCore);
+  _disc(ctx, cx + ax, cy + ay, 6 + Math.round(1 + Math.sin(_now * 11)), PAINT.ballCore);
 
   if (calm) return;
 
@@ -1426,14 +1444,19 @@ function _paintBall(ctx, cx, cy, r, verso) {
     const onda = Math.sin(_now * 7 + i * 1.7) * 0.5 + Math.sin(_now * 4.3 + i * 3.1) * 0.5;
     // Più lunga al centro e corta ai bordi: è una fiamma, non una frangia.
     const lunga = Math.round((22 + onda * 7) * (1 - Math.abs(u - 0.5) * 1.3));
-    const gy = cy + Math.round((u - 0.5) * 22);
+    const lato = (u - 0.5) * 22;                       // scostamento sulla perpendicolare
+    const bx = cx - dx * (r - 3) - dy * lato;
+    const by = cy - dy * (r - 3) + dx * lato;
     for (let j = 0; j < lunga; j += 1) {
       const v = j / Math.max(1, lunga);
+      // Un quadratino e non una colonna: una colonna assottigliata è larga in un verso solo, e su
+      // una coda che punta in diagonale si vedrebbe che il verso è quello dello schermo.
       const spessa = Math.max(1, Math.round(4 * (1 - v)));
       ctx.fillStyle = v < 0.25 ? PAINT.ballHot
         : v < 0.55 ? PAINT.ballBody
           : v < 0.8 ? PAINT.ballCrust : PAINT.ballRim;
-      ctx.fillRect(cx - verso * (r - 3 + j), gy - (spessa >> 1), 1, spessa);
+      ctx.fillRect(Math.round(bx - dx * j) - (spessa >> 1),
+        Math.round(by - dy * j) - (spessa >> 1), spessa, spessa);
     }
   }
 
@@ -1443,13 +1466,15 @@ function _paintBall(ctx, cx, cy, r, verso) {
   for (let i = 0; i < 10; i += 1) {
     const periodo = 0.5 + (i % 4) * 0.13;
     const ciclo = ((((_now + i * 0.21) % periodo) + periodo) % periodo) / periodo;
-    const spinta = -verso * (14 + (i % 3) * 10);
-    const salita = 6 + (i % 5) * 4;
-    const x0 = cx - verso * (r - 4);
-    const y0 = cy + ((i % 5) - 2) * 4;
+    const spinta = 14 + (i % 3) * 10;
+    const lato = ((i % 5) - 2) * 4;
+    const x0 = cx - dx * (r - 4) - dy * lato;
+    const y0 = cy - dy * (r - 4) + dx * lato;
+    // Sputati all'indietro lungo il moto, e poi cadono. La caduta è sempre verso il basso dello
+    // schermo, perché anche quella è una parabola e non ha ragione di ruotare con la palla.
     const arco = (t) => ({
-      x: Math.round(x0 + spinta * t * 3),
-      y: Math.round(y0 - salita * 4 * t * (1 - t) + t * t * 26),
+      x: Math.round(x0 - dx * spinta * 3 * t),
+      y: Math.round(y0 - dy * spinta * 3 * t + t * t * 26),
     });
     for (const [indietro, colore] of [[0.22, PAINT.ballRim], [0.11, PAINT.ballHot]]) {
       const dove = arco(Math.max(0, ciclo - indietro));

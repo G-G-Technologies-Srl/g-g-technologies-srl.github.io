@@ -549,9 +549,59 @@ export const INTRUDER = {
   // Più veloce di una cavalcatura, e di parecchio: 340 è il tetto di un dodo. Non lo si semina, lo
   // si affronta o lo si evita — che è la differenza fra una minaccia e una tassa.
   speed: 420,
-  // Quanto insegue in verticale, al secondo. Molto meno di quanto vada in orizzontale: sale e
-  // scende piano, e quella lentezza è la finestra in cui gli si va incontro alla sua quota.
-  climb: 105,
+  // **Cade.** È la cosa che ha cambiato di più questo nemico, ed è arrivata da una partita: «cambia
+  // direzione troppo spesso, a volte ogni secondo, così è poco naturale».
+  //
+  // Aveva ragione, e il difetto era strutturale. La rotta la decideva
+  // `Math.sign(deltaX(intruso.x, preda.x))`, ricalcolata centoventi volte al secondo, e la velocità
+  // veniva **assegnata** invece che accelerata: nell'istante in cui la palla superava il giocatore,
+  // `vx` passava da +420 a −420 in un passo. Ottocentoquaranta unità al secondo di inversione, senza
+  // nulla in mezzo.
+  //
+  // E c'erano **due** punti in cui succedeva, non uno. Il campo si avvolge, quindi `deltaX` prende
+  // il giro più corto: con la palla all'antipodo bastava che il giocatore si spostasse di poco
+  // perché «la via più corta» cambiasse lato, e la palla invertiva da un capo all'altro del campo
+  // per un movimento che non la riguardava. Quello è il caso «ogni secondo», ed è anche quello che
+  // non aveva nessuna spiegazione visibile.
+  //
+  // Adesso è un corpo lanciato: esce dal metallo, sale, rallenta, ricade. Una parabola non ha punti
+  // in cui invertire, e si legge in anticipo — che è metà del motivo per cui esiste, perché
+  // dev'essere una cosa che si evita o si affronta, non una che sorprende.
+  gravity: 150,
+
+  // La spinta verso l'alto nell'istante in cui buca il metallo. Con questa gravità il vertice sta a
+  // `lift² / (2·gravity)` sopra la colata — quattrocentottantasei unità — e il volo dura poco meno
+  // di cinque secondi. Le due misure vanno lette insieme e insieme sono provate: il vertice deve
+  // stare dentro la fascia di volo, e il volo deve durare abbastanza da poterlo attraversare.
+  lift: 345,
+  // Quanto varia la spinta da una palla all'altra, in frazione. Il seme decide, quindi due partite
+  // uguali lanciano archi uguali — ma un'ondata non è una fila di parabole identiche.
+  //
+  // Un quinto e non un terzo, e la ragione è che **il vertice va con il quadrato della spinta**: un
+  // ±15% di lancio è un ±32% di altezza, e il lancio più forte finiva contro il soffitto. Il
+  // controllo che lo dice sta in `test/physics.mjs` e guarda il caso peggiore, non quello medio.
+  spread: 0.2,
+
+  // **Rimbalza una volta sul metallo, poi affonda.**
+  //
+  // Serve a rimettere la pressione che la parabola aveva tolto. Prima una palla restava in campo
+  // finché non andavi a prendertela; adesso il suo arco finisce da solo, e con un arco solo il cielo
+  // sarebbe vuoto per i tre quarti del tempo fra un richiamo e l'altro.
+  //
+  // Il secondo arco è al trentotto per cento del primo — `restitution` al quadrato — quindi è basso
+  // e veloce, e attraversa proprio la fascia dove adesso c'è il varco nel metallo. È l'unico momento
+  // del gioco in cui una cosa ti costringe a stare in alto.
+  bounces: 1,
+  restitution: 0.62,
+
+  // **Come insegue, adesso che non può più girare su sé stessa.** Non è una rotta: è
+  // un'accelerazione laterale verso il giocatore, con un tetto. Invertire del tutto le richiede più
+  // di tre secondi, quindi l'arco si piega mentre passa invece di cambiare idea.
+  //
+  // È la parte che tiene in piedi il § 3.6 del piano: senza, la palla sarebbe un ostacolo che
+  // attraversa e se ne va, e la valvola della frenesia si aprirebbe da sola invece che perché sei
+  // andato a prendertela.
+  steer: 260,
 
   // La tolleranza dell'abbattimento: la punta dello sperone contro la bocca, entro quattro unità.
   // È meno della metà della fascia del pari fra due cavalcature, e deve esserlo: quello è un duello
@@ -984,6 +1034,15 @@ export function makeIntruder(world, called = true) {
     y: MELT + INTRUDER.h,
     vx: verso * INTRUDER.launch,
     vy: 0,
+    // Sta ancora salendo dentro il metallo. Serve un contrassegno e non basta guardare la quota,
+    // perché la stessa quota la riattraversa **in discesa** alla fine dell'arco: senza, il ramo che
+    // la fa salire ripartirebbe e la palla rimbalzerebbe sul pelo della lava per sempre.
+    rising: true,
+    // Quanti rimbalzi sul metallo le restano.
+    left: INTRUDER.bounces,
+    // Quanto in alto arriva questo lancio. Deciso adesso e non al momento di uscire, così è una
+    // proprietà della palla e non del passo in cui è capitata.
+    lift: INTRUDER.lift * (1 - INTRUDER.spread / 2 + INTRUDER.spread * _random(world)),
     // Il muso, e non la direzione in cui va: il cuore è quello, e l'abbattimento lo confronta.
     facing: verso,
     alive: true,
@@ -2491,32 +2550,58 @@ function _stepIntruders(world, dt) {
     // Finché è sotto il metallo **sale e viaggia, ma non insegue e non tocca.** La rotta è quella
     // con cui è stata sputata: cambia solo quando è fuori. È la differenza fra un preavviso e una
     // minaccia — mentre emerge si può ancora decidere da che parte stare.
-    if (intruso.y > MELT) {
-      intruso.y -= INTRUDER.rise * dt;
-      intruso.x += intruso.vx * dt;
-      wrapX(intruso);
-      continue;
+    if (intruso.rising) {
+      if (intruso.y > MELT) {
+        intruso.y -= INTRUDER.rise * dt;
+        intruso.x += intruso.vx * dt;
+        wrapX(intruso);
+        continue;
+      }
+      // Bucato il metallo, il lancio: da qui in poi è un corpo per aria come tutti gli altri.
+      intruso.rising = false;
+      intruso.vy = -intruso.lift;
     }
 
-    // **Non usa `_prey`**, che si ferma a `FOE.notice`: una palla che ti nota solo da vicino non è
-    // un orologio, è un altro nemico. Questo ti trova da qualunque punto del campo, ed è il punto.
+    // **L'inseguimento è un'accelerazione, non una rotta.**
+    //
+    // Non usa `_prey`, che si ferma a `FOE.notice`: una palla che ti nota solo da vicino non è un
+    // orologio, è un altro nemico. Questa ti trova da qualunque punto del campo — ma ci mette il
+    // tempo che serve a una massa per cambiare direzione, ed è quel tempo a renderla leggibile.
     const preda = _nearestPilot(world, intruso);
     if (preda) {
-      const verso = Math.sign(deltaX(intruso.x, preda.x)) || intruso.facing;
-      intruso.facing = verso;
-      intruso.vx = verso * INTRUDER.speed;
-      intruso.vy = Math.sign(preda.y - intruso.y) * INTRUDER.climb;
-    } else {
-      intruso.vx = intruso.facing * INTRUDER.speed;
-      intruso.vy = 0;
+      const verso = Math.sign(deltaX(intruso.x, preda.x)) || Math.sign(intruso.vx) || 1;
+      intruso.vx = Math.max(-INTRUDER.speed,
+        Math.min(INTRUDER.speed, intruso.vx + verso * INTRUDER.steer * dt));
     }
+    // Il muso segue il moto. Con la velocità che passa per lo zero invece di saltarlo, questo
+    // capovolgimento succede una volta sola per inversione, e nel punto giusto.
+    intruso.facing = Math.sign(intruso.vx) || intruso.facing;
 
+    intruso.vy += INTRUDER.gravity * dt;
     intruso.x += intruso.vx * dt;
     intruso.y += intruso.vy * dt;
     wrapX(intruso);
-    // Dentro la fascia di volo, come tutti: sopra il soffitto e sopra il metallo.
-    intruso.y = Math.max(CEILING + INTRUDER.h / 2,
-      Math.min(MELT - INTRUDER.h / 2, intruso.y));
+
+    // Il soffitto è di metallo anche lui: ci rimbalza contro invece di appiattircisi, come fa una
+    // cavalcatura. Non dovrebbe succedere con questi numeri, ed è scritto per il giorno in cui
+    // qualcuno li cambierà.
+    if (intruso.y < CEILING + INTRUDER.h / 2) {
+      intruso.y = CEILING + INTRUDER.h / 2;
+      intruso.vy = Math.abs(intruso.vy) * PILOT.ceilingBounce;
+    }
+
+    // **E ricade da dove è venuta**, ma non subito: tocca il metallo, ne riparte più bassa, e la
+    // seconda volta affonda. È la fine naturale dell'arco, e toglie di mezzo il caso in cui una
+    // palla resta in campo per sempre perché nessuno è andato a prendersela.
+    if (intruso.y > MELT && intruso.vy > 0) {
+      if (intruso.left > 0) {
+        intruso.left -= 1;
+        intruso.y = MELT;
+        intruso.vy = -intruso.lift * INTRUDER.restitution;
+      } else if (intruso.y > MELT + INTRUDER.h) {
+        intruso.alive = false;
+      }
+    }
   }
 
   world.intrusi = world.intrusi.filter((i) => i.alive);

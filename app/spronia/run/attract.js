@@ -101,8 +101,12 @@ function _lontano(a, b) {
  * in tutto il gioco in cui la regola dell'altezza non decide.
  */
 function _bersaglio(world, me) {
+  // **Non le palle che stanno già ricadendo.** Da quando l'Intruso è un corpo lanciato, la fine del
+  // suo arco è un tuffo nel metallo: andargli dietro là sotto vuol dire seguirlo dentro, e la palla
+  // se ne sarebbe andata da sola comunque.
   const palla = world.intrusi
-    .filter((i) => !i.going && i.leaving === 0 && i.y <= MELT)
+    .filter((i) => !i.going && i.leaving === 0 && i.y <= MELT
+      && !(i.vy > 0 && i.y > MELT - PILOTA.paura))
     .sort((a, b) => _lontano(me, a) - _lontano(me, b))[0];
   if (palla) {
     const cuore = core(palla);
