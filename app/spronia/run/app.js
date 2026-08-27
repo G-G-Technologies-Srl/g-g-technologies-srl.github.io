@@ -97,7 +97,15 @@ function _applyText() {
     node.setAttribute("aria-label", t(node.dataset.tLabel));
   }
   el("namefield").placeholder = t("namePlaceholder");
-  el("lang").textContent = t("langSwitch");
+  // **L'etichetta della lingua, corta su un telefono.**
+  //
+  // «Switch to English» sono centoventi pixel in una barra di icone da trentadue, ed è quello che
+  // faceva traboccare la riga. La frase intera resta come `aria-label`, quindi chi usa uno screen
+  // reader sente ancora che cosa fa il pulsante — e il sito, nella sua intestazione, quel comando lo
+  // scrive già così: IT · EN.
+  const stretto = window.matchMedia("(max-width: 620px)").matches;
+  el("lang").textContent = stretto ? (lang() === "it" ? "EN" : "IT") : t("langSwitch");
+  el("lang").setAttribute("aria-label", t("langSwitch"));
   el("theme").setAttribute("aria-label",
     theme.current() === "light" ? t("themeToDark") : t("themeToLight"));
   el("install").textContent = t("installButton");
@@ -760,6 +768,11 @@ function _bind() {
   window.addEventListener("keydown", _listen, true);
 
   input.setup(el("field"), _command, _side);
+
+  // **L'etichetta della lingua cambia con la larghezza**, quindi il testo va riscritto quando la
+  // larghezza cambia: una finestra ridotta o un telefono ruotato attraversano la soglia, e senza
+  // questa riga resterebbe la frase intera — che è quella che faceva traboccare la barra.
+  window.matchMedia("(max-width: 620px)").addEventListener("change", _applyText);
 
   window.addEventListener("resize", _resize);
   // Un telefono ruotato fra verticale e orizzontale manda questo, e non sempre `resize`.

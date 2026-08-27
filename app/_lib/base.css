@@ -169,13 +169,49 @@ button:disabled, input:disabled {
    and low-contrast — everything below it is what the visitor is actually doing, and gets the
    contrast. Six controls at one altitude read as six equally important things. */
 
+/* **Va a capo, e non è una rifinitura: senza, i comandi escono dallo schermo.**
+
+   È una riga flex, e una riga flex che non va a capo non trabocca in modo visibile — spinge fuori
+   gli ultimi elementi e basta. Su un telefono da 360 pixel, che è la larghezza di mezzo Android,
+   l'ultima icona finiva sedici pixel oltre il bordo destro: c'era, e non c'era modo di premerla.
+
+   Il difetto si è presentato come «non vedo il pulsante per il tutto schermo», ed è il tipo di cosa
+   che non si trova su un computer perché lì lo spazio avanza sempre. Andare a capo costa una riga
+   nei casi estremi e non la costa mai nei casi normali, perché sotto i 620 il sottotitolo sparisce
+   e l'etichetta della lingua si accorcia. */
 .appbar {
   display: flex;
+  flex-wrap: wrap;
+  row-gap: 2px;
   align-items: center;
   gap: 8px;
   padding: 4px 14px;
   border-bottom: 1px solid var(--border);
   min-height: 34px;
+}
+
+/* **E i comandi non si stringono**, che è la metà della correzione — anzi, è quella che spiega il
+   difetto vero.
+
+   Un elemento flex, per impostazione predefinita, **si restringe prima di traboccare**. Quindi la
+   riga non usciva dallo schermo: schiacciava gli ultimi pulsanti fino a **zero pixel di larghezza**.
+   Non erano fuori, erano larghi niente — invisibili e non premibili, esattamente nel punto in cui li
+   si stava cercando.
+
+   È il motivo per cui il difetto è comparso tutto insieme: il pulsante per installare, tornato a
+   funzionare, ha portato via sessanta pixel, e i due che gli stanno accanto sono spariti.
+
+   `flex-shrink: 0` sui comandi e sul nome; il sottotitolo resta l'unica cosa che può cedere, e sotto
+   i 620 se ne va del tutto. Quello che non ci sta va a capo, che è visibile e si può premere. */
+.appbar button,
+.appbar .brand { flex-shrink: 0; }
+
+.appbar .meta { min-width: 0; }
+
+/* Il sottotitolo è la prima cosa che se ne va quando lo spazio manca: il nome dell'app è lì accanto,
+   e su un telefono nessuno legge un payoff da undici pixel. */
+@media (max-width: 620px) {
+  .appbar .meta { display: none; }
 }
 
 .appbar .brand {
