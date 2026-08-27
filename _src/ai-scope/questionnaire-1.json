@@ -1,7 +1,7 @@
 {
   "edition": 1,
   "status": "draft",
-  "note": "Edition 1. Italian complete, English still to write: while status is draft the checker counts what is missing instead of failing, and status published requires every language. Field names, keys and enum values are English throughout, the way the manifests and the shared library already are; only the text under it/en is content. The reasoning behind every question lives in _src/fonti/ai-scope-nucleo.md - shape here, why there.",
+  "note": "Edition 1. Italian complete, English still to write: while status is draft the checker counts what is missing instead of failing, and status published requires every language. Field names, keys and enum values are English throughout, the way the manifests and the shared library already are; only the text under it/en is content. The reasoning behind every question lives in _src/fonti/ai-scope-nucleo.md — shape here, why there.",
   "dimensions": [
     { "id": "d1", "text": { "it": "Casi d'uso e valore" } },
     { "id": "d2", "text": { "it": "Dati" } },
@@ -114,7 +114,7 @@
       "id": "q008",
       "dimension": "d2",
       "scored": true,
-      "text": { "it": "L'ultima volta che un numero è risultato sbagliato - un totale che non tornava, una giacenza diversa dal magazzino, due sistemi in disaccordo: cosa è cambiato dopo?" },
+      "text": { "it": "L'ultima volta che un numero è risultato sbagliato — un totale che non tornava, una giacenza diversa dal magazzino, due sistemi in disaccordo: cosa è cambiato dopo?" },
       "options": [
         { "points": 0, "text": { "it": "Niente: è capitato di nuovo" } },
         { "points": 1, "text": { "it": "L'abbiamo corretto a mano, quella volta" } },
@@ -126,7 +126,7 @@
       "id": "q009",
       "dimension": "d2",
       "scored": true,
-      "text": { "it": "I documenti che servirebbero a rispondere a una domanda di un cliente - offerte fatte, manuali, storico - dove stanno?" },
+      "text": { "it": "I documenti che servirebbero a rispondere a una domanda di un cliente — offerte fatte, manuali, storico — dove stanno?" },
       "options": [
         { "points": 0, "text": { "it": "Ognuno ha i suoi, sul proprio computer o nella propria posta" } },
         { "points": 1, "text": { "it": "In cartelle condivise, ma bisogna sapere dove guardare" } },
@@ -166,7 +166,7 @@
       "id": "q012",
       "dimension": "d3",
       "scored": true,
-      "text": { "it": "L'ultima volta che qualcosa è andato storto nel processo che ti porta più fatturato - un ordine sbagliato, una consegna saltata, un lavoro da rifare - chi se n'è accorto per primo?" },
+      "text": { "it": "L'ultima volta che qualcosa è andato storto nel processo che ti porta più fatturato — un ordine sbagliato, una consegna saltata, un lavoro da rifare — chi se n'è accorto per primo?" },
       "options": [
         { "points": 0, "text": { "it": "Il cliente" } },
         { "points": 1, "text": { "it": "Noi, ma a cose fatte: sui conti, o rifacendo il lavoro" } },
@@ -214,7 +214,7 @@
       "id": "q016",
       "dimension": "d5",
       "scored": true,
-      "text": { "it": "Nell'ultimo mese, dati di clienti sono finiti in un servizio AI pubblico - cioè un servizio online dove quello che scrivi arriva sui server del fornitore?" },
+      "text": { "it": "Nell'ultimo mese, dati di clienti sono finiti in un servizio AI pubblico — cioè un servizio online dove quello che scrivi arriva sui server del fornitore?" },
       "options": [
         { "points": 0, "text": { "it": "Sì, succede" } },
         { "points": 1, "text": { "it": "Probabilmente sì, ma non lo sappiamo" } },
@@ -238,7 +238,7 @@
       "id": "q018",
       "dimension": "d5",
       "scored": true,
-      "text": { "it": "L'ultima volta che avete esportato i vostri dati da un servizio che usate - il gestionale, il cloud, uno strumento AI - per averne una copia vostra o portarli altrove: quando è stato?" },
+      "text": { "it": "L'ultima volta che avete esportato i vostri dati da un servizio che usate — il gestionale, il cloud, uno strumento AI — per averne una copia vostra o portarli altrove: quando è stato?" },
       "options": [
         { "points": 0, "text": { "it": "Mai, e non sapremmo da dove cominciare" } },
         { "points": 1, "text": { "it": "Mai, ma sappiamo che si può: l'abbiamo letto nel contratto" } },
@@ -274,7 +274,7 @@
       "id": "q021",
       "dimension": "d6",
       "scored": true,
-      "text": { "it": "L'ultimo strumento nuovo entrato in azienda - AI o no: chi ha detto sì?" },
+      "text": { "it": "L'ultimo strumento nuovo entrato in azienda — AI o no: chi ha detto sì?" },
       "options": [
         { "points": 0, "text": { "it": "Nessuno: chi lo voleva ha cominciato a usarlo" } },
         { "points": 1, "text": { "it": "Il reparto che lo voleva, da solo" } },

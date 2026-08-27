@@ -505,7 +505,41 @@ def _check_invalid_fixture_fails(failures):
             failures.append(f"{path.name}: è rotta apposta e nessun controllo l'ha bocciata")
 
 
+def _update_fixtures():
+    """Rewrite the digest in every fixture, and the scores in the ones that carry them.
+
+    Not a convenience: the digest changed three times while the questionnaire was being corrected,
+    and each time it was synchronised by hand with a `sed`. A chore done by hand is a chore done
+    wrong eventually — and the failure mode is a fixture that stops matching, which reads exactly
+    like the fork this digest exists to detect.
+    """
+    questionnaire = _questionnaire()
+    expected = data.digest(questionnaire)
+    for path in sorted(FIXTURES.glob("*.json")):
+        payload, error = data.load(path)
+        if error:
+            print(f"  !  {path.name}: {error}")
+            continue
+        payload["questionnaire_digest"] = expected
+        if "scores" in payload:
+            payload["scores"] = data.score(questionnaire, payload.get("answers", {}),
+                                           payload.get("skipped", []),
+                                           payload.get("not_applicable", []))
+        if path.name.startswith("invalid-"):
+            # This one is on disk to be refused. Recomputing its scores would repair the very
+            # defect it records — a company that uses no AI landing in the third band of four.
+            payload["scores"], payload["skipped"], payload["not_applicable"] = \
+                _fixture(path.name)["scores"], [], []
+        path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print(f"  ok {path.name}")
+    print(f"\nimpronta allineata: {expected}\nRilancia il test senza --update-fixtures.")
+
+
 def main():
+    if "--update-fixtures" in sys.argv:
+        _update_fixtures()
+        return
+
     failures = []
 
     baseline = []

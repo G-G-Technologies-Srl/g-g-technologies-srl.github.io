@@ -3,15 +3,20 @@
   "tool": "ai-scope",
   "tool_version": "1.0.0",
   "questionnaire_edition": 1,
-  "questionnaire_digest": "sha256:a81f28fb0c33476bbc1c23f2b4410198e8caad97a27a83834c9e6d6045b4f633",
+  "questionnaire_digest": "sha256:f470b1505ce96e0ae079f09ffe1dce4478f7cb8fac93db46f14b4e2e026c75bf",
   "lang": "it",
   "complete": false,
   "answered_at": "2026-08-27",
   "exported_at": "2026-08-27",
   "answers": {
-    "q001": 0, "q002": 1, "q003": 2,
-    "q004": 1, "q005": 0, "q006": 1,
-    "q007": 1, "q008": 0
+    "q001": 0,
+    "q002": 1,
+    "q003": 2,
+    "q004": 1,
+    "q005": 0,
+    "q006": 1,
+    "q007": 1,
+    "q008": 0
   },
   "skipped": [],
   "not_applicable": []

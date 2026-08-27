@@ -1,34 +1,61 @@
 AI SCOPE — le domande del nucleo
-edizione 1 · lingua it · foglio per la prova su persone vere
+edizione 1 · lingua it · foglio per la prova dal vivo
 ==============================================================================================
 
-CHI CONDUCE, PRIMA DI COMINCIARE
-----------------------------------------------------------------------------------------------
-Leggi la domanda ad alta voce, poi le opzioni, e taci. Non spiegare, non aiutare, non
-riformulare: se la domanda ha bisogno di essere spiegata, quello È il risultato della prova.
-Non dire che c'è un punteggio. Se ti chiede quanto manca, dillo — la stima onesta del tempo
-fa parte dello strumento.
+   data ____/____/______     partecipante n. ____     inizio ____:____   fine ____:____
 
-Se la situazione varia, la regola è rispondere sul caso più frequente. Dilla una volta
-all'inizio, non a ogni domanda.
-
-COSA GUARDARE MENTRE RISPONDE
-----------------------------------------------------------------------------------------------
-  · Quanto ci mette a rispondere. Oltre una decina di secondi la domanda non è ancorata a un
-    fatto che ha in mente: è la prova che l'ancoraggio non funziona.
-  · Se rilegge la domanda. Una rilettura è ambiguità, e va segnata anche se poi risponde
-    bene.
-  · Se dice «dipende» o «un po' tutte». Vuol dire che le opzioni si sovrappongono, o che non
-    ha capito se rispondere sul caso tipico o sul peggiore.
-  · Se chiede cosa significa una parola. Ogni termine da spiegare è gergo rimasto lì.
-  · Se una domanda sembra un giudizio. Si vede in faccia prima che nella risposta.
-  · Se nessuno sceglie mai un'opzione. Un'opzione che non sceglie nessuno o è scritta male o
-    descrive una situazione che non esiste.
+   q002 (da quanto esiste) = _______________   ← serve alla variante di q007, segnala subito
 
 ==============================================================================================
 
-— PER COMINCIARE —
+COSA DIRE PRIMA
+----------------------------------------------------------------------------------------------
+Da leggere prima di cominciare, e non a memoria.
 
+«Sto provando delle domande, non la tua azienda: quello che cerco è quali domande sono
+scritte male. Se una non funziona mi fai un favore a dirlo — ne devo buttare via qualcuna.
+Non scrivo da nessuna parte il nome dell'azienda, il foglio resta mio e non finisce online, e
+puoi fermarti quando vuoi. Una domanda parla di dati dei clienti finiti in servizi online:
+rispondi come stanno le cose, non mi interessa e non lo riferisco a nessuno.»
+
+COME SI CONDUCE
+----------------------------------------------------------------------------------------------
+PRIMO GIRO — compila lui, tu stai zitto.
+Dai il foglio e la penna, di' che può chiedere se una parola non è chiara, e poi taci. Non
+spiegare, non annuire, non commentare, non ripetere la risposta ad alta voce. Se ti chiede «è
+giusta?», rispondi: non c'è una risposta giusta, sto provando le domande. Tu segna solo
+quello che vedi, nella colonna a destra.
+
+SECONDO GIRO — riprendi il foglio e chiedi.
+Domanda per domanda, solo dove è successo qualcosa. Le tre sonde che servono, in
+quest'ordine:
+  1. «Qui hai scelto questa. Me la racconti, l'ultima volta che è successo?»
+     Se non riesce a raccontarla, la risposta era comoda, non vera. È l'unica cosa che
+     distingue le due, e non si può ottenere in nessun altro modo con tre persone.
+  2. «C'era un'opzione che ti somigliava di più e non c'era?»
+  3. «Perché non questa?» — indicando quella accanto a quella scelta.
+
+ALLA FINE — tre domande a lui, prima delle tue conclusioni.
+  · Quale domanda toglieresti?
+  · C'è qualcosa che ti aspettavi e non c'era?
+  · [calcola la fascia in fondo, leggila] Ti riconosci in questa frase?
+
+I LIMITI DI QUESTA PROVA
+----------------------------------------------------------------------------------------------
+COSA QUESTA PROVA NON PUÒ DIRTI, e va scritto nel resoconto invece che dimenticato.
+
+L'abbandono no: seduto davanti a te nessuno si alza alla domanda quattordici, quindi sulla
+lunghezza questa prova non dice niente. La copertura delle opzioni nemmeno: con tre persone
+quasi tutte le opzioni non le sceglierà nessuno, e sarebbe un fatto del campione, non delle
+opzioni — l'unico segnale che vale è a voce, «nessuna di queste mi somiglia». E le risposte
+saranno migliori del vero comunque, perché le stai guardando: le domande che ne soffrono di
+più sono q005, q015, q016 e q019.
+
+
+
+----------------------------------------------------------------------------------------------
+guarda:  esita · rilegge · «dipende» · faccia · penna che si ferma                    p. 1/8
+
 q001
 Quante persone lavorano nella tua azienda?
 
@@ -37,7 +64,8 @@ Quante persone lavorano nella tua azienda?
    [ ] Da 50 a 249
    [ ] 250 o più
 
-   cosa è successo: .........................................................................
+   sec ___    cosa hai visto: ................................................................
+   ........................................................................................
    ........................................................................................
 
 q002
@@ -48,7 +76,8 @@ Da quanto tempo esiste?
    [ ] Da 3 a 10 anni
    [ ] Più di 10 anni
 
-   cosa è successo: .........................................................................
+   sec ___    cosa hai visto: ................................................................
+   ........................................................................................
    ........................................................................................
 
 q003
@@ -59,7 +88,8 @@ Che ruolo hai?
    [ ] Mi occupo di sistemi informativi o tecnologia
    [ ] Altro
 
-   cosa è successo: .........................................................................
+   sec ___    cosa hai visto: ................................................................
+   ........................................................................................
    ........................................................................................
 
 
@@ -75,9 +105,17 @@ Lo strumento AI più usato nella tua azienda: com'è entrato?
    [ ] L'abbiamo scelto e introdotto come azienda
    [ ] L'abbiamo scelto, e c'è una persona che ne risponde
 
-   cosa è successo: .........................................................................
+   → se ha risposto «Non ne usiamo nessuno»: salta q005, q017 e passa oltre. Nell'app quelle
+   domande non gliele fa.
+
+   sec ___    cosa hai visto: ................................................................
+   ........................................................................................
    ........................................................................................
 
+
+----------------------------------------------------------------------------------------------
+guarda:  esita · rilegge · «dipende» · faccia · penna che si ferma                    p. 2/8
+
 q005
 L'ultima volta che hai misurato cosa ti ha fatto risparmiare o guadagnare uno strumento AI,
 quando è stato?
@@ -87,7 +125,8 @@ quando è stato?
    [ ] Più di un anno fa
    [ ] Negli ultimi sei mesi, e i numeri sono scritti da qualche parte
 
-   cosa è successo: .........................................................................
+   sec ___    cosa hai visto: ................................................................
+   ........................................................................................
    ........................................................................................
 
 q006
@@ -98,31 +137,38 @@ L'ultima cosa nuova che hai provato con l'AI: che fine ha fatto?
    [ ] L'abbiamo scartata per una ragione precisa
    [ ] È in uso oggi
 
-   cosa è successo: .........................................................................
+   sec ___    cosa hai visto: ................................................................
+   ........................................................................................
    ........................................................................................
 
 
 — DATI —
 
 q007
-Se domani ti servisse l'elenco completo dei tuoi ordini degli ultimi tre anni in un unico
+  [se q002 è «Meno di un anno» o «Da 1 a 3 anni» → leggi la versione B]
+
+A. Se domani ti servisse l'elenco completo dei tuoi ordini degli ultimi tre anni in un unico
 file, quanto ci metteresti?
 
-  [se q002 = «Meno di un anno» oppure «Da 1 a 3 anni», leggi invece:]
-  Se domani ti servisse l'elenco completo di tutti i tuoi clienti e di cosa hanno comprato in
-  un unico file, quanto ci metteresti?
+B. Se domani ti servisse l'elenco completo di tutti i tuoi clienti e di cosa hanno comprato
+in un unico file, quanto ci metteresti?
 
    [ ] Non saprei da dove partire
    [ ] Qualche giorno, chiedendo a più persone
    [ ] Qualche ora
    [ ] Lo esporto adesso
-   [ ] Non abbiamo ancora clienti   (solo se q002 = «Meno di un anno» oppure «Da 1 a 3 anni»)
+   [ ] (n/a) Non abbiamo ancora clienti (solo se q002 è «Meno di un anno» o «Da 1 a 3 anni»)
 
-   cosa è successo: .........................................................................
+   sec ___    cosa hai visto: ................................................................
+   ........................................................................................
    ........................................................................................
 
+
+----------------------------------------------------------------------------------------------
+guarda:  esita · rilegge · «dipende» · faccia · penna che si ferma                    p. 3/8
+
 q008
-L'ultima volta che un numero è risultato sbagliato - un totale che non tornava, una giacenza
+L'ultima volta che un numero è risultato sbagliato — un totale che non tornava, una giacenza
 diversa dal magazzino, due sistemi in disaccordo: cosa è cambiato dopo?
 
    [ ] Niente: è capitato di nuovo
@@ -130,19 +176,21 @@ diversa dal magazzino, due sistemi in disaccordo: cosa è cambiato dopo?
    [ ] Abbiamo trovato da dove veniva
    [ ] Abbiamo cambiato il modo in cui quel dato si tiene, e non è più successo
 
-   cosa è successo: .........................................................................
+   sec ___    cosa hai visto: ................................................................
+   ........................................................................................
    ........................................................................................
 
 q009
-I documenti che servirebbero a rispondere a una domanda di un cliente - offerte fatte,
-manuali, storico - dove stanno?
+I documenti che servirebbero a rispondere a una domanda di un cliente — offerte fatte,
+manuali, storico — dove stanno?
 
    [ ] Ognuno ha i suoi, sul proprio computer o nella propria posta
    [ ] In cartelle condivise, ma bisogna sapere dove guardare
    [ ] In un posto solo, organizzati
    [ ] In un posto solo, e si trovano cercando
 
-   cosa è successo: .........................................................................
+   sec ___    cosa hai visto: ................................................................
+   ........................................................................................
    ........................................................................................
 
 
@@ -156,9 +204,10 @@ lavoro?
    [ ] Affiancata da qualcuno, con i suoi appunti
    [ ] Con del materiale scritto, più l'affiancamento
    [ ] Con una procedura scritta, che usa ancora adesso
-   [ ] Non è mai entrato nessuno: siamo gli stessi dall'inizio
+   [ ] (n/a) Non è mai entrato nessuno: siamo gli stessi dall'inizio
 
-   cosa è successo: .........................................................................
+   sec ___    cosa hai visto: ................................................................
+   ........................................................................................
    ........................................................................................
 
 q011
@@ -170,19 +219,25 @@ l'ultima volta?
    [ ] Più di due anni fa
    [ ] Nell'ultimo anno
 
-   cosa è successo: .........................................................................
+   sec ___    cosa hai visto: ................................................................
+   ........................................................................................
    ........................................................................................
 
+
+----------------------------------------------------------------------------------------------
+guarda:  esita · rilegge · «dipende» · faccia · penna che si ferma                    p. 4/8
+
 q012
-L'ultima volta che qualcosa è andato storto nel processo che ti porta più fatturato - un
-ordine sbagliato, una consegna saltata, un lavoro da rifare - chi se n'è accorto per primo?
+L'ultima volta che qualcosa è andato storto nel processo che ti porta più fatturato — un
+ordine sbagliato, una consegna saltata, un lavoro da rifare — chi se n'è accorto per primo?
 
    [ ] Il cliente
    [ ] Noi, ma a cose fatte: sui conti, o rifacendo il lavoro
    [ ] Chi ci stava lavorando, mentre succedeva
    [ ] Un controllo automatico, prima che facesse danni
 
-   cosa è successo: .........................................................................
+   sec ___    cosa hai visto: ................................................................
+   ........................................................................................
    ........................................................................................
 
 
@@ -197,7 +252,8 @@ formazione sull'AI negli ultimi dodici mesi?
    [ ] Più della metà
    [ ] Tutte, o quasi
 
-   cosa è successo: .........................................................................
+   sec ___    cosa hai visto: ................................................................
+   ........................................................................................
    ........................................................................................
 
 q014
@@ -208,7 +264,8 @@ C'è qualcuno a cui gli altri chiedono, quando hanno un dubbio sull'uso dell'AI?
    [ ] Sì, e fa parte di quello che ci si aspetta da quella persona
    [ ] Sì, ed è parte del suo ruolo, con del tempo dedicato
 
-   cosa è successo: .........................................................................
+   sec ___    cosa hai visto: ................................................................
+   ........................................................................................
    ........................................................................................
 
 q015
@@ -220,14 +277,19 @@ accorti?
    [ ] Se n'è accorto chi lo stava usando, controllando il risultato
    [ ] Controlliamo sempre quello che esce, prima di usarlo
 
-   cosa è successo: .........................................................................
+   sec ___    cosa hai visto: ................................................................
+   ........................................................................................
    ........................................................................................
 
+
+----------------------------------------------------------------------------------------------
+guarda:  esita · rilegge · «dipende» · faccia · penna che si ferma                    p. 5/8
+
 
 — TECNOLOGIA E CONTROLLO —
 
 q016
-Nell'ultimo mese, dati di clienti sono finiti in un servizio AI pubblico - cioè un servizio
+Nell'ultimo mese, dati di clienti sono finiti in un servizio AI pubblico — cioè un servizio
 online dove quello che scrivi arriva sui server del fornitore?
 
    [ ] Sì, succede
@@ -235,7 +297,8 @@ online dove quello che scrivi arriva sui server del fornitore?
    [ ] No: c'è una regola scritta, e ne abbiamo parlato con tutti
    [ ] No: c'è una regola, e abbiamo controllato che regga davvero
 
-   cosa è successo: .........................................................................
+   sec ___    cosa hai visto: ................................................................
+   ........................................................................................
    ........................................................................................
 
 q017
@@ -246,19 +309,21 @@ I dati che metti negli strumenti AI: sai in che paese vengono elaborati?
    [ ] Sappiamo in che paese: l'abbiamo letto nel contratto
    [ ] Lavorano su macchine nostre, o da un fornitore scelto anche per questo
 
-   cosa è successo: .........................................................................
+   sec ___    cosa hai visto: ................................................................
+   ........................................................................................
    ........................................................................................
 
 q018
-L'ultima volta che avete esportato i vostri dati da un servizio che usate - il gestionale, il
-cloud, uno strumento AI - per averne una copia vostra o portarli altrove: quando è stato?
+L'ultima volta che avete esportato i vostri dati da un servizio che usate — il gestionale, il
+cloud, uno strumento AI — per averne una copia vostra o portarli altrove: quando è stato?
 
    [ ] Mai, e non sapremmo da dove cominciare
    [ ] Mai, ma sappiamo che si può: l'abbiamo letto nel contratto
    [ ] Almeno una volta, quando è servito
    [ ] Lo facciamo regolarmente: una copia dei nostri dati è sempre nostra
 
-   cosa è successo: .........................................................................
+   sec ___    cosa hai visto: ................................................................
+   ........................................................................................
    ........................................................................................
 
 
@@ -272,9 +337,14 @@ Esiste una regola scritta su cosa si può e non si può fare con l'AI?
    [ ] C'è, in una mail o in un documento
    [ ] C'è, è stata comunicata, e chi la deve seguire sa dov'è
 
-   cosa è successo: .........................................................................
+   sec ___    cosa hai visto: ................................................................
+   ........................................................................................
    ........................................................................................
 
+
+----------------------------------------------------------------------------------------------
+guarda:  esita · rilegge · «dipende» · faccia · penna che si ferma                    p. 6/8
+
 q020
 Se domani un cliente ti chiedesse quali strumenti AI usi sui suoi dati, quanto ci metteresti
 a rispondere?
@@ -284,22 +354,21 @@ a rispondere?
    [ ] So dirlo, ma non è scritto da nessuna parte
    [ ] C'è un elenco aggiornato
 
-   cosa è successo: .........................................................................
+   sec ___    cosa hai visto: ................................................................
+   ........................................................................................
    ........................................................................................
 
 q021
-L'ultimo strumento nuovo entrato in azienda - AI o no: chi ha detto sì?
+L'ultimo strumento nuovo entrato in azienda — AI o no: chi ha detto sì?
 
    [ ] Nessuno: chi lo voleva ha cominciato a usarlo
    [ ] Il reparto che lo voleva, da solo
    [ ] Qualcuno l'ha approvato, ma dipende da chi chiede
    [ ] C'è un passaggio, ed è lo stesso per tutti
 
-   cosa è successo: .........................................................................
+   sec ___    cosa hai visto: ................................................................
    ........................................................................................
-
-
-— UN'ULTIMA COSA —
+   ........................................................................................
 
 q022
 Nell'ultimo anno un cliente ti ha mandato un questionario sulla sicurezza informatica, o ti
@@ -309,21 +378,60 @@ ha chiesto di firmare clausole su notifica degli incidenti e diritto di verifica
    [ ] Sì, una volta
    [ ] Sì, e capita sempre più spesso
    [ ] Non lo so: se ne occupa qualcun altro
-   [ ] Non abbiamo ancora clienti   (solo se q002 = «Meno di un anno» oppure «Da 1 a 3 anni»)
+   [ ] (n/a) Non abbiamo ancora clienti (solo se q002 è «Meno di un anno» o «Da 1 a 3 anni»)
 
-   cosa è successo: .........................................................................
+   sec ___    cosa hai visto: ................................................................
    ........................................................................................
+   ........................................................................................
+
+
+----------------------------------------------------------------------------------------------
+guarda:  esita · rilegge · «dipende» · faccia · penna che si ferma                    p. 7/8
+
 
 ==============================================================================================
 
-DOPO, A CALDO — tre righe, prima di dimenticare
+SUBITO DOPO, A CALDO — prima di dimenticare
 ----------------------------------------------------------------------------------------------
+
 Quale domanda ha funzionato peggio, e cosa ha detto esattamente?
    ........................................................................................
 
-Quale opzione non ha scelto nessuno?
+Su quale sonda non è riuscito a raccontare l'ultima volta?
    ........................................................................................
 
-Quanto è durata davvero la compilazione?
+Quale opzione ha detto che gli mancava?
    ........................................................................................
 
+Quanto è durata: ____ minuti. Dove si è fermato più a lungo?
+   ........................................................................................
+
+
+
+==============================================================================================
+
+DOPO, IN PRIVATO — la fascia, per l'ultima domanda
+----------------------------------------------------------------------------------------------
+
+Ogni casella vale, da sinistra a destra: 0, 1, 2, 3. Le domande n/a non si contano né sopra
+né sotto; una domanda saltata vale 0 ma si conta sotto.
+
+   Casi d'uso e valore          q004 + q005 + q006  =  ____ / ____  →  ____ %
+   Dati                         q007 + q008 + q009  =  ____ / ____  →  ____ %
+   Processi                     q010 + q011 + q012  =  ____ / ____  →  ____ %
+   Competenze e persone         q013 + q014 + q015  =  ____ / ____  →  ____ %
+   Tecnologia e controllo       q016 + q017 + q018  =  ____ / ____  →  ____ %
+   Governo e responsabilità     q019 + q020 + q021  =  ____ / ____  →  ____ %
+
+Media delle sei percentuali = ____ %. Poi la fascia:
+        0–24   Non hai ancora cominciato
+       25–49   Stai provando
+       50–74   Qualcosa è in produzione
+       75–100  L'AI è nel modo in cui lavori
+
+Se ha risposto «Non ne usiamo nessuno» alla q004, la fascia è la prima qualunque sia la
+media. Leggigliela e chiedi se ci si riconosce.
+
+
+----------------------------------------------------------------------------------------------
+guarda:  esita · rilegge · «dipende» · faccia · penna che si ferma                    p. 8/8

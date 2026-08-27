@@ -569,6 +569,37 @@ ARTICLES = [
 ]
 
 # -----------------------------------------------------------------------------------------------------------------
+#  d e r i v e d
+# -----------------------------------------------------------------------------------------------------------------
+
+# Quanti articoli sono pubblicati, scritto in lettere. La card su Chi siamo lo diceva a mano —
+# «Sei articoli» — ed è un contatore: al settimo articolo la pagina avrebbe cominciato a mentire,
+# in silenzio e in due lingue. Il sito è generato, quindi il numero lo genera il sito.
+#
+# In lettere e non in cifre perché è la forma che il resto delle pagine usa per i numeri piccoli:
+# «novecento operatori», «dodici mesi», «quattro università». Oltre il ventesimo articolo la cifra
+# torna comoda da sola, ed è per questo che c'è il ripiego.
+_NUMERI = {
+    "it": ["zero", "un", "due", "tre", "quattro", "cinque", "sei", "sette", "otto", "nove",
+           "dieci", "undici", "dodici", "tredici", "quattordici", "quindici", "sedici",
+           "diciassette", "diciotto", "diciannove", "venti"],
+    "en": ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+           "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen",
+           "seventeen", "eighteen", "nineteen", "twenty"],
+}
+
+
+def articoli_pubblicati(lang, maiuscola=False):
+    """«sei articoli» / «six articles», contati e concordati. Uno solo resta al singolare."""
+    n = sum(1 for a in ARTICLES if a.get("stato") == "pronto")
+    parola = _NUMERI[lang][n] if n < len(_NUMERI[lang]) else str(n)
+    nome = ("articolo" if n == 1 else "articoli") if lang == "it" else \
+           ("article" if n == 1 else "articles")
+    testo = f"{parola} {nome}"
+    return testo[0].upper() + testo[1:] if maiuscola else testo
+
+
+# -----------------------------------------------------------------------------------------------------------------
 #  s h a r e d   c h r o m e
 # -----------------------------------------------------------------------------------------------------------------
 
@@ -1678,9 +1709,9 @@ PAGES = [
                 ("spark", "Specialisti con un clic",
                  "Competenze verticali che si installano come le app: Assistente Legale, Ricercatore Web, "
                  "Screening CV.",
-                 ["Scrivi a Podz.AI, non devi scegliere lo specialista",
-                  "Podz.AI coinvolge lo specialista giusto",
-                  "Tre specialisti disponibili oggi, altri in arrivo"]),
+                 ["Scrivi a Podz.AI, allo specialista ci pensa lui",
+                  "Podz.AI coinvolge quello giusto per la domanda",
+                  "Se ne installano e se ne aggiornano uno per volta"]),
             ],
             "steps_title": "Per chi l'abbiamo costruito",
             "steps_intro": "Podz.AI è per chi non può caricare i documenti dei clienti su un servizio esterno.",
@@ -1772,9 +1803,9 @@ PAGES = [
                   "The user decides what may leave"]),
                 ("spark", "One-click specialists",
                  "Expertise you install like an app: Legal Assistant, Web Researcher, CV Screening.",
-                 ["You always talk to one assistant",
-                  "Podz.AI brings in the right specialist",
-                  "Three specialists available today, more on the way"]),
+                 ["You write to Podz.AI, it picks the specialist",
+                  "Podz.AI brings in the right one for the question",
+                  "They install and update one at a time"]),
             ],
             "steps_title": "Who we built it for",
             "steps_intro": "Podz.AI is for people who cannot put client documents on an outside service.",
@@ -2307,7 +2338,8 @@ PAGES = [
                 "sull'impalcatura.",
             ],
             "cards_title": "Il lavoro pubblico",
-            "cards_intro": "Uno studio con revisione paritaria, un prodotto che si scarica, sei articoli.",
+            "cards_intro": f"Uno studio con revisione paritaria, un prodotto che si scarica, "
+                           f"{articoli_pubblicati('it')}.",
             "cards": [
                 ("data", "Uno studio con revisione paritaria",
                  "Novecento operatori dell'emergenza seguiti per dodici mesi, in uno studio pubblicato "
@@ -2328,7 +2360,7 @@ PAGES = [
                  "Dove passa il confine di un agente AI, cosa distingue un numero da una misura, "
                  "quanto dura un dispositivo che nessuno aggiorna: le domande che vengono prima "
                  "della tecnologia.",
-                 ["Sei articoli, in italiano e in inglese",
+                 [f"{articoli_pubblicati('it', maiuscola=True)}, in italiano e in inglese",
                   "Le fonti in fondo a ciascuno",
                   "<a href=\"/insights/\">Leggi gli articoli</a>"]),
             ],
@@ -2444,7 +2476,8 @@ PAGES = [
                 "registered trademark. The work goes on your problem, not on the scaffolding.",
             ],
             "cards_title": "Published work",
-            "cards_intro": "A peer-reviewed study, a product you can download, six articles.",
+            "cards_intro": f"A peer-reviewed study, a product you can download, "
+                           f"{articoli_pubblicati('en')}.",
             "cards": [
                 ("data", "A peer-reviewed study",
                  "Nine hundred emergency workers followed for twelve months, in a study published in "
@@ -2464,7 +2497,7 @@ PAGES = [
                  "Where the boundary of an AI agent falls, what separates a number from a "
                  "measurement, how long a device lasts when nobody updates it: the questions that "
                  "come before the technology.",
-                 ["Six articles, in Italian and English",
+                 [f"{articoli_pubblicati('en', maiuscola=True)}, in Italian and English",
                   "Sources at the foot of each one",
                   "<a href=\"/en/insights/\">Read the articles</a>"]),
             ],
