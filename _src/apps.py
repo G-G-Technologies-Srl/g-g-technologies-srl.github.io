@@ -785,7 +785,23 @@ APPS = [
         "en": {
             "slug": "en/app/spronia",
             "short": "SPRONIA",
-            "title": "SPRONIA — a flying joust in the browser | G&G Technologies",
+            # **Qui le due lingue non si traducono, ed è voluto.**
+            #
+            # L'italiano dice «giostra in volo», che è il traducente esatto e una parola comune.
+            # L'inglese direbbe «flying joust» — la stessa parola, altrettanto comune, in uso dal
+            # Trecento — ma in inglese quella parola è **anche il titolo di un gioco del 1982**, e
+            # un `<title>` è il posto in cui una parola pesa di più: è quello che finisce nei
+            # risultati di ricerca.
+            #
+            # Non è una questione di diritto: usare un termine descrittivo per dire cos'è un
+            # prodotto è uso descrittivo, e il NOTICE nega per iscritto qualunque parentela. È che
+            # non c'è ragione di sembrare a pesca di quel traffico. Nel corpo della pagina la parola
+            # resta, perché lì descrive e non intesta.
+            #
+            # Ed è il § «il traducente corretto non è simmetrico» del CLAUDE.md alla radice, letto
+            # al contrario: qui a divergere non è la traduzione, è quanto costa la stessa parola
+            # nelle due lingue.
+            "title": "SPRONIA — an aerial duel in the browser | G&G Technologies",
             "description": "You fly by flapping, and on contact the higher rider wins. It runs in "
                            "the browser: no account, no server, and the high score table stays on "
                            "this computer.",
