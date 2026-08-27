@@ -9,6 +9,27 @@ the repository has a .nojekyll at the root — which is what lets app/_lib/ be s
 _src/ is served too. Nothing secret goes in here; the repository is public anyway.
 """
 
+# Il primo sistema di machine learning messo in produzione, con la sua data. È la prova dell'h1
+# dell'hero — «Facevamo machine learning prima che si chiamasse AI» — che per anni è stato
+# un'affermazione senza niente sotto. «Primi anni Duemila» e non un anno esatto: la voce di
+# timeline che lo contiene apre nel 2002, e un anno più preciso di quella la contraddirebbe.
+IT_ML = ("Fra le cose progettate, machine learning in produzione da prima che si chiamasse AI. "
+         "Il primo è dei primi anni Duemila e sorvegliava un magazzino a scaffalature mobili — "
+         "quelle che scorrono su binari e aprono un corridoio per volta: prima che il corridoio si "
+         "richiudesse, una telecamera verificava che fosse libero, riconoscendo persone e ingombri "
+         "in una luce di capannone che cambia da mattina a sera. Più tardi, machine learning "
+         "applicato al controllo qualità.")
+EN_ML = ("Among the things designed, machine learning in production before it was called AI. The "
+         "first dates from the early 2000s and watched over a mobile-racking warehouse — the kind "
+         "that runs on rails and opens one aisle at a time: before the aisle closed again, a camera "
+         "checked it was clear, recognising people and obstructions in shed light that shifts from "
+         "morning to evening. Later, machine learning applied to quality control.")
+
+# Testi che vivono anche in _src/home.html, che è scritto a mano e non può importare da qui.
+# check_site.py verifica che la home li contenga alla lettera: è l'ottava variante della trappola
+# dei due posti, e l'unica difesa possibile è un controllo che fa fallire il build.
+SHARED_WITH_HOME = (IT_ML, EN_ML)
+
 SITE = "https://ggtechnologies.sm"
 PODZ_SITE = "https://ggtechnologies.sm/digisense-releases"
 
@@ -806,12 +827,18 @@ PAGES = [
                     "segue in continuo l'elettrocardiogramma e il respiro di paramedici e operatori sanitari "
                     "mentre lavorano, e porta gli allarmi a una centrale in tempo reale.",
                     "Sono stati seguiti 900 fra paramedici e operatori dell'emergenza, per dodici mesi. "
-                    # «Fra cui», non un elenco chiuso: home e Chi siamo dicono «quattro università», e
-                    # qui se ne leggevano tre. Chi contava trovava una contraddizione. Quando la quarta
-                    # è confermata sul paper, si aggiunge qui e l'elenco torna completo.
+                    # Affiliazioni verificate sul paper il 27/08/2026: sono dieci, e le università
+                    # distinte quattro — Bologna (due dipartimenti), la Kore di Enna, la Politecnica
+                    # delle Marche e la Johns Hopkins University, Division of Cardiology. Il «quattro»
+                    # era quindi giusto fin dall'inizio, ed era l'elenco a essere incompleto.
+                    #
+                    # La Johns Hopkins University chiede di essere nominata solo dove compare davvero
+                    # fra i firmatari di una pubblicazione. Questa è l'unica pagina che soddisfa la
+                    # condizione, perché la citazione completa con il DOI sta poche righe più sotto.
+                    # Altrove — home, card di Chi siamo — il sito dice «quattro università» e basta.
                     "G&amp;G Technologies è una delle affiliazioni dello studio, insieme al CNR e a "
-                    "quattro università, fra cui l'Università di Bologna, la Johns Hopkins University e "
-                    "l'Università Politecnica delle Marche. Il nostro amministratore delegato, "
+                    "quattro università: Bologna, la Kore di Enna, la Politecnica delle Marche e la "
+                    "Johns Hopkins University. Il nostro amministratore delegato, "
                     "<strong>Gian Angelo Geminiani</strong>, ne è il secondo autore.",
                     "Un'altra affiliazione è AccYouRate Group, che progetta, brevetta e produce i "
                     "dispositivi indossabili: lì Geminiani è stato direttore "
@@ -940,8 +967,8 @@ PAGES = [
                     "raises alarm events to a control centre in real time.",
                     "900 paramedics and emergency workers were followed for twelve months. "
                     "G&amp;G Technologies is one of the affiliations on the study, alongside the Italian "
-                    "National Research Council and four universities, among them the University of "
-                    "Bologna, Johns Hopkins University and Università Politecnica delle Marche. Our "
+                    "National Research Council and four universities: Bologna, Kore University of "
+                    "Enna, Università Politecnica delle Marche and Johns Hopkins University. Our "
                     "chief executive, <strong>Gian Angelo Geminiani</strong>, is its second author.",
                     "Another affiliation is AccYouRate Group, which designs, patents and manufactures the "
                     "wearable devices themselves: Geminiani was its chief technology officer "
@@ -2327,8 +2354,7 @@ PAGES = [
                 ("2002 – 2020 · Diciotto anni in Gruppo Fontanot",
                  "Project manager e architetto software, poi CIO, poi responsabile dello sviluppo e "
                  "manager dell'innovazione digitale del gruppo. Processi produttivi, logistica, "
-                 "rete vendita, configuratori. Fra le cose progettate, machine learning applicato "
-                 "al controllo qualità."),
+                 "rete vendita, configuratori. " + IT_ML),
                 ("2007 – 2008 · Ricerca all'Università di Bologna",
                  "A Scienze degli Alimenti, una piattaforma di tracciabilità per l'ortofrutta di "
                  "quarta gamma — insalate e frutta già lavate e confezionate: etichette RFID "
@@ -2434,8 +2460,8 @@ PAGES = [
             "cards": [
                 ("data", "A peer-reviewed study",
                  "Nine hundred emergency workers followed for twelve months, in a study published in "
-                 "“Sensors” with the Italian National Research Council and four universities. It "
-                 "has a permanent identifier.",
+                 "“Sensors” with the Italian National Research Council and four universities. It has a "
+                 "permanent identifier.",
                  ["Geminiani is its second author",
                   "Open access, CC BY licence",
                   "<a href=\"/en/services/medical-wearables/\">The page that tells it</a>"]),
@@ -2462,8 +2488,7 @@ PAGES = [
                 ("2002 – 2020 · Eighteen years at Gruppo Fontanot",
                  "Project manager and software architect, then CIO, then head of development and "
                  "digital innovation manager for the group. Production processes, logistics, sales "
-                 "network, configurators. Among the things designed, machine learning applied to "
-                 "quality control."),
+                 "network, configurators. " + EN_ML),
                 ("2007 – 2008 · Research at the University of Bologna",
                  "At Food Science, a traceability platform for fresh-cut fruit and vegetables — washed "
                  "and packed, ready to eat: RFID labels read on the products and an algorithm that "

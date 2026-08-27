@@ -16,7 +16,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from content import BANNED, CHROME, PAGES  # noqa: E402
+from content import BANNED, CHROME, PAGES, SHARED_WITH_HOME  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 SITE = "https://ggtechnologies.sm"
@@ -440,6 +440,23 @@ def _check_sitemap(problems, canonical):
     return len(listed)
 
 
+def _check_shared_with_home(problems):
+    """I testi dichiarati condivisi devono comparire alla lettera in _src/home.html.
+
+    La home è scritta a mano e non può importare da content.py, quindi certi passaggi vivono in due
+    file. `SHARED_WITH_HOME` è l'elenco di quelli che devono restare identici: correggerne uno solo
+    lascia il sito a raccontare due versioni della stessa cosa, e finora nessun controllo lo vedeva.
+    """
+    home_src = ROOT / "_src" / "home.html"
+    if not home_src.exists():
+        return
+    text = re.sub(r"\s+", " ", home_src.read_text(encoding="utf-8"))
+    for shared in SHARED_WITH_HOME:
+        if re.sub(r"\s+", " ", shared) not in text:
+            problems.append(f"_src/home.html: manca il testo condiviso con content.py — "
+                            f"«{_strip(shared)[:70]}…»")
+
+
 def _check_hero_stats_agree(problems):
     """I tre numeri dell'hero stanno in due posti, e devono dire la stessa cosa.
 
@@ -535,6 +552,7 @@ def main():
     _check_footers_agree(problems)
     _check_home_bullets_agree(problems)
     _check_hero_stats_agree(problems)
+    _check_shared_with_home(problems)
     _check_faq_voice(problems)
     _check_faq_contractions(problems)
     _check_reachable(problems)

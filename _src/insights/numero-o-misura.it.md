@@ -150,7 +150,7 @@ Il test di prima serve a leggere il dispositivo di qualcun altro. Se il disposit
 
 Progettiamo dispositivi indossabili per l'ambito medicale e sportivo, e dove passa questa linea è una domanda che ci facciamo su ogni progetto, prima dell'elettronica.
 
-Quello che sappiamo di questo confine viene da un lavoro che chiunque può controllare: uno studio pubblicato su «Sensors», rivista con revisione paritaria — cioè valutata prima della pubblicazione da ricercatori indipendenti del settore — in cui sono stati seguiti per dodici mesi novecento fra paramedici e operatori dell'emergenza, con l'elettrocardiogramma e il respiro registrati mentre lavoravano. G&G Technologies è una delle affiliazioni, insieme al Consiglio Nazionale delle Ricerche, all'Università di Bologna, alla Johns Hopkins University e all'Università Politecnica delle Marche. Chi firma questo articolo ne è il secondo autore.
+Quello che sappiamo di questo confine viene da un lavoro che chiunque può controllare: uno studio pubblicato su «Sensors», rivista con revisione paritaria — cioè valutata prima della pubblicazione da ricercatori indipendenti del settore — in cui sono stati seguiti per dodici mesi novecento fra paramedici e operatori dell'emergenza, con l'elettrocardiogramma e il respiro registrati mentre lavoravano. G&G Technologies è una delle affiliazioni, insieme al Consiglio Nazionale delle Ricerche e a quattro università. Chi firma questo articolo ne è il secondo autore.
 
 Lo studio ha un DOI, cioè un identificatore permanente che porta sempre allo stesso documento anche se cambia il sito che lo ospita. È in fondo a questa pagina.
 

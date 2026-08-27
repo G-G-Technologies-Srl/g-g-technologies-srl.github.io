@@ -150,7 +150,7 @@ The test above is for reading somebody else's device. If you are the one designi
 
 We design wearable devices for medical and sports use, and where this line falls is a question we ask ourselves on every project, before the electronics.
 
-What we know about this boundary comes from work anyone can check: a study published in Sensors, a peer-reviewed journal — meaning assessed before publication by independent researchers in the field — in which nine hundred paramedics and emergency workers were followed for twelve months, with their electrocardiogram and breathing recorded while they worked. G&G Technologies is one of the affiliations, alongside Italy's National Research Council, the University of Bologna, Johns Hopkins University and Università Politecnica delle Marche. The author of this article is its second author.
+What we know about this boundary comes from work anyone can check: a study published in Sensors, a peer-reviewed journal — meaning assessed before publication by independent researchers in the field — in which nine hundred paramedics and emergency workers were followed for twelve months, with their electrocardiogram and breathing recorded while they worked. G&G Technologies is one of the affiliations, alongside Italy's National Research Council and four universities. The author of this article is its second author.
 
 The study has a DOI, a permanent identifier that always leads to the same document even when the site hosting it changes. It is at the foot of this page.
 
