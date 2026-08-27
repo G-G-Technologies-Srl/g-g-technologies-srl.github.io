@@ -139,8 +139,8 @@ bastano.
 ## Il giro completo
 
 ```bash
-python3 _src/make_spronia_sheet.py
-python3 _src/make_spronia_sprites.py
+python3 _src/spronia/sheet.py
+python3 _src/spronia/sprites.py
 node app/spronia/test/physics.mjs
 ```
 

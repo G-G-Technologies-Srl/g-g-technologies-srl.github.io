@@ -1,6 +1,6 @@
 // Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
 
-// GENERATO da _src/make_spronia_sprites.py — non si modifica a mano.
+// GENERATO da _src/spronia/sprites.py — non si modifica a mano.
 //
 // Il disegno sorgente sta in app/spronia/art/. Per cambiare gli sprite si ridisegna il
 // foglio e si rilancia lo script: una trascrizione a mano di quindicimila pixel è una cosa
