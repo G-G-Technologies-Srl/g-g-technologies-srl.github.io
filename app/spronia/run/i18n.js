@@ -181,8 +181,9 @@ const IT = {
   themeToLight: "Passa al tema chiaro",
   themeToDark: "Passa al tema scuro",
   langSwitch: "Switch to English",
-  installButton: "Installa",
-  installIos: "Per installare: Condividi, poi «Aggiungi a Home».",
+  installButton: "Installala sul telefono",
+  installIos: "Per averla sul telefono: Condividi, poi «Aggiungi a Home». Tocca qui per non "
+    + "rivederlo.",
   backToPage: "Torna alla scheda",
   sourceLabel: "Codice sorgente",
 };
@@ -318,8 +319,9 @@ const EN = {
   themeToLight: "Switch to the light theme",
   themeToDark: "Switch to the dark theme",
   langSwitch: "Passa all'italiano",
-  installButton: "Install",
-  installIos: "To install: Share, then “Add to Home Screen”.",
+  installButton: "Put it on your phone",
+  installIos: "To keep it on your phone: Share, then “Add to Home Screen”. Tap here to stop "
+    + "seeing this.",
   backToPage: "Back to the app page",
   sourceLabel: "Source code",
 };

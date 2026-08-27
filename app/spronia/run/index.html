@@ -51,7 +51,10 @@
     <span class="brand">SPRONIA</span>
     <span class="meta" data-t="tagline"></span>
     <span class="spacer"></span>
-    <button type="button" id="install" class="ghost small" hidden></button>
+    <!-- **L'invito a installare non sta qui**, sta nel pannello di fine partita.
+         Nella barra chiedeva di installare un gioco a cui non avevi ancora giocato, e si prendeva
+         sessanta pixel nella riga che su un telefono ne ha già pochi. A fine partita la domanda ha
+         una risposta, ed è la prima volta che ce l'ha. -->
     <button type="button" id="lang" class="ghost small"></button>
     <!-- L'icona cambia con lo stato, non solo l'etichetta: l'onda quando suona, la croce quando no.
          Un pulsante che resta identico dopo che l'hai premuto non dice di aver fatto niente, e
@@ -89,7 +92,6 @@
     <button type="button" id="pauseButton" class="ghost small" data-t="pause"></button>
   </div>
 
-  <p class="hint" id="installHint" hidden></p>
 </header>
 
 <main id="main">
@@ -221,7 +223,16 @@
           <button type="button" id="coinAgain" class="linkish" data-t="playAgain"></button>
           ·
           <button type="button" id="scoresFromOver" class="linkish" data-t="scoresTitle"></button>
+          <!-- Compare da solo quando il browser dice che si può installare, e sparisce quando è
+               installata o quando hai risposto una volta. Della stessa taglia dei due accanto: è una
+               cosa che si può fare adesso, non una che va fatta.
+               Il punto che lo separa se lo porta dietro nel CSS, così compare e sparisce con lui
+               senza che nessuno debba ricordarsi di nasconderlo. -->
+          <button type="button" id="install" class="linkish" hidden></button>
         </p>
+        <!-- Su iPhone non esiste nessun invito da rimandare: installare passa da Condividi, e
+             l'unica cosa che si può fare è dirlo. Stessa riga, stesso momento. -->
+        <p class="small" id="installHint" hidden></p>
       </div>
     </section>
 

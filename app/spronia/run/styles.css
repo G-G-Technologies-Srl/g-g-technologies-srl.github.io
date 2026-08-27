@@ -250,6 +250,23 @@ main {
 
 .big { font-size: 16px; padding: 11px 26px; }
 
+/* Il punto che separa l'invito a installare dai due comandi accanto. Sta nel CSS e non nel markup
+   perché così **compare e sparisce con il pulsante**: un separatore che è un elemento a sé va
+   nascosto da qualcuno, e quel qualcuno prima o poi se ne dimentica — lasciando un punto solitario
+   in fondo alla riga.
+
+   `pointer-events: none` perché il punto non è un comando: chi lo prende di striscio col pollice non
+   deve installare niente. */
+#install:not([hidden])::before {
+  content: "· ";
+  color: var(--faint);
+  pointer-events: none;
+}
+
+/* L'unica riga di questa app che parla di iPhone. Non ha un pulsante da premere — installare passa
+   da Condividi — quindi è una frase, e si chiude toccandola. */
+#installHint { cursor: pointer; }
+
 .choose { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; }
 
 /* ---------------------------------------------------------------------------------------------
