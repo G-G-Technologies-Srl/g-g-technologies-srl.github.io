@@ -1,5 +1,10 @@
 User-agent: *
 Allow: /
 
+# I sorgenti del sito non stanno più nel repository, quindi qui non arrivano. La riga resta per i
+# commit vecchi, che su GitHub restano leggibili: se un motore avesse indicizzato un indirizzo
+# sotto /_src/ prima della rimozione, questo gli dice di lasciarlo perdere.
+Disallow: /_src/
+
 Sitemap: https://ggtechnologies.sm/sitemap.xml
 Sitemap: https://ggtechnologies.sm/digisense-releases/sitemap.xml
