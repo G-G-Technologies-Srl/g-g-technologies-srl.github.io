@@ -111,6 +111,21 @@ button {
 
 button:hover:not(:disabled) { border-color: var(--border-strong); }
 
+/* **Il testo di un comando è un'etichetta, non contenuto.** Trascinando sopra un pulsante — o
+   toccandolo un attimo di troppo sul telefono — il browser ne seleziona la scritta: compare
+   l'evidenziazione, sul telefono spesso anche la lente e il menù «copia», e per un istante il
+   comando sembra rotto invece che premuto. Non c'è nessun caso in cui qualcuno voglia copiare la
+   parola «Stampa».
+   Vale per i comandi, **non per i link e non per il testo**: l'etichetta di una fonte normativa —
+   «AI Act, art. 50(1)» — si copia eccome, ed è il punto di tutta la sezione della conformità. Per
+   questo la regola nomina `button`, `summary` e `label`, e si ferma lì.
+   Il prefisso `-webkit-` resta per i Safari più vecchi, dove quello senza non è supportato. */
+button, summary, label, [role="button"] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+
 /* A control that cannot do anything has to look like it. Several already switched themselves off —
    zooming out with the whole file on screen, playing something that has nowhere to scroll — and
    without this rule they went on looking exactly as clickable as the rest, so the only feedback
@@ -255,6 +270,7 @@ button:disabled, input:disabled {
    --------------------------------------------------------------------------------------------- */
 
 .foot {
+  position: relative;
   display: flex;
   gap: 14px;
   align-items: center;
@@ -266,3 +282,59 @@ button:disabled, input:disabled {
 }
 
 .foot a { color: var(--faint); }
+
+/* ---------------------------------------------------------------- il marchio nel piè di pagina
+
+   Al centro, fra i comandi a sinistra e la licenza a destra, e porta al sito. È l'unico punto in cui
+   un'app dice da dove viene: le app si installano, si aprono da sole e vivono mesi senza che nessuno
+   ripassi dalla scheda.
+
+   **Maschera e non immagine.** Un `<img>` non eredita il colore, quindi in un'app che ha due temi
+   servirebbero due file e una regola per scegliere; `mask-image` con `background: currentColor`
+   segue il tema da sé. E la geometria sta qui come data URI invece che in un file dentro `_lib/`:
+   un file in più andrebbe aggiunto all'elenco di precache di tutte e quattro le app, e questo è un
+   arco e un punto. */
+
+/* **Ancorato al centro della pagina, non fra i due gruppi.** Due spaziatori `flex: 1` dividono lo
+   spazio libero in parti uguali, il che centra il marchio fra quello che ha a sinistra e quello che
+   ha a destra — e i due gruppi hanno larghezze diverse, «Torna alla scheda · Codice sorgente» contro
+   «Apache-2.0», quindi finiva spostato. Al centro *della pagina* ci si arriva solo uscendo dal
+   flusso. Gli spaziatori restano perché tengono separati i due gruppi. */
+.foot-brand {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--faint);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.foot-brand:hover { color: var(--text); }
+
+.foot-mark {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20100%20100%22%3E%3Cpath%20d=%22M50%2014%20A36%2036%200%201%200%2086%2050%20H66%22%20fill=%22none%22%20stroke=%22%23fff%22%20stroke-width=%2213%22%20stroke-linecap=%22round%22/%3E%3Ccircle%20cx=%2250%22%20cy=%2250%22%20r=%229%22%20fill=%22%23fff%22/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20100%20100%22%3E%3Cpath%20d=%22M50%2014%20A36%2036%200%201%200%2086%2050%20H66%22%20fill=%22none%22%20stroke=%22%23fff%22%20stroke-width=%2213%22%20stroke-linecap=%22round%22/%3E%3Ccircle%20cx=%2250%22%20cy=%2250%22%20r=%229%22%20fill=%22%23fff%22/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* Sotto i 520px il piè di pagina va a capo e i due spaziatori collassano: il marchio finirebbe
+   attaccato al bordo sinistro invece che al centro, cioè in un posto che nessuno ha scelto. Lì
+   prende la riga tutta per sé. */
+/* Sotto i 700px i due gruppi si allargano fino a passare sotto il marchio, che essendo fuori dal
+   flusso non li respinge: lì rientra, prende la riga per sé e resta centrato dal flusso normale. */
+@media (max-width: 700px) {
+  .foot-brand {
+    position: static;
+    transform: none;
+    width: 100%;
+    justify-content: center;
+    order: 9;
+  }
+}
+

@@ -1,0 +1,1099 @@
+{
+  "edition": 1,
+  "key": "nis2",
+  "respondent_question": "n004",
+  "notes": "nis2-nucleo.md",
+  "status": "published",
+  "revision": 2,
+  "note": "Secondo questionario dell'app. Il documento di progetto è _src/fonti/nis2-nucleo.md: le domande si scrivono lì prima che qui, e check_against_notes confronta i due testi. Revisione 2: le dieci correzioni della prova di chiarezza del 28 agosto, in _src/fonti/survey-scope-chiarezza.md. In ordine di gravita: «voi» comprende chi ti tiene i sistemi, detto nell'introduzione della prima sezione a punteggio, perche nove domande su ventidue hanno la risposta solo dal fornitore IT e chi compila da solo si dichiara peggio di com'e; n016 aveva quattro opzioni tutte affermative, unica del questionario senza un'uscita per chi non sa, e chi non sapeva prendeva la peggiore; n012 e il punto in cui un lettore ha smesso di compilare — non per la risposta, per la domanda — e ora chiede per esempi; n002 non afferma piu che il settore da solo qualifichi qualcuno, e n003 non fa piu dichiarare «non rientriamo» a chi ha appena detto il proprio settore; n001 dice chi contare, e la soglia dei cinquanta e di legge; n018 vale per tutt'e due i pubblici, con l'obbligo verso l'ACN nel suggerimento; tre suggerimenti chiedono il sistema messo peggio invece dell'ultimo, perche IT e impianti divergono e il punteggio alto copriva il buco; l'occhiello del ripristino non da piu una pacca sulla spalla al contrario, e n019 non chiede piu «restano tracce», che si leggeva come una domanda su cosa nascondi.",
+  "presentation": {
+    "tagline": {
+      "it": "Sicurezza e NIS2",
+      "en": "Security and NIS2"
+    },
+    "kicker": {
+      "it": "Ventidue domande",
+      "en": "Twenty-two questions"
+    },
+    "title": {
+      "it": "NIS2 Check",
+      "en": "NIS2 Check"
+    },
+    "lede": {
+      "it": "Quello che ti verrà chiesto sulla sicurezza, sapresti rispondertelo oggi? A chi è in perimetro lo chiederà l'ACN, a chi non lo è il suo cliente più importante. Le domande sono le stesse.",
+      "en": "The security questions you will be asked — could you answer them today? If you are in scope the ACN will ask them; if you are not, your most important customer will. The questions are the same."
+    },
+    "duration": {
+      "it": "Dieci minuti, e puoi fermarti a metà: quello che hai risposto resta.",
+      "en": "Ten minutes, and you can stop half way: what you answered stays."
+    },
+    "dimensions_title": {
+      "it": "Le sei dimensioni",
+      "en": "The six dimensions"
+    },
+    "appendix_note": {
+      "it": "Ventidue domande, e cosa hai scelto. Il punteggio è una descrizione che hai dato tu: chi riceve questo foglio deve poterla leggere, non solo il numero che ne esce.",
+      "en": "Twenty-two questions, and what you chose. The score is a description you gave: whoever receives this sheet has to be able to read it, not only the number it produces."
+    }
+  },
+  "dimensions": [
+    {
+      "id": "d1",
+      "text": {
+        "it": "Chi risponde",
+        "en": "Who answers for it"
+      }
+    },
+    {
+      "id": "d2",
+      "text": {
+        "it": "Cosa hai, e chi ci entra",
+        "en": "What you have, and who gets in"
+      }
+    },
+    {
+      "id": "d3",
+      "text": {
+        "it": "Aggiornamenti ed esposizione",
+        "en": "Updates and exposure"
+      }
+    },
+    {
+      "id": "d4",
+      "text": {
+        "it": "Ripristino",
+        "en": "Restoring"
+      }
+    },
+    {
+      "id": "d5",
+      "text": {
+        "it": "Incidenti",
+        "en": "Incidents"
+      }
+    },
+    {
+      "id": "d6",
+      "text": {
+        "it": "Fornitori e contratti",
+        "en": "Suppliers and contracts"
+      }
+    }
+  ],
+  "sections": [
+    {
+      "id": "s1",
+      "text": {
+        "it": "Chi sei, e cosa ti riguarda",
+        "en": "Who you are, and what applies to you"
+      },
+      "intro": {
+        "it": "Quattro domande su di te. Restano fuori dal punteggio: una stabilisce quali obblighi ti mostriamo, le altre servono a chi mette insieme più compilazioni.",
+        "en": "Four questions about you. They stay outside the score: one decides which obligations we show you, the others help whoever puts several runs together."
+      },
+      "questions": [
+        "n001",
+        "n002",
+        "n003",
+        "n004"
+      ]
+    },
+    {
+      "id": "s2",
+      "dimension": "d1",
+      "intro": {
+        "it": "Da qui «voi» comprende chi vi tiene i sistemi, anche se è di fuori: se la risposta ce l'ha lui, vale la sua. Tre domande su chi decide.",
+        "en": "From here «you» includes whoever keeps your systems, even from outside: if they have the answer, theirs counts. Three questions on who decides."
+      },
+      "questions": [
+        "n005",
+        "n006",
+        "n007"
+      ]
+    },
+    {
+      "id": "s3",
+      "dimension": "d2",
+      "intro": {
+        "it": "Non si protegge quello che non si sa di avere. Tre domande su cosa c'è e su chi ci entra.",
+        "en": "You cannot protect what you do not know you have. Three questions on what is there, and on who gets in."
+      },
+      "questions": [
+        "n008",
+        "n009",
+        "n010"
+      ]
+    },
+    {
+      "id": "s4",
+      "dimension": "d3",
+      "intro": {
+        "it": "Quasi tutti gli attacchi passano da qualcosa di vecchio o di esposto senza saperlo. Tre domande.",
+        "en": "Almost every attack comes through something old, or something exposed without anyone knowing. Three questions."
+      },
+      "questions": [
+        "n011",
+        "n012",
+        "n013"
+      ]
+    },
+    {
+      "id": "s5",
+      "dimension": "d4",
+      "intro": {
+        "it": "Un backup si conosce quando lo si riporta indietro. Tre domande su com'è andata l'ultima volta che è servito.",
+        "en": "A backup is only known once you have brought it back. Three questions on how it went the last time it was needed."
+      },
+      "questions": [
+        "n014",
+        "n015",
+        "n016"
+      ]
+    },
+    {
+      "id": "s6",
+      "dimension": "d5",
+      "intro": {
+        "it": "Accorgersene, e saperlo raccontare entro un tempo. Tre domande.",
+        "en": "Noticing, and being able to describe it within a set time. Three questions."
+      },
+      "questions": [
+        "n017",
+        "n018",
+        "n019"
+      ]
+    },
+    {
+      "id": "s7",
+      "dimension": "d6",
+      "intro": {
+        "it": "Quello che hai firmato, e quello che firmi ai tuoi clienti. Tre domande.",
+        "en": "What you have signed, and what you sign for your customers. Three questions."
+      },
+      "questions": [
+        "n020",
+        "n021",
+        "n022"
+      ]
+    }
+  ],
+  "bands": [
+    {
+      "from": 0,
+      "to": 24,
+      "text": {
+        "it": "Non sapresti cosa rispondere",
+        "en": "You would not know what to answer"
+      }
+    },
+    {
+      "from": 25,
+      "to": 49,
+      "text": {
+        "it": "Risponderesti a voce",
+        "en": "You would answer verbally"
+      }
+    },
+    {
+      "from": 50,
+      "to": 74,
+      "text": {
+        "it": "Avresti qualcosa da mandare",
+        "en": "You would have something to send"
+      }
+    },
+    {
+      "from": 75,
+      "to": 100,
+      "text": {
+        "it": "Avresti già pronto quasi tutto",
+        "en": "You would have nearly everything ready"
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "n001",
+      "text": {
+        "it": "Quante persone lavorano nella tua azienda?",
+        "en": "How many people work in your company?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Meno di 10",
+            "en": "Fewer than 10"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Da 10 a 49",
+            "en": "10 to 49"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Da 50 a 249",
+            "en": "50 to 249"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "250 o più",
+            "en": "250 or more"
+          }
+        }
+      ],
+      "hint": {
+        "it": "Chi c'è tutto l'anno, interinali compresi. La direttiva guarda cinquanta addetti oppure dieci milioni di fatturato, non solo le persone.",
+        "en": "Whoever is there all year, agency staff included. The directive looks at fifty employees or ten million in turnover, not only at people."
+      }
+    },
+    {
+      "id": "n002",
+      "text": {
+        "it": "In quale di questi settori lavori?",
+        "en": "Which of these sectors do you work in?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Nessuno di questi",
+            "en": "None of these"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Non ne sono sicuro",
+            "en": "I am not sure"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Manifattura, alimentare, rifiuti, poste, chimica o ricerca",
+            "en": "Manufacturing, food, waste, post, chemicals or research"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Energia, trasporti, sanità, acqua, banche, reti o PA",
+            "en": "Energy, transport, health, water, banks, networks or the state"
+          }
+        }
+      ],
+      "hint": {
+        "it": "La direttiva guarda il settore insieme alla dimensione: da soli non bastano né l'uno né l'altra. L'elenco sta negli allegati del D.Lgs. 138/2024.",
+        "en": "The directive looks at the sector together with size: neither is enough on its own. The list is in the annexes to Legislative Decree 138/2024."
+      }
+    },
+    {
+      "id": "n003",
+      "text": {
+        "it": "Il tuo rapporto con la NIS2, oggi",
+        "en": "Where you stand with NIS2 today"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Non so cosa sia la NIS2",
+            "en": "I do not know what NIS2 is"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Non so se ci riguarda, né se riguarda i miei clienti",
+            "en": "I do not know if it applies to us, or to my customers"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Non credo ci riguardi, ma vendiamo a chi ci rientra",
+            "en": "I do not think it applies, but we sell to those in scope"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Ci riguarda: dobbiamo adeguarci noi",
+            "en": "It applies to us: we have to comply"
+          }
+        }
+      ],
+      "hint": {
+        "it": "Il perimetro, e l'essere soggetto essenziale o importante, sono qualificazioni giuridiche: qui non si fanno. Mostriamo i criteri e la fonte.",
+        "en": "Being in scope, and being an essential or an important entity, are legal qualifications: not made here. We show the criteria and the source."
+      }
+    },
+    {
+      "id": "n004",
+      "text": {
+        "it": "Che ruolo hai?",
+        "en": "What is your role?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Altro",
+            "en": "Other"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Mi occupo di sistemi informativi o sicurezza",
+            "en": "I look after IT systems or security"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Dirigo un'area o un reparto",
+            "en": "I run an area or a department"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Guido l'azienda o ne sono socio",
+            "en": "I lead the company, or I am a partner"
+          }
+        }
+      ]
+    },
+    {
+      "id": "n005",
+      "text": {
+        "it": "Se domani un attacco vi bloccasse, chi prende le decisioni?",
+        "en": "If an attack stopped you tomorrow, who takes the decisions?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Non ci abbiamo pensato",
+            "en": "We have not thought about it"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Ci si arrangia, chiamando chi è disponibile",
+            "en": "We manage, by calling whoever is around"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "C'è una persona che tutti chiamerebbero, ma non è scritto",
+            "en": "One person everyone would call, but it is not written"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "C'è un nome scritto, e chi lo sostituisce se non c'è",
+            "en": "A name written down, and who stands in for them"
+          }
+        }
+      ],
+      "dimension": "d1",
+      "scored": true
+    },
+    {
+      "id": "n006",
+      "text": {
+        "it": "L'ultima volta che si è deciso qualcosa sulla sicurezza informatica, chi l'ha approvato?",
+        "en": "The last decision made about IT security: who approved it?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Non ricordo una decisione del genere",
+            "en": "I do not remember a decision like that"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "L'ha presa chi tiene i sistemi, e basta",
+            "en": "Whoever keeps the systems, and that was that"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "L'ha presa chi tiene i sistemi, e la direzione l'ha saputo",
+            "en": "Whoever keeps the systems, and management was told"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "L'ha approvata la direzione, e ne è rimasta traccia",
+            "en": "Management approved it, and a record was kept"
+          }
+        }
+      ],
+      "dimension": "d1",
+      "scored": true
+    },
+    {
+      "id": "n007",
+      "text": {
+        "it": "Chi usa i vostri sistemi ha ricevuto qualcosa sulla sicurezza nell'ultimo anno?",
+        "en": "Have the people who use your systems had anything on security this year?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "No",
+            "en": "No"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Se n'è parlato a voce",
+            "en": "It was mentioned verbally"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Qualcuno ha fatto una formazione",
+            "en": "Somebody did some training"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "L'hanno fatta tutti quelli che usano i sistemi, e c'è l'elenco",
+            "en": "Everyone who uses the systems did, and there is a list"
+          }
+        }
+      ],
+      "dimension": "d1",
+      "scored": true
+    },
+    {
+      "id": "n008",
+      "text": {
+        "it": "Esiste un elenco dei sistemi e dei servizi che usate?",
+        "en": "Is there a list of the systems and services you use?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "No",
+            "en": "No"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "C'è nella testa di qualcuno",
+            "en": "It is in somebody's head"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "C'è un elenco, ma non so quando è stato aggiornato",
+            "en": "There is a list, but I do not know when it was updated"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "C'è un elenco, e so chi lo aggiorna",
+            "en": "There is a list, and I know who updates it"
+          }
+        }
+      ],
+      "dimension": "d2",
+      "scored": true
+    },
+    {
+      "id": "n009",
+      "text": {
+        "it": "L'ultima persona che se n'è andata: quanto ci è voluto a chiuderle gli accessi?",
+        "en": "The last person who left: how long did it take to close their access?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Non lo so, o forse sono ancora aperti",
+            "en": "I do not know, they may still be open"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Ce ne siamo accorti dopo settimane",
+            "en": "We noticed weeks later"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Qualche giorno",
+            "en": "A few days"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Lo stesso giorno, perché è un passaggio previsto",
+            "en": "The same day, because it is a step we follow"
+          }
+        }
+      ],
+      "dimension": "d2",
+      "scored": true
+    },
+    {
+      "id": "n010",
+      "text": {
+        "it": "Per entrare nella posta o negli strumenti aziendali da fuori, serve un secondo fattore?",
+        "en": "To reach mail or work tools from outside, is a second factor needed?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "No",
+            "en": "No"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Solo per alcuni",
+            "en": "Only for some people"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Sì per quasi tutti, con qualche eccezione che conosciamo",
+            "en": "Yes for almost everyone, with exceptions we know of"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Sì per tutti, e chi non ce l'ha non entra",
+            "en": "Yes for everyone, and without it you do not get in"
+          }
+        }
+      ],
+      "dimension": "d2",
+      "scored": true
+    },
+    {
+      "id": "n011",
+      "text": {
+        "it": "Quando è stato installato l'ultimo aggiornamento di sicurezza importante?",
+        "en": "When was the last important security update installed?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Non lo so",
+            "en": "I do not know"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Quando qualcosa ha smesso di funzionare",
+            "en": "When something stopped working"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Ogni tanto, quando c'è tempo",
+            "en": "Now and then, when there is time"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "C'è una cadenza, e so quando è stata l'ultima volta",
+            "en": "There is a schedule, and I know when it last ran"
+          }
+        }
+      ],
+      "hint": {
+        "it": "Se i sistemi non sono tutti uguali, rispondi guardando quello messo peggio.",
+        "en": "If the systems are not all alike, answer for the one in the worst state."
+      },
+      "dimension": "d3",
+      "scored": true
+    },
+    {
+      "id": "n012",
+      "text": {
+        "it": "Cosa dei vostri sistemi si può aprire da internet, stando fuori dall'azienda?",
+        "en": "What of your systems can be opened from the internet, from outside?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Non lo so",
+            "en": "I do not know"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "So che qualcosa si apre da fuori",
+            "en": "I know something can be opened from outside"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "So cosa si apre, e perché",
+            "en": "I know what can be opened, and why"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "So cosa si apre e perché, e qualcuno l'ha provato da fuori",
+            "en": "I know what can be opened and why, and someone tried"
+          }
+        }
+      ],
+      "hint": {
+        "it": "Il portale del gestionale, l'accesso da casa, una telecamera che guardi dal telefono, il sito: tutto quello che si apre da fuori.",
+        "en": "The management portal, access from home, a camera you watch on your phone, the website: everything that opens from outside."
+      },
+      "dimension": "d3",
+      "scored": true
+    },
+    {
+      "id": "n013",
+      "text": {
+        "it": "L'ultima volta che avete comprato un servizio online, chi ha deciso che si poteva usare?",
+        "en": "The last time you bought an online service, who decided it could be used?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Se n'è accorto qualcuno dopo",
+            "en": "Somebody noticed afterwards"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Chi ne aveva bisogno",
+            "en": "Whoever needed it"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Chi ne aveva bisogno, sentito chi si occupa dei sistemi",
+            "en": "Whoever needed it, having asked whoever keeps them"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "C'è un passaggio previsto, e viene fatto",
+            "en": "There is a step we follow, and it gets followed"
+          }
+        }
+      ],
+      "dimension": "d3",
+      "scored": true
+    },
+    {
+      "id": "n014",
+      "text": {
+        "it": "L'ultima volta che avete ripristinato davvero qualcosa da un backup, com'è andata?",
+        "en": "The last time you actually restored something from a backup, how did it go?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Non l'abbiamo mai fatto",
+            "en": "We have never done it"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Ci abbiamo provato e non è andata",
+            "en": "We tried and it did not work"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "È andata, ma ci è voluto più del previsto",
+            "en": "It worked, but it took longer than expected"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "È andata, e sappiamo quanto ci vuole",
+            "en": "It worked, and we know how long it takes"
+          }
+        }
+      ],
+      "dimension": "d4",
+      "scored": true
+    },
+    {
+      "id": "n015",
+      "text": {
+        "it": "Se domani i vostri dati fossero cifrati da un attacco, in quanto tempo tornereste a lavorare?",
+        "en": "If your data were encrypted by an attack tomorrow, how soon would you work again?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Non lo sappiamo",
+            "en": "We do not know"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Settimane, credo",
+            "en": "Weeks, I think"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Qualche giorno",
+            "en": "A few days"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Lo sappiamo perché l'abbiamo misurato",
+            "en": "We know, because we have measured it"
+          }
+        }
+      ],
+      "hint": {
+        "it": "Se i sistemi non sono tutti uguali, rispondi guardando quello messo peggio.",
+        "en": "If the systems are not all alike, answer for the one in the worst state."
+      },
+      "dimension": "d4",
+      "scored": true
+    },
+    {
+      "id": "n016",
+      "text": {
+        "it": "Dove stanno le copie?",
+        "en": "Where are the copies kept?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Non lo so, o stanno sullo stesso sistema",
+            "en": "I do not know, or they are on the same system"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Su un altro sistema, raggiungibile con le stesse credenziali",
+            "en": "On another system, reached with the same credentials"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Su un altro sistema, con credenziali diverse",
+            "en": "On another system, with different credentials"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Anche in una copia che dall'azienda non si può cancellare",
+            "en": "Also a copy that cannot be deleted from inside"
+          }
+        }
+      ],
+      "dimension": "d4",
+      "scored": true
+    },
+    {
+      "id": "n017",
+      "text": {
+        "it": "L'ultima volta che qualcosa è andato storto sui sistemi, chi se n'è accorto per primo?",
+        "en": "The last time something went wrong on the systems, who noticed first?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Non è mai successo, che io sappia",
+            "en": "It has never happened, as far as I know"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Ce l'ha detto un cliente o un fornitore",
+            "en": "A customer or a supplier told us"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Se n'è accorto chi stava lavorando",
+            "en": "Whoever was working noticed it"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "L'abbiamo visto da un controllo che facciamo",
+            "en": "We saw it from a check we run"
+          }
+        }
+      ],
+      "dimension": "d5",
+      "scored": true
+    },
+    {
+      "id": "n018",
+      "text": {
+        "it": "Se succedesse qualcosa di serio stanotte, entro quando dovreste dirlo, e a chi?",
+        "en": "If something serious happened tonight, by when would you have to say so, and to whom?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Non lo so",
+            "en": "I do not know"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Quando ce ne accorgiamo, e poi si vede",
+            "en": "When we notice, and then we see"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "In giornata, a chi tocca",
+            "en": "Same day, to whoever it concerns"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Entro un tempo che conosciamo: per contratto o per legge",
+            "en": "Within a time we know: by contract or by law"
+          }
+        }
+      ],
+      "hint": {
+        "it": "Chi è in perimetro ha tempi di legge — pre-notifica e notifica, da quando se ne accorge — e li trovi con le date qui sotto. Gli altri hanno quelli firmati.",
+        "en": "In scope the times are set by law — pre-notification and notification, from when you notice — and you find them dated below. Others have what they signed."
+      },
+      "dimension": "d5",
+      "scored": true
+    },
+    {
+      "id": "n019",
+      "text": {
+        "it": "Di quello che succede sui sistemi resta un registro?",
+        "en": "Is a record kept of what happens on the systems?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "No, o non lo so",
+            "en": "No, or I do not know"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Da qualche parte c'è",
+            "en": "There is one somewhere"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "C'è, e so per quanto si conserva",
+            "en": "There is, and I know for how long it is kept"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "C'è, qualcuno lo guarda, e so per quanto si conserva",
+            "en": "There is, someone reads it, and I know for how long"
+          }
+        }
+      ],
+      "dimension": "d5",
+      "scored": true
+    },
+    {
+      "id": "n020",
+      "text": {
+        "it": "Con chi vi fornisce i sistemi, c'è scritto cosa deve fare se succede un incidente?",
+        "en": "With whoever supplies your systems, is it written what they do in an incident?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Non lo so",
+            "en": "I do not know"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "C'è un contratto, ma non l'ho letto con questi occhi",
+            "en": "There is a contract, but I have not read it for this"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "C'è, e dice qualcosa",
+            "en": "There is, and it says something"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "C'è, e dice entro quando devono avvisarci",
+            "en": "There is, and it says by when they must tell us"
+          }
+        }
+      ],
+      "hint": {
+        "it": "Se i fornitori non sono tutti uguali, rispondi guardando il contratto messo peggio.",
+        "en": "If the suppliers are not all alike, answer for the contract in the worst state."
+      },
+      "dimension": "d6",
+      "scored": true
+    },
+    {
+      "id": "n021",
+      "text": {
+        "it": "Un cliente vi ha già chiesto come proteggete i suoi dati?",
+        "en": "Has a customer already asked how you protect their data?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Non ancora",
+            "en": "Not yet"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Sì, e abbiamo risposto come potevamo",
+            "en": "Yes, and we answered as best we could"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Sì, e abbiamo mandato quello che avevamo",
+            "en": "Yes, and we sent what we had"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Sì, e avevamo qualcosa di pronto",
+            "en": "Yes, and we had something ready"
+          }
+        }
+      ],
+      "dimension": "d6",
+      "scored": true
+    },
+    {
+      "id": "n022",
+      "text": {
+        "it": "Sapete a chi si appoggia il vostro fornitore principale?",
+        "en": "Do you know who your main supplier relies on?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "No",
+            "en": "No"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "So che si appoggia a qualcuno",
+            "en": "I know they rely on somebody"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "So a chi, per i servizi principali",
+            "en": "I know who, for the main services"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "So a chi, ed è scritto nel contratto",
+            "en": "I know who, and it is in the contract"
+          }
+        }
+      ],
+      "dimension": "d6",
+      "scored": true
+    }
+  ],
+  "rules": {}
+}

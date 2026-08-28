@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Survey Scope</title>
+<meta name="robots" content="noindex, follow">
+<meta name="theme-color" content="#0d1220">
+<meta name="description" content="Answer twenty-two questions about your company and get a readiness picture back, entirely in your browser.">
+<link rel="canonical" href="https://ggtechnologies.sm/app/survey-scope/">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="stylesheet" href="../../_lib/base.css">
+<link rel="stylesheet" href="./styles.css">
+<script>
+  // Before the first paint, on purpose. Applied from a module it would run after the stylesheet,
+  // and the app would flash dark and then jump to light at every start.
+  try {
+    var saved = localStorage.getItem('gg-theme');
+    var light = saved ? saved === 'light'
+      : window.matchMedia('(prefers-color-scheme: light)').matches;
+    if (light) {
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f6f8fc');
+    }
+  } catch (ignored) {}
+</script>
+<script>
+  // `beforeinstallprompt` waits for nobody: on a second visit, with the service worker already
+  // active, Chrome fires it before any module has finished loading, and a listener registered from
+  // app.js never sees it. Caught here and left in a global, which gg/install.js reads on setup.
+  // The defect shows up only on a phone — on a desktop the app is opened once, the event arrives
+  // late, and the button appears.
+  window.addEventListener('beforeinstallprompt', function (event) {
+    event.preventDefault();
+    window.__ggInstallPrompt = event;
+  });
+</script>
+</head>
+<body>
+
+<!-- One level, not two. CSV Scope has a second bar because it has a document open and the document
+     has its own commands; here there is nothing to command — you answer, and the only way forward
+     is the answer itself. The progress bar is not a control and sits with the question. -->
+<header>
+  <div class="appbar">
+    <span class="brand">Survey Scope</span>
+    <!-- **La via di casa, e prima non c'era.** Cominciato un questionario, la schermata iniziale
+         diventava irraggiungibile: è la home dell'archivio — nuovo, apri, importa — e da lì in poi
+         non ci si tornava. Sta nella barra perché la barra è l'unica cosa presente ovunque, e
+         compare solo quando non ci sei già. Non chiede conferma: le risposte si salvano a ogni
+         passo, quindi non c'è niente da perdere e un avviso direbbe il contrario. -->
+    <button type="button" id="goHome" hidden></button>
+    <span class="meta" id="tagline"></span>
+    <span class="spacer"></span>
+    <!-- **`ghost small` vive solo qui, ed è la regola.** Vestiva anche sedici azioni vere delle
+         schermate — Esporta, Rivedi, Indietro, Avanti, Rifai — che a `--faint` e 12,5px senza bordo
+         si leggevano come testo. Uno stile che significa insieme «comando accessorio» e «quello che
+         si fa qui» toglie all'occhio il modo di separarli, e nessuna quantità di etichette lo
+         rimette. Tre livelli, uno per mestiere: una primaria per schermata, il bottone bordato per
+         ogni azione, il fantasma per i comandi della barra e basta.
+         Dentro la barra restano fantasmi **installa, lingua e tema**: si toccano una volta e poi
+         mai più. `goHome` e `help` no, e stanno insieme: sono i due comandi globali dell'app — uno
+         porta all'archivio, l'altro spiega a cosa serve — e hanno lo stesso peso perché fanno lo
+         stesso mestiere. «Aiuto» era fantasma, e ci sono finiti dietro tutti i casi d'uso di chi
+         somministra la rilevazione: se il contenuto conta, la porta non può essere la cosa più
+         pallida della schermata. -->
+    <button type="button" id="help"></button>
+    <button type="button" id="install" class="ghost small" hidden></button>
+    <button type="button" id="lang" class="ghost small"></button>
+    <button type="button" id="theme" class="ghost small icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"></path>
+      </svg>
+    </button>
+  </div>
+  <p class="hint" id="installHint" hidden></p>
+</header>
+
+<main id="main">
+
+  <!-- ------------------------------------------------------------------ start -->
+
+  <section class="screen start" id="start" hidden>
+    <!-- **Compare solo sopra i due questionari.** Con uno solo sarebbe una tendina con dentro una
+         voce: un comando che si comporta da etichetta, la stessa ragione per cui la barra dei filtri
+         di /app/ sparisce sotto i due gruppi e per cui la paginazione dei salvati non mostra
+         «1 di 1». Sta **sopra** il titolo perché il titolo è del questionario: scegliere cambia
+         quello che si legge sotto, e un comando che modifica ciò che ha sopra si legge male. -->
+    <label class="pick no-print" id="pickWrap" hidden>
+      <span id="pickLabel"></span>
+      <select id="pick"></select>
+    </label>
+
+    <!-- **I comandi del questionario, non della compilazione.** Stanno accanto alla tendina perché
+         parlano dello strumento: uno lo tira fuori come file, l'altro toglie quello caricato.
+         «Togli» compare solo su un questionario che qualcuno ha caricato — i nostri arrivano dai
+         file e si aggiornano con l'app, quindi un pulsante che promettesse di toglierli mentirebbe
+         al primo ricaricamento. L'importazione invece non ha un pulsante suo: entra dalla stessa
+         porta dei risultati, poco più sotto, perché chi riceve un file per email non sa che tipo è
+         prima di aprirlo.
+
+         **Erano `ghost small`, ed era lo sbaglio che questo file documenta dodici righe più su.**
+         Quello stile è dei comandi della barra; qui sono due azioni di una schermata, e a `--faint`
+         e 12,5px senza bordo si leggevano come testo — tanto che chi le aveva appena fatte
+         scrivere non le trovava. La regola era già scritta, la mano l'ha ripetuta lo stesso: è il
+         motivo per cui sta in cima al file e non in un documento. -->
+    <div class="row no-print pack-row">
+      <button type="button" id="packExport"></button>
+      <button type="button" id="packRemove" hidden></button>
+    </div>
+
+    <p class="kicker" id="startKicker"></p>
+    <h1 id="startTitle"></h1>
+    <p class="lede" id="startLede"></p>
+
+    <ul class="facts" id="startFacts"></ul>
+
+    <!-- Tre azioni di pari grado, e ora stanno insieme: crearne uno, aprirne uno, caricarne uno.
+         «Importa» resta **fuori** dalla modale — quella si apre solo quando in memoria c'è
+         qualcosa, mentre l'importazione serve esattamente quando non c'è niente: un browser nuovo,
+         un computer nuovo, il file che ti ha mandato un'azienda. -->
+    <div class="row">
+      <button type="button" id="begin" class="primary"></button>
+      <button type="button" id="savedOpenDialog"></button>
+      <button type="button" id="savedImport"></button>
+      <input type="file" id="savedFile" accept=".json,application/json" hidden>
+      <!-- Il quarto, e l'unico della riga che non fa ma spiega. Porta la stessa etichetta di quello
+           nella barra — non il titolo della modale — perché sulla stessa schermata c'è già la riga
+           «Come si fa», e due nomi quasi uguali per la stessa porta fanno pensare a due posti
+           diversi. Un nome generico e una frase contestuale invece convivono: uno è un comando,
+           l'altra è una risposta alla domanda appena posta. -->
+      <button type="button" id="startHelp"></button>
+    </div>
+
+    <!-- Una riga sola per chi organizza, e il resto della sua storia dietro «Aiuto». La prima
+         pagina la aprono due persone diverse — chi somministra la rilevazione, una volta, e chi
+         deve rispondere, venti volte su ventuno — e spiegare qui come si distribuisce un
+         questionario parlerebbe al secondo del mestiere del primo. -->
+    <p class="small" id="startAdmin">
+      <span id="startAdminText"></span>
+      <button type="button" id="startAdminLink" class="linkish"></button>
+    </p>
+
+    <p class="small" id="startPrivacy"></p>
+  </section>
+
+  <!-- ------------------------------------------------------------------ saved results -->
+
+  <!-- Un `<dialog>` vero: il browser regala la chiusura con Esc, il fondo che blocca i clic e il
+       fuoco che resta dentro. Rifarlo con un div sarebbe stato lo stesso lavoro fatto peggio. -->
+  <dialog id="savedDialog" class="modal">
+    <div class="saved-head">
+      <h2 id="savedTitle"></h2>
+      <span class="spacer"></span>
+      <button type="button" id="savedExport"></button>
+      <button type="button" id="savedClear"></button>
+    </div>
+    <p class="small" id="savedNote"></p>
+
+    <!-- Sempre visibile. La prima versione la nascondeva sotto le sei righe, applicando la regola
+         sbagliata: «un comando che non fa niente è rumore» vale per un filtro con una voce sola,
+         mentre una ricerca su cinque righe qualcosa fa — ed è il mobile che ci si aspetta di
+         trovare in un elenco. Nascosta, sembrava semplicemente mancante. -->
+    <input type="search" id="savedSearch" class="search" autocomplete="off">
+
+    <ul class="saved-list" id="savedList"></ul>
+
+    <!-- Compare da sola quando le pagine sono più di una: due frecce e un contatore che dicono
+         «1 di 1» sono un comando che si comporta da etichetta, la stessa ragione per cui la barra
+         dei filtri di /app/ sparisce sotto i due gruppi. -->
+    <div class="row saved-nav" id="savedNav" hidden>
+      <button type="button" id="savedPrev"></button>
+      <span class="small" id="savedPage"></span>
+      <button type="button" id="savedNext"></button>
+    </div>
+
+    <div class="row nav">
+      <span class="spacer"></span>
+      <button type="button" id="savedClose" class="primary"></button>
+    </div>
+  </dialog>
+
+  <!-- ------------------------------------------------------------------ help -->
+
+  <!-- I quattro casi d'uso stanno qui e non nella prima pagina, ed è la decisione di struttura di
+       questa schermata. L'app la aprono due persone diverse: chi ha organizzato la rilevazione, una
+       volta, e chi deve rispondere, venti volte su ventuno. Una home che spiega come somministrare
+       un questionario parlerebbe al secondo del mestiere del primo. Qui invece ci si arriva
+       cercando, che è esattamente il gesto di chi organizza. -->
+  <!-- **Gli avvisi dell'app, al posto di quelli del browser.** `alert` e `confirm` sono comodi da
+       scrivere e sono l'unica cosa in tutta l'app che non le somiglia: carattere di sistema, il
+       nome del sito in cima, e su un telefono una finestra che arriva dall'alto. Peggio, sono
+       **bloccanti**: fermano il thread, e su iOS in modalità standalone alcuni li ignorano del
+       tutto — cioè una domanda che non compare e una risposta che nessuno dà.
+       Un `<dialog>` costa dieci righe e regala le stesse cose della modale dell'elenco: Esc, il
+       fondo che blocca i clic, il fuoco che resta dentro. Uno solo per tutta l'app: due bottoni,
+       e quello di annullamento sparisce quando c'è solo da prendere atto. -->
+  <dialog id="askDialog" class="modal ask">
+    <p id="askText" tabindex="-1"></p>
+    <div class="row ask-row">
+      <button type="button" id="askOk" class="primary"></button>
+      <button type="button" id="askCancel"></button>
+    </div>
+  </dialog>
+
+  <dialog id="helpDialog" class="modal">
+    <div class="saved-head">
+      <!-- `tabindex="-1"` perché il fuoco ci arrivi da `showModal`. Senza, il browser lo mette sul
+           primo elemento attivabile — che qui è «Chiudi», in fondo a una finestra che scorre — e la
+           modale si apriva mostrando l'ultimo paragrafo: titolo, premessa e i quattro passi
+           restavano sopra, fuori campo. Una finestra di aiuto che si apre alla fine dell'aiuto. -->
+      <h2 id="helpTitle" tabindex="-1"></h2>
+    </div>
+    <p class="lede" id="helpIntro"></p>
+
+    <h3 class="help-h" id="helpFlowTitle"></h3>
+    <ol class="help-flow">
+      <li id="helpFlow1"></li>
+      <li id="helpFlow2"></li>
+      <li id="helpFlow3"></li>
+      <li id="helpFlow4"></li>
+    </ol>
+
+    <h3 class="help-h" id="helpCasesTitle"></h3>
+    <div class="help-cases">
+      <div class="help-case">
+        <h4 id="helpCase1Title"></h4>
+        <p id="helpCase1"></p>
+      </div>
+      <div class="help-case">
+        <h4 id="helpCase2Title"></h4>
+        <p id="helpCase2"></p>
+      </div>
+      <div class="help-case">
+        <h4 id="helpCase3Title"></h4>
+        <p id="helpCase3"></p>
+      </div>
+      <div class="help-case">
+        <h4 id="helpCase4Title"></h4>
+        <p id="helpCase4"></p>
+      </div>
+    </div>
+
+    <!-- **I modelli, dopo i casi e prima del limite.** Non è una funzione per chi risponde: è per
+         chi somministra, cioè lo stesso lettore dei quattro casi qui sopra, ed è la risposta alla
+         domanda che quei casi fanno nascere — «e se le domande che mi servono sono altre?». -->
+    <h3 class="help-h" id="helpPackTitle"></h3>
+    <p id="helpPackIntro"></p>
+    <ol class="help-flow">
+      <li id="helpPack1"></li>
+      <li id="helpPack2"></li>
+      <li id="helpPack3"></li>
+    </ol>
+    <p class="small" id="helpPackNote"></p>
+
+    <!-- Il limite in fondo, e detto per intero. È la stessa cosa che rende l'app distribuibile e
+         che scarica su chi organizza il lavoro della raccolta: dirne una metà sola sarebbe una
+         promessa in un caso e una sorpresa nell'altro. -->
+    <h3 class="help-h" id="helpLimitTitle"></h3>
+    <p id="helpLimit"></p>
+
+    <!-- **Il tasto di chiusura resta in vista.** Era in fondo a una finestra che scorre per tre
+         schermate: chi apriva l'aiuto, leggeva il pezzo che gli serviva e voleva tornare indietro
+         doveva scorrere fino alla fine per trovarlo — o indovinare Esc, che non è scritto da
+         nessuna parte. Un piè di pagina appiccicato al fondo della modale costa quattro righe di
+         CSS e toglie quel giro. Il fondo è pieno e non trasparente, altrimenti il testo che scorre
+         gli passa sotto e si legge attraverso. -->
+    <div class="row nav help-foot">
+      <span class="spacer"></span>
+      <button type="button" id="helpClose" class="primary"></button>
+    </div>
+  </dialog>
+
+  <!-- ------------------------------------------------------------------ questions -->
+
+  <section class="screen quiz" id="quiz" hidden>
+    <div class="progress">
+      <span class="progress-label" id="progressLabel"></span>
+      <span class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack">
+        <span class="progress-fill" id="progressFill"></span>
+      </span>
+      <span class="progress-section" id="progressSection"></span>
+    </div>
+
+    <!-- The section opener lives inside the quiz screen and not beside it, so the progress bar
+         above stays the same object across both. It was the third live test that asked for it:
+         «l'utente si dimentica dov'è», «sezioni che sembrano appiccicate a caso». A screen of its
+         own would have reset the one thing that tells you where you are. -->
+    <div class="card opener" id="opener" hidden>
+      <p class="kicker" id="openerKicker"></p>
+      <h2 id="openerTitle"></h2>
+      <p id="openerIntro"></p>
+
+      <!-- Solo sull'apertura della prima sezione, e ci sta invece di una spiegazione: quella card
+           prometteva un confronto con imprese della stessa dimensione, che non esiste — non c'è
+           nessuna base dati dietro, e la scheda lo dichiara. Un'apertura si guadagna lo schermo
+           quando enuncia una premessa che cambia la risposta; questa non ne aveva una, quindi ne
+           ha inventata una. Ora fa qualcosa invece di dirlo.
+           Il nome si chiedeva alla fine, sulla schermata del report, e ne seguivano due difetti:
+           chi si ferma a metà lasciava una bozza senza nome nell'elenco di chi raccoglie, e chi
+           esportava di fretta mandava un file con l'etichetta vuota. Qui lo si chiede quando la
+           persona ricorda ancora perché le hanno mandato il link. -->
+      <div class="naming" id="openerNaming" hidden>
+        <label for="openerNameInput" id="openerNameLabel"></label>
+        <input type="text" id="openerNameInput" maxlength="120" autocomplete="off">
+        <p class="small" id="openerNameNote"></p>
+      </div>
+
+      <button type="button" id="openerGo" class="primary"></button>
+    </div>
+
+    <div class="card question" id="question">
+      <p class="kicker" id="qKicker"></p>
+      <h2 id="qText"></h2>
+      <p class="hint-text" id="qHint" hidden></p>
+
+      <!-- A radiogroup and not a list of buttons: with the right role, a screen reader announces
+           "3 of 4" and the arrow keys move between the options, which is how anyone driving this
+           from the keyboard expects a single choice to behave. -->
+      <div class="options" id="qOptions" role="radiogroup"></div>
+
+      <div class="exit" id="qExit" hidden>
+        <button type="button" id="qNotApplicable"></button>
+      </div>
+
+      <p class="warn" id="qWarn" hidden></p>
+    </div>
+
+    <!-- «Avanti» esiste perché senza di lui l'unico modo di procedere è rispondere, e chi torna
+         indietro a controllare una risposta resta bloccato lì: per tornare dov'era dovrebbe
+         ri-rispondere a tutte le domande in mezzo. È abilitato solo quando una risposta c'è. -->
+    <div class="row nav">
+      <button type="button" id="qBack"></button>
+      <button type="button" id="qNext"></button>
+      <span class="spacer"></span>
+      <button type="button" id="qReview"></button>
+      <!-- Solo su un questionario già finito. Rientrando fra le domande da un report — per
+           controllare una risposta, o cambiarla — l'unica strada indietro era rispondere fino in
+           fondo un'altra volta: ventidue schermate per verificarne una. Nascosto quando il giro è
+           ancora in corso, perché lì il report non esiste e un pulsante che porta a una pagina
+           vuota è peggio di un pulsante che manca. -->
+      <button type="button" id="qResult" hidden></button>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------------ review -->
+
+  <!-- Tutte le domande insieme, con la risposta data, e ognuna è un salto. È l'unica schermata che
+       mostra il questionario per intero: serve a correggere senza ripercorrere, e a rileggersi
+       prima di chiudere. -->
+  <section class="screen review" id="review" hidden>
+    <p class="kicker" id="reviewKicker"></p>
+    <h1 id="reviewTitle"></h1>
+    <p class="lede" id="reviewIntro"></p>
+
+    <div id="reviewList"></div>
+
+    <div class="row nav">
+      <button type="button" id="reviewBack" class="primary"></button>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------------ deep dive offer -->
+
+  <section class="screen offer" id="offer" hidden>
+    <div class="card">
+      <p class="kicker" id="offerKicker"></p>
+      <h2 id="offerTitle"></h2>
+      <p id="offerIntro"></p>
+      <div class="row">
+        <button type="button" id="offerYes" class="primary"></button>
+        <button type="button" id="offerNo"></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------------ compliance checklist -->
+
+  <section class="screen checklist" id="checklist" hidden>
+    <p class="kicker" id="clKicker"></p>
+    <h2 id="clTitle"></h2>
+    <p class="lede" id="clIntro"></p>
+    <p class="note" id="clScope"></p>
+    <p class="warn" id="clStale" hidden></p>
+
+    <ol class="items" id="clItems"></ol>
+
+    <p class="note" id="clDisclaimer"></p>
+
+    <div class="row nav">
+      <button type="button" id="clBack"></button>
+      <button type="button" id="clReview"></button>
+      <span class="spacer"></span>
+      <button type="button" id="clDone" class="primary"></button>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------------ report -->
+
+  <section class="screen report" id="report" hidden>
+
+    <!-- **Due righe dichiarate, non una che va a capo.** Con i bottoni tornati a dimensione piena la
+         riga unica si spezzava da sola, e per fortuna nel punto giusto: sopra quello che fai *del*
+         foglio, sotto dove *vai*. Uno spaziatore che spinge a destra due comandi destinati a
+         scendere a capo è una disposizione che dipende dalla larghezza della finestra — e su
+         schermi diversi raggruppa cose diverse. Scritta, invece, dice la stessa cosa ovunque. -->
+    <div class="row report-tools no-print">
+      <button type="button" id="rPrint" class="primary"></button>
+      <button type="button" id="rJson"></button>
+      <button type="button" id="rCsv"></button>
+      <!-- Il selettore non si stampa, la riga che ne esce sì: il comando è un comando, e il fatto
+           che ne risulta è parte del foglio. -->
+      <label class="compare" for="rCompare">
+        <span id="rCompareLabel"></span>
+        <select id="rCompare"></select>
+      </label>
+      <label class="toggle" for="rAppendixOn">
+        <input type="checkbox" id="rAppendixOn">
+        <span id="rAppendixLabel"></span>
+      </label>
+    </div>
+
+    <div class="row report-nav no-print">
+      <button type="button" id="rReview"></button>
+      <button type="button" id="rAgain"></button>
+    </div>
+
+    <!-- Il nome del questionario. È l'unico campo di questa app in cui qualcuno scrive testo
+         libero, ed è **anche l'unico che può contenere il nome di un'azienda**: la riga sotto lo
+         dice, perché quel testo finisce nel file che poi si manda a qualcuno. -->
+    <div class="naming no-print">
+      <label for="rLabelInput" id="rLabelLabel"></label>
+      <input type="text" id="rLabelInput" maxlength="120" autocomplete="off">
+      <p class="small" id="rLabelNote"></p>
+    </div>
+
+    <div class="sheet" id="rSheet">
+      <!-- La testata, e assorbe il nome del questionario invece di aggiungersi a lui: prima quel
+           nome galleggiava sopra l'occhiello come un'etichetta appiccicata. Un documento dice cosa
+           è prima di dire cosa ha trovato — chi lo riceve a mano lo capisce dalla prima riga senza
+           averne mai visto uno. Il filetto sotto è di 2px perché è l'unico spesso del foglio: è la
+           riga che separa l'intestazione dal contenuto, e le altre separano contenuto da contenuto. -->
+      <header class="masthead">
+        <span class="mast-brand">Survey Scope</span>
+        <span class="mast-what" id="rMastWhat"></span>
+        <span class="mast-meta" id="rMastMeta"></span>
+      </header>
+
+      <p class="kicker" id="rKicker"></p>
+      <h1 id="rHeadline"></h1>
+
+      <!-- Il punteggio come cifra display, con la fascia accanto oltre un filetto. Il titolo sopra
+           contiene lo stesso numero dentro una frase, e la ripetizione è voluta: una è la lettura,
+           l'altra è l'ancora visiva: è il modo in cui una rivista tratta un dato che è il soggetto
+           del pezzo. Le sei barre stanno sotto, così numero, fascia e forma sono un blocco solo. -->
+      <div class="score">
+        <span class="score-n" id="rScore"></span>
+        <span class="score-of" id="rScoreOf"></span>
+        <p class="band" id="rBand"></p>
+      </div>
+
+      <div class="gauge" id="rGauge" aria-hidden="true"></div>
+
+      <p class="lede" id="rWhat"></p>
+      <p class="note" id="rCompareLine" hidden></p>
+      <p class="warn" id="rFloor" hidden></p>
+      <p class="note" id="rRespondent" hidden></p>
+
+      <h2 id="rDimsTitle"></h2>
+      <p id="rHowToRead"></p>
+      <ul class="dims" id="rDims"></ul>
+
+      <h2 id="rActionsTitle"></h2>
+      <p id="rActionsIntro"></p>
+      <ol class="actions" id="rActions"></ol>
+
+      <section id="rComplianceBlock" hidden>
+        <h2 id="rComplianceTitle"></h2>
+        <p id="rComplianceIntro"></p>
+        <ul class="gaps" id="rGaps"></ul>
+      </section>
+
+      <!-- Le risposte, e sono facoltative per una ragione di carta: sono due pagine in più, e chi
+           stampa per sé non ne ha bisogno. Chi consegna il foglio a qualcun altro sì — il report
+           ammette nella prima riga che il numero è una descrizione di sé, e una descrizione che non
+           si può leggere chiede di fidarsi. La casella sta fuori dal foglio, con gli altri comandi. -->
+      <section id="rAppendixBlock" hidden>
+        <h2 id="rAppendixTitle"></h2>
+        <p id="rAppendixNote"></p>
+        <ul class="appendix" id="rAppendix"></ul>
+      </section>
+
+      <section id="rDeepBlock" hidden>
+        <h2 id="rDeepTitle"></h2>
+        <ul class="deep" id="rDeep"></ul>
+      </section>
+
+      <p class="note" id="rNotVerified"></p>
+      <p class="note" id="rPrintNote"></p>
+      <p class="note" id="rEdition"></p>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------------ error -->
+
+  <section class="error" id="error" hidden>
+    <h2 id="errorTitle"></h2>
+    <p id="errorText"></p>
+    <button type="button" id="retry"></button>
+  </section>
+
+</main>
+
+<footer class="foot no-print">
+  <a href="../" id="backLink"></a>
+  <a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/survey-scope" id="sourceLink"></a>
+  <span class="spacer"></span>
+  <a class="foot-brand" href="https://ggtechnologies.sm" rel="noopener">
+    <span class="foot-mark" aria-hidden="true"></span>G&amp;G Technologies</a>
+  <span class="spacer"></span>
+  <span>Apache-2.0</span>
+</footer>
+
+<!-- Every import into the shared library goes through here, never up the tree. Both forms work
+     identically today; the difference arrives the day _lib/ takes a version number, and it is one
+     line per app instead of every import in every file. check_apps.py rejects the relative form. -->
+<script type="importmap">
+{ "imports": { "gg/": "../../_lib/" } }
+</script>
+<script type="module" src="./app.js"></script>
+</body>
+</html>

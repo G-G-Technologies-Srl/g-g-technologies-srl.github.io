@@ -1,0 +1,83 @@
+{
+  "schema": "1.2",
+  "tool": "survey-scope",
+  "tool_version": "1.0.0",
+  "questionnaire": "nis2",
+  "questionnaire_edition": 1,
+  "questionnaire_digest": "sha256:34394895e30a1c901f40801db58c21455b0c7d7c741e7966f0e98e5685babd63",
+  "lang": "it",
+  "complete": true,
+  "answered_at": "2026-08-28",
+  "exported_at": "2026-08-28",
+  "label": "Stabilimento di Modena",
+  "answers": {
+    "n001": 1,
+    "n002": 2,
+    "n003": 2,
+    "n004": 3,
+    "n005": 2,
+    "n006": 1,
+    "n007": 1,
+    "n008": 2,
+    "n009": 1,
+    "n010": 1,
+    "n011": 3,
+    "n012": 1,
+    "n013": 1,
+    "n014": 0,
+    "n015": 0,
+    "n016": 1,
+    "n017": 1,
+    "n018": 1,
+    "n021": 2,
+    "n022": 1,
+    "q019": 2,
+    "q020": 1
+  },
+  "skipped": [],
+  "not_applicable": [],
+  "scores": {
+    "overall": 41,
+    "level": 1,
+    "dimensions": {
+      "d1": 44,
+      "d2": 44,
+      "d3": 56,
+      "d4": 11,
+      "d5": 44,
+      "d6": 44
+    },
+    "counts": {
+      "d1": {
+        "asked": 3,
+        "scored": 3,
+        "not_applicable": 0
+      },
+      "d2": {
+        "asked": 3,
+        "scored": 3,
+        "not_applicable": 0
+      },
+      "d3": {
+        "asked": 3,
+        "scored": 3,
+        "not_applicable": 0
+      },
+      "d4": {
+        "asked": 3,
+        "scored": 3,
+        "not_applicable": 0
+      },
+      "d5": {
+        "asked": 3,
+        "scored": 3,
+        "not_applicable": 0
+      },
+      "d6": {
+        "asked": 3,
+        "scored": 3,
+        "not_applicable": 0
+      }
+    }
+  }
+}

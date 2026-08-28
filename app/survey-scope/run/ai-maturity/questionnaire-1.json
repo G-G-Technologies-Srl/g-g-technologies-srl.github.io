@@ -1,0 +1,1224 @@
+{
+  "edition": 1,
+  "key": "ai-maturity",
+  "respondent_question": "q003",
+  "status": "published",
+  "revision": 18,
+  "note": "Edition 1, revision 10 — the wording is frozen. Behind it sit six revisions, three simulations and three live tests. Two simulations compared an honest pass with a flattering one and found the same +29 point gap, before and after fifteen questions were rewritten: that gap is not a defect to remove, because a self-assessment measures how the respondent sees things. The third measured what does matter — two honest readings of the same company land 1.1 points apart, same band ten times out of ten. The live tests produced what no simulation can. Revision 8 answers the third of them, which was about comprehension rather than length: q011 asked two things in one sentence with a pronoun that had three possible referents; q013 asked «quanti» and offered feminine options; q014's third option mixed two constructions; q007 buried its question at the end. The same test asked for orientation, which is what `sections` is: eight groups, each with one or two lines saying what it looks at and why, shown before its questions. A section takes its title from its dimension when it has one, and carries its own only when it does not — a title written twice is a title that diverges. Revision 9 fixes q005, whose options were not one scale: the top one moved two things at once against the one below it — when the sum was done and whether it was written down — so a company that worked it out two years ago and wrote it down had nowhere to go, and neither did one that worked it out last month and did not. The two windows also left a gap: eight months ago fitted neither. The time reference is gone and the ladder is one thing getting stronger — no number, talk, a number in somebody's head, a number written down and findable. Recency is already carried by q006. **Rule it makes general: an option may differ from the one below it in one respect only, or the scale stops being a scale.** Revision 10 moves the explanation of a coherence rule next to the rule itself. It used to be one hardcoded interface string, which was wrong twice over: a second coherence rule would have shown the first one's text, and the interface had no way to know which questions the message was about — so it painted the warning on every screen, including questions that had nothing to do with it. Rules enforced in code: the best option asks for an event that happened, not a state that persists; no option describes a company that has not started trading; a question stops at 100 characters, an option at 62, a hint at 160, a section intro at 200, and the concrete example belongs in the hint. Ids stay working labels until status becomes published — which needs the English. Findings in _src/fonti/survey-scope-simulazione-{1,2,3}.md. Revision 17 comes from the clarity test of 28 August, and fixes an ordering defect a blind reader found: q016 scored a ban higher than governed use, so the top option was more immature than the one below it in any company where AI is actually used — either you forbade it, or you are declaring something false. The ladder now reads: do not know, no rule, a rule that forbids, a rule that permits where decided and verifies it. The technology section also states that «you» includes whoever keeps your systems, external or not, which is where the same reader kept answering about somebody else's knowledge. Findings in _src/fonti/survey-scope-chiarezza.md. Revision 18 does two things the clarity test asked for. It opens six questions that assumed a company selling products to customers who buy — turnover became revenue, «clienti» became «chi servi», the warehouse example went, and «the work that brings you most turnover» became «the work that takes most of your time» — because two of the four audiences the scheda promises are public bodies and trade associations, and their director stopped at «con quanto ha comprato ciascuno»: not at the word customer, which she had already translated, but at the assumption that every relationship has a price. And it closes the four ways a founder demonstrated he could raise five points without lying: q004 asked about the most used tool, which samples the best case and hides the six bought on a card; q005's top option was satisfied by a slide with a guessed number; q013's hint let three kickoffs add up to half a day; q020 said «aggiornato» with no expiry, so five months qualified. The ceiling itself is not raised — the scale still measures whether a practice is present, never how far it reaches, and fixing that means rewriting the bands and the twenty-four recommendations.",
+  "dimensions": [
+    {
+      "id": "d1",
+      "text": {
+        "it": "Casi d'uso e valore",
+        "en": "Use cases and value"
+      }
+    },
+    {
+      "id": "d2",
+      "text": {
+        "it": "Dati",
+        "en": "Data"
+      }
+    },
+    {
+      "id": "d3",
+      "text": {
+        "it": "Processi",
+        "en": "Processes"
+      }
+    },
+    {
+      "id": "d4",
+      "text": {
+        "it": "Competenze e persone",
+        "en": "Skills and people"
+      }
+    },
+    {
+      "id": "d5",
+      "text": {
+        "it": "Tecnologia e controllo",
+        "en": "Technology and control"
+      }
+    },
+    {
+      "id": "d6",
+      "text": {
+        "it": "Governo e responsabilità",
+        "en": "Governance and responsibility"
+      }
+    }
+  ],
+  "sections": [
+    {
+      "id": "s1",
+      "text": {
+        "it": "La tua azienda",
+        "en": "Your company"
+      },
+      "intro": {
+        "it": "Dai un nome a questa compilazione: con quello la ritrovi nel tuo elenco, e la ritrova chi te l'ha mandata. Poi tre domande su chi sei, fuori dal punteggio: servono a chi raccoglie più unità.",
+        "en": "Give this run a name: it is how you find it again in your list, and how whoever sent it to you finds it. Then three questions about you, outside the score: they help whoever collects several units."
+      },
+      "questions": [
+        "q001",
+        "q002",
+        "q003"
+      ]
+    },
+    {
+      "id": "s2",
+      "dimension": "d1",
+      "intro": {
+        "it": "Da qui si parla di AI. Tre domande su cosa è entrato davvero in azienda, chi l'ha deciso e come è finita.",
+        "en": "From here on it is about AI. Three questions on what actually came into the company, who decided it, and how it ended."
+      },
+      "questions": [
+        "q004",
+        "q005",
+        "q006"
+      ]
+    },
+    {
+      "id": "s3",
+      "dimension": "d2",
+      "intro": {
+        "it": "L'AI lavora sui dati che hai già. Tre domande su quanto sono a portata di mano: non quanti sono, ma se li trovi quando servono.",
+        "en": "AI works on the data you already have. Three questions on how close to hand it is: not how much there is, but whether you find it when you need it."
+      },
+      "questions": [
+        "q007",
+        "q008",
+        "q009"
+      ]
+    },
+    {
+      "id": "s4",
+      "dimension": "d3",
+      "intro": {
+        "it": "Un lavoro che sta solo nella testa di chi lo fa non si può insegnare né migliorare. Tre domande su quanto del vostro è scritto, e usato.",
+        "en": "Work that lives only in the head of whoever does it can be neither taught nor improved. Three questions on how much of yours is written down, and used."
+      },
+      "questions": [
+        "q010",
+        "q011",
+        "q012"
+      ]
+    },
+    {
+      "id": "s5",
+      "dimension": "d4",
+      "intro": {
+        "it": "Uno strumento vale quanto chi lo usa. Tre domande su chi ha imparato a usarlo, e a chi ci si rivolge quando qualcosa non torna.",
+        "en": "A tool is worth as much as whoever uses it. Three questions on who has learnt to use it, and who people turn to when something is off."
+      },
+      "questions": [
+        "q013",
+        "q014",
+        "q015"
+      ]
+    },
+    {
+      "id": "s6",
+      "dimension": "d5",
+      "intro": {
+        "it": "Quello che scrivi in uno strumento online esce dall'azienda. Qui conta anche chi ti tiene i sistemi, se è di fuori: quello che sa lui vale. Tre domande.",
+        "en": "What you type into an online tool leaves the company. Whoever keeps your systems counts here too, if they are external: what they know counts. Three questions."
+      },
+      "questions": [
+        "q016",
+        "q017",
+        "q018"
+      ]
+    },
+    {
+      "id": "s7",
+      "dimension": "d6",
+      "intro": {
+        "it": "Quando qualcosa va storto qualcuno risponde, e conviene saperlo prima. Tre domande su cosa è deciso, cosa è scritto, e cosa sapresti dire a un cliente.",
+        "en": "When something goes wrong somebody answers for it, and it is better to know beforehand. Three questions on what is decided, what is written, and what you could tell a customer."
+      },
+      "questions": [
+        "q019",
+        "q020",
+        "q021"
+      ]
+    },
+    {
+      "id": "s8",
+      "text": {
+        "it": "I tuoi clienti",
+        "en": "Your customers"
+      },
+      "intro": {
+        "it": "Un'ultima domanda, su quanta pressione arriva già da chi ti compra. Subito dopo trovi quattordici obblighi europei, ognuno con la data da cui vale.",
+        "en": "One last question, on how much pressure already comes from whoever buys from you. Straight after it you will find fourteen European obligations, each with the date it applies from."
+      },
+      "questions": [
+        "q022"
+      ]
+    }
+  ],
+  "bands": [
+    {
+      "from": 0,
+      "to": 24,
+      "text": {
+        "it": "Non hai ancora cominciato",
+        "en": "You have not started yet"
+      }
+    },
+    {
+      "from": 25,
+      "to": 49,
+      "text": {
+        "it": "Stai provando",
+        "en": "You are trying things out"
+      }
+    },
+    {
+      "from": 50,
+      "to": 74,
+      "text": {
+        "it": "Qualcosa è in produzione",
+        "en": "Something is in production"
+      }
+    },
+    {
+      "from": 75,
+      "to": 100,
+      "text": {
+        "it": "L'AI è nel modo in cui lavori",
+        "en": "AI is in the way you work"
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "q001",
+      "dimension": null,
+      "scored": false,
+      "text": {
+        "it": "Quante persone lavorano nella tua azienda?",
+        "en": "How many people work in your company?"
+      },
+      "hint": {
+        "it": "Chi c'è tutto l'anno, stagionali esclusi. Se sei un ente o un'associazione, «azienda» qui è la tua struttura e «clienti» chi servi.",
+        "en": "Whoever is there all year, seasonal staff aside. For a public body or an association, «company» here is your organisation and «customers» whoever you serve."
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Meno di 10",
+            "en": "Fewer than 10"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Da 10 a 49",
+            "en": "10 to 49"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Da 50 a 249",
+            "en": "50 to 249"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "250 o più",
+            "en": "250 or more"
+          }
+        }
+      ]
+    },
+    {
+      "id": "q002",
+      "dimension": null,
+      "scored": false,
+      "text": {
+        "it": "In quale fascia stanno i ricavi dell'ultimo bilancio?",
+        "en": "Which band does the revenue in your last accounts fall into?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Sotto i 2 milioni",
+            "en": "Under 2 million"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Da 2 a 10 milioni",
+            "en": "2 to 10 million"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Da 10 a 50 milioni",
+            "en": "10 to 50 million"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Oltre i 50 milioni",
+            "en": "Over 50 million"
+          }
+        }
+      ],
+      "hint": {
+        "it": "Quello che entra in un anno: vendite, quote, corrispettivi, contributi. Serve a confrontarti con organizzazioni di dimensione simile.",
+        "en": "What comes in over a year: sales, membership fees, service income, grants. It is here to compare you with organisations of a similar size."
+      }
+    },
+    {
+      "id": "q003",
+      "dimension": null,
+      "scored": false,
+      "text": {
+        "it": "Che ruolo hai?",
+        "en": "What is your role?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Guido l'azienda o ne sono socio",
+            "en": "I lead the company, or I am a partner"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Dirigo un'area o un reparto",
+            "en": "I run an area or a department"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Mi occupo di sistemi informativi o tecnologia",
+            "en": "I look after IT systems or technology"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Altro",
+            "en": "Other"
+          }
+        }
+      ]
+    },
+    {
+      "id": "q004",
+      "dimension": "d1",
+      "scored": true,
+      "text": {
+        "it": "Gli strumenti AI che si usano in azienda: chi li ha scelti?",
+        "en": "The AI tools in use in the company: who chose them?"
+      },
+      "hint": {
+        "it": "Conta anche quello che un collega usa dal suo telefono, o che era già dentro un programma che avevate: il traduttore, la trascrizione dei messaggi.",
+        "en": "Count what a colleague uses from their own phone too, or what was already inside a programme you had: the translator, the transcription of messages."
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Non ne usiamo, e me ne sono accertato",
+            "en": "We use none, and I have checked"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Non che io sappia, ma non l'ho verificato",
+            "en": "Not that I know of, but I have not checked"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Li ha portati chi ne aveva bisogno",
+            "en": "Whoever needed them brought them in"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Li abbiamo scelti come azienda, e c'è chi ne risponde",
+            "en": "We chose them as a company, and somebody owns them"
+          }
+        }
+      ]
+    },
+    {
+      "id": "q005",
+      "dimension": "d1",
+      "scored": true,
+      "text": {
+        "it": "Hai mai fatto due conti su quanto l'AI ti fa risparmiare o guadagnare?",
+        "en": "Have you ever worked out what AI saves you, or earns you?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Mai",
+            "en": "Never"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Ne abbiamo parlato, senza fare nessun conto",
+            "en": "We talked about it, without working anything out"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Il conto l'abbiamo fatto, ma è rimasto a voce",
+            "en": "We worked it out, but it stayed in conversation"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Il conto è scritto, con i numeri da cui viene",
+            "en": "It is written down, with the numbers it comes from"
+          }
+        }
+      ],
+      "hint": {
+        "it": "Anche una stima grossolana: ore risparmiate a settimana, o un lavoro in più chiuso.",
+        "en": "Even a rough estimate: hours saved a week, or one more job closed."
+      }
+    },
+    {
+      "id": "q006",
+      "dimension": "d1",
+      "scored": true,
+      "text": {
+        "it": "L'ultimo progetto con l'AI, anche piccolo: che fine ha fatto?",
+        "en": "The last project with AI, however small: what became of it?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Nell'ultimo anno non ne abbiamo avviato nessuno",
+            "en": "We have not started one in the past year"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "L'abbiamo lasciato perdere, senza una decisione vera",
+            "en": "We let it drop, without a real decision"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Abbiamo deciso di non andare avanti, per una ragione precisa",
+            "en": "We decided not to go on, for a definite reason"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "È in uso oggi",
+            "en": "It is in use today"
+          }
+        }
+      ],
+      "hint": {
+        "it": "Anche una prova di poche settimane, o una cosa che avete solo provato a valutare.",
+        "en": "A trial of a few weeks counts too, or something you only tried to evaluate."
+      }
+    },
+    {
+      "id": "q007",
+      "dimension": "d2",
+      "scored": true,
+      "text": {
+        "it": "Quanto ci metti a tirare fuori l'elenco di chi servi, con quanto ha speso ciascuno?",
+        "en": "How long to pull out the list of whoever you serve, with what each one spent?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Non saprei da dove partire",
+            "en": "I would not know where to start"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Qualche giorno, mettendo insieme pezzi da posti diversi",
+            "en": "A few days, putting pieces together from several places"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Qualche ora",
+            "en": "A few hours"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Lo tiro fuori adesso, da un posto solo",
+            "en": "I can pull it out now, from one place"
+          }
+        }
+      ],
+      "hint": {
+        "it": "Clienti, associati, utenti: tutti, non solo i principali. In un file solo.",
+        "en": "Customers, members, users: all of them, not only the main ones. In one file."
+      }
+    },
+    {
+      "id": "q008",
+      "dimension": "d2",
+      "scored": true,
+      "text": {
+        "it": "L'ultima volta che un numero è risultato sbagliato: cosa è cambiato dopo?",
+        "en": "The last time a number turned out wrong: what changed afterwards?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Succede ancora, e non è cambiato niente",
+            "en": "It still happens, and nothing changed"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "L'abbiamo corretto a mano, quella volta",
+            "en": "We corrected it by hand, that time"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Abbiamo trovato da dove veniva",
+            "en": "We found where it came from"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Abbiamo cambiato come si tiene il dato, e non è più successo",
+            "en": "We changed how the data is kept, and it stopped"
+          }
+        }
+      ],
+      "hint": {
+        "it": "Un totale che non tornava, o lo stesso numero diverso fra due sistemi.",
+        "en": "A total that did not add up, or the same number differing between two systems."
+      }
+    },
+    {
+      "id": "q009",
+      "dimension": "d2",
+      "scored": true,
+      "text": {
+        "it": "Ti chiedono copia di un documento di due anni fa: in quanto tempo lo mandi?",
+        "en": "Somebody asks for a copy of a document from two years ago: how soon do you send it?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Dovrei cercare in più posti, e forse non la trovo",
+            "en": "I would have to look in several places, and may not find it"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "In un giorno o due",
+            "en": "In a day or two"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "In mezz'ora",
+            "en": "In half an hour"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Mentre siamo ancora al telefono",
+            "en": "While we are still on the phone"
+          }
+        }
+      ],
+      "hint": {
+        "it": "Un'offerta, una fattura, una relazione.",
+        "en": "A quote, an invoice, a report."
+      }
+    },
+    {
+      "id": "q010",
+      "dimension": "d3",
+      "scored": true,
+      "text": {
+        "it": "L'ultima persona entrata in azienda: come ha imparato il lavoro?",
+        "en": "The last person to join the company: how did they learn the work?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Guardando gli altri, e sbagliando",
+            "en": "By watching the others, and getting things wrong"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Affiancata da qualcuno, con gli appunti di quella persona",
+            "en": "Alongside somebody, with that person's own notes"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Con del materiale scritto, più l'affiancamento",
+            "en": "With written material, plus working alongside somebody"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Con una procedura scritta, che usa ancora adesso",
+            "en": "With a written procedure, which they still use now"
+          }
+        }
+      ],
+      "not_applicable": {
+        "when": true,
+        "text": {
+          "it": "Non è entrato nessuno negli ultimi anni",
+          "en": "Nobody has joined in the past few years"
+        }
+      },
+      "hint": {
+        "it": "Assunta, in tirocinio o a partita IVA. Non i corsi obbligatori: come ha imparato a fare il lavoro.",
+        "en": "Employed, on placement or self-employed. Not the mandatory courses: how they learnt to do the work."
+      }
+    },
+    {
+      "id": "q011",
+      "dimension": "d3",
+      "scored": true,
+      "text": {
+        "it": "Il lavoro che ti occupa di più: chi lo fa ha istruzioni scritte?",
+        "en": "The work that takes most of your time: does whoever does it have written instructions?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Non ci sono istruzioni scritte",
+            "en": "There are no written instructions"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Ci sono, ma chi fa il lavoro non le apre",
+            "en": "There are, but whoever does the work never opens them"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Ci sono e si usano, ferme da più di due anni",
+            "en": "They exist and are used, untouched for over two years"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Ci sono, si usano, aggiornate nell'ultimo anno",
+            "en": "They exist, are used, and were updated within the year"
+          }
+        }
+      ],
+      "hint": {
+        "it": "Una procedura, una scheda, anche una pagina sola. Non un manuale.",
+        "en": "A procedure, a sheet, even a single page. Not a manual."
+      }
+    },
+    {
+      "id": "q012",
+      "dimension": "d3",
+      "scored": true,
+      "text": {
+        "it": "L'ultima volta che un lavoro è andato storto: chi se n'è accorto per primo?",
+        "en": "The last time a job went wrong: who noticed first?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Qualcuno da fuori: il cliente, un fornitore, un ufficio",
+            "en": "Somebody outside: the customer, a supplier, an office"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Noi, a cose fatte: sui conti, o rifacendo il lavoro",
+            "en": "Us, after the fact: in the accounts, or redoing the work"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Chi ci stava lavorando, mentre succedeva",
+            "en": "Whoever was working on it, while it was happening"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Un controllo automatico, prima che facesse danni",
+            "en": "An automatic check, before it did any damage"
+          }
+        }
+      ],
+      "hint": {
+        "it": "Un ordine sbagliato, una consegna saltata, qualcosa da rifare.",
+        "en": "A wrong order, a missed delivery, something to be done again."
+      }
+    },
+    {
+      "id": "q013",
+      "dimension": "d4",
+      "scored": true,
+      "text": {
+        "it": "Fra chi usa l'AI, quante persone hanno fatto formazione nell'ultimo anno?",
+        "en": "Among the people who use AI, how many have had training in the past year?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Nessuna",
+            "en": "None"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Poche",
+            "en": "A few"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Più della metà",
+            "en": "More than half"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Tutte, o quasi",
+            "en": "All of them, or nearly"
+          }
+        }
+      ],
+      "hint": {
+        "it": "Almeno mezza giornata su come si usa, anche interna. Non il video di dieci minuti né la presentazione di lancio.",
+        "en": "At least half a day on how it is used, in-house counts. Not the ten-minute video, and not the launch presentation."
+      }
+    },
+    {
+      "id": "q014",
+      "dimension": "d4",
+      "scored": true,
+      "text": {
+        "it": "L'ultima volta che qualcuno ha avuto un dubbio sull'AI, a chi l'ha chiesto?",
+        "en": "The last time somebody had a doubt about AI, who did they ask?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Non è mai capitato, o se l'è cavata da sé",
+            "en": "It has never come up, or they sorted it out alone"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "A un collega, quello che c'era",
+            "en": "A colleague, whoever was around"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Sempre alla stessa persona, che se n'è fatta carico da sé",
+            "en": "Always the same person, who took it on themselves"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Alla persona che ha quel compito, e ha del tempo per farlo",
+            "en": "The person whose job it is, with time set aside for it"
+          }
+        }
+      ]
+    },
+    {
+      "id": "q015",
+      "dimension": "d4",
+      "scored": true,
+      "text": {
+        "it": "L'ultima volta che l'AI ha dato una risposta sbagliata: chi se n'è accorto?",
+        "en": "The last time AI gave a wrong answer: who noticed?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Non mi risulta sia mai successo",
+            "en": "Not that I am aware of, it has never happened"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Ce ne siamo accorti dopo, quando era già uscita",
+            "en": "We noticed later, once it had already gone out"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Se n'è accorto chi la stava usando, prima di usarla",
+            "en": "Whoever was using it noticed, before using it"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Un controllo che facciamo sempre, e quella volta ha retto",
+            "en": "A check we always run, and that time it held"
+          }
+        }
+      ]
+    },
+    {
+      "id": "q016",
+      "dimension": "d5",
+      "scored": true,
+      "text": {
+        "it": "I dati dei clienti finiscono dentro ChatGPT o strumenti simili?",
+        "en": "Does customer data end up inside ChatGPT or similar tools?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Non lo so, e non saprei come verificarlo",
+            "en": "I do not know, and I would not know how to check"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Può darsi: non c'è una regola, e non lo controlliamo",
+            "en": "It may: there is no rule, and we do not check"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "C'è una regola su cosa si può metterci, e tutti la conoscono",
+            "en": "There is a rule on what may go in, and all know it"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "C'è una regola, e verifichiamo che venga seguita",
+            "en": "There is a rule, and we check that it is followed"
+          }
+        }
+      ],
+      "hint": {
+        "it": "Vale per qualunque servizio online dove quello che scrivi esce dall'azienda.",
+        "en": "It holds for any online service where what you type leaves the company."
+      }
+    },
+    {
+      "id": "q017",
+      "dimension": "d5",
+      "scored": true,
+      "text": {
+        "it": "I dati che metti negli strumenti AI: sai in che paese finiscono?",
+        "en": "The data you put into AI tools: do you know which country it ends up in?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Non ce lo siamo mai chiesti",
+            "en": "We have never asked ourselves"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Ce lo siamo chiesti, e non abbiamo trovato la risposta",
+            "en": "We asked, and did not find the answer"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Lo sappiamo: l'abbiamo letto nel contratto",
+            "en": "We know: we read it in the contract"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Su macchine nostre, o da un fornitore scelto per questo",
+            "en": "On our own machines, or a supplier chosen for this"
+          }
+        }
+      ]
+    },
+    {
+      "id": "q018",
+      "dimension": "d5",
+      "scored": true,
+      "text": {
+        "it": "L'ultima volta che hai scaricato i tuoi dati da un programma che usi: quando è stato?",
+        "en": "The last time you downloaded your data out of a programme you use: when was it?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Mai, e non saprei nemmeno se si può",
+            "en": "Never, and I would not know whether it is possible"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Mai, ma so che si può",
+            "en": "Never, but I know it is possible"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Almeno una volta, quando è servito",
+            "en": "At least once, when it was needed"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Lo facciamo con regolarità",
+            "en": "We do it regularly"
+          }
+        }
+      ],
+      "hint": {
+        "it": "Non il backup automatico: proprio scaricarli per averne una copia tua.",
+        "en": "Not the automatic backup: actually downloading it to have a copy of your own."
+      }
+    },
+    {
+      "id": "q019",
+      "dimension": "d6",
+      "scored": true,
+      "text": {
+        "it": "Esiste una regola su cosa si può e non si può fare con l'AI?",
+        "en": "Is there a rule on what may and may not be done with AI?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "No",
+            "en": "No"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Ne abbiamo parlato, ma non è scritta",
+            "en": "We talked about it, but it is not written down"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "È scritta da qualche parte",
+            "en": "It is written down somewhere"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "È scritta, ed è stata detta a chi la deve seguire",
+            "en": "It is written, and told to whoever has to follow it"
+          }
+        }
+      ]
+    },
+    {
+      "id": "q020",
+      "dimension": "d6",
+      "scored": true,
+      "text": {
+        "it": "Ti chiedono quali strumenti AI toccano i dati di chi servi: cosa mandi?",
+        "en": "Somebody asks which AI tools touch the data of whoever you serve: what do you send?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Dovrei chiedere in giro, senza essere certo di trovare tutto",
+            "en": "I would have to ask around, unsure of finding everything"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Una risposta a memoria, senza controllare",
+            "en": "An answer from memory, without checking"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Un elenco, che però rifarei sul momento",
+            "en": "A list, which I would put together on the spot"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Un elenco che esiste già, aggiornato negli ultimi sei mesi",
+            "en": "A list that exists, updated in the past six months"
+          }
+        }
+      ],
+      "not_applicable": {
+        "when": {
+          "q004": [
+            0
+          ]
+        },
+        "text": {
+          "it": "Nessuno strumento AI tocca i dati dei nostri clienti",
+          "en": "No AI tool touches our customers' data"
+        }
+      }
+    },
+    {
+      "id": "q021",
+      "dimension": "d6",
+      "scored": true,
+      "text": {
+        "it": "L'ultimo strumento nuovo: prima di dire sì, cosa avete guardato?",
+        "en": "The last new tool: before saying yes, what did you look at?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "Niente in particolare: serviva, e l'abbiamo preso",
+            "en": "Nothing in particular: it was needed, and we took it"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Quanto costava",
+            "en": "How much it cost"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Quanto costava, e se si incastrava con quello che già c'era",
+            "en": "The cost, and whether it fitted with what was there"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Anche dove finiscono i dati, e come si esce se non va",
+            "en": "Also where the data ends up, and how to leave"
+          }
+        }
+      ],
+      "hint": {
+        "it": "AI o no, qualunque programma o servizio.",
+        "en": "AI or not, any programme or service."
+      }
+    },
+    {
+      "id": "q022",
+      "dimension": null,
+      "scored": false,
+      "text": {
+        "it": "Nell'ultimo anno chi servi ti ha chiesto qualcosa su sicurezza o dati?",
+        "en": "In the past year, has whoever you serve asked you anything about security or data?"
+      },
+      "options": [
+        {
+          "points": 0,
+          "text": {
+            "it": "No, mai",
+            "en": "No, never"
+          }
+        },
+        {
+          "points": 1,
+          "text": {
+            "it": "Non lo so: se ne occupa qualcun altro",
+            "en": "I do not know: somebody else deals with that"
+          }
+        },
+        {
+          "points": 2,
+          "text": {
+            "it": "Me l'hanno chiesto a voce, o di sfuggita",
+            "en": "I was asked verbally, or in passing"
+          }
+        },
+        {
+          "points": 3,
+          "text": {
+            "it": "Sì: un questionario da compilare, o clausole da firmare",
+            "en": "Yes: a questionnaire to fill in, or clauses to sign"
+          }
+        }
+      ]
+    }
+  ],
+  "rules": {
+    "skip": [
+      {
+        "when": {
+          "q004": [
+            0,
+            1
+          ]
+        },
+        "questions": [
+          "q005"
+        ],
+        "as": "skipped"
+      },
+      {
+        "when": {
+          "q004": [
+            0,
+            1
+          ]
+        },
+        "questions": [
+          "q015",
+          "q017"
+        ],
+        "as": "not_applicable"
+      }
+    ],
+    "floor": {
+      "when": {
+        "q004": [
+          0,
+          1
+        ]
+      },
+      "band": 0
+    },
+    "coherence": [
+      {
+        "forbid": {
+          "q004": 0,
+          "q006": 3
+        },
+        "text": {
+          "it": "Hai risposto che in azienda non si usano strumenti AI, e anche che l'ultimo progetto con l'AI è in uso oggi. Una delle due non descrive la tua situazione.",
+          "en": "You answered that no AI tools are used in the company, and also that the last project with AI is in use today. One of the two does not describe your situation."
+        }
+      }
+    ],
+    "branch": {
+      "when": {
+        "q022": [
+          2,
+          3
+        ]
+      },
+      "opens": "requirements"
+    }
+  },
+  "notes": "survey-scope-nucleo.md",
+  "presentation": {
+    "tagline": {
+      "it": "Autovalutazione sull'AI",
+      "en": "AI self-assessment"
+    },
+    "kicker": {
+      "it": "Ventidue domande",
+      "en": "Twenty-two questions"
+    },
+    "title": {
+      "it": "AI Maturity Assessment",
+      "en": "AI Maturity Assessment"
+    },
+    "lede": {
+      "it": "Rispondi a ventidue domande sulla tua azienda e ottieni un quadro su sei dimensioni, con tre cose da fare per prime. Serve orientarsi, non certificarsi.",
+      "en": "Answer twenty-two questions about your company and get a picture across six dimensions, with three things to do first. It is here to orient you, not to certify you."
+    },
+    "duration": {
+      "it": "Dieci minuti, e puoi fermarti a metà: quello che hai risposto resta.",
+      "en": "Ten minutes, and you can stop half way: what you answered stays."
+    },
+    "dimensions_title": {
+      "it": "Le sei dimensioni",
+      "en": "The six dimensions"
+    },
+    "appendix_note": {
+      "it": "Ventidue domande, e cosa hai scelto. Il punteggio è una descrizione che hai dato tu: chi riceve questo foglio deve poterla leggere, non solo il numero che ne esce.",
+      "en": "Twenty-two questions, and what you chose. The score is a description you gave: whoever receives this sheet has to be able to read it, not only the number it produces."
+    }
+  }
+}

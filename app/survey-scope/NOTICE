@@ -1,0 +1,25 @@
+Survey Scope
+Copyright 2026 G&G Technologies S.r.l.
+
+This product includes software developed by G&G Technologies S.r.l.
+(https://ggtechnologies.sm).
+
+Licensed under the Apache License, Version 2.0. See the LICENSE file in this
+directory for the full text.
+
+This licence covers the contents of this directory only — including the JSON
+files under run/, one folder per questionnaire, which hold the questions, the
+report texts and, where a questionnaire has them, the compliance checklist and
+the deep-dive modules. They are covered on purpose: an assessment nobody may
+adapt is an assessment nobody may check.
+
+The rest of the repository — the pages of ggtechnologies.sm, the articles under
+/insights, the brand and its marks — is not covered and remains all rights
+reserved.
+
+The compliance checklist cites European legislation and links to its published
+sources; the citations are not part of this work and carry no licence of ours.
+Nothing in run/compliance-1.json is legal advice.
+
+No third-party code is bundled: the app has no dependencies and loads nothing
+from outside its own directory.

@@ -1,0 +1,174 @@
+{
+  "edition": 1,
+  "status": "published",
+  "note": "Deep-dive modules, one per dimension, opened by whoever wants to go further after the core. Only d1 exists so far, and it exists because a live test asked for it: the core asks how the AI tool got in, and the tester wanted to know *why* it got in — which is a good question and does not belong in the core, where each dimension carries exactly three questions of equal weight. Adding a fourth there would silently reweight the dimension. Each question follows the rule the three measurements produced: the best option asks for an event that happened, not a state that persists. Field names, keys and enum values are English; only the text under it/en is content.",
+  "modules": [
+    {
+      "dimension": "d1",
+      "opens_when": {
+        "q004": [
+          2,
+          3
+        ]
+      },
+      "text": {
+        "it": "Come ci siete arrivati",
+        "en": "How you got there"
+      },
+      "intro": {
+        "it": "Quattro domande su come quello strumento è entrato davvero, e cosa ci si aspettava. Si aprono perché hai risposto che una scelta c'è stata.",
+        "en": "Four questions on how that tool really came in, and what was expected of it. They open because you answered that a choice was made."
+      },
+      "questions": [
+        {
+          "id": "d1a",
+          "text": {
+            "it": "Perché è entrato? Da dove è partita la spinta?",
+            "en": "Why did it come in? Where did the push come from?"
+          },
+          "options": [
+            {
+              "points": 0,
+              "text": {
+                "it": "Se n'è parlato in giro, e l'abbiamo provato",
+                "en": "People were talking about it, and we tried it"
+              }
+            },
+            {
+              "points": 1,
+              "text": {
+                "it": "L'ha proposto un fornitore, o l'ha portato un consulente",
+                "en": "A supplier proposed it, or a consultant brought it"
+              }
+            },
+            {
+              "points": 2,
+              "text": {
+                "it": "L'ha chiesto un cliente, o serviva per stare al passo con un concorrente",
+                "en": "A customer asked for it, or a competitor had it"
+              }
+            },
+            {
+              "points": 3,
+              "text": {
+                "it": "Avevamo un problema preciso, e siamo andati a cercare come risolverlo",
+                "en": "We had a definite problem, and looked for a solution"
+              }
+            }
+          ]
+        },
+        {
+          "id": "d1b",
+          "text": {
+            "it": "Prima di cominciare, avevate detto cosa vi aspettavate che succedesse?",
+            "en": "Before starting, had you said what you expected to happen?"
+          },
+          "options": [
+            {
+              "points": 0,
+              "text": {
+                "it": "No",
+                "en": "No"
+              }
+            },
+            {
+              "points": 1,
+              "text": {
+                "it": "Ne avevamo un'idea, mai messa per iscritto",
+                "en": "We had an idea of it, never put in writing"
+              }
+            },
+            {
+              "points": 2,
+              "text": {
+                "it": "Sì, a voce, e ce lo ricordiamo tutti allo stesso modo",
+                "en": "Yes, verbally, and we all remember it the same way"
+              }
+            },
+            {
+              "points": 3,
+              "text": {
+                "it": "Sì, scritto: e a posteriori l'abbiamo confrontato con quello che è successo",
+                "en": "Yes, in writing: and we compared it with what happened"
+              }
+            }
+          ]
+        },
+        {
+          "id": "d1c",
+          "text": {
+            "it": "Chi lo usa tutti i giorni era stato coinvolto prima che entrasse?",
+            "en": "Were the people who use it every day involved before it came in?"
+          },
+          "options": [
+            {
+              "points": 0,
+              "text": {
+                "it": "L'ha trovato lì un lunedì mattina",
+                "en": "They found it there one Monday morning"
+              }
+            },
+            {
+              "points": 1,
+              "text": {
+                "it": "Gliel'abbiamo annunciato prima",
+                "en": "We announced it to them beforehand"
+              }
+            },
+            {
+              "points": 2,
+              "text": {
+                "it": "Qualcuno di loro l'ha provato prima che decidessimo",
+                "en": "Some of them tried it before we decided"
+              }
+            },
+            {
+              "points": 3,
+              "text": {
+                "it": "Sono stati loro a dirci se teneva o no, e li abbiamo ascoltati",
+                "en": "They told us whether it held up, and we listened"
+              }
+            }
+          ]
+        },
+        {
+          "id": "d1d",
+          "text": {
+            "it": "Se domani smettesse di funzionare, cosa succederebbe al lavoro che ci passa dentro?",
+            "en": "If it stopped working tomorrow, what would happen to the work that goes through it?"
+          },
+          "options": [
+            {
+              "points": 0,
+              "text": {
+                "it": "Non lo so",
+                "en": "I do not know"
+              }
+            },
+            {
+              "points": 1,
+              "text": {
+                "it": "Si fermerebbe, e ci vorrebbe un po' per capire come fare",
+                "en": "It would stop, and it would take a while to work out how"
+              }
+            },
+            {
+              "points": 2,
+              "text": {
+                "it": "Torneremmo a farlo come prima, con più fatica",
+                "en": "We would go back to doing it as before, with more effort"
+              }
+            },
+            {
+              "points": 3,
+              "text": {
+                "it": "Ci è già successo, e sappiamo quanto costa",
+                "en": "It has already happened, and we know what it costs"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

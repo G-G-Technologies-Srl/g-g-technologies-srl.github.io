@@ -1,0 +1,640 @@
+{
+  "edition": 1,
+  "status": "published",
+  "note": "The words the report is made of: the frame that says what the number is, and one recommendation per dimension and band. Two rules run through all of it. First, the number is a self-description and the report says so in the first line — three measurements found that the same company scores twenty-nine points apart depending on how its owner chooses to tell it, and a report that hides that is claiming something it cannot support. Second, no recommendation names a service anyone sells: it says what is missing and how you would know in three months whether it worked. If what is missing happens to be something we do, the reader gets there on their own, and gets there believing it. Recommendations are per dimension and band, not per combination of answers — seventy-two little texts would have collapsed into generic advice, which is the failure this whole module exists to avoid. Field names and keys are English; only text under it/en is content.",
+  "frame": {
+    "headline": {
+      "it": "Da come l'hai descritta, la tua azienda è a {overall} su 100.",
+      "en": "From the way you described it, your company is at {overall} out of 100."
+    },
+    "subhead": {
+      "it": "{band}",
+      "en": "{band}"
+    },
+    "what_this_is": {
+      "it": "Questo numero descrive come hai risposto tu, oggi {date}, non come sta la tua azienda vista da fuori. È un'autovalutazione: nessuno ha verificato niente, e va bene così — serve a orientarti, non a certificarti. Se rifai il questionario fra sei mesi, il confronto fra i due risultati dirà più del numero di oggi.",
+      "en": "This number describes how you answered, today {date}, not how your company looks from outside. It is a self-assessment: nobody has verified anything, and that is fine — it is here to orient you, not to certify you. If you take the questionnaire again in six months, comparing the two results will say more than today's number."
+    },
+    "how_to_read": {
+      "it": "Guarda le sei dimensioni prima del totale. Un 42 fatto di sei punteggi vicini e un 42 con due dimensioni a zero e quattro alte sono due aziende diverse, e le cose da fare non sono le stesse.",
+      "en": "Look at the six dimensions before the total. A 42 made of six close scores and a 42 with two dimensions at zero and four high are two different companies, and the things to do are not the same."
+    },
+    "respondent_note": {
+      "it": "Alla domanda sul ruolo hai risposto «{role}». Chi guida l'azienda e chi ci lavora dentro tendono a vedere le stesse cose in modo diverso: se puoi, fai compilare il questionario anche a un'altra persona e confronta. Le domande su cui non siete d'accordo sono quelle che vale la pena guardare.",
+      "en": "You answered «{role}» to the question about your role. Whoever leads the company and whoever works inside it tend to see the same things differently: if you can, have somebody else fill the questionnaire in too, and compare. The questions you disagree on are the ones worth looking at."
+    },
+    "floor_note": {
+      "it": "Hai risposto che in azienda non risultano strumenti AI in uso, quindi il livello resta il primo qualunque siano gli altri punteggi: con zero AI non si può essere «in produzione con l'AI». Le altre dimensioni le trovi qui sotto, e valgono comunque.",
+      "en": "You answered that no AI tools are in use in the company, so the level stays the first one whatever the other scores say: with no AI you cannot be «in production with AI». The other dimensions are below, and they still count."
+    },
+    "not_verified": {
+      "it": "Nessuna delle risposte è stata verificata, e questo foglio non è un parere legale né una certificazione.",
+      "en": "None of the answers has been verified, and this sheet is neither legal advice nor a certification."
+    },
+    "print_note": {
+      "it": "Stampato il {date}. I dati non hanno lasciato questo computer.",
+      "en": "Printed on {date}. The data did not leave this computer."
+    },
+    "floor_band": {
+      "it": "L'AI non è ancora entrata",
+      "en": "AI has not arrived yet"
+    },
+    "floor_note_ready": {
+      "it": "Hai risposto che in azienda non risultano strumenti AI in uso, quindi il livello resta il primo: con zero AI non si può essere «in produzione con l'AI». Il punteggio qui sopra però resta tuo, ed è alto: dati, processi e competenze si costruiscono prima dell'AI, e sono la parte che a chi comincia da zero manca. Ti serve un primo caso d'uso, non una rincorsa.",
+      "en": "You answered that no AI tools are in use in the company, so the level stays the first one: with no AI you cannot be «in production with AI». The score above is still yours, though, and it is high: data, processes and skills are built before AI, and they are the part that whoever starts from nothing is missing. What you need is a first use case, not catching up."
+    }
+  },
+  "actions": {
+    "how_many": 3,
+    "intro": {
+      "it": "Tre cose, in quest'ordine. Sono scelte partendo dalle dimensioni in cui hai risposto peggio, perché è lì che una mossa vale di più — e una voce di conformità a cui non hai risposto sì viene prima di qualunque altra, perché ha una data.",
+      "en": "Three things, in this order. They are chosen from the dimensions you answered worst on, because that is where one move is worth most — and a compliance row you did not answer yes to comes before anything else, because it has a date."
+    },
+    "measure_label": {
+      "it": "Come lo sai fra tre mesi",
+      "en": "How you will know in three months"
+    },
+    "effort_label": {
+      "it": "Quanto costa",
+      "en": "What it costs"
+    }
+  },
+  "recommendations": [
+    {
+      "dimension": "d1",
+      "band": 0,
+      "title": {
+        "it": "Trova una cosa sola che vi fa perdere tempo tutte le settimane",
+        "en": "Find one single thing that wastes your time every week"
+      },
+      "why": {
+        "it": "Non serve una strategia: serve un caso. Le imprese che partono da un progetto generale si fermano al primo ostacolo, quelle che partono da un fastidio concreto arrivano in fondo perché sanno riconoscere quando è risolto.",
+        "en": "You do not need a strategy: you need a case. Companies that start from a general project stop at the first obstacle; the ones that start from a concrete irritation get to the end, because they can tell when it is solved."
+      },
+      "how": {
+        "it": "Chiedi a chi fa il lavoro qual è la cosa ripetitiva che gli pesa di più. Scegli quella, non quella che interessa a te.",
+        "en": "Ask whoever does the work which repetitive thing weighs on them most. Choose that one, not the one that interests you."
+      },
+      "effort": {
+        "it": "Un pomeriggio per decidere, poi dipende dal caso.",
+        "en": "An afternoon to decide, then it depends on the case."
+      },
+      "measure": {
+        "it": "C'è una cosa che prima si faceva a mano e adesso no, e chi la faceva se n'è accorto.",
+        "en": "There is something that used to be done by hand and now is not, and whoever did it has noticed."
+      }
+    },
+    {
+      "dimension": "d1",
+      "band": 1,
+      "title": {
+        "it": "Metti per iscritto cosa ti aspetti, prima della prossima prova",
+        "en": "Put in writing what you expect, before the next trial"
+      },
+      "why": {
+        "it": "State provando, ma senza un'aspettativa scritta nessuna prova può dirsi riuscita o fallita: resta un'impressione, e le impressioni non si difendono in una riunione.",
+        "en": "You are trying things out, but without a written expectation no trial can be called a success or a failure: it stays an impression, and impressions cannot be defended in a meeting."
+      },
+      "how": {
+        "it": "Prima di cominciare, tre righe: cosa deve migliorare, di quanto, entro quando. Anche a occhio.",
+        "en": "Before starting, three lines: what has to improve, by how much, by when. Even roughly."
+      },
+      "effort": {
+        "it": "Dieci minuti prima di ogni prova.",
+        "en": "Ten minutes before each trial."
+      },
+      "measure": {
+        "it": "La prossima prova finisce con una decisione presa guardando quelle tre righe, non con un «vediamo».",
+        "en": "The next trial ends with a decision taken by looking at those three lines, not with a «let us see»."
+      }
+    },
+    {
+      "dimension": "d1",
+      "band": 2,
+      "title": {
+        "it": "Misura una volta cosa vi ha fatto risparmiare quello che già usate",
+        "en": "Measure once what the tools you already use have saved you"
+      },
+      "why": {
+        "it": "Qualcosa è in produzione ma nessuno ha fatto i conti: significa che al primo taglio di budget quello strumento non ha nessuno che lo difenda con un numero.",
+        "en": "Something is in production but nobody has done the sums: which means that at the first budget cut that tool has nobody to defend it with a number."
+      },
+      "how": {
+        "it": "Prendi lo strumento che si usa di più e stima una cosa sola — ore risparmiate a settimana, o errori in meno. Chiedilo a chi lo usa, non al fornitore.",
+        "en": "Take the tool that is used most and estimate one single thing — hours saved a week, or errors avoided. Ask whoever uses it, not the supplier."
+      },
+      "effort": {
+        "it": "Mezza giornata, una volta.",
+        "en": "Half a day, once."
+      },
+      "measure": {
+        "it": "Esiste un numero, scritto, che qualcuno saprebbe ripetere fra sei mesi.",
+        "en": "There is a number, written down, that somebody could repeat in six months."
+      }
+    },
+    {
+      "dimension": "d1",
+      "band": 3,
+      "title": {
+        "it": "Rifai il conto sul più vecchio, non sul più nuovo",
+        "en": "Do the sums again on the oldest tool, not the newest"
+      },
+      "why": {
+        "it": "Quando l'AI è nel modo in cui si lavora, il rischio non è più partire: è tenersi strumenti che rendevano due anni fa e oggi costano più di quanto valgono.",
+        "en": "When AI is in the way you work, the risk is no longer starting: it is keeping tools that paid off two years ago and today cost more than they are worth."
+      },
+      "how": {
+        "it": "Prendi quello che usate da più tempo e chiediti se lo ricomprereste oggi, allo stesso prezzo.",
+        "en": "Take the one you have used longest and ask yourself whether you would buy it again today, at the same price."
+      },
+      "effort": {
+        "it": "Un'ora, una volta l'anno.",
+        "en": "An hour, once a year."
+      },
+      "measure": {
+        "it": "Almeno uno strumento è stato rinegoziato, sostituito o spento.",
+        "en": "At least one tool has been renegotiated, replaced or switched off."
+      }
+    },
+    {
+      "dimension": "d2",
+      "band": 0,
+      "title": {
+        "it": "Porta i tuoi dati di vendita in un posto solo",
+        "en": "Bring your sales data into one place"
+      },
+      "why": {
+        "it": "Finché i numeri stanno in tre posti che non si parlano, qualunque cosa costruisci sopra eredita quella confusione — e la prima domanda che ti farà chiunque, fornitore o cliente, è di esportarli.",
+        "en": "While the numbers sit in three places that do not talk to each other, anything you build on top inherits that confusion — and the first thing anyone will ask you, supplier or customer, is to export them."
+      },
+      "how": {
+        "it": "Scegli dove devono stare — il gestionale, non un foglio — e porta lì almeno l'ultimo anno.",
+        "en": "Decide where they have to live — the management system, not a spreadsheet — and move at least the last year there."
+      },
+      "effort": {
+        "it": "Qualche giorno, una volta.",
+        "en": "A few days, once."
+      },
+      "measure": {
+        "it": "Riesci a tirare fuori l'elenco di un anno di attività in meno di un'ora, da un posto solo.",
+        "en": "You can pull out a year of activity in less than an hour, from one place."
+      }
+    },
+    {
+      "dimension": "d2",
+      "band": 1,
+      "title": {
+        "it": "Decidi qual è il sistema che dice la verità",
+        "en": "Decide which system tells the truth"
+      },
+      "why": {
+        "it": "Il problema non è avere più sistemi: è non aver deciso quale vince quando due danno numeri diversi. Senza quella decisione, ogni disallineamento diventa una discussione.",
+        "en": "The problem is not having several systems: it is not having decided which one wins when two give different numbers. Without that decision, every mismatch becomes an argument."
+      },
+      "how": {
+        "it": "Per ogni dato che conta — ricavi, anagrafiche, quello che tieni a magazzino se ne hai — scrivi in una riga dove sta la versione buona.",
+        "en": "For every number that counts — revenue, records, stock if you hold any — write in one line where the good version lives."
+      },
+      "effort": {
+        "it": "Un'ora, più il tempo di dirlo a tutti.",
+        "en": "An hour, plus the time to tell everyone."
+      },
+      "measure": {
+        "it": "Alla prossima discrepanza nessuno chiede «ma quale è giusto?».",
+        "en": "At the next discrepancy nobody asks «but which one is right?»."
+      }
+    },
+    {
+      "dimension": "d2",
+      "band": 2,
+      "title": {
+        "it": "Rendi trovabile quello che è già ordinato",
+        "en": "Make findable what is already tidy"
+      },
+      "why": {
+        "it": "Ordinato e trovabile sono due cose diverse: una cartella per cliente è ordinata, ma se per trovare un documento serve sapere chi l'ha fatto e quando, sta in piedi solo finché quella persona c'è.",
+        "en": "Tidy and findable are two different things: a folder per customer is tidy, but if finding a document means knowing who made it and when, it stands only while that person is there."
+      },
+      "how": {
+        "it": "Dai ai file un nome che dica di chi sono e di cosa parlano, non un numero di pratica. Cominciando dall'ultimo anno.",
+        "en": "Give files a name that says whose they are and what they are about, not a job number. Starting with the last year."
+      },
+      "effort": {
+        "it": "Un giorno, più l'abitudine.",
+        "en": "A day, plus the habit."
+      },
+      "measure": {
+        "it": "Una persona che non ha fatto quel lavoro trova il documento da sola.",
+        "en": "Somebody who did not do that job finds the document on their own."
+      }
+    },
+    {
+      "dimension": "d2",
+      "band": 3,
+      "title": {
+        "it": "Prova a uscire da un fornitore, per finta",
+        "en": "Try leaving a supplier, for practice"
+      },
+      "why": {
+        "it": "I dati li avete in ordine: quello che non sapete è se sono vostri davvero. È una cosa che si scopre solo provando, e conviene scoprirla quando non serve.",
+        "en": "Your data is in order: what you do not know is whether it is really yours. That is something you find out only by trying, and it is better found out when you do not need it."
+      },
+      "how": {
+        "it": "Scegli un servizio che usate molto ed esporta tutto quello che ci avete dentro. Guarda cosa manca e in che formato esce.",
+        "en": "Pick a service you use heavily and export everything you have inside it. Look at what is missing, and in what format it comes out."
+      },
+      "effort": {
+        "it": "Mezza giornata.",
+        "en": "Half a day."
+      },
+      "measure": {
+        "it": "Hai un file, sai cosa non è uscito, e sai quanto tempo ci vorrebbe a rifare tutto altrove.",
+        "en": "You have a file, you know what did not come out, and you know how long redoing it elsewhere would take."
+      }
+    },
+    {
+      "dimension": "d3",
+      "band": 0,
+      "title": {
+        "it": "Scrivi come si fa il lavoro che ti occupa di più",
+        "en": "Write down how the work that takes most of your time is done"
+      },
+      "why": {
+        "it": "Sotto una certa regolarità l'AI non ha su cosa appoggiarsi: prima di automatizzare qualcosa bisogna che quel qualcosa si faccia due volte allo stesso modo. E il primo a guadagnarci è chi entra nuovo.",
+        "en": "Below a certain regularity AI has nothing to rest on: before automating something, that something has to be done the same way twice. And the first to benefit is whoever joins next."
+      },
+      "how": {
+        "it": "Falla scrivere a chi lo fa, non a un consulente. Una pagina, con i passaggi nell'ordine in cui succedono.",
+        "en": "Have it written by whoever does it, not by a consultant. One page, with the steps in the order they happen."
+      },
+      "effort": {
+        "it": "Due o tre ore della persona giusta.",
+        "en": "Two or three hours of the right person."
+      },
+      "measure": {
+        "it": "La usa qualcuno che non l'ha scritta.",
+        "en": "Somebody who did not write it uses it."
+      }
+    },
+    {
+      "dimension": "d3",
+      "band": 1,
+      "title": {
+        "it": "Metti una data sulla procedura che avete già",
+        "en": "Put a date on the procedure you already have"
+      },
+      "why": {
+        "it": "Una procedura di cui nessuno sa l'età è una procedura che nessuno guarda: le persone seguono quello che si ricordano, e la carta resta lì a dire un'altra cosa.",
+        "en": "A procedure whose age nobody knows is a procedure nobody looks at: people follow what they remember, and the paper sits there saying something else."
+      },
+      "how": {
+        "it": "Rileggila con chi fa il lavoro, correggi quello che non è più vero, scrivi la data in cima.",
+        "en": "Read it again with whoever does the work, correct what is no longer true, write the date at the top."
+      },
+      "effort": {
+        "it": "Mezza giornata.",
+        "en": "Half a day."
+      },
+      "measure": {
+        "it": "Chi fa il lavoro conferma che è quello che fa davvero.",
+        "en": "Whoever does the work confirms that it is what they actually do."
+      }
+    },
+    {
+      "dimension": "d3",
+      "band": 2,
+      "title": {
+        "it": "Fai in modo che gli errori si vedano prima del cliente",
+        "en": "Make sure mistakes show up before the customer does"
+      },
+      "why": {
+        "it": "Il processo è a posto, ma se il primo ad accorgersi di un problema è chi lo subisce, ogni errore costa il doppio: la riparazione e la fiducia.",
+        "en": "The process is in order, but if the first to notice a problem is whoever suffers it, every mistake costs twice: the repair and the trust."
+      },
+      "how": {
+        "it": "Prendi l'ultimo errore vero e chiediti quale controllo, anche a mano, l'avrebbe intercettato. Aggiungi quello, uno solo.",
+        "en": "Take the last real mistake and ask which check, even a manual one, would have caught it. Add that one, only that one."
+      },
+      "effort": {
+        "it": "Un'ora per decidere, poi due minuti al giorno.",
+        "en": "An hour to decide, then two minutes a day."
+      },
+      "measure": {
+        "it": "Il prossimo problema lo scopre qualcuno di voi, e c'è scritto quando.",
+        "en": "The next problem is found by one of you, and there is a record of when."
+      }
+    },
+    {
+      "dimension": "d3",
+      "band": 3,
+      "title": {
+        "it": "Porta il controllo dentro il sistema",
+        "en": "Move the check inside the system"
+      },
+      "why": {
+        "it": "I controlli a mano funzionano finché c'è la persona che li fa: il passo successivo è che sia lo strumento a fermare l'errore, non la memoria di qualcuno.",
+        "en": "Manual checks work while the person who does them is there: the next step is for the tool to stop the error, rather than somebody's memory."
+      },
+      "how": {
+        "it": "Prendi il controllo manuale più importante che avete e chiedi a chi vi fornisce il gestionale se può diventare un blocco o un avviso.",
+        "en": "Take the most important manual check you have and ask whoever supplies your management system whether it can become a block or an alert."
+      },
+      "effort": {
+        "it": "Dipende dal fornitore. La domanda costa dieci minuti.",
+        "en": "It depends on the supplier. The question costs ten minutes."
+      },
+      "measure": {
+        "it": "Almeno un controllo non dipende più da chi si ricorda di farlo.",
+        "en": "At least one check no longer depends on somebody remembering to do it."
+      }
+    },
+    {
+      "dimension": "d4",
+      "band": 0,
+      "title": {
+        "it": "Mezza giornata di formazione a chi già usa questi strumenti",
+        "en": "Half a day of training for the people already using these tools"
+      },
+      "why": {
+        "it": "Chi usa l'AI senza aver mai imparato a verificarne le uscite non è più veloce: è più veloce a sbagliare. E dal 2025 adottare misure di alfabetizzazione è un obbligo, non una buona pratica.",
+        "en": "Anyone using AI without ever having learnt to check its output is not faster: they are faster at getting it wrong. And since 2025 adopting literacy measures is an obligation, not good practice."
+      },
+      "how": {
+        "it": "Non un corso generico: mezza giornata su come si controlla quello che esce, con esempi presi dal vostro lavoro.",
+        "en": "Not a generic course: half a day on how to check what comes out, with examples taken from your own work."
+      },
+      "effort": {
+        "it": "Mezza giornata a persona, una volta.",
+        "en": "Half a day per person, once."
+      },
+      "measure": {
+        "it": "Qualcuno ti racconta di aver fermato un errore prima che uscisse.",
+        "en": "Somebody tells you they stopped a mistake before it went out."
+      }
+    },
+    {
+      "dimension": "d4",
+      "band": 1,
+      "title": {
+        "it": "Dai a qualcuno il compito, e il tempo",
+        "en": "Give somebody the job, and the time"
+      },
+      "why": {
+        "it": "C'è già una persona a cui gli altri chiedono, ma se lo fa per passione la competenza se ne va con lei. Un ruolo con del tempo dedicato è ciò che distingue una persona brava da una capacità dell'azienda.",
+        "en": "There is already a person the others ask, but if they do it out of enthusiasm the knowledge leaves with them. A role with time set aside is what separates a good person from a capability of the company."
+      },
+      "how": {
+        "it": "Dillo esplicitamente a quella persona e ai suoi colleghi, e togli qualcosa dal suo piatto per fare spazio.",
+        "en": "Say it explicitly to that person and to their colleagues, and take something off their plate to make room."
+      },
+      "effort": {
+        "it": "Una conversazione, e qualche ora al mese.",
+        "en": "A conversation, and a few hours a month."
+      },
+      "measure": {
+        "it": "Quella persona ha un'ora a settimana per farlo, e gli altri lo sanno.",
+        "en": "That person has an hour a week for it, and the others know."
+      }
+    },
+    {
+      "dimension": "d4",
+      "band": 2,
+      "title": {
+        "it": "Metti per iscritto come si controlla quello che esce",
+        "en": "Put in writing how the output gets checked"
+      },
+      "why": {
+        "it": "Le competenze ci sono ma stanno nelle teste: il momento in cui servono davvero è quando la persona esperta non c'è, ed è l'unico in cui non si può chiedere.",
+        "en": "The skills are there but they live in people's heads: the moment they are really needed is when the experienced person is away, and that is the one moment you cannot ask."
+      },
+      "how": {
+        "it": "Una pagina: cosa va sempre riletto, cosa non va mai copiato senza controllo, a chi si chiede nel dubbio.",
+        "en": "One page: what must always be read again, what must never be copied without checking, who to ask when in doubt."
+      },
+      "effort": {
+        "it": "Due ore.",
+        "en": "Two hours."
+      },
+      "measure": {
+        "it": "Una persona nuova la legge e sa cosa può fare da sola.",
+        "en": "A new person reads it and knows what they can do on their own."
+      }
+    },
+    {
+      "dimension": "d4",
+      "band": 3,
+      "title": {
+        "it": "Fai raccontare gli errori, non solo i successi",
+        "en": "Have the mistakes told, not only the successes"
+      },
+      "why": {
+        "it": "A questo livello il rischio è la fiducia: più lo strumento funziona, meno si controlla. Le aziende che tengono il livello sono quelle in cui raccontare un errore intercettato è normale.",
+        "en": "At this level the risk is trust: the better the tool works, the less it gets checked. The companies that hold the level are the ones where telling of a mistake you caught is normal."
+      },
+      "how": {
+        "it": "Una volta al mese, dieci minuti: qualcuno racconta l'ultima volta che l'AI ha sbagliato e come se n'è accorto.",
+        "en": "Once a month, ten minutes: somebody tells the last time AI got it wrong, and how they noticed."
+      },
+      "effort": {
+        "it": "Dieci minuti al mese.",
+        "en": "Ten minutes a month."
+      },
+      "measure": {
+        "it": "Nell'ultimo trimestre qualcuno ha raccontato un errore senza che glielo chiedessi.",
+        "en": "In the last quarter somebody told of a mistake without being asked."
+      }
+    },
+    {
+      "dimension": "d5",
+      "band": 0,
+      "title": {
+        "it": "Scopri cosa si sta già usando, prima di decidere qualsiasi cosa",
+        "en": "Find out what is already being used, before deciding anything"
+      },
+      "why": {
+        "it": "Nella maggior parte delle aziende l'AI è già entrata da qualcuno, dal proprio telefono o dentro un programma che avevate: finché non sai cosa c'è, ogni regola che scrivi parla di un'azienda diversa dalla tua.",
+        "en": "In most companies AI has already come in through somebody, from their own phone or inside a programme you had: until you know what is there, every rule you write describes a different company from yours."
+      },
+      "how": {
+        "it": "Chiedilo, senza tono di indagine: «cosa usate che vi aiuta a scrivere, tradurre, riassumere?». Le risposte sorprendono.",
+        "en": "Ask, without the tone of an investigation: «what do you use that helps you write, translate, summarise?». The answers surprise people."
+      },
+      "effort": {
+        "it": "Un giro di domande, un'ora.",
+        "en": "A round of questions, an hour."
+      },
+      "measure": {
+        "it": "Hai un elenco, e contiene almeno una cosa che non sapevi.",
+        "en": "You have a list, and it contains at least one thing you did not know about."
+      }
+    },
+    {
+      "dimension": "d5",
+      "band": 1,
+      "title": {
+        "it": "Scrivi una regola sola: cosa non si incolla mai",
+        "en": "Write one single rule: what never gets pasted"
+      },
+      "why": {
+        "it": "Non serve una policy di dieci pagine, serve una frase che tutti si ricordino. Quello che finisce in un servizio online esce dall'azienda, e chi lo incolla di solito non se lo sta chiedendo.",
+        "en": "You do not need a ten-page policy, you need a sentence everyone remembers. What ends up in an online service leaves the company, and whoever pastes it is usually not asking themselves that."
+      },
+      "how": {
+        "it": "Una riga su cosa non esce mai — dati di clienti, contratti, listini — e dove chiedere in caso di dubbio. Detta a voce e messa dove si lavora.",
+        "en": "One line on what never goes out — customer data, contracts, price lists — and where to ask when in doubt. Said out loud and put where the work happens."
+      },
+      "effort": {
+        "it": "Un'ora per scriverla, dieci minuti per dirla.",
+        "en": "An hour to write it, ten minutes to say it."
+      },
+      "measure": {
+        "it": "Chiedi a tre persone qual è la regola: te la sanno dire.",
+        "en": "Ask three people what the rule is: they can tell you."
+      }
+    },
+    {
+      "dimension": "d5",
+      "band": 2,
+      "title": {
+        "it": "Guarda dove finiscono i dati, sul contratto",
+        "en": "Look at where the data ends up, in the contract"
+      },
+      "why": {
+        "it": "Sapere quali strumenti si usano è metà del lavoro: l'altra metà è dove elaborano e cosa dice il contratto sul riuso di quello che ci mettete dentro. Sta scritto, e quasi nessuno lo legge.",
+        "en": "Knowing which tools are used is half the work: the other half is where they process and what the contract says about reusing what you put in. It is written down, and almost nobody reads it."
+      },
+      "how": {
+        "it": "Per i due strumenti che toccano più dati, cerca nel contratto tre cose: dove elaborano, se usano i tuoi contenuti per addestrare, cosa succede ai dati quando smetti.",
+        "en": "For the two tools that touch the most data, look in the contract for three things: where they process, whether they use your content for training, what happens to the data when you stop."
+      },
+      "effort": {
+        "it": "Un'ora per contratto.",
+        "en": "An hour per contract."
+      },
+      "measure": {
+        "it": "Sai rispondere a quelle tre domande senza chiamare nessuno.",
+        "en": "You can answer those three questions without calling anybody."
+      }
+    },
+    {
+      "dimension": "d5",
+      "band": 3,
+      "title": {
+        "it": "Verifica che la regola regga, invece di fidarti che regga",
+        "en": "Check that the rule holds, instead of trusting that it does"
+      },
+      "why": {
+        "it": "A questo livello la differenza non è avere le regole: è sapere se vengono seguite. Una regola mai verificata e una regola che non c'è si distinguono solo il giorno che succede qualcosa.",
+        "en": "At this level the difference is not having the rules: it is knowing whether they are followed. A rule never checked and a rule that does not exist are told apart only on the day something happens."
+      },
+      "how": {
+        "it": "Scegli un mese e guarda davvero: cosa è passato dai servizi esterni, chi li ha usati, per cosa.",
+        "en": "Pick a month and actually look: what went through the external services, who used them, what for."
+      },
+      "effort": {
+        "it": "Mezza giornata, una volta l'anno.",
+        "en": "Half a day, once a year."
+      },
+      "measure": {
+        "it": "Puoi dire cosa è successo nell'ultimo mese, non cosa dovrebbe succedere.",
+        "en": "You can say what happened last month, not what ought to happen."
+      }
+    },
+    {
+      "dimension": "d6",
+      "band": 0,
+      "title": {
+        "it": "Decidi chi dice sì",
+        "en": "Decide who says yes"
+      },
+      "why": {
+        "it": "Se chiunque può cominciare a usare uno strumento nuovo, l'azienda non sa cosa ha in casa — e la prima volta che un cliente lo chiede, la risposta arriva in tre giorni invece che in tre minuti.",
+        "en": "If anybody can start using a new tool, the company does not know what it has in the house — and the first time a customer asks, the answer takes three days instead of three minutes."
+      },
+      "how": {
+        "it": "Una persona, un passaggio, uguale per tutti. Non un modulo: basta che si sappia a chi si chiede.",
+        "en": "One person, one step, the same for everyone. Not a form: it is enough that people know who to ask."
+      },
+      "effort": {
+        "it": "Una decisione, e dirla.",
+        "en": "A decision, and saying it."
+      },
+      "measure": {
+        "it": "L'ultimo strumento entrato è passato da lì.",
+        "en": "The last tool that came in went through it."
+      }
+    },
+    {
+      "dimension": "d6",
+      "band": 1,
+      "title": {
+        "it": "Fai l'elenco degli strumenti che toccano dati dei clienti",
+        "en": "Make the list of tools that touch customer data"
+      },
+      "why": {
+        "it": "È il presupposto di quasi tutti gli obblighi che ti riguardano, e la prima cosa che ti chiederà un cliente strutturato. Senza, non puoi rispondere né a lui né a te stesso.",
+        "en": "It is the starting point of almost every obligation that concerns you, and the first thing a larger customer will ask for. Without it you can answer neither them nor yourself."
+      },
+      "how": {
+        "it": "Un foglio: strumento, chi lo usa, quali dati ci passano, chi è il fornitore. Anche fatto male è meglio che non averlo.",
+        "en": "One sheet: tool, who uses it, which data goes through it, who the supplier is. Even done badly it beats not having it."
+      },
+      "effort": {
+        "it": "Mezza giornata.",
+        "en": "Half a day."
+      },
+      "measure": {
+        "it": "Un cliente te lo chiede e glielo mandi lo stesso giorno.",
+        "en": "A customer asks for it and you send it the same day."
+      }
+    },
+    {
+      "dimension": "d6",
+      "band": 2,
+      "title": {
+        "it": "Dai dei criteri a chi approva",
+        "en": "Give whoever approves some criteria"
+      },
+      "why": {
+        "it": "Il passaggio c'è, ma se chi approva guarda solo il prezzo, sta decidendo su un terzo dell'informazione. Le cose che costano davvero — dove finiscono i dati, quanto costa uscire — si vedono prima di firmare o mai più.",
+        "en": "The step exists, but if whoever approves looks only at the price, they are deciding on a third of the information. The things that really cost — where the data ends up, what leaving costs — are seen before signing or never again."
+      },
+      "how": {
+        "it": "Tre domande da fare sempre: dove stanno i dati, come si esce, chi risponde se si rompe.",
+        "en": "Three questions to ask every time: where the data sits, how you leave, who answers if it breaks."
+      },
+      "effort": {
+        "it": "Un'ora per scriverle.",
+        "en": "An hour to write them."
+      },
+      "measure": {
+        "it": "L'ultima decisione di acquisto le ha usate, e si vede da cosa è stato chiesto al fornitore.",
+        "en": "The last buying decision used them, and you can see it from what was asked of the supplier."
+      }
+    },
+    {
+      "dimension": "d6",
+      "band": 3,
+      "title": {
+        "it": "Rileggi l'elenco, e guarda cosa è sparito",
+        "en": "Read the list again, and look at what has gone"
+      },
+      "why": {
+        "it": "Il governo c'è: quello che si perde è l'aggiornamento. Gli strumenti entrano quando serve e non esce mai niente, e dopo due anni l'elenco descrive un'azienda che non esiste più.",
+        "en": "The governance is there: what gets lost is the updating. Tools come in when they are needed and nothing ever leaves, and after two years the list describes a company that no longer exists."
+      },
+      "how": {
+        "it": "Due volte l'anno, riga per riga: si usa ancora? chi lo usa? serve ancora? Spegni quello che non serve.",
+        "en": "Twice a year, row by row: is it still used? who uses it? is it still needed? Switch off what is not."
+      },
+      "effort": {
+        "it": "Due ore, due volte l'anno.",
+        "en": "Two hours, twice a year."
+      },
+      "measure": {
+        "it": "All'ultima rilettura almeno una voce è stata tolta.",
+        "en": "At the last reading at least one row was removed."
+      }
+    }
+  ]
+}

@@ -1,0 +1,291 @@
+{
+  "edition": 1,
+  "status": "draft",
+  "verified_on": "2026-08-28",
+  "valid_until": "2026-11-28",
+  "warn_days": 30,
+  "note": "Le voci del ramo italiano. Il campo `when` le smista sulla risposta a n003: chi è in perimetro vede gli obblighi diretti, un fornitore quelli contrattuali. Nessuna riga dice se sei in regola.",
+  "scope": {
+    "it": "Gli obblighi elencati qui sono quelli **italiani**: D.Lgs. 138/2024 e determinazioni dell'ACN. La direttiva è europea ma l'attuazione è nazionale, e un'azienda stabilita in un altro Paese dell'Unione ha la stessa direttiva e un'altra trasposizione. Un'impresa non UE — per esempio sammarinese — non ha obbligo diretto, e le righe che la riguardano sono quelle contrattuali.",
+    "en": "The obligations listed here are the **Italian** ones: Legislative Decree 138/2024 and the ACN determinations. The directive is European but the implementation is national, and a company established in another Union country has the same directive and a different transposition. A non-EU company — a San Marino one, for instance — has no direct obligation, and the rows that concern it are the contractual ones."
+  },
+  "disclaimer": {
+    "it": "Queste righe dicono quale obbligo esiste, da quando vale e dove leggerlo. Non dicono se sei in regola: quello lo stabilite tu e chi ti assiste. Le date sono verificate al 28 agosto 2026 e vanno rilette entro il 28 novembre, perché le linee guida settoriali escono fino a settembre.",
+    "en": "These rows say which obligation exists, from when it applies and where to read it. They do not say whether you comply: that is settled by you and whoever advises you. The dates were verified on 28 August 2026 and are to be read again by 28 November, because the sector guidelines are published up to September."
+  },
+  "disclaimer_for_distributors": {
+    "it": "Se distribuisci questo questionario ai tuoi associati o fornitori, ricorda che le voci qui elencate sono quelle italiane, e che la verifica delle date scade il 28 novembre 2026.",
+    "en": "If you hand this questionnaire to your members or suppliers, remember that the rows listed here are the Italian ones, and that the verification of the dates expires on 28 November 2026."
+  },
+  "answers": [
+    {
+      "id": "yes",
+      "text": {
+        "it": "Sì",
+        "en": "Yes"
+      }
+    },
+    {
+      "id": "no",
+      "text": {
+        "it": "No",
+        "en": "No"
+      }
+    },
+    {
+      "id": "unknown",
+      "text": {
+        "it": "Non lo so",
+        "en": "I do not know"
+      }
+    },
+    {
+      "id": "not_relevant",
+      "text": {
+        "it": "Non ci riguarda",
+        "en": "Does not apply to us"
+      }
+    }
+  ],
+  "dimensions_note": {
+    "it": "BOZZA, DA RIVEDERE NEL MERITO. `dimensions` dice quale area del questionario un obbligo tocca, e serve a una cosa sola: accanto a una dimensione debole, il report elenca le voci a cui quella persona ha risposto no o non lo so nella stessa area. Non è una mappa di conformità e non va letta come tale — un punteggio basso non è una violazione, e nessuna riga qui dice il contrario. Tre voci non hanno nessuna dimensione, ed è un fatto e non una lacuna: «sapete di non dover fare la registrazione», «con quali criteri si stabilisce il perimetro» e «le linee guida escono gradualmente» dicono a chi legge dove sta, non cosa deve fare in un'area del questionario. Finché questa nota c'è, il file resta in bozza.",
+    "en": "DRAFT, TO BE REVIEWED ON THE MERITS. `dimensions` says which area of the questionnaire an obligation touches, and it serves one purpose only: next to a weak dimension, the report lists the rows that person answered no or do not know to in the same area. It is not a compliance map and must not be read as one — a low score is not a breach, and no row here says otherwise. Three rows have no dimension at all, and that is a fact rather than a gap: «you know you do not have to register», «the criteria that decide scope» and «the guidelines come out gradually» tell the reader where they stand, not what to do in an area of the questionnaire. While this note is here, the file stays a draft."
+  },
+  "items": [
+    {
+      "id": "c001",
+      "dimensions": [
+        "d1"
+      ],
+      "applies_from": "2025-12-31",
+      "question": {
+        "it": "Vi siete registrati sulla Piattaforma NIS dell'ACN, e avete rinnovato quest'anno?",
+        "en": "Have you registered on the ACN's NIS Platform, and renewed this year?"
+      },
+      "obligation": {
+        "it": "La registrazione non è una tantum: si rinnova ogni anno in una finestra che va dal 1° gennaio al 28 febbraio. Chi si è registrato l'anno scorso deve rinnovare, chi è diventato soggetto nel frattempo deve registrarsi la prima volta. Fuori dalla finestra non si può fare: se te ne accorgi adesso, la prossima apre il 1° gennaio.",
+        "en": "Registration is not a one-off: it is renewed every year in a window running from 1 January to 28 February. Whoever registered last year has to renew; whoever became an entity in the meantime has to register for the first time. Outside the window it cannot be done: if you notice now, the next one opens on 1 January."
+      },
+      "source": {
+        "label": "Determinazione ACN 379887/2025, art. 11",
+        "url": "https://www.acn.gov.it/portale/nis/registrazione"
+      },
+      "when": {
+        "n003": [
+          3
+        ]
+      },
+      "changes_on": "2027-01-01"
+    },
+    {
+      "id": "c002",
+      "dimensions": [
+        "d2",
+        "d3",
+        "d4"
+      ],
+      "applies_from": "2026-01-15",
+      "question": {
+        "it": "Le misure di sicurezza di base sono in piedi, o sapete cosa manca?",
+        "en": "Are the basic security measures in place, or do you know what is missing?"
+      },
+      "obligation": {
+        "it": "Le misure di base sono fissate dalla Determinazione 379907/2025 e vanno implementate entro il 31 ottobre 2026. Da quella data l'ACN può avviare le verifiche: preventive per i soggetti essenziali, dopo un evento o una segnalazione per gli importanti.",
+        "en": "The basic measures are set by Determination 379907/2025 and are to be implemented by 31 October 2026. From that date the ACN may begin its checks: in advance for essential entities, after an event or a report for important ones."
+      },
+      "source": {
+        "label": "Determinazione ACN 379907/2025",
+        "url": "https://www.acn.gov.it/portale/nis"
+      },
+      "when": {
+        "n003": [
+          3
+        ]
+      },
+      "enforced_from": "2026-10-31"
+    },
+    {
+      "id": "c003",
+      "dimensions": [
+        "d5"
+      ],
+      "applies_from": "2026-01-15",
+      "question": {
+        "it": "Sapreste fare una pre-notifica di incidente entro 24 ore?",
+        "en": "Would you be able to pre-notify an incident within 24 hours?"
+      },
+      "obligation": {
+        "it": "I tempi sono tre e sono stretti: pre-notifica entro 24 ore da quando si viene a conoscenza dell'incidente significativo, notifica completa entro 72 ore, relazione finale entro un mese. La prima non chiede analisi: chiede di dire che è successo qualcosa. È quella che si manca per non aver deciso prima chi la manda.",
+        "en": "There are three deadlines and they are tight: pre-notification within 24 hours of becoming aware of a significant incident, full notification within 72 hours, final report within a month. The first asks for no analysis: it asks you to say that something has happened. It is the one that gets missed for not having decided in advance who sends it."
+      },
+      "source": {
+        "label": "D.Lgs. 138/2024; Determinazione ACN 379907/2025",
+        "url": "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2024-09-04;138"
+      },
+      "when": {
+        "n003": [
+          3
+        ]
+      }
+    },
+    {
+      "id": "c004",
+      "dimensions": [
+        "d1"
+      ],
+      "applies_from": "2024-10-16",
+      "question": {
+        "it": "Chi guida l'azienda sa di rispondere personalmente delle misure di sicurezza?",
+        "en": "Does whoever leads the company know they answer personally for the security measures?"
+      },
+      "obligation": {
+        "it": "La responsabilità degli organi di amministrazione è personale e non si trasferisce delegandola a chi tiene i sistemi. Comprende l'approvazione delle misure e la vigilanza sulla loro attuazione, e la formazione degli organi direttivi è essa stessa un obbligo.",
+        "en": "The responsibility of the management bodies is personal and is not transferred by delegating it to whoever keeps the systems. It covers approving the measures and overseeing their implementation, and training for the management bodies is itself an obligation."
+      },
+      "source": {
+        "label": "D.Lgs. 138/2024, art. 23",
+        "url": "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2024-09-04;138"
+      },
+      "when": {
+        "n003": [
+          3
+        ]
+      }
+    },
+    {
+      "id": "c005",
+      "dimensions": [
+        "d1",
+        "d5"
+      ],
+      "applies_from": "2025-12-31",
+      "question": {
+        "it": "C'è un punto di contatto designato verso l'ACN, e i suoi recapiti sono aggiornati?",
+        "en": "Is there a designated contact point towards the ACN, and are its details up to date?"
+      },
+      "obligation": {
+        "it": "Il punto di contatto si designa con la registrazione e i suoi dati vanno tenuti aggiornati sulla Piattaforma: è l'indirizzo a cui l'Agenzia scrive, e un recapito vecchio significa non ricevere quello che arriva.",
+        "en": "The contact point is designated at registration and its details are to be kept up to date on the Platform: it is the address the Agency writes to, and an old contact means not receiving what arrives."
+      },
+      "source": {
+        "label": "Determinazione ACN 379887/2025",
+        "url": "https://www.acn.gov.it/portale/nis/registrazione"
+      },
+      "when": {
+        "n003": [
+          3
+        ]
+      }
+    },
+    {
+      "id": "c006",
+      "dimensions": [
+        "d6"
+      ],
+      "applies_from": "2026-01-15",
+      "question": {
+        "it": "Il vostro cliente in perimetro vi ha già mandato requisiti di sicurezza contrattuali?",
+        "en": "Has your customer in scope already sent you contractual security requirements?"
+      },
+      "obligation": {
+        "it": "Chi è in perimetro deve gestire la sicurezza della propria catena di fornitura, quindi i requisiti arrivano a te per contratto e non per legge. Il tuo cliente ha una scadenza al 31 ottobre 2026 per le proprie misure di base: la richiesta, se non è già arrivata, arriva prima di quella data.",
+        "en": "Whoever is in scope has to manage the security of their own supply chain, so the requirements reach you by contract rather than by law. Your customer has a deadline of 31 October 2026 for their own basic measures: the request, if it has not arrived already, arrives before that date."
+      },
+      "source": {
+        "label": "Direttiva (UE) 2022/2555, art. 21; D.Lgs. 138/2024, art. 24",
+        "url": "https://eur-lex.europa.eu/legal-content/IT/TXT/?uri=CELEX:32022L2555"
+      },
+      "when": {
+        "n003": [
+          2
+        ]
+      }
+    },
+    {
+      "id": "c007",
+      "dimensions": [
+        "d5",
+        "d6"
+      ],
+      "applies_from": "2026-01-15",
+      "question": {
+        "it": "Nei contratti con i vostri clienti è scritto entro quando li avvisate di un incidente?",
+        "en": "Do your contracts with customers say by when you will tell them about an incident?"
+      },
+      "obligation": {
+        "it": "È la clausola che i clienti in perimetro devono ottenere, e quella su cui si negozia di più: il loro obbligo di pre-notifica è di 24 ore da quando ne vengono a conoscenza, quindi il tempo che concedi a te stesso entra nel loro conto. Insieme viaggiano il diritto di audit e le responsabilità in caso di violazione.",
+        "en": "It is the clause customers in scope have to obtain, and the one most negotiated over: their pre-notification duty is 24 hours from becoming aware, so the time you allow yourself counts towards theirs. The right to audit and the liabilities in case of a breach travel with it."
+      },
+      "source": {
+        "label": "D.Lgs. 138/2024, art. 24",
+        "url": "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2024-09-04;138"
+      },
+      "when": {
+        "n003": [
+          2
+        ]
+      }
+    },
+    {
+      "id": "c008",
+      "applies_from": "2025-12-31",
+      "question": {
+        "it": "Sapete di non dover fare la registrazione presso l'ACN?",
+        "en": "Do you know that you do not have to register with the ACN?"
+      },
+      "obligation": {
+        "it": "Un fornitore che non rientra nel perimetro non si registra sulla Piattaforma NIS: la registrazione è dei soggetti essenziali e importanti. Questa riga esiste al negativo di proposito — è un confine di responsabilità, e senza di essa la reazione ragionevole di chi ha appena letto degli obblighi altrui è registrarsi per sicurezza.",
+        "en": "A supplier outside the scope does not register on the NIS Platform: registration is for essential and important entities. This row is deliberately in the negative — it is a boundary of responsibility, and without it the reasonable reaction of somebody who has just read about other people's obligations is to register to be on the safe side."
+      },
+      "source": {
+        "label": "Determinazione ACN 379887/2025",
+        "url": "https://www.acn.gov.it/portale/nis/registrazione"
+      },
+      "when": {
+        "n003": [
+          2
+        ]
+      }
+    },
+    {
+      "id": "c009",
+      "applies_from": "2024-10-16",
+      "question": {
+        "it": "Sapete con quali criteri si stabilisce se un'azienda rientra nel perimetro?",
+        "en": "Do you know the criteria that decide whether a company falls within the scope?"
+      },
+      "obligation": {
+        "it": "Dipendono da due cose insieme: il settore, elencato negli allegati del decreto, e le soglie dimensionali — di norma 50 addetti oppure 10 milioni di fatturato o di bilancio. Ci sono eccezioni per soggetti critici sotto soglia. Non è una qualificazione che possa fare uno strumento come questo: qui trovi i criteri e la fonte.",
+        "en": "They depend on two things together: the sector, listed in the annexes to the decree, and the size thresholds — as a rule 50 employees or 10 million in turnover or balance sheet total. There are exceptions for critical entities below the threshold. It is not a qualification a tool like this one can make: here you find the criteria and the source."
+      },
+      "source": {
+        "label": "D.Lgs. 138/2024, allegati I e II",
+        "url": "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2024-09-04;138"
+      },
+      "when": {
+        "n003": [
+          0,
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "id": "c010",
+      "applies_from": "2026-02-01",
+      "question": {
+        "it": "Sapete che le linee guida settoriali dell'ACN escono gradualmente durante il 2026?",
+        "en": "Do you know that the ACN's sector guidelines come out gradually during 2026?"
+      },
+      "obligation": {
+        "it": "Le linee guida che dettagliano le misure per ciascun settore vengono pubblicate progressivamente fra febbraio e settembre 2026. Per alcuni settori, a oggi, non sono ancora uscite: prima di pagare qualcuno perché indovini quello che l'Agenzia deve ancora pubblicare, vale la pena verificare se quella del tuo settore è già disponibile.",
+        "en": "The guidelines that set out the measures for each sector are published progressively between February and September 2026. For some sectors they have not appeared yet: before paying somebody to guess what the Agency has still to publish, it is worth checking whether the one for your sector is already available."
+      },
+      "source": {
+        "label": "ACN — linee guida settoriali",
+        "url": "https://www.acn.gov.it/portale/nis"
+      }
+    }
+  ]
+}

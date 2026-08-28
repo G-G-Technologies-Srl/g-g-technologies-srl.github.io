@@ -1,0 +1,640 @@
+{
+  "edition": 1,
+  "status": "published",
+  "note": "Testi del report del questionario NIS2. Nessuna raccomandazione nomina un servizio che vendiamo: dice cosa manca, non chi lo fornisce.",
+  "frame": {
+    "headline": {
+      "it": "Da come l'hai descritta, la tua azienda è a {overall} su 100.",
+      "en": "From the way you described it, your company is at {overall} out of 100."
+    },
+    "subhead": {
+      "it": "{band}",
+      "en": "{band}"
+    },
+    "what_this_is": {
+      "it": "Questo numero descrive come hai risposto tu, oggi {date}, non come sta la tua azienda vista da fuori. È un'autovalutazione: nessuno ha verificato niente, e va bene così — serve a sapere cosa risponderesti, non a certificare che è vero.",
+      "en": "This number describes how you answered, today {date}, not how your company looks from outside. It is a self-assessment: nobody has verified anything, and that is fine — it is here to tell you what you would answer, not to certify that it is true."
+    },
+    "how_to_read": {
+      "it": "Guarda le sei dimensioni prima del totale. Un 50 fatto di sei punteggi vicini e un 50 con due dimensioni a zero sono due aziende diverse, e le cose da fare non sono le stesse.",
+      "en": "Look at the six dimensions before the total. A 50 made of six close scores and a 50 with two dimensions at zero are two different companies, and the things to do are not the same."
+    },
+    "respondent_note": {
+      "it": "Alla domanda sul ruolo hai risposto «{role}». Chi guida l'azienda e chi tiene i sistemi vedono cose diverse: se puoi, fai compilare il questionario anche a un'altra persona e confronta. Le domande su cui non siete d'accordo sono quelle che vale la pena guardare.",
+      "en": "You answered «{role}» to the question about your role. Whoever leads the company and whoever keeps the systems see different things: if you can, have somebody else fill the questionnaire in too, and compare. The questions you disagree on are the ones worth looking at."
+    },
+    "floor_note": {
+      "it": "—",
+      "en": "—"
+    },
+    "floor_note_ready": {
+      "it": "—",
+      "en": "—"
+    },
+    "floor_band": {
+      "it": "—",
+      "en": "—"
+    },
+    "not_verified": {
+      "it": "Nessuno ha verificato queste risposte, e non è una certificazione di conformità. Le voci sugli obblighi dicono cosa esiste e da quando; se sei in regola lo stabilite tu e chi ti assiste.",
+      "en": "Nobody has verified these answers, and this is not a certificate of compliance. The obligation rows say what exists and from when; whether you comply is settled by you and whoever advises you."
+    },
+    "print_note": {
+      "it": "Stampato il {date} da NIS2 Check, che gira interamente nel browser: nessuna di queste risposte è uscita da questo computer.",
+      "en": "Printed on {date} by NIS2 Check, which runs entirely in the browser: none of these answers left this computer."
+    }
+  },
+  "actions": {
+    "how_many": 3,
+    "intro": {
+      "it": "Tre cose, in quest'ordine. Sono scelte partendo dalle dimensioni in cui hai risposto peggio, perché è lì che una mossa vale di più — e una voce di conformità a cui non hai risposto sì viene prima di qualunque altra, perché ha una data.",
+      "en": "Three things, in this order. They are chosen from the dimensions you answered worst on, because that is where one move is worth most — and a compliance row you did not answer yes to comes before anything else, because it has a date."
+    },
+    "measure_label": {
+      "it": "Come lo sai fra tre mesi",
+      "en": "How you will know in three months"
+    },
+    "effort_label": {
+      "it": "Quanto costa",
+      "en": "What it costs"
+    }
+  },
+  "recommendations": [
+    {
+      "dimension": "d1",
+      "band": 0,
+      "title": {
+        "it": "Scrivi un nome accanto alla parola «sicurezza»",
+        "en": "Write a name next to the word «security»"
+      },
+      "why": {
+        "it": "Quando qualcosa si rompe, il tempo si perde a decidere chi decide. Non serve un esperto: serve che tutti sappiano chi chiamare per primo.",
+        "en": "When something breaks, the time goes on deciding who decides. You do not need an expert: you need everyone to know who to call first."
+      },
+      "how": {
+        "it": "Una riga: chi chiami, e chi chiami se quella persona non c'è. Attaccala dove la vedono tutti.",
+        "en": "One line: who you call, and who you call if that person is away. Put it where everyone sees it."
+      },
+      "effort": {
+        "it": "Dieci minuti.",
+        "en": "Ten minutes."
+      },
+      "measure": {
+        "it": "Chiedi a tre persone chi chiamerebbero, e rispondono lo stesso nome.",
+        "en": "Ask three people who they would call, and they say the same name."
+      }
+    },
+    {
+      "dimension": "d1",
+      "band": 1,
+      "title": {
+        "it": "Fai in modo che la direzione lo sappia, non solo lo sappia fare",
+        "en": "Make sure management knows it, not only knows how"
+      },
+      "why": {
+        "it": "La responsabilità sulla sicurezza è personale di chi dirige, e non si delega firmando. Se le decisioni le prende solo chi tiene i sistemi, chi risponde non sa di cosa risponde.",
+        "en": "Responsibility for security sits personally with whoever leads, and signing does not delegate it. If the decisions are taken only by whoever keeps the systems, the person answering for them does not know what they are answering for."
+      },
+      "how": {
+        "it": "Alla prossima decisione tecnica sulla sicurezza, mettila per iscritto in cinque righe e falla approvare da chi guida l'azienda.",
+        "en": "At the next technical decision about security, put it in writing in five lines and have whoever leads the company approve it."
+      },
+      "effort": {
+        "it": "Una riunione da mezz'ora.",
+        "en": "A half-hour meeting."
+      },
+      "measure": {
+        "it": "Esiste una decisione con una data e una firma, e chi ha firmato sa cosa ha firmato.",
+        "en": "A decision exists with a date and a signature, and whoever signed knows what they signed."
+      }
+    },
+    {
+      "dimension": "d1",
+      "band": 2,
+      "title": {
+        "it": "Porta la formazione a chi usa i sistemi, non a chi li amministra",
+        "en": "Take the training to the people who use the systems, not the ones who run them"
+      },
+      "why": {
+        "it": "Chi amministra i sistemi di solito sa già. Gli attacchi che funzionano entrano da chi apre la posta, e quella persona spesso non è mai stata formata.",
+        "en": "Whoever administers the systems usually knows already. The attacks that work come in through whoever opens the post, and that person has often never been trained."
+      },
+      "how": {
+        "it": "Un'ora, a tutti quelli che usano un computer aziendale, sulle tre cose che succedono davvero: allegati, richieste di pagamento, credenziali.",
+        "en": "One hour, for everyone who uses a company computer, on the three things that actually happen: attachments, payment requests, credentials."
+      },
+      "effort": {
+        "it": "Un'ora per persona, una volta.",
+        "en": "One hour per person, once."
+      },
+      "measure": {
+        "it": "C'è l'elenco di chi l'ha fatta, e chi entra dopo la fa.",
+        "en": "There is a list of who did it, and whoever joins later does it too."
+      }
+    },
+    {
+      "dimension": "d1",
+      "band": 3,
+      "title": {
+        "it": "Metti alla prova la catena di decisione, non solo i sistemi",
+        "en": "Test the chain of decision, not only the systems"
+      },
+      "why": {
+        "it": "Sai chi decide e la direzione lo sa. La cosa che non hai ancora verificato è cosa succede alle due di notte, quando quella persona non risponde.",
+        "en": "You know who decides and management knows too. What you have not yet checked is what happens at two in the morning, when that person does not answer."
+      },
+      "how": {
+        "it": "Un'esercitazione da un'ora, a tavolino: un'ipotesi, e ognuno dice cosa farebbe. Annota dove ci si ferma.",
+        "en": "A one-hour tabletop exercise: one scenario, and everyone says what they would do. Note where it stalls."
+      },
+      "effort": {
+        "it": "Un'ora, una volta l'anno.",
+        "en": "One hour, once a year."
+      },
+      "measure": {
+        "it": "L'esercitazione ha prodotto almeno una correzione a quello che era scritto.",
+        "en": "The exercise produced at least one correction to what was written."
+      }
+    },
+    {
+      "dimension": "d2",
+      "band": 0,
+      "title": {
+        "it": "Fai l'elenco di quello che usate, anche se viene brutto",
+        "en": "Make the list of what you use, even if it comes out ugly"
+      },
+      "why": {
+        "it": "Non si protegge quello che non si sa di avere, e il primo elenco è sempre incompleto: va bene lo stesso, perché incompleto è infinitamente meglio di assente.",
+        "en": "You cannot protect what you do not know you have, and the first list is always incomplete: that is fine, because incomplete is infinitely better than absent."
+      },
+      "how": {
+        "it": "Un foglio: nome del servizio, chi lo usa, chi paga. Comincia da quelli che compaiono in banca.",
+        "en": "One sheet: name of the service, who uses it, who pays for it. Start with the ones that show up on the bank statement."
+      },
+      "effort": {
+        "it": "Un pomeriggio.",
+        "en": "An afternoon."
+      },
+      "measure": {
+        "it": "L'elenco esiste, e ci trovi almeno una cosa che avevi dimenticato.",
+        "en": "The list exists, and you find at least one thing on it you had forgotten."
+      }
+    },
+    {
+      "dimension": "d2",
+      "band": 1,
+      "title": {
+        "it": "Chiudi gli accessi il giorno in cui una persona se ne va",
+        "en": "Close the access on the day a person leaves"
+      },
+      "why": {
+        "it": "Un accesso rimasto aperto è la porta più usata e la meno sorvegliata, e non richiede nessuna competenza per essere sfruttata.",
+        "en": "An access left open is the most used door and the least watched, and exploiting it takes no skill at all."
+      },
+      "how": {
+        "it": "Aggiungi una riga alla procedura di uscita: chi avvisa, e cosa si chiude. Se non c'è una procedura, questa è la procedura.",
+        "en": "Add a line to the leaving procedure: who is told, and what gets closed. If there is no procedure, this is the procedure."
+      },
+      "effort": {
+        "it": "Mezz'ora per scriverla.",
+        "en": "Half an hour to write it."
+      },
+      "measure": {
+        "it": "L'ultima persona uscita non ha più accessi, e qualcuno l'ha verificato.",
+        "en": "The last person who left has no access any more, and somebody checked."
+      }
+    },
+    {
+      "dimension": "d2",
+      "band": 2,
+      "title": {
+        "it": "Accendi il secondo fattore dove ancora manca",
+        "en": "Turn on the second factor where it is still missing"
+      },
+      "why": {
+        "it": "È la misura che ferma la percentuale più alta di attacchi al costo più basso, e le eccezioni rimaste sono di solito account importanti — quelli storici, quelli condivisi.",
+        "en": "It is the measure that stops the highest share of attacks at the lowest cost, and the exceptions left are usually important accounts — the old ones, the shared ones."
+      },
+      "how": {
+        "it": "Prendi l'elenco delle eccezioni che conosci e chiudile una per una. Comincia da quelle di chi ha più privilegi.",
+        "en": "Take the list of exceptions you know about and close them one by one. Start with the people who hold the most privileges."
+      },
+      "effort": {
+        "it": "Un giorno, distribuito.",
+        "en": "A day, spread out."
+      },
+      "measure": {
+        "it": "L'elenco delle eccezioni è vuoto, e chi non ce l'ha non entra.",
+        "en": "The list of exceptions is empty, and without it nobody gets in."
+      }
+    },
+    {
+      "dimension": "d2",
+      "band": 3,
+      "title": {
+        "it": "Guarda chi ha più privilegi di quanti gliene servono",
+        "en": "Look at who holds more privileges than they need"
+      },
+      "why": {
+        "it": "Gli accessi si accumulano: chi cambia ruolo tiene quelli vecchi e prende quelli nuovi. Dopo qualche anno metà dell'azienda è amministratore di qualcosa.",
+        "en": "Access accumulates: whoever changes role keeps the old permissions and takes the new ones. After a few years half the company administers something."
+      },
+      "how": {
+        "it": "Una revisione: per ogni sistema, chi ha i permessi più alti e perché. Togli quello che nessuno sa giustificare.",
+        "en": "A review: for each system, who holds the highest permissions and why. Remove whatever nobody can justify."
+      },
+      "effort": {
+        "it": "Mezza giornata, una volta l'anno.",
+        "en": "Half a day, once a year."
+      },
+      "measure": {
+        "it": "Il numero di amministratori è sceso, e nessuno se n'è lamentato.",
+        "en": "The number of administrators has come down, and nobody complained."
+      }
+    },
+    {
+      "dimension": "d3",
+      "band": 0,
+      "title": {
+        "it": "Scopri cosa dei tuoi sistemi si apre da internet",
+        "en": "Find out what of your systems opens from the internet"
+      },
+      "why": {
+        "it": "Quasi tutti gli attacchi automatici entrano da qualcosa che si apre da fuori e che nessuno ricordava di avere acceso.",
+        "en": "Almost every automated attack comes in through something that opens from outside and that nobody remembered leaving on."
+      },
+      "how": {
+        "it": "Chiedi a chi ti gestisce i sistemi l'elenco di cosa risponde da fuori. Se non ce l'ha, è quella la risposta.",
+        "en": "Ask whoever runs your systems for the list of what answers from outside. If they do not have it, that is the answer."
+      },
+      "effort": {
+        "it": "Una telefonata.",
+        "en": "A phone call."
+      },
+      "measure": {
+        "it": "Hai un elenco, e sopra ogni voce c'è un perché.",
+        "en": "You have a list, and above every row there is a reason."
+      }
+    },
+    {
+      "dimension": "d3",
+      "band": 1,
+      "title": {
+        "it": "Dai una cadenza agli aggiornamenti, anche larga",
+        "en": "Give the updates a schedule, even a loose one"
+      },
+      "why": {
+        "it": "«Quando c'è tempo» significa quando qualcosa si rompe, cioè dopo. Una cadenza larga e rispettata vale più di una stretta e disattesa.",
+        "en": "«When there is time» means when something breaks, which is afterwards. A loose schedule that is kept is worth more than a tight one that is not."
+      },
+      "how": {
+        "it": "Scegli un giorno al mese. Quel giorno si aggiorna, e chi non può dice perché.",
+        "en": "Pick one day a month. On that day things get updated, and whoever cannot says why."
+      },
+      "effort": {
+        "it": "Mezza giornata al mese.",
+        "en": "Half a day a month."
+      },
+      "measure": {
+        "it": "Sai la data dell'ultima volta senza doverla cercare.",
+        "en": "You know the date of the last time without having to look it up."
+      }
+    },
+    {
+      "dimension": "d3",
+      "band": 2,
+      "title": {
+        "it": "Fai guardare da fuori quello che esponi",
+        "en": "Have what you expose looked at from outside"
+      },
+      "why": {
+        "it": "Sai cosa si apre e perché. Quello che non sai è come si vede da fuori, e la differenza fra le due cose è dove stanno le sorprese.",
+        "en": "You know what opens and why. What you do not know is how it looks from outside, and the difference between the two is where the surprises are."
+      },
+      "how": {
+        "it": "Una scansione dall'esterno, anche di quelle economiche. Poi leggi il rapporto con chi ti gestisce i sistemi.",
+        "en": "A scan from outside, even one of the cheap ones. Then read the report with whoever runs your systems."
+      },
+      "effort": {
+        "it": "Poche centinaia di euro, una volta l'anno.",
+        "en": "A few hundred euros, once a year."
+      },
+      "measure": {
+        "it": "Il rapporto ha prodotto almeno una modifica, e sai quale.",
+        "en": "The report produced at least one change, and you know which."
+      }
+    },
+    {
+      "dimension": "d3",
+      "band": 3,
+      "title": {
+        "it": "Metti un passaggio prima che entri un servizio nuovo",
+        "en": "Put a step in before a new service comes in"
+      },
+      "why": {
+        "it": "Il rischio non è più quello che hai: è quello che entra la settimana prossima, comprato con una carta aziendale da chi ne aveva bisogno.",
+        "en": "The risk is no longer what you have: it is what arrives next week, bought on a company card by whoever needed it."
+      },
+      "how": {
+        "it": "Una domanda sola prima di attivare qualcosa di nuovo: che dati ci finiscono dentro. Chi risponde è chi lo attiva.",
+        "en": "One question before anything new is switched on: what data ends up inside it. Whoever switches it on answers."
+      },
+      "effort": {
+        "it": "Cinque minuti per volta.",
+        "en": "Five minutes each time."
+      },
+      "measure": {
+        "it": "L'ultimo servizio attivato è passato di lì, e c'è traccia.",
+        "en": "The last service switched on went through it, and there is a record."
+      }
+    },
+    {
+      "dimension": "d4",
+      "band": 0,
+      "title": {
+        "it": "Prova a ripristinare qualcosa. Oggi.",
+        "en": "Try restoring something. Today."
+      },
+      "why": {
+        "it": "Un backup si conosce quando lo si riporta indietro, e la maggior parte delle brutte sorprese si scopre il giorno in cui serve. Comincia da lì.",
+        "en": "A backup is only known once you have brought it back, and most of the nasty surprises are found on the day it is needed. Start there."
+      },
+      "how": {
+        "it": "Scegli un file di sei mesi fa e riportalo indietro. Se non ci riesci, hai appena scoperto la cosa più importante del questionario. E se non sai nemmeno dove sono le copie, la prima telefonata è a chi ti tiene i sistemi: la domanda è dove stanno e chi può cancellarle.",
+        "en": "Pick a file from six months ago and bring it back. If you cannot, you have just found the most important thing in the questionnaire. And if you do not even know where the copies are, the first call is to whoever keeps your systems: the question is where they are and who can delete them."
+      },
+      "effort": {
+        "it": "Un'ora.",
+        "en": "An hour."
+      },
+      "measure": {
+        "it": "Un file è tornato, e sai quanto ci è voluto.",
+        "en": "A file came back, and you know how long it took."
+      }
+    },
+    {
+      "dimension": "d4",
+      "band": 1,
+      "title": {
+        "it": "Fai in modo che le copie non muoiano con l'originale",
+        "en": "Make sure the copies do not die with the original"
+      },
+      "why": {
+        "it": "Un attacco che cifra i dati cifra anche le copie raggiungibili con le stesse credenziali. È il motivo per cui aziende con backup regolari perdono tutto lo stesso.",
+        "en": "An attack that encrypts the data encrypts the copies reachable with the same credentials too. It is why companies with regular backups still lose everything."
+      },
+      "how": {
+        "it": "Almeno una copia che dall'interno dell'azienda non si possa cancellare: fuori dal dominio, o su un supporto che si stacca.",
+        "en": "At least one copy that cannot be deleted from inside the company: outside the domain, or on media that gets unplugged."
+      },
+      "effort": {
+        "it": "Dipende, ma spesso è un'opzione già inclusa.",
+        "en": "It depends, but often it is an option you already have."
+      },
+      "measure": {
+        "it": "Una copia esiste in un posto da cui le credenziali di tutti i giorni non arrivano.",
+        "en": "A copy exists somewhere the everyday credentials do not reach."
+      }
+    },
+    {
+      "dimension": "d4",
+      "band": 2,
+      "title": {
+        "it": "Misura quanto ci vuole davvero a ripartire",
+        "en": "Measure how long it really takes to start again"
+      },
+      "why": {
+        "it": "«Qualche giorno» è una stima, e le stime sui ripristini sono sempre ottimiste. Il numero vero serve a chi deve decidere se fermarsi o pagare.",
+        "en": "«A few days» is an estimate, and estimates about restoring are always optimistic. The real number is what whoever has to decide between stopping and paying needs."
+      },
+      "how": {
+        "it": "Un ripristino di prova su qualcosa di grosso, cronometrato. Poi scrivi il numero.",
+        "en": "A test restore on something large, timed. Then write the number down."
+      },
+      "effort": {
+        "it": "Mezza giornata.",
+        "en": "Half a day."
+      },
+      "measure": {
+        "it": "C'è un numero, e chi dirige lo conosce.",
+        "en": "There is a number, and whoever leads knows it."
+      }
+    },
+    {
+      "dimension": "d4",
+      "band": 3,
+      "title": {
+        "it": "Prova il caso peggiore, non quello comodo",
+        "en": "Test the worst case, not the convenient one"
+      },
+      "why": {
+        "it": "Ripristinare un file è facile; ripristinare quando il sistema che tiene i backup è anche lui cifrato è un'altra cosa, e nessuno la prova mai.",
+        "en": "Restoring a file is easy; restoring when the system that holds the backups is encrypted as well is another thing, and nobody ever tries it."
+      },
+      "how": {
+        "it": "Un'esercitazione all'anno con l'ipotesi cattiva: niente dominio, niente console, si riparte da zero.",
+        "en": "One exercise a year with the bad scenario: no domain, no console, you start from nothing."
+      },
+      "effort": {
+        "it": "Una giornata l'anno.",
+        "en": "One day a year."
+      },
+      "measure": {
+        "it": "L'esercitazione ha prodotto una modifica al piano, e la sai dire.",
+        "en": "The exercise produced a change to the plan, and you can say what it was."
+      }
+    },
+    {
+      "dimension": "d5",
+      "band": 0,
+      "title": {
+        "it": "Trova un modo di accorgertene che non sia un cliente",
+        "en": "Find a way of noticing that is not a customer"
+      },
+      "why": {
+        "it": "Se la brutta notizia arriva da chi ti compra, l'incidente ha già avuto tempo e il danno alla fiducia è più grande di quello tecnico.",
+        "en": "If the bad news comes from whoever buys from you, the incident has already had time, and the damage to trust is bigger than the technical one."
+      },
+      "how": {
+        "it": "Attiva gli avvisi che i sistemi che già hai sanno mandare: accessi anomali, spazio, errori. Falli arrivare a una persona, non a una casella che nessuno legge.",
+        "en": "Turn on the alerts the systems you already have know how to send: unusual logins, disk space, errors. Send them to a person, not to a mailbox nobody reads."
+      },
+      "effort": {
+        "it": "Mezza giornata.",
+        "en": "Half a day."
+      },
+      "measure": {
+        "it": "È arrivato un avviso, e qualcuno l'ha letto.",
+        "en": "An alert arrived, and somebody read it."
+      }
+    },
+    {
+      "dimension": "d5",
+      "band": 1,
+      "title": {
+        "it": "Decidi entro quando avviserai il cliente, prima che serva",
+        "en": "Decide by when you will tell the customer, before you need to"
+      },
+      "why": {
+        "it": "In mezzo a un incidente non si negozia: si esegue. Le ventiquattro ore che la legge chiede a chi è in perimetro arrivano ai fornitori per contratto, e chi non ha deciso prima decide tardi.",
+        "en": "In the middle of an incident nothing is negotiated: it is carried out. The twenty-four hours the law asks of those in scope reach suppliers by contract, and whoever has not decided in advance decides late."
+      },
+      "how": {
+        "it": "Scrivi un tempo, e chi lo comunica. Anche solo «entro la giornata» è meglio di nessun tempo.",
+        "en": "Write down a time, and who communicates it. Even «within the day» is better than no time at all."
+      },
+      "effort": {
+        "it": "Mezz'ora.",
+        "en": "Half an hour."
+      },
+      "measure": {
+        "it": "C'è un tempo scritto, e chi lo dovrà rispettare lo conosce.",
+        "en": "There is a time written down, and whoever will have to keep it knows it."
+      }
+    },
+    {
+      "dimension": "d5",
+      "band": 2,
+      "title": {
+        "it": "Conserva il registro abbastanza a lungo da poterlo guardare",
+        "en": "Keep the record long enough to be able to look at it"
+      },
+      "why": {
+        "it": "Dopo un incidente la prima domanda è «da quando». Senza log conservati non c'è risposta, e senza risposta non c'è né rimedio né racconto credibile.",
+        "en": "After an incident the first question is «since when». Without logs kept there is no answer, and without an answer there is neither a remedy nor a credible account."
+      },
+      "how": {
+        "it": "Stabilisci per quanto tempo si conservano — sei mesi è un inizio ragionevole — e verifica che sia davvero così.",
+        "en": "Decide how long they are kept — six months is a reasonable start — and check that it really happens."
+      },
+      "effort": {
+        "it": "Un pomeriggio.",
+        "en": "An afternoon."
+      },
+      "measure": {
+        "it": "Sai per quanto, e hai controllato che il sistema faccia quello che credi.",
+        "en": "You know for how long, and you have checked the system does what you think."
+      }
+    },
+    {
+      "dimension": "d5",
+      "band": 3,
+      "title": {
+        "it": "Fai leggere il registro a qualcuno, ogni tanto",
+        "en": "Have somebody read the record, now and then"
+      },
+      "why": {
+        "it": "Conservare i log e non guardarli mai è come avere le telecamere spente: costa uguale e non serve. La differenza la fa qualcuno che ci passa gli occhi.",
+        "en": "Keeping the logs and never looking at them is like having the cameras switched off: it costs the same and does nothing. The difference is somebody running their eyes over it."
+      },
+      "how": {
+        "it": "Un'ora al mese, una persona, con tre cose da cercare decise in anticipo.",
+        "en": "One hour a month, one person, with three things to look for decided in advance."
+      },
+      "effort": {
+        "it": "Un'ora al mese.",
+        "en": "One hour a month."
+      },
+      "measure": {
+        "it": "In tre mesi quella lettura ha prodotto almeno una domanda.",
+        "en": "In three months that reading produced at least one question."
+      }
+    },
+    {
+      "dimension": "d6",
+      "band": 0,
+      "title": {
+        "it": "Rileggi il contratto del tuo fornitore principale con occhi nuovi",
+        "en": "Read your main supplier's contract again with fresh eyes"
+      },
+      "why": {
+        "it": "Quasi nessuno lo ha letto cercando la parola «incidente», ed è l'unica cosa che conta il giorno in cui succede: se non c'è scritto entro quando ti avvisano, non ti avvisano.",
+        "en": "Almost nobody has read it looking for the word «incident», and it is the only thing that counts on the day one happens: if it does not say by when they tell you, they do not tell you."
+      },
+      "how": {
+        "it": "Apri il contratto e cerca cosa dice su incidenti, tempi e responsabilità. Se non dice niente, quella è l'informazione.",
+        "en": "Open the contract and look for what it says about incidents, times and responsibilities. If it says nothing, that is the information."
+      },
+      "effort": {
+        "it": "Un'ora.",
+        "en": "An hour."
+      },
+      "measure": {
+        "it": "Sai cosa dice, e lo sai citare.",
+        "en": "You know what it says, and you can quote it."
+      }
+    },
+    {
+      "dimension": "d6",
+      "band": 1,
+      "title": {
+        "it": "Chiedi al fornitore entro quando ti avvisa",
+        "en": "Ask the supplier by when they will tell you"
+      },
+      "why": {
+        "it": "È una domanda che si può fare per email e che nessuno fa. La risposta — o la sua assenza — dice più di qualunque certificazione appesa al sito.",
+        "en": "It is a question you can ask by email and that nobody asks. The answer — or its absence — says more than any certificate hanging on a website."
+      },
+      "how": {
+        "it": "Una email al fornitore principale: se succede un incidente che tocca i nostri dati, entro quanto lo sappiamo?",
+        "en": "One email to the main supplier: if an incident touches our data, how soon do we hear about it?"
+      },
+      "effort": {
+        "it": "Dieci minuti.",
+        "en": "Ten minutes."
+      },
+      "measure": {
+        "it": "Hai una risposta scritta, o sai che non arriva.",
+        "en": "You have a written answer, or you know that none is coming."
+      }
+    },
+    {
+      "dimension": "d6",
+      "band": 2,
+      "title": {
+        "it": "Prepara la risposta prima che il cliente la chieda",
+        "en": "Prepare the answer before the customer asks for it"
+      },
+      "why": {
+        "it": "Chi è in perimetro deve mettere in sicurezza la propria catena, quindi il questionario arriverà. Rispondere con quello che si trova in due giorni si vede, e chi legge lo nota.",
+        "en": "Whoever is in scope has to secure their own chain, so the questionnaire will arrive. Answering with whatever can be found in two days shows, and whoever reads it notices."
+      },
+      "how": {
+        "it": "Metti in un unico documento quello che già fai: accessi, backup, incidenti, contratti. Due pagine bastano.",
+        "en": "Put what you already do into one document: access, backups, incidents, contracts. Two pages are enough."
+      },
+      "effort": {
+        "it": "Mezza giornata.",
+        "en": "Half a day."
+      },
+      "measure": {
+        "it": "Al prossimo cliente che chiede, mandi qualcosa senza doverlo scrivere.",
+        "en": "At the next customer who asks, you send something without having to write it."
+      }
+    },
+    {
+      "dimension": "d6",
+      "band": 3,
+      "title": {
+        "it": "Guarda a chi si appoggia chi ti fornisce",
+        "en": "Look at who your supplier relies on"
+      },
+      "why": {
+        "it": "La catena non finisce al tuo fornitore: finisce a chi lui usa, e a chi usa quello. È l'anello che non si vede ed è quello per cui la direttiva parla di catena e non di fornitore.",
+        "en": "The chain does not end at your supplier: it ends at whoever they use, and at whoever that one uses. It is the link nobody sees, and the reason the directive talks about a chain rather than a supplier."
+      },
+      "how": {
+        "it": "Chiedi al fornitore principale l'elenco dei suoi sub-fornitori rilevanti, e fattelo mettere nel contratto al prossimo rinnovo.",
+        "en": "Ask your main supplier for the list of their relevant sub-suppliers, and have it written into the contract at the next renewal."
+      },
+      "effort": {
+        "it": "Un'email, e una clausola.",
+        "en": "An email, and a clause."
+      },
+      "measure": {
+        "it": "Sai i nomi, e sono scritti da qualche parte che non sia una email.",
+        "en": "You know the names, and they are written somewhere that is not an email."
+      }
+    }
+  ]
+}

@@ -10,7 +10,7 @@
 //  - no skipWaiting and no clients.claim: an update lands at the next start. Swapping files under
 //    a running app means changing the code while somebody is halfway through a game.
 
-const VERSION = '0.1.2';
+const VERSION = '0.2.1';
 const CACHE = `astrodroid-v${VERSION}`;
 
 // Every file the app is made of, plus the shared modules it borrows. Kept by hand and checked by

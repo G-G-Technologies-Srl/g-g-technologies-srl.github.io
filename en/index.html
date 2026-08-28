@@ -223,6 +223,15 @@
 
     html { scroll-behavior: smooth; scroll-padding-top: calc(var(--nav-h) + 16px); }
 
+    /* Il testo di un comando è un'etichetta, non contenuto: trascinando sopra un pulsante il
+       browser ne seleziona la scritta, e per un istante il comando sembra rotto invece che premuto.
+       Vale per i comandi e non per i link — un indirizzo o una citazione si copiano eccome. */
+    button, summary, label, [role="button"] {
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+
     body {
       font-family: var(--font);
       background: var(--bg);

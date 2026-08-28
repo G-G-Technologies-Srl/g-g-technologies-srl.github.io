@@ -1,0 +1,27 @@
+{
+  "schema": "1.2",
+  "tool": "survey-scope",
+  "tool_version": "1.0.0",
+  "questionnaire": "nis2",
+  "questionnaire_edition": 1,
+  "questionnaire_digest": "sha256:34394895e30a1c901f40801db58c21455b0c7d7c741e7966f0e98e5685babd63",
+  "lang": "it",
+  "complete": false,
+  "answered_at": "2026-08-28",
+  "exported_at": "2026-08-28",
+  "answers": {
+    "n001": 1,
+    "n002": 2,
+    "n003": 2,
+    "n004": 3,
+    "n005": 2,
+    "n006": 1,
+    "n007": 1,
+    "n008": 2,
+    "n009": 1,
+    "n010": 1,
+    "n011": 3
+  },
+  "skipped": [],
+  "not_applicable": []
+}
