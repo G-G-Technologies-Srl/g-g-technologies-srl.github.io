@@ -1722,7 +1722,55 @@ function _wire() {
 //  s t a r t
 // -----------------------------------------------------------------------------------------------------------------
 
+/**
+ * `?demo=1`: the report of a questionnaire answered by nobody, straight from the address bar.
+ *
+ * What the scheda's screenshot is taken from — headless Chrome cannot click through twenty-two
+ * questions — and nothing else. No database, no digest, no service worker: the two things the
+ * ordinary start waits on are the two that never come back under the screenshot's clock, and
+ * the black picture of 2 September was exactly that wait. The answers are a fixed pattern, so
+ * that every run paints the same picture: a middling company, with something to improve in each
+ * dimension and one clearly ahead.
+ */
+async function _demo() {
+  setLang(resolveLang());
+  try {
+    await load(null);
+  } catch (ignored) {
+    return _fail("errorLoad");
+  }
+  fingerprint = "demo";
+  _wire();
+  _applyText();
+  run = _fresh();
+  run.label = tf("openerNameDefault", { n: 1 });
+  const shares = [0.75, 0.5, 0.75, 0.75, 1];
+  QUESTIONNAIRE.questions.forEach((question, index) => {
+    const last = question.options.length - 1;
+    run.answers[question.id] = Math.max(0, Math.min(last, Math.round(last * shares[index % shares.length])));
+  });
+  // Not a company the floor rule catches: a report pinned to the first band by one answer says
+  // «no AI here» over a score of sixty, which is a true picture of a contradiction and a poor
+  // picture of the app. Whatever the rule keys on gets its top answer.
+  const floor = QUESTIONNAIRE.rules?.floor;
+  if (floor && fires(floor.when, run.answers)) {
+    for (const id of Object.keys(floor.when)) {
+      const question = QUESTIONNAIRE.questions.find((one) => one.id === id);
+      if (question) run.answers[id] = question.options.length - 1;
+    }
+  }
+  const { skipped, notApplicable } = _derived();
+  run.complete = true;
+  run.scores = score(run.answers, skipped, notApplicable);
+  el("rLabelInput").value = run.label;
+  _repaint();
+  await _renderCompare();
+  _show("report");
+  return undefined;
+}
+
 async function _boot() {
+  if (new URLSearchParams(location.search).get("demo") === "1") return _demo();
   setLang(resolveLang());
 
   // **Il deposito prima del contenuto**, e l'ordine è la correzione: `load()` senza chiave prende

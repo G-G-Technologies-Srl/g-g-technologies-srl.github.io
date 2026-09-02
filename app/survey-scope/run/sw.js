@@ -11,7 +11,7 @@
 //    running app means changing the questionnaire while somebody is half way through answering it,
 //    and saving them one reload is not worth an edition that changes under their hands.
 
-const VERSION = '1.27.1';
+const VERSION = '1.27.2';
 const CACHE = `survey-scope-v${VERSION}`;
 
 // Every file the app is made of. Kept by hand and checked by _src/check_apps.py against the
