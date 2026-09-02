@@ -69,8 +69,13 @@ const IT = {
   folderDone: "Cartella collegata. I progetti condivisi sono scritti lì.",
   folderError: "La cartella non si legge o non si scrive: {error}",
   sharedToggle: "Condiviso nella cartella",
+  sharedOff: "Spunta per scriverlo nella cartella «{folder}». Da lì in poi si salva da solo, a ogni modifica: non c'è niente da premere.",
+  sharedSoon: "Viene scritto nella cartella «{folder}» fra pochi secondi.",
+  sharedWriting: "In scrittura nella cartella «{folder}»…",
+  sharedOn: "Nella cartella «{folder}», sottocartella «{sub}» · scritto alle {time} · si aggiorna da solo a ogni modifica, entro pochi secondi.",
+  sharedNow: "Da adesso si salva da solo nella cartella, a ogni modifica.",
   pulled: "«{name}» aggiornato da {who}: {added} in più, {changed} aggiornate, {conflicts} da confrontare",
-  pulledTrashed: "«{name}» è stato messo nel cestino da {who}. Lo trovi nel cestino anche qui.",
+  pulledTrashed: "«{name}» è nel cestino: ce l'ha messo {who}, e vale anche per la tua copia.",
   folderGone: "La cartella di «{name}» non c'è più: il progetto resta qui, ma non è più condiviso.",
   logTitle: "Dalla cartella",
   logLine: "{who}: {added} in più, {changed} aggiornate, {conflicts} da confrontare",
@@ -78,7 +83,7 @@ const IT = {
   logTrashed: "{who} l'ha messo nel cestino",
   dropFolder: "Elimina la cartella condivisa",
   dropTitle: "Eliminare la cartella condivisa?",
-  dropText: "La cartella «{folder}» sparisce da Dropbox, per tutti. Qui il progetto resta dov'è; da chi "
+  dropText: "«{folder}» sparisce dalla cartella condivisa, per tutti. Qui il progetto resta dov'è; da chi "
     + "ce l'ha resta, ma smette di essere condiviso. Non c'è un annulla.",
   dropConfirm: "Elimina la cartella",
   dropped: "Cartella eliminata.",
@@ -136,7 +141,7 @@ const IT = {
   movePageUp: "Sposta su",
   movePageDown: "Sposta giù",
   treeAddSubpage: "+ Sottopagina di questa",
-  pageTitleHint: "Il titolo si cambia qui: scrivi sopra.",
+  pageTitleHint: "Il titolo si cambia qui: scrivici sopra.",
   emptyProject: "Svuota il progetto",
   emptiedProject: "«{name}» svuotato: pagine e attività sono nel cestino",
   // I nomi delle tre colonne di partenza. Sono **dati**, non etichette: appena il progetto esiste
@@ -498,11 +503,11 @@ const IT = {
     + "suo progetto con le stesse regole.\n\n"
     + "## Provarla in due, in dieci minuti\n\nPrima di fidarti, fai questa prova con un collega, "
     + "ognuno sul suo computer e con la stessa cartella di Dropbox collegata:\n\n"
-    + "- [ ] Tu segni un progetto «Condiviso nella cartella»; entro un minuto lui lo vede fra i suoi progetti\n"
-    + "- [ ] Lui cambia una pagina; tu la vedi cambiare, e nella scheda del progetto compare «Dalla cartella»\n"
+    + "- [ ] Tu segni un progetto «Condiviso nella cartella»; entro un minuto il collega lo vede fra i suoi progetti\n"
+    + "- [ ] Il collega cambia una pagina; tu la vedi cambiare, e nella scheda del progetto compare «Dalla cartella»\n"
     + "- [ ] Cambiate tutti e due la stessa pagina, senza aspettarvi: a uno dei due resta anche la copia "
     + "con il nome dell'altro, e nessun paragrafo è sparito\n"
-    + "- [ ] Tu metti un'attività nel cestino; lui la vede sparire dalla bacheca\n\n"
+    + "- [ ] Tu metti un'attività nel cestino; il collega la vede sparire dalla bacheca\n\n"
     + "Se una delle quattro non va, il difetto è dell'app, non tuo: segnalalo con «Codice sorgente» "
     + "in fondo alla pagina.\n\n"
     + "## Per chi non ha l'app\n\n- «Esporta come pagina web»: un file HTML che si apre ovunque\n"
@@ -636,6 +641,19 @@ const IT = {
   ln_fix: "Correggere quello che è emerso",
 
   demoName: "Fiera di settembre",
+  demoBadge: "Esempio",
+  demoStrip: "Questo è un progetto d'esempio: tocca tutto, cambia, cancella. Quando hai finito, buttalo.",
+  demoDrop: "Butta l'esempio",
+  demoDropped: "Esempio nel cestino. Il prossimo progetto è il tuo.",
+  welcomeTitle: "Benvenuto in Plan Scope",
+  welcomeText: "Pagine da scrivere e scadenze da rispettare, nello stesso posto. «Fiera di settembre» è un esempio "
+    + "già pieno, per vedere come funziona: toccalo, cambialo, e quando hai capito buttalo.",
+  welcomeNote: "Tutto quello che scrivi resta in questo browser: l'app non manda niente a nessuno. Per averne una "
+    + "copia sul disco c'è «Esporta».",
+  welcomeExample: "Guarda l'esempio",
+  welcomeOwn: "Comincia dal tuo",
+  welcomeGuide: "Leggi la Guida",
+  openGuide: "Guida",
   demoTag: "stampa",
   demoCheck1: "Ripulire l'elenco dei contatti",
   demoCheck2: "Scrivere il testo dell'invito",
@@ -719,8 +737,13 @@ const EN = {
   folderDone: "Folder linked. Shared projects are written there.",
   folderError: "The folder cannot be read or written: {error}",
   sharedToggle: "Shared in the folder",
+  sharedOff: "Tick to write it into the folder “{folder}”. From then on it saves itself, at every change: there is nothing to press.",
+  sharedSoon: "It is written into the folder “{folder}” in a few seconds.",
+  sharedWriting: "Writing into the folder “{folder}”…",
+  sharedOn: "In the folder “{folder}”, sub-folder “{sub}” · written at {time} · updates itself at every change, within seconds.",
+  sharedNow: "From now on it saves itself into the folder, at every change.",
   pulled: "“{name}” updated by {who}: {added} added, {changed} updated, {conflicts} to compare",
-  pulledTrashed: "“{name}” was put in the bin by {who}. You will find it in the bin here too.",
+  pulledTrashed: "“{name}” is in the bin: {who} put it there, and that holds for your copy too.",
   folderGone: "The folder of “{name}” is gone: the project stays here, but it is no longer shared.",
   logTitle: "From the folder",
   logLine: "{who}: {added} added, {changed} updated, {conflicts} to compare",
@@ -728,7 +751,7 @@ const EN = {
   logTrashed: "{who} put it in the bin",
   dropFolder: "Remove the shared folder",
   dropTitle: "Remove the shared folder?",
-  dropText: "The folder “{folder}” goes from Dropbox, for everybody. Here the project stays where it is; "
+  dropText: "“{folder}” goes from the shared folder, for everybody. Here the project stays where it is; "
     + "whoever has it keeps it, but it stops being shared. There is no undo.",
   dropConfirm: "Remove the folder",
   dropped: "Folder removed.",
@@ -1286,6 +1309,19 @@ const EN = {
   ln_fix: "Fix what came up",
 
   demoName: "September trade fair",
+  demoBadge: "Example",
+  demoStrip: "This is an example project: touch everything, change it, delete it. When you are done, throw it away.",
+  demoDrop: "Throw the example away",
+  demoDropped: "Example in the bin. The next project is yours.",
+  welcomeTitle: "Welcome to Plan Scope",
+  welcomeText: "Pages to write and deadlines to keep, in one place. “September trade fair” is an example, "
+    + "already full, to see how it works: touch it, change it, and once you have got it throw it away.",
+  welcomeNote: "Everything you write stays in this browser: the app sends nothing to anybody. For a copy on "
+    + "disk there is “Export”.",
+  welcomeExample: "See the example",
+  welcomeOwn: "Start with yours",
+  welcomeGuide: "Read the Guide",
+  openGuide: "Guide",
   demoTag: "print",
   demoCheck1: "Tidy up the contact list",
   demoCheck2: "Write the wording of the invitation",

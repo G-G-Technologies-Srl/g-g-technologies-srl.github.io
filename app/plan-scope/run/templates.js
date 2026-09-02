@@ -120,6 +120,17 @@ export const TEMPLATES = [
   { key: "blank", name: "tpl_blank", lead: "tpl_blank_lead", pages: [], tasks: [] },
 ];
 
+/**
+ * The order the chips are drawn in: «Vuoto» second, right after the first real one. Whoever has
+ * just thrown the example away often wants exactly that, and last in the row it was the one nobody
+ * saw. The list above keeps it last, because `byKey` falls back to the last one.
+ */
+export function shown() {
+  const blank = TEMPLATES.find((one) => one.key === "blank");
+  const rest = TEMPLATES.filter((one) => one !== blank);
+  return [rest[0], blank, ...rest.slice(1)];
+}
+
 export function byKey(key) {
   return TEMPLATES.find((one) => one.key === key) || TEMPLATES.at(-1);
 }

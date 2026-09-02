@@ -144,6 +144,7 @@ async function _paintFolder(error = null) {
   const state = await sync.status();
   el("openFolder").hidden = state.kind === "unavailable";
   el("sharedLine").hidden = state.kind !== "linked";
+  if (state.kind === "linked" && projectId) _paintShared();
   const line = el("folderLine");
   if (state.kind === "unavailable" || state.kind === "none") {
     line.hidden = true;
@@ -165,6 +166,23 @@ async function _paintFolder(error = null) {
 }
 
 /**
+ * Under the switch: what sharing means for this project right now. Off, it says what ticking
+ * does; on, where the project is written, when it last was, and that the next write comes by
+ * itself. The word «save» never appears, because there is nothing to press.
+ */
+function _paintShared() {
+  const state = sync.projectStatus(projectId);
+  const text = el("sharedText");
+  if (state.kind === "off") text.textContent = tf("sharedOff", { folder: state.folder });
+  else if (state.kind === "soon") text.textContent = tf("sharedSoon", { folder: state.folder });
+  else if (state.kind === "writing") text.textContent = tf("sharedWriting", { folder: state.folder });
+  else if (state.kind === "on") {
+    const at = new Date(state.wrote);
+    text.textContent = tf("sharedOn", { folder: state.folder, sub: state.sub, time: at.toTimeString().slice(0, 5) });
+  } else text.textContent = "";
+}
+
+/**
  * The backup reminder: shown when some project with anything in it has not been exported for
  * over two weeks, and not again for two weeks after «Va bene». A file on disk is the only copy
  * that survives a cleared browser, and the app says so once — repeated, it would be a nag, and
@@ -173,7 +191,9 @@ async function _paintFolder(error = null) {
 async function _paintNudge() {
   const today = model.todayISO();
   const stale = (iso) => !iso || (model.daysBetween(String(iso).slice(0, 10), today) || 0) > 14;
-  const needs = !demoMode && model.liveProjects().some((project) => stale(project.exportedAt)
+  // Never exported counts from the day the project was made, not from the dawn of time: a fair
+  // made this morning is not two weeks behind on its backup.
+  const needs = !demoMode && model.liveProjects().some((project) => stale(project.exportedAt || project.created)
     && (model.pagesOf(project.id).length || model.tasksOf(project.id).length));
   const quiet = !stale(await db.meta("exportNudge", null));
   el("exportNudge").hidden = !needs || quiet;
@@ -267,6 +287,23 @@ function _movePage(id, place) {
   if (!step) return;
   _paintTree();
   _offerUndo(step, t("pageMoved"));
+}
+
+/** The guide, as a project: made the first time it is asked for, opened every time. */
+function _openGuide() {
+  let guide = model.liveProjects().find((one) => one.guide);
+  if (!guide) {
+    guide = model.createProject({ name: t("tpl_guide"), columns: _startingColumns() });
+    templates.build(templates.byKey("guide"), { t, model, projectId: guide.id });
+    model.updateProject(guide.id, { guide: true });
+  }
+  _openProject(guide.id);
+}
+
+/** The welcome has been seen: it does not come back, whatever happens to the projects. */
+async function _welcomed() {
+  el("welcomeDialog").close();
+  if (!demoMode) await db.setMeta("welcomed", true);
 }
 
 /** The page on screen, reloaded from the model: head, body, properties, tree. */
@@ -494,7 +531,7 @@ async function _offerUndo(step, message, { also = null } = {}) {
  */
 function _paintTemplates() {
   const choice = el("templateChoice");
-  choice.replaceChildren(...templates.TEMPLATES.map((one) => {
+  choice.replaceChildren(...templates.shown().map((one) => {
     const chip = document.createElement("button");
     chip.type = "button";
     chip.className = one.key === template ? "tpl on" : "tpl";
@@ -870,6 +907,25 @@ function _wire() {
     _openProject(project.id);
   });
 
+  el("openGuide").addEventListener("click", () => _openGuide());
+  // Esc counts as read: it was on screen, and a welcome that comes back is a nag.
+  el("welcomeDialog").addEventListener("close", () => { if (!demoMode && db.available()) db.setMeta("welcomed", true); });
+  el("welcomeExample").addEventListener("click", async () => {
+    await _welcomed();
+    const example = model.liveProjects().find((one) => one.demo);
+    if (example) _openProject(example.id); else await _openHome();
+  });
+  el("welcomeOwn").addEventListener("click", async () => {
+    await _welcomed();
+    await _openHome();
+    el("newProjectForm").hidden = false;
+    el("projectName").focus();
+  });
+  el("welcomeGuide").addEventListener("click", async () => {
+    await _welcomed();
+    _openGuide();
+  });
+
   el("importProject").addEventListener("click", () => el("importFile").click());
   el("importFile").addEventListener("change", async (event) => {
     const [file] = event.target.files;
@@ -981,6 +1037,12 @@ function _wire() {
     _offerUndo(step, tf("emptiedProject", { name: project.name || t("projectUntitled") }));
   });
 
+  el("demoDrop").addEventListener("click", async () => {
+    const step = model.trashProject(projectId);
+    await _openHome();
+    _offerUndo(step, t("demoDropped"));
+  });
+
   el("trashProject").addEventListener("click", async () => {
     const project = model.project(projectId);
     const step = model.trashProject(projectId);
@@ -1063,7 +1125,11 @@ function _wire() {
   el("sharedToggle").addEventListener("change", () => {
     if (!projectId) return;
     model.updateProject(projectId, { shared: el("sharedToggle").checked });
-    if (el("sharedToggle").checked) sync.share(projectId);
+    if (el("sharedToggle").checked) {
+      sync.share(projectId);
+      snack(t("sharedNow"));
+    }
+    _paintShared();
   });
 
   el("exportNudgeOk").addEventListener("click", async () => {
@@ -1472,6 +1538,11 @@ async function _boot() {
     if (!model.liveProjects().length && !(await db.meta("greeted"))) {
       demo.build({ t, model, columns: _startingColumns() });
       await db.setMeta("greeted", true);
+      // The example arrives with finished tasks and a milestone already reached: what those make
+      // true is taken as already had, quietly. A fanfare on the first screen, for somebody else's
+      // fair, would be the app congratulating itself.
+      cheer.check(model, { exported: false, days: days.length });
+      await db.setMeta("awards", cheer.got());
     }
   }
 
@@ -1524,6 +1595,10 @@ async function _boot() {
   // The awards that depend on the calendar rather than on a tick — ten days, thirty — can only
   // become true here, at the start of a day.
   _cheerUp();
+
+  // The first time, once: the example is on screen and nobody has said it is one. Kept in the
+  // database and not tied to the projects, so that emptying the archive does not bring it back.
+  if (db.available() && !(await db.meta("welcomed"))) el("welcomeDialog").showModal();
 
   setupInstall(el("install"), el("installHint"), {
     storageKey: "gg.plan-scope.install",

@@ -978,8 +978,11 @@ export function search(query) {
  * hear about, or it keeps the record alive and sends it back.
  */
 export function exportable(projectId, { bin = false } = {}) {
+  // «This is the example» and «this is the guide» are true of this copy, not of the project: a
+  // file sent to a colleague, or written into the shared folder, must not arrive as an example.
+  const { demo, guide, ...project } = projects.get(projectId) || {};
   return {
-    project: projects.get(projectId) || null,
+    project: projects.has(projectId) ? project : null,
     pages: bin ? pagesOf(projectId).concat(pagesOf(projectId, { trashed: true })) : pagesOf(projectId),
     tasks: bin ? tasksOf(projectId).concat(tasksOf(projectId, { trashed: true })) : tasksOf(projectId),
   };

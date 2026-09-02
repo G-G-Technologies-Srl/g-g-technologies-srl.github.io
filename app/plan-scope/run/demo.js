@@ -39,6 +39,9 @@ export function build({ t, model, columns }) {
     eventDate,
     columns,
   });
+  // Says so on its card and on its screen, until it is binned: nobody should wonder whose fair
+  // this is, or write their own things into it by mistake.
+  model.updateProject(project.id, { demo: true });
 
   templates.build(templates.byKey("event"), { t, model, projectId: project.id, eventDate });
 

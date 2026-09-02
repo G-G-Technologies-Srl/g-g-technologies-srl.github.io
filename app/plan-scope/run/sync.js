@@ -267,6 +267,7 @@ async function _push(projectId) {
     pushed,
     exported: now.toISOString(),
     readAt: now.toISOString(),
+    wrote: now.toISOString(),
     seen: await _listing(dir),
   };
   await _saveState();
@@ -583,6 +584,19 @@ export async function pullNow() {
 export function share(projectId) {
   dirty.add(projectId);
   _schedulePush(0);
+}
+
+/**
+ * What the project's screen says under the switch: whether a write is waiting, when the last
+ * one was, and into which sub-folder. `kind` is "off", "soon", "writing" or "on".
+ */
+export function projectStatus(projectId) {
+  const project = model.project(projectId);
+  if (!root || !project) return { kind: "none" };
+  const mark = state.marks[project.uid || project.id] || {};
+  if (!project.shared) return { kind: "off", folder: root.name };
+  if (dirty.has(projectId) || !mark.wrote) return { kind: mark.wrote ? "writing" : "soon", folder: root.name, sub: mark.folder || vault.folderName(project) };
+  return { kind: "on", folder: root.name, sub: mark.folder, wrote: mark.wrote };
 }
 
 /** The name of the sub-folder this browser wrote a project into, or null when it never did. */

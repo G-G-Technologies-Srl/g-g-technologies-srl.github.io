@@ -65,6 +65,8 @@ const project = (over = {}) => model.createProject({
 test("i cinque template esistono, «vuoto» è vuoto davvero e la guida non ha date", () => {
   assert.deepEqual(templates.TEMPLATES.map((one) => one.key),
     ["event", "campaign", "launch", "guide", "blank"]);
+  assert.deepEqual(templates.shown().map((one) => one.key),
+    ["event", "blank", "campaign", "launch", "guide"], "sullo schermo il vuoto è secondo");
   // The guide's tasks carry no offset: dated from an event they would be deadlines, and a guide
   // has none. Built with a date, they still come out undated.
   const guided = project({ eventDate: "2026-10-14" });

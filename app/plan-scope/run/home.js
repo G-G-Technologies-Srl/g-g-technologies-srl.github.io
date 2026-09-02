@@ -51,6 +51,7 @@ function _projectCard(project, today) {
   card.addEventListener("click", () => on.openProject(project.id));
 
   card.append(node("span", "project-card-name", project.name || t("projectUntitled")));
+  if (project.demo) card.append(node("span", "badge tag", t("demoBadge")));
 
   const when = node("span", "project-card-when");
   when.append(project.eventDate ? `${shortDate(project.eventDate)} · ${_whenLabel(project, today)}`
@@ -272,6 +273,7 @@ export function paintProject(id) {
   // repeats is a nag. It goes quiet the moment the project has been exported once.
   el("exportInvite").hidden = Boolean(project.exportedAt) || (!pages.length && !tasks.length);
   el("sharedToggle").checked = Boolean(project.shared);
+  el("demoStrip").hidden = !project.demo;
   el("exportedWhen").textContent = project.exportedAt
     ? tf("exportedOn", { date: longDate(project.exportedAt) })
     : "";
@@ -363,7 +365,7 @@ function _startTreeDrag(event, pageId) {
     else mark(under, "drop-into", { parentId: over.id, index: null });
   };
 
-  const done = () => {
+  const done = (ended) => {
     window.removeEventListener("pointermove", move);
     window.removeEventListener("pointerup", done);
     window.removeEventListener("pointercancel", done);
@@ -372,7 +374,8 @@ function _startTreeDrag(event, pageId) {
     if (lifted) lifted.classList.remove("lifted");
     const landing = target;
     clear();
-    if (active && landing) on.movePage(pageId, landing);
+    // A gesture the system took away — a call, a swipe from the edge — is not a drop.
+    if (active && landing && !(ended && ended.type === "pointercancel")) on.movePage(pageId, landing);
   };
 
   window.addEventListener("pointermove", move);

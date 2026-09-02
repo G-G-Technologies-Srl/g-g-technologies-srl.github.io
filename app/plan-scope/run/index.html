@@ -60,6 +60,14 @@
       </svg>
     </button>
     <button type="button" id="install" class="ghost small" data-t="installButton" hidden></button>
+    <!-- The awards are an accessory, not a function: they sit up here with the sound — the other
+         half of the same game — and not among the commands of the archive, where a person looking
+         for «Importa» found a trophy. -->
+    <button type="button" id="openAwards" class="ghost small icon" data-t-label="awardsTitle">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 3.5l2.6 5.3 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.7 1-5.8L3.5 9.6l5.9-.8z"></path>
+      </svg>
+    </button>
     <!-- A setting, so it lives with the settings: language and theme are here, and a checkbox in a
          row of commands on the archive was a setting pretending to be an action. -->
     <button type="button" id="soundOn" class="ghost small icon" aria-pressed="false">
@@ -120,7 +128,9 @@
         <button type="button" id="importProject" data-t="importProject"></button>
         <button type="button" id="backupAll" data-t="backupAll"></button>
         <button type="button" id="openTrash" data-t="openTrash"></button>
-        <button type="button" id="openAwards" data-t="awardsTitle"></button>
+        <!-- The guide is a project like the others; this makes it, once, and opens it. Chosen as a
+             template it was found by the few who read template names. -->
+        <button type="button" id="openGuide" data-t="openGuide"></button>
         <!-- The shared folder: only where the browser can hand one out (Chromium, desktop). -->
         <button type="button" id="openFolder" data-t="folderButton" hidden></button>
         <span class="spacer"></span>
@@ -149,6 +159,12 @@
        to be argued for, not a thing to be added: past four the dashboard stops being a glance. -->
   <section class="screen" id="project" hidden>
     <div class="wrap">
+      <!-- The example says it is one, for as long as it exists. The welcome dialog says it once;
+           this is what somebody sees when they come back tomorrow having forgotten. -->
+      <p class="note invite" id="demoStrip" hidden>
+        <span data-t="demoStrip"></span>
+        <button type="button" id="demoDrop" class="ghost small" data-t="demoDrop"></button>
+      </p>
       <p class="kicker" id="projectWhen"></p>
       <!-- The export sits beside the title and not at the foot of the screen: on a laptop the foot
            is below the fold, and the one habit that protects everything somebody makes here should
@@ -212,14 +228,21 @@
 
       <!-- Fitts, applied: what gets used every day is a full-width button at the top of the panel,
            and what cannot be taken back easily sits down here, small and last. -->
-      <div class="screen-foot">
-        <button type="button" id="exportData" data-t="exportData"></button>
-        <button type="button" id="renameProject" data-t="renameProject"></button>
-        <!-- Per project, and only once a folder is linked: not every project is the team's. -->
-        <label class="check-line" id="sharedLine" hidden>
+      <!-- Per project, and only once a folder is linked: not every project is the team's. The
+           switch and, under it, what it means right now — where the project is written, when it
+           was last, and that it happens by itself. A switch among the buttons of the foot said
+           none of that, and the first person to tick it asked how to save. -->
+      <p class="note folder-line" id="sharedLine" hidden>
+        <label class="check-line">
           <input type="checkbox" id="sharedToggle">
           <span data-t="sharedToggle"></span>
         </label>
+        <span id="sharedText"></span>
+      </p>
+
+      <div class="screen-foot">
+        <button type="button" id="exportData" data-t="exportData"></button>
+        <button type="button" id="renameProject" data-t="renameProject"></button>
         <span class="spacer"></span>
         <span class="meta" id="exportedWhen"></span>
         <!-- A project started from a template is full of somebody else's pages and tasks: this
@@ -407,6 +430,20 @@
       <p class="empty" id="trashEmpty" data-t="trashEmpty" hidden></p>
     </div>
   </section>
+
+  <!-- The first time, once: what this is, that the fair is an example, where the writing stays.
+       Not a tour — a tour is clicked away — but a door with two handles. -->
+  <dialog id="welcomeDialog">
+    <h2 data-t="welcomeTitle"></h2>
+    <p data-t="welcomeText"></p>
+    <p class="note" data-t="welcomeNote"></p>
+    <div class="row">
+      <button type="button" id="welcomeExample" class="primary" data-t="welcomeExample"></button>
+      <button type="button" id="welcomeOwn" data-t="welcomeOwn"></button>
+      <span class="spacer"></span>
+      <button type="button" id="welcomeGuide" class="ghost small" data-t="welcomeGuide"></button>
+    </div>
+  </dialog>
 
   <!-- The app's own question, for what used to be the browser's `prompt`: a name, a choice, a yes
        or no. One dialog, three shapes; `ui.ask` fills it and reads it. -->
