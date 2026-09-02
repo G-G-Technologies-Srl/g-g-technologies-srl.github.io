@@ -97,6 +97,31 @@ function _applyText() {
   _updateExportLabel();
 }
 
+/**
+ * A yes-or-no question in the app's own dialog, in place of `confirm`. Resolves to true on the
+ * first button, false on the second and on Esc; the focus goes to the sentence, so that a screen
+ * reader says the question before the answers.
+ */
+function _ask(message) {
+  const dialog = el("askDialog");
+  el("askText").textContent = message;
+  el("askOk").textContent = t("askOk");
+  el("askCancel").textContent = t("askCancel");
+  return new Promise((resolve) => {
+    const close = (outcome) => {
+      dialog.removeEventListener("close", onClose);
+      if (dialog.open) dialog.close();
+      resolve(outcome);
+    };
+    const onClose = () => close(false);
+    dialog.addEventListener("close", onClose);
+    el("askOk").onclick = () => close(true);
+    el("askCancel").onclick = () => close(false);
+    if (!dialog.open) dialog.showModal();
+    el("askText").focus();
+  });
+}
+
 function _updateExportLabel() {
   el("exportRange").textContent = selection ? t("fileExport") : t("fileExportAll");
 }
@@ -988,7 +1013,7 @@ function _start() {
     event.target.value = "";            // so choosing the same file twice fires again
   });
   el("historyClear").addEventListener("click", async () => {
-    if (!confirm(t("historyClearAsk"))) return;
+    if (!(await _ask(t("historyClearAsk")))) return;
     await history.forget();
     await _showHistory();
   });

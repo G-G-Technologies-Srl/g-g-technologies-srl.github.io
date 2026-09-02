@@ -1,0 +1,1685 @@
+/* Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0 */
+
+/* Only what this app shapes differently. The palette, the buttons, the app bar, the error box and
+   the footer come from ../../_lib/base.css, which is loaded first.
+
+   One override at the top, and it is the one app/CLAUDE.md warns about by name: `base.css` assumes
+   a tool that fills the window — a chart, a playing field — and gives the body a fixed height. This
+   app is made of text that grows, and under that assumption the overflow scrolls *behind* the
+   footer. It is the defect Survey Scope found the hard way, with its saved results crossing the
+   footer line. The day a second app of text arrives, this pair of rules moves down into the
+   library. */
+
+html { height: 100%; }
+body { height: auto; min-height: 100%; }
+
+/* **Except on the page, which is a tool and not a document.**
+
+   The rule above lets the body grow, which is right for the archive and for a project: their
+   content is a list that gets longer, and the footer follows it down. The editor is the opposite —
+   it scrolls inside itself and the two toolbars have to stay put — and under a growing body it does
+   not: the whole page scrolls instead, and the app bar with the way home goes off the top of the
+   screen. Which, installed and with no browser chrome, is somebody stuck in a document.
+
+   Found by looking at a screenshot: the bar was simply not there any more. */
+body.fixed { height: 100%; overflow: hidden; }
+
+/* ---------------------------------------------------------------------------------------------
+   layout
+   --------------------------------------------------------------------------------------------- */
+
+.wrap {
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 22px 18px 34px;
+}
+
+.screen { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+
+.screen-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.screen-head h1 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 26px;
+  margin: 0;
+  flex: 1 1 auto;
+}
+
+/* The commands that get used every day sit at the top and are full-size; what cannot be undone in
+   one press sits down here, small and last. Fitts, applied rather than quoted. */
+.screen-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+.grow { flex: 1 1 auto; min-width: 0; }
+
+.note { color: var(--faint); font-size: 12.5px; margin: 8px 0 0; }
+
+.empty {
+  color: var(--muted);
+  font-size: 15px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(127, 140, 170, 0.05);
+  padding: 22px 20px;
+  margin: 0 0 18px;
+}
+
+/* Late is amber and never red, and it never travels alone: the word beside it says the same thing.
+   Red reads as a fault somebody committed, and a deadline that has moved is not one.
+
+   It is a variable and not two literals, and that is the correction rather than the tidying: the
+   first version wrote the colour into a rule per theme, and every later selector that needed it —
+   the date field, which an `input[type="date"]` rule was already colouring — had to repeat both.
+   One of the two repetitions was missed, and the result was a date the light theme called late and
+   the dark theme did not. Measured in the browser, not reasoned about. */
+:root { --late: #d9a441; }
+
+html[data-theme="light"] { --late: #a06b09; }
+
+@media (prefers-color-scheme: light) {
+  html:not([data-theme]) { --late: #a06b09; }
+}
+
+.late { color: var(--late); }
+
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-size: 11px;
+  color: var(--accent-text);
+  margin: 0 0 6px;
+}
+
+.kicker::before {
+  content: "";
+  width: 22px;
+  height: 1px;
+  background: var(--accent);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   cards and panels
+   --------------------------------------------------------------------------------------------- */
+
+/* The site's own recipe, and not a new one: a panel is a gradient, a hairline border and a 2px
+   filament of accent along the top. Coloured left borders and dashed boxes do not exist anywhere on
+   this site, and a panel that used one would look borrowed from somewhere else. */
+.card {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: linear-gradient(170deg, var(--panel-2), var(--panel) 60%);
+  padding: 18px 18px 16px;
+  overflow: hidden;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-text));
+}
+
+.card h2 {
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin: 0 0 12px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 720px) {
+  .grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+#project h1 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 28px;
+  margin: 0 0 20px;
+}
+
+.form { display: grid; gap: 8px; margin-bottom: 18px; }
+
+.form label, .field-label { font-size: 12.5px; color: var(--faint); }
+
+.template-choice {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.tpl {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+  padding: 9px 11px;
+  border-radius: var(--radius-sm);
+}
+
+.tpl.on { border-color: var(--accent); background: var(--accent-soft); }
+
+.tpl-name { font-size: 13.5px; }
+
+.tpl-lead { font-size: 11.5px; color: var(--faint); line-height: 1.35; }
+
+input[type="text"], input[type="date"], textarea {
+  font: inherit;
+  color: inherit;
+  background: rgba(127, 140, 170, 0.08);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  min-width: 0;
+}
+
+input[type="text"]:focus, textarea:focus { border-color: var(--border-strong); }
+
+/* ---------------------------------------------------------------------------------------------
+   the archive
+   --------------------------------------------------------------------------------------------- */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.project-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: linear-gradient(170deg, var(--panel-2), var(--panel) 60%);
+  padding: 15px 16px 14px;
+  min-height: 116px;
+}
+
+.project-card:hover { border-color: var(--border-strong); }
+
+.project-card-name {
+  font-family: var(--font-display);
+  font-size: 17px;
+  line-height: 1.25;
+}
+
+.project-card-when { font-size: 12px; color: var(--faint); }
+
+.project-card-progress { font-size: 13px; color: var(--muted); margin-top: auto; }
+
+.badge {
+  font-size: 11.5px;
+  color: var(--accent-text);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 1px 9px;
+}
+
+.badge.late { border-color: currentColor; }
+
+/* ---------------------------------------------------------------------------------------------
+   lists
+   --------------------------------------------------------------------------------------------- */
+
+.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+
+.row-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  flex-wrap: wrap;
+}
+
+.row-item:last-child { border-bottom: 0; }
+
+/* A page written inside another is a chapter of it, and the indent is how the panel says so. */
+.row-item.depth-1 { padding-left: 16px; }
+.row-item.depth-2 { padding-left: 32px; }
+.row-item.depth-3 { padding-left: 48px; }
+
+/* The title is as wide as its own text and no wider. With `flex: 1` here the line through a
+   finished task — a background the width of the element — ran past the last letter to the far side
+   of the row, and read as a rule across the list rather than as something crossed out. */
+.row-item .title { flex: 0 1 auto; min-width: 0; overflow-wrap: anywhere; }
+
+.row-item .when { font-size: 12px; color: var(--faint); white-space: nowrap; }
+.row-item .from { font-size: 12px; color: var(--faint); white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; max-width: 30%; }
+.card.today { margin-bottom: 20px; }
+
+/* The date sits on the row, quiet until it holds something: a field with a border on every task
+   would make the list read as a form. It is still a real control — 24px tall, focusable, and with
+   its own accessible name, since the label is the column and the column is not spoken. */
+/* `input.when-field` and not `.when-field`, all the way down. The rule above that gives every text
+   and date field its shape carries an attribute selector — `input[type="date"]` — which outweighs a
+   plain class, so a class on its own was losing every colour it declared here without saying so. */
+input.when-field {
+  font-size: 12px;
+  color: var(--faint);
+  background: transparent;
+  border-color: transparent;
+  padding: 2px 4px;
+  width: auto;
+}
+
+input.when-field:hover, input.when-field:focus {
+  border-color: var(--border);
+  color: var(--text);
+}
+
+input.when-field.late { color: var(--late); }
+
+/* A late date is amber in the field too, and it took a wrong turn to get here worth recording: the
+   first version reset it to the ordinary colour, and that rule won in the dark theme and lost in
+   the light one — where `html[data-theme="light"] .late` is the more specific selector. The two
+   themes would have disagreed about whether a date was late, which is the class of defect this
+   project keeps finding by looking rather than by thinking. */
+
+/* Without a pointer there is no hover, so a control that only shows its border on hover shows
+   nothing at all. On touch both of these carry their border from the start. */
+@media (hover: none) {
+  input.when-field, #pageTitleField { border-color: var(--border); }
+}
+
+.row-item .kind {
+  font-size: 11px;
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  min-width: 72px;
+}
+
+.link {
+  border: 0;
+  padding: 4px 0;
+  text-align: left;
+  color: inherit;
+  border-radius: var(--radius-sm);
+}
+
+.link:hover { color: var(--accent-text); }
+
+/* Ticking something off has to feel like ticking something off. 24px is the floor for any command
+   in this catalogue, and it is also, by luck rather than design, the size at which a tick reads. */
+.tick {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 7px;
+  color: var(--btn-text);
+  font-size: 14px;
+  line-height: 1;
+  transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease;
+}
+
+.tick.on {
+  background: var(--accent);
+  border-color: transparent;
+  transform: scale(1.06);
+}
+
+/* The line through a finished task is drawn, not merely applied: it is the small physical pleasure
+   the whole idea of a checklist rests on. Under `prefers-reduced-motion` it simply appears. */
+.struck {
+  color: var(--faint);
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 55%;
+  background-size: 100% 1px;
+  animation: strike 200ms ease-out;
+}
+
+@keyframes strike {
+  from { background-size: 0 1px; }
+  to { background-size: 100% 1px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .struck { animation: none; }
+  .tick { transition: none; }
+  .tick.on { transform: none; }
+  .snack { animation: none; }
+}
+
+/* ---------------------------------------------------------------------------------------------
+   the progress ring
+   --------------------------------------------------------------------------------------------- */
+
+.ring { position: relative; width: 132px; margin: 4px auto 2px; }
+
+.ring svg { width: 100%; height: auto; transform: rotate(-90deg); }
+
+.ring circle { fill: none; stroke-width: 9; }
+
+.ring-back { stroke: var(--border-strong); }
+
+.ring-fill {
+  stroke: var(--accent);
+  stroke-linecap: round;
+  transition: stroke-dasharray 320ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ring-fill { transition: none; }
+}
+
+.ring-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 19px;
+}
+
+/* ---------------------------------------------------------------------------------------------
+   one page
+   --------------------------------------------------------------------------------------------- */
+
+/* The second bar of the toolbar: the document and what can be done to it. It carries the panel's
+   own background and the only high-contrast text on the screen, which is what makes it a level
+   rather than a group — the first bar stays small and grey above it. */
+.pagebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 14px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+
+/* The title is a field, and looks like one: a quiet border from the start, stronger under the
+   pointer. Without the border the name sat naked at the left of the bar and nobody guessed it
+   could be typed in. */
+#pageTitleField {
+  flex: 1 1 240px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  background: transparent;
+  border-color: var(--border);
+}
+
+#pageTitleField:hover { border-color: var(--border-strong); }
+
+#editorNote {
+  margin: 0;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* The writing area fills what is left of the window, and scrolls inside itself. The page never
+   scrolls horizontally and the footer never ends up over the text. */
+#pageBody {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 320px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 20px max(18px, calc(50% - 360px));
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.65;
+  resize: none;
+}
+
+#pageBody:focus { outline: none; }
+
+/* ---------------------------------------------------------------------------------------------
+   the plan: board and calendar
+   --------------------------------------------------------------------------------------------- */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.filter-row { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+
+.filter-label { font-size: 11.5px; color: var(--faint); margin-right: 2px; }
+
+.chip {
+  font-size: 12.5px;
+  border-radius: 999px;
+  padding: 3px 11px;
+  color: var(--muted);
+}
+
+.chip.on { border-color: var(--accent); color: var(--accent-text); background: var(--accent-soft); }
+
+/* The board scrolls sideways and each column scrolls on its own. One scrollbar for everything would
+   mean that reaching the bottom of the third column moves the first two out of sight. */
+.board {
+  flex: 1 1 auto;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 16px 14px 22px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.column {
+  flex: 0 0 268px;
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(127, 140, 170, 0.05);
+  padding: 10px;
+}
+
+.column-head { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+
+.column-name { font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+.column-count { font-size: 12px; color: var(--faint); }
+
+.column-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-height: 40px;
+  padding-bottom: 4px;
+}
+
+.column-add { margin-top: 8px; }
+
+.column-add input { flex: 1 1 auto; min-width: 0; font-size: 13px; }
+
+.column-new {
+  flex: 0 0 190px;
+  align-self: flex-start;
+  border-style: dashed;
+  color: var(--faint);
+  padding: 12px;
+}
+
+/* The dashed edge lives here and nowhere else on this site, and it earns it the same way the drop
+   zone of the CSV viewer does: it is not decoration, it says "there could be something here". */
+
+.task-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(170deg, var(--panel-2), var(--panel) 60%);
+  padding: 9px 10px;
+  cursor: pointer;
+  display: grid;
+  gap: 6px;
+  touch-action: none;
+}
+
+.task-card:hover, .task-card:focus-visible { border-color: var(--border-strong); }
+
+.task-card.is-done { opacity: 0.62; }
+
+.task-card.lifted { opacity: 0.4; }
+
+.task-head { display: flex; gap: 8px; align-items: flex-start; }
+
+.task-head .title { flex: 0 1 auto; font-size: 13.5px; line-height: 1.35; }
+
+.task-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+.task-meta .tag, .task-meta .who {
+  font-size: 11px;
+  color: var(--faint);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0 8px;
+}
+
+.task-card .later { font-size: 11.5px; justify-self: start; color: var(--late); padding: 2px 6px; }
+
+.column-list.drop-here { outline: 2px dashed var(--accent); outline-offset: 4px; border-radius: 8px; }
+
+.plan.dragging, .dragging .task-card { cursor: grabbing; }
+
+/* ---- the calendar */
+
+.calendar { flex: 1 1 auto; display: flex; flex-direction: column; padding: 14px; min-height: 0; }
+
+.cal-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+
+.cal-head span { font-family: var(--font-display); font-size: 18px; min-width: 190px; }
+
+.cal-week, .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+
+.cal-week span {
+  font-size: 11px;
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 4px;
+}
+
+.cal-grid { flex: 1 1 auto; overflow-y: auto; grid-auto-rows: minmax(88px, 1fr); }
+
+.cal-day {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.cal-day.other-month { opacity: 0.45; }
+
+/* Today is marked by the accent edge and by the number turning bold: the colour alone would be the
+   one thing this site never lets carry the information by itself. */
+.cal-day.is-today { border-color: var(--accent); }
+
+.cal-day.is-today .cal-number { color: var(--accent-text); font-weight: 600; }
+
+.cal-day.drop-here { outline: 2px dashed var(--accent); outline-offset: -2px; }
+
+.cal-number { font-size: 11.5px; color: var(--faint); }
+
+.cal-entry {
+  font-size: 11.5px;
+  line-height: 1.3;
+  border-radius: 4px;
+  padding: 2px 5px;
+  background: rgba(127, 140, 170, 0.14);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  touch-action: none;
+}
+
+.cal-entry.is-milestone { border-left: 0; background: var(--accent-soft); color: var(--accent-text); }
+
+.cal-entry.is-done { opacity: 0.55; text-decoration: line-through; }
+
+.cal-entry.late { color: var(--late); }
+
+.cal-more { font-size: 11px; color: var(--faint); }
+
+/* ---- the timeline
+
+   One scrolling box for the whole thing: the names on the left are a sticky column *inside* each
+   row rather than a second panel beside it, so the vertical scroll is shared without a line of
+   JavaScript keeping two boxes in step — which is the part of a Gantt that usually drifts. */
+
+.timeline {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding-bottom: 20px;
+  position: relative;
+}
+
+.tl-head {
+  display: flex;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.tl-corner {
+  width: 190px;
+  flex: none;
+  position: sticky;
+  left: 0;
+  z-index: 4;
+  background: var(--bg);
+  border-right: 1px solid var(--border);
+}
+
+.tl-scale { flex: none; }
+
+.tl-months { display: flex; }
+
+.tl-month {
+  flex: none;
+  font-size: 11.5px;
+  color: var(--muted);
+  padding: 4px 6px;
+  border-left: 1px solid var(--border);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.tl-days { display: flex; }
+
+.tl-day {
+  width: 26px;
+  flex: none;
+  font-size: 10.5px;
+  color: var(--faint);
+  text-align: center;
+  padding: 2px 0 4px;
+}
+
+.tl-day.weekend { background: rgba(127, 140, 170, 0.07); }
+
+.tl-day.is-today { color: var(--accent-text); font-weight: 600; }
+
+.tl-grid { position: relative; width: max-content; min-width: 100%; }
+
+.tl-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  position: sticky;
+  left: 0;
+  width: max-content;
+  padding: 12px 10px 4px;
+}
+
+.tl-group-name {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--faint);
+}
+
+.tl-group-count { font-size: 11px; color: var(--faint); }
+
+.tl-row { display: flex; align-items: center; height: 30px; }
+
+.tl-title {
+  width: 190px;
+  flex: none;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--bg);
+  border-right: 1px solid var(--border);
+  padding-right: 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tl-title .link { font-size: 12.5px; padding: 0 0 0 10px; max-width: 100%; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; display: block; }
+
+.tl-track { position: relative; height: 100%; flex: none; }
+
+.tl-bar {
+  position: absolute;
+  top: 5px;
+  height: 20px;
+  border-radius: 5px;
+  background: linear-gradient(180deg, var(--accent), var(--accent-text));
+  color: var(--btn-text);
+  font-size: 11.5px;
+  line-height: 20px;
+  padding: 0 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.tl-bar.is-done { opacity: 0.5; }
+
+/* Late is amber here too, and it is the bar itself that changes rather than a mark beside it: at
+   this size there is no room for a word, so the shape carries it — a hatch, not only a colour. */
+.tl-bar.late {
+  background: repeating-linear-gradient(135deg, var(--late), var(--late) 6px,
+    rgba(0, 0, 0, 0.18) 6px, rgba(0, 0, 0, 0.18) 12px);
+  color: #0d1220;
+}
+
+.tl-bar.lifted { opacity: 0.85; cursor: grabbing; }
+
+/* A milestone is a date and not a stretch of work, so it is a square turned on its point — the
+   shape a plan uses for "this is the day" — and it has no handles, because there is nothing to
+   stretch. */
+.tl-bar.is-milestone {
+  width: 20px !important;
+  padding: 0;
+  border-radius: 3px;
+  transform: rotate(45deg) scale(0.72);
+}
+
+.tl-bar.is-milestone .tl-bar-name { display: none; }
+
+.tl-grip {
+  position: absolute;
+  top: 0;
+  width: 8px;
+  height: 100%;
+  cursor: ew-resize;
+}
+
+.tl-grip-start { left: 0; }
+
+.tl-grip-end { right: 0; }
+
+.tl-bar-name { pointer-events: none; }
+
+/* A bar of one day is twenty-six pixels: a name inside it is two letters and an ellipsis. Outside
+   it reads, and being a child of the bar it follows the drag with nothing to keep in step. */
+.tl-bar.short { overflow: visible; padding: 0; }
+
+.tl-bar.short .tl-bar-name {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  padding-left: 8px;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.tl-bar.short.is-done .tl-bar-name { color: var(--faint); text-decoration: line-through; }
+
+.tl-flag {
+  position: absolute;
+  top: 6px;
+  font-size: 11.5px;
+  line-height: 20px;
+  color: var(--text);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.tl-nodate {
+  position: absolute;
+  left: 8px;
+  top: 6px;
+  font-size: 11.5px;
+  color: var(--faint);
+}
+
+/* Today, drawn once behind everything: on a plan the question is always "where are we now". */
+.tl-now {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--accent);
+  opacity: 0.45;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ---- the card of one task */
+
+/* The card scrolls inside itself. Opened with everything shown it is taller than a laptop window,
+   and a dialog taller than the screen hides its own «Chiudi» — which is the one button somebody
+   needs when they cannot see the rest. */
+#taskCard {
+  max-width: 520px;
+  width: calc(100vw - 32px);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+
+#taskCard label, #taskCard .field-label {
+  display: block;
+  font-size: 12.5px;
+  color: var(--faint);
+  margin: 12px 0 4px;
+}
+
+#taskCard input[type="text"], #taskCard textarea, #taskCard select { width: 100%; }
+
+#taskCard select {
+  font: inherit;
+  color: inherit;
+  background: rgba(127, 140, 170, 0.08);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+}
+
+.card-dates { display: flex; gap: 12px; }
+
+.card-dates > div { flex: 1 1 0; }
+
+.check-line { display: flex !important; align-items: center; gap: 8px; }
+
+.check-line input { width: auto; }
+
+.card-foot { margin-top: 18px; }
+
+.wide { width: 100%; margin-top: 10px; }
+
+@media (max-width: 620px) {
+  .column { flex-basis: 80vw; }
+  .cal-grid { grid-auto-rows: minmax(64px, 1fr); }
+}
+
+/* ---------------------------------------------------------------------------------------------
+   the block editor
+   --------------------------------------------------------------------------------------------- */
+
+/* The editor and the column of pages beside it share what is left of the window. */
+.page-main { display: flex; flex: 1 1 auto; min-height: 0; }
+
+.page-tree {
+  flex: 0 0 220px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 14px 10px 14px 14px;
+  border-right: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 13px;
+}
+.page-tree nav { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+/* The two ways to grow the tree, at its foot, always there: a column that appears only once
+   there are two pages is a column nobody can find the first time. */
+.tree-foot { display: grid; gap: 2px; padding-top: 10px; border-top: 1px solid var(--border); margin-top: 10px; }
+.tree-foot button { text-align: left; }
+.tree-head {
+  margin: 10px 0 4px 6px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.tree-head:first-child { margin-top: 0; }
+.tree-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; }
+.tree-item.depth-1 { padding-left: 12px; }
+.tree-item.depth-2 { padding-left: 24px; }
+.tree-item.depth-3 { padding-left: 36px; }
+.tree-item.depth-4 { padding-left: 48px; }
+.tree-link {
+  display: block;
+  width: 100%;
+  padding: 4px 6px;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tree-link.on { color: var(--accent-text); background: rgba(127, 140, 170, 0.1); }
+
+/* Carrying a page: the handle, the lifted row, the mark where it would land. The marks are the
+   editor's vocabulary — a two-pixel line in the gradient between rows, a tinted row for «inside»
+   — and a struck-through grey for a place the model refuses. */
+.tree-item { display: flex; align-items: center; gap: 2px; position: relative; }
+.tree-item .tree-link { flex: 1 1 auto; }
+.tree-grip {
+  flex: 0 0 auto;
+  width: 14px;
+  color: var(--faint);
+  font-size: 12px;
+  line-height: 1;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  opacity: 0;
+}
+.tree-item:hover .tree-grip, #pageTree.dragging .tree-grip { opacity: 0.8; }
+@media (hover: none) { .tree-grip { opacity: 0.6; } }
+#pageTree.dragging { cursor: grabbing; }
+.tree-item.lifted { opacity: 0.4; }
+.tree-item.drop-before::before, .tree-item.drop-after::after {
+  content: ""; position: absolute; left: 14px; right: 4px; height: 2px; background: var(--gradient);
+}
+.tree-item.drop-before::before { top: -1px; }
+.tree-item.drop-after::after { bottom: -1px; }
+.tree-item.drop-into { background: rgba(52, 211, 153, 0.14); border-radius: var(--radius-sm, 6px); }
+.tree-item.drop-no { opacity: 0.35; text-decoration: line-through; }
+.tree-root-drop {
+  display: none;
+  margin-top: 6px;
+  padding: 6px;
+  font-size: 12px;
+  color: var(--faint);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 6px);
+  text-align: center;
+}
+#pageTree.dragging .tree-root-drop { display: block; }
+.tree-root-drop.drop-into { color: var(--accent-text); border-color: var(--accent); background: rgba(52, 211, 153, 0.14); }
+
+/* Under 900px the column would be the text's: the dashboard has the same list one press away. */
+@media (max-width: 900px) {
+  .page-tree { display: none; }
+}
+
+/* The column of writing is the same width as the site's prose, and for the same reason: a line of
+   text that runs the width of a desktop window is measurably harder to read, and the eye loses the
+   start of the next line. */
+.editor {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 22px max(16px, calc(50% - 360px)) 40vh;
+}
+
+/* The tail of empty space under the last block is not a mistake: without it the final paragraph
+   sits against the bottom of the window, and writing at the end of a long page means typing on the
+   last visible line. */
+
+.block { position: relative; display: flex; gap: 6px; align-items: flex-start; }
+
+.block-body { flex: 1 1 auto; min-width: 0; }
+
+/* The rail holds the `+`, and it is invisible until the pointer is near. It still occupies its
+   width at all times: appearing and disappearing space would shift the text sideways as the mouse
+   crosses it, which is worse than a faint button. */
+/* The rail: two controls, side by side rather than stacked. Stacked they were two six-pixel marks
+   in a column, and the one you wanted was always the other one — the handle in particular was a
+   target smaller than the gap between the fingers holding the mouse. */
+.block-rail {
+  width: 52px;
+  flex: none;
+  padding-top: 2px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 2px;
+}
+
+.rail-add, .rail-grip {
+  opacity: 0;
+  transition: opacity 120ms ease;
+  color: var(--faint);
+  border-radius: 6px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-size: 15px;
+}
+
+.rail-add:hover, .rail-grip:hover { background: rgba(127, 140, 170, 0.16); color: var(--text); }
+
+/* Twenty-four pixels each, which is this catalogue's floor for anything you have to hit, and the
+   handle carries a real grip pattern instead of the braille dots — at this size those read as
+   dirt on the screen. */
+.rail-grip {
+  cursor: grab;
+  touch-action: none;
+  letter-spacing: 1px;
+  font-size: 11px;
+}
+
+.dragging .rail-grip { cursor: grabbing; }
+
+.block:hover .rail-add, .block:hover .rail-grip,
+.rail-add:focus-visible, .rail-grip:focus-visible { opacity: 1; }
+
+/* Half-visible on the block being written in, so the two controls are discovered by writing rather
+   than by being told about — the block you are in is the block you are most likely to want to
+   change, and a control nobody ever sees is a control that does not exist. */
+.block:focus-within .rail-add, .block:focus-within .rail-grip { opacity: 0.55; }
+
+@media (hover: none) {
+  .rail-add, .rail-grip { opacity: 0.55; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail-add, .rail-grip { transition: none; }
+}
+
+/* While a block is being carried, the one it came from stays in place and fades: taking it out of
+   the flow would make everything under it jump, and the line showing where it will land would be
+   measured against a page that had already moved. */
+.editor.dragging { cursor: grabbing; user-select: none; }
+
+/* A link to a page that does not exist yet: dotted, so that the eye reads "to be made" before the
+   hand clicks it. Clicking makes the page. */
+.editor a.wiki.missing { text-decoration-style: dotted; opacity: 0.8; }
+
+.block.lifted { opacity: 0.4; }
+
+/* Where it will land: a line with a dot at its head, so it reads as a place and not as a border
+   somebody drew by accident. */
+.drop-line {
+  position: absolute;
+  left: 52px;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-text));
+  border-radius: 1px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.drop-line::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.editor { position: relative; }
+
+/* ---- the strip over a selection */
+
+.mark-bar {
+  position: fixed;
+  z-index: 30;
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.30);
+}
+
+.mark-bar button {
+  border-color: transparent;
+  min-width: 30px;
+  padding: 4px 6px;
+  line-height: 1.1;
+}
+
+.mark-bar button:hover { background: rgba(127, 140, 170, 0.14); }
+
+.mark-bar code { font-size: 12px; }
+
+.block [contenteditable] {
+  outline: none;
+  min-height: 1.5em;
+  padding: 2px 0;
+  overflow-wrap: anywhere;
+}
+
+.block [contenteditable]:focus { outline: none; }
+
+.block .h { font-family: var(--font-display); font-weight: 400; line-height: 1.25; }
+
+.block .h1 { font-size: 27px; margin-top: 14px; }
+
+.block .h2 { font-size: 21px; margin-top: 12px; }
+
+.block .h3 { font-size: 17px; margin-top: 10px; }
+
+.md-list { margin: 0; padding-left: 22px; }
+
+.md-list li { margin: 1px 0; display: flex; gap: 8px; align-items: flex-start; }
+
+.md-list li .item { flex: 1 1 auto; }
+
+/* An `li` laid out as flex loses the browser's own marker, and it has to be flex to hold the tick
+   beside the text. So an ordered list counts for itself, starting where the source said. */
+ol.md-list { list-style: none; padding-left: 4px; counter-reset: md-item; }
+
+ol.md-list > li { counter-increment: md-item; }
+
+ol.md-list > li::before {
+  content: counter(md-item) ".";
+  color: var(--faint);
+  min-width: 20px;
+  padding-top: 2px;
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+/* In the editor a ticked item is struck with `text-decoration`, not with the drawn line the task
+   list uses. There the element hugs its own text; here it is the editable field and has to span the
+   row to be clickable, so the drawn line would run to the far edge — the same defect twice, and the
+   second time in a place where the fix could not be the same. */
+.md-list li .item.struck {
+  background-image: none;
+  animation: none;
+  text-decoration: line-through;
+}
+
+/* The bullet is the site's own square in the accent gradient, not the browser's dot — the same mark
+   the pages and the article illustrations use. */
+ul.md-list { list-style: none; padding-left: 4px; }
+
+ul.md-list li:not(:has(.tick))::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  margin-top: 9px;
+  flex: none;
+  border-radius: 1px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-text));
+}
+
+.md-list .depth-1 { margin-left: 22px; }
+.md-list .depth-2 { margin-left: 44px; }
+.md-list .depth-3 { margin-left: 66px; }
+.md-list .depth-4 { margin-left: 88px; }
+.md-list .depth-5 { margin-left: 110px; }
+.md-list .depth-6 { margin-left: 132px; }
+
+.block .quote {
+  padding-left: 14px;
+  border-left: 2px solid var(--border-strong);
+  color: var(--muted);
+}
+
+/* The callout is the site's highlighted panel, recipe unchanged: the gradient, the hairline border,
+   the 2px filament of accent along the top. */
+.callout {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: linear-gradient(170deg, var(--panel-2), var(--panel) 60%);
+  padding: 14px 16px 12px;
+  overflow: hidden;
+}
+
+.callout::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-text));
+}
+
+.callout-kind {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+  margin-bottom: 4px;
+}
+
+.block-divider { border: 0; border-top: 1px solid var(--border-strong); margin: 18px 0; }
+
+.block-code, .block-raw {
+  background: rgba(127, 140, 170, 0.10);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin: 0;
+  overflow-x: auto;
+}
+
+.block-code code, .block-raw code {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  white-space: pre-wrap;
+}
+
+/* Raw is what this app has no block for — HTML, a footnote, a heading deeper than three. It is
+   shown as what it is rather than dressed up as prose, and it is written back untouched. */
+.block-raw { background: transparent; border-style: dashed; color: var(--faint); }
+
+.block-table { border-collapse: collapse; width: 100%; font-size: 14px; }
+
+.block-table th, .block-table td {
+  border: 1px solid var(--border);
+  padding: 4px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.block-table th { background: rgba(127, 140, 170, 0.08); font-weight: 500; }
+
+.block-image img { max-width: 100%; height: auto; border-radius: var(--radius-sm); }
+
+.block-image { margin: 6px 0; }
+
+.block a { color: var(--accent-text); }
+
+.block code { font-family: var(--font-mono); font-size: 0.92em; }
+
+.menu-list { display: grid; gap: 2px; margin: 12px 0; max-height: 54vh; overflow-y: auto; }
+
+/* Each entry shows the thing as well as its name. A list of names asks somebody to know what a
+   «callout» is before they can choose one; a line of the real thing tells them. */
+.menu-entry {
+  border-color: transparent;
+  text-align: left;
+  padding: 6px 10px;
+  display: grid;
+  grid-template-columns: 132px 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.menu-entry:hover, .menu-entry:focus-visible { background: rgba(127, 140, 170, 0.12); }
+
+/* The one the block already is, so «turn into» says what it is turning *from*. */
+.menu-entry.on { border-color: var(--accent); background: var(--accent-soft); }
+
+.menu-name { font-size: 13.5px; }
+
+.sample {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(127, 140, 170, 0.10);
+  overflow: hidden;
+}
+
+.sample-text {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sample .h { font-family: var(--font-display); }
+
+.sample .h1 { font-size: 16px; }
+.sample .h2 { font-size: 14px; }
+.sample .h3 { font-size: 12.5px; }
+
+.sample-dot {
+  width: 5px;
+  height: 5px;
+  flex: none;
+  border-radius: 1px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-text));
+}
+
+.sample-num { font-size: 11px; color: var(--faint); flex: none; }
+
+.sample-box {
+  width: 11px;
+  height: 11px;
+  flex: none;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+}
+
+.sample-quote { border-left: 2px solid var(--border-strong); padding-left: 6px; }
+
+.sample-callout { border-top: 2px solid var(--accent); background: var(--accent-soft); }
+
+.sample-code { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+
+.sample-rule { flex: 1 1 auto; height: 1px; background: var(--border-strong); }
+
+.sample-table {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  width: 100%;
+  height: 15px;
+}
+
+.sample-table span { background: var(--border-strong); border-radius: 1px; }
+
+#blockMenuField { width: 100%; }
+
+/* ---------------------------------------------------------------------------------------------
+   the strip that undoes
+   --------------------------------------------------------------------------------------------- */
+
+/* The confetti. Over everything and touchable by nothing: a celebration that swallowed a click
+   would be a celebration in the way. The canvas is hidden again when it ends. */
+.cheer {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  display: none;
+}
+
+.faint { color: var(--faint); }
+
+.snack {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: calc(100vw - 28px);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+  padding: 10px 12px 10px 16px;
+  font-size: 14px;
+  animation: rise 160ms ease-out;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.invite {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-top: 18px;
+}
+
+/* ---------------------------------------------------------------------------------------------
+   the import dialog
+   --------------------------------------------------------------------------------------------- */
+
+dialog {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--text);
+  max-width: 460px;
+  padding: 20px 22px;
+}
+
+dialog::backdrop { background: rgba(4, 8, 16, 0.55); }
+
+dialog h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 19px;
+  margin: 0 0 8px;
+}
+
+dialog p { color: var(--muted); font-size: 14px; margin: 0 0 16px; }
+
+/* The question: the sentence in the text colour, since it is the whole dialog; the field or the
+   list under it, full width; the two buttons last. */
+dialog.ask { width: min(420px, calc(100vw - 32px)); }
+dialog.ask p { color: var(--text); font-size: 14.5px; line-height: 1.55; margin: 0 0 12px; }
+dialog.ask p:focus { outline: none; }
+dialog.ask input, dialog.ask select { width: 100%; margin-bottom: 14px; font-size: 15px; }
+
+/* The menu's footer: what can be done to a block on the left, the way out on the right. */
+.menu-foot { margin-top: 14px; }
+
+/* ---------------------------------------------------------------------------------------------
+   The search box. Wider than the other dialogs because a hit is three things side by side — what
+   it is, what it says, where it lives — and 460px folds the third under the second. */
+dialog.search { max-width: 640px; width: calc(100vw - 32px); }
+dialog.search input[type="search"] { width: 100%; font-size: 16px; }
+.search-hit {
+  border-color: transparent;
+  text-align: left;
+  padding: 8px 10px;
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+}
+.search-hit.on { border-color: var(--border-strong); background: rgba(127, 140, 170, 0.1); }
+.search-hit .kind { font-size: 11px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.04em; }
+.search-body { display: grid; gap: 2px; min-width: 0; }
+.search-title { font-size: 14px; overflow-wrap: anywhere; }
+.search-snippet { font-size: 12.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; }
+.search-hit .from { font-size: 12px; color: var(--faint); max-width: 140px; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 560px) {
+  .search-hit { grid-template-columns: 1fr; gap: 2px; }
+  .search-hit .from { max-width: none; }
+}
+
+/* ---------------------------------------------------------------------------------------------
+   after the review: the things that were in the wrong place
+   --------------------------------------------------------------------------------------------- */
+
+/* A row that opens something says so with the cursor and on hover. */
+.row-item.opens { cursor: pointer; border-radius: 6px; }
+
+.row-item.opens:hover { background: rgba(127, 140, 170, 0.08); }
+
+/* The page's «⋯» menu: everything about a page that is not writing in it. */
+.more { position: relative; }
+
+.more-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 25;
+  display: grid;
+  gap: 2px;
+  min-width: 220px;
+  padding: 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+}
+
+.more-menu button { border-color: transparent; text-align: left; padding: 7px 10px; }
+.more-menu hr { border: 0; border-top: 1px solid var(--border); margin: 4px 0; }
+
+.more-menu button:hover { background: rgba(127, 140, 170, 0.14); }
+
+/* The one destructive entry, last, and coloured as the app colours a deadline that slipped: a
+   warning, not an alarm. */
+
+/* The sound button in the app bar: the wave is drawn only while the sound is on. */
+#soundOn .sound-wave { display: none; }
+
+#soundOn.is-on { color: var(--accent-text); }
+
+#soundOn.is-on .sound-wave { display: inline; }
+
+/* ---------------------------------------------------------------------------------------------
+   into a calendar, from the card */
+.card-calendar { align-items: center; gap: 10px; margin: 6px 0 2px; }
+.card-calendar .meta { font-size: 12px; flex: 1 1 100%; }
+.button-link {
+  display: inline-block;
+  padding: 5px 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  text-decoration: none;
+  color: var(--text);
+}
+.button-link:hover { border-color: var(--border-strong); color: var(--accent-text); }
+
+/* ---------------------------------------------------------------------------------------------
+   paper, and the PDF the browser makes from it.
+
+   No library: `window.print()` over this sheet gives real text, selectable and searchable, in
+   every browser's «Save as PDF». What comes out is the document — the page's blocks, or the
+   board as one column after another — and nothing of the app around it: bars, rails, handles,
+   hints, the tree of pages, the footer. `body.printing` is set by the button for the length of
+   the dialog, so that a Ctrl+P on any other screen prints that screen as it is. */
+/* On screen the printed title is nothing at all — not an empty heading with its margins, which
+   was a forty-pixel gap under the editor's hint. */
+.print-title { display: none; }
+
+@media print {
+  @page { margin: 18mm 16mm; }
+
+  body.printing { background: #fff; color: #000; height: auto; overflow: visible; }
+  body.printing header, body.printing footer, body.printing .snack, body.printing .hint,
+  body.printing .pagebar, body.printing #editorNote, body.printing .page-tree,
+  body.printing .filters, body.printing .block-rail, body.printing .mark-bar,
+  body.printing dialog { display: none !important; }
+
+  body.printing .screen { display: block; }
+  body.printing .page-main, body.printing .page-column { display: block; }
+  body.printing .editor { overflow: visible; padding: 0; max-width: 720px; margin: 0 auto; }
+  body.printing .editor [contenteditable] { outline: none; }
+  body.printing .block { break-inside: avoid; }
+  body.printing .callout, body.printing table, body.printing tr, body.printing figure { break-inside: avoid; }
+  body.printing h1, body.printing h2, body.printing h3 { break-after: avoid; }
+  body.printing a.wiki { color: inherit; text-decoration: none; }
+
+  /* The title is in the bar, which is hidden: it is printed again, from a copy the app fills in. */
+  body.printing .print-title { display: block; font-family: var(--font-display); font-size: 26pt;
+    margin: 0 auto 6mm; max-width: 720px; }
+
+  /* The board: one column after another, cards whole, no drag affordances. */
+  body.printing .board { display: block; overflow: visible; height: auto; }
+  body.printing .board .column { display: block; width: auto; max-width: 720px; margin: 0 auto 8mm;
+    border: 0; background: none; }
+  body.printing .task-card { break-inside: avoid; border: 1px solid #999; background: #fff; }
+  body.printing .task-card .tick, body.printing .column-add, body.printing .column .ghost { display: none; }
+  body.printing .calendar, body.printing .timeline { overflow: visible; }
+}
+
+/* ---------------------------------------------------------------------------------------------
+   the page's properties: one quiet line under the bar */
+.page-column { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.page-props { padding: 10px max(16px, calc(50% - 360px)) 0; }
+.page-props input {
+  width: 100%;
+  display: block;
+  font-size: 13px;
+  background: transparent;
+  border-color: transparent;
+  padding: 3px 6px;
+  margin-left: -6px;
+}
+.page-props input:hover, .page-props input:focus { border-color: var(--border); }
+.row-item .badge.tag { margin-left: 6px; color: var(--muted); }
+body.printing .page-props { display: none; }
+
+/* the shortcuts */
+.keys { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 6px 0 14px; }
+.keys dt { font-family: var(--font-mono); font-size: 12.5px; color: var(--accent-text); }
+.keys dd { margin: 0; font-size: 14px; }
+#quickForm { display: grid; gap: 8px; }
+#pasteField { width: 100%; font-family: var(--font-mono); font-size: 13px; }
+#quickForm label { font-size: 12.5px; color: var(--faint); }
+
+/* ---------------------------------------------------------------------------------------------
+   sub-tasks: indented under the card, each a line with its own tick and date */
+.subtasks { display: grid; gap: 2px; margin-top: 6px; padding-left: 8px; border-left: 2px solid var(--border); }
+.subtask { display: flex; gap: 8px; align-items: center; font-size: 12.5px; padding: 2px 4px; border-radius: 6px; cursor: pointer; }
+.subtask:hover { background: rgba(127, 140, 170, 0.1); }
+.subtask .title { flex: 0 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.subtask .when { margin-left: auto; font-size: 11.5px; color: var(--faint); white-space: nowrap; }
+.subtask .when.late { color: var(--late); }
+.subtask.is-done { opacity: 0.62; }
+.tick.small { width: 18px; height: 18px; font-size: 11px; flex: none; }
+.card-parent { margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
+#cardSubtasks:empty { display: none; }
+
+/* the properties: key : value, quiet until touched */
+.props { display: grid; gap: 2px; margin-top: 2px; }
+.prop { display: flex; align-items: center; gap: 4px; }
+.prop input { font-size: 13px; background: transparent; border-color: transparent; padding: 3px 6px; }
+.prop input:first-child { width: 140px; color: var(--muted); }
+.prop input:nth-of-type(2) { flex: 1 1 auto; min-width: 0; }
+.prop input:hover, .prop input:focus { border-color: var(--border); }
+.prop-colon { color: var(--faint); }
+.prop .icon { opacity: 0; }
+.prop:hover .icon, .prop:focus-within .icon { opacity: 1; }
+#propAdd { margin: 4px 0 0 -6px; font-size: 12px; color: var(--faint); }
+#propAdd:hover { color: var(--accent-text); }
+body.printing .props, body.printing #propAdd { display: none; }
+
+/* the pages as a table */
+.table-wrap { flex: 1 1 auto; overflow: auto; padding: 14px 18px 40px; }
+.pages-table { border-collapse: collapse; width: 100%; max-width: 1100px; margin: 0 auto; font-size: 14px; }
+.pages-table th, .pages-table td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.pages-table th { font-size: 11.5px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--faint); }
+.pages-table th .link { font-size: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; padding: 0; }
+.pages-table td .badge.tag { margin-right: 4px; }
+.pages-table td.when { font-size: 12px; color: var(--faint); white-space: nowrap; }
+#pagesFilters { padding: 8px 18px; display: flex; gap: 8px; align-items: center; }
+
+/* the versions: the list on the left, the difference on the right */
+dialog.versions { max-width: 860px; width: calc(100vw - 32px); }
+.versions-body { display: grid; grid-template-columns: 250px 1fr; gap: 16px; }
+.versions-list { overflow-y: auto; margin: 0; max-height: 56vh; }
+.versions-diff { max-height: 56vh; }
+.versions-list .row-item.on { background: rgba(127, 140, 170, 0.12); border-radius: 6px; }
+.versions-list .when { font-size: 11px; }
+.versions-diff { overflow-y: auto; font-size: 13.5px; line-height: 1.5; padding-right: 6px; }
+.versions-diff .piece { margin: 0 0 8px; padding: 4px 8px; border-radius: 6px; white-space: pre-wrap; }
+.versions-diff .piece.same { color: var(--muted); }
+/* Read from the page as it is towards the chosen version: what is here now and would go is
+   struck through in amber, what would come back is green. */
+.versions-diff .piece.gone { background: rgba(217, 119, 6, 0.12); text-decoration: line-through; }
+.versions-diff .piece.new { background: rgba(5, 150, 105, 0.14); }
+@media (max-width: 700px) { .versions-body { grid-template-columns: 1fr; } .versions-list { max-height: 30vh; } }
+
+/* the selection: a picked card, and the bar that acts on all of them */
+.task-card.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+/* Shift-click picks a card; without this it also painted a text selection across it. */
+.task-card { user-select: none; }
+/* What throws away is amber wherever it sits: a menu, the bar under the board, a dialog, the bin. */
+.danger, .ghost.small.danger, .ghost.small.danger:hover:not(:disabled) { color: var(--late); }
+
+.select-bar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--panel);
+  font-size: 13px;
+}
+.select-bar select, .select-bar input { font-size: 13px; padding: 5px 8px; max-width: 180px; }
+
+/* an attachment: a chip with the file's name, pressed to get the bytes back */
+a.attachment {
+  display: inline-block;
+  padding: 2px 10px 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  text-decoration: none;
+  color: var(--accent-text);
+  font-size: 0.92em;
+}
+a.attachment::before { content: "⤓ "; color: var(--faint); }
+a.attachment:hover { border-color: var(--border-strong); }
+
+/* the shared folder's line on the archive */
+.folder-line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+#folderDialog label { display: block; font-size: 12.5px; color: var(--faint); margin: 8px 0 4px; }
+#folderDialog input { width: 100%; }

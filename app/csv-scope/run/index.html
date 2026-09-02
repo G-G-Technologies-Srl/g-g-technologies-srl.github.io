@@ -98,6 +98,17 @@
     <input type="file" id="historyFile" accept=".json,application/json" hidden>
   </section>
 
+  <!-- The app's own question, in place of the browser's `confirm`: that one is the only thing here
+       that does not look like the app — system font, the site's name on top — and it blocks the
+       thread. A `<dialog>` gives Esc, the backdrop and the focus that stays inside for free. -->
+  <dialog id="askDialog" class="ask">
+    <p id="askText" tabindex="-1"></p>
+    <div class="ask-row">
+      <button type="button" id="askOk" class="primary"></button>
+      <button type="button" id="askCancel"></button>
+    </div>
+  </dialog>
+
   <section class="error" id="error" hidden>
     <h2 id="errorTitle"></h2>
     <p id="errorText"></p>

@@ -534,3 +534,18 @@ body.dragging .drop { position: relative; }
   .bar { gap: 8px; }
   .sep { display: none; }
 }
+
+/* ---------------------------------------------------------------------------------------------
+   The question dialog: the app's colours, not the browser's. */
+dialog.ask {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--text);
+  width: min(420px, calc(100vw - 32px));
+  padding: 20px 22px;
+}
+dialog.ask::backdrop { background: rgba(4, 8, 16, 0.55); }
+dialog.ask p { margin: 0 0 18px; font-size: 14.5px; line-height: 1.55; }
+dialog.ask p:focus { outline: none; }
+.ask-row { display: flex; gap: 10px; justify-content: space-between; }

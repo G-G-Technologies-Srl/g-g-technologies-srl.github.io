@@ -1,0 +1,20 @@
+Plan Scope
+Copyright 2026 G&G Technologies S.r.l.
+
+This product includes software developed by G&G Technologies S.r.l.
+(https://ggtechnologies.sm).
+
+Licensed under the Apache License, Version 2.0. See the LICENSE file in this
+directory for the full text.
+
+This licence covers the contents of this directory only. The rest of the
+repository — the pages of ggtechnologies.sm, the articles under /insights, the
+brand and its marks — is not covered and remains all rights reserved.
+
+Whatever you write inside the app is yours. It is kept in your own browser, it
+is never sent anywhere, and it comes back out as a ZIP holding plain Markdown
+and your images: readable without this app, and without us.
+
+No third-party code is bundled: the app has no dependencies and loads nothing
+from outside its own directory. The ZIP reader and writer in run/zip.js are our
+own implementation of the published format, storing entries uncompressed.

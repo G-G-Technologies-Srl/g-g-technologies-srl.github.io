@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plan Scope</title>
+<meta name="robots" content="noindex, follow">
+<meta name="theme-color" content="#0d1220">
+<meta name="description" content="Organise projects, pages and deadlines in one place, entirely in your browser.">
+<link rel="canonical" href="https://ggtechnologies.sm/app/plan-scope/">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="stylesheet" href="../../_lib/base.css">
+<link rel="stylesheet" href="./styles.css">
+<script>
+  // Before the first paint, on purpose. Applied from a module it would run after the stylesheet,
+  // and the app would flash dark and then jump to light at every start.
+  try {
+    var saved = localStorage.getItem('gg-theme');
+    var light = saved ? saved === 'light'
+      : window.matchMedia('(prefers-color-scheme: light)').matches;
+    if (light) {
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f6f8fc');
+    }
+  } catch (ignored) {}
+</script>
+<script>
+  // `beforeinstallprompt` waits for nobody: on a second visit, with the service worker already
+  // active, Chrome fires it before any module has finished loading, and a listener registered from
+  // app.js never sees it. Caught here and left in a global, which gg/install.js reads on setup.
+  window.addEventListener('beforeinstallprompt', function (event) {
+    event.preventDefault();
+    window.__ggInstallPrompt = event;
+  });
+</script>
+</head>
+<body>
+
+<!-- One bar, and one command in it that is not a setting: the way home. Installed, the app runs in
+     a standalone window with no back button, so a screen you can enter and not leave is a screen
+     that traps somebody. It appears only when you are not already home, and it asks nothing before
+     leaving: everything is saved as it is typed, so there is nothing to lose and a confirmation
+     would suggest otherwise. -->
+<header>
+  <div class="appbar">
+    <span class="brand">Plan Scope</span>
+    <span class="meta" id="tagline"></span>
+    <!-- After the tagline, not between it and the name: name and tagline are one thing, the way
+         back is another. «Progetti», the word of the screen it goes to. -->
+    <button type="button" id="goHome" data-t="goHome" hidden></button>
+    <span class="spacer"></span>
+    <!-- One box, every project. The lens is in the bar because the question it answers — where
+         did I write that — comes up on every screen, not on one. -->
+    <button type="button" id="search" class="ghost small icon" data-t-label="searchLabel">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <circle cx="11" cy="11" r="6"></circle>
+        <path d="M20 20l-4.5-4.5"></path>
+      </svg>
+    </button>
+    <button type="button" id="install" class="ghost small" data-t="installButton" hidden></button>
+    <!-- A setting, so it lives with the settings: language and theme are here, and a checkbox in a
+         row of commands on the archive was a setting pretending to be an action. -->
+    <button type="button" id="soundOn" class="ghost small icon" aria-pressed="false">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <path d="M4 9v6h4l5 4V5L8 9H4z"></path>
+        <path class="sound-wave" d="M16 9a4 4 0 0 1 0 6"></path>
+      </svg>
+    </button>
+    <button type="button" id="lang" class="ghost small"></button>
+    <button type="button" id="theme" class="ghost small icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"></path>
+      </svg>
+    </button>
+  </div>
+  <p class="hint" id="installHint" hidden></p>
+</header>
+
+<main>
+
+  <!-- ------------------------------------------------------------------ archive -->
+
+  <section class="screen" id="home">
+    <div class="wrap">
+      <div class="screen-head">
+        <h1 data-t="homeTitle"></h1>
+        <button type="button" id="newProject" class="primary" data-t="newProject"></button>
+      </div>
+
+      <form class="card form" id="newProjectForm" hidden>
+        <label for="projectName" data-t="projectNameLabel"></label>
+        <input type="text" id="projectName" maxlength="80" autocomplete="off">
+        <label for="projectDate" data-t="projectDateLabel"></label>
+        <input type="date" id="projectDate">
+        <!-- The templates, and they are the first thing this app can do for somebody who has never
+             organised anything in it: a project that already knows what it is. -->
+        <span class="field-label" id="templateLabel"></span>
+        <div class="template-choice" id="templateChoice"></div>
+        <div class="row">
+          <button type="submit" id="createProject" class="primary" data-t="createProject"></button>
+          <button type="button" id="cancelProject" data-t="cancelProject"></button>
+        </div>
+      </form>
+
+      <!-- What the morning asks first — not "which projects do I have" but "what is due". One
+           list across every project, late first, and it is the reason to open the app at all. -->
+      <div class="card today" id="todayPanel" hidden>
+        <h2 data-t="todayTitle"></h2>
+        <ul class="list" id="todayList"></ul>
+        <p class="note" id="todayEmpty" data-t="todayEmpty" hidden></p>
+      </div>
+
+      <p class="empty" id="homeEmpty" data-t="homeEmpty" hidden></p>
+      <div class="cards" id="projectList"></div>
+
+      <div class="screen-foot">
+        <button type="button" id="importProject" data-t="importProject"></button>
+        <button type="button" id="backupAll" data-t="backupAll"></button>
+        <button type="button" id="openTrash" data-t="openTrash"></button>
+        <button type="button" id="openAwards" data-t="awardsTitle"></button>
+        <!-- The shared folder: only where the browser can hand one out (Chromium, desktop). -->
+        <button type="button" id="openFolder" data-t="folderButton" hidden></button>
+        <span class="spacer"></span>
+        <span class="meta" id="storage"></span>
+      </div>
+      <!-- The folder's state, when there is one: its name, who we are, when it was last read; and
+           the button to take the permission up again when the browser dropped it. -->
+      <p class="note folder-line" id="folderLine" hidden>
+        <span id="folderText"></span>
+        <button type="button" id="folderResume" class="ghost small" data-t="folderResume" hidden></button>
+      </p>
+
+      <!-- Once, and not every time: the nudge shows when the last backup is over two weeks old, and
+           «Va bene» silences it for another two. A reminder that repeats is a nag. -->
+      <p class="note invite" id="exportNudge" hidden>
+        <span data-t="exportNudge"></span>
+        <button type="button" id="exportNudgeOk" class="ghost small" data-t="exportNudgeOk"></button>
+      </p>
+      <p class="note" id="noStore" hidden></p>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------------ one project -->
+
+  <!-- Four panels, and the fourth is the limit rather than the count so far. A fifth is a decision
+       to be argued for, not a thing to be added: past four the dashboard stops being a glance. -->
+  <section class="screen" id="project" hidden>
+    <div class="wrap">
+      <p class="kicker" id="projectWhen"></p>
+      <!-- The export sits beside the title and not at the foot of the screen: on a laptop the foot
+           is below the fold, and the one habit that protects everything somebody makes here should
+           not need a scroll to find. -->
+      <div class="screen-head">
+        <h1 id="projectTitle"></h1>
+        <button type="button" id="exportProject" class="accent" data-t="exportProject"></button>
+      </div>
+
+      <div class="grid">
+        <div class="card" id="panelProgress">
+          <h2 data-t="progressTitle"></h2>
+          <div class="ring">
+            <svg viewBox="0 0 120 120" aria-hidden="true">
+              <circle class="ring-back" cx="60" cy="60" r="52"></circle>
+              <circle class="ring-fill" id="ringFill" cx="60" cy="60" r="52"></circle>
+            </svg>
+            <span class="ring-text" id="progressText"></span>
+          </div>
+          <p class="note" id="progressNote"></p>
+        </div>
+
+        <div class="card">
+          <h2 data-t="dueTitle"></h2>
+          <ul class="list" id="dueList"></ul>
+          <p class="note" id="dueEmpty" data-t="dueEmpty" hidden></p>
+        </div>
+
+        <!-- What the shared folder brought in, and when: the strip says it once and goes; whoever
+             comes back after lunch reads it here. Only on a shared project, only once there is
+             something to read. -->
+        <div class="card" id="panelLog" hidden>
+          <h2 data-t="logTitle"></h2>
+          <ul class="list" id="logList"></ul>
+        </div>
+
+        <div class="card">
+          <h2 data-t="docsTitle"></h2>
+          <ul class="list" id="pageList"></ul>
+          <button type="button" id="openPages" class="ghost small" data-t="pagesTable"></button>
+          <p class="note" id="pagesEmpty" data-t="pagesEmpty" hidden></p>
+          <form class="row" id="newPageForm">
+            <input type="text" id="pageField" maxlength="120" autocomplete="off">
+            <button type="submit" id="addPage" class="primary" data-t="addPage"></button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2 data-t="planTitle"></h2>
+          <ul class="list" id="taskList"></ul>
+          <p class="note" id="tasksEmpty" data-t="tasksEmpty" hidden></p>
+          <form class="row" id="newTaskForm">
+            <input type="text" id="taskField" maxlength="160" autocomplete="off">
+            <button type="submit" id="addTask" class="primary" data-t="addTask"></button>
+          </form>
+          <button type="button" id="openPlan" class="accent wide" data-t="openPlan"></button>
+        </div>
+      </div>
+
+      <p class="note invite" id="exportInvite" data-t="exportInvite" hidden></p>
+
+      <!-- Fitts, applied: what gets used every day is a full-width button at the top of the panel,
+           and what cannot be taken back easily sits down here, small and last. -->
+      <div class="screen-foot">
+        <button type="button" id="exportData" data-t="exportData"></button>
+        <button type="button" id="renameProject" data-t="renameProject"></button>
+        <!-- Per project, and only once a folder is linked: not every project is the team's. -->
+        <label class="check-line" id="sharedLine" hidden>
+          <input type="checkbox" id="sharedToggle">
+          <span data-t="sharedToggle"></span>
+        </label>
+        <span class="spacer"></span>
+        <span class="meta" id="exportedWhen"></span>
+        <!-- A project started from a template is full of somebody else's pages and tasks: this
+             puts them all in the bin at once, with one undo, and leaves the project. -->
+        <button type="button" id="emptyProject" class="ghost small" data-t="emptyProject"></button>
+        <button type="button" id="trashProject" class="ghost small" data-t="trashProject"></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------------ the plan -->
+
+  <!-- Two views of the same tasks, and they are views and not copies: moving a deadline on the
+       calendar shows up on the board without a reload, because both read the same model. -->
+  <section class="screen" id="plan" hidden>
+    <div class="pagebar">
+      <button type="button" id="planBack" data-t="planBack"></button>
+      <span class="meta" id="planTitle"></span>
+      <span class="spacer"></span>
+      <span class="meta" id="planDue"></span>
+      <button type="button" id="viewKanban" data-t="viewKanban"></button>
+      <button type="button" id="viewCalendar" data-t="viewCalendar"></button>
+      <button type="button" id="viewTimeline" data-t="viewTimeline"></button>
+      <button type="button" id="filtersOpen" class="ghost small" data-t="filtersOpen"></button>
+      <!-- What leaves the plan: a calendar file, a spreadsheet, a page for somebody without the
+           app, paper. And what comes in: a pasted list. Behind one button, like the page's. -->
+      <div class="more">
+        <button type="button" id="planMore" class="ghost small" aria-haspopup="true" aria-expanded="false" data-t-label="planMoreLabel">⋯</button>
+        <div class="more-menu" id="planMoreMenu" hidden>
+          <button type="button" id="planPaste" data-t="pasteOpen"></button>
+          <button type="button" id="planCopy" data-t="copyForAssistant"></button>
+          <button type="button" id="planIcs" data-t="exportIcs"></button>
+          <button type="button" id="planCsv" data-t="exportCsv"></button>
+          <button type="button" id="planHtml" data-t="exportHtml"></button>
+          <button type="button" id="planPrint" data-t="printPage"></button>
+        </div>
+      </div>
+    </div>
+
+    <h1 class="print-title" id="printTitlePlan"></h1>
+
+    <div class="filters" id="filters" hidden>
+      <div class="filter-row" id="tagFilters"></div>
+      <div class="filter-row" id="assigneeFilters"></div>
+      <button type="button" id="filtersClear" class="ghost small" data-t="filtersClear"></button>
+    </div>
+
+    <div class="board" id="board"></div>
+    <!-- The selection bar: Shift-click picks cards, and this says what can be done to all of them
+         at once. It is at the bottom, where the hand goes after it has finished picking. -->
+    <div class="select-bar" id="selectBar" hidden>
+      <span id="selectCount"></span>
+      <select id="selectMove" data-t-label="selectMove"></select>
+      <input type="text" id="selectAssign" maxlength="80" autocomplete="off" list="assigneeList" data-t-label="selectAssign">
+      <input type="text" id="selectTag" maxlength="40" autocomplete="off" data-t-label="selectTag">
+      <button type="button" id="selectTrash" class="ghost small danger" data-t="selectTrash"></button>
+      <span class="spacer"></span>
+      <button type="button" id="selectClear" class="ghost small" data-t="selectClear"></button>
+    </div>
+
+    <div class="calendar" id="calendar" hidden>
+      <div class="cal-head">
+        <button type="button" id="calPrev" class="ghost small">‹</button>
+        <span id="calMonth"></span>
+        <button type="button" id="calNext" class="ghost small">›</button>
+        <button type="button" id="calToday" class="ghost small" data-t="calToday"></button>
+      </div>
+      <div class="cal-week" id="calWeekdays"></div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+
+    <!-- The third view. The rows follow the board's columns on purpose: grouped by date it would
+         be a second way of reading the same plan, and somebody who knows where a task sits on the
+         board would have to find it again here. -->
+    <div class="timeline" id="timeline" hidden></div>
+  </section>
+
+  <!-- ------------------------------------------------------------------ one page -->
+
+  <!-- The plain text area is scaffolding with a future: in the next version it becomes the "source
+       view" behind the block editor, which is why the page is stored as Markdown from today. -->
+  <section class="screen" id="page" hidden>
+    <div class="pagebar">
+      <button type="button" id="pageBack" data-t="pageBack"></button>
+      <input type="text" id="pageTitleField" maxlength="120" autocomplete="off" data-t-label="pageTitlePlaceholder" data-t-placeholder="pageTitlePlaceholder" data-t-title="pageTitleHint">
+      <span class="spacer"></span>
+      <span class="meta" id="saveState"></span>
+      <button type="button" id="addImage" data-t="addImage"></button>
+      <button type="button" id="addFile" class="ghost small" data-t="addFile"></button>
+      <!-- Everything else about a page goes behind one button. «Vedi il sorgente» and «Esporta
+           come Markdown» are for the few; leaving them in the bar put two pieces of jargon in
+           front of everybody, every time. Progressive disclosure, as the plan calls it. -->
+      <div class="more">
+        <button type="button" id="pageMore" class="ghost small" aria-haspopup="true" aria-expanded="false" data-t-label="pageMoreLabel">⋯</button>
+        <div class="more-menu" id="pageMoreMenu" hidden>
+          <!-- The page's own shape first — its name, a chapter under it, a page beside it — then
+               what can be done with its text. Pages were only ever made from the dashboard and
+               from a [[link]]; nobody found either from here. -->
+          <button type="button" id="renamePage" data-t="renamePage"></button>
+          <button type="button" id="newSubpage" data-t="newSubpage"></button>
+          <button type="button" id="newSibling" data-t="newSibling"></button>
+          <button type="button" id="movePageUnder" data-t="movePageUnder"></button>
+          <button type="button" id="movePageUp" data-t="movePageUp"></button>
+          <button type="button" id="movePageDown" data-t="movePageDown"></button>
+          <hr>
+          <button type="button" id="starPage"></button>
+          <button type="button" id="copyPage" data-t="copyForAssistant"></button>
+          <button type="button" id="printPage" data-t="printPage"></button>
+          <button type="button" id="exportHtml" data-t="exportHtml"></button>
+          <button type="button" id="openVersions" data-t="versionsOpen"></button>
+          <button type="button" id="sourceToggle"></button>
+          <button type="button" id="exportPage" data-t="exportPage"></button>
+          <button type="button" id="trashPage" class="danger" data-t="removePage"></button>
+        </div>
+      </div>
+    </div>
+    <p class="note" id="editorNote" data-t="editorNote"></p>
+    <!-- Printed only: the title lives in the bar, which paper does not get. -->
+    <h1 class="print-title" id="printTitlePage"></h1>
+    <!-- Two views of one document. The blocks are what you write in; the source is the Markdown
+         underneath, for the few who want it — and the reason the file on disk is Markdown in the
+         first place is that this view can exist at all. -->
+    <div class="page-main">
+      <!-- The other pages of the project, one column to the left: favourites, the ones opened
+           last, then the tree. A page that can only be reached by going back to the dashboard is a
+           page two clicks away from the one being written, and a knowledge base is made of pages
+           that point at each other. Hidden on a narrow screen, where the column would be the text's. -->
+      <div class="page-tree" id="pageTreeWrap">
+        <nav id="pageTree" data-t-label="treeLabel"></nav>
+        <!-- Under the tree, always: the two things somebody looking at a tree wants to do to it. -->
+        <div class="tree-foot">
+          <button type="button" id="treeAddPage" class="ghost small" data-t="treeAddPage"></button>
+          <button type="button" id="treeAddSubpage" class="ghost small" data-t="treeAddSubpage"></button>
+        </div>
+      </div>
+      <div class="page-column">
+        <!-- The page's properties, above the text and in its column: one line, the tags. Where a
+             document keeps what is about it rather than in it. -->
+        <div class="page-props">
+          <input type="text" id="pageTags" maxlength="200" autocomplete="off" data-t-label="pageTagsLabel">
+          <!-- The properties: key and value, one line each, kept at the head of the Markdown as
+               the block Obsidian reads. «+» adds a line; a line emptied goes away on its own. -->
+          <div class="props" id="pageProps"></div>
+          <button type="button" id="propAdd" class="ghost small" data-t="propAdd"></button>
+          <datalist id="propKeys"></datalist>
+        </div>
+        <div class="editor" id="editor"></div>
+        <textarea id="pageBody" spellcheck="true" data-t-label="sourceView" hidden></textarea>
+      </div>
+    </div>
+    <input type="file" id="imageFile" accept="image/*" hidden>
+    <input type="file" id="attachFile" hidden>
+  </section>
+
+  <!-- ------------------------------------------------------------------ the bin -->
+
+  <!-- ------------------------------------------------------------------ the pages, as a table -->
+
+  <!-- Every page of the project as a row, with its tags and its properties as columns: the view
+       that turns thirty pages into something that can be sorted and filtered, without inventing a
+       format — the columns are whatever keys the pages carry. -->
+  <section class="screen" id="pages" hidden>
+    <div class="pagebar">
+      <button type="button" id="pagesBack" data-t="planBack"></button>
+      <span class="meta" id="pagesTitle"></span>
+      <span class="spacer"></span>
+      <span class="meta" id="pagesCount"></span>
+    </div>
+    <div class="filters" id="pagesFilters"></div>
+    <div class="table-wrap">
+      <table class="pages-table" id="pagesTable"></table>
+      <p class="note" id="pagesTableEmpty" data-t="pagesTableEmpty" hidden></p>
+    </div>
+  </section>
+
+  <section class="screen" id="trash" hidden>
+    <div class="wrap">
+      <div class="screen-head">
+        <h1 data-t="trashTitle"></h1>
+        <button type="button" id="trashPurge" class="danger" data-t="trashPurge" hidden></button>
+        <button type="button" id="trashBack" data-t="trashBack"></button>
+      </div>
+      <p class="note" data-t="trashNote"></p>
+      <ul class="list" id="trashList"></ul>
+      <p class="empty" id="trashEmpty" data-t="trashEmpty" hidden></p>
+    </div>
+  </section>
+
+  <!-- The app's own question, for what used to be the browser's `prompt`: a name, a choice, a yes
+       or no. One dialog, three shapes; `ui.ask` fills it and reads it. -->
+  <dialog id="askDialog" class="ask">
+    <form id="askForm">
+      <p id="askText" tabindex="-1"></p>
+      <input type="text" id="askField" maxlength="200" autocomplete="off" data-t-label="askField" hidden>
+      <select id="askSelect" data-t-label="askSelect" hidden></select>
+      <div class="row">
+        <button type="submit" id="askOk" class="primary"></button>
+        <span class="spacer"></span>
+        <button type="button" id="askCancel"></button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Removing a shared folder removes it from everybody's Dropbox: it asks. -->
+  <dialog id="dropDialog">
+    <h2 data-t="dropTitle"></h2>
+    <p id="dropText"></p>
+    <div class="row">
+      <button type="button" id="dropConfirm" class="danger" data-t="dropConfirm"></button>
+      <span class="spacer"></span>
+      <button type="button" id="dropClose" data-t="menuClose"></button>
+    </div>
+  </dialog>
+
+  <!-- Emptying the bin is the one thing in the app that cannot be undone: it asks. -->
+  <dialog id="purgeDialog">
+    <h2 data-t="purgeTitle"></h2>
+    <p id="purgeText"></p>
+    <div class="row">
+      <button type="button" id="purgeConfirm" class="danger" data-t="purgeConfirm"></button>
+      <span class="spacer"></span>
+      <button type="button" id="purgeClose" data-t="menuClose"></button>
+    </div>
+  </dialog>
+
+  <!-- ------------------------------------------------------------------ the achievements -->
+
+  <!-- A page you have to go and look at. They are shown here and nowhere else: an achievement that
+       arrives as a notification is an interruption wearing a rosette. -->
+  <section class="screen" id="awards" hidden>
+    <div class="wrap">
+      <div class="screen-head">
+        <h1 data-t="awardsTitle"></h1>
+        <button type="button" id="awardsBack" data-t="trashBack"></button>
+      </div>
+      <p class="note" data-t="awardsNote"></p>
+      <ul class="list" id="awardsList"></ul>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------------ error -->
+
+  <section class="error" id="error" hidden>
+    <h2 id="errorTitle"></h2>
+    <p id="errorText"></p>
+    <button type="button" id="retry"></button>
+  </section>
+
+</main>
+
+<!-- Not a dialog and not a question: a strip that states what happened and offers to take it back.
+     There is no "are you sure?" anywhere in this app, and this is what replaces it. -->
+<div class="snack" id="snack" role="status" aria-live="polite" hidden>
+  <span id="snackText"></span>
+  <button type="button" id="snackAction"></button>
+</div>
+
+<dialog id="importDialog">
+  <h2 data-t="importTitle"></h2>
+  <p id="importSummary"></p>
+  <div class="row">
+    <!-- «Aggiorna» comes first when the file is a copy of a project that is already here — the
+         same lineage, told by `uid` — because that is what somebody who receives a colleague's
+         file wants nine times out of ten. Importing it as a second project is still there. -->
+    <button type="button" id="importUpdate" class="primary" hidden></button>
+    <button type="button" id="importNew" data-t="importNew"></button>
+    <!-- Two buttons that are never both on screen: one adds a project, the other puts a whole
+         backup back and replaces what is here. They are told apart by what is inside the file, and
+         they are separate buttons because replacing everything is not a thing to offer by accident. -->
+    <button type="button" id="importReplace" hidden></button>
+    <button type="button" id="importRestore" class="primary" hidden></button>
+    <button type="button" id="importCancel" data-t="importCancel"></button>
+  </div>
+</dialog>
+
+<!-- The card of one task. Six fields are visible; the rest — priority, tags, checklist, what it
+     waits for — sit behind «Mostra altro», because a form with fourteen boxes is how a tool for
+     planning becomes a thing people avoid opening. -->
+<dialog id="taskCard">
+  <h2 data-t="cardTitle"></h2>
+
+  <label for="cardTitleField" id="cardTitleLabel"></label>
+  <input type="text" id="cardTitleField" maxlength="160" autocomplete="off">
+
+  <label for="cardNotes" id="cardNotesLabel"></label>
+  <textarea id="cardNotes" rows="3"></textarea>
+
+  <div class="card-dates">
+    <div>
+      <label for="cardStart" id="cardStartLabel"></label>
+      <input type="date" id="cardStart">
+    </div>
+    <div>
+      <label for="cardEnd" id="cardEndLabel"></label>
+      <input type="date" id="cardEnd">
+    </div>
+  </div>
+
+  <label class="check-line">
+    <input type="checkbox" id="cardMilestone">
+    <span id="cardMilestoneLabel"></span>
+  </label>
+
+  <!-- A sub-task's card says whose it is, and takes you back there. -->
+  <p class="note card-parent" id="cardParent" hidden>
+    <span id="cardParentText"></span>
+    <button type="button" id="cardParentOpen" class="ghost small" data-t="cardParentOpen"></button>
+  </p>
+
+  <!-- The sub-tasks: real tasks with dates and owners, listed inside the parent and drawn under
+       its card on the board. The checklist below is for the small things; a checklist item that
+       grows has «diventa attività». -->
+  <span class="field-label" id="cardSubtasksLabel" data-t="cardSubtasks"></span>
+  <ul class="list" id="cardSubtasks"></ul>
+  <form class="row" id="cardSubtaskForm">
+    <input type="text" id="cardSubtaskField" maxlength="160" autocomplete="off" data-t-label="subtaskPlaceholder">
+    <button type="submit" id="cardSubtaskAdd" data-t="subtaskAdd"></button>
+  </form>
+
+  <!-- Into a calendar, as a copy: a file every calendar opens, and a link that opens Google
+       Calendar already filled in. Shown only when there is a date to put there. -->
+  <div class="row card-calendar" id="cardCalendar" hidden>
+    <button type="button" id="cardIcs" class="ghost small" data-t="cardIcs"></button>
+    <a id="cardGoogle" class="button-link" href="#" target="_blank" rel="noopener" data-t="cardGoogle"></a>
+    <span class="meta" data-t="calendarCopy"></span>
+  </div>
+
+  <button type="button" id="cardMore" class="ghost small"></button>
+
+  <div id="cardExtra" hidden>
+    <label for="cardAssignee" id="cardAssigneeLabel"></label>
+    <input type="text" id="cardAssignee" maxlength="80" autocomplete="off" list="assigneeList">
+    <datalist id="assigneeList"></datalist>
+
+    <label for="cardPriority" id="cardPriorityLabel"></label>
+    <select id="cardPriority"></select>
+
+    <label for="cardRepeat" id="cardRepeatLabel"></label>
+    <select id="cardRepeat"></select>
+
+    <label for="cardTags" id="cardTagsLabel"></label>
+    <input type="text" id="cardTags" maxlength="200" autocomplete="off">
+
+    <span class="field-label" id="cardChecklistLabel"></span>
+    <ul class="list" id="cardChecklist"></ul>
+    <form class="row" id="cardChecklistForm">
+      <input type="text" id="cardChecklistField" maxlength="160" autocomplete="off">
+      <button type="submit" id="cardChecklistAdd"></button>
+    </form>
+
+    <label for="cardBlocked" id="cardBlockedLabel"></label>
+    <select id="cardBlocked"></select>
+  </div>
+
+  <div class="row card-foot">
+    <button type="button" id="cardClose" class="primary" data-t="cardClose"></button>
+    <span class="spacer"></span>
+    <button type="button" id="cardDelete" class="ghost small" data-t="cardDelete"></button>
+  </div>
+</dialog>
+
+<!-- The strip over a selection. It is the twin of Cmd+B and Cmd+I: the shortcuts are for people who
+     already know them, and this is for everybody else. -->
+<div class="mark-bar" id="markBar" hidden>
+  <button type="button" id="markBold"><strong>B</strong></button>
+  <button type="button" id="markItalic"><em>I</em></button>
+  <button type="button" id="markStrike"><del>S</del></button>
+  <button type="button" id="markCode"><code>&lt;&gt;</code></button>
+  <button type="button" id="markLink">🔗</button>
+  <button type="button" id="markPage">[[ ]]</button>
+</div>
+
+<!-- The `/` menu, and the same list behind the `+` beside every block: a shortcut that is the only
+     way to reach something is a shortcut somebody has to be told about. -->
+<dialog id="searchDialog" class="search">
+  <h2 data-t="searchTitle"></h2>
+  <input type="search" id="searchField" autocomplete="off" data-t-label="searchTitle">
+  <div class="menu-list" id="searchList" role="listbox"></div>
+  <p class="note" id="searchEmpty" data-t="searchEmpty" hidden></p>
+  <div class="row menu-foot">
+    <span class="meta" data-t="searchHint"></span>
+    <span class="spacer"></span>
+    <button type="button" id="searchClose" data-t="menuClose"></button>
+  </div>
+</dialog>
+
+<!-- A pasted list becomes cards. It is the way back from «Copia per un assistente», and it is
+     also how a list from Word, from a mail or from a colleague gets onto the board without
+     retyping. One line, one card; `@2026-09-20` is the date, `#tag` a tag, `!` a high priority. -->
+<!-- The texts a page had. One is chosen on the left; what it would change is on the right,
+     paragraph by paragraph, before anything is done. «Ripristina» writes it back, with an undo. -->
+<dialog id="versionsDialog" class="versions">
+  <h2 data-t="versionsTitle"></h2>
+  <p data-t="versionsHint"></p>
+  <div class="versions-body">
+    <ul class="list versions-list" id="versionsList"></ul>
+    <div class="versions-diff" id="versionsDiff"></div>
+  </div>
+  <p class="note" id="versionsEmpty" data-t="versionsEmpty" hidden></p>
+  <div class="row">
+    <button type="button" id="versionRestore" class="primary" data-t="versionRestore" disabled></button>
+    <span class="spacer"></span>
+    <button type="button" id="versionsClose" data-t="menuClose"></button>
+  </div>
+</dialog>
+
+<!-- The shared folder, explained once and chosen once. The name is what the other people see on
+     the copies the merge keeps and on the files this browser writes. -->
+<dialog id="folderDialog">
+  <h2 data-t="folderTitle"></h2>
+  <p data-t="folderHint"></p>
+  <label for="folderWho" data-t="folderWho"></label>
+  <input type="text" id="folderWho" maxlength="60" autocomplete="off">
+  <p class="note" data-t="folderNote"></p>
+  <div class="row">
+    <button type="button" id="folderPick" class="primary" data-t="folderPick"></button>
+    <button type="button" id="folderUnlink" class="ghost small danger" data-t="folderUnlink" hidden></button>
+    <span class="spacer"></span>
+    <button type="button" id="folderClose" data-t="menuClose"></button>
+  </div>
+</dialog>
+
+<!-- A task from anywhere, without leaving the screen: Ctrl+N, a title, Enter. -->
+<dialog id="quickDialog">
+  <h2 data-t="quickTitle"></h2>
+  <form id="quickForm">
+    <input type="text" id="quickField" maxlength="160" autocomplete="off" data-t-label="quickTitle">
+    <label for="quickProject" data-t="quickProject"></label>
+    <select id="quickProject"></select>
+    <div class="row">
+      <button type="submit" id="quickAdd" class="primary" data-t="quickAdd"></button>
+      <button type="button" id="quickCancel" data-t="cancelProject"></button>
+    </div>
+  </form>
+</dialog>
+
+<!-- The shortcuts, on «?». Drawn from the dictionary so that the two languages cannot drift. -->
+<dialog id="keysDialog">
+  <h2 data-t="keysTitle"></h2>
+  <div id="keysList"></div>
+  <p class="note" data-t="keysMac"></p>
+  <div class="row">
+    <button type="button" id="keysClose" class="primary" data-t="menuClose"></button>
+  </div>
+</dialog>
+
+<dialog id="pasteDialog">
+  <h2 data-t="pasteTitle"></h2>
+  <p data-t="pasteHint"></p>
+  <textarea id="pasteField" rows="8" spellcheck="false" data-t-label="pasteTitle"></textarea>
+  <p class="note" id="pasteCount"></p>
+  <div class="row">
+    <button type="button" id="pasteAdd" class="primary" data-t="pasteAdd"></button>
+    <button type="button" id="pasteCancel" data-t="cancelProject"></button>
+  </div>
+</dialog>
+
+<dialog id="blockMenu">
+  <h2 id="blockMenuTitle"></h2>
+  <input type="text" id="blockMenuField" autocomplete="off" data-t-label="menuFind">
+  <div class="menu-list" id="blockMenuList"></div>
+  <p class="note" id="blockMenuEmpty" data-t="menuEmpty" hidden></p>
+  <!-- Only when the menu was opened from a block's handle: the two things that can be done to a
+       block and had nowhere else to live. -->
+  <div class="row menu-foot">
+    <button type="button" id="blockDuplicate" data-t="blockDuplicate" hidden></button>
+    <button type="button" id="blockDelete" class="ghost small" data-t="blockDelete" hidden></button>
+    <span class="spacer"></span>
+    <button type="button" id="blockMenuClose" data-t="menuClose"></button>
+  </div>
+</dialog>
+
+<input type="file" id="importFile" accept=".zip,.json,application/zip,application/json" hidden>
+
+<footer class="foot">
+  <a href="../" id="backLink"></a>
+  <a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/plan-scope" id="sourceLink"></a>
+  <span class="spacer"></span>
+  <a class="foot-brand" href="https://ggtechnologies.sm" rel="noopener">
+    <span class="foot-mark" aria-hidden="true"></span>G&amp;G Technologies</a>
+  <span class="spacer"></span>
+  <span>Apache-2.0</span>
+</footer>
+
+<!-- Every import into the shared library goes through here, never up the tree. Both forms work
+     identically today; the difference arrives the day _lib/ takes a version number, and it is one
+     line per app instead of every import in every file. check_apps.py rejects the relative form. -->
+<script type="importmap">
+{ "imports": { "gg/": "../../_lib/" } }
+</script>
+<script type="module" src="./app.js"></script>
+</body>
+</html>
