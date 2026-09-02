@@ -133,7 +133,6 @@ const IT = {
   newSibling: "Nuova pagina accanto",
   newPagePrompt: "Come si chiama la pagina?",
   treeAddPage: "+ Pagina",
-  treeToTop: "Lascia qui per portarla al livello base",
   pageMoved: "Pagina spostata",
   movePageUnder: "Sposta sotto…",
   movePagePrompt: "Dove va questa pagina?",
@@ -446,9 +445,11 @@ const IT = {
     + "tratteggiato e il clic la crea. In fondo alla colonna di sinistra vedi anche **chi punta qui**.\n\n"
     + "## L'albero delle pagine\n\nLa colonna di sinistra è l'indice del progetto. Da lì aggiungi una "
     + "pagina o una sottopagina, e sposti quelle che ci sono: prendi una riga dalla maniglia ⠿ e "
-    + "lasciala **sopra o sotto** un'altra per metterla accanto, **al centro** per metterla dentro, "
-    + "sulla striscia in fondo per riportarla al livello base. Lo stesso dal menu ⋯ della pagina: "
-    + "«Sposta sotto…», «Sposta su», «Sposta giù». Il titolo si cambia scrivendo nel campo in alto.\n\n"
+    + "trascinala. **Su e giù** scegli fra quali righe va; **a destra e a sinistra** scegli il "
+    + "livello: più a destra diventa un capitolo della riga sopra, più a sinistra risale fino al "
+    + "livello base. La linea compare esattamente dove atterrerà, con il suo rientro. Lo stesso dal "
+    + "menu ⋯ della pagina: «Sposta sotto…», «Sposta su», «Sposta giù». Il titolo si cambia "
+    + "scrivendo nel campo in alto.\n\n"
     + "> [!nota]\n> Le pagine hanno dei **tag**, nella riga sotto il titolo: servono a ritrovarle con la "
     + "ricerca (Ctrl+K) e a raggrupparle nell'elenco del progetto. Sotto i tag ci sono le **proprietà** — "
     + "tipo, stato, cliente, quello che vuoi — e «Vedi come tabella», nel progetto, le mette in colonna.\n\n"
@@ -801,7 +802,6 @@ const EN = {
   newSibling: "New page beside this one",
   newPagePrompt: "What is the page called?",
   treeAddPage: "+ Page",
-  treeToTop: "Drop here to bring it to the top",
   pageMoved: "Page moved",
   movePageUnder: "Move under…",
   movePagePrompt: "Where does this page go?",
@@ -1113,10 +1113,11 @@ const EN = {
     + "it becomes a link. If the page is not there yet the link is dotted, and clicking it makes the "
     + "page. At the bottom of the left column you also see **who points here**.\n\n"
     + "## The tree of pages\n\nThe left column is the project's index. From there you add a page or "
-    + "a sub-page, and move the ones there are: take a row by its ⠿ handle and drop it **above or "
-    + "below** another to put it beside, **in the middle** to put it inside, on the strip at the foot "
-    + "to bring it back to the top. The same from the page's ⋯ menu: “Move under…”, “Move up”, "
-    + "“Move down”. The title is changed by typing in the field at the top.\n\n"
+    + "a sub-page, and move the ones there are: take a row by its ⠿ handle and drag it. **Up and "
+    + "down** chooses which rows it goes between; **left and right** chooses the level: further "
+    + "right it becomes a chapter of the row above, further left it climbs back to the top. The line "
+    + "appears exactly where it will land, at its indent. The same from the page's ⋯ menu: “Move "
+    + "under…”, “Move up”, “Move down”. The title is changed by typing in the field at the top.\n\n"
     + "> [!nota]\n> Pages have **tags**, on the line under the title: they help find them with the "
     + "search (Ctrl+K) and group them in the project's list. Under the tags sit the **properties** — "
     + "type, status, client, whatever you need — and “See as a table”, in the project, puts them in columns.\n\n"

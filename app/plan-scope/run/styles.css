@@ -963,25 +963,29 @@ input.when-field.late { color: var(--late); }
 @media (hover: none) { .tree-grip { opacity: 0.6; } }
 #pageTree.dragging { cursor: grabbing; }
 .tree-item.lifted { opacity: 0.4; }
-.tree-item.drop-before::before, .tree-item.drop-after::after {
-  content: ""; position: absolute; left: 14px; right: 4px; height: 2px; background: var(--gradient);
+/* Where it will land: the editor's line, at the indent of the level it will take. Grey where the
+   model refuses. */
+.tree-line {
+  position: absolute;
+  right: 4px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-text));
+  border-radius: 1px;
+  pointer-events: none;
+  z-index: 5;
 }
-.tree-item.drop-before::before { top: -1px; }
-.tree-item.drop-after::after { bottom: -1px; }
-.tree-item.drop-into { background: rgba(52, 211, 153, 0.14); border-radius: var(--radius-sm, 6px); }
-.tree-item.drop-no { opacity: 0.35; text-decoration: line-through; }
-.tree-root-drop {
-  display: none;
-  margin-top: 6px;
-  padding: 6px;
-  font-size: 12px;
-  color: var(--faint);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm, 6px);
-  text-align: center;
+.tree-line::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
 }
-#pageTree.dragging .tree-root-drop { display: block; }
-.tree-root-drop.drop-into { color: var(--accent-text); border-color: var(--accent); background: rgba(52, 211, 153, 0.14); }
+.tree-line.no { background: var(--faint); opacity: 0.6; }
+.tree-line.no::before { background: var(--faint); }
 
 /* Under 900px the column would be the text's: the dashboard has the same list one press away. */
 @media (max-width: 900px) {

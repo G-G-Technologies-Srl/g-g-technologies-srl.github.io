@@ -299,35 +299,52 @@ export function paintPage(id) {
  */
 // ---- carrying a page through the tree
 
+const INDENT = 12;                      // one level of the tree, in pixels: what `.depth-N` pads by
+
 /**
  * Dragging a page with pointer events, the way the editor drags blocks: one code path for the
  * mouse, the pen and the finger, and the gesture begins only after a few pixels.
  *
- * Where it lands depends on where it is let go over a row: the top or bottom quarter puts it
- * beside that page — before or after, same parent — and the middle puts it inside, as the last
- * chapter. The strip at the foot of the tree takes it to the top. A place the model refuses — a
- * page into itself, into its own chapters, past the fourth level — is shown as refused, and a
- * drop there does nothing.
+ * Two axes, two answers — the way Obsidian and Notion do it, because it is the one gesture that
+ * says both things at once. **Up and down** chooses the gap between two rows the page will go
+ * into. **Left and right** chooses the level: further right and it becomes the last chapter of
+ * the row above; further left and it climbs, one level per twelve pixels, up to the top. The
+ * line is drawn at the exact indent it will land at, so what is seen is what happens. The levels
+ * on offer are the ones the tree can hold at that gap: no deeper than one under the row above,
+ * no shallower than the row below. A place the model refuses — past the fourth level with the
+ * chapters it carries — is drawn grey, and a drop there does nothing.
  */
 function _startTreeDrag(event, pageId) {
   if (event.button !== undefined && event.button !== 0) return;
   const tree = el("pageTree");
+  const list = tree.querySelector("li[data-page]") ? tree.querySelector("li[data-page]").parentElement : null;
+  if (!list) return;
   const from = { x: event.clientX, y: event.clientY };
   let active = false;
   let target = null;                    // { parentId, index } or null when refused
-  let marked = null;                    // the element carrying the mark
-  const rows = () => [...tree.querySelectorAll("li[data-page]")];
+  let line = null;
 
-  const clear = () => {
-    if (marked) marked.classList.remove("drop-before", "drop-after", "drop-into", "drop-no");
-    marked = null;
+  // The rows the page can land among: every row but the page itself and its own chapters, which
+  // travel with it. Their depth is what the row's class says, which is what the eye sees.
+  const rows = () => [...list.querySelectorAll("li[data-page]")]
+    .filter((row) => !model.isUnder(row.dataset.page, pageId))
+    .map((row) => ({ row, id: row.dataset.page, depth: Number((row.className.match(/depth-(\d)/) || [0, 0])[1]) }));
+
+  const hide = () => {
+    if (line) line.remove();
+    line = null;
     target = null;
   };
-  const mark = (element, kind, place) => {
-    clear();
-    marked = element;
-    element.classList.add(model.canMovePage(pageId, place.parentId) ? kind : "drop-no");
-    target = model.canMovePage(pageId, place.parentId) ? place : null;
+  const show = (top, depth, allowed) => {
+    if (!line) {
+      line = node("div", "tree-line");
+      list.style.position = "relative";
+      list.append(line);
+    }
+    const box = list.getBoundingClientRect();
+    line.style.top = `${top - box.top - 1}px`;
+    line.style.left = `${14 + depth * INDENT}px`;
+    line.classList.toggle("no", !allowed);
   };
 
   const move = (moved) => {
@@ -336,33 +353,44 @@ function _startTreeDrag(event, pageId) {
     if (!active) {
       active = true;
       tree.classList.add("dragging");
-      const lifted = tree.querySelector(`li[data-page="${pageId}"]`);
-      if (lifted) lifted.classList.add("lifted");
-    }
-    if (moved.cancelable) moved.preventDefault();
-    const root = tree.querySelector("li[data-root]");
-    if (root) {
-      const box = root.getBoundingClientRect();
-      if (moved.clientY >= box.top && moved.clientY <= box.bottom) {
-        mark(root, "drop-into", { parentId: null, index: null });
-        return;
+      for (const one of tree.querySelectorAll("li[data-page]")) {
+        if (model.isUnder(one.dataset.page, pageId)) one.classList.add("lifted");
       }
     }
-    const under = rows().find((row) => {
-      const box = row.getBoundingClientRect();
-      return moved.clientY >= box.top && moved.clientY <= box.bottom;
-    });
-    if (!under || under.dataset.page === pageId) { clear(); return; }
-    const over = model.page(under.dataset.page);
-    if (!over) { clear(); return; }
-    const box = under.getBoundingClientRect();
-    const slice = (moved.clientY - box.top) / box.height;
-    const siblings = model.pagesOf(over.projectId)
-      .filter((one) => one.parentId === over.parentId && one.id !== pageId);
-    const at = siblings.findIndex((one) => one.id === over.id);
-    if (slice < 0.25) mark(under, "drop-before", { parentId: over.parentId, index: at });
-    else if (slice > 0.75) mark(under, "drop-after", { parentId: over.parentId, index: at + 1 });
-    else mark(under, "drop-into", { parentId: over.id, index: null });
+    if (moved.cancelable) moved.preventDefault();
+
+    const all = rows();
+    if (!all.length) { hide(); return; }
+    // The gap: after every row whose middle is above the pointer.
+    let at = 0;
+    for (const one of all) {
+      const box = one.row.getBoundingClientRect();
+      if (moved.clientY > box.top + box.height / 2) at += 1;
+    }
+    const prev = at > 0 ? all[at - 1] : null;
+    const next = at < all.length ? all[at] : null;
+    const deepest = prev ? prev.depth + 1 : 0;
+    const shallowest = next ? next.depth : 0;
+    const wanted = Math.round((moved.clientX - list.getBoundingClientRect().left - 14) / INDENT);
+    const depth = Math.max(shallowest, Math.min(deepest, wanted));
+
+    // Who the parent is at that depth, and where among its chapters: right under `prev` as its
+    // first chapter, or after the ancestor of `prev` that sits at this depth.
+    let place = { parentId: null, index: 0 };
+    if (prev) {
+      if (depth === prev.depth + 1) place = { parentId: prev.id, index: 0 };
+      else {
+        let cursor = model.page(prev.id);
+        while (cursor && model.depthOf(cursor.id) > depth) cursor = model.page(cursor.parentId);
+        const siblings = model.pagesOf(cursor.projectId)
+          .filter((one) => one.parentId === cursor.parentId && one.id !== pageId);
+        place = { parentId: cursor.parentId, index: siblings.findIndex((one) => one.id === cursor.id) + 1 };
+      }
+    }
+    const allowed = model.canMovePage(pageId, place.parentId);
+    const top = prev ? prev.row.getBoundingClientRect().bottom : all[0].row.getBoundingClientRect().top;
+    show(top, depth, allowed);
+    target = allowed ? place : null;
   };
 
   const done = (ended) => {
@@ -370,10 +398,9 @@ function _startTreeDrag(event, pageId) {
     window.removeEventListener("pointerup", done);
     window.removeEventListener("pointercancel", done);
     tree.classList.remove("dragging");
-    const lifted = tree.querySelector(`li[data-page="${pageId}"]`);
-    if (lifted) lifted.classList.remove("lifted");
+    for (const one of tree.querySelectorAll("li.lifted")) one.classList.remove("lifted");
     const landing = target;
-    clear();
+    hide();
     // A gesture the system took away — a call, a swipe from the edge — is not a drop.
     if (active && landing && !(ended && ended.type === "pointercancel")) on.movePage(pageId, landing);
   };
@@ -436,10 +463,6 @@ export function paintTree(projectId, currentId, recentIds = []) {
     if (page.parentId && !pages.some((one) => one.id === page.parentId)) rows.push(row(page, 0, { grip: true }));
   }
   section("treePages", rows);
-  // Where a page goes to leave its parent: shown only while one is being carried.
-  const root = node("li", "tree-root-drop", t("treeToTop"));
-  root.dataset.root = "1";
-  out.at(-1).append(root);
 
   // The other direction of a link. A page that is pointed at from three places is a page that
   // matters, and without this list the only way to know was to remember.
