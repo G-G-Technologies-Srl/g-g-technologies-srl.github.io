@@ -175,8 +175,15 @@
       </div>
 
       <div class="grid">
+        <!-- Every panel is a way into its screen, not only a report of it: the title on the left,
+             the door on the right. Before this, the only way to a page was clicking one that was
+             already listed — and the deadlines and the ring led nowhere at all. -->
         <div class="card" id="panelProgress">
-          <h2 data-t="progressTitle"></h2>
+          <div class="panel-head">
+            <h2 data-t="progressTitle"></h2>
+            <span class="spacer"></span>
+            <button type="button" id="progressGo" class="link small" data-t="panelPlan"></button>
+          </div>
           <div class="ring">
             <svg viewBox="0 0 120 120" aria-hidden="true">
               <circle class="ring-back" cx="60" cy="60" r="52"></circle>
@@ -188,7 +195,11 @@
         </div>
 
         <div class="card">
-          <h2 data-t="dueTitle"></h2>
+          <div class="panel-head">
+            <h2 data-t="dueTitle"></h2>
+            <span class="spacer"></span>
+            <button type="button" id="dueGo" class="link small" data-t="panelCalendar"></button>
+          </div>
           <ul class="list" id="dueList"></ul>
           <p class="note" id="dueEmpty" data-t="dueEmpty" hidden></p>
         </div>
@@ -197,14 +208,19 @@
              comes back after lunch reads it here. Only on a shared project, only once there is
              something to read. -->
         <div class="card" id="panelLog" hidden>
-          <h2 data-t="logTitle"></h2>
+          <div class="panel-head">
+            <h2 data-t="logTitle"></h2>
+          </div>
           <ul class="list" id="logList"></ul>
         </div>
 
         <div class="card">
-          <h2 data-t="docsTitle"></h2>
+          <div class="panel-head">
+            <h2 data-t="docsTitle"></h2>
+            <span class="spacer"></span>
+            <button type="button" id="openPages" class="link small" data-t="panelPages"></button>
+          </div>
           <ul class="list" id="pageList"></ul>
-          <button type="button" id="openPages" class="ghost small" data-t="pagesTable"></button>
           <p class="note" id="pagesEmpty" data-t="pagesEmpty" hidden></p>
           <form class="row" id="newPageForm">
             <input type="text" id="pageField" maxlength="120" autocomplete="off">
@@ -212,8 +228,12 @@
           </form>
         </div>
 
+        <!-- The plan's own panel keeps its full-width button and gains no link in the head: one
+             door, drawn once, at the size of the thing most used on this screen. -->
         <div class="card">
-          <h2 data-t="planTitle"></h2>
+          <div class="panel-head">
+            <h2 data-t="planTitle"></h2>
+          </div>
           <ul class="list" id="taskList"></ul>
           <p class="note" id="tasksEmpty" data-t="tasksEmpty" hidden></p>
           <form class="row" id="newTaskForm">

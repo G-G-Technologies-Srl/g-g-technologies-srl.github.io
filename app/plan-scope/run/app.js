@@ -1094,6 +1094,10 @@ function _wire() {
     openPage: (id) => _openPage(id),
   });
   el("openPages").addEventListener("click", () => _openPages(projectId));
+  // The ring counts the tasks, so its door is the board; the deadlines are dates, so theirs is
+  // the calendar. A panel that reports something and cannot be entered is a dead end.
+  el("progressGo").addEventListener("click", () => _openPlan(projectId));
+  el("dueGo").addEventListener("click", () => _openPlan(projectId, { view: "calendar" }));
   el("pagesBack").addEventListener("click", () => _openProject(projectId));
 
   // ---- the shared folder
