@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Invoice Scope</title>
+<meta name="robots" content="noindex, follow">
+<meta name="theme-color" content="#0d1220">
+<meta name="description" content="Prepare invoices and write the XML file to be sent, entirely in your browser.">
+<link rel="canonical" href="https://ggtechnologies.sm/app/invoice-scope/">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="stylesheet" href="../../_lib/base.css">
+<link rel="stylesheet" href="./styles.css">
+<link rel="stylesheet" href="./print.css" media="print">
+<script>
+  // Before the first paint, on purpose. Applied from a module it would run after the stylesheet,
+  // and the app would flash dark and then jump to light at every start.
+  try {
+    var saved = localStorage.getItem('gg-theme');
+    var light = saved ? saved === 'light'
+      : window.matchMedia('(prefers-color-scheme: light)').matches;
+    if (light) {
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f6f8fc');
+    }
+  } catch (ignored) {}
+</script>
+<script type="importmap">
+{ "imports": { "gg/": "../../_lib/" } }
+</script>
+</head>
+<body>
+
+<!-- **The navigation is a column, not a strip.** Six entries today and ten once quotes, delivery
+     notes and the rest arrive: a horizontal bar at ten entries either wraps or scrolls, and in both
+     cases it stops being a map. A column also puts the app where somebody who uses management
+     software expects to find it, which is worth more than novelty.
+
+     On a narrow screen it goes back to being a strip along the top — a sidebar on a phone is a
+     drawer, and a drawer is a thing to open before you can navigate. -->
+<header class="appbar">
+  <span class="brand">Invoice Scope</span>
+  <span class="meta" id="tagline" data-t="tagline"></span>
+  <span class="spacer"></span>
+  <button type="button" id="install" class="ghost small" data-t="install" hidden></button>
+  <p class="meta install-hint" id="installHint" hidden></p>
+  <button type="button" id="lang" class="ghost small"></button>
+  <button type="button" id="theme" class="ghost small icon" aria-label="Tema">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+      <circle cx="12" cy="12" r="4"></circle>
+      <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"></path>
+    </svg>
+  </button>
+</header>
+
+<!-- Solo con `?demo=1`. Sopra tutto e non dentro una schermata, perché quello che dice vale per
+     tutte: i dati sono inventati e non escono dalla memoria. -->
+<p class="demo-note" id="demoNote" data-t="demoNote" hidden></p>
+
+<div class="shell">
+  <nav class="navbar" id="navbar" aria-label="Invoice Scope">
+    <a href="#/" id="navHome" data-t="navHome"></a>
+    <a href="#/documenti" id="navDocs" data-t="navDocs"></a>
+    <a href="#/scadenzario" id="navDue" data-t="navDue"></a>
+    <a href="#/anagrafiche" id="navParties" data-t="navParties"></a>
+    <a href="#/azienda" id="navCompany" data-t="navCompany"></a>
+    <a href="#/impostazioni" id="navSettings" data-t="navSettings"></a>
+  </nav>
+
+<main>
+
+  <!-- Casa -->
+  <section id="screenHome" class="screen">
+    <h1 data-t="homeTitle"></h1>
+
+    <div class="panel warn" id="setupNote" hidden>
+      <p data-t="homeSetup"></p>
+      <a class="button" href="#/azienda" data-t="homeSetupGo"></a>
+    </div>
+
+    <div class="panel warn" id="backupNote" hidden>
+      <p data-t="homeBackupNever"></p>
+      <a class="button ghost" href="#/impostazioni" data-t="homeBackupGo"></a>
+    </div>
+
+    <div class="figures">
+      <div class="figure"><span class="label" data-t="homeYear"></span><span class="value" id="figYear">—</span></div>
+      <div class="figure"><span class="label" data-t="homeDue"></span><span class="value" id="figDue">—</span></div>
+      <div class="figure"><span class="label" data-t="homeOverdue"></span><span class="value" id="figOverdue">—</span></div>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="button" id="homeNew" data-t="homeNew"></button>
+    </div>
+
+    <p class="empty" id="homeEmpty" data-t="homeEmpty"></p>
+
+    <!-- Quello che si guarda aprendo l'app: le prossime scadenze e gli ultimi documenti. Tre numeri
+         e un pulsante erano una situazione senza situazione — si vedeva quanto, non cosa. -->
+    <div class="home-lists" id="homeLists" hidden>
+      <div class="home-list">
+        <div class="section-head">
+          <h2 data-t="homeNextDue"></h2>
+          <a href="#/scadenzario" data-t="homeSeeAll"></a>
+        </div>
+        <p class="note" id="homeDueEmpty" data-t="homeDueEmpty" hidden></p>
+        <table class="rows compact" id="homeDueTable"><tbody id="homeDueBody"></tbody></table>
+      </div>
+      <div class="home-list">
+        <div class="section-head">
+          <h2 data-t="homeRecent"></h2>
+          <a href="#/documenti" data-t="homeSeeAll"></a>
+        </div>
+        <table class="rows compact" id="homeRecentTable"><tbody id="homeRecentBody"></tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Documenti -->
+  <section id="screenDocs" class="screen wide" hidden>
+    <h1 data-t="docsTitle"></h1>
+    <div class="actions">
+      <button type="button" class="button" id="docsNew" data-t="docsNew"></button>
+      <!-- L'invito porta al caso comune, il menù accanto agli altri quattro. Cinque bottoni in fila
+           farebbero sembrare i cinque tipi equivalenti, e non lo sono: di fatture se ne scrivono
+           dieci per ogni nota di credito. -->
+      <select id="docsNewType"></select>
+    </div>
+    <p class="empty" id="docsEmpty"><span data-t="docsEmpty"></span> <a href="#/impostazioni" data-t="emptyImport"></a></p>
+    <!-- I filtri: compaiono da una decina di documenti in su, prima sarebbero comandi senza
+         niente da filtrare. Chi ha tre anni di fatture cerca per cliente o per anno, e prima non
+         c'era altro che scorrere. -->
+    <div class="form docs-filters" id="docsFilters" hidden>
+      <label class="wide"><span data-t="docsSearch"></span><input type="search" id="docsSearch" autocomplete="off"></label>
+      <label class="narrow"><span data-t="docsYear"></span><select id="docsYear"></select></label>
+      <label class="narrow"><span data-t="docsState"></span><select id="docsStateFilter"></select></label>
+    </div>
+    <p class="empty" id="docsNoMatch" data-t="docsNoMatch" hidden></p>
+    <div class="table-scroll">
+    <table class="rows" id="docsTable" hidden>
+        <thead><tr>
+          <th data-t="docsType"></th>
+          <th data-t="docsNumber"></th><th data-t="docsDate"></th>
+          <th data-t="docsParty"></th><th data-t="docsTotal"></th><th data-t="docsState"></th>
+          <th></th>
+        </tr></thead>
+        <tbody id="docsBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Scadenzario -->
+  <section id="screenDue" class="screen wide" hidden>
+    <h1 data-t="dueTitle"></h1>
+
+    <div class="actions">
+      <button type="button" class="button ghost" id="dueFilter" data-t="dueAll" aria-pressed="false"></button>
+      <span class="ok" id="dueTotal"></span>
+    </div>
+
+    <div class="chart" id="dueChart" hidden></div>
+
+    <p class="empty" id="dueEmpty" data-t="dueEmpty"></p>
+    <div class="table-scroll">
+    <table class="rows" id="dueTable" hidden>
+        <thead><tr>
+          <th data-t="dueWhen"></th><th data-t="dueDoc"></th><th data-t="docsParty"></th>
+          <th class="right" data-t="dueLeft"></th><th></th>
+        </tr></thead>
+        <tbody id="dueBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Il documento -->
+  <section id="screenDoc" class="screen wide" hidden>
+    <div class="doc-head">
+      <h1 id="docTitle"></h1>
+      <!-- Stampa in testa e sempre, bozza compresa: stava in fondo alla pagina, sotto gli incassi, e
+           solo sui documenti emessi — quindi chi voleva rileggere un preventivo su carta prima di
+           emetterlo non trovava il pulsante, e chi l'aveva emesso nemmeno. Una bozza stampata lo
+           dice nel piè di pagina. -->
+      <button type="button" class="button ghost" id="docPrint" data-t="docPrint"></button>
+      <span id="docStato" class="doc-stato"></span>
+    </div>
+
+    <div class="form">
+      <label><span data-t="f_tipo"></span>
+        <select id="docType"></select>
+      </label>
+      <label><span data-t="f_data"></span><input type="date" id="docDate"></label>
+      <label class="required"><span data-t="docParty"></span>
+        <select id="docPartySelect" required></select>
+        <!-- **Il cliente si crea da qui, senza uscire dal documento.** Prima bisognava lasciare la
+             fattura a metà, andare in Anagrafiche e tornare — e il documento a metà è esattamente
+             il momento in cui ci si accorge che il cliente non c'è. Un pulsante e non una voce del
+             menù: un menù sceglie un valore, un pulsante fa una cosa. -->
+        <button type="button" class="link-button" id="docPartyNew" data-t="partiesNew"></button>
+      </label>
+      <label id="docValiditaField" class="required" hidden><span data-t="f_validoFino"></span>
+        <input type="date" id="docValidoFino" required>
+      </label>
+      <label class="wide"><span data-t="f_causale"></span><input id="docCausale"></label>
+    </div>
+    <p class="note" id="docPartyNone" data-t="docPartyNone" hidden></p>
+    <p class="note" id="docLinkedNote" hidden></p>
+    <!-- Da dove viene un documento arrivato per importazione: chi lo apre fra un anno deve saperlo, e
+         la riga ricostruita dal registro non spiega da sola perché è una sola. -->
+    <p class="note" id="docImportedNote" hidden></p>
+    <p class="note" id="docOriginNote" hidden></p>
+
+    <!-- Il comando sta sull'intestazione, come in Anagrafiche e negli incassi: questa era l'unica
+         sezione dell'app che lo teneva in fondo, sotto la tabella — cioè più lontano proprio nel
+         momento in cui serve di più, quando il documento è vuoto e la tabella non c'è ancora.
+         Durante la compilazione però quasi non lo si usa: `Invio` sull'ultima riga ne aggiunge
+         un'altra, che è il gesto che toglie il viaggio invece di accorciarlo. -->
+    <div class="section-head">
+      <h2 data-t="docLines"></h2>
+      <span class="head-tools">
+        <select id="docFromList"></select>
+        <button type="button" class="button ghost" id="docAddLine" data-t="docAddLine"></button>
+      </span>
+    </div>
+    <p class="empty" id="docEmptyLines" data-t="docEmptyLines"></p>
+    <div class="table-scroll">
+    <table class="rows" id="docLinesTable" hidden>
+        <thead><tr>
+          <!-- Intestazioni corte: «unità di misura» su tre righe faceva la testata alta il triplo
+               delle righe. Il nome intero resta nell'`aria-label` di ogni campo. -->
+          <th data-t="f_descrizione"></th><th class="right" data-t="hQuantita"></th><th data-t="hUnita"></th>
+          <th class="right" data-t="hPrezzo"></th><th class="right" data-t="hIva"></th><th data-t="f_natura"></th>
+          <th class="col-tm" data-t="hTm"></th>
+          <th class="right" data-t="docTotale"></th><th></th>
+        </tr></thead>
+        <tbody id="docLinesBody"></tbody>
+      </table>
+    </div>
+    <!-- Vuota finché l'Ufficio Tributario non pubblica i valori: un campo con una datalist vuota
+         si comporta come un campo libero, che è quello che serve adesso. -->
+    <datalist id="tmValori"></datalist>
+    <p class="note" id="tmNote" data-t="tmNote" hidden></p>
+    <p class="note" id="docAddLineHint" data-t="docAddLineHint"></p>
+
+    <!-- Un contenitore, perché il documento di trasporto non ha un riepilogo IVA: accompagna la
+         merce, non la fattura. Le righe restano, il riepilogo e i totali no. -->
+    <div id="docSummarySection">
+    <h2 data-t="docSummary"></h2>
+    <div class="table-scroll">
+    <table class="rows" id="docSummaryTable">
+        <thead><tr>
+          <th data-t="f_aliquota"></th><th data-t="f_natura"></th>
+          <th class="right" data-t="docImponibile"></th><th class="right" data-t="docImposta"></th>
+        </tr></thead>
+        <tbody id="docSummaryBody"></tbody>
+      </table>
+    </div>
+
+    <div class="panel" id="docTotals">
+      <p class="figure-line"><span data-t="docImponibile"></span><strong id="sumImponibile">—</strong></p>
+      <p class="figure-line"><span data-t="docImposta"></span><strong id="sumImposta">—</strong></p>
+      <p class="figure-line total"><span data-t="docTotale"></span><strong id="sumTotale">—</strong></p>
+    </div>
+    </div>
+
+    <!-- Le sezioni che seguono compaiono per tipo di documento, e l'elenco di quali valgono per
+         quale sta in `kinds.js`: un documento di trasporto non ha una ritenuta d'acconto, e un
+         preventivo non ha un bollo perché non è ancora un documento fiscale. -->
+    <div id="docBolloSection">
+      <p class="note" id="bolloNote" data-t="docBolloDue" hidden></p>
+      <label class="check" id="docBolloField"><input type="checkbox" id="docBollo"><span data-t="docBollo"></span></label>
+      <p class="note" id="docBolloCharged" data-t="docBolloCharged" hidden></p>
+    </div>
+
+    <div id="docTrasportoSection" hidden>
+      <h2 data-t="trasportoTitle"></h2>
+      <div class="form">
+        <label class="required"><span data-t="f_causaleTrasporto"></span>
+          <input id="trCausale" required list="trCausaleList">
+        </label>
+        <datalist id="trCausaleList">
+          <option value="Vendita"></option>
+          <option value="Conto visione"></option>
+          <option value="Conto lavorazione"></option>
+          <option value="Reso"></option>
+          <option value="Riparazione"></option>
+        </datalist>
+        <label><span data-t="f_aspetto"></span><input id="trAspetto" list="trAspettoList"></label>
+        <datalist id="trAspettoList">
+          <option value="Scatole"></option>
+          <option value="Pallet"></option>
+          <option value="Sfuso"></option>
+          <option value="Busta"></option>
+        </datalist>
+        <label class="narrow"><span data-t="f_colli"></span><input id="trColli" inputmode="numeric"></label>
+        <label><span data-t="f_porto"></span>
+          <select id="trPorto">
+            <option value="franco"></option>
+            <option value="assegnato"></option>
+          </select>
+        </label>
+        <label><span data-t="f_vettore"></span><input id="trVettore"></label>
+      </div>
+      <p class="note" data-t="trasportoNote"></p>
+    </div>
+
+    <!-- **Su un documento chiuso le sezioni vuote sono una riga.** Un campo sconto disabilitato con
+         dentro uno zero e la sua spiegazione, seguito da una ritenuta non applicata con i suoi tre
+         campi grigi, è mezza schermata di moduli per dire «niente». Chi apre una fattura emessa
+         cerca il totale e l'IBAN, non la ragione per cui non c'è uno sconto. -->
+    <div id="docScontoSection">
+      <h2 data-t="discTitle"></h2>
+      <div class="form" id="docScontoFields">
+        <label class="narrow"><span data-t="discPercent"></span><input id="docDiscount" inputmode="decimal" placeholder="0"></label>
+      </div>
+      <p class="note" id="docScontoNote" data-t="discNote"></p>
+      <p class="note" id="docScontoNone" data-t="docNoDiscount" hidden></p>
+    </div>
+
+    <div id="docRitenutaSection">
+      <h2 data-t="ritTitle"></h2>
+      <p class="note" id="docRitenutaNone" data-t="docNoWithholding" hidden></p>
+      <label class="check" id="ritApplyField"><input type="checkbox" id="ritApply"><span data-t="ritApply"></span></label>
+      <div class="form" id="ritFields" hidden>
+        <label class="narrow"><span data-t="f_tipo"></span>
+          <select id="ritType">
+            <option value="RT01"></option>
+            <option value="RT02"></option>
+          </select>
+        </label>
+        <label class="narrow"><span data-t="f_aliquota"></span><input id="ritRate" inputmode="decimal" value="20"></label>
+        <label class="narrow"><span data-t="ritCausale"></span><input id="ritCausale" maxlength="2" value="A"></label>
+      </div>
+      <p class="note" id="docRitenutaNote" data-t="ritNote"></p>
+    </div>
+
+    <div id="docPagamentoSection">
+      <h2 data-t="payTitle"></h2>
+      <!-- Su un documento chiuso i termini sono una riga: «Bonifico · in un'unica soluzione · IBAN …».
+           Quattro menù disabilitati dicono la stessa cosa in quattro volte lo spazio. -->
+      <p class="note" id="docPagamentoSummary" hidden></p>
+      <div class="form" id="docPagamentoFields">
+        <label><span data-t="payCondizioni"></span>
+          <select id="payCondizioni">
+            <option value="TP02"></option>
+            <option value="TP01"></option>
+          </select>
+        </label>
+        <label><span data-t="payModalita"></span>
+          <select id="payModalita">
+            <option value="MP05"></option>
+            <option value="MP01"></option>
+            <option value="MP08"></option>
+            <option value="MP12"></option>
+            <option value="MP19"></option>
+          </select>
+        </label>
+        <!-- Il conto si sceglie, l'IBAN si legge. Il menù è una scorciatoia sui conti dell'azienda;
+             il campo sotto resta la verità, perché è quello che finisce nel file. -->
+        <label id="payContoField"><span data-t="payConto"></span>
+          <select id="payConto"></select>
+        </label>
+        <label class="wide"><span data-t="f_iban"></span><input id="payIban" autocomplete="off"></label>
+      </div>
+
+      <div class="section-head">
+        <h3 data-t="payDue"></h3>
+        <button type="button" class="button ghost" id="payAddDue" data-t="payAddDue"></button>
+      </div>
+      <p class="note" id="payNoDue" data-t="payNoDue" hidden></p>
+      <div class="table-scroll">
+    <table class="rows" id="payTable" hidden>
+          <thead><tr>
+            <th data-t="f_scadenza"></th><th class="right" data-t="docTotale"></th><th></th>
+          </tr></thead>
+          <tbody id="payBody"></tbody>
+        </table>
+    </div>
+    </div>
+
+    <!-- Gli incassi stanno sul documento perché è lì che si va a controllare se una fattura è
+         stata pagata: lo scadenzario risponde a «che cosa devo incassare», questo a «che cosa è
+         arrivato su questa». Compare solo sui documenti che qualcuno deve pagare. -->
+    <div id="docIncassiSection" hidden>
+      <div class="section-head">
+        <h2 data-t="incassiTitle"></h2>
+        <button type="button" class="button ghost" id="incassiNew" data-t="dueRecord"></button>
+      </div>
+      <p class="empty" id="incassiEmpty" data-t="incassiEmpty"></p>
+      <div class="table-scroll">
+        <table class="rows" id="incassiTable" hidden>
+          <thead><tr>
+            <th data-t="f_data"></th><th data-t="payConto"></th><th data-t="incassiNote"></th>
+            <th class="right" data-t="incassiAmount"></th><th></th>
+          </tr></thead>
+          <tbody id="incassiBody"></tbody>
+        </table>
+      </div>
+      <p class="note" id="incassiTotals"></p>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="button" id="docIssue" data-t="docIssue"></button>
+      <button type="button" class="button ghost" id="docSave" data-t="save"></button>
+      <button type="button" class="button ghost" id="docDelete" data-t="del"></button>
+      <button type="button" class="button" id="docConvert" hidden></button>
+      <button type="button" class="button" id="docXml" data-t="docXml" hidden></button>
+      <button type="button" class="button ghost" id="docCredit" data-t="docCreditNote" hidden></button>
+      <button type="button" class="button ghost" id="docReopen" data-t="docReopen" hidden></button>
+      <span class="ok" id="docSaved" data-t="docSaveFirst" hidden></span>
+    </div>
+  </section>
+
+  <!-- Anagrafiche -->
+  <section id="screenParties" class="screen" hidden>
+    <h1 data-t="partiesTitle"></h1>
+
+    <div class="section-head">
+      <h2 data-t="partiesClients"></h2>
+      <button type="button" class="button ghost" id="partyNew" data-t="partiesNew"></button>
+    </div>
+    <p class="empty" id="partiesEmpty"><span data-t="partiesEmpty"></span> <a href="#/impostazioni" data-t="emptyImport"></a></p>
+    <div class="table-scroll">
+    <table class="rows" id="partiesTable" hidden>
+        <thead><tr>
+          <th data-t="f_denominazione"></th><th data-t="f_partitaIva"></th>
+          <th data-t="f_comune"></th><th></th>
+        </tr></thead>
+        <tbody id="partiesBody"></tbody>
+      </table>
+    </div>
+
+    <div class="section-head">
+      <h2 data-t="partiesItems"></h2>
+      <button type="button" class="button ghost" id="itemNew" data-t="itemsNew"></button>
+    </div>
+    <p class="empty" id="itemsEmpty" data-t="itemsEmpty"></p>
+    <div class="table-scroll">
+    <table class="rows" id="itemsTable" hidden>
+        <thead><tr>
+          <th data-t="itemName"></th><th data-t="itemUnit"></th>
+          <th class="right" data-t="itemPrice"></th><th class="right" data-t="itemVat"></th><th></th>
+        </tr></thead>
+        <tbody id="itemsBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Azienda -->
+  <section id="screenCompany" class="screen" hidden>
+    <h1 data-t="companyTitle"></h1>
+    <p class="note" data-t="companyNote"></p>
+    <!-- Tre gruppi, con un titolo ciascuno: chi è l'azienda, dov'è, come numera. Prima i campi
+         stavano in fila e «indirizzo» finiva accanto a «regime fiscale», che è il modo in cui una
+         maschera sembra lunga anche quando non lo è. -->
+    <form id="companyForm" class="form" novalidate>
+      <h2 class="form-group" data-t="companyWho"></h2>
+      <label class="wide"><span data-t="f_denominazione"></span><input name="denominazione" autocomplete="organization" required></label>
+      <label><span data-t="f_paese"></span>
+        <select name="paese">
+          <option value="IT"></option>
+          <option value="SM"></option>
+        </select>
+      </label>
+      <!-- L'etichetta segue il paese: un'azienda sammarinese ha un COE, non una partita IVA, e il
+           campo che lo chiama con il nome sbagliato fa dubitare di aver scritto la cosa giusta. -->
+      <label><span id="companyPivaLabel" data-t="f_partitaIva"></span><input name="partitaIva" inputmode="numeric" required></label>
+      <label><span data-t="f_codiceFiscale"></span><input name="codiceFiscale"></label>
+      <label><span data-t="f_regimeFiscale"></span>
+        <select name="regimeFiscale">
+          <option value="RF01"></option>
+          <option value="RF19"></option>
+        </select>
+      </label>
+
+      <h2 class="form-group" data-t="companyWhere"></h2>
+      <label class="wide"><span data-t="f_indirizzo"></span><input name="indirizzo"></label>
+      <label class="narrow"><span data-t="f_numeroCivico"></span><input name="numeroCivico"></label>
+      <label class="narrow"><span data-t="f_cap"></span><input name="cap" inputmode="numeric" maxlength="5"></label>
+      <label><span data-t="f_comune"></span><input name="comune"></label>
+      <label class="narrow"><span data-t="f_provincia"></span><input name="provincia" maxlength="2"></label>
+
+      <!-- La carta intestata: quello che sta in testa a ogni foglio stampato e in nessun file XML.
+           Il logo resta nel deposito come immagine, ridotto se serve, e si vede qui prima che su
+           un documento. I recapiti stanno sotto l'indirizzo, dove un cliente li cerca. -->
+      <h2 class="form-group" data-t="companyLetterhead"></h2>
+      <p class="note wide" data-t="companyLetterheadNote"></p>
+      <div class="wide logo-field" id="companyLogoField">
+        <img id="companyLogoPreview" alt="" hidden>
+        <div class="actions">
+          <button type="button" class="button ghost" id="companyLogoPick" data-t="companyLogoPick"></button>
+          <button type="button" class="button ghost" id="companyLogoRemove" data-t="companyLogoRemove" hidden></button>
+          <input type="file" id="companyLogoFile" accept="image/png,image/jpeg,image/svg+xml,image/webp" hidden>
+        </div>
+        <p class="note" id="companyLogoNote" hidden></p>
+      </div>
+      <label><span data-t="f_email"></span><input name="email" type="email" autocomplete="email"></label>
+      <label class="narrow"><span data-t="f_telefono"></span><input name="telefono" type="tel" autocomplete="tel"></label>
+      <label><span data-t="f_sito"></span><input name="sito" type="url" inputmode="url" placeholder="https://"></label>
+
+      <h2 class="form-group" data-t="companyDefaultsTitle"></h2>
+      <p class="note wide" data-t="companyDefaultsNote"></p>
+      <label class="narrow"><span data-t="f_aliquotaPredefinita"></span><input name="aliquotaPredefinita" inputmode="decimal" placeholder="22"></label>
+      <label class="narrow"><span data-t="f_naturaPredefinita"></span><select name="naturaPredefinita" id="companyNatura"></select></label>
+      <label class="narrow tm-only"><span data-t="f_tmPredefinito"></span><input name="tmPredefinito" list="tmValori" maxlength="10"></label>
+
+      <h2 class="form-group" data-t="companyNumbering"></h2>
+      <!-- Serve a chi arriva da un altro programma con una numerazione già iniziata. Il contatore
+           si sposta solo in avanti: un progressivo già uscito è uscito, e riusarlo è un duplicato
+           che il Sistema di Interscambio rifiuta. -->
+      <label class="narrow"><span data-t="f_progressivoInvio"></span>
+        <input name="progressivoInvio" inputmode="numeric" placeholder="1">
+      </label>
+      <!-- Le voci le scrive `_loadCompany`, con dentro l'esempio di come esce il numero: una forma
+           si sceglie guardandola, non leggendo il nome che le abbiamo dato. -->
+      <label><span data-t="f_formatoNumero"></span>
+        <select name="formatoNumero"></select>
+      </label>
+      <p class="note" data-t="progressivoNote"></p>
+
+      <!-- I conti stanno dentro il form dell'azienda, e si salvano con «Salva» insieme al resto:
+           un secondo pulsante che salva solo questo pezzo farebbe chiedere ogni volta quale dei due
+           premere. Le righe si modificano sul posto, come le scadenze del documento — è un gruppo
+           di campi che si ripete, non un elenco di schede. -->
+      <div class="conti">
+        <div class="section-head">
+          <h2 data-t="contiTitle"></h2>
+          <button type="button" class="button ghost" id="contoNew" data-t="contiNew"></button>
+        </div>
+        <p class="note" data-t="contiNote"></p>
+        <p class="empty" id="contiEmpty" data-t="contiEmpty"></p>
+        <div class="table-scroll">
+          <table class="rows" id="contiTable" hidden>
+            <thead><tr>
+              <th data-t="f_etichetta"></th><th data-t="f_iban"></th>
+              <th data-t="contiDefault"></th><th></th>
+            </tr></thead>
+            <tbody id="contiBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="button" data-t="save"></button>
+        <span class="ok" id="companySaved" data-t="companySaved" hidden></span>
+      </div>
+    </form>
+  </section>
+
+  <!-- Impostazioni -->
+  <section id="screenSettings" class="screen" hidden>
+    <h1 data-t="settingsTitle"></h1>
+
+    <h2 data-t="settingsData"></h2>
+    <div class="actions">
+      <button type="button" class="button" id="exportAll" data-t="settingsExport"></button>
+      <button type="button" class="button ghost" id="importAll" data-t="settingsImport"></button>
+      <button type="button" class="button ghost" id="exportCsv" data-t="settingsCsv"></button>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+    </div>
+    <p class="note"><span data-t="settingsSpace"></span>: <span id="space">—</span></p>
+
+    <!-- **Portare dentro un account da un altro programma.** Sta qui e non in una voce di menù
+         propria perché è un'operazione che si fa una volta: una riga nella barra a sinistra per
+         sempre, per una cosa che serve il primo giorno, è la voce che poi nessuno sa perché c'è.
+
+         Il pannello resta nascosto finché non c'è un piano da mostrare. Non è cortesia: è la
+         regola di questa schermata — niente viene scritto prima che qualcuno abbia visto cosa
+         verrebbe scritto — e il pannello *è* quel passaggio. -->
+    <h2 data-t="impTitle"></h2>
+    <p class="note" data-t="impNote"></p>
+    <div class="actions">
+      <button type="button" class="button ghost" id="impPick" data-t="impPick"></button>
+      <span class="note" id="impReading" data-t="impReading" hidden></span>
+      <!-- `.xls` è il formato in cui Fatture in Cloud esporta i documenti, e `xls.js` lo legge
+           così com'è: nessun passaggio da Excel. -->
+      <input type="file" id="impFiles" accept=".xlsx,.xls,.xml,.zip" multiple hidden>
+    </div>
+
+    <!-- Il fuoco arriva qui quando c'è un piano da leggere, e la regione annuncia i cambiamenti:
+         chi non vede lo schermo deve sapere che dopo la scelta dei file è comparso qualcosa. -->
+    <div id="impPanel" tabindex="-1" aria-live="polite" hidden>
+      <p class="empty" id="impEmpty" data-t="impEmpty" hidden></p>
+      <div class="table-scroll">
+        <table class="rows" id="impTable" hidden>
+          <thead><tr>
+            <th data-t="impFile"></th><th data-t="impWhat"></th>
+            <th class="right" data-t="impNew"></th><th class="right" data-t="impExisting"></th>
+          </tr></thead>
+          <tbody id="impBody"></tbody>
+        </table>
+      </div>
+      <!-- I nomi, per fonte, chiusi di default: i conteggi rispondono a «quanti», i nomi a
+           «quali», e la seconda domanda si fa solo quando la prima non torna. -->
+      <div id="impNames"></div>
+      <ul class="imp-notes" id="impNotes"></ul>
+      <div class="actions">
+        <button type="button" class="button" id="impGo" data-t="impGo"></button>
+        <button type="button" class="button ghost" id="impCancel" data-t="cancel"></button>
+      </div>
+    </div>
+
+    <!-- La via di ritorno. Compare solo quando c'è un lotto da togliere, e toglie solo quello. -->
+    <div id="impUndoBox" hidden>
+      <p class="note" id="impUndoWhen"></p>
+      <div class="actions">
+        <button type="button" class="button ghost" id="impUndo" data-t="impUndo"></button>
+      </div>
+    </div>
+
+    <h2 data-t="settingsFormat"></h2>
+    <p class="note"><strong id="tracciato">—</strong></p>
+    <p class="note" data-t="settingsFormatNote"></p>
+
+    <h2 data-t="settingsLimits"></h2>
+    <p class="note" data-t="settingsLimitsNote"></p>
+  </section>
+
+</main>
+</div>
+
+<!-- Il foglio stampato. Vuoto e invisibile sullo schermo; `print.js` lo costruisce dal documento
+     aperto e `print.css` mostra lui solo. Un foglio è una lettera, non un modulo: la stampa dello
+     schermo portava sulla carta menù, caselle e lo stato del documento. -->
+<article id="printSheet" aria-hidden="true"></article>
+
+<!-- Il piè di pagina che hanno tutte le altre app, e che a questa mancava. È l'unico punto in cui
+     un'app installata dice da dove viene: si apre dall'icona, vive per mesi e nessuno ripassa più
+     dalla scheda. Le etichette arrivano da `data-t`, come tutto il resto del markup. -->
+<footer class="foot">
+  <a href="../" data-t="backToPage"></a>
+  <a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope" data-t="sourceLabel"></a>
+  <span class="spacer"></span>
+  <a class="foot-brand" href="https://ggtechnologies.sm" rel="noopener">
+    <span class="foot-mark" aria-hidden="true"></span>G&amp;G Technologies</a>
+  <span class="spacer"></span>
+  <span>Apache-2.0</span>
+</footer>
+
+<!-- The one dialog the app asks with. `alert` and `confirm` are refused by check_apps.py: they
+     ignore the theme, they block the page, and in an installed window on iOS some never appear —
+     which here would mean a confirmation nobody sees before a number is assigned for good. -->
+<dialog id="partyDialog" class="sheet">
+  <form method="dialog" id="partyForm">
+    <h2 id="partyDialogTitle"></h2>
+    <div class="form">
+      <label class="wide"><span data-t="f_denominazione"></span><input name="denominazione" autocomplete="organization" required></label>
+      <label><span data-t="f_partitaIva"></span><input name="partitaIva" inputmode="numeric"></label>
+      <label><span data-t="f_codiceFiscale"></span><input name="codiceFiscale"></label>
+      <label><span data-t="f_codiceDestinatario"></span><input name="codiceDestinatario" maxlength="7"></label>
+      <label><span data-t="f_pec"></span><input name="pec" type="email" autocomplete="email"></label>
+      <!-- A chi non lo sa: sono i due modi in cui la fattura elettronica arriva al cliente, e ne
+           basta uno. Senza questa riga i due campi sembrano burocrazia da riempire tutta. -->
+      <p class="note wide" data-t="partyDeliveryNote"></p>
+      <!-- **Il paese mancava del tutto**, e senza si poteva registrare solo un cliente italiano.
+           Un menù con i nomi, non una casella per la sigla: chi non sa che la Svizzera è «CH» non
+           deve saperlo. L'ultima voce apre una casella per i paesi che non sono nell'elenco. -->
+      <label><span data-t="f_paese"></span>
+        <select name="paeseScelto" id="partyPaese">
+          <option value="IT">Italia</option>
+          <option value="SM">San Marino</option>
+          <option value="AT">Austria</option>
+          <option value="BE">Belgio</option>
+          <option value="CH">Svizzera</option>
+          <option value="DE">Germania</option>
+          <option value="ES">Spagna</option>
+          <option value="FR">Francia</option>
+          <option value="GB">Regno Unito</option>
+          <option value="NL">Paesi Bassi</option>
+          <option value="PT">Portogallo</option>
+          <option value="SI">Slovenia</option>
+          <option value="US">Stati Uniti</option>
+          <option value="VA">Città del Vaticano</option>
+          <option value="__altro" data-t="paeseAltro"></option>
+        </select>
+      </label>
+      <label class="narrow" id="partyPaeseAltro" hidden><span data-t="f_paeseSigla"></span>
+        <input name="paese" maxlength="2" placeholder="XX" autocomplete="off">
+      </label>
+      <label class="wide"><span data-t="f_indirizzo"></span><input name="indirizzo"></label>
+      <label class="narrow"><span data-t="f_numeroCivico"></span><input name="numeroCivico"></label>
+      <label class="narrow"><span data-t="f_cap"></span><input name="cap" inputmode="numeric" maxlength="5"></label>
+      <label><span data-t="f_comune"></span><input name="comune"></label>
+      <label class="narrow"><span data-t="f_provincia"></span><input name="provincia" maxlength="2"></label>
+    </div>
+    <p class="note" id="partyEsteraNote" data-t="sedeEsteraNote" hidden></p>
+    <ul class="sheet-problems" id="partyProblems" hidden></ul>
+    <div class="actions sheet-actions">
+      <button type="button" class="button ghost" id="partyCancel" data-t="cancel"></button>
+      <button type="button" class="button ghost danger-text" id="partyDelete" data-t="del" hidden></button>
+      <span class="spacer"></span>
+      <button type="button" class="button" id="partySave" data-t="save"></button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="itemDialog" class="sheet">
+  <form method="dialog" id="itemForm">
+    <h2 id="itemDialogTitle"></h2>
+    <div class="form">
+      <label class="wide"><span data-t="f_descrizione"></span><input name="descrizione" required></label>
+      <label class="narrow"><span data-t="f_unitaMisura"></span><input name="unitaMisura" maxlength="10"></label>
+      <label class="narrow"><span data-t="f_prezzoUnitario"></span><input name="prezzoUnitario" inputmode="decimal"></label>
+      <label class="narrow"><span data-t="f_aliquota"></span><input name="aliquota" inputmode="decimal" value="22"></label>
+      <!-- Natura e codice TM sulla voce: per chi fattura senza IVA erano due campi da ribattere a
+           ogni riga di ogni documento, con la stessa risposta ogni volta. -->
+      <label><span data-t="f_natura"></span><select name="natura" id="itemNatura"></select></label>
+      <label class="narrow tm-only"><span data-t="f_tm"></span><input name="tm" list="tmValori" maxlength="10"></label>
+    </div>
+    <div class="actions sheet-actions">
+      <button type="button" class="button ghost" id="itemCancel" data-t="cancel"></button>
+      <button type="button" class="button ghost danger-text" id="itemDelete" data-t="del" hidden></button>
+      <span class="spacer"></span>
+      <button type="button" class="button" id="itemSave" data-t="save"></button>
+    </div>
+  </form>
+</dialog>
+
+<!-- La scheda dell'incasso. Quattro campi, perché quattro sono le cose che si sanno di un
+     pagamento arrivato: quanto, quando, dove, e perché era diverso dal previsto. -->
+<dialog id="payDialog" class="sheet">
+  <form method="dialog" id="payForm">
+    <h2 data-t="dueRecord"></h2>
+    <p class="note" id="payDialogDoc"></p>
+    <div class="form">
+      <label class="narrow"><span data-t="incassiAmount"></span>
+        <input name="importo" inputmode="decimal" required>
+      </label>
+      <label class="narrow"><span data-t="f_data"></span><input name="data" type="date" required></label>
+      <label id="payContoRow"><span data-t="payConto"></span><select name="conto"></select></label>
+      <label class="wide"><span data-t="incassiNote"></span><input name="nota" autocomplete="off"></label>
+    </div>
+    <ul class="sheet-problems" id="payProblems" hidden></ul>
+    <div class="actions sheet-actions">
+      <button type="button" class="button ghost" id="payCancel" data-t="cancel"></button>
+      <span class="spacer"></span>
+      <button type="button" class="button" id="paySave" data-t="dueRecord"></button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="ask">
+  <p id="askText"></p>
+  <ul id="askList" hidden></ul>
+  <div class="actions">
+    <button type="button" id="askCancel" class="button ghost" data-t="cancel"></button>
+    <button type="button" id="askOk" class="button" data-t="ok"></button>
+  </div>
+</dialog>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>

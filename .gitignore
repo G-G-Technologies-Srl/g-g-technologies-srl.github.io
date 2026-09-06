@@ -55,3 +55,43 @@ _src/fonti/
 # 9,5 MB che ogni clone paga per sempre, in un repository servito da Pages.
 # `archivio/cavaliere-posa.png` invece resta tracciato: è la posa da cui viene il cavaliere di oggi.
 /app/spronia/art/archivio/*.jpeg
+
+# I documenti di prova di Invoice Scope: li riscrive `node app/invoice-scope/test/samples.mjs` a
+# ogni giro, e sono l'ingresso di `xsd.sh`. Un file generato che viene committato è un file che
+# prima o poi discorda dal generatore, e qui discorderebbe in silenzio.
+/app/invoice-scope/test/out/
+
+# Lo schema XSD ufficiale della FatturaPA. Non è nostro, cambia circa una volta l'anno, e non
+# serve all'app: serve a chi sviluppa, per far girare `xsd.sh`. Le istruzioni per scaricarlo
+# stanno in app/invoice-scope/test/schema/README.md, che invece è tracciato.
+/app/invoice-scope/test/schema/*.xsd
+
+# -----------------------------------------------------------------------------------------------
+# Fogli di calcolo, in blocco e in qualsiasi cartella. Nel repository non ce n'è nessuno — 286 file
+# tracciati, zero fra `.xls`, `.xlsx`, `.ods` e `.csv` — quindi la regola non toglie niente a
+# nessuno, e in cambio rende impossibile un `git add` distratto.
+#
+# Non è una regola d'igiene: è che i fogli che arrivano qui sono **esportazioni vere**. Il listino
+# clienti di Fatture in Cloud ha ragione sociale, partita IVA, PEC, IBAN e codice SDI di aziende
+# reali; il registro dei documenti ha anche gli importi fatturati. Questo repository è la sorgente
+# di GitHub Pages e `.nojekyll` fa copiare tutto alla lettera: un file committato qui non è
+# «tracciato per sbaglio», è **pubblicato su ggtechnologies.sm**, indirizzo compreso.
+#
+# E la storia resta: un file pubblicato una volta resta leggibile nei commit anche dopo che lo
+# cancelli. Per questo la protezione sta a monte — sull'estensione, dovunque il file finisca — e
+# non su una cartella che qualcuno potrebbe scegliere di non usare.
+*.xls
+*.xlsx
+*.xlsm
+*.ods
+*.csv
+
+# Le esportazioni vere di Fatture in Cloud, tenute qui per sviluppare l'importazione contro file
+# autentici invece che contro un'idea di come dovrebbero essere fatti. Doppiamente ignorate — sono
+# sotto `/_src/` e sotto `_src/fonti/`, già esclusi entrambi sopra — e la riga qui sotto è la terza
+# ridondanza, scritta perché si veda: sono dati di clienti, non fixture.
+#
+# Le fixture dei test sono un'altra cosa e restano tracciate: nomi inventati e partite IVA con il
+# carattere di controllo giusto, in `app/invoice-scope/test/`. Da un file vero si copia la **forma**
+# — quali colonne, in che ordine, con che formato di data — mai il contenuto.
+_src/fonti/fic/

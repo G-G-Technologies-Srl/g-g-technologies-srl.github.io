@@ -1,0 +1,20 @@
+{
+  "id": "/app/invoice-scope/run/",
+  "name": "Invoice Scope",
+  "short_name": "Invoice",
+  "description": "Prepare invoices and write the XML file to be sent, entirely in your browser.",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "/app/invoice-scope/run/",
+  "scope": "/app/invoice-scope/run/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#0d1220",
+  "background_color": "#0d1220",
+  "categories": ["business", "finance", "productivity"],
+  "icons": [
+    { "src": "/app/invoice-scope/run/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/app/invoice-scope/run/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/app/invoice-scope/run/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

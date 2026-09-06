@@ -1,0 +1,27 @@
+Invoice Scope
+Copyright 2026 G&G Technologies S.r.l.
+
+This product includes software developed by G&G Technologies S.r.l.
+(https://ggtechnologies.sm).
+
+Licensed under the Apache License, Version 2.0. See the LICENSE file in this
+directory for the full text.
+
+This licence covers the contents of this directory only. The rest of the
+repository — the pages of ggtechnologies.sm, the articles under /insights, the
+brand and its marks — is not covered and remains all rights reserved.
+
+Your customers, your prices and your invoices are yours. They are kept in your
+own browser, they are never sent anywhere, and they come back out as XML and
+plain JSON: readable without this app, and without us.
+
+The app prepares the file. Sending it is yours to do: it does not transmit to
+the SdI or to the HUB SM, it does not sign, and it does not keep the legal
+archive. Those need an accredited channel and are obligations of their own.
+
+No third-party code is bundled: the app has no dependencies, and the only code
+it loads from outside this directory is the shared library in /app/_lib/, which
+is ours and carries the same licence. The FatturaPA format is published by the
+Agenzia delle Entrate; the schema itself is not redistributed here, and both the
+emitter and the reader in run/fatturapa.js and run/reading.js are our own
+implementation of the published specification.

@@ -1,0 +1,182 @@
+/* Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0 */
+
+/* The printed sheet, and nothing else.
+ *
+ * **It is not the invoice.** The fiscal original is the XML, and the sheet says so in its foot —
+ * a PDF that does not declare it gets filed in the original's place, and then two documents claim
+ * to be the same invoice. The line is small and it is not optional.
+ *
+ * The page is `#printSheet`, built by `print.js` from the open document: everything the screen
+ * shows is hidden here, and the sheet — hidden on screen — is the only thing on the page. The
+ * layout is the one the invoicing services people already use print: issuer top left, the
+ * document's name and number top right, the recipient in a box, the lines, VAT summary beside the
+ * totals, the payment terms, a note at the foot. Ink on white, whatever theme the screen was in:
+ * the brand's colours on a light ground, and no dark sheet nobody agreed to spend a cartridge on.
+ */
+
+@media print {
+  :root { color-scheme: light; }
+
+  /* Everything that is the app. */
+  body > *:not(#printSheet) { display: none !important; }
+
+  html, body {
+    background: #fff !important;
+    color: #0d1220 !important;
+    font-family: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 10pt;
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  #printSheet { display: block !important; }
+
+  @page {
+    size: A4;
+    margin: 16mm 15mm 18mm;
+  }
+
+  /* ---- head: issuer left, document right ---- */
+  .ps-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12mm;
+    padding-bottom: 5mm;
+    border-bottom: 2px solid #059669;
+  }
+  /* Chi emette tiene la sua metà: «DOCUMENTO DI TRASPORTO» in corpo 20 schiacciava la ragione
+     sociale su tre righe. Il titolo va a capo, l'indirizzo no. */
+  .ps-issuer { flex: 1 1 0; min-width: 80mm; }
+  /* Il logo sopra il nome: alto al massimo 22 mm, largo al massimo 70, in proporzione. Un logo
+     più largo che alto tiene la riga, uno quadrato tiene l'altezza. */
+  .ps-logo { display: block; max-height: 22mm; max-width: 70mm; width: auto; height: auto; margin-bottom: 3mm; }
+  .ps-issuer-name { font-size: 15pt; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 1.5mm; }
+  .ps-contacts { margin-top: 1mm; }
+  .ps-issuer-line { font-size: 9.5pt; color: #4a5266; }
+
+  .ps-title { text-align: right; flex: 0 1 auto; max-width: 85mm; }
+  .ps-kind {
+    font-size: 18pt;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #059669;
+    line-height: 1.1;
+  }
+  .ps-draft {
+    display: inline-block;
+    margin-top: 1.5mm;
+    padding: 0.5mm 2.5mm;
+    border: 1px solid #b4413c;
+    color: #b4413c;
+    font-size: 8pt;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .ps-meta { margin-top: 2.5mm; }
+  .ps-meta .ps-pair { justify-content: flex-end; }
+
+  .ps-pair { display: flex; gap: 2mm; font-size: 9.5pt; }
+  .ps-label { color: #4a5266; }
+  .ps-label::after { content: ":"; }
+  .ps-value { font-weight: 600; }
+
+  /* ---- recipient ---- */
+  .ps-section-label {
+    display: block;
+    font-size: 7.5pt;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #4a5266;
+    margin-bottom: 1.5mm;
+  }
+  .ps-to {
+    margin: 7mm 0 0;
+    padding: 4mm 5mm;
+    border: 1px solid #d7dce6;
+    border-radius: 2mm;
+    max-width: 95mm;
+    page-break-inside: avoid;
+  }
+  .ps-to-name { font-size: 11pt; font-weight: 700; }
+  .ps-to-line { font-size: 9.5pt; }
+  .ps-muted { color: #4a5266; }
+
+  .ps-subject { margin: 5mm 0 0; font-size: 9.5pt; }
+  .ps-subject .ps-section-label { display: inline; margin: 0 2mm 0 0; }
+
+  /* ---- transport, on a delivery note ---- */
+  .ps-transport { margin: 5mm 0 0; padding: 3mm 4mm; border: 1px solid #d7dce6; border-radius: 2mm; }
+  .ps-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1mm 8mm; }
+
+  /* ---- lines ---- */
+  .ps-lines {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 7mm;
+    font-size: 9.5pt;
+  }
+  .ps-lines th, .ps-lines td { padding: 2.2mm 2mm; vertical-align: top; text-align: left; }
+  .ps-lines th {
+    font-size: 7.5pt;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #4a5266;
+    border-bottom: 1.5px solid #0d1220;
+  }
+  .ps-lines td { border-bottom: 1px solid #e3e7ef; }
+  .ps-lines tbody tr:nth-child(even) td { background: #f6f8fc; }
+  .ps-lines .ps-desc { width: 44%; }
+  .ps-num { text-align: right !important; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .ps-lines tr { page-break-inside: avoid; }
+  .ps-lines thead { display: table-header-group; }
+
+  /* ---- VAT summary beside the totals ---- */
+  .ps-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10mm;
+    margin-top: 6mm;
+    page-break-inside: avoid;
+  }
+  .ps-vat { flex: 1 1 0; min-width: 0; }
+  .ps-vat-table { border-collapse: collapse; font-size: 9pt; width: 100%; max-width: 90mm; }
+  .ps-vat-table th, .ps-vat-table td { padding: 1.2mm 2mm; text-align: left; }
+  .ps-vat-table th { font-size: 7.5pt; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #4a5266; border-bottom: 1px solid #d7dce6; }
+  .ps-vat-table td { border-bottom: 1px solid #eef1f6; }
+  .ps-vat-note { margin-top: 2mm; font-size: 8pt; color: #4a5266; max-width: 90mm; }
+
+  .ps-totals { flex: 0 0 70mm; font-size: 10pt; }
+  .ps-total-line { display: flex; justify-content: space-between; gap: 6mm; padding: 1.2mm 0; }
+  .ps-total-line span:first-child { color: #4a5266; }
+  .ps-grand {
+    margin-top: 2mm;
+    padding: 2.5mm 3mm;
+    border-top: 1.5px solid #0d1220;
+    font-size: 12.5pt;
+    font-weight: 700;
+    background: #f6f8fc;
+  }
+  .ps-grand span:first-child { color: #0d1220; }
+
+  /* ---- payment ---- */
+  .ps-pay { margin-top: 7mm; page-break-inside: avoid; }
+  .ps-pay-line { font-size: 9.5pt; }
+  .ps-due { border-collapse: collapse; font-size: 9.5pt; margin-top: 2mm; min-width: 70mm; }
+  .ps-due th, .ps-due td { padding: 1.2mm 3mm 1.2mm 0; text-align: left; }
+  .ps-due th { font-size: 7.5pt; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #4a5266; border-bottom: 1px solid #d7dce6; }
+
+  /* ---- foot ---- */
+  .ps-foot {
+    margin-top: 10mm;
+    padding-top: 3mm;
+    border-top: 1px solid #d7dce6;
+    font-size: 8pt;
+    color: #4a5266;
+  }
+}
