@@ -290,6 +290,24 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://ggtechnologies.sm/app/invoice-scope/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/app/invoice-scope/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/app/invoice-scope/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/app/invoice-scope/"/>
+    <lastmod>2026-09-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/en/app/invoice-scope/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/app/invoice-scope/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/app/invoice-scope/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/app/invoice-scope/"/>
+    <lastmod>2026-09-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://ggtechnologies.sm/insights/ai-act-dati-clienti/</loc>
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/ai-act-dati-clienti/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/ai-act-client-data/"/>
