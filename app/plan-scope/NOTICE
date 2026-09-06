@@ -15,6 +15,8 @@ Whatever you write inside the app is yours. It is kept in your own browser, it
 is never sent anywhere, and it comes back out as a ZIP holding plain Markdown
 and your images: readable without this app, and without us.
 
-No third-party code is bundled: the app has no dependencies and loads nothing
-from outside its own directory. The ZIP reader and writer in run/zip.js are our
-own implementation of the published format, storing entries uncompressed.
+No third-party code is bundled: the app has no dependencies, and the only code
+it loads from outside this directory is the shared library in /app/_lib/, which
+is ours and carries the same licence. The ZIP reader and writer it uses, in
+_lib/zip.js, are our own implementation of the published format: what this app
+writes is stored uncompressed, and what it reads may be either.

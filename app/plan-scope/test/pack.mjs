@@ -16,7 +16,7 @@
 
 import assert from "node:assert/strict";
 
-import * as zip from "../run/zip.js";
+import * as zip from "../../_lib/zip.js";
 import * as pack from "../run/pack.js";
 
 let passed = 0;

@@ -12,7 +12,14 @@
 // The three things that go wrong here are all silent, and all three are handled below: the CRC has
 // to be real, the date is MS-DOS and not ISO, and a name is only UTF-8 if a flag says so.
 //
-// No DOM and no browser API: `node app/plan-scope/test/pack.mjs` runs this file directly.
+// No DOM: `node app/plan-scope/test/pack.mjs` runs this file directly. One browser API is used, and
+// only on the way in — `DecompressionStream`, in `readAny()` — because an archive from elsewhere is
+// deflated and inflating by hand would be a second library's worth of code. Writing stays pure.
+//
+// It moved here from `app/plan-scope/run/` when Invoice Scope became its second user: an `.xlsx` is
+// a ZIP of XML files, deflated, so reading a spreadsheet starts exactly where reading a Notion
+// export starts. That second use is the condition app/CLAUDE.md sets for entering the library, and
+// the move cost nothing — this file never knew the name of the app that hosted it.
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e

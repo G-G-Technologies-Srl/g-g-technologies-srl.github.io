@@ -14,7 +14,7 @@
 import * as model from "./model.js";
 import * as db from "./db.js";
 import * as pack from "./pack.js";
-import * as zip from "./zip.js";
+import * as zip from "gg/zip.js";
 import * as importers from "./importers.js";
 import * as versions from "./versions.js";
 import * as io from "gg/io.js";

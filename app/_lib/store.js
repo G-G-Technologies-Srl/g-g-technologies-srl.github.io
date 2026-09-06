@@ -68,12 +68,21 @@ function _upgrade(db, transaction, stores) {
  * viewer must still open the file, and a game must still be playable, on a browser that will not
  * remember either. Every call below tolerates a null handle, so the caller has one check to make
  * and not twelve.
+ *
+ * `upgrade` is an optional hook, run on the same transaction right after the declared shape is
+ * built. It exists for what this file deliberately does not do: `_upgrade` creates every index
+ * non-unique, which is the right default for a shared library and not enough for an app where a
+ * duplicate is the defect it cannot recover from. Rather than teach this file about uniqueness —
+ * and about whatever the next app needs — it hands the transaction over and stays out of the way.
  */
-export async function open(name, version, stores) {
+export async function open(name, version, stores, { upgrade = null } = {}) {
   if (!self.indexedDB) return null;
   try {
     const request = indexedDB.open(name, version);
-    request.onupgradeneeded = () => _upgrade(request.result, request.transaction, stores);
+    request.onupgradeneeded = () => {
+      _upgrade(request.result, request.transaction, stores);
+      if (upgrade) upgrade(request.result, request.transaction);
+    };
     const db = await _ask(request);
     // A second tab opening a newer version blocks this one. Closing on demand lets it through
     // instead of leaving both stuck, which is a deadlock nobody can diagnose from the outside.
@@ -82,6 +91,64 @@ export async function open(name, version, stores) {
   } catch (ignored) {
     return null;
   }
+}
+
+/**
+ * Several reads and writes as one transaction: all of them, or none.
+ *
+ * The rest of this file gives one transaction per call, which is right for what it was written
+ * for — a viewer keeping a file's history, a game keeping a score — and wrong the moment two
+ * records have to agree with each other. Read a counter in one transaction and write the record it
+ * numbered in another, and two things can go wrong: a second tab reads the same value before you
+ * write it, and a failure between the two leaves the counter moved and the record missing.
+ *
+ * `run` receives a handle whose `get`, `put` and `remove` all use the same transaction, and returns
+ * whatever the caller wants back. Throwing from inside aborts it, and nothing is written.
+ *
+ * **The one rule for callers: no `await` on anything outside this transaction.** IndexedDB commits
+ * a transaction as soon as its requests have settled and control returns to the event loop, so
+ * awaiting an unrelated promise in the middle ends it early and the writes after that point fail.
+ * Everything `run` needs must be read through the handle or passed in.
+ */
+export function tx(db, stores, run) {
+  if (!db) return Promise.resolve(null);
+  return new Promise((resolve, reject) => {
+    let transaction;
+    try {
+      transaction = db.transaction(stores, "readwrite");
+    } catch (error) {
+      reject(error);
+      return;
+    }
+
+    const scope = {
+      get: (store, key) => _ask(transaction.objectStore(store).get(key)),
+      put: (store, record) => _ask(transaction.objectStore(store).put(record)),
+      remove: (store, key) => _ask(transaction.objectStore(store).delete(key)),
+    };
+
+    let result;
+    let failure = null;
+
+    // `complete` is the only place that resolves: a promise settled when the last request succeeds
+    // would report success before the transaction had actually committed, which is precisely the
+    // guarantee this function exists to give.
+    transaction.oncomplete = () => (failure ? reject(failure) : resolve(result));
+    transaction.onabort = () => reject(failure || transaction.error || new Error("transazione annullata"));
+    transaction.onerror = () => { failure = failure || transaction.error; };
+
+    Promise.resolve()
+      .then(() => run(scope))
+      .then((value) => { result = value; })
+      .catch((error) => {
+        failure = error;
+        try {
+          transaction.abort();
+        } catch (ignored) {
+          // Already finished: `onabort` or `oncomplete` will settle the promise.
+        }
+      });
+  });
 }
 
 /** Write one record. The key comes from the record itself, through the store's `keyPath`. */
