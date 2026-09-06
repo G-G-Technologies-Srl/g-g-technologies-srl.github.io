@@ -159,6 +159,27 @@ const IT = {
   settingsImportBad: "Questo file non è un archivio di Invoice Scope.",
   settingsCsv: "Esporta un CSV per il commercialista",
   settingsSpace: "Spazio usato",
+
+  backupTitle: "Copia automatica in una cartella",
+  backupNote: "Scegli una cartella e l'app ci scrive da sola l'archivio a ogni modifica — lo "
+    + "stesso file di «Esporta tutto». Se la cartella è dentro Dropbox o iCloud, la copia arriva "
+    + "da sé sugli altri tuoi computer. Tiene anche una copia al giorno degli ultimi trenta "
+    + "giorni. Da qui scrive un computer solo: sull'altro apri l'archivio con «Importa un "
+    + "archivio».",
+  backupPick: "Scegli la cartella…",
+  backupResume: "Riprendi la cartella",
+  backupUnlink: "Scollega la cartella",
+  backupUnlinkAsk: "L'app smette di scrivere nella cartella. I file che ci sono restano dove "
+    + "sono. Vado avanti?",
+  backupUnavailable: "Questo browser non sa aprire una cartella: funziona con Chrome o Edge sul "
+    + "computer. Qui resta «Esporta tutto».",
+  backupNone: "Nessuna cartella collegata.",
+  backupPrompt: "La cartella «{folder}» aspetta il tuo permesso: il browser lo chiede di nuovo a "
+    + "ogni apertura.",
+  backupLinked: "Cartella «{folder}» · ultima copia {when}.",
+  backupNever: "Cartella «{folder}» · nessuna copia ancora.",
+  backupError: "Non riesco a scrivere nella cartella «{folder}» ({error}). Controlla che esista "
+    + "ancora, o scegline un'altra.",
   settingsFormat: "Tracciato",
   settingsFormatNote: "L'app scrive il formato FatturaPA nella versione qui sopra. Quando "
     + "l'Agenzia pubblica una versione nuova, l'app va aggiornata.",
@@ -722,6 +743,27 @@ const EN = {
   settingsImportBad: "This file is not an Invoice Scope archive.",
   settingsCsv: "Export a CSV for the accountant",
   settingsSpace: "Space used",
+
+  backupTitle: "Automatic copy in a folder",
+  backupNote: "Choose a folder and the app writes the archive there by itself at every change — "
+    + "the same file as «Export everything». If the folder sits inside Dropbox or iCloud, the "
+    + "copy reaches your other computers on its own. It also keeps one copy a day for the last "
+    + "thirty days. Only one computer writes here: on the other, open the archive with «Import "
+    + "an archive».",
+  backupPick: "Choose the folder…",
+  backupResume: "Resume the folder",
+  backupUnlink: "Unlink the folder",
+  backupUnlinkAsk: "The app stops writing into the folder. The files already there stay where "
+    + "they are. Go on?",
+  backupUnavailable: "This browser cannot open a folder: it works with Chrome or Edge on a "
+    + "computer. Here, «Export everything» remains.",
+  backupNone: "No folder linked.",
+  backupPrompt: "The folder «{folder}» is waiting for your permission: the browser asks for it "
+    + "again at every opening.",
+  backupLinked: "Folder «{folder}» · last copy {when}.",
+  backupNever: "Folder «{folder}» · no copy yet.",
+  backupError: "Cannot write into the folder «{folder}» ({error}). Check that it still exists, "
+    + "or choose another one.",
   settingsFormat: "Format",
   settingsFormatNote: "The app writes the FatturaPA format in the version above. When the revenue "
     + "publishes a new one, the app has to be updated.",

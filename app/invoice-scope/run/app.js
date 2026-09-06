@@ -19,7 +19,7 @@ import { get, put, persist } from "gg/store.js";
 
 import { t, tf, lang, otherLang, setLang, resolveLang } from "./i18n.js";
 import { ask, tell } from "./ask.js";
-import { openDatabase, isDemo, NAME, VERSION, STORES } from "./db.js";
+import { openDatabase, isDemo, NAME, VERSION, EXPORTED } from "./db.js";
 import { seed } from "./demo.js";
 import { documents, convertMany, save, invoicedBy, NUMERAZIONI } from "./model.js";
 import { TIPI, KINDS, kind, numero as shownNumber, convertibile } from "./kinds.js";
@@ -36,6 +36,7 @@ import { fiscalCode, parseOptional } from "./parse.js";
 import { money, date as shownDate } from "./format.js";
 import { wire as wireImport, refresh as refreshImport } from "./importing.js";
 import { LOGO as BRAND_LOGO } from "./brand.js";
+import * as backup from "./backup.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -97,6 +98,9 @@ let conti = [];
  */
 let logo = null;
 
+/** Whether the backup folder is linked and writing: then the home stops asking for an export. */
+let backupLinked = false;
+
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
 // -----------------------------------------------------------------------------------------------------------------
@@ -148,6 +152,9 @@ async function _route() {
   // Anything the document screen still had pending goes out first. The 800 ms that make typing
   // comfortable are also 800 ms in which a tab of the navbar can be tapped.
   await doc.flush();
+  // Every navigation is a moment something may have changed: the backup folder is told, and
+  // decides by fingerprint whether there is anything to write.
+  backup.touch();
 
   const hash = location.hash || "#/";
   const document_ = DOC_ROUTE.exec(hash);
@@ -174,6 +181,7 @@ async function _route() {
 
 /** Redraw what the shell shows. Cheap enough to do on every route. */
 async function _refresh() {
+  backup.touch();
   const company = db ? await get(db, "company", COMPANY_ID) : null;
   el("setupNote").hidden = Boolean(company && company.denominazione);
 
@@ -188,6 +196,7 @@ async function _refresh() {
   // the app is, and a framed warning about the only copy is a heavy first thing to read.
   el("backupNote").hidden = isDemo()
     || docs.length < 3
+    || backupLinked
     || Boolean(localStorage.getItem(BACKUP_KEY));
 
   const anno = new Date().getFullYear();
@@ -731,8 +740,33 @@ async function _saveCompany(event) {
   await _refresh();
 }
 
+/**
+ * The backup folder's line on the settings screen, and which of its buttons apply.
+ *
+ * Four states, all said in words: the browser cannot hand out a folder (Safari, Firefox, every
+ * phone), no folder yet, a folder waiting for its permission again, a folder that is written —
+ * with the time of the last write, or the error that stopped the last one.
+ */
+async function _drawBackup() {
+  const stato = await backup.status();
+  backupLinked = stato.kind === "linked" && !stato.error;
+  el("backupPick").hidden = stato.kind !== "none";
+  el("backupResume").hidden = stato.kind !== "prompt";
+  el("backupUnlink").hidden = stato.kind === "none" || stato.kind === "unavailable";
+  const line = el("backupLine");
+  if (stato.kind === "unavailable") line.textContent = t("backupUnavailable");
+  else if (stato.kind === "none") line.textContent = t("backupNone");
+  else if (stato.kind === "prompt") line.textContent = tf("backupPrompt", { folder: stato.folder });
+  else if (stato.error) line.textContent = tf("backupError", { folder: stato.folder, error: stato.error });
+  else if (stato.lastWrite) {
+    const when = new Date(stato.lastWrite);
+    line.textContent = tf("backupLinked", { folder: stato.folder,
+      when: `${shownDate(stato.lastWrite.slice(0, 10))} ${when.toTimeString().slice(0, 5)}` });
+  } else line.textContent = tf("backupNever", { folder: stato.folder });
+}
+
 async function _export() {
-  await download(db, { app: NAME, schema: VERSION, stores: Object.keys(STORES) });
+  await download(db, { app: NAME, schema: VERSION, stores: EXPORTED });
   localStorage.setItem(BACKUP_KEY, new Date().toISOString());
   await _refresh();
 }
@@ -743,7 +777,7 @@ async function _import(event) {
   if (!file) return;
   if (!(await ask(t("settingsImportAsk"), { okLabel: t("settingsImport") }))) return;
   try {
-    await restore(db, await file.text(), { app: NAME, stores: Object.keys(STORES) });
+    await restore(db, await file.text(), { app: NAME, stores: EXPORTED });
     await tell(t("settingsImportDone"));
     await _loadCompany();
     await _route();
@@ -831,6 +865,18 @@ async function main() {
     if (ultimo) ultimo.querySelector("input").focus();
   });
   el("exportAll").addEventListener("click", _export);
+  el("backupPick").addEventListener("click", async () => {
+    if (await backup.link()) await _drawBackup();
+  });
+  el("backupResume").addEventListener("click", async () => {
+    await backup.resume();
+    await _drawBackup();
+  });
+  el("backupUnlink").addEventListener("click", async () => {
+    if (!(await ask(t("backupUnlinkAsk"), { okLabel: t("backupUnlink") }))) return;
+    await backup.unlink();
+    await _drawBackup();
+  });
   el("importAll").addEventListener("click", () => el("importFile").click());
   el("importFile").addEventListener("change", _import);
 
@@ -842,6 +888,13 @@ async function main() {
       await _route();
     },
   });
+  // The backup folder wakes up after the screens are wired: its status line is one of them, and
+  // it reports to it whenever a write lands or fails. Not in the demo — there is nothing to keep.
+  if (!isDemo()) {
+    await backup.setup(db, { status: () => { _drawBackup().then(_refresh); } });
+  } else {
+    await _drawBackup();
+  }
   el("exportCsv").addEventListener("click", async () => {
     const text = await csv(db);
     const url = URL.createObjectURL(new Blob([text], { type: "text/csv;charset=utf-8" }));

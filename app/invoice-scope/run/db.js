@@ -44,6 +44,16 @@ export const STORES = {
 };
 
 /**
+ * The stores an export carries: every one but `meta`.
+ *
+ * `meta` is this browser's own state — today the handle of the backup folder — and it is not
+ * data: a directory handle serialised to JSON is `{}`, and restoring `{}` into another machine's
+ * `meta` would leave it holding a folder that does not exist. Used by «Esporta tutto», by the
+ * backup folder and by «Importa un archivio», so that the three agree on what an archive is.
+ */
+export const EXPORTED = Object.keys(STORES).filter((store) => store !== "meta");
+
+/**
  * The one index that has to refuse duplicates, and the fields it is built from.
  *
  * Exported because the tests build their fake store from it rather than describing the schema a

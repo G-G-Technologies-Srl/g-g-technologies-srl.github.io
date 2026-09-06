@@ -561,6 +561,19 @@
     </div>
     <p class="note"><span data-t="settingsSpace"></span>: <span id="space">—</span></p>
 
+    <!-- La cartella di backup: l'archivio scritto da solo in una cartella scelta — di solito una
+         cartella di Dropbox o iCloud, che poi viaggia da sé. Sta qui, accanto a «Esporta tutto»,
+         perché è la stessa cosa fatta dall'app invece che da chi si ricorda. Una macchina scrive,
+         le altre leggono con «Importa un archivio»: il perché sta in `backup.js`. -->
+    <h2 data-t="backupTitle"></h2>
+    <p class="note" data-t="backupNote"></p>
+    <div class="actions">
+      <button type="button" class="button ghost" id="backupPick" data-t="backupPick" hidden></button>
+      <button type="button" class="button" id="backupResume" data-t="backupResume" hidden></button>
+      <button type="button" class="button ghost" id="backupUnlink" data-t="backupUnlink" hidden></button>
+    </div>
+    <p class="note" id="backupLine" aria-live="polite"></p>
+
     <!-- **Portare dentro un account da un altro programma.** Sta qui e non in una voce di menù
          propria perché è un'operazione che si fa una volta: una riga nella barra a sinistra per
          sempre, per una cosa che serve il primo giorno, è la voce che poi nessuno sa perché c'è.
