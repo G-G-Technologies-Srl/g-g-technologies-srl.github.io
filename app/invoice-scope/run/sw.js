@@ -11,7 +11,7 @@
 //    a running app means changing the code while somebody is halfway through an invoice, and
 //    saving them one reload is not worth that — here least of all.
 
-const VERSION = '0.28.2';
+const VERSION = '0.28.3';
 const CACHE = `invoice-scope-v${VERSION}`;
 
 // Every file the app is made of. Kept by hand and checked by _src/check_apps.py against the
@@ -71,6 +71,7 @@ const ASSETS = [
   '../../_lib/store.js',
   '../../_lib/io.js',
   '../../_lib/zip.js',
+  '../../_lib/folder.js',
 ];
 
 self.addEventListener('install', (event) => {

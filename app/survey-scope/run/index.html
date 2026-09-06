@@ -160,6 +160,20 @@
     </div>
     <p class="small" id="savedNote"></p>
 
+    <!-- La cartella di backup: i risultati scritti da soli in una cartella scelta — di solito una
+         di Dropbox o iCloud, che poi viaggia da sé. Sta qui accanto a «Esporta» perché è la stessa
+         cosa fatta dall'app invece che da chi si ricorda. La meccanica è `gg/folder.js`. -->
+    <details class="saved-backup" id="backupSection">
+      <summary id="backupSummary"></summary>
+      <p class="small" id="backupNote"></p>
+      <div class="row">
+        <button type="button" id="backupPick" hidden></button>
+        <button type="button" id="backupResume" class="primary" hidden></button>
+        <button type="button" id="backupUnlink" hidden></button>
+      </div>
+      <p class="small" id="backupLine" aria-live="polite"></p>
+    </details>
+
     <!-- Sempre visibile. La prima versione la nascondeva sotto le sei righe, applicando la regola
          sbagliata: «un comando che non fa niente è rumore» vale per un filtro con una voce sola,
          mentre una ricerca su cinque righe qualcosa fa — ed è il mobile che ci si aspetta di

@@ -11,7 +11,7 @@
 //    running app means changing the code while somebody has unsaved keystrokes in a page, and
 //    saving them one reload is not worth that.
 
-const VERSION = '2.5.3';
+const VERSION = '2.6.2';
 const CACHE = `plan-scope-v${VERSION}`;
 
 // Every file the app is made of. Kept by hand and checked by _src/check_apps.py against the
@@ -66,6 +66,7 @@ const ASSETS = [
   '../../_lib/store.js',
   '../../_lib/io.js',
   '../../_lib/zip.js',
+  '../../_lib/folder.js',
 ];
 
 self.addEventListener('install', (event) => {

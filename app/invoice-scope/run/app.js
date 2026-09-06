@@ -890,11 +890,8 @@ async function main() {
   });
   // The backup folder wakes up after the screens are wired: its status line is one of them, and
   // it reports to it whenever a write lands or fails. Not in the demo — there is nothing to keep.
-  if (!isDemo()) {
-    await backup.setup(db, { status: () => { _drawBackup().then(_refresh); } });
-  } else {
-    await _drawBackup();
-  }
+  el("backupSection").hidden = isDemo();
+  if (!isDemo()) await backup.setup(db, { status: () => { _drawBackup().then(_refresh); } });
   el("exportCsv").addEventListener("click", async () => {
     const text = await csv(db);
     const url = URL.createObjectURL(new Blob([text], { type: "text/csv;charset=utf-8" }));

@@ -1,16 +1,20 @@
 // Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
 
-// The backup folder, the half that decides which files exist.
+// The backup folder, the half that decides which files exist — `writeSnapshot` in `gg/folder.js`,
+// tested from here because this is the app that put it in the library.
 //
 // A `FileSystemDirectoryHandle` is a browser object, so the folder here is a fake with the three
-// methods `writeInto` uses — `getFileHandle`, `removeEntry`, `keys` — over a Map. What is tested is
-// the policy: the latest file is always rewritten, today's dated copy is made once, older copies
-// beyond the limit go and nothing else in the folder is touched.
+// methods `writeSnapshot` uses — `getFileHandle`, `removeEntry`, `keys` — over a Map. What is
+// tested is the policy: the latest file is always rewritten, today's dated copy is made once,
+// older copies beyond the limit go and nothing else in the folder is touched.
 //
 //     node --import ./app/invoice-scope/test/loader.mjs app/invoice-scope/test/backup.mjs
 
 import assert from "node:assert/strict";
-import { writeInto, LATEST, KEEP_DAYS } from "../run/backup.js";
+import { writeSnapshot, KEEP_DAYS } from "gg/folder.js";
+
+const LATEST = "invoice-scope.json";
+const writeInto = (dir, text, options) => writeSnapshot(dir, text, { prefix: "invoice-scope", ...options });
 
 let passed = 0;
 async function prova(nome, fn) {

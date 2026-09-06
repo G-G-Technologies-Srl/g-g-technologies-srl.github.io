@@ -25,7 +25,8 @@ import { digest, downloadJson, downloadCsv, TOOL_VERSION } from "./export.js";
 import * as theme from "gg/theme.js";
 import { setup as setupInstall } from "gg/install.js";
 import * as store from "gg/store.js";
-import { download, restore } from "gg/io.js";
+import { download, restore, collect } from "gg/io.js";
+import { hash, linkFolder, backupWriter } from "gg/folder.js";
 
 const el = (id) => document.getElementById(id);
 
@@ -41,17 +42,23 @@ const DB = "survey-scope";
 // scrivere, e non è fortuna: l'app non era ancora pubblicata, quindi non esisteva un deposito al
 // mondo con dentro dei dati. È la stessa finestra del campo `questionnaire` e della rinomina, e si
 // chiude tutta insieme il giorno del primo push.
-const DB_VERSION = 2;
+// **Da 2 a 3 il 6 settembre**, per `meta`: lo stato di questo browser — la cartella di backup e
+// l'impronta dell'ultima copia — che non è un dato e non entra nell'export. Aggiungere uno store è
+// l'unico caso in cui la versione sale senza migrazione: i due esistenti restano come sono.
+const DB_VERSION = 3;
 const RESULTS = "results";
 const PACKS = "packs";
+const META = "meta";
 const STORES = {
   [RESULTS]: { keyPath: "id", indexes: { updated: "updated" } },
   // La chiave del questionario è la chiave del record: due pacchi con la stessa chiave sono lo
   // stesso questionario, e il secondo sostituisce il primo — che è come si aggiorna una revisione.
   [PACKS]: { keyPath: "key" },
+  [META]: { keyPath: "key" },
 };
 
 let db = null;
+let backup = null;                      // the backup folder's writer, once the database is open
 let fingerprint = "";
 let screen = "start";
 let phase = "core";                     // "core" | "deep"
@@ -184,6 +191,7 @@ function _rescore() {
 }
 
 async function _remember() {
+  if (backup) backup.touch();
   if (!run) return;
   run.updated = new Date().toISOString();
   await store.put(db, RESULTS, run);
@@ -300,6 +308,50 @@ async function _openQuestionnaire(key) {
  * Restituiscono una promessa perché `confirm` era sincrono e questo non lo è: ogni punto che
  * chiedeva conferma adesso attende. È la sola cosa che il cambio costa, e la si paga una volta.
  */
+/**
+ * The backup folder: the saved results written by themselves into a folder the person chose —
+ * the same file as «Esporta», with one dated copy a day. The mechanics are `gg/folder.js`,
+ * shared with Invoice Scope; what is here is which records, under which name, in which store.
+ * Results only, as the export: a loaded questionnaire is a file that can be loaded again.
+ */
+async function _setupBackup() {
+  if (!db) return;
+  const load = async (key) => {
+    const record = await store.get(db, META, key);
+    return record ? record.value : null;
+  };
+  const save = (key, value) => store.put(db, META, { key, value });
+  backup = backupWriter({
+    folder: linkFolder({ id: "survey-scope-backup", load, save, key: "backupFolder" }),
+    snapshot: async () => {
+      const payload = await collect(db, { app: "survey-scope", schema: DB_VERSION, stores: [RESULTS] });
+      return { text: JSON.stringify(payload, null, 2), fingerprint: hash(JSON.stringify(payload.data)) };
+    },
+    prefix: "survey-scope",
+    load,
+    save,
+    onStatus: () => { _drawBackup(); },
+  });
+  await backup.setup();
+}
+
+/** The backup folder's line in the saved-results dialog, and which of its buttons apply. */
+async function _drawBackup() {
+  const stato = backup ? await backup.status() : { kind: "unavailable" };
+  el("backupPick").hidden = stato.kind !== "none";
+  el("backupResume").hidden = stato.kind !== "prompt";
+  el("backupUnlink").hidden = stato.kind === "none" || stato.kind === "unavailable";
+  const line = el("backupLine");
+  if (stato.kind === "unavailable") line.textContent = t("backupUnavailable");
+  else if (stato.kind === "none") line.textContent = t("backupNone");
+  else if (stato.kind === "prompt") line.textContent = tf("backupPrompt", { folder: stato.folder });
+  else if (stato.error) line.textContent = tf("backupError", { folder: stato.folder, error: stato.error });
+  else if (stato.lastWrite) {
+    const when = new Date(stato.lastWrite);
+    line.textContent = tf("backupLinked", { folder: stato.folder, when: when.toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" }) });
+  } else line.textContent = tf("backupNever", { folder: stato.folder });
+}
+
 function _ask(message, { cancel = true } = {}) {
   const dialog = el("askDialog");
   el("askText").textContent = message;
@@ -407,6 +459,12 @@ function _applyText() {
   el("packRemove").textContent = t("packRemove");
   el("savedClear").textContent = t("savedClear");
   el("savedClose").textContent = t("savedClose");
+  el("backupSummary").textContent = t("backupTitle");
+  el("backupNote").textContent = t("backupNote");
+  el("backupPick").textContent = t("backupPick");
+  el("backupResume").textContent = t("backupResume");
+  el("backupUnlink").textContent = t("backupUnlink");
+  _drawBackup();
 
   el("goHome").textContent = t("goHome");
 
@@ -1617,6 +1675,18 @@ function _wire() {
   });
 
   el("savedClose").addEventListener("click", () => el("savedDialog").close());
+  el("backupPick").addEventListener("click", async () => {
+    if (backup && await backup.link()) await _drawBackup();
+  });
+  el("backupResume").addEventListener("click", async () => {
+    if (backup) await backup.resume();
+    await _drawBackup();
+  });
+  el("backupUnlink").addEventListener("click", async () => {
+    if (!await _ask(t("backupUnlinkAsk"))) return;
+    if (backup) await backup.unlink();
+    await _drawBackup();
+  });
 
   // L'aiuto si apre da qualunque schermata, anche a metà questionario: chi organizza la rilevazione
   // spesso la prova compilandola, e la domanda «come lo mando agli altri?» arriva lì, non prima.
@@ -1780,6 +1850,7 @@ async function _boot() {
   db = await store.open(DB, DB_VERSION, STORES);
   if (db) store.persist();
   await _adoptPacks();
+  await _setupBackup();
 
   try {
     let scelto = null;

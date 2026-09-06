@@ -161,7 +161,9 @@ async function _paintFolder(error = null) {
     return;
   }
   el("folderText").textContent = state.lastPull
-    ? tf("folderLinked", { folder: state.folder, who: state.who, time: state.lastPull.slice(11, 16) })
+    // Local time, as «scritto alle» beside it: sliced from the ISO string it was UTC, and the two
+    // lines disagreed by the whole time zone.
+    ? tf("folderLinked", { folder: state.folder, who: state.who, time: new Date(state.lastPull).toTimeString().slice(0, 5) })
     : tf("folderNever", { folder: state.folder, who: state.who });
 }
 

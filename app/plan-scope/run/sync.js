@@ -30,11 +30,14 @@
 // survives in IndexedDB between sessions; the permission does not always, and then the archive
 // shows a button to take it up again. Everything the browser cannot do is reported, not hidden.
 // Two tabs of the same browser take turns through a Web Lock, and read the marks afresh each
-// time, so that a folder is adopted once and not twice.
+// time, so that a folder is adopted once and not twice. Handle, permission and lock are
+// `gg/folder.js`, shared with the apps that write a plain backup there; the reading and the
+// merging above them are this file's, and nobody else's.
 
 import * as model from "./model.js";
 import * as db from "./db.js";
 import * as vault from "./vault.js";
+import { available as folderAvailable, hash as _hash, withLock, linkFolder } from "gg/folder.js";
 import { t, tf } from "./i18n.js";
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -52,7 +55,14 @@ const LOCK_NAME = "plan-scope-sync";
 // -----------------------------------------------------------------------------------------------------------------
 
 let on = { pulled() {}, status() {}, unshared() {}, snapshot: async () => undefined, columns: () => undefined };
-let root = null;                        // the FileSystemDirectoryHandle, once granted
+// The folder, through the library: `folder.handle` is the `FileSystemDirectoryHandle` once granted.
+// `db.meta` is read lazily because the fake database of the tests is swapped in per world.
+const folder = linkFolder({
+  id: "plan-scope",
+  key: HANDLE_KEY,
+  load: (key) => db.meta(key, null),
+  save: (key, value) => db.setMeta(key, value),
+});
 // marks[uid] = { folder, pushed, exported, readAt, seen, tooNew }:
 //   folder   the sub-folder's name
 //   pushed   fingerprint of this browser's records when they last matched the file; null forces a write
@@ -83,17 +93,8 @@ async function _loadState() {
 }
 
 /** Take turns: one tab reads or writes the folder at a time. Without locks, just run. */
-async function _withLock(fn) {
-  if (typeof navigator !== "undefined" && navigator.locks && navigator.locks.request) {
-    return navigator.locks.request(LOCK_NAME, fn);
-  }
-  return fn();
-}
-
-function _hash(text) {
-  let hash = 5381;
-  for (let i = 0; i < text.length; i += 1) hash = ((hash * 33) ^ text.charCodeAt(i)) >>> 0;
-  return `${hash.toString(16)}:${text.length}`;
+function _withLock(fn) {
+  return withLock(LOCK_NAME, fn);
 }
 
 /**
@@ -120,7 +121,7 @@ function _localByUid(uid) {
 /** Every immediate sub-folder that holds a project.json, as `{ name, handle }`. */
 async function _projectFolders() {
   const out = [];
-  for await (const [name, handle] of root.entries()) {
+  for await (const [name, handle] of folder.handle.entries()) {
     if (handle.kind !== "directory") continue;
     try {
       await handle.getFileHandle(vault.PROJECT_FILE);
@@ -235,7 +236,7 @@ function _quietly(fn) {
 /** One project into its folder, if it is shared and changed since the last write. */
 async function _push(projectId) {
   const project = model.project(projectId);
-  if (!project || !project.shared || !root) return;
+  if (!project || !project.shared || !folder.handle) return;
   const uid = project.uid || project.id;
   const mark = state.marks[uid] || {};
   if (mark.tooNew) return;
@@ -247,7 +248,7 @@ async function _push(projectId) {
     // A folder this browser wrote before and finds gone was removed on purpose, by somebody:
     // writing it again would undo that. The project stays, and stops being shared.
     try {
-      dir = await root.getDirectoryHandle(mark.folder);
+      dir = await folder.handle.getDirectoryHandle(mark.folder);
     } catch (ignored) {
       delete state.marks[uid];
       await _saveState();
@@ -256,7 +257,7 @@ async function _push(projectId) {
       return;
     }
   } else {
-    dir = await root.getDirectoryHandle(vault.folderName(project), { create: true });
+    dir = await folder.handle.getDirectoryHandle(vault.folderName(project), { create: true });
   }
   const now = new Date();
   const files = vault.write({ ...payload, assets: await _assetsOf(projectId) },
@@ -384,7 +385,7 @@ async function _storeAssets(payload, projectId) {
  * but it is a reason not to write over it.
  */
 async function _pullAll() {
-  if (!root) return false;
+  if (!folder.handle) return false;
   let ok = true;
   try {
     await _loadState();
@@ -453,12 +454,8 @@ function _schedulePush(delay = PUSH_DELAY_MS) {
   pushTimer = _loose(setTimeout(() => { _round(); }, delay));
 }
 
-async function _permission(ask = false) {
-  if (!root) return "none";
-  const options = { mode: "readwrite" };
-  let outcome = await root.queryPermission(options);
-  if (outcome === "prompt" && ask) outcome = await root.requestPermission(options);
-  return outcome;
+function _permission(ask = false) {
+  return folder.permission(ask);
 }
 
 /** Read the folder when the app comes back in front, and once a minute while it is. */
@@ -482,7 +479,7 @@ function _markAllShared() {
 
 /** Whether this browser can hand out a folder at all: Chromium on a desktop, today. */
 export function available() {
-  return typeof window !== "undefined" && "showDirectoryPicker" in window;
+  return folderAvailable();
 }
 
 /**
@@ -495,8 +492,7 @@ export async function setup(handlers) {
   if (!available()) return;
   try {
     await _loadState();
-    root = (await db.meta(HANDLE_KEY, null)) || null;
-    if (root && (await _permission()) === "granted") {
+    if ((await folder.restore()) === "granted") {
       _markAllShared();
       await _round();
       _watch();
@@ -510,17 +506,9 @@ export async function setup(handlers) {
 
 /** «Scegli la cartella»: the picker, the permission, the first read. Needs a user gesture. */
 export async function link(who) {
-  if (!available()) return false;
-  let handle = null;
-  try {
-    handle = await window.showDirectoryPicker({ mode: "readwrite", id: "plan-scope" });
-  } catch (ignored) {
-    return false;                       // the person closed the picker
-  }
-  root = handle;
+  if (!(await folder.link())) return false;   // no picker here, or the person closed it
   // A new folder knows nothing of the old one's marks: everything shared is written afresh.
   state = { who: String(who || "").trim(), marks: {} };
-  await db.setMeta(HANDLE_KEY, handle);
   await _saveState();
   _markAllShared();
   await _round();
@@ -541,17 +529,16 @@ export async function resume() {
 
 /** «Scollega la cartella»: forget the handle; the files on disk stay where they are. */
 export async function unlink() {
-  root = null;
   clearInterval(pullTimer);
   clearTimeout(pushTimer);
-  await db.setMeta(HANDLE_KEY, null);
+  await folder.unlink();
   on.status();
 }
 
 /** What the archive shows: the folder's name, who we are, when it was last read. */
 export async function status() {
   if (!available()) return { kind: "unavailable" };
-  const handle = root;                  // «Scollega» can land while the permission is being asked
+  const handle = folder.handle;         // «Scollega» can land while the permission is being asked
   if (!handle) return { kind: "none", who: state.who };
   const permission = await _permission();
   return { kind: permission === "granted" ? "linked" : "prompt", folder: handle.name, who: state.who, lastPull };
@@ -568,7 +555,7 @@ export async function setWho(name) {
 
 /** A record of this project changed by the person: it will be written, once typing settles. */
 export function changed(projectId) {
-  if (!root || !projectId || muted) return;
+  if (!folder.handle || !projectId || muted) return;
   const project = model.project(projectId);
   if (!project || !project.shared) return;
   dirty.add(projectId);
@@ -592,16 +579,16 @@ export function share(projectId) {
  */
 export function projectStatus(projectId) {
   const project = model.project(projectId);
-  if (!root || !project) return { kind: "none" };
+  if (!folder.handle || !project) return { kind: "none" };
   const mark = state.marks[project.uid || project.id] || {};
-  if (!project.shared) return { kind: "off", folder: root.name };
-  if (dirty.has(projectId) || !mark.wrote) return { kind: mark.wrote ? "writing" : "soon", folder: root.name, sub: mark.folder || vault.folderName(project) };
-  return { kind: "on", folder: root.name, sub: mark.folder, wrote: mark.wrote };
+  if (!project.shared) return { kind: "off", folder: folder.handle.name };
+  if (dirty.has(projectId) || !mark.wrote) return { kind: mark.wrote ? "writing" : "soon", folder: folder.handle.name, sub: mark.folder || vault.folderName(project) };
+  return { kind: "on", folder: folder.handle.name, sub: mark.folder, wrote: mark.wrote };
 }
 
 /** The name of the sub-folder this browser wrote a project into, or null when it never did. */
 export function folderOf(project) {
-  if (!root || !project) return null;
+  if (!folder.handle || !project) return null;
   const mark = state.marks[project.uid || project.id];
   return mark && mark.folder ? mark.folder : null;
 }
@@ -613,10 +600,10 @@ export function folderOf(project) {
  */
 export async function removeFolder(projectId) {
   const project = model.project(projectId);
-  const folder = folderOf(project);
-  if (!folder) return false;
+  const sub = folderOf(project);
+  if (!sub) return false;
   await _withLock(async () => {
-    await root.removeEntry(folder, { recursive: true });
+    await folder.handle.removeEntry(sub, { recursive: true });
     delete state.marks[project.uid || project.id];
     dirty.delete(projectId);
     await _saveState();

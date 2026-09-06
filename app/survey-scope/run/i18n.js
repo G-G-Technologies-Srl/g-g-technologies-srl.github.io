@@ -64,6 +64,24 @@ const IT = {
   savedExport: "Esporta",
   savedClear: "Svuota",
   savedClearAsk: "Cancello i risultati salvati? Non si può annullare.",
+  backupTitle: "Copia automatica in una cartella",
+  backupNote: "Scegli una cartella e l'app ci scrive da sola i risultati a ogni modifica — lo "
+    + "stesso file di «Esporta» — più una copia al giorno degli ultimi trenta giorni. Dentro "
+    + "Dropbox o iCloud, la copia arriva da sé sugli altri tuoi computer.",
+  backupPick: "Scegli la cartella…",
+  backupResume: "Riprendi la cartella",
+  backupUnlink: "Scollega la cartella",
+  backupUnlinkAsk: "L'app smette di scrivere nella cartella. I file che ci sono restano dove "
+    + "sono. Vado avanti?",
+  backupUnavailable: "Questo browser non sa aprire una cartella: funziona con Chrome o Edge sul "
+    + "computer. Qui resta «Esporta».",
+  backupNone: "Nessuna cartella collegata.",
+  backupPrompt: "La cartella «{folder}» aspetta il tuo permesso: il browser lo chiede di nuovo a "
+    + "ogni apertura.",
+  backupLinked: "Cartella «{folder}» · ultima copia {when}.",
+  backupNever: "Cartella «{folder}» · nessuna copia ancora.",
+  backupError: "Non riesco a scrivere nella cartella «{folder}» ({error}). Controlla che esista "
+    + "ancora, o scegline un'altra.",
   savedImportedOne: "Importato un risultato.",
   savedImportedMany: "Importati {n} risultati.",
   // Lo stato di avanzamento sta **nella riga**, non in un pulsante che ne offriva una sola. Se le
@@ -381,6 +399,24 @@ const EN = {
   savedExport: "Export",
   savedClear: "Clear",
   savedClearAsk: "Delete the saved results? This cannot be undone.",
+  backupTitle: "Automatic copy in a folder",
+  backupNote: "Choose a folder and the app writes the results there by itself at every change — "
+    + "the same file as «Export» — plus one copy a day for the last thirty days. Inside Dropbox "
+    + "or iCloud, the copy reaches your other computers on its own.",
+  backupPick: "Choose the folder…",
+  backupResume: "Resume the folder",
+  backupUnlink: "Unlink the folder",
+  backupUnlinkAsk: "The app stops writing into the folder. The files already there stay where "
+    + "they are. Go on?",
+  backupUnavailable: "This browser cannot open a folder: it works with Chrome or Edge on a "
+    + "computer. Here, «Export» remains.",
+  backupNone: "No folder linked.",
+  backupPrompt: "The folder «{folder}» is waiting for your permission: the browser asks for it "
+    + "again at every opening.",
+  backupLinked: "Folder «{folder}» · last copy {when}.",
+  backupNever: "Folder «{folder}» · no copy yet.",
+  backupError: "Cannot write into the folder «{folder}» ({error}). Check that it still exists, "
+    + "or choose another one.",
   savedImportedOne: "Imported one result.",
   savedImportedMany: "Imported {n} results.",
   savedProgress: "{n} of {total} · {section}",

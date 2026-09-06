@@ -1143,3 +1143,8 @@ button.review-row:hover { border-color: var(--border-strong); background: rgba(1
 }
 
 #helpTitle:focus { outline: none; }
+
+/* ----- la cartella di backup, nel dialogo dei risultati salvati ----- */
+.saved-backup { margin: 14px 0 4px; border: 1px solid var(--border); border-radius: 10px; padding: 8px 14px; }
+.saved-backup summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+.saved-backup .row { margin: 10px 0; }
