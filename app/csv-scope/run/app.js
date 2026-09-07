@@ -1034,7 +1034,8 @@ function _start() {
   _scrubPointer();
   _keyboardZoom();
   setupInstall(el("install"), el("installHint"),
-    { storageKey: "gg.csv-scope.install-dismissed", iosText: t("installIos") });
+    { storageKey: "gg.csv-scope.install-dismissed", iosText: t("installIos"),
+      removal: (kind) => t(kind === "ios" ? "removalIos" : kind === "android" ? "removalAndroid" : kind === "label" ? "removalLabel" : "removalDesktop"), });
 
   if (new URLSearchParams(location.search).has("demo")) _demo();
 

@@ -483,7 +483,8 @@ async function main() {
 
   input.setup(document.body, _command);
   setupInstall(el("install"), el("installHint"),
-    { storageKey: "gg.astrodroid.install-dismissed", iosText: t("installIos") });
+    { storageKey: "gg.astrodroid.install-dismissed", iosText: t("installIos"),
+      removal: (kind) => t(kind === "ios" ? "removalIos" : kind === "android" ? "removalAndroid" : kind === "label" ? "removalLabel" : "removalDesktop"), });
 
   // A game left running in a background tab is a game being lost while nobody watches.
   document.addEventListener("visibilitychange", () => {

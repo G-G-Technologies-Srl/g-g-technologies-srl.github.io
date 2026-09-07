@@ -109,6 +109,16 @@ const IT = {
   themeToLight: "Passa al tema chiaro",
   themeToDark: "Passa al tema scuro",
   langSwitch: "Switch to English",
+  removalLabel: "Installata",
+  removalDesktop: "Per toglierla: apri il menù ⋮ in alto a destra nella finestra dell'app e scegli "
+    + "«Disinstalla». I dati restano nel browser: se non ti servono più, esportali prima e poi "
+    + "cancella i dati del sito da Impostazioni del browser.",
+  removalAndroid: "Per toglierla: tieni premuta l'icona nella schermata Home e scegli «Disinstalla» "
+    + "o trascinala sul cestino. I dati restano nel browser: se non ti servono più, esportali "
+    + "prima e poi cancella i dati del sito.",
+  removalIos: "Per toglierla: tieni premuta l'icona nella schermata Home, poi «Rimuovi app». I "
+    + "dati restano in Safari: se non ti servono più, esportali prima e poi cancella i dati del "
+    + "sito da Impostazioni.",
   versionLabel: "v{version}",
   versionNext: "v{current} → {next}",
   versionNextUnknown: "v{current} → nuova",
@@ -221,6 +231,16 @@ const EN = {
   themeToLight: "Switch to the light theme",
   themeToDark: "Switch to the dark theme",
   langSwitch: "Passa all'italiano",
+  removalLabel: "Installed",
+  removalDesktop: "To remove it: open the ⋮ menu at the top right of the app's window and choose "
+    + "«Uninstall». The data stays in the browser: if you no longer need it, export it first and "
+    + "then clear the site's data from the browser's settings.",
+  removalAndroid: "To remove it: press and hold the icon on the Home screen and choose «Uninstall», "
+    + "or drag it to the bin. The data stays in the browser: if you no longer need it, export it "
+    + "first and then clear the site's data.",
+  removalIos: "To remove it: press and hold the icon on the Home screen, then «Remove App». The "
+    + "data stays in Safari: if you no longer need it, export it first and then clear the site's "
+    + "data from Settings.",
   versionLabel: "v{version}",
   versionNext: "v{current} → {next}",
   versionNextUnknown: "v{current} → new",

@@ -55,7 +55,8 @@ function browser({ stored = null, alreadyFired = null, installed = false, ios = 
   asNavigator(ios
     ? { userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0)", maxTouchPoints: 5 }
     : { userAgent: "Mozilla/5.0 (X11; Linux x86_64) Chrome/140", maxTouchPoints: 0 });
-  const button = { hidden: true, handlers: [], addEventListener(n, fn) { this.handlers.push(fn); },
+  const button = { hidden: true, textContent: "", title: "", handlers: [],
+                   addEventListener(n, fn) { this.handlers.push(fn); },
                    click() { return Promise.all(this.handlers.map((fn) => fn())); } };
   const hint = { hidden: true, textContent: "", addEventListener() {} };
   return { button, hint, store };
@@ -73,7 +74,10 @@ function prompt(outcome = "accepted") {
 }
 
 const { setup } = await import("gg/install.js");
-const wire = (b) => setup(b.button, b.hint, { storageKey: KEY, iosText: "Condividi…" });
+const removal = (kind) => ({ label: "Installata", desktop: "menù ⋮ · Disinstalla — i dati restano",
+                             android: "tieni premuta l'icona — i dati restano",
+                             ios: "tieni premuta l'icona, Rimuovi app — i dati restano" }[kind]);
+const wire = (b) => setup(b.button, b.hint, { storageKey: KEY, iosText: "Condividi…", removal });
 
 // -----------------------------------------------------------------------------------------------------------------
 //  l e   p r o v e
@@ -130,9 +134,33 @@ await prova("il vecchio segno «1» lascia passare l'invito una volta, e poi spa
   assert.equal(b.store.get(KEY), undefined, "il valore che non dice niente viene tolto");
 });
 
-await prova("con l'app in esecuzione installata non si offre niente", async () => {
+await prova("dentro l'app installata il pulsante dice «Installata» e spiega come toglierla", async () => {
+  // Nessuna API disinstalla una PWA — una pagina che potesse farlo potrebbe farlo contro di te —
+  // quindi la sola cosa onesta è dire dov'è il comando, e che i dati restano.
   const b = browser({ installed: true, alreadyFired: prompt() });
   wire(b);
+  assert.equal(b.button.hidden, false);
+  assert.equal(b.button.textContent, "Installata");
+  assert.equal(b.hint.hidden, true, "finché non lo chiedi");
+  await b.button.click();
+  assert.equal(b.hint.hidden, false);
+  assert.match(b.hint.textContent, /Disinstalla/);
+  assert.match(b.hint.textContent, /i dati restano/, "la cosa che nessuno dice");
+  await b.button.click();
+  assert.equal(b.hint.hidden, true, "premuto di nuovo, si richiude");
+  assert.equal(b.store.get(KEY), undefined, "e niente viene marcato");
+});
+
+await prova("su un telefono le istruzioni sono quelle del telefono", async () => {
+  const b = browser({ installed: true, ios: true });
+  wire(b);
+  await b.button.click();
+  assert.match(b.hint.textContent, /Rimuovi app/);
+});
+
+await prova("un'app che non passa le istruzioni non mostra niente", async () => {
+  const b = browser({ installed: true });
+  setup(b.button, b.hint, { storageKey: KEY, iosText: "Condividi…" });
   assert.equal(b.button.hidden, true);
 });
 

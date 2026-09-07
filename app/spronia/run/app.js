@@ -821,6 +821,7 @@ async function main() {
   setupInstall(el("install"), el("installHint"), {
     storageKey: "gg.spronia.install-dismissed",
     iosText: t("installIos"),
+    removal: (kind) => t(kind === "ios" ? "removalIos" : kind === "android" ? "removalAndroid" : kind === "label" ? "removalLabel" : "removalDesktop"),
   });
 
   _toAttract();

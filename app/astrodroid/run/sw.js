@@ -11,7 +11,7 @@
 //    when the person presses «Aggiorna» on the line gg/update.js shows. Swapping files under
 //    a running app means changing the code while somebody is halfway through a game.
 
-const VERSION = '0.3.5';
+const VERSION = '0.3.6';
 const CACHE = `astrodroid-v${VERSION}`;
 
 // Every file the app is made of, plus the shared modules it borrows. Kept by hand and checked by

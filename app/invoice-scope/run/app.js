@@ -810,6 +810,7 @@ async function main() {
     setupInstall(el("install"), el("installHint"), {
       storageKey: "gg.invoice-scope.install-dismissed",
       iosText: t("installIos"),
+      removal: (kind) => t(kind === "ios" ? "removalIos" : kind === "android" ? "removalAndroid" : kind === "label" ? "removalLabel" : "removalDesktop"),
     });
   }
 

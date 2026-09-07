@@ -1,8 +1,19 @@
 // Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
 
-// The install invitation. Two paths, because Safari does not send `beforeinstallprompt` and on
-// iPhone and iPad installing goes through Share, then "Add to Home Screen" — so there the button
-// is replaced by a line of instructions.
+// The install invitation, and — inside the installed app — the way back out.
+//
+// Two paths to get in, because Safari does not send `beforeinstallprompt` and on iPhone and iPad
+// installing goes through Share, then "Add to Home Screen" — so there the button is replaced by a
+// line of instructions.
+//
+// **There is no way out in code, and that is the web working as intended.** No API removes an
+// installed app: a page that could uninstall itself could uninstall itself against you. So when
+// the app is running installed the same button turns into «Installata», and pressing it opens the
+// same one-line hint the iPhone instructions use — where the command is on the system in use, and
+// the thing nobody says: removing the app does not delete the data, and deleting the data does not
+// remove the app. `removal(kind)` gives the sentences, with `kind` one of «label», «desktop»,
+// «android», «ios»; an app that passes no `removal` simply shows no button, which is what the two
+// games do.
 //
 // Moving here cost this file its two ties to the app that hosted it: the preference key was
 // written out as `gg.csv-scope.install-dismissed`, and the iOS wording came from that app's
@@ -51,6 +62,14 @@ function _installed(key) {
   } catch (ignored) { /* nothing to do */ }
 }
 
+/** Which system's instructions apply: what the person needs is a menu path, not a browser name. */
+function _system() {
+  const ua = navigator.userAgent || "";
+  if (_isIos()) return "ios";
+  if (/Android/.test(ua)) return "android";
+  return "desktop";
+}
+
 function _isIos() {
   const ua = navigator.userAgent;
   // iPadOS reports itself as a Mac, so the touch points are what tells the two apart.
@@ -78,8 +97,21 @@ function _isInstalled() {
  * An install prompt that reappears at every start is the reason people uninstall, and nothing here
  * is worth that.
  */
-export function setup(button, hint, { storageKey, iosText }) {
-  if (_isInstalled() || _dismissed(storageKey)) return;
+export function setup(button, hint, { storageKey, iosText, removal = null }) {
+  // Running installed: nothing to offer, and one thing to answer — «e come la tolgo?».
+  if (_isInstalled()) {
+    if (!removal) return;
+    button.textContent = removal("label");
+    button.title = removal("label");
+    button.hidden = false;
+    button.addEventListener("click", () => {
+      if (!hint.hidden) { hint.hidden = true; return; }        // pressed again: put it away
+      hint.textContent = removal(_system());
+      hint.hidden = false;
+    });
+    return;
+  }
+  if (_dismissed(storageKey)) return;
 
   if (_isIos()) {
     hint.textContent = iosText;

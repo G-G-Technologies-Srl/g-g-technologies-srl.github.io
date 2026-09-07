@@ -1610,6 +1610,7 @@ async function _boot() {
   setupInstall(el("install"), el("installHint"), {
     storageKey: "gg.plan-scope.install",
     iosText: t("installHint"),
+    removal: (kind) => t(kind === "ios" ? "removalIos" : kind === "android" ? "removalAndroid" : kind === "label" ? "removalLabel" : "removalDesktop"),
   });
 
   // The two key lists compared in the browser as well as before publishing. It costs nothing and
