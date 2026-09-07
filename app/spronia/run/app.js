@@ -23,6 +23,7 @@ import * as audio from "./audio.js";
 import { autopilot } from "./attract.js";
 import * as theme from "gg/theme.js";
 import { setup as setupInstall } from "gg/install.js";
+import * as update from "gg/update.js";
 import { download, restore } from "gg/io.js";
 
 const el = (id) => document.getElementById(id);
@@ -109,6 +110,7 @@ function _applyText() {
   el("theme").setAttribute("aria-label",
     theme.current() === "light" ? t("themeToDark") : t("themeToLight"));
   el("install").textContent = t("installButton");
+  el("updateNow").textContent = t("updateNow");
   el("full").setAttribute("aria-label",
     document.documentElement.dataset.full ? t("fullOff") : t("fullOn"));
   el("sound").setAttribute("aria-label", audio.isEnabled() ? t("soundOn") : t("soundOff"));
@@ -869,9 +871,13 @@ async function main() {
 }
 
 if ("serviceWorker" in navigator) {
-  // Registrato dopo il caricamento, così non compete con il primo disegno per la banda.
+  // Registrato dopo il caricamento, così non compete con il primo disegno per la banda. La
+  // libreria registra, controlla se c'è una versione nuova e mostra la riga in fondo quando c'è.
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch(() => { /* offline only */ });
+    update.setup({
+      bar: el("updateBar"), text: el("updateText"), button: el("updateNow"),
+      ready: (version) => (version ? t("updateReady").replace("{version}", version) : t("updateReadyUnknown")),
+    });
   });
 }
 

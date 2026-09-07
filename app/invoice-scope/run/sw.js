@@ -7,11 +7,12 @@
 //  - scope stays inside /app/invoice-scope/run/, so no page of the site is ever served from here;
 //  - the cache name carries the version, and everything else is deleted on activate;
 //  - sw.js never caches itself;
-//  - no skipWaiting and no clients.claim: an update lands at the next start. Swapping files under
+//  - no skipWaiting on its own and no clients.claim: an update lands at the next start, or
+//    when the person presses «Aggiorna» on the line gg/update.js shows. Swapping files under
 //    a running app means changing the code while somebody is halfway through an invoice, and
 //    saving them one reload is not worth that — here least of all.
 
-const VERSION = '0.28.3';
+const VERSION = '0.29.0';
 const CACHE = `invoice-scope-v${VERSION}`;
 
 // Every file the app is made of. Kept by hand and checked by _src/check_apps.py against the
@@ -68,6 +69,7 @@ const ASSETS = [
   '../../_lib/i18n.js',
   '../../_lib/theme.js',
   '../../_lib/install.js',
+  '../../_lib/update.js',
   '../../_lib/store.js',
   '../../_lib/io.js',
   '../../_lib/zip.js',
@@ -102,4 +104,12 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request, { ignoreSearch: false }).then((hit) => hit || fetch(event.request)),
   );
+});
+
+// The two messages `gg/update.js` sends: which version this worker is, and — from the person's
+// click on «Aggiorna», never on its own — the go-ahead to take over from the one before it.
+self.addEventListener('message', (event) => {
+  const type = event.data && event.data.type;
+  if (type === 'gg:version' && event.ports && event.ports[0]) event.ports[0].postMessage(VERSION);
+  if (type === 'gg:skip-waiting') self.skipWaiting();
 });

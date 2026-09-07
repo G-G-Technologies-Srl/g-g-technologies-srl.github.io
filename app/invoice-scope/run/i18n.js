@@ -183,6 +183,7 @@ const IT = {
   settingsFormat: "Tracciato",
   settingsFormatNote: "L'app scrive il formato FatturaPA nella versione qui sopra. Quando "
     + "l'Agenzia pubblica una versione nuova, l'app va aggiornata.",
+  settingsVersion: "Versione dell'app {version}.",
   settingsLimits: "Quello che l'app non fa",
   settingsLimitsNote: "Non trasmette il file, non fa la conservazione a norma e non firma "
     + "digitalmente. Il file lo prepari qui e lo mandi tu.",
@@ -306,6 +307,9 @@ const IT = {
   install: "Installa",
   backToPage: "Torna alla scheda",
   sourceLabel: "Codice sorgente",
+  updateReady: "È pronta la versione {version}.",
+  updateReadyUnknown: "È pronta una versione nuova.",
+  updateNow: "Aggiorna",
   installIos: "Per installarla: tocca Condividi, poi «Aggiungi alla schermata Home».",
 
   // ---- i campi, come li chiama chi compila
@@ -767,6 +771,7 @@ const EN = {
   settingsFormat: "Format",
   settingsFormatNote: "The app writes the FatturaPA format in the version above. When the revenue "
     + "publishes a new one, the app has to be updated.",
+  settingsVersion: "App version {version}.",
   settingsLimits: "What the app does not do",
   settingsLimitsNote: "It does not transmit the file, it does not keep the legal archive and it "
     + "does not sign digitally. You prepare the file here and send it yourself.",
@@ -889,6 +894,9 @@ const EN = {
   install: "Install",
   backToPage: "Back to the app page",
   sourceLabel: "Source code",
+  updateReady: "Version {version} is ready.",
+  updateReadyUnknown: "A new version is ready.",
+  updateNow: "Update",
   installIos: "To install it: tap Share, then “Add to Home Screen”.",
 
   f_azienda: "your company",

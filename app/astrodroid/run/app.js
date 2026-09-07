@@ -23,6 +23,7 @@ import { autopilot } from "./attract.js";
 import * as card from "./card.js";
 import * as theme from "gg/theme.js";
 import { setup as setupInstall } from "gg/install.js";
+import * as update from "gg/update.js";
 import { download, restore } from "gg/io.js";
 
 const el = (id) => document.getElementById(id);
@@ -72,6 +73,7 @@ function _applyText() {
   el("sound").setAttribute("aria-label", audio.isEnabled() ? t("soundOn") : t("soundOff"));
   el("sound").dataset.sound = audio.isEnabled() ? "on" : "off";
   el("install").textContent = t("installButton");
+  el("updateNow").textContent = t("updateNow");
   _paintHud();
   _paintScores();
 }
@@ -508,10 +510,12 @@ async function main() {
   requestAnimationFrame(_frame);
 
   if ("serviceWorker" in navigator) {
-    // Registered after load so it never competes with the first paint for bandwidth.
+    // Registered after load so it never competes with the first paint for bandwidth. The library
+    // registers, watches for a newer version and shows the line at the foot when one is waiting.
     window.addEventListener("load", () => {
-      navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch(() => {
-        // Offline is a convenience here, not a feature to fail over: the game works without it.
+      update.setup({
+        bar: el("updateBar"), text: el("updateText"), button: el("updateNow"),
+        ready: (version) => (version ? t("updateReady").replace("{version}", version) : t("updateReadyUnknown")),
       });
     });
   }

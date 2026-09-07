@@ -24,6 +24,7 @@ import { paint, relabel } from "./report.js";
 import { digest, downloadJson, downloadCsv, TOOL_VERSION } from "./export.js";
 import * as theme from "gg/theme.js";
 import { setup as setupInstall } from "gg/install.js";
+import * as update from "gg/update.js";
 import * as store from "gg/store.js";
 import { download, restore, collect } from "gg/io.js";
 import { hash, linkFolder, backupWriter } from "gg/folder.js";
@@ -422,6 +423,7 @@ function _applyText() {
   el("theme").setAttribute("aria-label",
     theme.current() === "light" ? t("themeToDark") : t("themeToLight"));
   el("install").textContent = t("installButton");
+  el("updateNow").textContent = t("updateNow");
   el("backLink").textContent = t("backToPage");
   el("sourceLink").textContent = t("sourceLabel");
   el("errorTitle").textContent = t("errorTitle");
@@ -1884,9 +1886,12 @@ async function _boot() {
   const missing = missingKeys();
   if (missing.length) console.warn("i18n:", missing.join(", "));
 
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js").catch(() => { /* offline is a bonus, never a need */ });
-  }
+  // The library registers the worker, watches for a newer version and shows the line at the foot
+  // when one is waiting; offline is a bonus, never a need, so a failure here is a `null`.
+  update.setup({
+    bar: el("updateBar"), text: el("updateText"), button: el("updateNow"),
+    ready: (version) => (version ? t("updateReady").replace("{version}", version) : t("updateReadyUnknown")),
+  });
 }
 
 _boot();

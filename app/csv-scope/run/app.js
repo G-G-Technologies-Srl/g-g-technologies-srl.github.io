@@ -11,6 +11,7 @@ import { channelSvg, overlayHtml, indexAt } from "./chart.js";
 import * as theme from "gg/theme.js";
 import { mount as mountTable } from "./table.js";
 import { setup as setupInstall } from "gg/install.js";
+import * as update from "gg/update.js";
 import * as history from "./history.js";
 import { download, restore } from "gg/io.js";
 
@@ -77,6 +78,7 @@ function _applyText() {
   el("lang").textContent = t("langSwitch");
   el("theme").setAttribute("aria-label", theme.current() === "light" ? t("themeToDark") : t("themeToLight"));
   el("install").textContent = t("installButton");
+  el("updateNow").textContent = t("updateNow");
   el("viewChart").textContent = t("viewChart");
   el("viewTable").textContent = t("viewTable");
   el("sample").textContent = t("dropSample");
@@ -1038,10 +1040,12 @@ function _start() {
   if (new URLSearchParams(location.search).has("demo")) _demo();
 
   if ("serviceWorker" in navigator) {
-    // Registered after load so it never competes with the first paint for bandwidth.
+    // Registered after load so it never competes with the first paint for bandwidth. The library
+    // registers, watches for a newer version and shows the line at the foot when one is waiting.
     window.addEventListener("load", () => {
-      navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch(() => {
-        // Offline is a convenience here, not a feature to fail over: the app works without it.
+      update.setup({
+        bar: el("updateBar"), text: el("updateText"), button: el("updateNow"),
+        ready: (version) => (version ? t("updateReady").replace("{version}", version) : t("updateReadyUnknown")),
       });
     });
   }

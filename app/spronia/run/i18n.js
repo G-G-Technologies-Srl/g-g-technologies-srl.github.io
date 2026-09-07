@@ -181,6 +181,9 @@ const IT = {
   themeToLight: "Passa al tema chiaro",
   themeToDark: "Passa al tema scuro",
   langSwitch: "Switch to English",
+  updateReady: "È pronta la versione {version}.",
+  updateReadyUnknown: "È pronta una versione nuova.",
+  updateNow: "Aggiorna",
   installButton: "Installala sul telefono",
   installIos: "Per averla sul telefono: Condividi, poi «Aggiungi a Home». Tocca qui per non "
     + "rivederlo.",
@@ -319,6 +322,9 @@ const EN = {
   themeToLight: "Switch to the light theme",
   themeToDark: "Switch to the dark theme",
   langSwitch: "Passa all'italiano",
+  updateReady: "Version {version} is ready.",
+  updateReadyUnknown: "A new version is ready.",
+  updateNow: "Update",
   installButton: "Put it on your phone",
   installIos: "To keep it on your phone: Share, then “Add to Home Screen”. Tap here to stop "
     + "seeing this.",

@@ -13,6 +13,7 @@
 // four files that each know about the header.
 
 import { setup as setupInstall } from "gg/install.js";
+import * as update from "gg/update.js";
 import { apply as applyTheme, initial as initialTheme, toggle as toggleTheme } from "gg/theme.js";
 import { download, restore } from "gg/io.js";
 import { get, put, persist } from "gg/store.js";
@@ -938,8 +939,14 @@ async function main() {
   // Il service worker resta fuori dal dimostrativo: metterebbe in cache una copia dell'app aperta
   // con dei dati che non sono di nessuno, e sotto l'orologio dello screenshot è una delle due cose
   // che non tornano indietro in tempo.
-  if ("serviceWorker" in navigator && !isDemo()) {
-    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  // The library registers the worker, watches for a newer version and shows the line at the foot
+  // when one is waiting. It also tells the settings screen which version is running.
+  if (!isDemo()) {
+    update.setup({
+      bar: el("updateBar"), text: el("updateText"), button: el("updateNow"),
+      ready: (version) => (version ? t("updateReady").replace("{version}", version) : t("updateReadyUnknown")),
+      onVersion: (version) => { el("appVersion").textContent = tf("settingsVersion", { version }); },
+    });
   }
 }
 

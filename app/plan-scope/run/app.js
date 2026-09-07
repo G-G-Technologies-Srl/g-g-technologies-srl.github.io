@@ -37,6 +37,7 @@ import * as sync from "./sync.js";
 import * as theme from "gg/theme.js";
 import * as io from "gg/io.js";
 import { setup as setupInstall } from "gg/install.js";
+import * as update from "gg/update.js";
 import { t, tf, num, otherLang, setLang, resolveLang, missingKeys } from "./i18n.js";
 import { el, node, fill, applyText, snack, hideSnack, longDate, ask } from "./ui.js";
 
@@ -1616,10 +1617,12 @@ async function _boot() {
   const missing = missingKeys();
   if (missing.length) console.warn("i18n:", missing.join(", "));
 
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js")
-      .catch(() => { /* offline is a bonus, never a need */ });
-  }
+  // The library registers the worker, watches for a newer version and shows the line at the foot
+  // when one is waiting; offline is a bonus, never a need, so a failure here is a `null`.
+  update.setup({
+    bar: el("updateBar"), text: el("updateText"), button: el("updateNow"),
+    ready: (version) => (version ? t("updateReady").replace("{version}", version) : t("updateReadyUnknown")),
+  });
 }
 
 function _storeOf(kind) {
