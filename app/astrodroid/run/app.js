@@ -539,24 +539,20 @@ async function main() {
   requestAnimationFrame(_frame);
 
   if ("serviceWorker" in navigator) {
-    // Registered after load so it never competes with the first paint for bandwidth. The library
-    // registers, watches for a newer version and shows the line at the foot when one is waiting.
-    window.addEventListener("load", () => {
-      update.setup({
-        badge: el("appVersion"),
-        texts: {
-          version: (v) => t("versionLabel").replace("{version}", v),
-          // Without a running version to name — a worker from before the channel — the line is «→ 0.30.0».
+    update.setup({
+      badge: el("appVersion"),
+      texts: {
+        version: (v) => t("versionLabel").replace("{version}", v),
+        // Without a running version to name — a worker from before the channel — the line is «→ 0.30.0».
 
-          next: (current, v) => (v ? t("versionNext") : t("versionNextUnknown")).replace("v{current}", current ? `v${current}` : "").replace("{next}", v || "").trim(),
+        next: (current, v) => (v ? t("versionNext") : t("versionNextUnknown")).replace("v{current}", current ? `v${current}` : "").replace("{next}", v || "").trim(),
 
-          update: (v) => (v ? t("versionUpdate").replace("{next}", v) : t("versionUpdateUnknown")),
+        update: (v) => (v ? t("versionUpdate").replace("{next}", v) : t("versionUpdateUnknown")),
 
-          reload: () => t("versionReload"),
+        reload: () => t("versionReload"),
 
-          upToDate: (v) => t("versionUpToDate").replace("{version}", v),
-        },
-      });
+        upToDate: (v) => t("versionUpToDate").replace("{version}", v),
+      },
     });
   }
 }

@@ -900,24 +900,20 @@ async function main() {
 }
 
 if ("serviceWorker" in navigator) {
-  // Registrato dopo il caricamento, così non compete con il primo disegno per la banda. La
-  // libreria registra, controlla se c'è una versione nuova e mostra la riga in fondo quando c'è.
-  window.addEventListener("load", () => {
-    update.setup({
-      badge: el("appVersion"),
-      texts: {
-        version: (v) => t("versionLabel").replace("{version}", v),
-        // Without a running version to name — a worker from before the channel — the line is «→ 0.30.0».
+  update.setup({
+    badge: el("appVersion"),
+    texts: {
+      version: (v) => t("versionLabel").replace("{version}", v),
+      // Without a running version to name — a worker from before the channel — the line is «→ 0.30.0».
 
-        next: (current, v) => (v ? t("versionNext") : t("versionNextUnknown")).replace("v{current}", current ? `v${current}` : "").replace("{next}", v || "").trim(),
+      next: (current, v) => (v ? t("versionNext") : t("versionNextUnknown")).replace("v{current}", current ? `v${current}` : "").replace("{next}", v || "").trim(),
 
-        update: (v) => (v ? t("versionUpdate").replace("{next}", v) : t("versionUpdateUnknown")),
+      update: (v) => (v ? t("versionUpdate").replace("{next}", v) : t("versionUpdateUnknown")),
 
-        reload: () => t("versionReload"),
+      reload: () => t("versionReload"),
 
-        upToDate: (v) => t("versionUpToDate").replace("{version}", v),
-      },
-    });
+      upToDate: (v) => t("versionUpToDate").replace("{version}", v),
+    },
   });
 }
 

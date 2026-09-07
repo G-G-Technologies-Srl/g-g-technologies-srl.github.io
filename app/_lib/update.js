@@ -94,6 +94,17 @@ function _versionOf(worker) {
 export async function setup({ badge, texts, onVersion = () => {}, script = "./sw.js" }) {
   if (!("serviceWorker" in navigator)) return null;
 
+  // **The wait for `load` belongs here, and it is not ceremony.** Three apps wrapped this call in
+  // a listener on `load` so that the registration would not compete with the first paint for
+  // bandwidth — and `main()` is asynchronous, so it arrived at the call *after* `load` had already
+  // fired: the listener never ran, and the app had no service worker at all. No offline, no
+  // version, no updates, and nothing said so. Found by opening AstroDroid on the site and finding
+  // an empty version line. Waiting here, on the state and not only on the event, is the fix that
+  // no app has to remember.
+  if (document.readyState !== "complete") {
+    await new Promise((resolve) => window.addEventListener("load", resolve, { once: true }));
+  }
+
   let registration = null;
   try {
     registration = await navigator.serviceWorker.register(script);

@@ -47,7 +47,7 @@ function worker(version, state = "installed") {
 }
 
 /** The page's side: navigator, window, document — the four things the module touches. */
-function browser({ waiting = null, active = null, controller = null, ready = null } = {}) {
+function browser({ waiting = null, active = null, controller = null, ready = null, complete = true } = {}) {
   // `navigator.serviceWorker.ready`: on a first visit the module waits for it instead of giving up.
   const readyPromise = ready ? Promise.resolve(ready) : new Promise(() => {});
   const listeners = {};
@@ -65,12 +65,17 @@ function browser({ waiting = null, active = null, controller = null, ready = nul
     },
   };
   const reloads = [];
-  const doc = { visibilityState: "visible", addEventListener() {} };
+  const doc = { visibilityState: "visible", readyState: complete ? "complete" : "loading", addEventListener() {} };
   Object.defineProperty(globalThis, "navigator", {
     configurable: true,
     value: { serviceWorker: { controller, ready: readyPromise, async register() { return registration; } } },
   });
-  globalThis.window = { location: { reload() { reloads.push(1); } } };
+  const windowListeners = {};
+  globalThis.window = {
+    location: { reload() { reloads.push(1); } },
+    addEventListener(name, fn) { (windowListeners[name] ||= []).push(fn); },
+    fire(name) { for (const fn of windowListeners[name] || []) fn(); },
+  };
   globalThis.document = doc;
   const badge = {
     hidden: true, textContent: "", title: "", attrs: {}, classes: new Set(), handlers: [],
@@ -204,6 +209,24 @@ await prova("alla prima visita nessuno risponde ancora: la versione arriva quand
   await tick();
   assert.equal(b.badge.hidden, false, "la versione compare da sola, senza ricaricare");
   assert.equal(b.badge.textContent, "v0.15.3");
+});
+
+
+await prova("la pagina non ha ancora finito di caricare: si aspetta «load», e poi si registra", async () => {
+  // Il difetto vero, trovato sul sito: tre app avvolgevano questa chiamata in un listener su
+  // `load` per non rubare banda al primo disegno, e `main()` è asincrona — ci arrivava quando
+  // `load` era già passato, il listener non partiva mai e l'app restava senza service worker.
+  // Niente offline, niente versione, niente aggiornamenti, e nessuno che lo dicesse.
+  const active = worker("0.3.7", "activated");
+  const b = browser({ active, controller: active, complete: false });
+  let registrata = false;
+  const finita = setup({ ...b, texts }).then(() => { registrata = true; });
+  await tick();
+  assert.equal(registrata, false, "finché la pagina carica, niente");
+  window.fire("load");
+  await finita;
+  await tick();
+  assert.equal(b.badge.textContent, "v0.3.7", "e appena carica, la versione c'è");
 });
 
 console.log(`update: ${passed} prove passate`);
