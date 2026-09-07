@@ -32,6 +32,7 @@ import { KINDS } from "./kinds.js";
 import { totals } from "./totals.js";
 import { from, cmp } from "./decimal.js";
 import { partyRecord, itemRecord } from "./parties.js";
+import { fiscalCode } from "./parse.js";
 import { t, tf } from "./i18n.js";
 import { date as shownDate, money } from "./format.js";
 import { ask, tell } from "./ask.js";
@@ -67,15 +68,23 @@ function _key(text) {
  * How an existing customer is recognised in an incoming one.
  *
  * The fiscal identifier first, because it is the thing that is meant to be unique, and the name only
- * when there is no identifier at all. Not the name first: two companies of the same group share a
+ * when there is no identifier to compare. Not the name first: two companies of the same group share a
  * name and differ by VAT number, and merging them would move invoices onto the wrong customer.
+ *
+ * **Both sides go through `fiscalCode` before the comparison.** The stored record has already been
+ * through it — `partyRecord` strips the country prefix, so a San Marino customer is kept as `29077`
+ * — while the sheet still says `SM29077`. Compared raw, the two never matched, and every San Marino
+ * customer came in again at every import: six duplicates out of seventeen, found by importing the
+ * same file twice. Two records that disagree on an identifier are different; a record with no
+ * identifier at all is matched by name, which is all there is.
  */
 function _sameParty(a, b) {
-  const iva = (p) => _key(p.partitaIva) || "";
-  const cf = (p) => _key(p.codiceFiscale) || "";
-  if (iva(a) && iva(a) === iva(b)) return true;
-  if (cf(a) && cf(a) === cf(b)) return true;
-  if (iva(a) || iva(b) || cf(a) || cf(b)) return false;
+  const iva = (p) => _key(fiscalCode(p.partitaIva, p.paese)) || "";
+  const cf = (p) => _key(fiscalCode(p.codiceFiscale, p.paese)) || "";
+  if (iva(a) && iva(b)) return iva(a) === iva(b);
+  if (cf(a) && cf(b)) return cf(a) === cf(b);
+  if (iva(a) && cf(b) && iva(a) === cf(b)) return true;     // a sole trader's number written in either column
+  if (cf(a) && iva(b) && cf(a) === iva(b)) return true;
   return _key(a.denominazione) === _key(b.denominazione) && !!_key(a.denominazione);
 }
 

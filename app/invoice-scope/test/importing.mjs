@@ -310,6 +310,46 @@ await prova("l'XML completa una ricostruzione già scritta, tiene gli incassi, e
   assert.equal(dopo[0].id, stub.id);
 });
 
+await prova("importare due volte non duplica niente: clienti (anche sammarinesi), listino, registro, XML, in ogni ordine", async () => {
+  // The bug that started this: the stored San Marino customer is kept as `29141`, the sheet says
+  // `SM29141`, and compared raw they never matched — six duplicates out of seventeen on the real
+  // file. So every source goes in twice, in every order, and the counts must not move.
+  const db = await openDatabase();
+  const contesto = async () => ({
+    parties: await list(db, "parties"), items: await list(db, "items"), docs: await list(db, "docs"),
+  });
+  const tutti = async () => [
+    file("c.xlsx", await xlsx(HEAD_CLIENTI, [CLIENTE_A, CLIENTE_B])),
+    file("l.xlsx", await xlsx(HEAD_LISTINO, [VOCE])),
+    file("r.xlsx", await xlsx(HEAD_REGISTRO, [registro(), registro({ 3: "13", 7: "Rossi Impianti S.r.l.", 14: "SM29141", 10: "RSM", 13: "San Marino" })])),
+    xml("f.xml", FATTURA),
+  ];
+  await apply(db, await plan(await tutti(), await contesto()));
+  const conta = async () => ({
+    clienti: (await list(db, "parties")).length, listino: (await list(db, "items")).length,
+    docs: (await list(db, "docs")).length, incassi: (await list(db, "payments")).length,
+  });
+  const prima = await conta();
+  assert.equal(prima.clienti, 2, "due clienti, di cui uno sammarinese");
+  assert.equal(prima.docs, 2, "la 12 completata dall'XML, la 13 dal registro");
+
+  for (const ordine of [(f) => f, (f) => f.reverse(), (f) => [f[3], f[2], f[0], f[1]]]) {
+    const piano = await plan(ordine(await tutti()), await contesto());
+    for (const fonte of piano.fonti) {
+      assert.equal(fonte.nuovi, 0, `${fonte.name}: niente di nuovo al secondo giro`);
+      assert.equal(fonte.completati || 0, 0, `${fonte.name}: niente da completare al secondo giro`);
+    }
+    await apply(db, piano);
+    assert.deepEqual(await conta(), prima, "i conteggi non si muovono");
+  }
+
+  // The same again, one source at a time: a person re-exports the customers alone, months later.
+  for (const uno of await tutti()) {
+    await apply(db, await plan([uno], await contesto()));
+    assert.deepEqual(await conta(), prima, `${uno.name} da solo`);
+  }
+});
+
 await prova("un documento importato porta i suoi totali", async () => {
   // Senza, l'importo non compare da nessuna parte: `issue()` è quello che di solito li calcola, e
   // l'importazione non ci passa — i documenti arrivano già numerati e già spediti. Trovato
