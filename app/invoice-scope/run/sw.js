@@ -12,7 +12,7 @@
 //    a running app means changing the code while somebody is halfway through an invoice, and
 //    saving them one reload is not worth that — here least of all.
 
-const VERSION = '0.29.4';
+const VERSION = '0.29.5';
 const CACHE = `invoice-scope-v${VERSION}`;
 
 // Every file the app is made of. Kept by hand and checked by _src/check_apps.py against the

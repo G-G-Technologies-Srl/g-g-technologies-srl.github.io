@@ -29,8 +29,15 @@
 //    reloaded: it keeps running the code it loaded, and its light turns to «aggiornata: ricarica»
 //    for a click of its own. No `clients.claim`: the hand-over is watched on the worker's state.
 //
-// Where there is no worker to ask — Safari in a private window, the demo — the version stays
-// hidden: writing it into the page would be a second copy of the number, and the one that drifts.
+// **On the very first visit there is nobody to ask yet**, and this was found on the site rather
+// than here: the worker is still installing when the page asks, so the answer is nothing and the
+// line stayed empty until the next reload. Now the question waits for `navigator.serviceWorker
+// .ready` — the promise the browser settles when a worker is finally in charge — so the version
+// appears on its own, a moment later, without a reload.
+//
+// Where there is no worker to ask at all — Safari in a private window, the demo — the version
+// stays hidden: writing it into the page would be a second copy of the number, and the one that
+// drifts.
 //
 // Every `sw.js` has to listen for the two messages, and the header of each says so. This module
 // holds no strings: the three sentences come from the app, in its language.
@@ -43,6 +50,7 @@ const CHECK_EVERY_MS = 60 * 60 * 1000;      // once an hour, while the app is in
 const CHECK_NOT_BEFORE_MS = 5 * 60 * 1000;  // and not on every glance back at the window
 const ANSWER_WITHIN_MS = 1500;              // a worker that does not answer is an older worker
 const CONFIRM_FOR_MS = 2500;                // «aggiornata» after a check that found nothing
+const FIRST_WORKER_WITHIN_MS = 20000;       // on a first visit, how long to wait for one to take charge
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
@@ -101,9 +109,18 @@ export async function setup({ badge, texts, onVersion = () => {}, script = "./sw
   let confirmTimer = null;
 
   // The running version, asked first: the badge at rest needs it, and the badge with a version
-  // waiting needs it too — «v0.29.0 → 0.30.0» — so the announcement waits for this answer.
-  const active = navigator.serviceWorker.controller || registration.active;
-  const currentKnown = _versionOf(active).then((version) => { current = version; return version; });
+  // waiting needs it too — «v0.29.0 → 0.30.0» — so the announcement waits for this answer. On the
+  // first visit nobody is in charge yet: `ready` is the promise for exactly that moment.
+  const currentKnown = (async () => {
+    const now = navigator.serviceWorker.controller || registration.active;
+    if (now) return (current = await _versionOf(now));
+    const ready = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise((resolve) => setTimeout(() => resolve(null), FIRST_WORKER_WITHIN_MS)),
+    ]);
+    const later = navigator.serviceWorker.controller || (ready && ready.active) || registration.active;
+    return (current = await _versionOf(later));
+  })();
 
   const reload = () => {
     if (reloading) return;

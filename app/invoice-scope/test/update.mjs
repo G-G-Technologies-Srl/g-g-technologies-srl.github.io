@@ -47,7 +47,9 @@ function worker(version, state = "installed") {
 }
 
 /** The page's side: navigator, window, document — the four things the module touches. */
-function browser({ waiting = null, active = null, controller = null } = {}) {
+function browser({ waiting = null, active = null, controller = null, ready = null } = {}) {
+  // `navigator.serviceWorker.ready`: on a first visit the module waits for it instead of giving up.
+  const readyPromise = ready ? Promise.resolve(ready) : new Promise(() => {});
   const listeners = {};
   const registration = {
     waiting, active, installing: null, updates: 0,
@@ -66,7 +68,7 @@ function browser({ waiting = null, active = null, controller = null } = {}) {
   const doc = { visibilityState: "visible", addEventListener() {} };
   Object.defineProperty(globalThis, "navigator", {
     configurable: true,
-    value: { serviceWorker: { controller, async register() { return registration; } } },
+    value: { serviceWorker: { controller, ready: readyPromise, async register() { return registration; } } },
   });
   globalThis.window = { location: { reload() { reloads.push(1); } } };
   globalThis.document = doc;
@@ -190,6 +192,18 @@ await prova("senza niente in attesa, il click sulla versione è «controlla ades
   await tick();
   assert.equal(b.badge.textContent, "v0.29.0 · aggiornata", "e lo dice, per un momento");
   assert.ok(!b.badge.classes.has("ready"));
+});
+
+
+await prova("alla prima visita nessuno risponde ancora: la versione arriva quando un worker prende il comando", async () => {
+  // Found on the site, not here: at the very first visit the worker is still installing, so the
+  // line stayed empty until the next reload. Now the question waits for `ready`.
+  const active = worker("0.15.3", "activated");
+  const b = browser({ ready: { active } });                 // no controller, no registration.active
+  await setup({ ...b, texts });
+  await tick();
+  assert.equal(b.badge.hidden, false, "la versione compare da sola, senza ricaricare");
+  assert.equal(b.badge.textContent, "v0.15.3");
 });
 
 console.log(`update: ${passed} prove passate`);
