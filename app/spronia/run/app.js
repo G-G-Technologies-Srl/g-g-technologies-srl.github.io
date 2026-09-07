@@ -28,6 +28,35 @@ import { download, restore } from "gg/io.js";
 
 const el = (id) => document.getElementById(id);
 
+/**
+ * La domanda dell'app, dove prima c'era `window.confirm`.
+ *
+ * Il `confirm` del browser è comodo da scrivere ed è l'unica cosa in tutta l'app che non le
+ * somiglia: carattere di sistema, il nome del sito in cima, e su un telefono una finestra che
+ * arriva dall'alto. Peggio, blocca il thread — qui significa fermare l'animazione — e in modalità
+ * installata alcuni browser lo ignorano del tutto, cioè una domanda che non compare e una risposta
+ * che nessuno dà.
+ */
+function _ask(message) {
+  const dialog = el("askDialog");
+  el("askText").textContent = message;
+  el("askOk").textContent = t("askOk");
+  el("askCancel").textContent = t("askCancel");
+  return new Promise((resolve) => {
+    const close = (outcome) => {
+      dialog.removeEventListener("close", onClose);
+      if (dialog.open) dialog.close();
+      resolve(outcome);
+    };
+    const onClose = () => close(false);
+    dialog.addEventListener("close", onClose);
+    el("askOk").onclick = () => close(true);
+    el("askCancel").onclick = () => close(false);
+    if (!dialog.open) dialog.showModal();
+    el("askText").focus();
+  });
+}
+
 const KEY = "spronia";
 const PREF = {
   players: "gg.spronia.players",
@@ -732,8 +761,8 @@ function _bind() {
 
   el("pauseButton").addEventListener("click", () => _command("pause"));
   el("resumeButton").addEventListener("click", () => _show("playing"));
-  el("quitButton").addEventListener("click", () => {
-    if (world && window.confirm(t("quitAsk"))) _finish();
+  el("quitButton").addEventListener("click", async () => {
+    if (world && await _ask(t("quitAsk"))) _finish();
   });
   el("nameform").addEventListener("submit", (event) => { event.preventDefault(); _saveScore(); });
   for (const id of ["scoresButton", "scoresFromOver"]) {
@@ -758,7 +787,7 @@ function _bind() {
     event.target.value = "";
   });
   el("clearButton").addEventListener("click", async () => {
-    if (!db || !window.confirm(t("clearAsk"))) return;
+    if (!db || !(await _ask(t("clearAsk")))) return;
     await scores.clearAll(db);
     table = [];
     totals = await scores.stats(db);

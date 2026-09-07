@@ -39,6 +39,8 @@ const IT = {
   paused: "In pausa",
   resume: "Riprendi",
   quit: "Chiudi la partita",
+  askOk: "Va bene",
+  askCancel: "Lascia stare",
   quitAsk: "Chiudere la partita in corso?",
 
   score: "Punti",
@@ -223,6 +225,8 @@ const EN = {
   paused: "Paused",
   resume: "Resume",
   quit: "End this game",
+  askOk: "OK",
+  askCancel: "Leave it",
   quitAsk: "End the game in progress?",
 
   score: "Score",

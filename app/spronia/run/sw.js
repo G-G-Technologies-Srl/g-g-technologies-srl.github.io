@@ -11,7 +11,7 @@
 //    when the person presses «Aggiorna» on the line gg/update.js shows. Swapping files under
 //    a running app means changing the code while somebody is halfway through a game.
 
-const VERSION = '1.7.6';
+const VERSION = '1.7.7';
 const CACHE = `spronia-v${VERSION}`;
 
 // Every file the app is made of, plus the shared modules it borrows. Kept by hand and checked by

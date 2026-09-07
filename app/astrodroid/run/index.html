@@ -259,5 +259,17 @@
 { "imports": { "gg/": "../../_lib/" } }
 </script>
 <script type="module" src="./app.js"></script>
+<!-- La domanda dell'app, al posto del `confirm` del browser: quello è l'unica cosa qui dentro che
+     non somiglia all'app — carattere di sistema, il nome del sito in cima — e blocca il thread, che
+     in un gioco vuol dire fermare l'animazione. Un `<dialog>` regala Esc, il fondo che blocca i
+     clic e il fuoco che resta dentro. -->
+<dialog id="askDialog" class="ask">
+  <p id="askText" tabindex="-1"></p>
+  <div class="ask-row">
+    <button type="button" id="askOk" class="primary"></button>
+    <button type="button" id="askCancel"></button>
+  </div>
+</dialog>
+
 </body>
 </html>

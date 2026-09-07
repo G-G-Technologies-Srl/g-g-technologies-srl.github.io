@@ -428,3 +428,18 @@ body { overflow: hidden; }              /* the field is the page; nothing here s
   .scores .when { display: none; }
   .scores th.when { display: none; }
 }
+
+/* ---------------------------------------------------------------------------------------------
+   La domanda dell'app: i colori dell'app, non quelli del browser. */
+dialog.ask {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--text);
+  width: min(420px, calc(100vw - 32px));
+  padding: 20px 22px;
+}
+dialog.ask::backdrop { background: rgba(4, 8, 16, 0.55); }
+dialog.ask p { margin: 0 0 18px; font-size: 14.5px; line-height: 1.55; }
+dialog.ask p:focus { outline: none; }
+.ask-row { display: flex; gap: 10px; justify-content: space-between; }
