@@ -16,18 +16,39 @@
 
 let deferred = null;
 
+/**
+ * Whether the invitation was closed for good — and «installed» is not that.
+ *
+ * **Installing used to close it for ever.** `appinstalled` wrote the same mark as a refusal, so
+ * somebody who installed the app and later removed it never saw the button again: found by
+ * installing Invoice Scope, removing it, and looking for the way back. Now the mark says which of
+ * the two happened — `"no"` or `"installed"` — and the old `"1"`, which said neither, lets the
+ * invitation through one more time: whoever had refused closes it again with one click, and
+ * whoever had installed gets back the button they were owed.
+ *
+ * The browser only sends `beforeinstallprompt` when the app is *not* installed, so a mark left by
+ * an install is exactly the case where the invitation is due again.
+ */
 function _dismissed(key) {
   try {
-    return localStorage.getItem(key) === "1";
+    return localStorage.getItem(key) === "no";
   } catch (ignored) {
     return false;
   }
 }
 
+/** «No, grazie»: the invitation does not come back. */
 function _dismiss(key) {
   try {
-    localStorage.setItem(key, "1");
+    localStorage.setItem(key, "no");
   } catch (ignored) { /* nothing to do: the invitation simply comes back next time */ }
+}
+
+/** Installed: the button has nothing left to do today, and everything to do after a removal. */
+function _installed(key) {
+  try {
+    localStorage.setItem(key, "installed");
+  } catch (ignored) { /* nothing to do */ }
 }
 
 function _isIos() {
@@ -52,8 +73,10 @@ function _isInstalled() {
  * `iosText` is the sentence to show where there is no prompt to defer; this module has no opinion
  * about language and holds no strings of its own.
  *
- * The invitation never comes back once it has been closed. An install prompt that reappears at
- * every start is the reason people uninstall, and nothing here is worth that.
+ * The invitation never comes back once it has been **closed** — that is, refused. Installing is a
+ * different ending: it hides the button, and leaves the door open for the day the app is removed.
+ * An install prompt that reappears at every start is the reason people uninstall, and nothing here
+ * is worth that.
  */
 export function setup(button, hint, { storageKey, iosText }) {
   if (_isInstalled() || _dismissed(storageKey)) return;
@@ -69,6 +92,12 @@ export function setup(button, hint, { storageKey, iosText }) {
     deferred = event;
     button.hidden = false;
   };
+
+  // The old `"1"` is cleared the moment the browser offers an install: it said neither of the two
+  // things, and leaving it would keep a value nothing reads any more.
+  try {
+    if (localStorage.getItem(storageKey) === "1") localStorage.removeItem(storageKey);
+  } catch (ignored) { /* a locked-down profile: nothing to clean */ }
 
   // **Quello che è già arrivato, e quello che deve ancora arrivare.**
   //
@@ -94,13 +123,14 @@ export function setup(button, hint, { storageKey, iosText }) {
     deferred = null;
     window.__ggInstallPrompt = null;
     prompt.prompt();
-    await prompt.userChoice;
-    _dismiss(storageKey);
+    const choice = await prompt.userChoice;
+    // Accepted, and `appinstalled` follows with its own mark; refused, and the invitation is over.
+    if (!choice || choice.outcome !== "accepted") _dismiss(storageKey);
   });
 
   window.addEventListener("appinstalled", () => {
     button.hidden = true;
     window.__ggInstallPrompt = null;
-    _dismiss(storageKey);
+    _installed(storageKey);
   });
 }

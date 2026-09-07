@@ -26,6 +26,15 @@
     }
   } catch (ignored) {}
 </script>
+<script>
+  // `beforeinstallprompt` waits for nobody: on a second visit, with the service worker already
+  // active, Chrome fires it before any module has finished loading, and a listener registered from
+  // app.js never sees it. Caught here and left in a global, which gg/install.js reads on setup.
+  window.addEventListener('beforeinstallprompt', function (event) {
+    event.preventDefault();
+    window.__ggInstallPrompt = event;
+  });
+</script>
 </head>
 <body>
 
