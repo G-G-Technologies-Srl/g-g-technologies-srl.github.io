@@ -110,7 +110,6 @@ function _applyText() {
   el("theme").setAttribute("aria-label",
     theme.current() === "light" ? t("themeToDark") : t("themeToLight"));
   el("install").textContent = t("installButton");
-  el("updateNow").textContent = t("updateNow");
   el("full").setAttribute("aria-label",
     document.documentElement.dataset.full ? t("fullOff") : t("fullOn"));
   el("sound").setAttribute("aria-label", audio.isEnabled() ? t("soundOn") : t("soundOff"));
@@ -875,8 +874,12 @@ if ("serviceWorker" in navigator) {
   // libreria registra, controlla se c'è una versione nuova e mostra la riga in fondo quando c'è.
   window.addEventListener("load", () => {
     update.setup({
-      bar: el("updateBar"), text: el("updateText"), button: el("updateNow"),
-      ready: (version) => (version ? t("updateReady").replace("{version}", version) : t("updateReadyUnknown")),
+      badge: el("appVersion"),
+      texts: {
+        version: (v) => t("versionLabel").replace("{version}", v),
+        next: (current, v) => (v ? t("versionNext") : t("versionNextUnknown")).replace("{current}", current || "?").replace("{next}", v || ""),
+        update: (v) => (v ? t("versionUpdate").replace("{next}", v) : t("versionUpdateUnknown")),
+      },
     });
   });
 }

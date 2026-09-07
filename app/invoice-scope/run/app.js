@@ -943,9 +943,12 @@ async function main() {
   // when one is waiting. It also tells the settings screen which version is running.
   if (!isDemo()) {
     update.setup({
-      bar: el("updateBar"), text: el("updateText"), button: el("updateNow"),
-      ready: (version) => (version ? t("updateReady").replace("{version}", version) : t("updateReadyUnknown")),
-      onVersion: (version) => { el("appVersion").textContent = tf("settingsVersion", { version }); },
+      badge: el("appVersion"),
+      texts: {
+        version: (v) => t("versionLabel").replace("{version}", v),
+        next: (current, v) => (v ? t("versionNext") : t("versionNextUnknown")).replace("{current}", current || "?").replace("{next}", v || ""),
+        update: (v) => (v ? t("versionUpdate").replace("{next}", v) : t("versionUpdateUnknown")),
+      },
     });
   }
 }

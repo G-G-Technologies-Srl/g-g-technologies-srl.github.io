@@ -41,7 +41,7 @@
      On a narrow screen it goes back to being a strip along the top — a sidebar on a phone is a
      drawer, and a drawer is a thing to open before you can navigate. -->
 <header class="appbar">
-  <span class="brand">Invoice Scope</span>
+  <span class="brand-block"><span class="brand">Invoice Scope</span><button type="button" class="gg-version" id="appVersion" hidden></button></span>
   <span class="meta" id="tagline" data-t="tagline"></span>
   <span class="spacer"></span>
   <button type="button" id="install" class="ghost small" data-t="install" hidden></button>
@@ -630,10 +630,6 @@
 
     <h2 data-t="settingsLimits"></h2>
     <p class="note" data-t="settingsLimitsNote"></p>
-
-    <!-- Asked of the service worker, where the version lives: written here it would be a second
-         copy, and the one that drifts. Empty in the demo and where there is no worker. -->
-    <p class="note" id="appVersion"></p>
   </section>
 
 </main>
@@ -647,12 +643,6 @@
 <!-- Il piè di pagina che hanno tutte le altre app, e che a questa mancava. È l'unico punto in cui
      un'app installata dice da dove viene: si apre dall'icona, vive per mesi e nessuno ripassa più
      dalla scheda. Le etichette arrivano da `data-t`, come tutto il resto del markup. -->
-<!-- A newer version is installed and waiting: the line says so, and the button hands over — the
-     person's click, at a moment they chose. `gg/update.js` fills it; hidden until then. -->
-<div class="gg-update" id="updateBar" hidden>
-  <span id="updateText"></span>
-  <button type="button" class="primary" id="updateNow" data-t="updateNow"></button>
-</div>
 
 <footer class="foot">
   <a href="../" data-t="backToPage"></a>

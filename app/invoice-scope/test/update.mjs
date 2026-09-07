@@ -6,7 +6,7 @@
 // why the lifecycle is played here by hand: a worker that answers its version over the channel,
 // one that is already waiting when the page opens, one found later, the click that hands over,
 // the reload that follows the hand-over and not the click. Tested from here because Invoice Scope
-// is the app that shows the version on its settings screen.
+// is the app that put the module in the library.
 //
 //     node --import ./app/invoice-scope/test/loader.mjs app/invoice-scope/test/update.mjs
 
@@ -70,14 +70,22 @@ function browser({ waiting = null, active = null, controller = null } = {}) {
   });
   globalThis.window = { location: { reload() { reloads.push(1); } } };
   globalThis.document = doc;
-  const bar = { hidden: true };
-  const text = { textContent: "" };
-  const button = { handlers: [], addEventListener(name, fn) { this.handlers.push(fn); }, click() { for (const fn of this.handlers) fn(); } };
-  return { registration, reloads, bar, text, button };
+  const badge = {
+    hidden: true, textContent: "", title: "", attrs: {}, classes: new Set(), handlers: [],
+    classList: { add(c) { badge.classes.add(c); }, remove(c) { badge.classes.delete(c); } },
+    setAttribute(name, value) { this.attrs[name] = value; },
+    addEventListener(name, fn) { this.handlers.push(fn); },
+    click() { for (const fn of this.handlers) fn(); },
+  };
+  return { registration, reloads, badge };
 }
 
 const { setup } = await import("gg/update.js");
-const ready = (v) => (v ? `pronta ${v}` : "pronta nuova");
+const texts = {
+  version: (v) => `v${v}`,
+  next: (current, v) => `v${current || "?"} → ${v || "nuova"}`,
+  update: (v) => `aggiorna ${v || "nuova"}`,
+};
 const tick = () => new Promise((r) => setTimeout(r, 20));
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -88,55 +96,59 @@ await prova("la versione in esecuzione arriva dal worker attivo, per la schermat
   const active = worker("0.29.0", "activated");
   const b = browser({ active, controller: active });
   let shown = null;
-  await setup({ ...b, ready, onVersion: (v) => { shown = v; } });
+  await setup({ ...b, texts, onVersion: (v) => { shown = v; } });
   await tick();
   assert.equal(shown, "0.29.0");
-  assert.equal(b.bar.hidden, true, "niente da annunciare");
+  assert.equal(b.badge.hidden, false);
+  assert.equal(b.badge.textContent, "v0.29.0");
+  assert.ok(!b.badge.classes.has("ready"), "niente da annunciare");
 });
 
 await prova("un worker già in attesa all'apertura viene annunciato con il suo numero", async () => {
   const active = worker("0.29.0", "activated");
   const waiting = worker("0.30.0");
   const b = browser({ active, controller: active, waiting });
-  await setup({ ...b, ready });
+  await setup({ ...b, texts });
   await tick();
-  assert.equal(b.bar.hidden, false);
-  assert.equal(b.text.textContent, "pronta 0.30.0");
+  assert.equal(b.badge.hidden, false);
+  assert.ok(b.badge.classes.has("ready"));
+  assert.equal(b.badge.textContent, "v0.29.0 → 0.30.0");
+  assert.equal(b.badge.title, "aggiorna 0.30.0");
 });
 
 await prova("un worker trovato dopo viene annunciato; senza controller è la prima installazione, e tace", async () => {
   const first = browser({});
-  await setup({ ...first, ready });
+  await setup({ ...first, texts });
   first.registration.found(worker("0.29.0"));
   await tick();
-  assert.equal(first.bar.hidden, true, "prima installazione: nessuna riga");
+  assert.equal(first.badge.hidden, true, "prima installazione: niente da dire, e nessun worker attivo da cui leggere la versione");
 
   const active = worker("0.29.0", "activated");
   const b = browser({ active, controller: active });
-  await setup({ ...b, ready });
+  await setup({ ...b, texts });
   b.registration.found(worker("0.30.0"));
   await tick();
-  assert.equal(b.bar.hidden, false);
-  assert.equal(b.text.textContent, "pronta 0.30.0");
+  assert.ok(b.badge.classes.has("ready"));
+  assert.equal(b.badge.textContent, "v0.29.0 → 0.30.0");
 });
 
 await prova("un worker di prima della libreria non risponde: la riga dice «una versione nuova»", async () => {
   const active = worker(null, "activated");
   const b = browser({ active, controller: active, waiting: worker(null) });
-  await setup({ ...b, ready });
-  await new Promise((r) => setTimeout(r, 1700));           // past the answer timeout
-  assert.equal(b.text.textContent, "pronta nuova");
+  await setup({ ...b, texts });
+  await new Promise((r) => setTimeout(r, 3300));           // past two answer timeouts: the active worker, then the waiting one
+  assert.equal(b.badge.textContent, "v? → nuova");
 });
 
 await prova("il click chiede il passaggio; la ricarica segue l'attivazione, non il click", async () => {
   const active = worker("0.29.0", "activated");
   const waiting = worker("0.30.0");
   const b = browser({ active, controller: active, waiting });
-  await setup({ ...b, ready });
+  await setup({ ...b, texts });
   await tick();
-  b.button.click();
+  b.badge.click();
   assert.deepEqual(waiting.got.at(-1), { type: "gg:skip-waiting" });
-  assert.equal(b.bar.hidden, true, "la riga sparisce al click");
+  assert.ok(!b.badge.classes.has("ready"), "la spia si spegne al click");
   assert.equal(b.reloads.length, 0, "non ancora: il worker deve prima attivarsi");
   waiting.setState("activating");
   assert.equal(b.reloads.length, 0);
@@ -150,10 +162,22 @@ await prova("il worker in attesa si attiva da solo — l'ultima altra scheda si 
   const active = worker("0.29.0", "activated");
   const waiting = worker("0.30.0");
   const b = browser({ active, controller: active, waiting });
-  await setup({ ...b, ready });
+  await setup({ ...b, texts });
   await tick();
   waiting.setState("activated");
   assert.equal(b.reloads.length, 1);
+});
+
+
+await prova("senza niente in attesa, il click sulla versione è «controlla adesso»", async () => {
+  const active = worker("0.29.0", "activated");
+  const b = browser({ active, controller: active });
+  await setup({ ...b, texts });
+  await tick();
+  const before = b.registration.updates;
+  b.badge.click();
+  assert.equal(b.registration.updates, before + 1);
+  assert.equal(b.reloads.length, 0);
 });
 
 console.log(`update: ${passed} prove passate`);

@@ -45,7 +45,7 @@
      is the answer itself. The progress bar is not a control and sits with the question. -->
 <header>
   <div class="appbar">
-    <span class="brand">Survey Scope</span>
+    <span class="brand-block"><span class="brand">Survey Scope</span><button type="button" class="gg-version" id="appVersion" hidden></button></span>
     <!-- **La via di casa, e prima non c'era.** Cominciato un questionario, la schermata iniziale
          diventava irraggiungibile: è la home dell'archivio — nuovo, apri, importa — e da lì in poi
          non ci si tornava. Sta nella barra perché la barra è l'unica cosa presente ovunque, e
@@ -528,12 +528,6 @@
 
 </main>
 
-<!-- A newer version is installed and waiting: the line says so, and the button hands over — the
-     person's click, at a moment they chose. `gg/update.js` fills it; hidden until then. -->
-<div class="gg-update" id="updateBar" hidden>
-  <span id="updateText"></span>
-  <button type="button" class="primary" id="updateNow"></button>
-</div>
 
 <footer class="foot no-print">
   <a href="../" id="backLink"></a>

@@ -78,7 +78,6 @@ function _applyText() {
   el("lang").textContent = t("langSwitch");
   el("theme").setAttribute("aria-label", theme.current() === "light" ? t("themeToDark") : t("themeToLight"));
   el("install").textContent = t("installButton");
-  el("updateNow").textContent = t("updateNow");
   el("viewChart").textContent = t("viewChart");
   el("viewTable").textContent = t("viewTable");
   el("sample").textContent = t("dropSample");
@@ -1044,8 +1043,12 @@ function _start() {
     // registers, watches for a newer version and shows the line at the foot when one is waiting.
     window.addEventListener("load", () => {
       update.setup({
-        bar: el("updateBar"), text: el("updateText"), button: el("updateNow"),
-        ready: (version) => (version ? t("updateReady").replace("{version}", version) : t("updateReadyUnknown")),
+        badge: el("appVersion"),
+        texts: {
+          version: (v) => t("versionLabel").replace("{version}", v),
+          next: (current, v) => (v ? t("versionNext") : t("versionNextUnknown")).replace("{current}", current || "?").replace("{next}", v || ""),
+          update: (v) => (v ? t("versionUpdate").replace("{next}", v) : t("versionUpdateUnknown")),
+        },
       });
     });
   }

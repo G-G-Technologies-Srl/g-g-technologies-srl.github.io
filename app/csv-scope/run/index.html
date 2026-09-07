@@ -34,7 +34,7 @@
      with contrast. Six controls at one altitude read as six equally important things. -->
 <header>
   <div class="appbar">
-    <span class="brand">CSV Scope</span>
+    <span class="brand-block"><span class="brand">CSV Scope</span><button type="button" class="gg-version" id="appVersion" hidden></button></span>
     <span class="meta" id="tagline"></span>
     <span class="spacer"></span>
     <button type="button" id="install" class="ghost small" hidden></button>
@@ -192,12 +192,6 @@
 
 </main>
 
-<!-- A newer version is installed and waiting: the line says so, and the button hands over — the
-     person's click, at a moment they chose. `gg/update.js` fills it; hidden until then. -->
-<div class="gg-update" id="updateBar" hidden>
-  <span id="updateText"></span>
-  <button type="button" class="primary" id="updateNow"></button>
-</div>
 
 <footer class="foot">
   <a href="../" id="backLink"></a>

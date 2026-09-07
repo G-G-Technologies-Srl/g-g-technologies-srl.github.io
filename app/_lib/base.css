@@ -339,26 +339,56 @@ button:disabled, input:disabled {
 }
 
 /* ---------------------------------------------------------------------------------------------
-   update — a newer version is waiting; `gg/update.js` shows this and hides it
+   version — under the app's name; `gg/update.js` fills it and turns it into the update light
    --------------------------------------------------------------------------------------------- */
 
-.gg-update {
-  position: fixed;
-  left: 50%;
-  bottom: 18px;
-  transform: translateX(-50%);
-  z-index: 60;
+/* Name over version, in the height the bar already has: 13.5px over 10px fits the 34px row. */
+.appbar .brand-block {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  max-width: calc(100vw - 32px);
-  padding: 10px 12px 10px 16px;
-  background: var(--panel);
-  color: var(--text);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
-  font-size: 14px;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
+  flex-shrink: 0;
 }
 
-.gg-update button { white-space: nowrap; }
+.gg-version {
+  margin: 0;
+  padding: 0 0 0 2px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 10px;
+  color: var(--faint);
+  cursor: pointer;
+  text-align: left;
+}
+
+.gg-version:hover { color: var(--muted); background: none; }
+
+/* A version is waiting: the accent, a dot before the text, and three slow pulses when it appears —
+   then still. A light, not an alarm. Off for whoever asked the system for less motion. */
+.gg-version.ready {
+  color: var(--accent-text);
+  font-weight: 600;
+  animation: gg-version-pulse 1.4s ease-in-out 3;
+}
+
+.gg-version.ready::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  vertical-align: 1px;
+}
+
+@keyframes gg-version-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gg-version.ready { animation: none; }
+}

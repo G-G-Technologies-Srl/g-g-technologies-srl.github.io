@@ -1620,8 +1620,12 @@ async function _boot() {
   // The library registers the worker, watches for a newer version and shows the line at the foot
   // when one is waiting; offline is a bonus, never a need, so a failure here is a `null`.
   update.setup({
-    bar: el("updateBar"), text: el("updateText"), button: el("updateNow"),
-    ready: (version) => (version ? t("updateReady").replace("{version}", version) : t("updateReadyUnknown")),
+    badge: el("appVersion"),
+    texts: {
+      version: (v) => t("versionLabel").replace("{version}", v),
+      next: (current, v) => (v ? t("versionNext") : t("versionNextUnknown")).replace("{current}", current || "?").replace("{next}", v || ""),
+      update: (v) => (v ? t("versionUpdate").replace("{next}", v) : t("versionUpdateUnknown")),
+    },
   });
 }
 

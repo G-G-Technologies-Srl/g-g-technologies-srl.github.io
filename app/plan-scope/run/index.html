@@ -45,7 +45,7 @@
      would suggest otherwise. -->
 <header>
   <div class="appbar">
-    <span class="brand">Plan Scope</span>
+    <span class="brand-block"><span class="brand">Plan Scope</span><button type="button" class="gg-version" id="appVersion" hidden></button></span>
     <span class="meta" id="tagline"></span>
     <!-- After the tagline, not between it and the name: name and tagline are one thing, the way
          back is another. «Progetti», the word of the screen it goes to. -->
@@ -751,12 +751,6 @@
 
 <input type="file" id="importFile" accept=".zip,.json,application/zip,application/json" hidden>
 
-<!-- A newer version is installed and waiting: the line says so, and the button hands over — the
-     person's click, at a moment they chose. `gg/update.js` fills it; hidden until then. -->
-<div class="gg-update" id="updateBar" hidden>
-  <span id="updateText"></span>
-  <button type="button" class="primary" id="updateNow" data-t="updateNow"></button>
-</div>
 
 <footer class="foot">
   <a href="../" id="backLink"></a>

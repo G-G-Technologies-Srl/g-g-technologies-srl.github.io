@@ -73,7 +73,6 @@ function _applyText() {
   el("sound").setAttribute("aria-label", audio.isEnabled() ? t("soundOn") : t("soundOff"));
   el("sound").dataset.sound = audio.isEnabled() ? "on" : "off";
   el("install").textContent = t("installButton");
-  el("updateNow").textContent = t("updateNow");
   _paintHud();
   _paintScores();
 }
@@ -514,8 +513,12 @@ async function main() {
     // registers, watches for a newer version and shows the line at the foot when one is waiting.
     window.addEventListener("load", () => {
       update.setup({
-        bar: el("updateBar"), text: el("updateText"), button: el("updateNow"),
-        ready: (version) => (version ? t("updateReady").replace("{version}", version) : t("updateReadyUnknown")),
+        badge: el("appVersion"),
+        texts: {
+          version: (v) => t("versionLabel").replace("{version}", v),
+          next: (current, v) => (v ? t("versionNext") : t("versionNextUnknown")).replace("{current}", current || "?").replace("{next}", v || ""),
+          update: (v) => (v ? t("versionUpdate").replace("{next}", v) : t("versionUpdateUnknown")),
+        },
       });
     });
   }

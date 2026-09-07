@@ -48,7 +48,7 @@
 
 <header>
   <div class="appbar">
-    <span class="brand">SPRONIA</span>
+    <span class="brand-block"><span class="brand">SPRONIA</span><button type="button" class="gg-version" id="appVersion" hidden></button></span>
     <span class="meta" data-t="tagline"></span>
     <span class="spacer"></span>
     <!-- **L'invito a installare non sta qui**, sta nel pannello di fine partita.
@@ -293,12 +293,6 @@
   <p class="sr-only" id="live" role="status" aria-live="polite"></p>
 </main>
 
-<!-- A newer version is installed and waiting: the line says so, and the button hands over — the
-     person's click, at a moment they chose. `gg/update.js` fills it; hidden until then. -->
-<div class="gg-update" id="updateBar" hidden>
-  <span id="updateText"></span>
-  <button type="button" class="primary" id="updateNow"></button>
-</div>
 
 <footer class="foot">
   <a href="../" data-t="backToPage"></a>
