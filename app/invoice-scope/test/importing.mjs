@@ -10,6 +10,7 @@
 //     node --import ./app/invoice-scope/test/loader.mjs app/invoice-scope/test/importing.mjs
 
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import * as zip from "../../_lib/zip.js";
 import { plan, apply, lastImport, undoLast } from "../run/importing.js";
 import { draft, issue } from "../run/model.js";
@@ -347,6 +348,41 @@ await prova("importare due volte non duplica niente: clienti (anche sammarinesi)
   for (const uno of await tutti()) {
     await apply(db, await plan([uno], await contesto()));
     assert.deepEqual(await conta(), prima, `${uno.name} da solo`);
+  }
+});
+
+await prova("i file veri di Fatture in Cloud, se sono sul disco: righe dall'XML, completamento, e niente doppioni", async () => {
+  // The real exports live in `_src/fonti/fic/`, outside the repository. Two rounds of everything:
+  // the XML must carry its own line words, complete the register's sketch of the same invoice,
+  // and the second round must move no count at all.
+  const dir = new URL("../../../_src/fonti/fic/", import.meta.url);
+  const nomi = ["clienti.xlsx", "prodotti.xlsx", "documenti.xls", "fattura-12.xml"];
+  if (!nomi.every((n) => fs.existsSync(new URL(n, dir)))) {
+    console.log("  (file veri non presenti: prova saltata)");
+    return;
+  }
+  const db = await openDatabase();
+  const contesto = async () => ({
+    parties: await list(db, "parties"), items: await list(db, "items"), docs: await list(db, "docs"),
+  });
+  const veri = () => nomi.map((n) => ({ name: n, bytes: new Uint8Array(fs.readFileSync(new URL(n, dir))) }));
+  const primo = await plan(veri(), await contesto());
+  const xmlFonte = primo.fonti.find((f) => f.tipo === "fattura");
+  assert.equal(xmlFonte.completati, 1, "l'XML completa la fattura che il registro aveva abbozzato");
+  await apply(db, primo);
+  const conta = async () => ({
+    clienti: (await list(db, "parties")).length, listino: (await list(db, "items")).length,
+    docs: (await list(db, "docs")).length, incassi: (await list(db, "payments")).length,
+  });
+  const dopo = await conta();
+  const completata = (await list(db, "docs")).find((d) => !d.ricostruito && d.importato);
+  assert.ok(completata, "una fattura con le righe vere");
+  assert.ok(completata.righe.every((r) => r.descrizione && !/importata dal registro/.test(r.descrizione)), "le descrizioni sono quelle dell'XML");
+  for (let giro = 0; giro < 2; giro += 1) {
+    const piano = await plan(veri(), await contesto());
+    for (const f of piano.fonti) assert.equal(f.nuovi + (f.completati || 0), 0, `${f.name}: niente al giro ${giro + 2}`);
+    await apply(db, piano);
+    assert.deepEqual(await conta(), dopo);
   }
 });
 
