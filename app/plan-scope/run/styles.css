@@ -1438,6 +1438,13 @@ dialog h2 {
 
 dialog p { color: var(--muted); font-size: 14px; margin: 0 0 16px; }
 
+/* **La riga dei comandi si stacca dal testo.** `.note` porta con sé `margin-bottom: 0`, che vince
+   sul margine dei `<p>` qui sopra: nel benvenuto la frase sulla privacy finiva incollata ai due
+   pulsanti — zero pixel, contro i sedici che aveva sopra e i venti del padding sotto — e la
+   finestra sembrava tagliata male. Lo spazio va messo sulla riga, che è l'elemento che deve
+   staccarsi, e non sull'ultimo paragrafo, che cambia da un dialogo all'altro. */
+dialog > .row { margin-top: 20px; }
+
 /* The question: the sentence in the text colour, since it is the whole dialog; the field or the
    list under it, full width; the two buttons last. */
 dialog.ask { width: min(420px, calc(100vw - 32px)); }
