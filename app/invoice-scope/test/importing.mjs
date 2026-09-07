@@ -261,6 +261,55 @@ await prova("la riga ricostruita del registro tiene in piedi il totale", async (
   assert.ok(!piano.fonti[0].avvisi.some((a) => a.chiave === "impRegisterNoNature"));
 });
 
+await prova("senza oggetto, la riga ricostruita dice quale documento è e perché è così", async () => {
+  const piano = await plan([file("r", await xlsx(HEAD_REGISTRO, [registro({ 16: "", 17: "" })]))]);
+  const riga = piano.documenti[0].righe[0].descrizione;
+  assert.match(riga, /Fattura n\. 12 del 27\/07\/2026/, riga);
+  assert.match(riga, /registro/, "dice da dove viene");
+  assert.equal(piano.documenti[0].ricostruito, true);
+});
+
+await prova("l'XML della stessa fattura completa la ricostruzione del registro, nello stesso giro", async () => {
+  // Register and XML together: the register sketches invoice 12, the XML has its lines. One
+  // document comes out, the XML's, under the id the register gave it.
+  const piano = await plan([
+    file("r", await xlsx(HEAD_REGISTRO, [registro()])),
+    xml("f.xml", FATTURA),
+  ]);
+  assert.equal(piano.documenti.length, 1);
+  assert.equal(piano.documenti[0].righe[0].descrizione, "Consulenza specialistica");
+  assert.ok(!piano.documenti[0].ricostruito);
+  assert.equal(piano.fonti[1].completati, 1);
+  assert.equal(piano.fonti[1].esistenti, 0, "non è «già presente»: è completata");
+  assert.equal(piano.fonti[1].nomi.completati.length, 1);
+});
+
+await prova("l'XML completa una ricostruzione già scritta, tiene gli incassi, e l'annullamento la rimette", async () => {
+  const db = await openDatabase();
+  const primo = await plan([file("r", await xlsx(HEAD_REGISTRO, [registro({ 5: "SI" })]))]);
+  await apply(db, primo);
+  const stub = (await list(db, "docs"))[0];
+  assert.equal(stub.ricostruito, true);
+  assert.equal((await list(db, "payments")).length, 1, "saldata: un incasso");
+
+  const secondo = await plan([xml("f.xml", FATTURA)], { docs: await list(db, "docs"), parties: await list(db, "parties") });
+  assert.equal(secondo.fonti[0].completati, 1);
+  assert.equal(secondo.documenti[0].id, stub.id, "stesso id: gli incassi restano agganciati");
+  await apply(db, secondo);
+  const docs = await list(db, "docs");
+  assert.equal(docs.length, 1);
+  assert.equal(docs[0].righe[0].descrizione, "Consulenza specialistica");
+  assert.ok(!docs[0].ricostruito);
+  assert.ok(docs[0].precedente && docs[0].precedente.ricostruito, "la ricostruzione resta sul record, per l'annullamento");
+  assert.equal((await list(db, "payments")).length, 1);
+
+  await undoLast(db);
+  const dopo = await list(db, "docs");
+  assert.equal(dopo.length, 1, "annullare il completamento non cancella la fattura");
+  assert.equal(dopo[0].ricostruito, true);
+  assert.equal(dopo[0].id, stub.id);
+});
+
 await prova("un documento importato porta i suoi totali", async () => {
   // Senza, l'importo non compare da nessuna parte: `issue()` è quello che di solito li calcola, e
   // l'importazione non ci passa — i documenti arrivano già numerati e già spediti. Trovato

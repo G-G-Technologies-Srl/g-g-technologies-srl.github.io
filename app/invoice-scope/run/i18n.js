@@ -496,13 +496,17 @@ const IT = {
   impOld: "Aprilo e salvalo come .xlsx: è un formato di Excel 95 o precedente, che non si legge "
     + "nel browser.",
   impSkipped: "Colonne lette e lasciate fuori: {elenco}.",
-  impRegisterLine: "Importo da registro",
+  impRegisterLineOf: "{tipo} n. {numero} del {data} — importata dal registro, senza il dettaglio "
+    + "delle righe",
   impRegisterRebuilt: "Il registro porta i totali e non le righe: ogni documento entra con una riga "
-    + "sola, che tiene il totale. Le fatture per intero stanno negli XML del backup.",
+    + "sola, che tiene il totale e dice di essere una ricostruzione. Per avere le righe vere — "
+    + "anche per ristampare — importa gli XML del backup di Fatture in Cloud: prendono il posto "
+    + "di queste ricostruzioni, incassi compresi.",
   impUnreadable: "Il file non si legge: è danneggiato, o è un formato che sembra un altro.",
   impPaidNote: "Saldata secondo il registro di Fatture in Cloud",
   impNamesNew: "Nuovi",
   impNamesExisting: "Già presenti",
+  impNamesCompleted: "Completati dall'XML, al posto della ricostruzione",
   impUndo: "Annulla l'ultima importazione",
   impUndoWhen: "Ultima importazione: {quando} — {clienti} clienti, {listino} voci di listino, "
     + "{documenti} documenti, {incassi} incassi.",
@@ -1071,13 +1075,17 @@ const EN = {
   impOld: "Open it and save it as .xlsx: it is an Excel 95 or earlier format, which cannot be read "
     + "in a browser.",
   impSkipped: "Columns read and left out: {elenco}.",
-  impRegisterLine: "Amount from register",
+  impRegisterLineOf: "{tipo} no. {numero} of {data} — imported from the register, without the "
+    + "line detail",
   impRegisterRebuilt: "The register carries totals and not lines, so each document arrives with a "
-    + "single line that holds its total. The complete invoices are the XML files in the backup.",
+    + "single line that holds its total and says it is a reconstruction. For the real lines — to "
+    + "reprint, too — import the XML files from the Fatture in Cloud backup: they take the place "
+    + "of these reconstructions, payments included.",
   impUnreadable: "The file cannot be read: it is damaged, or one format dressed as another.",
   impPaidNote: "Paid, according to the Fatture in Cloud register",
   impNamesNew: "New",
   impNamesExisting: "Already here",
+  impNamesCompleted: "Completed from the XML, in place of the reconstruction",
   impUndo: "Undo the last import",
   impUndoWhen: "Last import: {quando} — {clienti} customers, {listino} price-list lines, "
     + "{documenti} documents, {incassi} payments.",

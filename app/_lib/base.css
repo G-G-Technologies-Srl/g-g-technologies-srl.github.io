@@ -351,6 +351,15 @@ button:disabled, input:disabled {
   flex-shrink: 0;
 }
 
+/* The tagline sits on the name's line, not in the middle of the block: centred against name-plus-
+   version it floated between the two, which read as belonging to neither. */
+.appbar .brand-block + .meta,
+.appbar .brand-block + button + .meta {
+  align-self: flex-start;
+  line-height: 1.15;
+  margin-top: 3px;                      /* the two baselines meet: measured, not guessed */
+}
+
 .gg-version {
   margin: 0;
   padding: 0 0 0 2px;

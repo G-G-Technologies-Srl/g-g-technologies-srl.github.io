@@ -97,6 +97,13 @@ function _aliquota(imponibile, iva) {
  */
 function _fromRegister(entry) {
   const aliquota = _aliquota(entry.imponibile, entry.iva);
+  // The line's words, when the register has none: the document's own name and date, and that
+  // the detail is missing. «Importo da registro» printed on a courtesy copy meant nothing to the
+  // customer who got it; this at least says which invoice it is, and why it looks like this.
+  const kind = KINDS[entry.tipo] || KINDS.TD01;
+  const ripiego = tf("impRegisterLineOf", {
+    tipo: t(kind.label), numero: entry.numero, data: shownDate(entry.data),
+  });
   const doc = draft({
     tipo: entry.tipo,
     // The first state the kind allows, and not a constant: «inviato» is right for an invoice and
@@ -108,7 +115,7 @@ function _fromRegister(entry) {
     serie: entry.serie || undefined,
     esportato: true,
     righe: [{
-      descrizione: entry.oggetto || t("impRegisterLine"),
+      descrizione: entry.oggetto || ripiego,
       quantita: "1",
       prezzoUnitario: entry.imponibile,
       aliquota,
@@ -121,6 +128,9 @@ function _fromRegister(entry) {
   if (entry.scadenza) {
     doc.pagamento = { rate: [{ scadenza: entry.scadenza, importo: entry.lordo || entry.imponibile }] };
   }
+  // **A reconstruction says so on the record.** It is what lets the XML of the same invoice, when
+  // it arrives, replace this one instead of being turned away as «already here».
+  doc.ricostruito = true;
   return doc;
 }
 
@@ -231,7 +241,13 @@ function _titolo(doc, nomeCliente) {
  */
 export async function plan(sorgenti, contesto = {}) {
   const esistenti = { parties: contesto.parties || [], items: contesto.items || [], docs: contesto.docs || [] };
-  const chiavi = new Set(esistenti.docs.map((doc) => documentKey(doc)).filter(Boolean));
+  // Every document already there, by key — and whether it is a register reconstruction, because
+  // for those the XML of the same invoice is a completion, not a duplicate.
+  const chiavi = new Map();
+  for (const doc of esistenti.docs) {
+    const chiave = documentKey(doc);
+    if (chiave) chiavi.set(chiave, { id: doc.id, ricostruito: !!doc.ricostruito, inPiano: false });
+  }
   const descrizioni = new Set(esistenti.items.map((item) => _key(item.descrizione)));
 
   const fonti = [];
@@ -353,7 +369,7 @@ export async function plan(sorgenti, contesto = {}) {
           const nuovo = !(chiave && chiavi.has(chiave));
           conta(nuovo, _titolo(doc, chi.nome));
           if (!nuovo) continue;
-          if (chiave) chiavi.add(chiave);
+          if (chiave) chiavi.set(chiave, { id: doc.id, ricostruito: true, inPiano: true });
           documenti.push(_withTotals(doc));
           // **«Saldato: SI» is a payment, not a word.** Read and dropped, it left every paid invoice
           // of the register open in the schedule — the first screen after an import, showing a sum
@@ -374,10 +390,31 @@ export async function plan(sorgenti, contesto = {}) {
           doc.partyId = chi.id;
           doc._fonte = fonte.name;
           const chiave = documentKey(doc);
-          const nuovo = !(chiave && chiavi.has(chiave));
+          const prima = chiave ? chiavi.get(chiave) : null;
+          // **The XML of an invoice the register only sketched completes it.** The reconstruction
+          // had one line carrying the total; this has the real lines, and takes its place — same
+          // id, so the payments recorded against it stay attached. Counted apart, and named apart,
+          // because «already here, untouched» would be exactly the wrong thing to say.
+          if (prima && prima.ricostruito) {
+            doc.id = prima.id;
+            doc._completa = true;
+            report.completati = (report.completati || 0) + 1;
+            (report.nomi.completati ||= []).push(_titolo(doc, chi.nome));
+            chiavi.set(chiave, { id: prima.id, ricostruito: false, inPiano: true });
+            const conTotali = _withTotals(doc);
+            if (prima.inPiano) {
+              const at = documenti.findIndex((d) => d.id === prima.id);
+              if (at >= 0) documenti.splice(at, 1, conTotali); else documenti.push(conTotali);
+            } else {
+              documenti.push(conTotali);
+            }
+            report.avvisi.push(...avvisi);
+            continue;
+          }
+          const nuovo = !prima;
           conta(nuovo, _titolo(doc, chi.nome));
           if (!nuovo) continue;
-          if (chiave) chiavi.add(chiave);
+          if (chiave) chiavi.set(chiave, { id: doc.id, ricostruito: false, inPiano: true });
           const conTotali = _withTotals(doc);
           documenti.push(conTotali);
           report.avvisi.push(...avvisi);
@@ -434,10 +471,18 @@ export async function apply(db, piano) {
 
     const massimi = new Map();                          // series key → highest number imported
     for (const doc of piano.documenti) {
-      const { _fonte, ...fields } = doc;
-      await scope.put("docs", {
+      const { _fonte, _completa, ...fields } = doc;
+      // A completion overwrites the reconstruction under the same id, and keeps it on the record:
+      // «Annulla l'ultima importazione» puts it back instead of deleting an invoice that was there.
+      const precedente = _completa ? await scope.get("docs", fields.id) : null;
+      const record = {
         ...fields, chiave: documentKey(fields), updated: quando, importato: marca(_fonte),
-      });
+      };
+      if (precedente && precedente.ricostruito) {
+        const { precedente: ignored, ...stub } = precedente;
+        record.precedente = stub;
+      }
+      await scope.put("docs", record);
       scritti.documenti += 1;
       const n = _ordinale(doc.numero);
       if (n !== null) {
@@ -539,7 +584,11 @@ export async function undoLast(db) {
 
   await tx(db, ["parties", "items", "docs", "payments", "counters"], async (scope) => {
     for (const [store, records] of Object.entries(daTogliere)) {
-      for (const r of records) await scope.remove(store, r.id);
+      for (const r of records) {
+        // A completion is undone by putting the reconstruction back, not by removing the invoice.
+        if (store === "docs" && r.precedente) await scope.put("docs", r.precedente);
+        else await scope.remove(store, r.id);
+      }
     }
     for (const c of daTenere) {
       const { importato, ...resto } = c;
@@ -606,7 +655,9 @@ function _riga(fonte) {
   const muto = fonte.tipo === "vecchio" || fonte.tipo === "ignoto";
   const nuovi = document.createElement("td");
   nuovi.className = "right";
-  nuovi.textContent = muto ? "—" : String(fonte.nuovi);
+  // Completions — invoices the register had sketched, now with their real lines — are counted
+  // with the new, and the list under the table names them apart.
+  nuovi.textContent = muto ? "—" : String(fonte.nuovi + (fonte.completati || 0));
   const gia = document.createElement("td");
   gia.className = "right";
   gia.textContent = muto ? "—" : String(fonte.esistenti);
@@ -691,6 +742,7 @@ function _draw(piano) {
     for (const dettaglio of [
       _elenco(t("impNamesNew"), fonte.nomi.nuovi),
       _elenco(t("impNamesExisting"), fonte.nomi.esistenti),
+      _elenco(t("impNamesCompleted"), fonte.nomi.completati || []),
     ]) {
       if (dettaglio) blocco.append(dettaglio);
     }
