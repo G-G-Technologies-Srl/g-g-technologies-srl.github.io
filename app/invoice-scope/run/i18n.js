@@ -311,6 +311,8 @@ const IT = {
   versionNextUnknown: "v{current} → nuova",
   versionUpdate: "Aggiorna alla versione {next}",
   versionUpdateUnknown: "Aggiorna alla versione nuova",
+  versionReload: "Aggiornata: ricarica",
+  versionUpToDate: "v{version} · aggiornata",
   installIos: "Per installarla: tocca Condividi, poi «Aggiungi alla schermata Home».",
 
   // ---- i campi, come li chiama chi compila
@@ -903,6 +905,8 @@ const EN = {
   versionNextUnknown: "v{current} → new",
   versionUpdate: "Update to version {next}",
   versionUpdateUnknown: "Update to the new version",
+  versionReload: "Updated: reload",
+  versionUpToDate: "v{version} · up to date",
   installIos: "To install it: tap Share, then “Add to Home Screen”.",
 
   f_azienda: "your company",

@@ -74,6 +74,7 @@ function browser({ waiting = null, active = null, controller = null } = {}) {
     hidden: true, textContent: "", title: "", attrs: {}, classes: new Set(), handlers: [],
     classList: { add(c) { badge.classes.add(c); }, remove(c) { badge.classes.delete(c); } },
     setAttribute(name, value) { this.attrs[name] = value; },
+    removeAttribute(name) { delete this.attrs[name]; },
     addEventListener(name, fn) { this.handlers.push(fn); },
     click() { for (const fn of this.handlers) fn(); },
   };
@@ -83,8 +84,10 @@ function browser({ waiting = null, active = null, controller = null } = {}) {
 const { setup } = await import("gg/update.js");
 const texts = {
   version: (v) => `v${v}`,
-  next: (current, v) => `v${current || "?"} → ${v || "nuova"}`,
+  next: (current, v) => `${current ? `v${current} ` : ""}→ ${v || "nuova"}`,
   update: (v) => `aggiorna ${v || "nuova"}`,
+  reload: () => "aggiornata: ricarica",
+  upToDate: (v) => `v${v} · aggiornata`,
 };
 const tick = () => new Promise((r) => setTimeout(r, 20));
 
@@ -137,7 +140,7 @@ await prova("un worker di prima della libreria non risponde: la riga dice «una 
   const b = browser({ active, controller: active, waiting: worker(null) });
   await setup({ ...b, texts });
   await new Promise((r) => setTimeout(r, 3300));           // past two answer timeouts: the active worker, then the waiting one
-  assert.equal(b.badge.textContent, "v? → nuova");
+  assert.equal(b.badge.textContent, "→ nuova", "nessun «v?» quando la versione corrente non si sa");
 });
 
 await prova("il click chiede il passaggio; la ricarica segue l'attivazione, non il click", async () => {
@@ -158,13 +161,19 @@ await prova("il click chiede il passaggio; la ricarica segue l'attivazione, non 
   assert.equal(b.reloads.length, 1, "una ricarica sola");
 });
 
-await prova("il worker in attesa si attiva da solo — l'ultima altra scheda si è chiusa — e la pagina si ricarica lo stesso", async () => {
+await prova("il passaggio arriva da un'altra scheda: questa non si ricarica da sola, la spia chiede il click", async () => {
+  // Two tabs, the click in the other one: this page — maybe halfway through a document — keeps the
+  // code it loaded, and its light turns to «aggiornata: ricarica» for a click of its own.
   const active = worker("0.29.0", "activated");
   const waiting = worker("0.30.0");
   const b = browser({ active, controller: active, waiting });
   await setup({ ...b, texts });
   await tick();
   waiting.setState("activated");
+  assert.equal(b.reloads.length, 0, "nessuna ricarica non chiesta");
+  assert.ok(b.badge.classes.has("ready"));
+  assert.equal(b.badge.textContent, "aggiornata: ricarica");
+  b.badge.click();
   assert.equal(b.reloads.length, 1);
 });
 
@@ -178,6 +187,9 @@ await prova("senza niente in attesa, il click sulla versione è «controlla ades
   b.badge.click();
   assert.equal(b.registration.updates, before + 1);
   assert.equal(b.reloads.length, 0);
+  await tick();
+  assert.equal(b.badge.textContent, "v0.29.0 · aggiornata", "e lo dice, per un momento");
+  assert.ok(!b.badge.classes.has("ready"));
 });
 
 console.log(`update: ${passed} prove passate`);

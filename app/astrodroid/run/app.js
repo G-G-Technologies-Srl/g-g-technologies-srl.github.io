@@ -516,8 +516,15 @@ async function main() {
         badge: el("appVersion"),
         texts: {
           version: (v) => t("versionLabel").replace("{version}", v),
-          next: (current, v) => (v ? t("versionNext") : t("versionNextUnknown")).replace("{current}", current || "?").replace("{next}", v || ""),
+          // Without a running version to name — a worker from before the channel — the line is «→ 0.30.0».
+
+          next: (current, v) => (v ? t("versionNext") : t("versionNextUnknown")).replace("v{current}", current ? `v${current}` : "").replace("{next}", v || "").trim(),
+
           update: (v) => (v ? t("versionUpdate").replace("{next}", v) : t("versionUpdateUnknown")),
+
+          reload: () => t("versionReload"),
+
+          upToDate: (v) => t("versionUpToDate").replace("{version}", v),
         },
       });
     });

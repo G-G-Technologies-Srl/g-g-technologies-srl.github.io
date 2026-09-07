@@ -186,6 +186,8 @@ const IT = {
   versionNextUnknown: "v{current} → nuova",
   versionUpdate: "Aggiorna alla versione {next}",
   versionUpdateUnknown: "Aggiorna alla versione nuova",
+  versionReload: "Aggiornata: ricarica",
+  versionUpToDate: "v{version} · aggiornata",
   installButton: "Installala sul telefono",
   installIos: "Per averla sul telefono: Condividi, poi «Aggiungi a Home». Tocca qui per non "
     + "rivederlo.",
@@ -329,6 +331,8 @@ const EN = {
   versionNextUnknown: "v{current} → new",
   versionUpdate: "Update to version {next}",
   versionUpdateUnknown: "Update to the new version",
+  versionReload: "Updated: reload",
+  versionUpToDate: "v{version} · up to date",
   installButton: "Put it on your phone",
   installIos: "To keep it on your phone: Share, then “Add to Home Screen”. Tap here to stop "
     + "seeing this.",

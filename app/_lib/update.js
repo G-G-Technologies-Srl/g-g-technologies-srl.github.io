@@ -22,10 +22,12 @@
 //    not an alarm: something that blinks for days is either irritating or invisible, and it is off
 //    for whoever asked the system for less motion. The number comes from the waiting worker
 //    itself, over a `MessageChannel`, because the version lives in `sw.js` and nowhere else;
-//  - **the swap is the person's click** on that line. It tells the waiting worker to take over,
-//    and the page reloads when it has — the moment they chose, with their work already saved by
-//    the autosave every app has. No `clients.claim`: the reload is watched on the worker's own
-//    state, which does not depend on it.
+//  - **the swap is the person's click** on that line, and so is the reload. The click tells the
+//    waiting worker to take over, and this page reloads when it has — the moment they chose, with
+//    their work already saved by the autosave every app has. A page that did *not* click and finds
+//    the worker changed under it — the click came from another tab of the same app — is not
+//    reloaded: it keeps running the code it loaded, and its light turns to «aggiornata: ricarica»
+//    for a click of its own. No `clients.claim`: the hand-over is watched on the worker's state.
 //
 // Where there is no worker to ask — Safari in a private window, the demo — the version stays
 // hidden: writing it into the page would be a second copy of the number, and the one that drifts.
@@ -40,6 +42,7 @@
 const CHECK_EVERY_MS = 60 * 60 * 1000;      // once an hour, while the app is in front
 const CHECK_NOT_BEFORE_MS = 5 * 60 * 1000;  // and not on every glance back at the window
 const ANSWER_WITHIN_MS = 1500;              // a worker that does not answer is an older worker
+const CONFIRM_FOR_MS = 2500;                // «aggiornata» after a check that found nothing
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
@@ -73,11 +76,12 @@ function _versionOf(worker) {
  * Register `sw.js`, show the running version on `badge`, and watch for a newer one.
  *
  * `badge` is a `<button>` in the app bar, hidden until the version is known. `texts` gives the
- * three sentences: `version(v)` for the badge at rest, `next(current, v)` for the badge when `v`
- * is waiting (`current` or `v` may be `null` when a worker predates the channel), `update(v)` for
- * the button's title and label while it waits. `onVersion(v)` is told the running version, for
- * anything else that wants it. Returns the registration, or `null` where there is no service
- * worker at all.
+ * sentences: `version(v)` for the badge at rest, `next(current, v)` when `v` is waiting (`current`
+ * or `v` may be `null` when a worker predates the channel), `update(v)` for the title and label
+ * while it waits, `reload()` when the hand-over happened from another tab and this page needs a
+ * click of its own, `upToDate(v)` for the two seconds after a check that found nothing.
+ * `onVersion(v)` is told the running version. Returns the registration, or `null` where there is
+ * no service worker at all.
  */
 export async function setup({ badge, texts, onVersion = () => {}, script = "./sw.js" }) {
   if (!("serviceWorker" in navigator)) return null;
@@ -91,7 +95,10 @@ export async function setup({ badge, texts, onVersion = () => {}, script = "./sw
 
   let current = null;                   // the running version, once the active worker answered
   let announced = null;                 // the waiting worker on the badge, so it is announced once
+  let asked = false;                    // this page clicked «Aggiorna»: the reload is its own
+  let needsReload = false;              // the hand-over came from elsewhere: the light asks for a click
   let reloading = false;
+  let confirmTimer = null;
 
   // The running version, asked first: the badge at rest needs it, and the badge with a version
   // waiting needs it too — «v0.29.0 → 0.30.0» — so the announcement waits for this answer.
@@ -108,6 +115,17 @@ export async function setup({ badge, texts, onVersion = () => {}, script = "./sw
     if (!current || announced) return;
     badge.textContent = texts.version(current);
     badge.title = "";
+    badge.removeAttribute("aria-label");
+    badge.classList.remove("ready");
+    badge.hidden = false;
+  };
+
+  /** The light in its «click me» state, with the sentence and the label given. */
+  const light = (text, label) => {
+    badge.textContent = text;
+    badge.title = label;
+    badge.setAttribute("aria-label", label);
+    badge.classList.add("ready");
     badge.hidden = false;
   };
 
@@ -116,29 +134,42 @@ export async function setup({ badge, texts, onVersion = () => {}, script = "./sw
     announced = worker;
     await currentKnown;
     const next = await _versionOf(worker);
-    badge.textContent = texts.next(current, next);
-    badge.title = texts.update(next);
-    badge.setAttribute("aria-label", texts.update(next));
-    badge.classList.add("ready");
-    badge.hidden = false;
-    // The worker may activate on its own — the last other tab closed — and then the page it
-    // controls is the old one: reload, exactly as after the click.
+    light(texts.next(current, next), texts.update(next));
+    // Activated: by this page's click, and the reload is its own; or by another tab's, and this
+    // page — maybe halfway through something — keeps its code and gets a light to click.
     worker.addEventListener("statechange", () => {
-      if (worker.state === "activated") reload();
+      if (worker.state !== "activated") return;
+      if (asked) reload();
+      else {
+        needsReload = true;
+        light(texts.reload(), texts.reload());
+      }
     });
   };
 
   // The checks: at start the browser has just made one, so the timers cover what it does not.
   let lastCheck = Date.now();
-  const check = (force = false) => {
-    if (!force && Date.now() - lastCheck < CHECK_NOT_BEFORE_MS) return;
+  const check = () => {
+    if (Date.now() - lastCheck < CHECK_NOT_BEFORE_MS) return;
     lastCheck = Date.now();
     registration.update().catch(() => {});
   };
 
   badge.addEventListener("click", () => {
+    if (needsReload) { reload(); return; }
     const waiting = registration.waiting || announced;
-    if (!waiting) { check(true); return; }          // nothing waiting: the click is «look now»
+    if (!waiting) {
+      // Nothing waiting: the click is «look now», and says so when nothing turns up.
+      registration.update().then(() => {
+        if (registration.waiting || registration.installing || announced || !current) return;
+        badge.textContent = texts.upToDate(current);
+        clearTimeout(confirmTimer);
+        confirmTimer = setTimeout(showCurrent, CONFIRM_FOR_MS);
+      }).catch(() => {});
+      lastCheck = Date.now();
+      return;
+    }
+    asked = true;
     badge.classList.remove("ready");
     waiting.postMessage({ type: "gg:skip-waiting" });
   });
