@@ -11,7 +11,7 @@
 
 import assert from "node:assert/strict";
 
-import * as model from "../run/model.js";
+import * as model from "gg/plan-model.js";
 
 let passed = 0;
 

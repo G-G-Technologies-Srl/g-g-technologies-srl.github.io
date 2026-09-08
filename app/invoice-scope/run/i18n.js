@@ -114,6 +114,127 @@ const IT = {
   convertGroupAll: "Tutti insieme",
   convertGroupOne: "Solo questo",
 
+  // ---- progetti
+  navProjects: "Progetti",
+  projectsTitle: "Progetti",
+  projectsNew: "Nuovo progetto",
+  projectsEdit: "Modifica il progetto",
+  projectsImport: "Importa un progetto",
+  projectExport: "Esporta il progetto",
+  projectImportAsk: "Importo «{nome}» come progetto nuovo?",
+  projectImportPages: "{quante} pagine",
+  projectImportTasks: "{quante} fasi",
+  projectImportImages: "{quante} immagini, che restano fuori: qui non c'è ancora dove tenerle",
+  projectImportBad: "Questo file non è un progetto. Il pacchetto è quello che escono da qui e da "
+    + "Plan Scope, con estensione .zip o .json.",
+  projectImportOther: "Questo file è di un altro programma.",
+  projectsUntitled: "Senza nome",
+  projectsNote: "Il piano di un lavoro, con accanto quello che hai quotato, fatturato e incassato. "
+    + "Un progetto nasce anche da un preventivo accettato, con una fase per riga.",
+  projectsEmpty: "Qui compaiono i lavori che segui.",
+  projectNeedsName: "Serve almeno il nome del progetto.",
+  projectDeleteAsk: "Elimino questo progetto? Le fatture e i preventivi collegati restano dove "
+    + "sono. Torna indietro dal cestino entro trenta giorni.",
+  projectPhases: "Fasi",
+  projectPhasesCount: "{fatte} di {tutte}",
+  projectToBill: "Da fatturare",
+  projectBack: "Tutti i progetti",
+  projectEditData: "Modifica i dati",
+  projectSince: "aperto il {data}",
+  f_nomeProgetto: "nome del progetto",
+  projectsName: "Progetto",
+
+  projQuoted: "Quotato",
+  projBilled: "Fatturato",
+  projPaid: "Incassato",
+  projToBill: "Da fatturare (imponibile)",
+  projPhasesTitle: "Fasi",
+  projPhasesNote: "Spunta una fase quando è fatta. Una fase con un importo, quando è fatta, diventa "
+    + "una riga di fattura: è il motivo per cui il piano sta qui e non in un programma a parte. "
+    + "L'importo di una fase è l'imponibile: l'IVA la aggiunge la fattura.",
+  projPhasesEmpty: "Qui compaiono le fasi che aggiungi.",
+  projDone: "fatta",
+  projPhase: "fase",
+  projAmount: "importo",
+  projPhaseAdd: "Aggiungi la fase",
+  projPhaseNeedsTitle: "Scrivi che cos'è, anche solo due parole.",
+  projPhaseDeleteAsk: "Elimino questa fase?",
+  projPhaseBilled: "fatturata",
+  projPhaseDrafted: "in bozza",
+  projInvoiceDone: "Fattura le fasi fatte",
+  projInvoiceAsk: "Preparo una bozza di fattura con dentro {quante} fasi. Resta una bozza: la "
+    + "controlli e la emetti tu.",
+  projInvoiceNothing: "Non c'è nessuna fase fatta con un importo.",
+  projDocsTitle: "Documenti collegati",
+  projDocsEmpty: "Nessun documento collegato a questo progetto.",
+  projUnlink: "Scollega",
+  docMakeProject: "Crea il progetto",
+  docInProject: "Progetto: {nome}",
+
+  // ---- le pagine di un progetto, e le parole dell'editor condiviso
+  //
+  // **Le stesse chiavi che ha Plan Scope**, perché `gg/plan-editor.js` le cerca con la funzione che
+  // gli passa l'app: ogni app tiene le proprie parole — è la regola — e `check_apps.py` verifica che
+  // le due lingue di ognuna coincidano. Copiate una volta; se una cambia lì, qui resta com'è, ed è
+  // giusto così: sono le parole di questa app.
+  projPagesTitle: "Pagine",
+  projPagesNote: "Il capitolato, il verbale di un sopralluogo, le misure prese in cantiere. Stanno "
+    + "nel progetto, e viaggiano con lui quando lo esporti.",
+  projPagesEmpty: "Qui compaiono le pagine che aggiungi.",
+  projPageNew: "Nuova pagina",
+  projPageImage: "Immagine",
+  projPageFile: "Allegato",
+  projAssetNoPage: "Apri prima una pagina: l'immagine va dentro una pagina, non nel progetto.",
+  projAssetTooBig: "Questo file pesa più di {mb} MB. L'app tiene tutto nel browser, quindi il "
+    + "limite c'è per non riempirtelo: riduci l'immagine, o tienila fuori e mettine il nome.",
+  projAssetMissing: "Questo allegato non c'è più nel deposito.",
+  projPageAsk: "Come si chiama la pagina?",
+  projPageUntitled: "Senza titolo",
+  projPageSubNew: "Aggiungi una sotto-pagina",
+  projPageSubAsk: "Come si chiama la sotto-pagina?",
+  projPageTooDeep: "Le sotto-pagine arrivano a quattro livelli, e questa è già in fondo. Se serve "
+    + "un altro scalino, di solito conviene una pagina in più accanto.",
+  projPageDeleteAsk: "Elimino questa pagina? Le sue sotto-pagine restano, e salgono di un livello. "
+    + "Torni indietro dal cestino entro trenta giorni.",
+  addBlock: "Aggiungi un blocco",
+  dragHandle: "Trascina per spostare, tocca per trasformare — con la tastiera, Alt e le frecce",
+  taskDone: "Fatto",
+  taskUndone: "Da fare",
+  menuTitle: "Aggiungi un blocco",
+  menuChange: "Trasforma in",
+  menuFind: "Cerca",
+  menuEmpty: "Niente con questo nome.",
+  menuClose: "Chiudi",
+  linkPrompt: "Dove porta il collegamento?",
+  sampleHeading: "Titolo",
+  sampleText: "Testo normale",
+  sampleItem: "Una voce",
+  sampleQuote: "Una citazione",
+  sampleNote: "Una nota in evidenza",
+  blockParagraph: "Testo",
+  blockHeading1: "Titolo grande",
+  blockHeading2: "Titolo medio",
+  blockHeading3: "Titolo piccolo",
+  blockHeading1: "Titolo grande",
+  blockHeading2: "Titolo medio",
+  blockHeading3: "Titolo piccolo",
+  blockHeading2: "Titolo medio",
+  blockHeading3: "Titolo piccolo",
+  blockHeading3: "Titolo piccolo",
+  blockList: "Elenco puntato",
+  blockOrdered: "Elenco numerato",
+  blockCheck: "Checklist",
+  blockQuote: "Citazione",
+  blockCallout: "Riquadro in evidenza",
+  blockCode: "Codice",
+  blockDivider: "Riga di separazione",
+  blockTable: "Tabella",
+  blockDuplicate: "Duplica",
+  blockDelete: "Elimina il blocco",
+  callout_nota: "Nota",
+  callout_attenzione: "Attenzione",
+  callout_fatto: "Fatto",
+
   // ---- anagrafiche
   partiesTitle: "Anagrafiche",
   partiesClients: "Clienti",
@@ -132,6 +253,50 @@ const IT = {
     + "il nome della regione servono a chi riceve.",
 
   itemsEmpty: "Qui compaiono le voci che usi spesso.",
+  partiesLastContact: "Ultimo contatto",
+
+  // ---- la scheda di un cliente
+  custBack: "Tutti i clienti",
+  custEditData: "Modifica i dati",
+  custBilledLabel: "Fatturato in tutto",
+  custDueLabel: "Da incassare",
+  custContactsTitle: "Persone di riferimento",
+  custContactsNote: "Chi risponde al telefono e a chi scrivi. Restano qui, sul tuo computer: la "
+    + "fattura elettronica non ha un campo per il nome di una persona, e l'app non ne inventa uno.",
+  custContactsEmpty: "Le persone che aggiungi compaiono qui.",
+  custDiaryTitle: "Diario",
+  custDiaryNote: "Una riga per telefonata, email o incontro. Vale la volta dopo, quando ti chiedono "
+    + "che cosa vi eravate detti — e quando il preventivo arriva tre mesi più tardi.",
+  custDiaryEmpty: "Qui compare quello che annoti.",
+  custProjectsTitle: "I suoi progetti",
+  partyDefaultsTitle: "Nei suoi documenti",
+  partyDefaultsNote: "Quello che l'app propone su un documento nuovo per questo cliente. Vuoti, "
+    + "valgono i predefiniti dell'azienda.",
+  f_contoCliente: "conto su cui paga",
+  custRate: "IVA",
+  custAccount: "paga sul conto",
+  partyContoAzienda: "quello predefinito dell'azienda",
+  custDocsTitle: "I suoi documenti",
+  custDocsEmpty: "Per questo cliente non c'è ancora nessun documento.",
+
+  contactNew: "Aggiungi una persona",
+  contactEdit: "Modifica la persona",
+  contactNeedsName: "Serve almeno il nome.",
+  contactDeleteAsk: "Elimino questa persona? Il cliente e i suoi documenti restano come sono.",
+  f_nome: "nome",
+  f_ruolo: "ruolo",
+  f_notePersona: "nota",
+
+  actKind: "Tipo",
+  actNota: "Nota",
+  actChiamata: "Telefonata",
+  actEmail: "Email",
+  actIncontro: "Incontro",
+  actText: "cosa è successo",
+  actAdd: "Aggiungi",
+  actNeedsText: "Scrivi cosa è successo, anche solo due parole.",
+  actNotSaved: "Questa voce non è stata salvata. Riprova.",
+  actDeleteAsk: "Elimino questa voce del diario?",
 
   // ---- azienda
   companyTitle: "La tua azienda",
@@ -165,7 +330,8 @@ const IT = {
     + "stesso file di «Esporta tutto». Se la cartella è dentro Dropbox o iCloud, la copia arriva "
     + "da sé sugli altri tuoi computer. Tiene anche una copia al giorno degli ultimi trenta "
     + "giorni. Da qui scrive un computer solo: sull'altro apri l'archivio con «Importa un "
-    + "archivio».",
+    + "archivio». L'archivio porta il testo: le immagini dentro le pagine dei progetti viaggiano "
+    + "nel pacchetto del progetto, che è uno zip.",
   backupPick: "Scegli la cartella…",
   backupResume: "Riprendi la cartella",
   backupUnlink: "Scollega la cartella",
@@ -302,6 +468,7 @@ const IT = {
   cancel: "Lascia stare",
   ok: "Va bene",
   del: "Elimina",
+  edit: "Modifica",
   close: "Chiudi",
   install: "Installa",
   backToPage: "Torna alla scheda",
@@ -473,6 +640,19 @@ const IT = {
   demoTransportReason: "Vendita",
   demoTransportLook: "Pallet",
   demoPaymentNote: "Acconto, saldo a fine mese",
+  demoActCall: "Chiamata di Chiara: la seconda linea parte a ottobre, quindi il collaudo slitta.\n"
+    + "Da risentire la settimana del 20.",
+  demoActMeeting: "In officina da loro. Il telaio va rinforzato sul lato motore: è il motivo per cui "
+    + "il preventivo è più alto del primo.",
+  demoActEmail: "Mandato il preventivo, con lo sconto del 5% concordato a voce.",
+  demoActNote: "Decide Marta, il figlio guarda solo i tempi di consegna.",
+  demoProjectName: "Linea di montaggio — secondo lotto",
+  demoProjectPhase: "Collaudo in sede e consegna",
+  demoProjectPage: "Verbale del sopralluogo",
+  demoProjectPageText: "# Sopralluogo del 21 agosto\n\nIn officina con Marta e il figlio.\n\n"
+    + "- Il telaio va rinforzato sul lato motore: 40 ore di officina in più rispetto al primo preventivo.\n"
+    + "- La seconda linea parte a ottobre, quindi il collaudo slitta.\n"
+    + "- Misure prese: campata 4,20 m, altezza utile 2,80 m.\n",
 
   // ---- importazione da un altro programma
   //
@@ -722,6 +902,123 @@ const EN = {
   convertGroupAll: "All together",
   convertGroupOne: "Only this one",
 
+  // ---- projects
+  navProjects: "Projects",
+  projectsTitle: "Projects",
+  projectsNew: "New project",
+  projectsEdit: "Edit the project",
+  projectsImport: "Import a project",
+  projectExport: "Export the project",
+  projectImportAsk: "Import «{nome}» as a new project?",
+  projectImportPages: "{quante} pages",
+  projectImportTasks: "{quante} phases",
+  projectImportImages: "{quante} images, which stay out: there is nowhere to keep them here yet",
+  projectImportBad: "This file is not a project. The package is the one this app and Plan Scope "
+    + "write, with a .zip or .json extension.",
+  projectImportOther: "This file belongs to another program.",
+  projectsUntitled: "Untitled",
+  projectsNote: "The plan of a job, beside what you quoted, invoiced and collected. A project can "
+    + "also start from an accepted quote, with one phase per line.",
+  projectsEmpty: "The jobs you follow show up here.",
+  projectNeedsName: "The project needs a name.",
+  projectDeleteAsk: "Delete this project? The invoices and quotes linked to it stay where they "
+    + "are. You can take it back from the bin within thirty days.",
+  projectPhases: "Phases",
+  projectPhasesCount: "{fatte} of {tutte}",
+  projectToBill: "To invoice",
+  projectBack: "All projects",
+  projectEditData: "Edit the details",
+  projectSince: "opened on {data}",
+  f_nomeProgetto: "project name",
+  projectsName: "Project",
+
+  projQuoted: "Quoted",
+  projBilled: "Invoiced",
+  projPaid: "Collected",
+  projToBill: "To invoice (net of VAT)",
+  projPhasesTitle: "Phases",
+  projPhasesNote: "Tick a phase when it is done. A phase with an amount becomes an invoice line "
+    + "once it is done: that is why the plan lives here and not in a separate program. "
+    + "A phase amount is net of VAT: the invoice adds it.",
+  projPhasesEmpty: "The phases you add show up here.",
+  projDone: "done",
+  projPhase: "phase",
+  projAmount: "amount",
+  projPhaseAdd: "Add the phase",
+  projPhaseNeedsTitle: "Write what it is, even just two words.",
+  projPhaseDeleteAsk: "Delete this phase?",
+  projPhaseBilled: "invoiced",
+  projPhaseDrafted: "in a draft",
+  projInvoiceDone: "Invoice the finished phases",
+  projInvoiceAsk: "I will prepare a draft invoice with {quante} phases in it. It stays a draft: "
+    + "you check it and you issue it.",
+  projInvoiceNothing: "There is no finished phase with an amount.",
+  projDocsTitle: "Linked documents",
+  projDocsEmpty: "No document linked to this project.",
+  projUnlink: "Unlink",
+  docMakeProject: "Create the project",
+  docInProject: "Project: {nome}",
+
+  // ---- a project's pages, and the words of the shared editor
+  projPagesTitle: "Pages",
+  projPagesNote: "The specification, the notes from a site visit, the measurements taken on site. "
+    + "They live in the project, and travel with it when you export it.",
+  projPagesEmpty: "The pages you add show up here.",
+  projPageNew: "New page",
+  projPageImage: "Image",
+  projPageFile: "Attachment",
+  projAssetNoPage: "Open a page first: an image goes inside a page, not in the project.",
+  projAssetTooBig: "This file is larger than {mb} MB. The app keeps everything in the browser, so "
+    + "the limit is there to keep it from filling up: shrink the image, or keep it outside and "
+    + "write its name.",
+  projAssetMissing: "This attachment is no longer in the store.",
+  projPageAsk: "What is the page called?",
+  projPageUntitled: "Untitled",
+  projPageSubNew: "Add a sub-page",
+  projPageSubAsk: "What is the sub-page called?",
+  projPageTooDeep: "Sub-pages go four levels deep, and this one is already at the bottom. When you "
+    + "need another step, one more page beside it usually reads better.",
+  projPageDeleteAsk: "Delete this page? Its sub-pages stay, and move up one level. You can take it "
+    + "back from the bin within thirty days.",
+  addBlock: "Add a block",
+  dragHandle: "Drag to move, click to turn into — with a keyboard, Alt and the arrows",
+  taskDone: "Done",
+  taskUndone: "To do",
+  menuTitle: "Add a block",
+  menuChange: "Turn into",
+  menuFind: "Search",
+  menuEmpty: "Nothing by that name.",
+  menuClose: "Close",
+  linkPrompt: "Where does the link go?",
+  sampleHeading: "Heading",
+  sampleText: "Ordinary text",
+  sampleItem: "An item",
+  sampleQuote: "A quotation",
+  sampleNote: "A highlighted note",
+  blockParagraph: "Text",
+  blockHeading1: "Large heading",
+  blockHeading2: "Medium heading",
+  blockHeading3: "Small heading",
+  blockHeading1: "Large heading",
+  blockHeading2: "Medium heading",
+  blockHeading3: "Small heading",
+  blockHeading2: "Medium heading",
+  blockHeading3: "Small heading",
+  blockHeading3: "Small heading",
+  blockList: "Bulleted list",
+  blockOrdered: "Numbered list",
+  blockCheck: "Checklist",
+  blockQuote: "Quote",
+  blockCallout: "Highlighted box",
+  blockCode: "Code",
+  blockDivider: "Divider",
+  blockTable: "Table",
+  blockDuplicate: "Duplicate",
+  blockDelete: "Delete the block",
+  callout_nota: "Note",
+  callout_attenzione: "Careful",
+  callout_fatto: "Done",
+
   partiesTitle: "Contacts",
   partiesClients: "Customers",
   partiesItems: "Price list",
@@ -739,6 +1036,50 @@ const EN = {
     + "postcode and the region's name are of use to whoever receives it.",
 
   itemsEmpty: "The lines you use often show up here.",
+  partiesLastContact: "Last contact",
+
+  // ---- a customer's own screen
+  custBack: "All customers",
+  custEditData: "Edit the details",
+  custBilledLabel: "Invoiced in total",
+  custDueLabel: "Outstanding",
+  custContactsTitle: "People to talk to",
+  custContactsNote: "Who answers the phone, and who you write to. They stay here, on your computer: "
+    + "an electronic invoice has no field for a person's name, and the app does not invent one.",
+  custContactsEmpty: "The people you add show up here.",
+  custDiaryTitle: "Diary",
+  custDiaryNote: "One line per call, email or meeting. It pays off the next time somebody asks what "
+    + "the two of you had agreed — and when the quote arrives three months later.",
+  custDiaryEmpty: "What you write down shows up here.",
+  custProjectsTitle: "Their projects",
+  partyDefaultsTitle: "In their documents",
+  partyDefaultsNote: "What the app proposes on a new document for this customer. Left empty, the "
+    + "company defaults apply.",
+  f_contoCliente: "account they pay into",
+  custRate: "VAT",
+  custAccount: "pays into",
+  partyContoAzienda: "the company default",
+  custDocsTitle: "Their documents",
+  custDocsEmpty: "There is no document for this customer yet.",
+
+  contactNew: "Add a person",
+  contactEdit: "Edit the person",
+  contactNeedsName: "A name is the one thing needed.",
+  contactDeleteAsk: "Delete this person? The customer and their documents stay as they are.",
+  f_nome: "name",
+  f_ruolo: "role",
+  f_notePersona: "note",
+
+  actKind: "Kind",
+  actNota: "Note",
+  actChiamata: "Call",
+  actEmail: "Email",
+  actIncontro: "Meeting",
+  actText: "what happened",
+  actAdd: "Add",
+  actNeedsText: "Write what happened, even just two words.",
+  actNotSaved: "This entry was not saved. Try again.",
+  actDeleteAsk: "Delete this diary entry?",
 
   companyTitle: "Your company",
   companyNote: "These are the details that head every document. You fill them in once.",
@@ -770,7 +1111,8 @@ const EN = {
     + "the same file as «Export everything». If the folder sits inside Dropbox or iCloud, the "
     + "copy reaches your other computers on its own. It also keeps one copy a day for the last "
     + "thirty days. Only one computer writes here: on the other, open the archive with «Import "
-    + "an archive».",
+    + "an archive». The archive carries the text: the images inside project pages travel in the "
+    + "project package, which is a zip.",
   backupPick: "Choose the folder…",
   backupResume: "Resume the folder",
   backupUnlink: "Unlink the folder",
@@ -906,6 +1248,7 @@ const EN = {
   cancel: "Never mind",
   ok: "All right",
   del: "Delete",
+  edit: "Edit",
   close: "Close",
   install: "Install",
   backToPage: "Back to the app page",
@@ -1070,6 +1413,19 @@ const EN = {
   demoTransportReason: "Sale",
   demoTransportLook: "Pallet",
   demoPaymentNote: "Part payment, balance at month end",
+  demoActCall: "Chiara rang: the second line starts in October, so testing moves back.\n"
+    + "Call again in the week of the 20th.",
+  demoActMeeting: "At their workshop. The frame needs reinforcing on the engine side: that is why "
+    + "this quote is higher than the first one.",
+  demoActEmail: "Quote sent, with the 5% discount agreed on the phone.",
+  demoActNote: "Marta decides; her son only looks at the delivery dates.",
+  demoProjectName: "Assembly line — second batch",
+  demoProjectPhase: "On-site testing and delivery",
+  demoProjectPage: "Site visit notes",
+  demoProjectPageText: "# Site visit, 21 August\n\nAt the workshop with Marta and her son.\n\n"
+    + "- The frame needs reinforcing on the engine side: 40 more workshop hours than the first quote.\n"
+    + "- The second line starts in October, so testing moves back.\n"
+    + "- Measurements: span 4.20 m, clear height 2.80 m.\n",
 
   impTitle: "From another program",
   impNote: "Bring customers, price list and documents over from Fatture in Cloud, and XML invoices "

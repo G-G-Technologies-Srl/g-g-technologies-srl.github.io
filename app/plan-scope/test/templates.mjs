@@ -24,7 +24,7 @@ import { dirname, join } from "node:path";
 
 import * as templates from "../run/templates.js";
 import * as demo from "../run/demo.js";
-import * as model from "../run/model.js";
+import * as model from "gg/plan-model.js";
 
 let passed = 0;
 

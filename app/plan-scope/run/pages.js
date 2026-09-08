@@ -11,8 +11,8 @@
 // Split off `app.js` because the head is state of its own, and the file that owns it should be
 // the file that reads and writes it.
 
-import * as model from "./model.js";
-import * as md from "./markdown.js";
+import * as model from "gg/plan-model.js";
+import * as md from "gg/plan-markdown.js";
 import { t, tf, num } from "./i18n.js";
 import { el, node, button, fill, shortDate } from "./ui.js";
 

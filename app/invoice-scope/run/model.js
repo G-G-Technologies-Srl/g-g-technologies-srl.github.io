@@ -452,6 +452,26 @@ export async function discard(db, doc) {
   await remove(db, "docs", doc.id);
 }
 
+/**
+ * The amount a document weighs in a column of documents, or `null` when it has none yet.
+ *
+ * Frozen totals when it has been issued, worked out from the lines for a draft — a draft has no
+ * saved total and a dash tells the reader nothing about what they are about to invoice — and
+ * negative for a credit note: its own figures are positive, as the tracciato wants them, but beside
+ * a column of invoices it is money going the other way.
+ *
+ * Here rather than beside each list because there are three lists now — the documents, the home, a
+ * customer's own — and the sign is the part that goes wrong quietly: added instead of subtracted, a
+ * credit note raises the very figure it was written to cancel.
+ */
+export function signedTotal(doc) {
+  const valore = doc.totali
+    ? BigInt(doc.totali.totale)
+    : ((doc.righe || []).length ? totals(doc).totale : null);
+  if (valore === null) return null;
+  return kind(doc).storna ? -valore : valore;
+}
+
 /** Every document, newest first. */
 export async function documents(db) {
   const all = await list(db, "docs");

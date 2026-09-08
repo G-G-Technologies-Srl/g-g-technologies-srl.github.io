@@ -10,7 +10,7 @@ import assert from "node:assert/strict";
 import { install, elem, text } from "./dom.mjs";
 
 install();
-const { __test: editor } = await import("../run/editor.js");
+const { __test: editor } = await import("gg/plan-editor.js");
 
 let passed = 0;
 

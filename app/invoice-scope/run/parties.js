@@ -25,10 +25,12 @@ import { get, put, list, remove } from "gg/store.js";
 
 import { t } from "./i18n.js";
 import { fiscalCode, parseAmount } from "./parse.js";
-import { money, rate } from "./format.js";
+import { money, rate, date as shownDate } from "./format.js";
+import { activities, contactsOf, contactRecord, lastContactByParty, removeParty } from "./crm.js";
 import { ask, tell } from "./ask.js";
 import { from, toString } from "./decimal.js";
 import { PAESI_CON_CAP } from "./fatturapa.js";
+import { NATURE } from "./validate.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -36,6 +38,10 @@ import { PAESI_CON_CAP } from "./fatturapa.js";
 
 const PARTY_FIELDS = [
   "denominazione", "partitaIva", "codiceFiscale", "codiceDestinatario", "pec", "paese",
+  // **Quello che il cliente porta nei suoi documenti.** L'aliquota da proporre sulle righe nuove e
+  // il conto su cui paga: vuoti, valgono quelli dell'azienda. Un cliente estero a zero, o uno che
+  // paga su un conto diverso dagli altri, così si scrive una volta e non su ogni fattura.
+  "aliquotaPredefinita", "naturaPredefinita", "ibanPredefinito",
 ];
 const SEDE_FIELDS = ["indirizzo", "numeroCivico", "cap", "comune", "provincia"];
 const ITEM_FIELDS = ["descrizione", "unitaMisura", "prezzoUnitario", "aliquota", "natura", "tm"];
@@ -56,6 +62,7 @@ let onChange = null;
 let editing = null;
 let aliquotaNuova = "22";                               // the company's usual rate, for a new item
 let predefiniti = { natura: "", tm: "" };               // and its nature and TM code at a zero rate
+let conti = [];                                         // the company's bank accounts, for the party sheet
 
 /**
  * Chi aspetta il cliente appena creato.
@@ -176,9 +183,55 @@ function _openParty(record) {
   form.elements.paese.value = sigla;
   _paeseScelto();
   _paeseCambiato();
+  _fillDefaults(form, data);
 
   _open(el("partyDialog"));
   form.elements.denominazione.focus();
+}
+
+/**
+ * I predefiniti del cliente nel foglio: l'aliquota con accanto quella dell'azienda come suggerimento,
+ * la natura solo quando l'aliquota è zero, e il conto scelto fra quelli dell'azienda.
+ *
+ * Sotto i due conti il menù non compare: con uno solo non c'è niente da scegliere, e la voce
+ * «quello dell'azienda» lo dice già.
+ */
+function _fillDefaults(form, data) {
+  form.elements.aliquotaPredefinita.placeholder = aliquotaNuova;
+  form.elements.aliquotaPredefinita.value = data.aliquotaPredefinita ?? "";
+
+  const natura = form.elements.naturaPredefinita;
+  natura.textContent = "";
+  for (const code of ["", ...NATURE]) {
+    const option = document.createElement("option");
+    option.value = code;
+    option.textContent = code ? `${code} — ${t(`natura${code}`)}` : "—";
+    natura.append(option);
+  }
+  natura.value = data.naturaPredefinita || "";
+  _aliquotaCambiata();
+
+  const scelta = form.elements.ibanPredefinito;
+  scelta.textContent = "";
+  const azienda = document.createElement("option");
+  azienda.value = "";
+  azienda.textContent = t("partyContoAzienda");
+  scelta.append(azienda);
+  for (const conto of conti) {
+    const option = document.createElement("option");
+    option.value = conto.iban;
+    option.textContent = conto.etichetta ? `${conto.etichetta} · …${conto.iban.slice(-4)}` : conto.iban;
+    scelta.append(option);
+  }
+  scelta.value = conti.some((conto) => conto.iban === data.ibanPredefinito) ? data.ibanPredefinito : "";
+  el("partyContoField").hidden = conti.length < 2;
+}
+
+/** La natura serve solo a zero: a 22 il menù sarebbe una domanda senza senso. */
+function _aliquotaCambiata() {
+  const form = el("partyForm");
+  const zero = String(parseAmount(form.elements.aliquotaPredefinita.value) ?? "") === "0";
+  el("partyNaturaField").hidden = !zero;
 }
 
 /**
@@ -226,7 +279,7 @@ async function _saveParty() {
   // Il paese adesso è un campo della scheda: prima nasceva «IT» e non c'era modo di cambiarlo,
   // quindi un cliente tedesco o sammarinese non si poteva registrare affatto.
   flat.paese = (flat.paese || "IT").toUpperCase();
-  const record = await saveParty(database, { ...flat, id: editing?.id });
+  const record = await saveParty(database, { ...flat, id: editing?.id, contatti: editing?.contatti });
 
   // What is still missing is said *after* saving, not instead of it: the record is already safe,
   // and the note is a reminder rather than a gate.
@@ -339,6 +392,12 @@ export function partyRecord(fields) {
   const record = { id: fields.id || _id(), sede: {}, paese: fields.paese || "IT" };
   for (const key of PARTY_FIELDS) record[key] = (fields[key] || "").trim();
   for (const key of SEDE_FIELDS) record.sede[key] = (fields[key] || "").trim();
+  // **I contatti passano di qui o si perdono.** Questa funzione costruisce il record da una lista di
+  // campi e butta via tutto il resto, che è quello che la rende adatta all'importazione — e che
+  // cancellerebbe le persone di riferimento ogni volta che qualcuno corregge un CAP nella scheda.
+  // Le maschere passano quelli che c'erano; chi non ne ha non ha la chiave.
+  const contatti = contactsOf({ contatti: fields.contatti }).map(contactRecord);
+  if (contatti.length) record.contatti = contatti;
   record.paese = (record.paese || "IT").toUpperCase();
   // Senza il paese davanti: Fatture in Cloud scrive `SM29141`, il tracciato vuole `29141` con
   // `IdPaese` accanto, e lasciato così il codice usciva doppio nel file.
@@ -350,6 +409,14 @@ export function partyRecord(fields) {
     record.sede.provincia = record.sede.provincia.toUpperCase().replace(/^R\.?S\.?M\.?$/, "SM");
   }
   record.codiceDestinatario = record.codiceDestinatario.toUpperCase();
+  // L'aliquota nella forma che i conti accettano, o vuota: «22,0» scritto a mano vale 22.
+  // Senza zeri in coda: «22,0» e «22» sono la stessa aliquota, e nel riepilogo IVA devono cadere
+  // nella stessa riga.
+  record.aliquotaPredefinita = record.aliquotaPredefinita === ""
+    ? ""
+    : (parseAmount(record.aliquotaPredefinita) ?? "").replace(/\.(\d*?)0+$/, ".$1").replace(/\.$/, "");
+  if (String(record.aliquotaPredefinita) !== "0") record.naturaPredefinita = "";
+  record.ibanPredefinito = record.ibanPredefinito.replace(/\s/g, "").toUpperCase();
   record.name = record.denominazione;
   record.updated = new Date().toISOString();
   return record;
@@ -384,21 +451,34 @@ export async function render(db, afterChange = null) {
   const company = await get(db, "company", "company");
   aliquotaNuova = (company && company.aliquotaPredefinita) || "22";
   predefiniti = { natura: (company || {}).naturaPredefinita || "", tm: (company || {}).tmPredefinito || "" };
+  conti = ((company || {}).conti || []).filter((conto) => conto.iban);
 
   const people = await parties(db);
   el("partiesEmpty").hidden = people.length > 0;
   el("partiesTable").hidden = people.length === 0;
   const body = el("partiesBody");
   body.textContent = "";
+  // L'ultimo contatto in una lettura sola del diario, non una per riga: su un'anagrafica di
+  // duecento clienti sarebbero duecento transazioni per disegnare una tabella.
+  const ultimo = lastContactByParty(await activities(db));
   for (const person of people) {
+    const quando = ultimo.get(person.id);
     body.append(_row(
-      [[person.denominazione], [person.partitaIva || person.codiceFiscale], [person.sede?.comune]],
+      [
+        [person.denominazione],
+        [person.partitaIva || person.codiceFiscale],
+        [person.sede?.comune],
+        [quando ? shownDate(quando) : ""],
+      ],
       {
         label: person.denominazione,
-        onOpen: () => _openParty(person),
+        // La riga apre il cliente, non la maschera: da quando la scheda porta le persone, il
+        // diario e i documenti, il modulo dei dati fiscali è una delle cose che si fanno lì, non
+        // l'unica. Si modifica dal pulsante che sta dentro.
+        onOpen: () => { location.hash = `#/cliente/${person.id}`; },
         onDelete: async () => {
           if (!(await ask(t("partyDeleteAsk"), { okLabel: t("del"), danger: true }))) return;
-          await remove(db, "parties", person.id);
+          await removeParty(db, person.id);
           await render(db, onChange);
           if (onChange) onChange();
         },
@@ -447,6 +527,18 @@ export function openNewParty({ afterSave = null } = {}) {
   _openParty(null);
 }
 
+/**
+ * Apri la maschera dei dati fiscali di un cliente che esiste già.
+ *
+ * La usa la sua scheda, che è la schermata dove quel cliente si guarda: i dati per fatturare sono
+ * dieci campi e stanno bene in un foglio sovrapposto, mentre persone, diario e documenti vogliono
+ * spazio. `afterSave` riceve il record salvato, così la scheda si ridisegna col nome nuovo.
+ */
+export function openParty(record, { afterSave = null } = {}) {
+  dopoIlSalvataggio = afterSave;
+  _openParty(record);
+}
+
 export function connect(db, afterChange = null) {
   database = db;
   onChange = afterChange;
@@ -455,6 +547,7 @@ export function connect(db, afterChange = null) {
   // Il paese decide se CAP e provincia finiscono nel file o solo sul foglio stampato, quindi la
   // scheda si adatta mentre lo si scrive e non al salvataggio.
   el("partyForm").elements.paese.addEventListener("input", _paeseCambiato);
+  el("partyForm").elements.aliquotaPredefinita.addEventListener("input", _aliquotaCambiata);
   el("partyForm").elements.paeseScelto.addEventListener("change", () => {
     _paeseScelto();
     _paeseCambiato();
@@ -471,7 +564,12 @@ export function connect(db, afterChange = null) {
     if (!(await ask(t("partyDeleteAsk"), { okLabel: t("del"), danger: true }))) return;
     _close(el("partyDialog"));
     editing = null;
-    await remove(database, "parties", record.id);
+    dopoIlSalvataggio = null;
+    await removeParty(database, record.id);
+    // Cancellato da dentro la sua scheda, si torna all'elenco: restare su `#/cliente/<id>` vuol
+    // dire guardare la scheda di un cliente che non c'è più, e in finestra installata non c'è il
+    // pulsante «indietro» del browser per uscirne.
+    if (location.hash === `#/cliente/${record.id}`) location.hash = "#/anagrafiche";
     await render(database, onChange);
     if (onChange) onChange();
   });

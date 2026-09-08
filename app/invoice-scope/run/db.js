@@ -24,7 +24,20 @@ import { openMemory } from "./memory.js";
 // -----------------------------------------------------------------------------------------------------------------
 
 export const NAME = "invoice-scope";
-export const VERSION = 1;
+
+/**
+ * The schema's version, and the one number that must move when a store is added.
+ *
+ * 3 → 4: `assets`, le immagini e i file dentro le pagine.
+ *
+ * 2 → 3: `projects`, `pages` e `tasks`, cioè i progetti con dentro il loro piano.
+ *
+ * 1 → 2: `activities`, the diary on a customer. The whole shape is declared below, as the rule
+ * demands — `onupgradeneeded` fires from whatever version the visitor has, and on a program somebody
+ * opens once a quarter that is not the previous one. Nothing is migrated: a customer without a diary
+ * simply has none, which is the state every existing one starts from.
+ */
+export const VERSION = 4;
 
 /**
  * The stores, as `gg/store.js` describes them.
@@ -39,19 +52,41 @@ export const STORES = {
   items: { keyPath: "id", indexes: { name: "name" } },
   docs: { keyPath: "id", indexes: { party: "partyId", date: "data", state: "stato" } },
   payments: { keyPath: "id", indexes: { doc: "docId", due: "scadenza" } },
+  // Il diario di un cliente: una riga per telefonata, email, incontro o nota. Uno store e non un
+  // campo dentro il cliente, al contrario dei contatti, perché le voci crescono senza limite e si
+  // leggono per data — un cliente seguito per tre anni porterebbe in memoria tutta la sua storia
+  // ogni volta che compare in un menù. Le persone di riferimento invece stanno nel record del
+  // cliente, in `contatti`: sono cinque, e senza la loro azienda non significano niente.
+  activities: { keyPath: "id", indexes: { party: "partyId", date: "data" } },
+  // I progetti, e il piano che ci sta dentro. Le tre forme sono quelle di `gg/plan-model.js`, che è
+  // lo stesso modello di Plan Scope: un progetto esportato da qui si apre lì, e viceversa. Gli
+  // indici sono quelli che servono a leggere per progetto, come nell'altra app.
+  projects: { keyPath: "id", indexes: { updated: "updated" } },
+  pages: { keyPath: "id", indexes: { project: "projectId" } },
+  tasks: { keyPath: "id", indexes: { project: "projectId" } },
+  // Le immagini e i file dentro le pagine di un progetto. Uno store a parte perché sono byte: un
+  // record di `pages` che se li portasse dentro renderebbe pesante ogni lettura del testo.
+  assets: { keyPath: "id", indexes: { project: "projectId" } },
   counters: { keyPath: "key" },
   meta: { keyPath: "key" },
 };
 
 /**
- * The stores an export carries: every one but `meta`.
+ * The stores an export carries: every one but `meta` and `assets`.
  *
  * `meta` is this browser's own state — today the handle of the backup folder — and it is not
  * data: a directory handle serialised to JSON is `{}`, and restoring `{}` into another machine's
  * `meta` would leave it holding a folder that does not exist. Used by «Esporta tutto», by the
  * backup folder and by «Importa un archivio», so that the three agree on what an archive is.
+ *
+ * **`assets` sta fuori perché sono byte, e l'archivio è JSON.** Un'immagine dentro un file di testo
+ * diventa base64: un archivio di pochi kilobyte si gonfierebbe di megabyte, e la cartella di backup
+ * lo riscriverebbe intero a ogni modifica. Le immagini viaggiano nel pacchetto del progetto, che è
+ * uno zip ed è fatto per portarle — la stessa divisione che fa Plan Scope. Va detto dove conta:
+ * l'archivio salva il testo, il pacchetto salva anche le figure.
  */
-export const EXPORTED = Object.keys(STORES).filter((store) => store !== "meta");
+export const EXPORTED = Object.keys(STORES)
+  .filter((store) => store !== "meta" && store !== "assets");
 
 /**
  * The one index that has to refuse duplicates, and the fields it is built from.

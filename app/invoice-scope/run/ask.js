@@ -163,3 +163,83 @@ export function tell(message, { lines = [], okLabel = null } = {}) {
     ok.focus();
   });
 }
+
+// -----------------------------------------------------------------------------------------------------------------
+//  l a   d o m a n d a   c o n   u n a   r i s p o s t a   s c r i t t a
+// -----------------------------------------------------------------------------------------------------------------
+
+/**
+ * Il dialogo si chiama `prompt`, e non `askText`, per una ragione che è costata mezz'ora.
+ *
+ * `askText` era già l'id del **paragrafo dentro `#ask`**, quello che porta il testo di una domanda:
+ * due elementi con lo stesso id, e `document.getElementById` ne restituisce uno solo. Il risultato
+ * è che `tell()` scriveva il suo messaggio dentro questo dialogo — `textContent` — svuotandolo dei
+ * suoi campi, e la domanda scritta successiva moriva con «null non ha addEventListener».
+ *
+ * `check_apps.py` verificava che ogni id usato dal codice **esista**; adesso verifica anche che sia
+ * **unico**, perché è l'altra metà della stessa promessa.
+ */
+let _textDialog = null;
+let _textResolve = null;
+
+function _textParts() {
+  if (!_textDialog) {
+    _textDialog = document.getElementById("prompt");
+    const chiudi = (answer) => {
+      const done = _textResolve;
+      _textResolve = null;
+      try {
+        if (_textDialog.open) _textDialog.close();
+      } catch (ignored) { /* già chiuso: la promessa si risolve comunque */ }
+      if (done) done(answer);
+    };
+    document.getElementById("promptOk").addEventListener("click", () => {
+      chiudi(document.getElementById("promptField").value.trim() || null);
+    });
+    document.getElementById("promptCancel").addEventListener("click", () => chiudi(null));
+    _textDialog.addEventListener("cancel", () => chiudi(null));
+    _textDialog.addEventListener("close", () => chiudi(null));
+    document.getElementById("promptField").addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      document.getElementById("promptOk").click();
+    });
+  }
+  return {
+    dialog: _textDialog,
+    field: document.getElementById("promptField"),
+    message: document.getElementById("promptMessage"),
+  };
+}
+
+/**
+ * Chiedi una riga di testo: il nome di una pagina, l'indirizzo di un collegamento.
+ *
+ * Risolve con quello che è stato scritto, o `null` se si è lasciato stare. È il `prompt()` del
+ * browser rifatto nel vocabolario dell'app, per la ragione scritta in `app/CLAUDE.md`: quello di
+ * sistema non somiglia all'app, blocca il thread, e in finestra installata su iOS certi browser non
+ * lo mostrano affatto — cioè una domanda che nessuno vede.
+ *
+ * Serve anche all'editor condiviso, che per il collegamento chiede un indirizzo e non sa disegnare
+ * finestre: gliela passa chi lo monta.
+ */
+export function askText(message, { value = "", okLabel = null } = {}) {
+  const { dialog, field, message: testo } = _textParts();
+  testo.textContent = message;
+  field.value = value || "";
+  document.getElementById("promptOk").textContent = okLabel || t("ok");
+
+  return new Promise((resolve) => {
+    if (_textResolve) _textResolve(null);
+    _textResolve = resolve;
+    try {
+      if (!dialog.open) dialog.showModal();
+    } catch (ignored) {
+      _textResolve = null;
+      resolve(null);
+      return;
+    }
+    field.focus();
+    field.select();
+  });
+}

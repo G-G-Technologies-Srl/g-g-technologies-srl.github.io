@@ -21,10 +21,13 @@
 // arriva e non nel settembre 2026.
 
 import { put } from "gg/store.js";
+import * as plan from "gg/plan-model.js";
 
 import { t } from "./i18n.js";
 import { draft, save, issue, setState } from "./model.js";
 import { recordPayment } from "./schedule.js";
+import { saveActivity } from "./crm.js";
+import * as progetti from "./projects.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -59,11 +62,24 @@ const CLIENTI = [
     id: "demo-1", name: "rossi impianti s.r.l.", denominazione: "Rossi Impianti S.r.l.",
     partitaIva: "01335577993", codiceDestinatario: "M5UXCR1", paese: "IT",
     sede: { indirizzo: "Via Emilia", numeroCivico: "140", cap: "40068", comune: "Bologna", provincia: "BO" },
+    // Le persone di riferimento: nomi inventati come la ragione sociale, e recapiti che non
+    // appartengono a nessuno — `example.com` è riservato per questo, e il prefisso 0522 con quel
+    // numero non è assegnato. Un recapito vero in un dimostrativo è il telefono di qualcuno.
+    contatti: [
+      { id: "demo-c1", nome: "Chiara Rossi", ruolo: "Acquisti", email: "chiara@example.com",
+        telefono: "0522 000111", note: "" },
+      { id: "demo-c2", nome: "Ivan Baldi", ruolo: "Officina", email: "", telefono: "0522 000112",
+        note: "" },
+    ],
   },
   {
     id: "demo-2", name: "brandi e figli s.n.c.", denominazione: "Brandi & Figli S.n.c.",
     partitaIva: "02446688000", codiceDestinatario: "", paese: "IT",
     sede: { indirizzo: "Corso Garibaldi", numeroCivico: "7", cap: "61121", comune: "Pesaro", provincia: "PU" },
+    contatti: [
+      { id: "demo-c3", nome: "Marta Brandi", ruolo: "Titolare", email: "marta@example.com",
+        telefono: "0721 000222", note: "" },
+    ],
   },
   // Il cliente sammarinese senza codice destinatario: l'app scrive `2R4GTO8`, che è il codice
   // dell'Ufficio Tributario, e la fattura vuole natura N3.3 con aliquota zero. È il caso che la
@@ -218,6 +234,34 @@ export async function seed(db) {
     }, contesto(CLIENTI[0]));
     await setState(db, consegna, "consegnato");
   }
+
+  // Il diario dei due clienti che ne hanno uno. Poche voci, e ognuna dice una cosa che l'app da
+  // sola non saprebbe: perché il preventivo è quello che è, quando risentirli, chi decide. È il
+  // punto del diario — quello che sta intorno ai documenti e che altrimenti resta in una mail.
+  const diario = [
+    ["demo-1", "chiamata", -3, t("demoActCall")],
+    ["demo-1", "incontro", -18, t("demoActMeeting")],
+    ["demo-2", "email", -8, t("demoActEmail")],
+    ["demo-2", "nota", -9, t("demoActNote")],
+  ];
+  for (const [partyId, tipo, giorno, testo] of diario) {
+    await saveActivity(db, { partyId, tipo, data: _giorno(giorno), testo });
+  }
+
+  // Il progetto nato dal preventivo accettato: una fase per riga, la prima già fatta e con il suo
+  // importo. È il giro che la scheda promette — preventivo, fasi, «fattura le fasi fatte» — e nel
+  // dimostrativo si vede senza doverlo costruire.
+  const lavoro = progetti.fromQuote(preventivo, { name: t("demoProjectName") });
+  const fasi = progetti.tasksOf(lavoro.id);
+  const finale = lavoro.columns.find((colonna) => colonna.done);
+  if (fasi[0] && finale) plan.moveTask(fasi[0].id, finale.id);
+  progetti.addTask(lavoro.id, {
+    title: t("demoProjectPhase"), importo: "1200.00", end: _giorno(20),
+  });
+  // Una pagina, perché si veda dove stanno i documenti del progetto: il verbale del sopralluogo,
+  // con dentro la misura che ha fatto salire il preventivo.
+  plan.createPage(lavoro.id, { title: t("demoProjectPage"), markdown: t("demoProjectPageText") });
+  await progetti.flush();
 
   // E una bozza lasciata a metà, perché è lo stato in cui un documento passa la maggior parte del
   // suo tempo e l'unico in cui si può ancora provare qualcosa senza rompere niente.

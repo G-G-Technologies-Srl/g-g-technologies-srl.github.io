@@ -2,6 +2,13 @@
 
 // What a project, a page and a task are, and every change that can be made to one.
 //
+// **In `_lib/` da quando lo usano due app**, e ci è arrivato senza modifiche: la persistenza gli
+// arriva come porta — `connect({save, drop})` — detta nelle sue parole, `project | page | task`, e
+// non nei nomi degli store. Plan Scope lo usa per i suoi piani, Invoice Scope per i progetti che
+// fattura, e nessuno dei due compare qui dentro. Il rovescio da ricordare: **lo stato è uno solo per
+// pagina**, perché è un modulo con dentro il suo modello, quindi due app non lo condividono mai
+// nello stesso momento — si condivide il codice, mai i dati.
+//
 // **This file does not know the DOM and does not know IndexedDB.** It is the same line AstroDroid
 // draws between `game.js` and its canvas, and for the same reason: this is where the defects that
 // cost most would live, and here they can be provoked from Node in a millisecond instead of
@@ -20,7 +27,7 @@
 // creation, and travels through every export and import. Two copies of a project on two computers
 // have different ids and the same uids, and that is what `merge` matches on.
 
-import { links, frontmatter } from "./markdown.js";
+import { links, frontmatter } from "./plan-markdown.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s

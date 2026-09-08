@@ -17,7 +17,7 @@
 import assert from "node:assert/strict";
 
 import * as zip from "../../_lib/zip.js";
-import * as pack from "../run/pack.js";
+import * as pack from "gg/plan-pack.js";
 
 let passed = 0;
 
@@ -115,13 +115,26 @@ function sample() {
   };
 }
 
+test("un pacchetto scritto prima, con il marcatore vecchio, si apre ancora", () => {
+  // Da quando le app che scrivono pacchetti sono due, il marcatore è del formato — `gg-plan` — e
+  // non dell'app. Ma i file esportati fino a ieri dicono «plan-scope» e stanno sul disco di
+  // qualcuno: rifiutarli vorrebbe dire rompere un file che era valido quando è stato scritto.
+  const data = sample();
+  const bytes = pack.toZip(data, { schema: 1 });
+  const letto = pack.parse(bytes);
+  const vecchio = { ...letto.payload, app: "plan-scope" };
+  const esito = pack.parse(bytesOf(JSON.stringify(vecchio)));
+  assert.equal(esito.ok, true, "il pacchetto di ieri non si apre più");
+  assert.deepEqual(esito.payload.project, data.project);
+});
+
 test("il giro completo restituisce lo stesso progetto", () => {
   const data = sample();
   const archive = pack.toZip(data, { schema: 1 });
 
   const read = pack.parse(archive);
   assert.equal(read.ok, true, "l'archivio appena scritto non si rilegge");
-  assert.equal(read.payload.app, "plan-scope");
+  assert.equal(read.payload.app, "gg-plan", "in scrittura il marcatore è quello del formato");
   assert.deepEqual(read.payload.project, data.project);
   assert.deepEqual(read.payload.tasks, data.tasks);
 

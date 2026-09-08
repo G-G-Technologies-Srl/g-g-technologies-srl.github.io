@@ -16,7 +16,7 @@
 
 import { list, put, remove } from "gg/store.js";
 
-import { from, add, sub, sum, cmp, toString, ZERO } from "./decimal.js";
+import { from, add, sub, sum, cmp, round, toString, ZERO } from "./decimal.js";
 import { kind } from "./kinds.js";
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -63,6 +63,51 @@ function _field(value) {
 // -----------------------------------------------------------------------------------------------------------------
 //  p u b l i c
 // -----------------------------------------------------------------------------------------------------------------
+
+/**
+ * Quanto vale ogni rata, per una lista di rate e il totale del documento.
+ *
+ * **Una rata senza importo vale quello che resta, diviso fra quelle che non lo dicono.** La regola
+ * di prima — «vale il totale» — è giusta per una rata sola, che è il caso per cui era scritta, e
+ * conta due volte lo stesso documento appena le rate sono due: la maschera del documento aggiunge
+ * una rata con l'importo vuoto e il segnaposto del totale, quindi due scadenze lasciate in bianco
+ * facevano leggere in Situazione il doppio di quello che il cliente deve. Trovato guardando lo
+ * scadenzario del dimostrativo in un browser vero: «da incassare» era più alto del fatturato, che
+ * per un'azienda senza acconti è impossibile.
+ *
+ * L'arrotondamento va ai centesimi e il resto sulla prima, come si dividono tre rate su cento euro:
+ * 33,34 · 33,33 · 33,33. Sommano al totale, che è la condizione che `validate.js` chiede quando gli
+ * importi sono scritti tutti a mano.
+ */
+function _quote(rate, totale) {
+  const scritte = rate.map((quota) => (quota.importo === undefined ? null : from(quota.importo)));
+  const quante = scritte.filter((importo) => importo === null).length;
+  if (!quante) return scritte;
+
+  const resto = sub(totale, sum(scritte.filter((importo) => importo !== null)));
+  const rimasto = cmp(resto, ZERO) > 0 ? resto : ZERO;
+  // Ai centesimi, con la differenza sulla prima delle rate senza importo: un ottavo di euro
+  // sparso su otto rate lascerebbe un totale che non torna, ed è la somma che si controlla.
+  const ciascuna = round(divide(rimasto, quante), 2);
+  const primo = sub(rimasto, mulInt(ciascuna, quante - 1));
+
+  let vista = 0;
+  return scritte.map((importo) => {
+    if (importo !== null) return importo;
+    vista += 1;
+    return vista === 1 ? primo : ciascuna;
+  });
+}
+
+/** Un valore scalato diviso per un intero, senza passare da un numero in virgola mobile. */
+function divide(value, n) {
+  return value / BigInt(n);
+}
+
+/** Un valore scalato moltiplicato per un intero. Stessa ragione. */
+function mulInt(value, n) {
+  return value * BigInt(n);
+}
 
 /**
  * Every amount owed, one row per instalment, oldest first.
@@ -112,9 +157,9 @@ export async function schedule(db, { today = new Date().toISOString().slice(0, 1
 
     // No instalments means payable on receipt: one row, on the document's own date.
     const parts = rate.length
-      ? rate.map((quota) => ({
-        scadenza: quota.scadenza || doc.data,
-        importo: quota.importo === undefined ? totale : from(quota.importo),
+      ? _quote(rate, totale).map((importo, i) => ({
+        scadenza: rate[i].scadenza || doc.data,
+        importo,
       }))
       : [{ scadenza: doc.data, importo: totale }];
 

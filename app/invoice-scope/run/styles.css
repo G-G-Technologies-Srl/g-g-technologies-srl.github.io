@@ -150,6 +150,9 @@ main { padding: 0; flex: 1 1 auto; min-width: 0; }
 
 .screen h1 { font-family: var(--font-display); font-size: 1.6rem; margin: 0 0 20px; }
 .screen h2 { font-family: var(--font-display); font-size: 1.1rem; margin: 32px 0 12px; }
+/* Un titolo di terzo livello — le scadenze dentro il pagamento — nello stesso carattere dei suoi
+   fratelli: senza questa riga il browser lo disegnava in sans, grassetto e più grande dell'h2. */
+.screen h3 { font-family: var(--font-display); font-size: 1rem; font-weight: 600; margin: 24px 0 10px; }
 
 /* The command of a section sits on its heading, not under it: two filled buttons stacked down the
    page compete with each other and with the lists they belong to. */
@@ -157,7 +160,10 @@ main { padding: 0; flex: 1 1 auto; min-width: 0; }
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 16px;
+  /* Su un telefono il comando scende sotto il titolo, invece di spezzare il titolo su due righe
+     per fargli posto: «Persone di / riferimento» accanto a un pulsante intero era la prova. */
+  flex-wrap: wrap;
+  gap: 8px 16px;
   margin: 32px 0 12px;
 }
 
@@ -178,7 +184,7 @@ main { padding: 0; flex: 1 1 auto; min-width: 0; }
 }
 
 .doc-head h1 { margin: 0; flex: 1 1 auto; }
-.doc-head #docPrint { align-self: center; }
+.doc-head #docPrint, .doc-head #docProject, .doc-head #docProjectLink { align-self: center; }
 .doc-stato select { max-width: 180px; }
 
 /* A field that belongs to another kind of document. `.form label` is a flex column, which beats the
@@ -612,8 +618,9 @@ dialog li::before {
 @media (max-width: 640px) {
   /* In colonna, ma **con l'altezza del contenuto**: `flex: 1 1 160px` in una colonna fa della base
      un'altezza, e i tre riquadri arrivavano a trecento pixel l'uno per un numero solo. */
-  .figures { flex-direction: column; }
-  .figure { flex: 0 0 auto; }
+  .figures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .figure { flex: 0 0 auto; min-width: 0; }
+  .figure .value { font-size: 1.15rem; }
   .form label, .form label.narrow { flex: 1 1 100%; }
 }
 
@@ -756,3 +763,235 @@ dialog li::before {
   align-self: flex-start;
 }
 .logo-field .actions { margin: 0; }
+
+/* ----- la scheda di un cliente: persone, diario, documenti ----- */
+
+/* Il ritorno all'elenco, sopra il titolo. Serve anche dove la colonna di navigazione c'è: quella
+   dice in che sezione sei, questo dice che sei *dentro* qualcosa — e in finestra installata, dove il
+   browser non presta il suo «indietro», è l'unico che lo dice. */
+.back-link {
+  display: inline-block;
+  margin: 0 0 10px;
+  color: var(--faint);
+  font-size: 0.9rem;
+}
+.back-link::before { content: "← "; }
+.back-link:hover { color: var(--text); }
+
+/* La casella della nota. Stessa resa di un campo di testo — è un campo di testo — con l'altezza
+   che cresce se serve e la larghezza che non esce dalla riga. */
+.form textarea {
+  background: var(--fill);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 9px 11px;
+  color: var(--text);
+  font: inherit;
+  min-height: 44px;
+  resize: vertical;
+  width: 100%;
+  box-sizing: border-box;
+}
+.form textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* La riga per scrivere una voce nuova: larga come la colonna, non come una maschera di anagrafica. */
+.act-new { max-width: none; align-items: flex-end; margin: 0 0 18px; }
+.act-new .actions { flex-basis: auto; align-items: center; }
+.act-new label.wide { flex: 1 1 320px; }
+.act-problem { color: var(--accent-strong); margin: 0; }
+
+/* I quattro tipi. Bottoni con uno stato premuto, come il filtro dei tag sul sito: il segno è il
+   bordo e il colore d'accento, gli stessi che la voce corrente della navigazione usa già. Non un
+   menù a tendina, perché quattro valori fissi si scelgono in un tocco invece di due. */
+.act-kinds { display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 100%; }
+.act-kinds .pick { border: 1px solid var(--border); border-radius: 999px; }
+.act-kinds .pick[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+/* Il diario. Una voce per riquadro, il quadratino in gradiente a sinistra come negli elenchi del
+   sito, e il testo che tiene gli a capo di chi l'ha scritto. */
+.acts { list-style: none; margin: 0; padding: 0; max-width: 72ch; }
+.acts li {
+  position: relative;
+  padding: 10px 0 12px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.acts li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 17px;
+  width: 6px;
+  height: 6px;
+  background: var(--gradient);
+}
+/* La voce che si sta modificando lo dice: senza, la riga in cima si riempie di un testo che sembra
+   nuovo, e si finisce per salvare due volte la stessa nota. */
+.acts li.editing { background: var(--fill); }
+.act-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 4px;
+  font-size: 0.85rem;
+  color: var(--faint);
+}
+.act-when { color: var(--text); }
+.act-kind { text-transform: lowercase; }
+.act-tools { margin-left: auto; display: flex; gap: 4px; }
+.act-text { margin: 0; white-space: pre-wrap; font-size: 0.95rem; }
+
+/* Sul telefono i due comandi della voce non stanno accanto alla data se il testo è lungo. */
+@media (max-width: 640px) {
+  .act-new label.narrow { flex: 0 1 160px; }
+}
+
+/* ----- le pagine di un progetto ----- */
+
+/* L'elenco delle pagine e l'editor, affiancati. L'editor si porta il proprio foglio da
+   `_lib/plan-editor.css`: qui c'è solo dove sta nella schermata e quanto è alto — la disposizione è
+   dell'app, il componente no. */
+.pages-split {
+  display: grid;
+  /* Duecentosessanta, non duecento: con i due comandi della pagina aperta accanto, a duecento
+     «Verbale del sopralluogo» diventava «Verbale d…», e un titolo a metà non si sceglie. */
+  grid-template-columns: 260px 1fr;
+  gap: 18px;
+  align-items: start;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  min-height: 240px;
+  max-height: 70vh;
+  overflow: hidden;
+}
+
+.page-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  max-height: 70vh;
+}
+
+.page-row { display: flex; align-items: center; gap: 4px; }
+/* Il rientro sta sul collegamento e non sulla riga: i due comandi della pagina aperta restano
+   allineati a destra qualunque sia il livello, come le maniglie di un albero vero. */
+/* Dodici pixel per livello, come l'albero di Plan Scope: il primo scalino parte dagli otto che il
+   pulsante ha già, quindi 20, 32, 44, 56. Con meno, due livelli si leggono come uno. */
+.page-row.depth-1 .page-link { padding-left: 20px; }
+.page-row.depth-2 .page-link { padding-left: 32px; }
+.page-row.depth-3 .page-link { padding-left: 44px; }
+.page-row.depth-4 .page-link { padding-left: 56px; }
+.page-add { flex: none; }
+.page-row .page-link { flex: 1 1 auto; min-width: 0; }
+
+.page-link {
+  text-align: left;
+  border-color: transparent;
+  color: var(--muted);
+  font-size: 0.92rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* Un titolo lungo va a capo, invece di tagliarsi: nella colonna c'è posto in altezza, non in
+     larghezza. Sul telefono l'elenco è in riga e lì resta su una riga sola. */
+  white-space: normal;
+  line-height: 1.3;
+}
+.page-link.on { color: var(--text); background: var(--fill); border-color: var(--border); }
+.page-remove { flex: none; }
+
+/* L'editor riempie quello che resta, e scorre dentro il riquadro invece che allungare la pagina:
+   sotto ci sono i documenti collegati, e un editor che cresce li spingerebbe fuori vista. */
+#projEditor { max-height: 70vh; padding: 16px 20px 60px; }
+
+/* Sul telefono l'elenco sta sopra, in riga: una colonna da 200px lascerebbe all'editor la metà
+   della larghezza, e si scriverebbe in una fessura. */
+@media (max-width: 720px) {
+  .pages-split { grid-template-columns: 1fr; max-height: none; }
+  .page-list {
+    flex-direction: row;
+    overflow-x: auto;
+    max-height: none;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .page-link { white-space: nowrap; }
+  #projEditor { max-height: 60vh; padding: 14px 16px 40px; }
+}
+
+/* ----- le fasi di un progetto, su un telefono ----- */
+
+/* Cinque colonne di campi in 390 pixel stringevano il titolo a tre lettere. Ogni fase diventa una
+   scheda, come le righe del documento: spunta e titolo sulla prima riga, importo e scadenza sotto
+   con l'etichetta sopra, e il comando in fondo a destra. */
+@media (max-width: 640px) {
+  #projPhasesTable, #projPhasesTable tbody { display: block; }
+  #projPhasesTable thead { display: none; }
+  #projPhasesTable tr {
+    display: grid;
+    grid-template-columns: 32px 1fr 1fr;
+    gap: 8px 10px;
+    padding: 12px 0 14px;
+    border-bottom: 1px solid var(--border);
+    align-items: end;
+  }
+  #projPhasesTable td { display: block; padding: 0; border: 0; text-align: left; white-space: normal; }
+  #projPhasesTable td.phase-done { grid-column: 1; align-self: center; }
+  #projPhasesTable td.phase-title { grid-column: 2 / -1; }
+  #projPhasesTable td.phase-amount { grid-column: 2; }
+  #projPhasesTable td.phase-date { grid-column: 3; }
+  #projPhasesTable td.phase-tools { grid-column: 2 / -1; justify-self: end; }
+  #projPhasesTable td.phase-amount::before, #projPhasesTable td.phase-date::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--faint);
+    font-size: 0.78rem;
+    margin-bottom: 4px;
+  }
+  #projPhasesTable td input { width: 100%; max-width: none; }
+  #projPhasesTable td.phase-done input { width: 22px; }
+}
+
+/* ----- la spunta di una fase ----- */
+
+/* Tonda, come la scelta del conto predefinito nell'anagrafica dell'azienda: due forme diverse per
+   «questa» nella stessa app si notano, e il quadrato del browser era l'unica cosa non disegnata
+   della schermata. Resta una checkbox — ogni fase si spunta da sola — cambia solo il disegno. */
+.phase-done input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--fill);
+  display: inline-grid;
+  place-content: center;
+  cursor: pointer;
+  vertical-align: middle;
+}
+.phase-done input[type="checkbox"]::before {
+  content: "";
+  width: 6px;
+  height: 11px;
+  margin-top: -3px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) scale(0);
+  transition: transform 0.12s ease-out;
+}
+.phase-done input[type="checkbox"]:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.phase-done input[type="checkbox"]:checked::before { transform: rotate(45deg) scale(1); }
+.phase-done input[type="checkbox"]:hover { border-color: var(--accent); }
+.phase-done input[type="checkbox"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

@@ -15,8 +15,8 @@
 // Pure: `write` turns a payload into `{ path, bytes | text }` entries, `read` turns entries back
 // into a payload. The folder itself is the caller's business, and the tests use a Map.
 
-import * as md from "./markdown.js";
-import { safeName, reference, idOf } from "./pack.js";
+import * as md from "gg/plan-markdown.js";
+import { safeName, reference, idOf } from "gg/plan-pack.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s

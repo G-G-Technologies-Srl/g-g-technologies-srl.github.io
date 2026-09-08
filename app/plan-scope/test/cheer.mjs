@@ -6,7 +6,7 @@
 
 import assert from "node:assert/strict";
 
-import * as model from "../run/model.js";
+import * as model from "gg/plan-model.js";
 import * as cheer from "../run/cheer.js";
 
 let passed = 0;

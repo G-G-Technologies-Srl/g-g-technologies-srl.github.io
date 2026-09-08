@@ -52,9 +52,9 @@
     "url": "https://ggtechnologies.sm/app/invoice-scope/",
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "Any (web browser)",
-    "softwareVersion": "0.29.8",
+    "softwareVersion": "0.36.0",
     "datePublished": "2026-09-03",
-    "dateModified": "2026-09-06",
+    "dateModified": "2026-09-08",
     "license": "https://www.apache.org/licenses/LICENSE-2.0",
     "description": "Prepara fatture, note di credito e preventivi e genera il file XML della fattura elettronica. Gira nel browser: i dati dei tuoi clienti restano sul tuo computer.",
     "inLanguage": "it",
@@ -167,7 +167,10 @@
               <li>Prepara fatture, note di credito e fatture differite, con più aliquote sullo stesso documento.</li>
               <li>Tiene anche i preventivi e i documenti di trasporto, ciascuno con la sua numerazione e i suoi stati: un preventivo si accetta o si rifiuta, un documento di trasporto si consegna.</li>
               <li>Trasforma un preventivo accettato in fattura, e i documenti di trasporto di un cliente in una sola fattura differita, portando righe, sconto e scadenze senza ridigitarli.</li>
-              <li>Tiene i conti correnti bancari dell'azienda, e mette il predefinito nei documenti nuovi: l'IBAN si scrive una volta invece che su ogni fattura.</li>
+              <li>Tiene i progetti: un piano di fasi con le loro scadenze, le pagine di appunti che gli stanno intorno — in sotto-pagine, fino a quattro livelli, con dentro immagini e allegati — e i documenti collegati. Un progetto nasce anche da un preventivo accettato, con una fase per riga.</li>
+              <li>Una fase con un importo, quando è fatta, diventa una riga di fattura: accanto al progetto ci sono quotato, fatturato, incassato e quello che resta da fatturare.</li>
+              <li>Dà a ogni cliente una scheda sua: le persone con cui parli, con email e telefono, e un diario di telefonate, email e incontri. Accanto ci sono il fatturato, quello che resta da incassare e i suoi documenti.</li>
+              <li>Tiene i conti correnti bancari dell'azienda, e mette il predefinito nei documenti nuovi: l'IBAN si scrive una volta invece che su ogni fattura. Un cliente può avere la sua aliquota e il suo conto: si scrivono nella sua scheda, e i suoi documenti nascono già compilati.</li>
               <li>Tiene lo scadenzario: le rate di ogni documento, quelle scadute e quanto resta da incassare, e gli incassi che registri con data, importo e conto.</li>
               <li>Importa da Fatture in Cloud clienti, listino e documenti, dai fogli dell'esportazione così come li scarichi — anche il .xls — e le fatture intere dagli XML del backup. Prima di scrivere ti mostra cosa ha letto — quanti entrano, quali sono già lì, cosa ha lasciato fuori — e scrive solo se confermi.</li>
               <li>Vale per un'azienda italiana e per una sammarinese: chi emette da San Marino ha un profilo suo, con quello che l'Ufficio Tributario richiede perché il documento passi la validazione.</li>
@@ -214,6 +217,27 @@
             <div>
               <h4>Uscita</h4>
               <p>Un file XML per documento, più una copia di cortesia su carta intestata, da stampare o salvare in PDF per il cliente.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Figure</h4>
+              <p>Le immagini e gli allegati di una pagina stanno nel browser come tutto il resto, e viaggiano nel pacchetto del progetto. L'archivio JSON porta il testo: è la copia che si riscrive a ogni modifica, e un'immagine dentro un file di testo la farebbe pesare cento volte tanto.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Progetti</h4>
+              <p>Un progetto porta le sue fasi, le sue pagine e i suoi documenti, e dice quanto hai quotato, fatturato, incassato e quanto resta da fatturare. Si esporta e si riapre in Plan Scope, che usa lo stesso formato.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Clienti</h4>
+              <p>Ogni cliente ha una scheda: le persone di riferimento, il diario di quello che vi siete detti, e i suoi documenti accanto ai due numeri che contano.</p>
             </div>
           </div>
           <div class="fact">
@@ -266,7 +290,7 @@
             </div>
           </div>
         </div>
-        <p class="app-meta"><span><b>Versione</b> 0.29.8</span><span><b>Aggiornata il</b> 6 settembre 2026</span><span><b>Licenza</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope" rel="noopener">Codice sorgente</a></p>
+        <p class="app-meta"><span><b>Versione</b> 0.36.0</span><span><b>Aggiornata il</b> 8 settembre 2026</span><span><b>Licenza</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope" rel="noopener">Codice sorgente</a></p>
       </div>
     </section>
 
@@ -290,6 +314,14 @@
           <details class="faq-item reveal">
             <summary>Vale anche per le fatture con San Marino?</summary>
             <p>Sì, nei due versi, e chi emette da San Marino ha un profilo suo: trasmittente dell'HUB, COE al posto della partita IVA, CAP e provincia veri, e il codice TM sulla riga e in testa alla nota di esenzione. È ricavato da una fattura già registrata, non da una ricostruzione. Dall'Italia verso San Marino la natura è N3.3 con il codice destinatario dell'Ufficio Tributario. La fatturazione interna fra operatori sammarinesi arriverà quando saranno pubblicate le regole tecniche.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>Che differenza c'è fra i progetti qui e Plan Scope?</summary>
+            <p>Il modello è lo stesso file, quindi un progetto scritto qui si apre lì e viceversa. Cambia dove vive: un progetto sta dove sta il suo denaro. Se il lavoro ha un preventivo e delle fatture, tienilo qui, perché solo qui il piano può dire quanto hai quotato, fatturato e incassato, e una fase fatta può diventare una riga di fattura. Se è un piano e basta — un evento, un libro, un trasloco — Plan Scope resta il posto giusto, ed è più leggero. Quello che conviene evitare è tenere lo stesso progetto aperto in tutt'e due: il passaggio è un file, non una sincronizzazione.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>Posso tenerci anche i contatti e quello che ci siamo detti?</summary>
+            <p>Sì, sulla scheda del cliente: le persone con cui parli, e un diario di telefonate, email e incontri, ognuna con la sua data. Sta dentro l'app che fattura e non in un programma a parte perché il browser dà a ogni app un archivio suo: un programma separato non vedrebbe questi clienti, e finirebbe per tenere un secondo elenco delle stesse aziende — quello che poi diverge. Le persone di riferimento restano sul tuo computer: la fattura elettronica non ha un campo per il nome di una persona, e l'app non ne inventa uno.</p>
           </details>
           <details class="faq-item reveal">
             <summary>Che succede se cambio computer?</summary>

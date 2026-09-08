@@ -25,8 +25,13 @@ register("data:text/javascript," + encodeURIComponent(`
     const parent = context.parentURL ? new URL(context.parentURL) : null;
     const who = parent ? parent.searchParams.get("w") : null;
     if (specifier.startsWith("gg/")) {
+      // Il modello sta in _lib da quando lo usano due app, e qui va tenuto separato per persona
+      // come tutto il resto: senza il ?w= le due scrivanie condividerebbero un'istanza sola, e la
+      // prova sui conflitti proverebbe due copie che sono lo stesso oggetto.
       const base = new URL("../../_lib/", context.parentURL.split("?")[0]);
-      return next(new URL(specifier.slice(3), base).href, context);
+      const url = new URL(specifier.slice(3), base);
+      if (who) url.search = "?w=" + who;
+      return next(url.href, context);
     }
     if (who && specifier === "./db.js") {
       return next(new URL("../test/fake-db.mjs?w=" + who, context.parentURL.split("?")[0]).href, context);
@@ -40,7 +45,7 @@ register("data:text/javascript," + encodeURIComponent(`
 
 /** One person's app: model, sync and their memory, wired the way `app.js` wires them. */
 async function world(who, folder) {
-  const model = await import(new URL(`../run/model.js?w=${who}`, import.meta.url));
+  const model = await import(new URL(`../../_lib/plan-model.js?w=${who}`, import.meta.url));
   const sync = await import(new URL(`../run/sync.js?w=${who}`, import.meta.url));
   const db = await import(new URL(`../test/fake-db.mjs?w=${who}`, import.meta.url));
   const events = { pulled: [], unshared: [], snapshots: [], errors: [] };

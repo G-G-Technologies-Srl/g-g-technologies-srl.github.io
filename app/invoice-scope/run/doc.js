@@ -37,6 +37,7 @@ import { profileFor } from "./fatturapa.js";
 import { control as statoControl } from "./states.js";
 import { openSheet, render as renderPayments } from "./payments.js";
 import { render as renderSheet } from "./print.js";
+import * as progetti from "./projects.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -123,8 +124,40 @@ function _optionLabel(field, value) {
 }
 
 /** The company's defaults for a line at a zero rate, applied where the line has nothing yet. */
+/** L'IBAN che entra da sé in una bozza: quello del cliente se ce l'ha, altrimenti il predefinito. */
+function _usualIban() {
+  const conti = company.conti || [];
+  if (party && party.ibanPredefinito && conti.some((conto) => conto.iban === party.ibanPredefinito)) {
+    return party.ibanPredefinito;
+  }
+  const predefinito = conti.find((conto) => conto.predefinito) || conti[0];
+  return (predefinito && predefinito.iban) || "";
+}
+
+/** Il cliente è cambiato su una bozza: si rilegge la sua scheda e l'IBAN si ripropone. */
+async function _partyChanged() {
+  party = current.partyId ? await getParty(database, current.partyId) : null;
+  if (!editable(current) || !has(current, "pagamento")) return;
+  const iban = _usualIban();
+  if (!iban) return;
+  current.pagamento = { ...(current.pagamento || {}), iban };
+  el("payIban").value = iban;
+  const scelta = el("payConto");
+  scelta.value = [...scelta.options].some((option) => option.value === iban) ? iban : "";
+  _touch();
+}
+
+/** L'aliquota di una riga nuova: quella del cliente se l'ha, altrimenti quella dell'azienda. */
+function _usualRate() {
+  const sua = party && party.aliquotaPredefinita;
+  return (sua !== undefined && sua !== null && sua !== "") ? String(sua) : (company.aliquotaPredefinita || "22");
+}
+
 function _applyDefaults(line) {
   if (String(line.aliquota) !== "0") return line;
+  // La natura del cliente prima di quella dell'azienda: un cliente estero a zero ha la sua
+  // ragione — N3.2 intracomunitaria, N3.3 San Marino — e non quella di chi emette.
+  if (!line.natura && party && party.naturaPredefinita) line.natura = party.naturaPredefinita;
   if (!line.natura && company.naturaPredefinita) line.natura = company.naturaPredefinita;
   if (!line.tm && company.tmPredefinito && profileFor(company).datiGestionali) {
     line.tm = company.tmPredefinito;
@@ -205,9 +238,9 @@ function _quantity(value) {
  * la gente ha già passato ore.
  */
 function _addLine(focus = false) {
-  // The company's usual rate rather than 22 on every keyboard: an operator invoicing at zero would
-  // otherwise change the rate on every line, and then type the nature, and then the TM code.
-  const aliquota = company.aliquotaPredefinita || "22";
+  // The customer's usual rate, then the company's, rather than 22 on every keyboard: an operator
+  // invoicing at zero would otherwise change the rate on every line, and then type the nature.
+  const aliquota = _usualRate();
   current.righe.push(_applyDefaults({ descrizione: "", quantita: "1", prezzoUnitario: "0.00", aliquota }));
   _drawLines();
   _drawSummary();
@@ -378,20 +411,26 @@ function _drawDue() {
     date.addEventListener("input", () => { quota.scadenza = date.value; _touch(); });
     when.append(date);
 
-    const amount = document.createElement("td");
-    amount.className = "right";
+    // Come lo legge una persona — `7.649,40` — e non come lo tiene il deposito: su un documento
+    // emesso il campo è bloccato e mostrava `7649.40`, l'unica cifra della pagina scritta così.
+    const leggibile = (valore) => {
+      if (valore === undefined || valore === null || valore === "") return "";
+      try { return amount(from(String(valore)), 2); } catch (ignored) { return String(valore); }
+    };
+    const cell = document.createElement("td");
+    cell.className = "right";
     const value = document.createElement("input");
     value.inputMode = "decimal";
     value.className = "small";
-    value.value = quota.importo || "";
-    value.placeholder = toString(totals(current).totale, 2);
+    value.value = leggibile(quota.importo);
+    value.placeholder = amount(totals(current).totale, 2);
     value.disabled = !editable(current);
     value.setAttribute("aria-label", `${t("docTotale")} — ${t("f_scadenza")} ${index + 1}`);
     value.addEventListener("input", () => {
       quota.importo = parseOptional(value.value) || undefined;
       _touch();
     });
-    amount.append(value);
+    cell.append(value);
 
     const actions = document.createElement("td");
     actions.className = "right";
@@ -409,7 +448,7 @@ function _drawDue() {
       actions.append(remove);
     }
 
-    tr.append(when, amount, actions);
+    tr.append(when, cell, actions);
     body.append(tr);
   });
 }
@@ -717,11 +756,13 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
   // Solo su una bozza che non ne ha già uno: un documento emesso porta l'IBAN con cui è uscito, e
   // riscriverglielo perché nel frattempo la banca è cambiata falsificherebbe quello che è stato
   // mandato al cliente.
+  //
+  // Il conto del cliente prima di quello dell'azienda, se nella sua scheda ne ha uno: è il motivo
+  // per cui quel campo esiste.
+  party = current.partyId ? await getParty(db, current.partyId) : null;
   if (editable(current) && has(current, "pagamento") && !(current.pagamento || {}).iban) {
-    const predefinito = conti.find((conto) => conto.predefinito) || conti[0];
-    if (predefinito && predefinito.iban) {
-      current.pagamento = { ...(current.pagamento || {}), iban: predefinito.iban };
-    }
+    const iban = _usualIban();
+    if (iban) current.pagamento = { ...(current.pagamento || {}), iban };
   }
 
   const scelta = el("payConto");
@@ -905,6 +946,7 @@ export function connect(db) {
       afterSave: async (record) => {
         await _drawParties(database, record.id);
         _readHeader();
+        await _partyChanged();
         _touch();
       },
     });
@@ -988,6 +1030,11 @@ export function connect(db) {
     });
   }
 
+  // Cambiato il cliente su una bozza, l'IBAN si ripropone: il suo se ne ha uno, altrimenti quello
+  // dell'azienda. Il campo del cliente serve a questo, e un documento che tiene il conto del
+  // cliente di prima manderebbe il pagamento sul conto sbagliato senza che niente lo dica.
+  el("docPartySelect").addEventListener("change", _partyChanged);
+
   // The transport fields are typed into, not chosen from: `change` alone would only save them when
   // the focus left, and on a phone the focus often leaves by the app being closed.
   for (const id of ["trCausale", "trAspetto", "trColli", "trVettore"]) {
@@ -1010,6 +1057,8 @@ export function connect(db) {
     _cancelPending();
     if (!(await ask(t("docDeleteAsk"), { okLabel: t("del"), danger: true }))) return;
     await discard(database, current);
+    // Le fasi che questa bozza fatturava tornano fatturabili, e il progetto smette di elencarla.
+    progetti.forgetDoc(current.id);
     location.hash = "#/documenti";
   });
 

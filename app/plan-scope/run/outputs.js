@@ -8,13 +8,13 @@
 // its own. The files it produces are the work of `webpage.js`, `csv.js` and `ics.js`, which are
 // pure and proved in Node; this is the layer that fetches the images and hands the file over.
 
-import * as model from "./model.js";
+import * as model from "gg/plan-model.js";
 import * as db from "./db.js";
-import * as pack from "./pack.js";
+import * as pack from "gg/plan-pack.js";
 import * as webpage from "./webpage.js";
 import * as csv from "./csv.js";
 import * as ics from "./ics.js";
-import * as md from "./markdown.js";
+import * as md from "gg/plan-markdown.js";
 import { t, tf, lang } from "./i18n.js";
 import { el, snack, longDate } from "./ui.js";
 

@@ -10,7 +10,7 @@
 // Split off `app.js` so that the policy — when a version is worth keeping — sits with the
 // dialog that shows them and nowhere else. `diff.js` does the comparing, and is proved in Node.
 
-import * as model from "./model.js";
+import * as model from "gg/plan-model.js";
 import * as db from "./db.js";
 import * as diff from "./diff.js";
 import { t, tf, num } from "./i18n.js";

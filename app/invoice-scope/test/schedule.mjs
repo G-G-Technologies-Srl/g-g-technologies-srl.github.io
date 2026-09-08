@@ -15,7 +15,7 @@
 
 import assert from "node:assert/strict";
 
-import { from, toString } from "../run/decimal.js";
+import { from, sum, toString } from "../run/decimal.js";
 import {
   schedule, summary, recordPayment, removePayment, paymentsOf, received, owedOn, csv,
 } from "../run/schedule.js";
@@ -116,6 +116,49 @@ await test("una rata senza importo vale il totale del documento", async () => {
   await put(db, "docs", issued({ pagamento: { rate: [{ scadenza: "2026-10-03" }] } }));
   const rows = await schedule(db, { today: OGGI });
   assert.equal(money(rows[0].importo), "1220.00");
+});
+
+await test("due rate senza importo si dividono il totale, non lo valgono ognuna", async () => {
+  // Il difetto vero, trovato guardando il dimostrativo in un browser: la maschera del documento
+  // aggiunge una rata con l'importo vuoto, quindi due scadenze lasciate in bianco facevano contare
+  // il documento due volte — «da incassare» più alto del fatturato, che senza acconti è impossibile.
+  const db = await openDatabase();
+  await put(db, "docs", issued({
+    pagamento: { rate: [{ scadenza: "2026-10-03" }, { scadenza: "2026-11-03" }] },
+  }));
+  const rows = await schedule(db, { today: OGGI });
+  assert.deepEqual(rows.map((r) => money(r.importo)), ["610.00", "610.00"]);
+  assert.equal(money(sum(rows.map((r) => r.importo))), "1220.00", "e sommano al totale");
+});
+
+await test("tre rate senza importo: il resto va sulla prima, e la somma torna", async () => {
+  const db = await openDatabase();
+  await put(db, "docs", issued({
+    pagamento: { rate: [{ scadenza: "2026-10-01" }, { scadenza: "2026-11-01" }, { scadenza: "2026-12-01" }] },
+  }));
+  const rows = await schedule(db, { today: OGGI });
+  // La differenza sta sulla prima: 1.220,00 / 3 arrotondato ai centesimi fa 406,67, e la prima
+  // prende quello che resta. Su cento euro esce l'altro verso — 33,34 · 33,33 · 33,33 — e in
+  // entrambi i casi la somma è il totale, che è la condizione che conta.
+  assert.deepEqual(rows.map((r) => money(r.importo)), ["406.66", "406.67", "406.67"]);
+  assert.equal(money(sum(rows.map((r) => r.importo))), "1220.00");
+});
+
+await test("una rata scritta e una in bianco: la seconda vale quello che resta", async () => {
+  // `validate.js` controlla la somma solo quando gli importi sono scritti tutti; il caso misto è
+  // ammesso, ed è quello di chi scrive l'acconto e lascia il saldo da calcolare all'app.
+  const db = await openDatabase();
+  await put(db, "docs", issued({
+    pagamento: { rate: [{ scadenza: "2026-10-03", importo: "220.00" }, { scadenza: "2026-11-03" }] },
+  }));
+  const rows = await schedule(db, { today: OGGI });
+  assert.deepEqual(rows.map((r) => money(r.importo)), ["220.00", "1000.00"]);
+});
+
+await test("una rata sola senza importo continua a valere il totale", async () => {
+  const db = await openDatabase();
+  await put(db, "docs", issued({ pagamento: { rate: [{ scadenza: "2026-10-03" }] } }));
+  assert.equal(money((await schedule(db, { today: OGGI }))[0].importo), "1220.00");
 });
 
 await test("una rata senza data cade sulla data del documento", async () => {

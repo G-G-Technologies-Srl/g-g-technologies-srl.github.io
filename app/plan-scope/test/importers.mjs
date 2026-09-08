@@ -7,7 +7,7 @@
 import assert from "node:assert/strict";
 
 import * as importers from "../run/importers.js";
-import * as pack from "../run/pack.js";
+import * as pack from "gg/plan-pack.js";
 
 let passed = 0;
 

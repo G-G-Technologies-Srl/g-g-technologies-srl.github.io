@@ -12,7 +12,7 @@
 //    running app means changing the code while somebody has unsaved keystrokes in a page, and
 //    saving them one reload is not worth that.
 
-const VERSION = '2.7.8';
+const VERSION = '2.9.1';
 const CACHE = `plan-scope-v${VERSION}`;
 
 // Every file the app is made of. Kept by hand and checked by _src/check_apps.py against the
@@ -29,10 +29,7 @@ const ASSETS = [
   './app.js',
   './i18n.js',
   './db.js',
-  './model.js',
   './home.js',
-  './editor.js',
-  './markdown.js',
   './plan.js',
   './timeline.js',
   './templates.js',
@@ -43,7 +40,6 @@ const ASSETS = [
   './csv.js',
   './webpage.js',
   './diff.js',
-  './clip.js',
   './importers.js',
   './outputs.js',
   './versions.js',
@@ -52,7 +48,6 @@ const ASSETS = [
   './vault.js',
   './sync.js',
   './ui.js',
-  './pack.js',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',
@@ -69,6 +64,13 @@ const ASSETS = [
   '../../_lib/io.js',
   '../../_lib/zip.js',
   '../../_lib/folder.js',
+  '../../_lib/plan-markdown.js',
+  '../../_lib/plan-editor.js',
+  '../../_lib/plan-editor.css',
+  '../../_lib/clip.js',
+  '../../_lib/dom.js',
+  '../../_lib/plan-pack.js',
+  '../../_lib/plan-model.js',
 ];
 
 self.addEventListener('install', (event) => {

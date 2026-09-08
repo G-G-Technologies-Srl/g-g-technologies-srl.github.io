@@ -10,7 +10,7 @@
 // carries handles, rails and `contenteditable`, none of which belongs in a document. This is the
 // static reading of the same Markdown, and it is pure: strings in, one string out.
 
-import * as md from "./markdown.js";
+import * as md from "gg/plan-markdown.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s

@@ -21,7 +21,12 @@
 // divider — the original is carried in the block and written back. Normalising `*` to `-` would be
 // defensible for our own documents and rude to a file somebody brought with them.
 //
-// No DOM in here: `node app/plan-scope/test/markdown.mjs` runs it directly.
+// **In `_lib/` da quando lo usano due app.** Plan Scope lo ha scritto, Invoice Scope lo usa per i
+// piani dei progetti che fattura: due usi veri, e il file non nomina né l'app che lo ospita né uno
+// store — si è spostato senza toccare una riga, che è la prova che la linea era nel punto giusto.
+//
+// No DOM in here:
+// `node --import ./app/plan-scope/test/loader.mjs app/plan-scope/test/markdown.mjs`.
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s

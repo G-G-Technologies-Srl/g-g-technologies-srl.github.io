@@ -16,10 +16,10 @@
 // to both there is a way out — "move it to tomorrow" — because a deadline that has moved is not a
 // fault somebody committed.
 
-import * as model from "./model.js";
+import * as model from "gg/plan-model.js";
 import * as timeline from "./timeline.js";
 import * as ics from "./ics.js";
-import * as pack from "./pack.js";
+import * as pack from "gg/plan-pack.js";
 import { t, tf, num } from "./i18n.js";
 import { el, node, button, fill, shortDate, locale, ask } from "./ui.js";
 

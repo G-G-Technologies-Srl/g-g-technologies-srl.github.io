@@ -52,9 +52,9 @@
     "url": "https://ggtechnologies.sm/en/app/invoice-scope/",
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "Any (web browser)",
-    "softwareVersion": "0.29.8",
+    "softwareVersion": "0.36.0",
     "datePublished": "2026-09-03",
-    "dateModified": "2026-09-06",
+    "dateModified": "2026-09-08",
     "license": "https://www.apache.org/licenses/LICENSE-2.0",
     "description": "Prepare invoices, credit notes and quotes, and generate the XML file for Italian electronic invoicing. It runs in the browser: your customers' data stays on your own computer.",
     "inLanguage": "en",
@@ -167,7 +167,10 @@
               <li>Prepares invoices, credit notes and deferred invoices, with several VAT rates on one document.</li>
               <li>Keeps quotes and delivery notes too, each with its own numbering and its own states: a quote is accepted or declined, a delivery note is delivered.</li>
               <li>Turns an accepted quote into an invoice, and a customer's delivery notes into one deferred invoice, carrying the lines, the discount and the due dates across without retyping them.</li>
-              <li>Keeps your bank accounts, and puts the default one on new documents: the IBAN is written once instead of on every invoice.</li>
+              <li>Keeps projects: a plan of phases with their dates, the pages of notes around them — in sub-pages, four levels deep, with images and attachments inside — and the documents linked to them. A project can also start from an accepted quote, with one phase per line.</li>
+              <li>A phase with an amount becomes an invoice line once it is done: beside the project sit what was quoted, invoiced, collected and what is still to invoice.</li>
+              <li>Gives every customer a screen of their own: the people you talk to, with email and phone, and a diary of calls, emails and meetings. Beside them sit what you have invoiced, what is still owed and their documents.</li>
+              <li>Keeps your bank accounts, and puts the default one on new documents: the IBAN is written once instead of on every invoice. A customer can have their own VAT rate and account: you write them on their record, and their documents start out already filled in.</li>
               <li>Keeps the payment schedule: each document's instalments, the overdue ones and what is still owed, and the payments you record with date, amount and account.</li>
               <li>Imports customers, price list and documents from Fatture in Cloud, from the export sheets as you download them — the .xls included — and whole invoices from the XML files in the backup. Before anything is written it shows what it read — how many arrive, which are already here, what it left out — and writes only once you confirm.</li>
               <li>Works for an Italian company and for a San Marino one: issuing from San Marino has a profile of its own, carrying what the tax office needs for the document to pass validation.</li>
@@ -214,6 +217,27 @@
             <div>
               <h4>Output</h4>
               <p>One XML file per document, plus a courtesy copy on your letterhead, to print or save as PDF for the customer.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Pictures</h4>
+              <p>The images and attachments in a page stay in the browser like everything else, and travel in the project package. The JSON archive carries the text: it is the copy rewritten at every change, and an image inside a text file would make it a hundred times heavier.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Projects</h4>
+              <p>A project carries its phases, its pages and its documents, and says what you quoted, invoiced and collected, and what is left to invoice. It exports and reopens in Plan Scope, which uses the same format.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Customers</h4>
+              <p>Every customer has a screen: the people to talk to, the diary of what was said, and their documents beside the two figures that matter.</p>
             </div>
           </div>
           <div class="fact">
@@ -266,7 +290,7 @@
             </div>
           </div>
         </div>
-        <p class="app-meta"><span><b>Version</b> 0.29.8</span><span><b>Updated</b> 6 September 2026</span><span><b>Licence</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope" rel="noopener">Source code</a></p>
+        <p class="app-meta"><span><b>Version</b> 0.36.0</span><span><b>Updated</b> 8 September 2026</span><span><b>Licence</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope" rel="noopener">Source code</a></p>
       </div>
     </section>
 
@@ -290,6 +314,14 @@
           <details class="faq-item reveal">
             <summary>Does it cover invoices with San Marino?</summary>
             <p>Yes, in both directions, and issuing from San Marino has a profile of its own: the hub as transmitter, the COE in place of the VAT number, a real postcode and province, and the TM code on the line and in front of the exemption note. It is taken from an invoice already registered, not from a reconstruction. From Italy to San Marino the nature is N3.3 with the tax office's recipient code. Invoicing between San Marino operators arrives once the technical rules are published.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>What is the difference between projects here and Plan Scope?</summary>
+            <p>The model is the same file, so a project written here opens there and the other way round. What differs is where it lives: a project belongs where its money is. If the job has a quote and invoices, keep it here, because only here can the plan say what you quoted, invoiced and collected, and a finished phase become an invoice line. If it is a plan and nothing else — an event, a book, a move — Plan Scope stays the right place, and it is lighter. What to avoid is keeping the same project open in both: the crossing is a file, not a sync.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>Can I keep the contacts and what we said, too?</summary>
+            <p>Yes, on the customer's own screen: the people you talk to, and a diary of calls, emails and meetings, each with its date. It sits inside the app that invoices rather than in a separate program because a browser gives each app a store of its own: a separate program would not see these customers, and would end up keeping a second list of the same companies — the one that then drifts. The people stay on your own computer: an electronic invoice has no field for a person's name, and the app does not invent one.</p>
           </details>
           <details class="faq-item reveal">
             <summary>What happens when I change computer?</summary>

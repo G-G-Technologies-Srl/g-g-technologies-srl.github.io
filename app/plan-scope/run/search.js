@@ -10,7 +10,7 @@
 // The search itself is `model.search`, so that it can be proved without a browser; this file is
 // the box, the list and the keys.
 
-import * as model from "./model.js";
+import * as model from "gg/plan-model.js";
 import { t } from "./i18n.js";
 import { el, node, fill } from "./ui.js";
 

@@ -22,14 +22,16 @@ import { t, tf, lang, otherLang, setLang, resolveLang } from "./i18n.js";
 import { ask, tell } from "./ask.js";
 import { openDatabase, isDemo, NAME, VERSION, EXPORTED } from "./db.js";
 import { seed } from "./demo.js";
-import { documents, convertMany, save, invoicedBy, NUMERAZIONI } from "./model.js";
+import { documents, convertMany, save, invoicedBy, signedTotal, NUMERAZIONI } from "./model.js";
 import { TIPI, KINDS, kind, numero as shownNumber, convertibile } from "./kinds.js";
 import { label as statoLabel } from "./states.js";
 import { TRACCIATO, profileFor } from "./fatturapa.js";
 import { NATURE } from "./validate.js";
 import { toString } from "./decimal.js";
-import { totals } from "./totals.js";
 import * as parties from "./parties.js";
+import * as customer from "./customer.js";
+import * as progetti from "./projects.js";
+import * as project from "./project.js";
 import * as doc from "./doc.js";
 import * as due from "./due.js";
 import { summary, csv } from "./schedule.js";
@@ -50,6 +52,7 @@ const BACKUP_KEY = "gg.invoice-scope.exported";
 const ROUTES = {
   "#/": "screenHome",
   "#/documenti": "screenDocs",
+  "#/progetti": "screenProjects",
   "#/scadenzario": "screenDue",
   "#/anagrafiche": "screenParties",
   "#/azienda": "screenCompany",
@@ -64,6 +67,18 @@ const ROUTES = {
  * bookmarked or arrived at from the back gesture, a variable would be gone and the parameter is not.
  */
 const DOC_ROUTE = /^#\/documento(?:\/([^?]+))?(?:\?tipo=([A-Za-z0-9]+))?$/;
+
+/**
+ * La scheda di un cliente: `#/cliente/<id>`.
+ *
+ * Un indirizzo suo e non un pannello dentro Anagrafiche, per la ragione che vale già per il
+ * documento: si arriva qui da un segnalibro, da un ricaricamento e dal gesto «indietro» del
+ * sistema, e uno stato tenuto in una variabile non sopravvive a nessuno dei tre.
+ */
+const PARTY_ROUTE = /^#\/cliente\/([^?]+)$/;
+
+/** La scheda di un progetto: `#/progetto/<id>`, per la stessa ragione della scheda di un cliente. */
+const PROJECT_ROUTE = /^#\/progetto\/([^?]+)$/;
 
 // **`paese` and `regimeFiscale` are fields, not constants.** They were hard-coded to IT and RF01,
 // which quietly excluded the two cases this app was written for: a company on the flat-rate scheme,
@@ -153,27 +168,57 @@ async function _route() {
   // Anything the document screen still had pending goes out first. The 800 ms that make typing
   // comfortable are also 800 ms in which a tab of the navbar can be tapped.
   await doc.flush();
+  // Anche le fasi di un progetto hanno una coda di scrittura, e va svuotata prima di cambiare
+  // schermata: la coda esiste per non scrivere a ogni tasto, non per perdere l'ultimo tasto.
+  await progetti.flush();
   // Every navigation is a moment something may have changed: the backup folder is told, and
   // decides by fingerprint whether there is anything to write.
   backup.touch();
 
   const hash = location.hash || "#/";
   const document_ = DOC_ROUTE.exec(hash);
-  const screen = document_ ? "screenDoc" : (ROUTES[hash] ? ROUTES[hash] : "screenHome");
+  const person = PARTY_ROUTE.exec(hash);
+  const lavoro = PROJECT_ROUTE.exec(hash);
+  const screen = document_ ? "screenDoc"
+    : person ? "screenCustomer"
+      : lavoro ? "screenProject"
+        : (ROUTES[hash] ? ROUTES[hash] : "screenHome");
 
-  for (const id of [...Object.values(ROUTES), "screenDoc"]) {
+  for (const id of [...Object.values(ROUTES), "screenDoc", "screenCustomer", "screenProject"]) {
     el(id).hidden = id !== screen;
   }
   for (const link of window.document.querySelectorAll("#navbar a")) {
     // The document screen is reached from the list, so it lights the list's tab: a tab that lights
-    // nothing while you are inside it makes the app feel as if you have left it.
-    const target = document_ ? "#/documenti" : hash;
+    // nothing while you are inside it makes the app feel as if you have left it. A customer's own
+    // screen lights Anagrafiche for the same reason.
+    const target = document_ ? "#/documenti"
+      : person ? "#/anagrafiche"
+        : lavoro ? "#/progetti" : hash;
     link.classList.toggle("here", link.getAttribute("href") === target);
   }
 
   if (document_) {
     await doc.open(db, document_[1] || null, { afterSave: _refresh, tipo: document_[2] || null });
+    // Il pulsante «crea il progetto», o il collegamento al progetto che già lo contiene. Il
+    // documento viene riletto dal deposito invece che chiesto a `doc.js`: quel file non sa che i
+    // progetti esistono, e continua a non saperlo.
+    await project.onDocument(db, document_[1] ? await get(db, "docs", document_[1]) : null);
   }
+  if (lavoro) {
+    if (!(await project.render(db, lavoro[1], { afterChange: _refresh }))) {
+      location.hash = "#/progetti";
+      return;
+    }
+  }
+  if (person) {
+    // Un cliente cancellato, e un indirizzo che qualcuno aveva tenuto: si torna all'elenco invece di
+    // mostrare una scheda senza nome. `_route` riparte da sé sul cambio di hash.
+    if (!(await customer.render(db, person[1], { afterChange: _refresh }))) {
+      location.hash = "#/anagrafiche";
+      return;
+    }
+  }
+  if (screen === "screenProjects") await project.renderList(db, { afterChange: _refresh });
   if (screen === "screenParties") await parties.render(db, _refresh);
   if (screen === "screenDue") await due.render(db, _refresh);
   if (screen === "screenSettings") await refreshImport();
@@ -414,11 +459,8 @@ async function _drawDocuments(docs) {
  * but in a column of invoices it reads as money going the other way.
  */
 function _shownTotal(record) {
-  const valore = record.totali
-    ? BigInt(record.totali.totale)
-    : ((record.righe || []).length ? totals(record).totale : null);
-  if (valore === null) return "—";
-  return money(kind(record).storna ? -valore : valore);
+  const valore = signedTotal(record);
+  return valore === null ? "—" : money(valore);
 }
 
 // How many rows the two lists on the home show. Five is what fits without scrolling on a laptop
@@ -778,7 +820,16 @@ async function _import(event) {
   if (!file) return;
   if (!(await ask(t("settingsImportAsk"), { okLabel: t("settingsImport") }))) return;
   try {
-    await restore(db, await file.text(), { app: NAME, stores: EXPORTED });
+    // **`restore` non solleva niente: risponde.** Un file che arriva da fuori può non essere un
+    // archivio, e per la libreria è un esito ordinario — quindi senza guardare `ok` l'app diceva
+    // «Archivio importato» anche a chi aveva scelto il file sbagliato, e la persona andava a cercare
+    // dei dati che non erano stati scritti. Trovato rileggendo, non provando: è il tipo di difetto
+    // che si vede solo sbagliando di proposito.
+    const esito = await restore(db, await file.text(), { app: NAME, stores: EXPORTED });
+    if (!esito || !esito.ok) {
+      await tell(t("settingsImportBad"));
+      return;
+    }
     await tell(t("settingsImportDone"));
     await _loadCompany();
     await _route();
@@ -815,6 +866,10 @@ async function main() {
   }
 
   db = await openDatabase();
+  // Il modello dei progetti si aggancia al deposito **prima** del dimostrativo: il seme scrive i
+  // suoi progetti passando dal modello, come farebbe una persona, e senza la porta collegata non
+  // avrebbe dove scrivere.
+  await progetti.setup(db);
   // **Prima della prima schermata**, non dopo: headless Chrome scatta all'evento `load`, e una
   // schermata che si popola dopo lo scatto è una schermata vuota nella scheda. È il difetto che
   // Survey Scope ha già pagato una volta.
@@ -914,6 +969,8 @@ async function main() {
   });
 
   parties.connect(db, _refresh);
+  customer.connect(db, { afterChange: _refresh });
+  project.connect(db, { afterChange: _refresh });
   doc.connect(db);
   due.connect(db, _refresh);
 
@@ -922,9 +979,12 @@ async function main() {
   // Closing the tab, switching app on a phone, or the browser reclaiming the page: `pagehide` is
   // the one event that fires in all three, where `beforeunload` is ignored on mobile. The save is
   // best-effort — the page may go before it lands — which is why the deferred save is short.
-  window.addEventListener("pagehide", () => { doc.flush(); });
+  window.addEventListener("pagehide", () => { doc.flush(); progetti.flush(); });
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") doc.flush();
+    if (document.visibilityState === "hidden") {
+      doc.flush();
+      progetti.flush();
+    }
   });
   await _loadCompany();
   await _route();

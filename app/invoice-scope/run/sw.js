@@ -12,7 +12,7 @@
 //    a running app means changing the code while somebody is halfway through an invoice, and
 //    saving them one reload is not worth that — here least of all.
 
-const VERSION = '0.29.8';
+const VERSION = '0.36.0';
 const CACHE = `invoice-scope-v${VERSION}`;
 
 // Every file the app is made of. Kept by hand and checked by _src/check_apps.py against the
@@ -30,6 +30,8 @@ const ASSETS = [
   './ask.js',
   './backup.js',
   './brand.js',
+  './crm.js',
+  './customer.js',
   './db.js',
   './doc.js',
   './due.js',
@@ -47,6 +49,8 @@ const ASSETS = [
   './parties.js',
   './payments.js',
   './print.js',
+  './project.js',
+  './projects.js',
   './problems.js',
   './reading.js',
   './schedule.js',
@@ -74,6 +78,13 @@ const ASSETS = [
   '../../_lib/io.js',
   '../../_lib/zip.js',
   '../../_lib/folder.js',
+  '../../_lib/plan-model.js',
+  '../../_lib/plan-editor.js',
+  '../../_lib/plan-pack.js',
+  '../../_lib/plan-editor.css',
+  '../../_lib/clip.js',
+  '../../_lib/dom.js',
+  '../../_lib/plan-markdown.js',
 ];
 
 self.addEventListener('install', (event) => {

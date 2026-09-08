@@ -11,9 +11,9 @@
 // Split off `app.js` with the state it needs — the parsed file waiting for a choice — and the few
 // things it asks the app to do afterwards, handed in through `setup`.
 
-import * as model from "./model.js";
+import * as model from "gg/plan-model.js";
 import * as db from "./db.js";
-import * as pack from "./pack.js";
+import * as pack from "gg/plan-pack.js";
 import * as zip from "gg/zip.js";
 import * as importers from "./importers.js";
 import * as versions from "./versions.js";
@@ -59,7 +59,10 @@ export async function receive(file) {
     try {
       envelope = JSON.parse(text);
     } catch (ignored) { /* not JSON at all: pack.parse says so properly below */ }
-    if (envelope && envelope.data && envelope.app === pack.APP) {
+    // L'archivio completo porta il nome dell'app, non quello del formato dei pacchetti: da quando
+    // `pack.APP` è «gg-plan» qui si confronta con `db.DB`, o un backup di Plan Scope non verrebbe
+    // più riconosciuto come tale — e cadrebbe nel ramo del pacchetto, che lo direbbe illeggibile.
+    if (envelope && envelope.data && envelope.app === db.DB) {
       pending = { kind: "backup", text, envelope };
       el("importSummary").textContent = tf("importBackupSummary", {
         date: longDate(envelope.exported || ""),
@@ -246,7 +249,7 @@ async function _restoreBackup() {
   // loss with no way back. The download is the way back. Skipped when there is nothing to lose.
   if (model.liveProjects().length || model.trashedProjects().length) {
     try {
-      await io.download(db.handle(), { app: pack.APP, schema: db.SCHEMA, stores: db.DOCUMENT_STORES });
+      await io.download(db.handle(), { app: db.DB, schema: db.SCHEMA, stores: db.DOCUMENT_STORES });
     } catch (ignored) {
       // A download that could not start is not a reason to stop the restore the person asked for.
     }
@@ -254,7 +257,7 @@ async function _restoreBackup() {
   let outcome;
   try {
     outcome = await io.restore(db.handle(), pending.text, {
-      app: pack.APP,
+      app: db.DB,
       stores: db.DOCUMENT_STORES,
     });
   } catch (ignored) {

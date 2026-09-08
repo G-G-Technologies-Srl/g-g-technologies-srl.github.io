@@ -16,7 +16,7 @@
 
 import assert from "node:assert/strict";
 
-import { parse, serialize, inlineHtml, images, links, assets, frontmatter, withFrontmatter } from "../run/markdown.js";
+import { parse, serialize, inlineHtml, images, links, assets, frontmatter, withFrontmatter } from "gg/plan-markdown.js";
 
 let passed = 0;
 

@@ -17,11 +17,11 @@
 //    does the thing it looks like it does — which matters more once the app is installed and that
 //    button is not there at all.
 
-import * as model from "./model.js";
+import * as model from "gg/plan-model.js";
 import * as db from "./db.js";
 import * as home from "./home.js";
-import * as pack from "./pack.js";
-import * as editor from "./editor.js";
+import * as pack from "gg/plan-pack.js";
+import * as editor from "gg/plan-editor.js";
 import * as plan from "./plan.js";
 import * as templates from "./templates.js";
 import * as demo from "./demo.js";
@@ -29,7 +29,7 @@ import * as cheer from "./cheer.js";
 import * as search from "./search.js";
 import * as outputs from "./outputs.js";
 import * as csv from "./csv.js";
-import * as md from "./markdown.js";
+import * as md from "gg/plan-markdown.js";
 import * as versions from "./versions.js";
 import * as pages from "./pages.js";
 import * as importing from "./importing.js";
@@ -628,7 +628,7 @@ async function _exportProject() {
   await db.flush();
   const data = { ...model.exportable(projectId), assets: await _assetsOf(projectId) };
   const bytes = pack.toZip(data, { schema: db.SCHEMA });
-  pack.save(pack.fileName(project), bytes, "application/zip");
+  pack.save(pack.fileName(project, { prefix: db.DB }), bytes, "application/zip");
   model.markExported(projectId);
   home.paintProject(projectId);
   _cheerUp({ exported: true });
@@ -639,7 +639,7 @@ async function _exportData() {
   if (!project) return;
   await db.flush();
   const json = pack.manifest(model.exportable(projectId), { schema: db.SCHEMA });
-  pack.save(pack.fileName(project, { extension: "json" }),
+  pack.save(pack.fileName(project, { extension: "json", prefix: db.DB }),
     JSON.stringify(json, null, 2), "application/json;charset=utf-8");
   model.markExported(projectId);
   home.paintProject(projectId);
@@ -736,7 +736,9 @@ async function _backup() {
     return snack(t("backupNothing"));
   }
   const name = await io.download(db.handle(), {
-    app: pack.APP,
+    // Il nome dell'app, non quello del formato: questo è l'archivio di Plan Scope, e `gg/io.js`
+    // rifiuta un archivio che non porta il nome dell'app che lo riapre.
+    app: db.DB,
     schema: db.SCHEMA,
     stores: db.DOCUMENT_STORES,
   });
@@ -1408,6 +1410,10 @@ function _connect() {
   });
 
   editor.mount(el("editor"), {
+    // Le parole e la domanda: l'editor sta in `_lib/` e non ha una lingua sua, quindi riceve la
+    // funzione che cerca le chiavi — la stessa dell'app — e il `<dialog>` con cui si fa una domanda.
+    text: t,
+    ask,
     // Every keystroke in the editor arrives here as the whole document, and goes into the model the
     // same way the source view's text does. One path to disk, whichever view is up.
     change: (markdown) => {

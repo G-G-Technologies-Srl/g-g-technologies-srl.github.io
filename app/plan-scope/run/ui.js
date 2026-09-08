@@ -12,7 +12,16 @@
 
 import { t, tf, lang, num } from "./i18n.js";
 
-export const el = (id) => document.getElementById(id);
+// **Le quattro di sotto stanno in `gg/dom.js`** da quando le usa anche l'editor, che è condiviso
+// con Invoice Scope. Ri-esportate da qui perché il resto dell'app le chiama da `ui.js` da sempre,
+// e cambiare venti import per uno spostamento sarebbe rumore.
+// **Importate e poi ri-esportate, non ri-esportate soltanto.** `export ... from` inoltra il nome a
+// chi importa questo file e **non** crea un legame qui dentro: `snack` e `ask`, che chiamano `el` e
+// `node` due righe più sotto, sono morte con «el is not defined». Trovato aprendo Plan Scope in un
+// browser vero — nessun test lo copriva, perché `ui.js` è tutto DOM.
+import { el, node, button, fill } from "gg/dom.js";
+
+export { el, node, button, fill };
 
 // Eight seconds. Long enough to notice and reach it, short enough not to sit over the interface.
 const SNACK_MS = 8000;
@@ -203,21 +212,3 @@ export function count(n, one, many) {
  * "Fiera <b>autunno</b>" would simply render wrong, and the first person to notice would be the
  * person who named it.
  */
-export function node(tag, className = "", text = "") {
-  const element = document.createElement(tag);
-  if (className) element.className = className;
-  if (text) element.textContent = text;
-  return element;
-}
-
-export function button(className, text, onClick, { label = null } = {}) {
-  const element = node("button", className, text);
-  element.type = "button";
-  if (label) element.setAttribute("aria-label", label);
-  element.addEventListener("click", onClick);
-  return element;
-}
-
-export function fill(target, children) {
-  target.replaceChildren(...children);
-}

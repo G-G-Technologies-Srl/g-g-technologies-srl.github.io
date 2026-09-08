@@ -21,10 +21,9 @@
 // reordered, because the nodes it points at are gone. Inside a field the browser's own undo is
 // still the right one — it works character by character — so the shortcut is left alone there.
 
-import * as md from "./markdown.js";
+import * as md from "./plan-markdown.js";
 import * as clip from "./clip.js";
-import { t } from "./i18n.js";
-import { el, node, button, fill, ask } from "./ui.js";
+import { el, node, button, fill } from "./dom.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -110,6 +109,27 @@ const MENU = [
 
 let blocks = [];
 let on = { change() {}, openPage() {}, exists: () => true, image() {}, attachment() {}, moved() {}, removed() {} };
+
+/**
+ * Le parole dell'editor, e la domanda per il collegamento.
+ *
+ * **Un componente condiviso non ha una lingua**, quindi non tiene le parole: riceve la funzione che
+ * le cerca — la stessa `t` dell'app che lo monta — come `gg/update.js` riceve le sue tre frasi.
+ *
+ * Una funzione e non un oggetto di stringhe perché **due chiavi si costruiscono mentre si disegna**:
+ * l'etichetta di ogni voce del menù e il tipo di un riquadro, `callout_nota`. Con un oggetto,
+ * l'elenco delle chiavi da passare sarebbe scritto due volte — qui e nell'app — e la seconda
+ * dimenticherebbe quella aggiunta per ultima. Il ripiego restituisce la chiave, che si legge sullo
+ * schermo e si nota: `check_apps.py` confronta le chiavi di ogni app, non quelle di questo file.
+ *
+ * Le chiavi che l'app deve avere: `addBlock`, `dragHandle`, `taskDone`, `taskUndone`, `menuTitle`,
+ * `menuChange`, `linkPrompt`, `sampleHeading`, `sampleText`, `sampleItem`, `sampleQuote`,
+ * `sampleNote`, le etichette di `MENU` e un `callout_<tipo>` per ogni riquadro.
+ */
+let text = (key) => key;
+
+/** La domanda con una risposta di testo. La disegna l'app, con il suo `<dialog>`. */
+let askFor = async () => null;
 let host = null;
 let menuAt = null;                      // index the slash menu is acting on, or null
 let caret = null;                       // { index, offset } to restore after the next draw
@@ -458,7 +478,7 @@ function _blockNode(block, index) {
 
   const rail = node("div", "block-rail");
   rail.append(button("ghost small icon rail-add", "+", () => _openMenu(index),
-    { label: t("addBlock") }));
+    { label: text("addBlock") }));
 
   // The handle is a button before it is a drag target: it can be reached with the keyboard, and
   // there Alt+Up and Alt+Down move the block. A reorder that only exists as a gesture is a reorder
@@ -469,7 +489,7 @@ function _blockNode(block, index) {
   // `showModal` on an open dialog throws.
   const grip = button("ghost small icon rail-grip", "⣿", () => {
     if (!el("blockMenu").open) _openMenu(index, { transform: true });
-  }, { label: t("dragHandle") });
+  }, { label: text("dragHandle") });
   grip.addEventListener("pointerdown", (event) => _startDrag(event, index));
   grip.addEventListener("keydown", (event) => {
     if (!event.altKey || (event.key !== "ArrowUp" && event.key !== "ArrowDown")) return;
@@ -513,7 +533,7 @@ function _blockNode(block, index) {
         if (item.checked !== null && item.checked !== undefined) {
           const box = button(item.checked ? "tick on" : "tick", item.checked ? "✓" : "",
             () => { _snapshot(); item.checked = !item.checked; _apply({ index, offset: 0 }); },
-            { label: item.checked ? t("taskUndone") : t("taskDone") });
+            { label: item.checked ? text("taskUndone") : text("taskDone") });
           box.setAttribute("aria-pressed", item.checked ? "true" : "false");
           li.append(box);
         }
@@ -533,7 +553,7 @@ function _blockNode(block, index) {
 
     case "callout": {
       const box = node("div", `callout callout-${block.kind}`);
-      box.append(node("span", "callout-kind", t(`callout_${block.kind}`)));
+      box.append(node("span", "callout-kind", text(`callout_${block.kind}`)));
       box.append(_editable(block, index, { className: "callout-text" }));
       body.append(box);
       break;
@@ -1167,21 +1187,21 @@ function _sample(key) {
   const box = node("span", "sample");
   if (key.startsWith("heading")) {
     const level = key.slice(-1);
-    box.append(node("span", `h h${level} sample-text`, t("sampleHeading")));
+    box.append(node("span", `h h${level} sample-text`, text("sampleHeading")));
   } else if (key === "paragraph") {
-    box.append(node("span", "sample-text", t("sampleText")));
+    box.append(node("span", "sample-text", text("sampleText")));
   } else if (key === "list" || key === "ordered" || key === "check") {
     const mark = key === "ordered" ? node("span", "sample-num", "1.")
       : key === "check" ? node("span", "sample-box", "")
         : node("span", "sample-dot", "");
     box.append(mark);
-    box.append(node("span", "sample-text", t("sampleItem")));
+    box.append(node("span", "sample-text", text("sampleItem")));
   } else if (key === "quote") {
     box.classList.add("sample-quote");
-    box.append(node("span", "sample-text", t("sampleQuote")));
+    box.append(node("span", "sample-text", text("sampleQuote")));
   } else if (key === "callout") {
     box.classList.add("sample-callout");
-    box.append(node("span", "sample-text", t("sampleNote")));
+    box.append(node("span", "sample-text", text("sampleNote")));
   } else if (key === "code") {
     box.append(node("code", "sample-code", "const a = 1"));
   } else if (key === "divider") {
@@ -1204,7 +1224,7 @@ function _sample(key) {
 function _openMenu(index, { replace = false, transform = false } = {}) {
   menuAt = { index, replace, transform };
   el("blockMenuField").value = "";
-  el("blockMenuTitle").textContent = transform ? t("menuChange") : t("menuTitle");
+  el("blockMenuTitle").textContent = transform ? text("menuChange") : text("menuTitle");
   el("blockDuplicate").hidden = !transform;
   el("blockDelete").hidden = !transform;
   _fillMenu("");
@@ -1232,7 +1252,7 @@ function _fillMenu(query) {
   const holds = block ? _textOf(block).trim() : "";
 
   const found = MENU.filter((entry) => {
-    if (wanted && !t(entry.label).toLowerCase().includes(wanted)) return false;
+    if (wanted && !text(entry.label).toLowerCase().includes(wanted)) return false;
     // An image has no words to carry across: only duplicate and delete apply, and they sit in the
     // footer of this same menu.
     if (block && block.type === "image") return false;
@@ -1246,7 +1266,7 @@ function _fillMenu(query) {
     const row = node("button", entry.key === here ? "menu-entry on" : "menu-entry");
     row.type = "button";
     row.append(_sample(entry.key));
-    row.append(node("span", "menu-name", t(entry.label)));
+    row.append(node("span", "menu-name", text(entry.label)));
     row.addEventListener("click", () => _chooseBlock(entry));
     return row;
   }));
@@ -1300,9 +1320,11 @@ function _removeBlock() {
 //  p u b l i c
 // -----------------------------------------------------------------------------------------------------------------
 
-export function mount(container, handlers) {
+export function mount(container, { text: words = null, ask = null, ...handlers } = {}) {
   host = container;
   on = { ...on, ...handlers };
+  if (words) text = words;
+  if (ask) askFor = ask;
 
   // A link between pages is caught here rather than on each one: the blocks are redrawn constantly,
   // and a listener per link would be added and thrown away hundreds of times a session.
@@ -1344,7 +1366,7 @@ export function mount(container, handlers) {
     // up, and comes back to the same range before the link is wrapped around it.
     const selection = window.getSelection();
     const range = selection && selection.rangeCount ? selection.getRangeAt(0).cloneRange() : null;
-    const href = await ask(t("linkPrompt"), { value: "https://" });
+    const href = await askFor(text("linkPrompt"), { value: "https://" });
     if (!href || !/^https?:\/\//i.test(href.trim())) return;
     if (range && selection) { selection.removeAllRanges(); selection.addRange(range); }
     _wrap("a", { href: href.trim(), rel: "noopener" });

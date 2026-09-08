@@ -12,6 +12,7 @@
 <link rel="icon" href="./icon-192.png" sizes="192x192">
 <link rel="apple-touch-icon" href="./icon-192.png">
 <link rel="stylesheet" href="../../_lib/base.css">
+<link rel="stylesheet" href="../../_lib/plan-editor.css">
 <link rel="stylesheet" href="./styles.css">
 <link rel="stylesheet" href="./print.css" media="print">
 <script>
@@ -72,6 +73,7 @@
   <nav class="navbar" id="navbar" aria-label="Invoice Scope">
     <a href="#/" id="navHome" data-t="navHome"></a>
     <a href="#/documenti" id="navDocs" data-t="navDocs"></a>
+    <a href="#/progetti" id="navProjects" data-t="navProjects"></a>
     <a href="#/scadenzario" id="navDue" data-t="navDue"></a>
     <a href="#/anagrafiche" id="navParties" data-t="navParties"></a>
     <a href="#/azienda" id="navCompany" data-t="navCompany"></a>
@@ -192,6 +194,11 @@
            emetterlo non trovava il pulsante, e chi l'aveva emesso nemmeno. Una bozza stampata lo
            dice nel piè di pagina. -->
       <button type="button" class="button ghost" id="docPrint" data-t="docPrint"></button>
+      <!-- Da un preventivo nasce il progetto, con una fase per riga: è il punto in cui il piano e il
+           denaro si incontrano senza ridigitare niente. Il pulsante c'è finché quel documento non è
+           già dentro un progetto; dopo, al suo posto, il collegamento per andarci. -->
+      <button type="button" class="button ghost" id="docProject" data-t="docMakeProject" hidden></button>
+      <a class="link-button" id="docProjectLink" href="#/progetti" hidden></a>
       <span id="docStato" class="doc-stato"></span>
     </div>
 
@@ -434,7 +441,7 @@
     <table class="rows" id="partiesTable" hidden>
         <thead><tr>
           <th data-t="f_denominazione"></th><th data-t="f_partitaIva"></th>
-          <th data-t="f_comune"></th><th></th>
+          <th data-t="f_comune"></th><th data-t="partiesLastContact"></th><th></th>
         </tr></thead>
         <tbody id="partiesBody"></tbody>
       </table>
@@ -452,6 +459,205 @@
           <th class="right" data-t="itemPrice"></th><th class="right" data-t="itemVat"></th><th></th>
         </tr></thead>
         <tbody id="itemsBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- I progetti. Il piano di un lavoro sta qui e non in un programma a parte perché tre dei quattro
+       numeri che contano — quotato, fatturato, incassato — vivono nei documenti, e il quarto, «da
+       fatturare», è quello che dice cosa fare adesso. Il modello è lo stesso di Plan Scope, quindi
+       un progetto esportato da qui si apre lì. -->
+  <section id="screenProjects" class="screen wide" hidden>
+    <h1 data-t="projectsTitle"></h1>
+    <div class="actions">
+      <button type="button" class="button" id="projectNew" data-t="projectsNew"></button>
+      <!-- Un progetto scritto in Plan Scope entra da qui: stesso formato, stesso `uid`, e nessuna
+           ridigitazione. È il ponte fra le due app, e senza un pulsante non esisterebbe. -->
+      <button type="button" class="button ghost" id="projectImport" data-t="projectsImport"></button>
+      <input type="file" id="projectImportFile" accept=".zip,.json,application/zip,application/json" hidden>
+    </div>
+    <p class="note" data-t="projectsNote"></p>
+    <p class="empty" id="projectsEmpty" data-t="projectsEmpty"></p>
+    <div class="table-scroll">
+      <table class="rows" id="projectsTable" hidden>
+        <thead><tr>
+          <th data-t="projectsName"></th><th data-t="docsParty"></th>
+          <th data-t="projectPhases"></th><th class="right" data-t="projectToBill"></th><th></th>
+        </tr></thead>
+        <tbody id="projectsBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- La scheda di un progetto: i quattro numeri, le fasi, i documenti collegati. -->
+  <section id="screenProject" class="screen wide" hidden>
+    <a class="back-link" href="#/progetti" data-t="projectBack"></a>
+    <div class="doc-head">
+      <h1 id="projName"></h1>
+      <button type="button" class="button ghost" id="projEdit" data-t="projectEditData"></button>
+      <button type="button" class="button ghost" id="projExport" data-t="projectExport"></button>
+      <button type="button" class="button ghost danger-text" id="projDelete" data-t="del"></button>
+    </div>
+    <p class="note" id="projMeta"></p>
+
+    <div class="figures">
+      <div class="figure"><span class="label" data-t="projQuoted"></span><span class="value" id="projQuoted">—</span></div>
+      <div class="figure"><span class="label" data-t="projBilled"></span><span class="value" id="projBilled">—</span></div>
+      <div class="figure"><span class="label" data-t="projPaid"></span><span class="value" id="projPaid">—</span></div>
+      <div class="figure"><span class="label" data-t="projToBill"></span><span class="value" id="projToBill">—</span></div>
+    </div>
+
+    <div class="section-head">
+      <h2 data-t="projPhasesTitle"></h2>
+      <button type="button" class="button" id="projInvoice" data-t="projInvoiceDone" hidden></button>
+    </div>
+    <p class="note" data-t="projPhasesNote"></p>
+    <p class="empty" id="projPhasesEmpty" data-t="projPhasesEmpty"></p>
+    <div class="table-scroll">
+      <table class="rows" id="projPhasesTable" hidden>
+        <thead><tr>
+          <th data-t="projDone"></th><th data-t="projPhase"></th>
+          <th class="right" data-t="projAmount"></th><th data-t="f_scadenza"></th><th></th>
+        </tr></thead>
+        <tbody id="projPhasesBody"></tbody>
+      </table>
+    </div>
+    <!-- La riga per aggiungerne una sta sotto l'elenco, aperta: una fase si aggiunge mentre si
+         guarda quelle che ci sono, e un foglio sovrapposto per tre campi sarebbe di troppo. -->
+    <div class="form act-new">
+      <label class="wide"><span data-t="projPhase"></span><input id="projPhaseTitle" autocomplete="off"></label>
+      <label class="narrow"><span data-t="projAmount"></span><input id="projPhaseAmount" inputmode="decimal"></label>
+      <label class="narrow"><span data-t="f_scadenza"></span><input type="date" id="projPhaseDate"></label>
+      <div class="actions">
+        <button type="button" class="button ghost" id="projPhaseAdd" data-t="projPhaseAdd"></button>
+        <p class="note act-problem" id="projPhaseProblem" hidden></p>
+      </div>
+    </div>
+
+    <!-- Le pagine del progetto: gli appunti che stanno intorno al lavoro — il capitolato, il verbale
+         di un sopralluogo, le misure prese in cantiere. L'editor è quello di Plan Scope, montato da
+         `gg/plan-editor.js`: stesso componente, stesso formato, quindi un progetto esportato da qui
+         si riapre lì con le sue pagine. -->
+    <div class="section-head">
+      <h2 data-t="projPagesTitle"></h2>
+      <!-- I tre comandi stanno insieme, non ai due capi della riga: sono la stessa azione — mettere
+           qualcosa nelle pagine — presa da tre parti diverse. È la ragione per cui `.head-tools`
+           esiste, ed è già scritta nel foglio di stile. -->
+      <div class="head-tools">
+        <button type="button" class="button ghost" id="projPageNew" data-t="projPageNew"></button>
+        <!-- L'immagine e il file entrano nella pagina aperta. La finestra che sceglie il file è del
+             sistema — una delle tre eccezioni scritte in app/CLAUDE.md — e tutto il resto è nostro:
+             il pulsante, il limite dichiarato, e la riga che dice com'è andata. -->
+        <button type="button" class="button ghost" id="projPageImage" data-t="projPageImage"></button>
+        <button type="button" class="button ghost" id="projPageFile" data-t="projPageFile"></button>
+        <input type="file" id="projImageFile" accept="image/*" hidden>
+        <input type="file" id="projAnyFile" hidden>
+      </div>
+    </div>
+    <p class="note" data-t="projPagesNote"></p>
+    <p class="empty" id="projPagesEmpty" data-t="projPagesEmpty"></p>
+    <div class="pages-split" id="projPagesSplit" hidden>
+      <nav class="page-list" id="projPagesList" aria-label="Pagine"></nav>
+      <div class="editor" id="projEditor"></div>
+    </div>
+
+    <div class="section-head">
+      <h2 data-t="projDocsTitle"></h2>
+    </div>
+    <p class="empty" id="projDocsEmpty" data-t="projDocsEmpty"></p>
+    <div class="table-scroll">
+      <table class="rows" id="projDocsTable" hidden>
+        <thead><tr>
+          <th data-t="docsType"></th><th data-t="docsNumber"></th><th data-t="docsDate"></th>
+          <th class="right" data-t="docsTotal"></th><th data-t="docsState"></th><th></th>
+        </tr></thead>
+        <tbody id="projDocsBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- La scheda di un cliente. Ci si arriva dalla riga dell'elenco, e ci stanno le quattro cose che
+       si vogliono sapere di un cliente nell'ordine in cui si chiedono: chi è e quanto vale, chi
+       chiamo, cosa ci siamo detti, cosa gli ho mandato. Il diario prima dei documenti di proposito:
+       i documenti si raggiungono anche dall'elenco, la conversazione solo da qui. -->
+  <section id="screenCustomer" class="screen wide" hidden>
+    <a class="back-link" href="#/anagrafiche" data-t="custBack"></a>
+    <div class="doc-head">
+      <h1 id="custName"></h1>
+      <button type="button" class="button ghost" id="custEdit" data-t="custEditData"></button>
+    </div>
+    <p class="note" id="custMeta"></p>
+
+    <div class="figures">
+      <div class="figure"><span class="label" data-t="custBilledLabel"></span><span class="value" id="custBilled">—</span></div>
+      <div class="figure"><span class="label" data-t="custDueLabel"></span><span class="value" id="custDue">—</span></div>
+    </div>
+
+    <div class="section-head">
+      <h2 data-t="custContactsTitle"></h2>
+      <button type="button" class="button ghost" id="custContactNew" data-t="contactNew"></button>
+    </div>
+    <p class="note" data-t="custContactsNote"></p>
+    <p class="empty" id="custContactsEmpty" data-t="custContactsEmpty"></p>
+    <div class="table-scroll">
+      <table class="rows" id="custContactsTable" hidden>
+        <thead><tr>
+          <th data-t="f_nome"></th><th data-t="f_ruolo"></th>
+          <th data-t="f_email"></th><th data-t="f_telefono"></th><th></th>
+        </tr></thead>
+        <tbody id="custContactsBody"></tbody>
+      </table>
+    </div>
+
+    <div class="section-head">
+      <h2 data-t="custDiaryTitle"></h2>
+    </div>
+    <p class="note" data-t="custDiaryNote"></p>
+    <!-- Si scrive dove si legge: la riga sta in cima all'elenco, aperta, con la data di oggi già
+         dentro. Annotare una telefonata deve costare meno che rimandarla. -->
+    <div class="form act-new">
+      <div class="act-kinds" id="custKinds" role="group"></div>
+      <label class="narrow"><span data-t="f_data"></span><input type="date" id="custDate"></label>
+      <label class="wide"><span data-t="actText"></span>
+        <textarea id="custText" rows="2"></textarea>
+      </label>
+      <div class="actions">
+        <button type="button" class="button" id="custAdd"></button>
+        <button type="button" class="button ghost" id="custCancel" data-t="cancel" hidden></button>
+        <p class="note act-problem" id="custProblem" hidden></p>
+      </div>
+    </div>
+    <p class="empty" id="custDiaryEmpty" data-t="custDiaryEmpty"></p>
+    <ul class="acts" id="custDiary"></ul>
+
+    <!-- Solo se ce n'è almeno uno: la maggior parte dei clienti non ha progetti, e una sezione
+         vuota con il suo titolo sarebbe una riga in più da leggere per niente. -->
+    <div id="custProjects" hidden>
+      <div class="section-head">
+        <h2 data-t="custProjectsTitle"></h2>
+      </div>
+      <div class="table-scroll">
+        <table class="rows">
+          <thead><tr>
+            <th data-t="projectsName"></th><th data-t="projectPhases"></th>
+            <th class="right" data-t="projectToBill"></th>
+          </tr></thead>
+          <tbody id="custProjectsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <h2 data-t="custDocsTitle"></h2>
+    </div>
+    <p class="empty" id="custDocsEmpty" data-t="custDocsEmpty"></p>
+    <div class="table-scroll">
+      <table class="rows" id="custDocsTable" hidden>
+        <thead><tr>
+          <th data-t="docsType"></th><th data-t="docsNumber"></th><th data-t="docsDate"></th>
+          <th class="right" data-t="docsTotal"></th><th data-t="docsState"></th>
+        </tr></thead>
+        <tbody id="custDocsBody"></tbody>
       </table>
     </div>
   </section>
@@ -708,6 +914,14 @@
       <label class="narrow"><span data-t="f_cap"></span><input name="cap" inputmode="numeric" maxlength="5"></label>
       <label><span data-t="f_comune"></span><input name="comune"></label>
       <label class="narrow"><span data-t="f_provincia"></span><input name="provincia" maxlength="2"></label>
+
+      <!-- Quello che questo cliente porta nei suoi documenti: l'aliquota sulle righe nuove e il conto
+           su cui paga. Vuoti, valgono quelli dell'azienda — il suggerimento nel campo lo dice. -->
+      <h2 class="form-group" data-t="partyDefaultsTitle"></h2>
+      <p class="note wide" data-t="partyDefaultsNote"></p>
+      <label class="narrow"><span data-t="f_aliquotaPredefinita"></span><input name="aliquotaPredefinita" inputmode="decimal"></label>
+      <label class="narrow" id="partyNaturaField" hidden><span data-t="f_naturaPredefinita"></span><select name="naturaPredefinita"></select></label>
+      <label id="partyContoField"><span data-t="f_contoCliente"></span><select name="ibanPredefinito"></select></label>
     </div>
     <p class="note" id="partyEsteraNote" data-t="sedeEsteraNote" hidden></p>
     <ul class="sheet-problems" id="partyProblems" hidden></ul>
@@ -716,6 +930,47 @@
       <button type="button" class="button ghost danger-text" id="partyDelete" data-t="del" hidden></button>
       <span class="spacer"></span>
       <button type="button" class="button" id="partySave" data-t="save"></button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Il progetto: due campi, il nome e il cliente. Le fasi si scrivono dentro, dove si vedono. -->
+<dialog id="projectDialog" class="sheet">
+  <form method="dialog" id="projectForm">
+    <h2 id="projectDialogTitle"></h2>
+    <div class="form">
+      <label class="wide"><span data-t="f_nomeProgetto"></span><input name="name" required></label>
+      <label class="wide"><span data-t="docParty"></span><select name="partyId" id="projectParty"></select></label>
+    </div>
+    <p class="note act-problem" id="projectProblem" hidden></p>
+    <div class="actions sheet-actions">
+      <button type="button" class="button ghost" id="projectCancel" data-t="cancel"></button>
+      <span class="spacer"></span>
+      <button type="button" class="button" id="projectSave" data-t="save"></button>
+    </div>
+  </form>
+</dialog>
+
+<!-- La persona di riferimento. Cinque campi, e un foglio come per il cliente e per la voce di
+     listino: chi ha un nome ha una scheda, chi è un gruppo di campi che si ripete si modifica sul
+     posto. Nessuno di questi campi finisce nel file XML — il tracciato non ha un posto per «chiedi
+     di Mario», e inventarne uno vorrebbe dire scrivere un valore che nessuno legge. -->
+<dialog id="contactDialog" class="sheet">
+  <form method="dialog" id="contactForm">
+    <h2 id="contactDialogTitle"></h2>
+    <div class="form">
+      <label class="wide"><span data-t="f_nome"></span><input name="nome" autocomplete="name" required></label>
+      <label><span data-t="f_ruolo"></span><input name="ruolo" autocomplete="organization-title"></label>
+      <label><span data-t="f_email"></span><input name="email" type="email" autocomplete="email"></label>
+      <label><span data-t="f_telefono"></span><input name="telefono" type="tel" autocomplete="tel"></label>
+      <label class="wide"><span data-t="f_notePersona"></span><input name="note" autocomplete="off"></label>
+    </div>
+    <p class="note act-problem" id="contactProblem" hidden></p>
+    <div class="actions sheet-actions">
+      <button type="button" class="button ghost" id="contactCancel" data-t="cancel"></button>
+      <button type="button" class="button ghost danger-text" id="contactDelete" data-t="del" hidden></button>
+      <span class="spacer"></span>
+      <button type="button" class="button" id="contactSave" data-t="save"></button>
     </div>
   </form>
 </dialog>
@@ -763,6 +1018,43 @@
       <button type="button" class="button" id="paySave" data-t="dueRecord"></button>
     </div>
   </form>
+</dialog>
+
+<!-- **Il markup che l'editor condiviso pretende.** `gg/plan-editor.js` cerca questi id: la barra che
+     segue la selezione e il menù dei blocchi. Sta scritto nel suo commento in testa, e
+     `check_apps.py` verifica che ogni `el("…")` esista, quindi una dimenticanza si ferma qui. -->
+<div class="mark-bar" id="markBar" hidden>
+  <button type="button" id="markBold"><strong>B</strong></button>
+  <button type="button" id="markItalic"><em>I</em></button>
+  <button type="button" id="markStrike"><del>S</del></button>
+  <button type="button" id="markCode"><code>&lt;&gt;</code></button>
+  <button type="button" id="markLink">🔗</button>
+  <button type="button" id="markPage">[[ ]]</button>
+</div>
+
+<dialog id="blockMenu">
+  <h2 id="blockMenuTitle"></h2>
+  <input type="text" id="blockMenuField" autocomplete="off">
+  <div class="menu-list" id="blockMenuList"></div>
+  <p class="note" id="blockMenuEmpty" data-t="menuEmpty" hidden></p>
+  <div class="actions menu-foot">
+    <button type="button" class="button ghost" id="blockDuplicate" data-t="blockDuplicate" hidden></button>
+    <button type="button" class="button ghost" id="blockDelete" data-t="blockDelete" hidden></button>
+    <span class="spacer"></span>
+    <button type="button" class="button ghost" id="blockMenuClose" data-t="menuClose"></button>
+  </div>
+</dialog>
+
+<!-- La domanda con una risposta di testo: il nome di una pagina, l'indirizzo di un collegamento.
+     Il `<dialog>` dell'app, non `prompt()` del browser. -->
+<dialog id="prompt">
+  <p id="promptMessage"></p>
+  <input type="text" id="promptField" autocomplete="off">
+  <div class="actions">
+    <button type="button" id="promptCancel" class="button ghost" data-t="cancel"></button>
+    <span class="spacer"></span>
+    <button type="button" id="promptOk" class="button" data-t="ok"></button>
+  </div>
 </dialog>
 
 <dialog id="ask">

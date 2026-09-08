@@ -11,7 +11,7 @@
 // something you take in at a glance and becomes something you read, and a fifth panel is a decision
 // to be argued for rather than a thing to be added.
 
-import * as model from "./model.js";
+import * as model from "gg/plan-model.js";
 import { t, tf, num } from "./i18n.js";
 import { el, node, button, fill, shortDate, longDate, bytes } from "./ui.js";
 

@@ -34,7 +34,7 @@
 // `gg/folder.js`, shared with the apps that write a plain backup there; the reading and the
 // merging above them are this file's, and nobody else's.
 
-import * as model from "./model.js";
+import * as model from "gg/plan-model.js";
 import * as db from "./db.js";
 import * as vault from "./vault.js";
 import { available as folderAvailable, hash as _hash, withLock, linkFolder } from "gg/folder.js";
