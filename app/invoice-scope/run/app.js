@@ -248,6 +248,40 @@ async function _drawSteps(company, docs) {
   el("setupNote").hidden = isDemo() || (fatti.stepCompany && fatti.stepDoc && fatti.stepBackup);
 }
 
+/**
+ * La schermata su cui apre il dimostrativo, da `?view=`.
+ *
+ * I documenti del dimostrativo hanno id nuovi a ogni apertura, quindi «la fattura» e «il
+ * preventivo» si cercano per tipo e stato, non per id; il cliente e il progetto no, quelli sono
+ * fissi. Una chiave sconosciuta apre la Situazione, che è anche la risposta senza `view=`.
+ */
+async function _demoView(db) {
+  const view = new URLSearchParams(location.search).get("view") || "";
+  const docs = await documents(db);
+  const primo = (test) => docs.find(test);
+  switch (view) {
+    case "documenti": return "#/documenti";
+    case "scadenzario": return "#/scadenzario";
+    case "anagrafiche": return "#/anagrafiche";
+    case "progetti": return "#/progetti";
+    case "azienda": return "#/azienda";
+    case "cliente": return "#/cliente/demo-1";
+    case "progetto": {
+      const record = progetti.projects()[0];
+      return record ? `#/progetto/${record.id}` : "#/progetti";
+    }
+    case "fattura": {
+      const doc = primo((one) => one.tipo === "TD01" && one.stato === "emesso");
+      return doc ? `#/documento/${doc.id}` : "#/documenti";
+    }
+    case "preventivo": {
+      const doc = primo((one) => one.tipo === "preventivo" && one.stato === "accettato");
+      return doc ? `#/documento/${doc.id}` : "#/documenti";
+    }
+    default: return "#/";
+  }
+}
+
 /** Redraw what the shell shows. Cheap enough to do on every route. */
 async function _refresh() {
   backup.touch();
@@ -801,7 +835,12 @@ async function main() {
 
   // Nel dimostrativo non si offre di installare: quello che si installerebbe è una copia con dentro
   // dati inventati, e l'invito arriverebbe prima che uno abbia capito che cosa sta guardando.
-  el("demoNote").hidden = !isDemo();
+  // Senza la striscia del dimostrativo quando la pagina è una fotografia: nella scheda e sui
+  // social la striscia sarebbe la prima riga che si legge, e dice una cosa della pagina, non
+  // dell'app. `shot=1` lo chiede solo `make_screenshots.py`; nel dimostrativo aperto da una
+  // persona la striscia resta, perché lì è un'informazione dovuta.
+  const foto = new URLSearchParams(location.search).get("shot") === "1";
+  el("demoNote").hidden = !isDemo() || foto;
   if (!isDemo()) {
     setupInstall(el("install"), el("installHint"), {
       storageKey: "gg.invoice-scope.install-dismissed",
@@ -820,11 +859,11 @@ async function main() {
   // Survey Scope ha già pagato una volta.
   if (isDemo()) {
     await seed(db);
-    // **Il dimostrativo si apre sull'elenco, non su Situazione.** Situazione sono tre numeri, veri
-    // e poco eloquenti; l'elenco mostra in un colpo i cinque tipi di documento, la numerazione per
-    // serie e il comando che trasforma un preventivo in fattura — che è quello che l'app fa. È
-    // anche la schermata che finisce nello screenshot della scheda, e che deve reggere da sola.
-    if (!location.hash) location.hash = "#/documenti";
+    // **Il dimostrativo si apre sulla Situazione**, da quando è una dashboard: numeri, grafico dei
+    // mesi, chi deve di più, progetti, preventivi. Prima apriva sull'elenco, perché la Situazione
+    // erano tre numeri e poco altro. `view=` sceglie un'altra schermata: serve a
+    // `make_screenshots.py`, che non sa cliccare, per fotografare la galleria della scheda.
+    if (!location.hash) location.hash = await _demoView(db);
   }
 
   el("companyForm").addEventListener("submit", _saveCompany);

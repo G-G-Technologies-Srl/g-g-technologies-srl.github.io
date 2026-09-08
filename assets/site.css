@@ -978,6 +978,38 @@
   border-radius: var(--radius);
 }
 
+/* La galleria sotto lo screenshot grande: una striscia che scorre di lato, con lo scatto sulle
+   miniature. Stessa scatola dell'immagine grande, più piccola; la didascalia sotto in tinta bassa. */
+.app-gallery {
+  display: flex;
+  gap: 14px;
+  margin-top: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+}
+.app-gallery-item {
+  flex: 0 0 300px;
+  scroll-snap-align: start;
+  text-decoration: none;
+  color: var(--faint);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+.app-gallery-item img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+  transition: border-color 0.2s ease;
+}
+.app-gallery-item:hover img { border-color: var(--accent); }
+.app-gallery-item span { display: block; }
+@media (max-width: 640px) { .app-gallery-item { flex-basis: 240px; } }
+
 .app-meta { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 22px; color: var(--faint); font-size: 0.88rem; }
 .app-meta b { color: var(--muted); font-weight: 500; }
 
