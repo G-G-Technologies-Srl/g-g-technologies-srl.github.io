@@ -30,6 +30,7 @@ import { NATURE } from "./validate.js";
 import { toString } from "./decimal.js";
 import * as parties from "./parties.js";
 import * as customer from "./customer.js";
+import * as home from "./home.js";
 import * as progetti from "./projects.js";
 import * as project from "./project.js";
 import * as doc from "./doc.js";
@@ -156,6 +157,10 @@ function _translate() {
   _drawNewMenu();
   for (const select of [el("companyForm").elements.naturaPredefinita, el("itemNatura")]) _fillNature(select);
   el("docsSearch").placeholder = t("docsSearchHint");
+  // Due campi che un nome solo non spiega: «causale» a chi fa la prima fattura non dice niente,
+  // e un IBAN vuoto non dice da dove arriverebbe.
+  el("docCausale").placeholder = t("causaleHint");
+  el("payIban").placeholder = t("ibanHint");
   // The label that follows the country is rewritten by `data-t` a line above: it has to follow
   // the country again, or an English San Marino company reads «VAT number» over its COE.
   _companyCountryChanged();
@@ -225,13 +230,30 @@ async function _route() {
   await _refresh();
 }
 
+/**
+ * I primi passi sulla Situazione: fatti e da fare, e via del tutto alla prima fattura emessa.
+ *
+ * La copia dei dati è un passo come gli altri, e non solo un avviso al terzo documento: chi non
+ * sa cos'è un browser non sa che i dati stanno lì dentro, e la cartella è la cosa più semplice
+ * che possa fare per sé.
+ */
+async function _drawSteps(company, docs) {
+  const fatti = {
+    stepCompany: Boolean(company && company.denominazione),
+    stepParty: db ? (await parties.parties(db)).length > 0 : false,
+    stepDoc: docs.some((doc) => doc.numero),
+    stepBackup: backupLinked || Boolean(localStorage.getItem(BACKUP_KEY)),
+  };
+  for (const [id, fatto] of Object.entries(fatti)) el(id).classList.toggle("done", fatto);
+  el("setupNote").hidden = isDemo() || (fatti.stepCompany && fatti.stepDoc && fatti.stepBackup);
+}
+
 /** Redraw what the shell shows. Cheap enough to do on every route. */
 async function _refresh() {
   backup.touch();
   const company = db ? await get(db, "company", COMPANY_ID) : null;
-  el("setupNote").hidden = Boolean(company && company.denominazione);
-
   const docs = db ? await documents(db) : [];
+  await _drawSteps(company, docs);
   el("homeEmpty").hidden = docs.length > 0;
   el("docsEmpty").hidden = docs.length > 0;
   el("docsTable").hidden = docs.length === 0;
@@ -245,27 +267,11 @@ async function _refresh() {
     || backupLinked
     || Boolean(localStorage.getItem(BACKUP_KEY));
 
-  const anno = new Date().getFullYear();
-  // **Fiscal documents only.** «Fatturato dell'anno» means invoiced, and a quote is not invoiced:
-  // counting quotes there would put money you hope for next to money you have asked for, under one
-  // label, and the figure would read high to exactly the person who most needs it to read true.
-  const emesse = docs.filter((d) => d.totali && kind(d).fiscale
-    && String(d.data).startsWith(String(anno)));
-  // A credit note takes away: it was being added, and stornare a fattura raised the year's figure
-  // by the amount it had just cancelled. `kinds.js` says which kinds reverse.
-  const totale = emesse.reduce((sum, d) => sum + (kind(d).storna ? -1n : 1n) * BigInt(d.totali.totale), 0n);
-  el("figYear").textContent = money(totale);
-  // Derived from the documents, never from a second store: a due date lives inside the document
-  // that agreed it, and a copy of it elsewhere would be a second truth.
+  // La Situazione la disegna `home.js`: i conti stanno lì, provati in Node, e qui resta solo il
+  // giro che li chiama.
   const owed = db ? await summary(db) : { rows: [], overdue: [], total: 0n };
-  el("figDue").textContent = money(owed.total);
-  // An amount like its two neighbours, with the count in the label: three figures side by side
-  // read as three of the same thing, and «0» beside «1.371,00 €» did not.
-  el("figOverdue").textContent = money(owed.overdue.reduce((sum, row) => sum + row.importo, 0n));
-  el("figOverdue").previousElementSibling.textContent = owed.overdue.length
-    ? tf("homeOverdueCount", { quante: owed.overdue.length })
-    : t("homeOverdue");
-  await _drawHomeLists(docs, owed.rows);
+  const byParty = new Map(db ? (await parties.parties(db)).map((p) => [p.id, p.denominazione]) : []);
+  home.render({ docs, owed, byParty });
 
   el("tracciato").textContent = `FatturaPA ${TRACCIATO.versione} · ${TRACCIATO.dal}`;
   await _drawDocuments(docs);
@@ -461,67 +467,6 @@ async function _drawDocuments(docs) {
 function _shownTotal(record) {
   const valore = signedTotal(record);
   return valore === null ? "—" : money(valore);
-}
-
-// How many rows the two lists on the home show. Five is what fits without scrolling on a laptop
-// beside the figures, and enough to answer "what did I do last" without opening the list.
-const HOME_ROWS = 5;
-
-/** A compact row for the home: three or four cells, the whole row a link into the document. */
-function _homeRow(cells, id) {
-  const tr = document.createElement("tr");
-  tr.className = "clickable";
-  tr.tabIndex = 0;
-  const go = () => { location.hash = `#/documento/${id}`; };
-  tr.addEventListener("click", go);
-  tr.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      go();
-    }
-  });
-  for (const [text, classe] of cells) {
-    const td = document.createElement("td");
-    td.textContent = text;
-    if (classe) td.className = classe;
-    tr.append(td);
-  }
-  return tr;
-}
-
-/** The two lists on the home: what is due next, and what was done last. */
-async function _drawHomeLists(docs, dueRows) {
-  el("homeLists").hidden = docs.length === 0;
-  if (!docs.length) return;
-  const people = new Map((await parties.parties(db)).map((p) => [p.id, p.denominazione]));
-
-  const prossime = [...dueRows]
-    .sort((a, b) => String(a.scadenza).localeCompare(String(b.scadenza)))
-    .slice(0, HOME_ROWS);
-  const dueBody = el("homeDueBody");
-  dueBody.textContent = "";
-  el("homeDueEmpty").hidden = prossime.length > 0;
-  el("homeDueTable").hidden = prossime.length === 0;
-  for (const row of prossime) {
-    const quando = row.scaduta ? `${shownDate(row.scadenza)} · ${t("dueOverdue")}` : shownDate(row.scadenza);
-    dueBody.append(_homeRow([
-      [quando, row.scaduta ? "nowrap overdue" : "nowrap"],
-      [people.get(row.partyId) || "—", "nowrap"],
-      [money(row.importo), "right"],
-    ], row.docId));
-  }
-
-  const recentBody = el("homeRecentBody");
-  recentBody.textContent = "";
-  for (const record of docs.slice(0, HOME_ROWS)) {
-    const totale = _shownTotal(record);
-    recentBody.append(_homeRow([
-      [`${t(kind(record).label.replace(/^type/, "short"))} ${shownNumber(record) || ""}`.trim(), "nowrap"],
-      [people.get(record.partyId) || "—", "nowrap"],
-      [statoLabel(record.stato), "nowrap"],
-      [totale, "right"],
-    ], record.id));
-  }
 }
 
 /** How much room the app is using, shown always and not only when it runs short. */

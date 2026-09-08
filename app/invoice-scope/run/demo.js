@@ -28,6 +28,7 @@ import { draft, save, issue, setState } from "./model.js";
 import { recordPayment } from "./schedule.js";
 import { saveActivity } from "./crm.js";
 import * as progetti from "./projects.js";
+import { toString } from "./decimal.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -106,6 +107,14 @@ function _giorno(n) {
   return data.toISOString().slice(0, 10);
 }
 
+/** Il quindici di `n` mesi fa: le fatture del passato, per il grafico dei mesi. */
+function _mese(n) {
+  const data = new Date();
+  data.setDate(15);
+  data.setMonth(data.getMonth() - n);
+  return data.toISOString().slice(0, 10);
+}
+
 /** L'unità di ogni voce del listino, per nome: ore per il lavoro, pezzi per le cose. */
 const UNITA = () => ({
   [t("demoItemProgettazione")]: t("demoUnitHour"),
@@ -153,6 +162,31 @@ export async function seed(db) {
 
   const contesto = (cliente) => ({ company: AZIENDA, party: cliente });
   const iban = AZIENDA.conti[0].iban;
+
+  // Il passato, perché il grafico dei mesi abbia una forma: una fattura al mese per gli ultimi
+  // undici mesi, e le stesse un anno prima un po' più basse — così il confronto dice qualcosa.
+  // Tutte incassate, così non intasano lo scadenzario. Emesse per prime, perché la numerazione
+  // segue l'ordine di emissione e una fattura di marzo con un numero più alto di una di settembre
+  // sarebbe una cosa che nel dimostrativo salta all'occhio.
+  const ORE = [30, 24, 0, 42, 36, 18, 48, 0, 28, 40, 22];
+  for (let indietro = 22; indietro >= 2; indietro -= 1) {
+    const ore = ORE[(indietro - 2) % ORE.length];
+    if (!ore) continue;
+    const quante = indietro > 12 ? Math.round(ore * 0.8) : ore;
+    const cliente = indietro % 2 ? CLIENTI[0] : CLIENTI[1];
+    const passata = await _emetti(db, {
+      tipo: "TD01",
+      data: _mese(indietro),
+      partyId: cliente.id,
+      righe: [_riga(t("demoItemProgettazione"), String(quante), "80.00")],
+      pagamento: { condizioni: "TP02", modalita: "MP05", iban, rate: [{ scadenza: _mese(indietro - 1) }] },
+    }, contesto(cliente));
+    await recordPayment(db, passata, {
+      importo: toString(BigInt(passata.totali.totale), 2),
+      data: _mese(indietro - 1),
+      conto: AZIENDA.conti[0],
+    });
+  }
 
   // Una fattura scaduta da dieci giorni: è quello che fa comparire il numero rosso in Situazione e
   // la parte accesa nella prima colonna del grafico.
@@ -219,6 +253,18 @@ export async function seed(db) {
   }, contesto(CLIENTI[1]));
   await setState(db, preventivo, "accettato");
 
+  // E uno che aspetta ancora una risposta, e scade fra cinque giorni: è la riga che la Situazione
+  // mette in evidenza fra i preventivi in attesa.
+  await _emetti(db, {
+    tipo: "preventivo",
+    data: _giorno(-25),
+    partyId: "demo-3",
+    validoFino: _giorno(5),
+    causale: t("demoQuoteCausaleOpen"),
+    righe: [_riga(t("demoItemTelaio"), "2", "250.00", { aliquota: "0", natura: "N3.3" })],
+    pagamento: { condizioni: "TP02", modalita: "MP05", iban, rate: [{ scadenza: _giorno(35) }] },
+  }, contesto(CLIENTI[2]));
+
   // Due consegne allo stesso cliente: insieme fanno una fattura differita sola, ed è la domanda che
   // l'app pone da sé quando si preme «crea la fattura differita» sulla prima.
   for (const [giorno, quanti] of [[-12, "3"], [-6, "2"]]) {
@@ -255,6 +301,8 @@ export async function seed(db) {
   const fasi = progetti.tasksOf(lavoro.id);
   const finale = lavoro.columns.find((colonna) => colonna.done);
   if (fasi[0] && finale) plan.moveTask(fasi[0].id, finale.id);
+  // La seconda fase doveva finire quattro giorni fa: il ritardo che la Situazione segnala.
+  if (fasi[1]) plan.updateTask(fasi[1].id, { end: _giorno(-4) });
   progetti.addTask(lavoro.id, {
     title: t("demoProjectPhase"), importo: "1200.00", end: _giorno(20),
   });

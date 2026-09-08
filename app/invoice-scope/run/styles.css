@@ -56,7 +56,9 @@
 }
 
 .navbar a {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 9px 12px;
   border-radius: var(--radius);
   color: var(--faint);
@@ -77,6 +79,49 @@
 }
 
 .navbar a:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* L'icona: linea sottile nel colore del testo, un po' spenta finché la voce non è quella aperta. */
+.navbar svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.75;
+}
+.navbar a.here svg, .navbar a:hover svg { opacity: 1; }
+.navbar a.here svg { color: var(--accent-text); }
+
+/* La stessa icona accanto al titolo della schermata, in un cerchio: fondo nell'accento tenue,
+   segno nell'accento pieno. Dice a colpo d'occhio dove si è, prima ancora di leggere. */
+.titled { display: flex; align-items: center; gap: 12px; }
+.titled .ico {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  border: 1px solid var(--border);
+  display: inline-grid;
+  place-items: center;
+  color: var(--accent-text);
+}
+.titled .ico svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+@media (max-width: 640px) {
+  .titled .ico { width: 32px; height: 32px; }
+  .titled .ico svg { width: 17px; height: 17px; }
+}
 
 /* **On a narrow screen the column goes back to being a strip.** A sidebar on a phone is a drawer,
    and a drawer is one more thing to open before you can go anywhere. */
@@ -337,6 +382,8 @@ select:disabled { cursor: default; opacity: 1; color: var(--text); background-im
    per classe invece che tolta dal markup: l'intestazione sta nell'HTML e le celle le disegna il
    JavaScript, e una colonna che sparisce da una sola delle due parti sposta tutte le altre. */
 .rows.no-tm .col-tm { display: none; }
+/* Stessa cosa per la natura: compare quando una riga va a zero, e prima no. */
+.rows.no-natura .col-natura, .rows.no-natura .cell-natura { display: none; }
 
 .rows { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
 .rows th, .rows td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); }
@@ -675,6 +722,19 @@ dialog li::before {
   font-size: 1.05rem;
 }
 .form h2.form-group:first-child { margin-top: 0; }
+
+/* Un gruppo che si apre con un clic: il titolo è lo stesso di `.form-group`, con la freccia del
+   browser davanti. Serve a quello che quasi nessuno compila alla prima fattura. */
+.form details.form-fold { flex: 1 1 100%; margin-top: 14px; }
+.form details.form-fold summary {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--text);
+  cursor: pointer;
+}
+.form details.form-fold summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.form details.form-fold > .form { margin-top: 8px; }
 .form p.note.wide { flex: 1 1 100%; margin: 0; }
 
 /* Il codice TM esiste solo per chi emette da San Marino: la classe la mette e la toglie `app.js`
@@ -695,12 +755,85 @@ dialog li::before {
 .rows td.line-code { white-space: nowrap; }
 
 /* ----- le due liste della Situazione ----- */
-.home-lists { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 8px; }
-.home-list .section-head { margin-bottom: 4px; }
-.home-list .section-head h2 { font-size: 1.05rem; margin: 0; }
-.home-list .section-head a { font-size: 0.9rem; }
+/* I riquadri della Situazione: la stessa scatola dei quattro numeri — bordo, raggio, fondo `--fill`
+   — due per riga, e quello dei mesi largo quanto la riga. Un riquadro per domanda, e il titolo
+   con il suo «Vedi tutti» sulla stessa riga come in ogni sezione dell'app. */
+.widgets { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 8px; }
+.widget {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--fill);
+  padding: 14px 16px 12px;
+  min-width: 0;
+  /* Una tabella con le cifre a non andare a capo può essere più larga del riquadro: scorre dentro,
+     come tutte le tabelle dell'app, invece di uscire dal bordo. */
+  overflow-x: auto;
+}
+/* Il nome di un progetto o di un cliente va a capo, se serve: è l'unica colonna con una frase.
+   Le altre celle stanno più strette che nelle tabelle grandi: qui ce ne sono due per riga. */
+.widget .rows { font-size: 0.88rem; }
+.widget .rows td { padding-left: 8px; padding-right: 8px; }
+.widget .rows td:first-child { min-width: 12ch; }
+
+/* Sul telefono ogni riga di un riquadro diventa due righe: la prima cella con la cifra a destra,
+   il resto sotto in tinta bassa. Una tabella a quattro colonne in 360 pixel scorreva di lato e
+   nascondeva proprio la cifra. */
+@media (max-width: 640px) {
+  .widget .rows tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .widget .rows tr:last-child { border-bottom: 0; }
+  .widget .rows td { display: block; padding: 0; border: 0; white-space: normal; min-width: 0; max-width: none; }
+  .widget .rows td:first-child { order: 0; flex: 1 1 auto; }
+  .widget .rows td.right { order: 1; margin-left: auto; text-align: right; }
+  /* L'a capo fra la prima riga e le celle secondarie, che poi stanno in fila. */
+  .widget .rows tr::after { content: ""; order: 2; flex-basis: 100%; height: 0; }
+  .widget .rows td:not(:first-child):not(.right) { order: 3; flex: 0 0 auto; color: var(--faint); font-size: 0.84rem; }
+  .widget .rows td.overdue, .widget .rows td.overdue:not(:first-child) { color: var(--accent-strong); }
+}
+.widget.wide { grid-column: 1 / -1; }
+.widget .section-head { margin: 0 0 8px; }
+.widget .section-head h2 { font-size: 1.05rem; margin: 0; }
+.widget .section-head a { font-size: 0.9rem; }
+.widget .rows td:first-child { padding-left: 0; }
+.widget .rows td:last-child { padding-right: 0; }
+.widget .rows tr:last-child td { border-bottom: 0; }
 .rows.compact td { padding-top: 8px; padding-bottom: 8px; }
-@media (max-width: 900px) { .home-lists { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .widgets { grid-template-columns: 1fr; } }
+
+/* La riga sotto ogni numero: cosa lo qualifica — «+12% sull'anno scorso», «la più vecchia da 40
+   giorni» — in corpo piccolo e tinta bassa, perché il numero resta il numero. */
+.figure .sub { display: block; color: var(--faint); font-size: 0.78rem; margin-top: 6px; min-height: 1em; }
+
+/* Le barre dei mesi: quest'anno nel colore dell'accento, l'anno scorso dietro nel colore del
+   bordo. Le lettere dei mesi nel colore delle etichette. Tutto da variabili, così il tema chiaro
+   le ridisegna. */
+.bars-box { width: 100%; }
+.bars-box svg.bars { width: 100%; height: 170px; display: block; }
+.bars rect.now { fill: var(--accent); }
+.bars rect.before { fill: var(--border-strong); }
+.bars line.axis { stroke: var(--border); stroke-width: 1; }
+.bars text.label { fill: var(--faint); font-size: 11px; font-family: inherit; }
+.legend { display: inline-flex; align-items: center; gap: 6px; color: var(--faint); font-size: 0.82rem; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; }
+.legend i.now { background: var(--accent); }
+.legend i.before { background: var(--border-strong); margin-left: 10px; }
+
+/* Le barre orizzontali dei clienti: nome, barra, cifra. La parte scaduta sopra la barra, più
+   scura, così «chi deve di più» e «chi è in ritardo» si vedono nello stesso disegno. */
+.hbars { display: flex; flex-direction: column; gap: 10px; padding: 4px 0 2px; }
+.hbar { display: grid; grid-template-columns: minmax(90px, 32%) 1fr auto; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-size: 0.92rem; }
+.hbar:hover .name { color: var(--accent-text); }
+.hbar .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hbar .track { height: 10px; border-radius: 5px; background: var(--border); overflow: hidden; }
+.hbar .fill { display: block; height: 100%; background: var(--accent); border-radius: 5px; position: relative; }
+.hbar .late { position: absolute; inset: 0 auto 0 0; background: var(--danger); border-radius: 5px; }
+.hbar .amount { white-space: nowrap; font-variant-numeric: tabular-nums; }
 
 
 /* ----- le righe del documento, sul telefono: una scheda per riga ----- */
@@ -742,6 +875,7 @@ dialog li::before {
   #docLinesTable td:last-child { grid-column: 3; justify-self: end; align-self: end; }
   #docLinesTable td input, #docLinesTable td select { width: 100%; max-width: none; }
   #docLinesTable.no-tm td.col-tm { display: none; }
+  #docLinesTable.no-natura td.cell-natura { display: none; }
 }
 
 /* L'IBAN per intero: ventisette caratteri in monospazio, e la casella li tiene tutti. */
@@ -995,3 +1129,39 @@ dialog li::before {
 .phase-done input[type="checkbox"]:checked::before { transform: rotate(45deg) scale(1); }
 .phase-done input[type="checkbox"]:hover { border-color: var(--accent); }
 .phase-done input[type="checkbox"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ----- i primi passi, sulla Situazione ----- */
+
+/* Stessa ricetta di `.imp-notes`: il quadratino in gradiente del sito. Un passo fatto prende la
+   spunta al posto del quadratino e scende di tono, ma resta un collegamento: si torna a
+   correggere i dati dell'azienda anche dopo averli scritti. */
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.95rem;
+}
+.steps li { padding-left: 22px; position: relative; margin-bottom: 8px; }
+.steps li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 7px;
+  height: 7px;
+  background: var(--gradient);
+}
+.steps li a { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+.steps li a:hover { color: var(--accent-text); }
+.steps li.done { color: var(--faint); }
+.steps li.done a { color: var(--faint); text-decoration: none; }
+.steps li.done::before {
+  background: none;
+  width: 5px;
+  height: 10px;
+  top: 0.2em;
+  left: 3px;
+  border: solid var(--accent);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}

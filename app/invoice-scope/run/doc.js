@@ -24,7 +24,7 @@ import { toString, from } from "./decimal.js";
 import { totals } from "./totals.js";
 import { money, amount, rate as shownRate } from "./format.js";
 import { parseAmount, parseOptional } from "./parse.js";
-import { NATURE as ALL_NATURE } from "./validate.js";
+import { NATURE as ALL_NATURE, validate } from "./validate.js";
 import { describe } from "./problems.js";
 import {
   draft, editable, save, issue, reopen, creditNote, convert, discard, markExported, nextProgressivo,
@@ -250,11 +250,22 @@ function _addLine(focus = false) {
   if (ultima) ultima.querySelector("input").focus();
 }
 
+/**
+ * La colonna «natura» solo quando serve: a chi fattura al 22% non dice niente, e compare da sola
+ * appena una riga va a zero — è lì che il tracciato la pretende. Una classe sulla tabella, come
+ * per il codice TM, così intestazione e celle spariscono insieme.
+ */
+function _toggleNatura() {
+  const serve = (current.righe || []).some((line) => String(line.aliquota) === "0" || line.natura);
+  el("docLinesTable").classList.toggle("no-natura", !serve);
+}
+
 function _drawLines() {
   const righe = current.righe || [];
   const canEdit = editable(current);
   el("docEmptyLines").hidden = righe.length > 0;
   el("docLinesTable").hidden = righe.length === 0;
+  _toggleNatura();
   // The two notes under the table only when they say something: a hint about `Invio` on the last
   // line means nothing with no lines, and the TM note on a closed document explains a column
   // nobody can fill in any more.
@@ -305,6 +316,7 @@ function _drawLines() {
           _applyDefaults(line);
           _drawLines();
         }
+        _toggleNatura();
       } }],
       ["natura", { width: "small", options: NATURE }],
       // Il codice dell'Ufficio Tributario. La colonna esiste sempre nel markup e la nasconde il
@@ -794,9 +806,12 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
 
   const canEdit = editable(current);
   const profile = kind(current);
+  // «Preventivo in bozza», non «Nuovo documento»: il tipo è già scelto, e il titolo è la prima
+  // cosa che dice a chi guarda se sta facendo la cosa giusta. «In bozza» e non «nuovo» perché non
+  // chiede l'accordo del genere, e perché è quello che è.
   el("docTitle").textContent = current.numero
     ? `${t(profile.label)} ${shownNumber(current)}`
-    : t("docNewTitle");
+    : tf("docNewTitle", { tipo: t(profile.label) });
   for (const id_ of [
     "docType", "docDate", "docPartySelect", "docCausale", "docBollo", "docDiscount",
     "docValidoFino", "trCausale", "trAspetto", "trColli", "trPorto", "trVettore",
@@ -1015,6 +1030,7 @@ export function connect(db) {
   el("docType").addEventListener("change", () => {
     _readHeader();
     setType(current, el("docType").value);
+    if (!current.numero) el("docTitle").textContent = tf("docNewTitle", { tipo: t(kind(current).label) });
     _drawSections();
     _drawSummary();
     _touch();
@@ -1067,14 +1083,23 @@ export function connect(db) {
     _readHeader();
     current = await save(database, current);
 
+    const company = await _context();
+    const party = current.partyId ? await getParty(database, current.partyId) : null;
+
+    // I controlli **prima** della domanda. Chi ha appena risposto «emetti» e si vede arrivare un
+    // elenco di cose che mancano ha risposto a una domanda che non andava ancora fatta: prima si
+    // dice cosa manca, e la domanda arriva quando la risposta può essere sì.
+    const mancanze = validate(current, { company, party, richiedeNumero: false });
+    if (mancanze.length) {
+      await tell(t("errIntro"), { lines: describe(mancanze), okLabel: t("close") });
+      return;
+    }
+
     // Asked before the number is handed out, because that is the step that cannot be taken back.
     // The wording says what follows — a credit note, or another quote — rather than "are you sure",
     // which tells nobody anything they did not already suspect.
     const domanda = t(ISSUE_ASK[current.tipo] || "docIssueAsk");
     if (!(await ask(domanda, { okLabel: t("docIssue") }))) return;
-
-    const company = await _context();
-    const party = current.partyId ? await getParty(database, current.partyId) : null;
 
     try {
       current = await issue(database, current, { company, party });
@@ -1088,7 +1113,12 @@ export function connect(db) {
       throw error;
     }
 
-    await tell(`${t("docIssued")} ${shownNumber(current)}.`);
+    // Con il numero, il passo dopo: una fattura non è finita finché il file non è partito, e chi
+    // emette la prima non sa che il pulsante sta in fondo alla pagina.
+    const seguito = kind(current).fiscale
+      ? ` ${t(profileFor(company).paese === "SM" ? "docIssuedNextSm" : "docIssuedNext")}`
+      : "";
+    await tell(`${t("docIssued")} ${shownNumber(current)}.${seguito}`);
     if (onSaved) onSaved();
     await open(database, current.id, { afterSave: onSaved });
   });

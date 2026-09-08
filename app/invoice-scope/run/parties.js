@@ -225,6 +225,9 @@ function _fillDefaults(form, data) {
   }
   scelta.value = conti.some((conto) => conto.iban === data.ibanPredefinito) ? data.ibanPredefinito : "";
   el("partyContoField").hidden = conti.length < 2;
+  // Aperto solo se c'è già qualcosa dentro: un valore nascosto dietro un titolo chiuso è un valore
+  // che nessuno sa di avere.
+  el("partyDefaults").open = Boolean((data.aliquotaPredefinita ?? "") !== "" || data.ibanPredefinito);
 }
 
 /** La natura serve solo a zero: a 22 il menù sarebbe una domanda senza senso. */

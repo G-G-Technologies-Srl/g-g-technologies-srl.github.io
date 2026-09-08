@@ -69,26 +69,49 @@
      tutte: i dati sono inventati e non escono dalla memoria. -->
 <p class="demo-note" id="demoNote" data-t="demoNote" hidden></p>
 
+<!-- Le sette icone, una volta sola: il menù e i titoli delle schermate le richiamano con `<use>`.
+     Disegnate a mano sulla griglia di 24, in `currentColor`: nessun file da scaricare, e seguono il
+     colore del tema. -->
+<svg hidden aria-hidden="true">
+  <symbol id="ico-home" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.2"/></symbol>
+  <symbol id="ico-docs" viewBox="0 0 24 24"><path d="M6 3.5h8l4.5 4.5v12.5h-12.5z"/><path d="M14 3.5v4.5h4.5"/><path d="M8.5 12.5h7M8.5 16h7"/></symbol>
+  <symbol id="ico-projects" viewBox="0 0 24 24"><circle cx="6" cy="7" r="2"/><circle cx="6" cy="17" r="2"/><path d="M11 7h9.5M11 17h9.5M6 9v6"/></symbol>
+  <symbol id="ico-due" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="1.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="M8 14h3v3H8z"/></symbol>
+  <symbol id="ico-parties" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="1.5"/><circle cx="9" cy="11" r="2.2"/><path d="M5.8 16.2c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14.5 10h3M14.5 13.5h3"/></symbol>
+  <symbol id="ico-company" viewBox="0 0 24 24"><path d="M4.5 20.5v-15l7.5-3 7.5 3v15"/><path d="M3 20.5h18"/><path d="M9 9.5h1.5M13.5 9.5H15M9 13h1.5M13.5 13H15M10.5 20.5v-4h3v4"/></symbol>
+  <symbol id="ico-settings" viewBox="0 0 24 24"><path d="M4 7h2.5M11.5 7H20M4 12h8.5M17.5 12H20M4 17h1.5M10.5 17H20"/><circle cx="9" cy="7" r="2.5"/><circle cx="15" cy="12" r="2.5"/><circle cx="8" cy="17" r="2.5"/></symbol>
+</svg>
+
 <div class="shell">
+  <!-- Il testo di ogni voce sta in uno `<span>` perché `data-t` riscrive il contenuto del nodo, e
+       riscriverebbe via l'icona. -->
   <nav class="navbar" id="navbar" aria-label="Invoice Scope">
-    <a href="#/" id="navHome" data-t="navHome"></a>
-    <a href="#/documenti" id="navDocs" data-t="navDocs"></a>
-    <a href="#/progetti" id="navProjects" data-t="navProjects"></a>
-    <a href="#/scadenzario" id="navDue" data-t="navDue"></a>
-    <a href="#/anagrafiche" id="navParties" data-t="navParties"></a>
-    <a href="#/azienda" id="navCompany" data-t="navCompany"></a>
-    <a href="#/impostazioni" id="navSettings" data-t="navSettings"></a>
+    <a href="#/" id="navHome"><svg aria-hidden="true"><use href="#ico-home"/></svg><span data-t="navHome"></span></a>
+    <a href="#/documenti" id="navDocs"><svg aria-hidden="true"><use href="#ico-docs"/></svg><span data-t="navDocs"></span></a>
+    <a href="#/progetti" id="navProjects"><svg aria-hidden="true"><use href="#ico-projects"/></svg><span data-t="navProjects"></span></a>
+    <a href="#/scadenzario" id="navDue"><svg aria-hidden="true"><use href="#ico-due"/></svg><span data-t="navDue"></span></a>
+    <a href="#/anagrafiche" id="navParties"><svg aria-hidden="true"><use href="#ico-parties"/></svg><span data-t="navParties"></span></a>
+    <a href="#/azienda" id="navCompany"><svg aria-hidden="true"><use href="#ico-company"/></svg><span data-t="navCompany"></span></a>
+    <a href="#/impostazioni" id="navSettings"><svg aria-hidden="true"><use href="#ico-settings"/></svg><span data-t="navSettings"></span></a>
   </nav>
 
 <main>
 
   <!-- Casa -->
-  <section id="screenHome" class="screen">
-    <h1 data-t="homeTitle"></h1>
+  <section id="screenHome" class="screen wide">
+    <h1 class="titled"><span class="ico" aria-hidden="true"><svg><use href="#ico-home"/></svg></span><span data-t="homeTitle"></span></h1>
 
+    <!-- I primi passi, nell'ordine in cui vanno fatti, con la spunta su quelli fatti. Prima c'era
+         solo l'avviso sull'azienda: chi lo seguiva tornava qui e trovava tre zeri e un pulsante,
+         senza sapere che il passo dopo era il cliente. Sparisce da solo alla prima fattura emessa. -->
     <div class="panel warn" id="setupNote" hidden>
       <p data-t="homeSetup"></p>
-      <a class="button" href="#/azienda" data-t="homeSetupGo"></a>
+      <ul class="steps">
+        <li id="stepCompany"><a href="#/azienda" data-t="homeStepCompany"></a></li>
+        <li id="stepParty"><a href="#/anagrafiche" data-t="homeStepParty"></a></li>
+        <li id="stepDoc"><a href="#/documento" data-t="homeStepDoc"></a></li>
+        <li id="stepBackup"><a href="#/impostazioni" data-t="homeStepBackup"></a></li>
+      </ul>
     </div>
 
     <div class="panel warn" id="backupNote" hidden>
@@ -96,10 +119,13 @@
       <a class="button ghost" href="#/impostazioni" data-t="homeBackupGo"></a>
     </div>
 
+    <!-- I quattro numeri: quanto ho fatturato, quanto mi devono, quanto è in ritardo, quanto ho
+         già guadagnato e non ancora chiesto. Sotto ognuno una riga che lo qualifica. -->
     <div class="figures">
-      <div class="figure"><span class="label" data-t="homeYear"></span><span class="value" id="figYear">—</span></div>
-      <div class="figure"><span class="label" data-t="homeDue"></span><span class="value" id="figDue">—</span></div>
-      <div class="figure"><span class="label" data-t="homeOverdue"></span><span class="value" id="figOverdue">—</span></div>
+      <div class="figure"><span class="label" data-t="homeYear"></span><span class="value" id="figYear">—</span><span class="sub" id="figYearDelta"></span></div>
+      <div class="figure"><span class="label" data-t="homeDue"></span><span class="value" id="figDue">—</span><span class="sub" id="figDueSub"></span></div>
+      <div class="figure"><span class="label" data-t="homeOverdue"></span><span class="value" id="figOverdue">—</span><span class="sub" id="figOverdueSub"></span></div>
+      <div class="figure"><span class="label" data-t="homeToBill"></span><span class="value" id="figToBill">—</span><span class="sub" id="figToBillSub"></span></div>
     </div>
 
     <div class="actions">
@@ -108,10 +134,20 @@
 
     <p class="empty" id="homeEmpty" data-t="homeEmpty"></p>
 
-    <!-- Quello che si guarda aprendo l'app: le prossime scadenze e gli ultimi documenti. Tre numeri
-         e un pulsante erano una situazione senza situazione — si vedeva quanto, non cosa. -->
-    <div class="home-lists" id="homeLists" hidden>
-      <div class="home-list">
+    <!-- La dashboard: riquadri della stessa famiglia dei quattro numeri, due per riga. Quelli che
+         non hanno niente da dire spariscono — un riquadro vuoto è rumore — tranne i due che ci
+         sono da sempre: le scadenze e gli ultimi documenti. I grafici sono SVG scritti a mano con
+         i colori del tema: niente librerie, e il tema chiaro li ridisegna da solo. -->
+    <div class="widgets" id="homeLists" hidden>
+      <div class="widget wide" id="wMonths">
+        <div class="section-head">
+          <h2 data-t="homeMonths"></h2>
+          <span class="legend"><i class="now"></i><span id="legendNow"></span> <i class="before"></i><span id="legendBefore"></span></span>
+        </div>
+        <div class="bars-box" id="chartMonths" role="img"></div>
+      </div>
+
+      <div class="widget">
         <div class="section-head">
           <h2 data-t="homeNextDue"></h2>
           <a href="#/scadenzario" data-t="homeSeeAll"></a>
@@ -119,7 +155,40 @@
         <p class="note" id="homeDueEmpty" data-t="homeDueEmpty" hidden></p>
         <table class="rows compact" id="homeDueTable"><tbody id="homeDueBody"></tbody></table>
       </div>
-      <div class="home-list">
+
+      <div class="widget" id="wParties" hidden>
+        <div class="section-head">
+          <h2 data-t="homeTopParties"></h2>
+          <a href="#/scadenzario" data-t="homeSeeAll"></a>
+        </div>
+        <div class="hbars" id="chartParties"></div>
+      </div>
+
+      <div class="widget" id="wProjects" hidden>
+        <div class="section-head">
+          <h2 data-t="homeProjects"></h2>
+          <a href="#/progetti" data-t="homeSeeAll"></a>
+        </div>
+        <table class="rows compact" id="homeProjectsTable"><tbody id="homeProjectsBody"></tbody></table>
+      </div>
+
+      <div class="widget" id="wQuotes" hidden>
+        <div class="section-head">
+          <h2 data-t="homeQuotes"></h2>
+          <a href="#/documenti" data-t="homeSeeAll"></a>
+        </div>
+        <table class="rows compact" id="homeQuotesTable"><tbody id="homeQuotesBody"></tbody></table>
+      </div>
+
+      <div class="widget" id="wDrafts" hidden>
+        <div class="section-head">
+          <h2 data-t="homeDrafts"></h2>
+          <a href="#/documenti" data-t="homeSeeAll"></a>
+        </div>
+        <table class="rows compact" id="homeDraftsTable"><tbody id="homeDraftsBody"></tbody></table>
+      </div>
+
+      <div class="widget">
         <div class="section-head">
           <h2 data-t="homeRecent"></h2>
           <a href="#/documenti" data-t="homeSeeAll"></a>
@@ -131,7 +200,7 @@
 
   <!-- Documenti -->
   <section id="screenDocs" class="screen wide" hidden>
-    <h1 data-t="docsTitle"></h1>
+    <h1 class="titled"><span class="ico" aria-hidden="true"><svg><use href="#ico-docs"/></svg></span><span data-t="docsTitle"></span></h1>
     <div class="actions">
       <button type="button" class="button" id="docsNew" data-t="docsNew"></button>
       <!-- L'invito porta al caso comune, il menù accanto agli altri quattro. Cinque bottoni in fila
@@ -164,7 +233,7 @@
 
   <!-- Scadenzario -->
   <section id="screenDue" class="screen wide" hidden>
-    <h1 data-t="dueTitle"></h1>
+    <h1 class="titled"><span class="ico" aria-hidden="true"><svg><use href="#ico-due"/></svg></span><span data-t="dueTitle"></span></h1>
 
     <div class="actions">
       <button type="button" class="button ghost" id="dueFilter" data-t="dueAll" aria-pressed="false"></button>
@@ -188,7 +257,7 @@
   <!-- Il documento -->
   <section id="screenDoc" class="screen wide" hidden>
     <div class="doc-head">
-      <h1 id="docTitle"></h1>
+      <h1 class="titled"><span class="ico" aria-hidden="true"><svg><use href="#ico-docs"/></svg></span><span id="docTitle"></span></h1>
       <!-- Stampa in testa e sempre, bozza compresa: stava in fondo alla pagina, sotto gli incassi, e
            solo sui documenti emessi — quindi chi voleva rileggere un preventivo su carta prima di
            emetterlo non trovava il pulsante, e chi l'aveva emesso nemmeno. Una bozza stampata lo
@@ -246,7 +315,7 @@
           <!-- Intestazioni corte: «unità di misura» su tre righe faceva la testata alta il triplo
                delle righe. Il nome intero resta nell'`aria-label` di ogni campo. -->
           <th data-t="f_descrizione"></th><th class="right" data-t="hQuantita"></th><th data-t="hUnita"></th>
-          <th class="right" data-t="hPrezzo"></th><th class="right" data-t="hIva"></th><th data-t="f_natura"></th>
+          <th class="right" data-t="hPrezzo"></th><th class="right" data-t="hIva"></th><th class="col-natura" data-t="f_natura"></th>
           <th class="col-tm" data-t="hTm"></th>
           <th class="right" data-t="docTotale"></th><th></th>
         </tr></thead>
@@ -430,7 +499,7 @@
 
   <!-- Anagrafiche -->
   <section id="screenParties" class="screen" hidden>
-    <h1 data-t="partiesTitle"></h1>
+    <h1 class="titled"><span class="ico" aria-hidden="true"><svg><use href="#ico-parties"/></svg></span><span data-t="partiesTitle"></span></h1>
 
     <div class="section-head">
       <h2 data-t="partiesClients"></h2>
@@ -468,7 +537,7 @@
        fatturare», è quello che dice cosa fare adesso. Il modello è lo stesso di Plan Scope, quindi
        un progetto esportato da qui si apre lì. -->
   <section id="screenProjects" class="screen wide" hidden>
-    <h1 data-t="projectsTitle"></h1>
+    <h1 class="titled"><span class="ico" aria-hidden="true"><svg><use href="#ico-projects"/></svg></span><span data-t="projectsTitle"></span></h1>
     <div class="actions">
       <button type="button" class="button" id="projectNew" data-t="projectsNew"></button>
       <!-- Un progetto scritto in Plan Scope entra da qui: stesso formato, stesso `uid`, e nessuna
@@ -493,7 +562,7 @@
   <section id="screenProject" class="screen wide" hidden>
     <a class="back-link" href="#/progetti" data-t="projectBack"></a>
     <div class="doc-head">
-      <h1 id="projName"></h1>
+      <h1 class="titled"><span class="ico" aria-hidden="true"><svg><use href="#ico-projects"/></svg></span><span id="projName"></span></h1>
       <button type="button" class="button ghost" id="projEdit" data-t="projectEditData"></button>
       <button type="button" class="button ghost" id="projExport" data-t="projectExport"></button>
       <button type="button" class="button ghost danger-text" id="projDelete" data-t="del"></button>
@@ -583,7 +652,7 @@
   <section id="screenCustomer" class="screen wide" hidden>
     <a class="back-link" href="#/anagrafiche" data-t="custBack"></a>
     <div class="doc-head">
-      <h1 id="custName"></h1>
+      <h1 class="titled"><span class="ico" aria-hidden="true"><svg><use href="#ico-parties"/></svg></span><span id="custName"></span></h1>
       <button type="button" class="button ghost" id="custEdit" data-t="custEditData"></button>
     </div>
     <p class="note" id="custMeta"></p>
@@ -664,7 +733,7 @@
 
   <!-- Azienda -->
   <section id="screenCompany" class="screen" hidden>
-    <h1 data-t="companyTitle"></h1>
+    <h1 class="titled"><span class="ico" aria-hidden="true"><svg><use href="#ico-company"/></svg></span><span data-t="companyTitle"></span></h1>
     <p class="note" data-t="companyNote"></p>
     <!-- Tre gruppi, con un titolo ciascuno: chi è l'azienda, dov'è, come numera. Prima i campi
          stavano in fila e «indirizzo» finiva accanto a «regime fiscale», che è il modo in cui una
@@ -765,9 +834,10 @@
 
   <!-- Impostazioni -->
   <section id="screenSettings" class="screen" hidden>
-    <h1 data-t="settingsTitle"></h1>
+    <h1 class="titled"><span class="ico" aria-hidden="true"><svg><use href="#ico-settings"/></svg></span><span data-t="settingsTitle"></span></h1>
 
     <h2 data-t="settingsData"></h2>
+    <p class="note" data-t="settingsDataNote"></p>
     <div class="actions">
       <button type="button" class="button" id="exportAll" data-t="settingsExport"></button>
       <button type="button" class="button ghost" id="importAll" data-t="settingsImport"></button>
@@ -876,7 +946,7 @@
   <form method="dialog" id="partyForm">
     <h2 id="partyDialogTitle"></h2>
     <div class="form">
-      <label class="wide"><span data-t="f_denominazione"></span><input name="denominazione" autocomplete="organization" required></label>
+      <label class="wide"><span data-t="f_denominazioneCliente"></span><input name="denominazione" autocomplete="organization" required></label>
       <label><span data-t="f_partitaIva"></span><input name="partitaIva" inputmode="numeric"></label>
       <label><span data-t="f_codiceFiscale"></span><input name="codiceFiscale"></label>
       <label><span data-t="f_codiceDestinatario"></span><input name="codiceDestinatario" maxlength="7"></label>
@@ -916,12 +986,18 @@
       <label class="narrow"><span data-t="f_provincia"></span><input name="provincia" maxlength="2"></label>
 
       <!-- Quello che questo cliente porta nei suoi documenti: l'aliquota sulle righe nuove e il conto
-           su cui paga. Vuoti, valgono quelli dell'azienda — il suggerimento nel campo lo dice. -->
-      <h2 class="form-group" data-t="partyDefaultsTitle"></h2>
-      <p class="note wide" data-t="partyDefaultsNote"></p>
-      <label class="narrow"><span data-t="f_aliquotaPredefinita"></span><input name="aliquotaPredefinita" inputmode="decimal"></label>
-      <label class="narrow" id="partyNaturaField" hidden><span data-t="f_naturaPredefinita"></span><select name="naturaPredefinita"></select></label>
-      <label id="partyContoField"><span data-t="f_contoCliente"></span><select name="ibanPredefinito"></select></label>
+           su cui paga. Vuoti, valgono quelli dell'azienda — il suggerimento nel campo lo dice.
+           Chiuso, perché alla prima fattura è una sezione in più da leggere; si apre da sé se il
+           cliente ha già un valore, così quello che c'è non resta nascosto. -->
+      <details class="form-fold" id="partyDefaults">
+        <summary><span data-t="partyDefaultsTitle"></span></summary>
+        <div class="form">
+          <p class="note wide" data-t="partyDefaultsNote"></p>
+          <label class="narrow"><span data-t="f_aliquotaPredefinita"></span><input name="aliquotaPredefinita" inputmode="decimal"></label>
+          <label class="narrow" id="partyNaturaField" hidden><span data-t="f_naturaPredefinita"></span><select name="naturaPredefinita"></select></label>
+          <label id="partyContoField"><span data-t="f_contoCliente"></span><select name="ibanPredefinito"></select></label>
+        </div>
+      </details>
     </div>
     <p class="note" id="partyEsteraNote" data-t="sedeEsteraNote" hidden></p>
     <ul class="sheet-problems" id="partyProblems" hidden></ul>

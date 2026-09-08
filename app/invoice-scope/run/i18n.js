@@ -29,8 +29,11 @@ const IT = {
   // ---- casa
   homeTitle: "Situazione",
   homeEmpty: "Qui compaiono le scadenze e quello che hai emesso quest'anno.",
-  homeSetup: "Prima di emettere serve l'anagrafica della tua azienda.",
-  homeSetupGo: "Compila i dati dell'azienda",
+  homeSetup: "Per arrivare alla prima fattura, nell'ordine:",
+  homeStepCompany: "I dati della tua azienda: nome, partita IVA, indirizzo",
+  homeStepParty: "Il primo cliente",
+  homeStepDoc: "La prima fattura, o un preventivo",
+  homeStepBackup: "Una cartella dove l'app tiene una copia dei tuoi dati",
   homeNew: "Nuova fattura",
   homeYear: "Fatturato dell'anno",
   homeDue: "In scadenza",
@@ -40,6 +43,32 @@ const IT = {
   homeRecent: "Ultimi documenti",
   homeSeeAll: "Vedi tutti",
   homeDueEmpty: "Niente da incassare.",
+  homeToBill: "Da fatturare dai progetti",
+  homeToBillSub: "{quante} fasi fatte, non ancora in fattura",
+  homeToBillOne: "una fase fatta, non ancora in fattura",
+  homeToBillNone: "nessuna fase da fatturare",
+  homeDueSub: "{quante} scadenze aperte",
+  homeDueOne: "una scadenza aperta",
+  homeDueNone: "tutto incassato",
+  homeOverdueSub: "la più vecchia da {giorni} giorni",
+  homeOverdueNone: "nessun ritardo",
+  homeYearUp: "+{pct}% sull'anno scorso a oggi",
+  homeYearDown: "−{pct}% sull'anno scorso a oggi",
+  homeYearSame: "come l'anno scorso a oggi",
+  homeYearFirst: "primo anno",
+  homeMonths: "Fatturato per mese",
+  homeMonthsEmpty: "Le barre compaiono con la prima fattura emessa.",
+  homeTopParties: "Chi deve di più",
+  homeProjects: "Progetti in corso",
+  homeProjectLate: "in ritardo di {giorni} giorni",
+  homeProjectNext: "prossima il {data}",
+  homeProjectNoDate: "senza scadenze",
+  homeQuotes: "Preventivi in attesa",
+  homeQuoteExpiring: "scade fra {giorni} giorni",
+  homeQuoteExpired: "scaduto",
+  homeQuoteUntil: "fino al {data}",
+  homeDrafts: "Bozze lasciate a metà",
+  monthLetters: "G F M A M G L A S O N D",
   homeBackupNever: "Non hai mai esportato un archivio. Con l'app senza server, quella è l'unica "
     + "copia che esiste.",
   homeBackupGo: "Esporta adesso",
@@ -317,6 +346,9 @@ const IT = {
   // ---- impostazioni
   settingsTitle: "Impostazioni",
   settingsData: "I tuoi dati",
+  settingsDataNote: "Stanno solo in questo browser, su questo computer: non su un server. Se cambi "
+    + "computer o svuoti il browser, quello che non hai copiato è perso. La cartella qui sotto è "
+    + "il modo più semplice per avere sempre una copia.",
   settingsExport: "Esporta tutto",
   settingsImport: "Importa un archivio",
   settingsImportAsk: "L'importazione sostituisce quello che c'è adesso. Vado avanti?",
@@ -346,15 +378,17 @@ const IT = {
   backupNever: "Cartella «{folder}» · nessuna copia ancora.",
   backupError: "Non riesco a scrivere nella cartella «{folder}» ({error}). Controlla che esista "
     + "ancora, o scegline un'altra.",
-  settingsFormat: "Tracciato",
+  settingsFormat: "Formato del file",
   settingsFormatNote: "L'app scrive il formato FatturaPA nella versione qui sopra. Quando "
     + "l'Agenzia pubblica una versione nuova, l'app va aggiornata.",
   settingsLimits: "Quello che l'app non fa",
   settingsLimitsNote: "Non trasmette il file, non fa la conservazione a norma e non firma "
-    + "digitalmente. Il file lo prepari qui e lo mandi tu.",
+    + "digitalmente. Il file lo prepari qui e lo mandi tu: da «Fatture e Corrispettivi» "
+    + "dell'Agenzia delle Entrate, dal portale dell'Ufficio Tributario se emetti da San Marino, o "
+    + "tramite il tuo commercialista.",
 
   // ---- il documento
-  docNewTitle: "Nuovo documento",
+  docNewTitle: "{tipo} in bozza",
   docParty: "Cliente",
   docPartyChoose: "Scegli un cliente",
   docPartyNone: "Aggiungi prima un cliente.",
@@ -376,10 +410,15 @@ const IT = {
   docIssueAsk: "Una volta emessa, la fattura non si modifica più: si storna con una nota di "
     + "credito. Emetto?",
   docIssued: "Emesso con il numero",
+  docIssuedNext: "Adesso scarica l'XML — il pulsante è in fondo alla pagina — e mandalo: da "
+    + "«Fatture e Corrispettivi» dell'Agenzia delle Entrate, o tramite il tuo commercialista.",
+  docIssuedNextSm: "Adesso scarica l'XML — il pulsante è in fondo alla pagina — e caricalo sul "
+    + "portale dell'Ufficio Tributario, o passalo al tuo commercialista.",
   docDeleteAsk: "Cancello questa bozza?",
   docCreditNote: "Storna con una nota di credito",
   docReopen: "Riporta in bozza",
-  docReopenAsk: "Il documento torna modificabile e libera il suo numero. Vado avanti?",
+  docReopenAsk: "Il documento torna modificabile e libera il suo numero. Se il file è già "
+    + "partito, fermati: una fattura inviata si corregge con una nota di credito. Vado avanti?",
   docLinked: "Storna il documento",
   docFromQuote: "Dal preventivo",
   docFromDdt: "Dai documenti di trasporto",
@@ -516,6 +555,9 @@ const IT = {
   f_data: "data",
   f_numero: "numero",
   f_causale: "causale",
+  causaleHint: "di cosa si tratta — es. «Rifacimento porta d'ingresso»",
+  ibanHint: "aggiungi un conto in Azienda e lo trovi già qui",
+  f_denominazioneCliente: "ragione sociale, o nome e cognome",
   f_righe: "righe",
   f_riepiloghi: "riepilogo",
   f_riferimentoNormativo: "riferimento normativo",
@@ -637,6 +679,7 @@ const IT = {
   demoUnitHour: "ora",
   demoUnitPiece: "pz",
   demoQuoteCausale: "Revisione della linea di montaggio, secondo lotto",
+  demoQuoteCausaleOpen: "Due telai di ricambio",
   demoTransportReason: "Vendita",
   demoTransportLook: "Pallet",
   demoPaymentNote: "Acconto, saldo a fine mese",
@@ -821,8 +864,11 @@ const EN = {
 
   homeTitle: "Home",
   homeEmpty: "Due dates and what you have issued this year show up here.",
-  homeSetup: "Before issuing anything, your company details are needed.",
-  homeSetupGo: "Fill in the company details",
+  homeSetup: "To get to the first invoice, in this order:",
+  homeStepCompany: "Your company details: name, VAT number, address",
+  homeStepParty: "The first customer",
+  homeStepDoc: "The first invoice, or a quote",
+  homeStepBackup: "A folder where the app keeps a copy of your data",
   homeNew: "New invoice",
   homeYear: "Invoiced this year",
   homeDue: "Falling due",
@@ -832,6 +878,32 @@ const EN = {
   homeRecent: "Latest documents",
   homeSeeAll: "See all",
   homeDueEmpty: "Nothing to collect.",
+  homeToBill: "To invoice from projects",
+  homeToBillSub: "{quante} phases done, not yet invoiced",
+  homeToBillOne: "one phase done, not yet invoiced",
+  homeToBillNone: "no phase to invoice",
+  homeDueSub: "{quante} open due dates",
+  homeDueOne: "one open due date",
+  homeDueNone: "all collected",
+  homeOverdueSub: "the oldest for {giorni} days",
+  homeOverdueNone: "nothing late",
+  homeYearUp: "+{pct}% on last year to date",
+  homeYearDown: "−{pct}% on last year to date",
+  homeYearSame: "same as last year to date",
+  homeYearFirst: "first year",
+  homeMonths: "Invoiced by month",
+  homeMonthsEmpty: "The bars appear with the first issued invoice.",
+  homeTopParties: "Who owes the most",
+  homeProjects: "Projects under way",
+  homeProjectLate: "{giorni} days late",
+  homeProjectNext: "next on {data}",
+  homeProjectNoDate: "no deadlines",
+  homeQuotes: "Quotes awaiting an answer",
+  homeQuoteExpiring: "expires in {giorni} days",
+  homeQuoteExpired: "expired",
+  homeQuoteUntil: "until {data}",
+  homeDrafts: "Drafts left half-way",
+  monthLetters: "J F M A M J J A S O N D",
   homeBackupNever: "You have never exported an archive. With the app running without a server, "
     + "that is the only copy there is.",
   homeBackupGo: "Export now",
@@ -1098,6 +1170,9 @@ const EN = {
 
   settingsTitle: "Settings",
   settingsData: "Your data",
+  settingsDataNote: "It lives only in this browser, on this computer: not on a server. If you change "
+    + "computer or clear the browser, whatever you have not copied is lost. The folder below is the "
+    + "simplest way to always have a copy.",
   settingsExport: "Export everything",
   settingsImport: "Import an archive",
   settingsImportAsk: "Importing replaces what is here now. Shall I go ahead?",
@@ -1127,14 +1202,16 @@ const EN = {
   backupNever: "Folder «{folder}» · no copy yet.",
   backupError: "Cannot write into the folder «{folder}» ({error}). Check that it still exists, "
     + "or choose another one.",
-  settingsFormat: "Format",
+  settingsFormat: "File format",
   settingsFormatNote: "The app writes the FatturaPA format in the version above. When the revenue "
     + "publishes a new one, the app has to be updated.",
   settingsLimits: "What the app does not do",
   settingsLimitsNote: "It does not transmit the file, it does not keep the legal archive and it "
-    + "does not sign digitally. You prepare the file here and send it yourself.",
+    + "does not sign digitally. You prepare the file here and send it yourself: from the revenue "
+    + "agency's portal, from the tax office portal if you issue from San Marino, or through your "
+    + "accountant.",
 
-  docNewTitle: "New document",
+  docNewTitle: "{tipo} — draft",
   docParty: "Customer",
   docPartyChoose: "Choose a customer",
   docPartyNone: "Add a customer first.",
@@ -1157,10 +1234,15 @@ const EN = {
   docIssueAsk: "Once issued, an invoice cannot be changed: it is reversed with a credit note. "
     + "Shall I issue it?",
   docIssued: "Issued with number",
+  docIssuedNext: "Now download the XML — the button is at the foot of the page — and send it: "
+    + "from the revenue agency's portal, or through your accountant.",
+  docIssuedNextSm: "Now download the XML — the button is at the foot of the page — and upload it "
+    + "to the tax office portal, or pass it to your accountant.",
   docDeleteAsk: "Shall I delete this draft?",
   docCreditNote: "Reverse with a credit note",
   docReopen: "Take back to draft",
-  docReopenAsk: "The document becomes editable again and gives up its number. Shall I go ahead?",
+  docReopenAsk: "The document becomes editable again and gives up its number. If the file has "
+    + "already gone out, stop: a sent invoice is corrected with a credit note. Shall I go ahead?",
   docLinked: "Reverses document",
   docFromQuote: "From quote",
   docFromDdt: "From delivery notes",
@@ -1295,6 +1377,9 @@ const EN = {
   f_data: "date",
   f_numero: "number",
   f_causale: "reason",
+  causaleHint: "what it is about — e.g. “Front door replacement”",
+  ibanHint: "add an account under Company and it shows up here by itself",
+  f_denominazioneCliente: "company name, or first and last name",
   f_righe: "lines",
   f_riepiloghi: "summary",
   f_riferimentoNormativo: "legal reference",
@@ -1410,6 +1495,7 @@ const EN = {
   demoUnitHour: "hr",
   demoUnitPiece: "pcs",
   demoQuoteCausale: "Assembly line overhaul, second batch",
+  demoQuoteCausaleOpen: "Two spare frames",
   demoTransportReason: "Sale",
   demoTransportLook: "Pallet",
   demoPaymentNote: "Part payment, balance at month end",
