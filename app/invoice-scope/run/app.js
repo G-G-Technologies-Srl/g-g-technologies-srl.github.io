@@ -22,7 +22,7 @@ import { t, tf, lang, otherLang, setLang, resolveLang } from "./i18n.js";
 import { ask, tell } from "./ask.js";
 import { openDatabase, isDemo, NAME, VERSION, EXPORTED } from "./db.js";
 import { seed } from "./demo.js";
-import { documents, convertMany, save, invoicedBy, signedTotal, NUMERAZIONI } from "./model.js";
+import { documents, convertMany, save, invoicedBy, signedTotal, editable, NUMERAZIONI } from "./model.js";
 import { TIPI, KINDS, kind, numero as shownNumber, convertibile } from "./kinds.js";
 import { label as statoLabel } from "./states.js";
 import { TRACCIATO, profileFor } from "./fatturapa.js";
@@ -473,6 +473,21 @@ async function _drawDocuments(docs) {
       const fattura = fatturati.get(record.id);
       segno.textContent = `${t("docsInvoiced")} ${shownNumber(fattura) || t("stateBozza").toLowerCase()}`;
       azioni.append(segno);
+    }
+    // Su una fattura emessa, «XML» sulla riga: porta al documento, dove il comando sta in testa,
+    // perché il download ha le sue regole — progressivo di invio, avviso al secondo scarico — e
+    // stanno in un posto solo. Chi non trovava il file lo cercava prima di tutto qui.
+    if (kind(record).fiscale && !editable(record) && record.numero) {
+      const xml = document.createElement("button");
+      xml.type = "button";
+      xml.className = "ghost small row-action";
+      xml.textContent = t("docsXml");
+      xml.setAttribute("aria-label", `${t("docXml")} — ${shownNumber(record)}`);
+      xml.addEventListener("click", (event) => {
+        event.stopPropagation();
+        location.hash = `#/documento/${record.id}`;
+      });
+      azioni.append(xml);
     }
     if (diventa) {
       const bottone = document.createElement("button");

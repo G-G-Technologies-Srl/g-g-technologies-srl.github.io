@@ -229,7 +229,7 @@ main { padding: 0; flex: 1 1 auto; min-width: 0; }
 }
 
 .doc-head h1 { margin: 0; flex: 1 1 auto; }
-.doc-head #docPrint, .doc-head #docProject, .doc-head #docProjectLink { align-self: center; }
+.doc-head #docPrint, .doc-head #docXml, .doc-head #docProject, .doc-head #docProjectLink { align-self: center; }
 .doc-stato select { max-width: 180px; }
 
 /* A field that belongs to another kind of document. `.form label` is a flex column, which beats the

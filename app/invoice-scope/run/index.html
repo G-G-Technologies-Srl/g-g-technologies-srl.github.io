@@ -263,6 +263,10 @@
            emetterlo non trovava il pulsante, e chi l'aveva emesso nemmeno. Una bozza stampata lo
            dice nel piè di pagina. -->
       <button type="button" class="button ghost" id="docPrint" data-t="docPrint"></button>
+      <!-- L'XML in testa, e non in fondo dopo gli incassi: è la cosa che si viene a prendere su una
+           fattura emessa, e stava dove nessuno la cercava. Su una bozza non c'è: il file nasce
+           con il numero, e il messaggio dell'emissione dice dove trovarlo. -->
+      <button type="button" class="button" id="docXml" data-t="docXml" hidden></button>
       <!-- Da un preventivo nasce il progetto, con una fase per riga: è il punto in cui il piano e il
            denaro si incontrano senza ridigitare niente. Il pulsante c'è finché quel documento non è
            già dentro un progetto; dopo, al suo posto, il collegamento per andarci. -->
@@ -490,7 +494,6 @@
       <button type="button" class="button ghost" id="docSave" data-t="save"></button>
       <button type="button" class="button ghost" id="docDelete" data-t="del"></button>
       <button type="button" class="button" id="docConvert" hidden></button>
-      <button type="button" class="button" id="docXml" data-t="docXml" hidden></button>
       <button type="button" class="button ghost" id="docCredit" data-t="docCreditNote" hidden></button>
       <button type="button" class="button ghost" id="docReopen" data-t="docReopen" hidden></button>
       <span class="ok" id="docSaved" data-t="docSaveFirst" hidden></span>

@@ -410,9 +410,9 @@ const IT = {
   docIssueAsk: "Una volta emessa, la fattura non si modifica più: si storna con una nota di "
     + "credito. Emetto?",
   docIssued: "Emesso con il numero",
-  docIssuedNext: "Adesso scarica l'XML — il pulsante è in fondo alla pagina — e mandalo: da "
+  docIssuedNext: "Adesso scarica l'XML — il pulsante è in cima, accanto al titolo — e mandalo: da "
     + "«Fatture e Corrispettivi» dell'Agenzia delle Entrate, o tramite il tuo commercialista.",
-  docIssuedNextSm: "Adesso scarica l'XML — il pulsante è in fondo alla pagina — e caricalo sul "
+  docIssuedNextSm: "Adesso scarica l'XML — il pulsante è in cima, accanto al titolo — e caricalo sul "
     + "portale dell'Ufficio Tributario, o passalo al tuo commercialista.",
   docDeleteAsk: "Cancello questa bozza?",
   docCreditNote: "Storna con una nota di credito",
@@ -425,6 +425,7 @@ const IT = {
   docAlreadyInvoiced: "Già fatturato con",
   docSaveFirst: "Salvato.",
   docXml: "Scarica l'XML",
+  docsXml: "XML",
   docNotIssued: "Prima emetti il documento: una bozza non ha un numero, e un file senza "
     + "numero viene scartato.",
   docNoXml: "Il preventivo e il documento di trasporto restano qui: si stampano, e quando il "
@@ -1234,9 +1235,9 @@ const EN = {
   docIssueAsk: "Once issued, an invoice cannot be changed: it is reversed with a credit note. "
     + "Shall I issue it?",
   docIssued: "Issued with number",
-  docIssuedNext: "Now download the XML — the button is at the foot of the page — and send it: "
+  docIssuedNext: "Now download the XML — the button is at the top, beside the title — and send it: "
     + "from the revenue agency's portal, or through your accountant.",
-  docIssuedNextSm: "Now download the XML — the button is at the foot of the page — and upload it "
+  docIssuedNextSm: "Now download the XML — the button is at the top, beside the title — and upload it "
     + "to the tax office portal, or pass it to your accountant.",
   docDeleteAsk: "Shall I delete this draft?",
   docCreditNote: "Reverse with a credit note",
@@ -1249,6 +1250,7 @@ const EN = {
   docAlreadyInvoiced: "Already invoiced on",
   docSaveFirst: "Saved.",
   docXml: "Download the XML",
+  docsXml: "XML",
   docNotIssued: "Issue the document first: a draft has no number, and a file without one is "
     + "rejected.",
   docNoXml: "A quote and a delivery note stay here: you print them, and when the customer confirms "
