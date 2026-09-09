@@ -1165,3 +1165,30 @@ dialog li::before {
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
+
+/* ----- la zona di cancellazione, in fondo alle impostazioni ----- */
+
+/* Un riquadro minore con il bordo nel colore del pericolo, e non un pannello acceso: è una
+   sezione che si usa una volta, e deve dire «attento», non «guarda qui». Una riga per gruppo,
+   con il comando a destra. */
+.danger-zone {
+  margin-top: 40px;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px 6px;
+}
+.danger-zone h2 { margin-top: 0; color: var(--danger); }
+.danger-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+}
+.danger-row > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.danger-row b { font-weight: 600; }
+.danger-row .note { margin: 0; }
+@media (max-width: 640px) {
+  .danger-row { flex-direction: column; align-items: flex-start; }
+}

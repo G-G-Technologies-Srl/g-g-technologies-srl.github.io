@@ -381,6 +381,43 @@ const IT = {
   settingsFormat: "Formato del file",
   settingsFormatNote: "L'app scrive il formato FatturaPA nella versione qui sopra. Quando "
     + "l'Agenzia pubblica una versione nuova, l'app va aggiornata.",
+  dangerTitle: "Zona di cancellazione",
+  dangerNote: "Per ricominciare da capo, per esempio prima di rifare un'importazione. Quello che "
+    + "cancelli qui non torna: prima di ogni cancellazione l'app ti propone di esportare una copia.",
+  dangerDocs: "Documenti e incassi",
+  dangerDocsNote: "Fatture, preventivi, documenti di trasporto, note di credito, gli incassi "
+    + "registrati e la numerazione, che riparte da uno.",
+  dangerParties: "Clienti e listino",
+  dangerPartiesNote: "I clienti con le loro persone e il diario, e le voci del listino. I "
+    + "documenti restano, senza il nome del cliente.",
+  dangerProjects: "Progetti",
+  dangerProjectsNote: "I progetti con fasi, pagine, immagini e allegati. I documenti collegati "
+    + "restano.",
+  dangerAll: "Tutto",
+  dangerAllNote: "L'app torna come appena installata, dati dell'azienda compresi. La cartella di "
+    + "backup resta collegata.",
+  dangerWipe: "Cancella",
+  dangerWipeAll: "Cancella tutto",
+  dangerNothing: "Non c'è niente da cancellare.",
+  dangerExportFirst: "Vuoi prima esportare una copia dell'archivio? È l'unico modo per tornare "
+    + "indietro.",
+  dangerExportYes: "Esporta prima",
+  dangerExportNo: "No, vai avanti",
+  dangerAsk: "Cancello {cosa}. Non si torna indietro.",
+  dangerAskFolder: " La cartella di backup collegata verrà riscritta con l'archivio svuotato; "
+    + "le copie del giorno restano.",
+  dangerDone: "Cancellato.",
+  dangerCountDocs: "{n} documenti",
+  dangerCountDocsOne: "un documento",
+  dangerCountPayments: "{n} incassi",
+  dangerCountPaymentsOne: "un incasso",
+  dangerCountParties: "{n} clienti",
+  dangerCountPartiesOne: "un cliente",
+  dangerCountItems: "{n} voci di listino",
+  dangerCountItemsOne: "una voce di listino",
+  dangerCountProjects: "{n} progetti",
+  dangerCountProjectsOne: "un progetto",
+  dangerCountCompany: "i dati dell'azienda",
   settingsLimits: "Quello che l'app non fa",
   settingsLimitsNote: "Non trasmette il file, non fa la conservazione a norma e non firma "
     + "digitalmente. Il file lo prepari qui e lo mandi tu: da «Fatture e Corrispettivi» "
@@ -1206,6 +1243,43 @@ const EN = {
   settingsFormat: "File format",
   settingsFormatNote: "The app writes the FatturaPA format in the version above. When the revenue "
     + "publishes a new one, the app has to be updated.",
+  dangerTitle: "Deletion zone",
+  dangerNote: "To start again, for example before redoing an import. What you delete here does "
+    + "not come back: before every deletion the app offers to export a copy.",
+  dangerDocs: "Documents and payments",
+  dangerDocsNote: "Invoices, quotes, delivery notes, credit notes, the recorded payments and the "
+    + "numbering, which starts again from one.",
+  dangerParties: "Customers and price list",
+  dangerPartiesNote: "Customers with their people and diary, and the price list entries. "
+    + "Documents stay, without the customer's name.",
+  dangerProjects: "Projects",
+  dangerProjectsNote: "Projects with phases, pages, images and attachments. Linked documents "
+    + "stay.",
+  dangerAll: "Everything",
+  dangerAllNote: "The app goes back to freshly installed, company details included. The backup "
+    + "folder stays linked.",
+  dangerWipe: "Delete",
+  dangerWipeAll: "Delete everything",
+  dangerNothing: "There is nothing to delete.",
+  dangerExportFirst: "Do you want to export a copy of the archive first? It is the only way "
+    + "back.",
+  dangerExportYes: "Export first",
+  dangerExportNo: "No, go ahead",
+  dangerAsk: "I will delete {cosa}. There is no way back.",
+  dangerAskFolder: " The linked backup folder will be rewritten with the emptied archive; the "
+    + "daily copies stay.",
+  dangerDone: "Deleted.",
+  dangerCountDocs: "{n} documents",
+  dangerCountDocsOne: "one document",
+  dangerCountPayments: "{n} payments",
+  dangerCountPaymentsOne: "one payment",
+  dangerCountParties: "{n} customers",
+  dangerCountPartiesOne: "one customer",
+  dangerCountItems: "{n} price list entries",
+  dangerCountItemsOne: "one price list entry",
+  dangerCountProjects: "{n} projects",
+  dangerCountProjectsOne: "one project",
+  dangerCountCompany: "the company details",
   settingsLimits: "What the app does not do",
   settingsLimitsNote: "It does not transmit the file, it does not keep the legal archive and it "
     + "does not sign digitally. You prepare the file here and send it yourself: from the revenue "

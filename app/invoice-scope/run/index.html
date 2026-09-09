@@ -918,6 +918,30 @@
 
     <h2 data-t="settingsLimits"></h2>
     <p class="note" data-t="settingsLimitsNote"></p>
+
+    <!-- La zona di cancellazione, in fondo: per chi vuole rifare un'importazione da capo. Ogni
+         riga svuota un gruppo, l'ultima tutto. Il perché dei gruppi sta in `reset.js`; la
+         domanda — con la proposta di esportare prima — la fa `app.js`. -->
+    <div class="danger-zone" id="dangerZone">
+      <h2 data-t="dangerTitle"></h2>
+      <p class="note" data-t="dangerNote"></p>
+      <div class="danger-row">
+        <div><b data-t="dangerDocs"></b><span class="note" data-t="dangerDocsNote"></span></div>
+        <button type="button" class="button ghost danger-text" id="resetDocs" data-t="dangerWipe"></button>
+      </div>
+      <div class="danger-row">
+        <div><b data-t="dangerParties"></b><span class="note" data-t="dangerPartiesNote"></span></div>
+        <button type="button" class="button ghost danger-text" id="resetParties" data-t="dangerWipe"></button>
+      </div>
+      <div class="danger-row">
+        <div><b data-t="dangerProjects"></b><span class="note" data-t="dangerProjectsNote"></span></div>
+        <button type="button" class="button ghost danger-text" id="resetProjects" data-t="dangerWipe"></button>
+      </div>
+      <div class="danger-row">
+        <div><b data-t="dangerAll"></b><span class="note" data-t="dangerAllNote"></span></div>
+        <button type="button" class="button danger" id="resetAll" data-t="dangerWipeAll"></button>
+      </div>
+    </div>
   </section>
 
 </main>

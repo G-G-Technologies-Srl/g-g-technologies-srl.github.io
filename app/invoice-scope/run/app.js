@@ -31,6 +31,7 @@ import { toString } from "./decimal.js";
 import * as parties from "./parties.js";
 import * as customer from "./customer.js";
 import * as home from "./home.js";
+import * as reset from "./reset.js";
 import * as progetti from "./projects.js";
 import * as project from "./project.js";
 import * as doc from "./doc.js";
@@ -808,6 +809,44 @@ async function _export() {
   await _refresh();
 }
 
+/**
+ * Una cancellazione dalla zona in fondo alle impostazioni.
+ *
+ * Tre passi, nell'ordine in cui proteggono: il conto di quello che sparirebbe — e se è zero non
+ * si chiede niente —, la proposta di esportare prima, e la domanda vera con i numeri dentro.
+ * «Cancello 43 documenti e 12 incassi» si legge; «sei sicuro?» no.
+ */
+async function _reset(group) {
+  const n = await reset.counts(db, group);
+  if (!n.total) {
+    await tell(t("dangerNothing"));
+    return;
+  }
+  if (await ask(t("dangerExportFirst"), { okLabel: t("dangerExportYes"), cancelLabel: t("dangerExportNo") })) {
+    await _export();
+  }
+  const pezzi = [
+    ["docs", "dangerCountDocs"], ["payments", "dangerCountPayments"], ["parties", "dangerCountParties"],
+    ["items", "dangerCountItems"], ["projects", "dangerCountProjects"],
+  ].filter(([store]) => n[store]).map(([store, key]) => (n[store] === 1 ? t(`${key}One`) : tf(key, { n: n[store] })));
+  if (group === "all" && n.company) pezzi.push(t("dangerCountCompany"));
+  // «Cancello 1.» non dice niente: se resta solo quello che non si conta — i contatori, il diario —
+  // si dice il gruppo.
+  const cosa = pezzi.length ? pezzi.join(", ") : t(`danger${group[0].toUpperCase()}${group.slice(1)}`).toLowerCase();
+  const domanda = tf("dangerAsk", { cosa }) + (backupLinked ? t("dangerAskFolder") : "");
+  if (!(await ask(domanda, { okLabel: t(group === "all" ? "dangerWipeAll" : "dangerWipe"), danger: true }))) return;
+
+  await progetti.flush();
+  await reset.wipe(db, group);
+  // Il modello dei progetti va riletto dal deposito svuotato: tenerlo in memoria com'era lo
+  // riscriverebbe alla prima modifica.
+  if (group === "projects" || group === "all") await progetti.setup(db);
+  if (group === "all") await _loadCompany();
+  await tell(t("dangerDone"));
+  location.hash = "#/";
+  await _refresh();
+}
+
 async function _import(event) {
   const file = event.target.files?.[0];
   event.target.value = "";
@@ -935,6 +974,9 @@ async function main() {
   });
   el("importAll").addEventListener("click", () => el("importFile").click());
   el("importFile").addEventListener("change", _import);
+  for (const [id, group] of [["resetDocs", "docs"], ["resetParties", "parties"], ["resetProjects", "projects"], ["resetAll", "all"]]) {
+    el(id).addEventListener("click", () => _reset(group));
+  }
 
   // La migrazione da un altro programma. Collegata qui e non dentro la schermata perché è una volta
   // sola, come tutto il resto di questo blocco: `wire` non disegna niente, arma tre comandi.

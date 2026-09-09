@@ -59,7 +59,15 @@ function _parts() {
 
     // Escape and the backdrop go through here, and on a browser that does fire `close` this is
     // also what catches a dialog dismissed by the system.
-    _dialog.addEventListener("close", () => _settle(_dialog.returnValue === "ok"));
+    //
+    // **Only while the dialog is really closed.** The `close` event is queued, not fired on the
+    // spot: answering one question and asking the next straight after — the deletion zone does
+    // it, «export first?» then «delete?» — meant the first dialog's `close` arrived while the
+    // second was already open, and settled the second promise with «no». The dialog stayed on
+    // screen with nobody waiting for its answer, and the click on «Delete» did nothing.
+    _dialog.addEventListener("close", () => {
+      if (!_dialog.open) _settle(_dialog.returnValue === "ok");
+    });
     _dialog.addEventListener("cancel", () => _settle(false));
   }
   return {
@@ -198,7 +206,9 @@ function _textParts() {
     });
     document.getElementById("promptCancel").addEventListener("click", () => chiudi(null));
     _textDialog.addEventListener("cancel", () => chiudi(null));
-    _textDialog.addEventListener("close", () => chiudi(null));
+    // Stessa guardia del dialogo delle domande: l'evento `close` arriva in ritardo, e non deve
+    // chiudere una domanda aperta subito dopo.
+    _textDialog.addEventListener("close", () => { if (!_textDialog.open) chiudi(null); });
     document.getElementById("promptField").addEventListener("keydown", (event) => {
       if (event.key !== "Enter") return;
       event.preventDefault();
