@@ -167,6 +167,45 @@ await prova("le persone: due righe, email e telefono come collegamenti", async (
   assert.equal(dom.byId("custContactsBody").at(1).at(2).allText, "—");
 });
 
+await prova("un cliente puro non ha il riquadro degli acquisti né il terzo numero", async (db) => {
+  await popola(db);
+  await customer.render(db, "p1");
+  assert.equal(dom.byId("custPurchases").hidden, true);
+  assert.equal(dom.byId("custToPayBox").hidden, true);
+  assert.equal(dom.byId("custBilledBox").hidden, false);
+  assert.equal(dom.byId("custDocsSection").hidden, false);
+});
+
+await prova("un fornitore: i suoi acquisti con lo stato, e quanto resta da pagargli", async (db) => {
+  const { saveCost, recordOutlay } = await import("../run/costs.js");
+  await saveParty(db, { id: "s1", denominazione: "Hosting Cloud S.p.A.", ruolo: "fornitore" });
+  const pagata = await saveCost(db, { id: "c1", tipo: "fattura", partyId: "s1", data: "2026-07-01", numero: "H-1", imponibile: "100", aliquota: "22", scadenza: "2026-07-31" });
+  await recordOutlay(db, pagata, { importo: "122.00", data: "2026-07-20" });
+  await saveCost(db, { id: "c2", tipo: "fattura", partyId: "s1", data: "2026-08-01", numero: "H-2", imponibile: "200", aliquota: "22", scadenza: "2099-01-01" });
+  await saveCost(db, { id: "c3", tipo: "nota", partyId: "s1", data: "2026-08-05", numero: "NC-1", imponibile: "50", aliquota: "22" });
+  await saveCost(db, { id: "c9", tipo: "spesa", partyId: "p1", data: "2026-08-05", imponibile: "1", aliquota: "0" });
+  await customer.render(db, "s1");
+  assert.equal(dom.byId("custPurchases").hidden, false);
+  assert.equal(dom.count("custPurchasesBody"), 3, "solo i suoi");
+  const righe = [0, 1, 2].map((n) => dom.byId("custPurchasesBody").at(n));
+  assert.match(righe[0].allText, /NC-1/);
+  assert.equal(leggibile(righe[0].at(2).allText), "-61,00 €", "la nota col meno");
+  assert.match(righe[1].allText, /H-2/);
+  assert.match(righe[1].allText, /Da pagare/);
+  assert.match(righe[2].allText, /Pagato/);
+  assert.equal(dom.byId("custToPayBox").hidden, false);
+  assert.equal(leggibile(dom.text("custToPay")), "244,00 €", "la pagata no, la nota non si paga");
+  // Un fornitore puro senza documenti: né i due numeri del cliente né la sezione dei documenti.
+  assert.equal(dom.byId("custBilledBox").hidden, true);
+  assert.equal(dom.byId("custDocsSection").hidden, true);
+  // Un fornitore senza acquisti ha il riquadro a zero, e non la sezione.
+  await saveParty(db, { id: "s2", denominazione: "Nuovo Fornitore", ruolo: "fornitore" });
+  await customer.render(db, "s2");
+  assert.equal(dom.byId("custPurchases").hidden, true);
+  assert.equal(dom.byId("custToPayBox").hidden, false);
+  assert.equal(leggibile(dom.text("custToPay")), "0,00 €");
+});
+
 await prova("un cliente appena creato: gli elenchi vuoti lo dicono, e le tabelle stanno via", async (db) => {
   await saveParty(db, { id: "p9", denominazione: "Appena Nato S.r.l." });
   await customer.render(db, "p9");

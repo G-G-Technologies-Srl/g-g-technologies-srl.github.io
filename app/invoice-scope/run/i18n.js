@@ -377,6 +377,8 @@ const IT = {
   ruoloFornitore: "fornitore",
   ruoloEntrambi: "cliente e fornitore",
 
+  custToPayLabel: "Da pagargli",
+  custPurchasesTitle: "I suoi acquisti",
   custBack: "Tutti i clienti",
   custEditData: "Modifica i dati",
   custBilledLabel: "Fatturato in tutto",
@@ -1353,6 +1355,8 @@ const EN = {
   ruoloFornitore: "supplier",
   ruoloEntrambi: "customer and supplier",
 
+  custToPayLabel: "To pay them",
+  custPurchasesTitle: "Purchases from them",
   custBack: "All customers",
   custEditData: "Edit the details",
   custBilledLabel: "Invoiced in total",

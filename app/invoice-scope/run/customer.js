@@ -41,6 +41,7 @@ import {
   withContact, withoutContact,
 } from "./crm.js";
 import { PAESI_CON_CAP } from "./fatturapa.js";
+import { allCosts, allOutlays, owedOn as costOwed, state as costState, signedTotal as costTotal } from "./costs.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  s t a t e
@@ -374,12 +375,63 @@ async function _drawDiary() {
  * come va l'anno, qui è quanto vale questo cliente. Solo i documenti fiscali, con la nota di
  * credito in meno — `signedTotal` porta il segno, che è la parte che si sbaglia in silenzio.
  */
-function _drawFigures(suoi, dovuto) {
+function _drawFigures(suoi, dovuto, daPagare) {
   const fatturato = suoi
     .filter((doc) => kind(doc).fiscale && doc.totali)
     .reduce((somma, doc) => somma + (signedTotal(doc) || 0n), 0n);
   el("custBilled").textContent = money(fatturato);
   el("custDue").textContent = money(dovuto);
+  // I due numeri del cliente su chi è cliente, il terzo su chi ci vende: un fornitore puro
+  // vedrebbe due zeri, un cliente puro uno.
+  const fornitorePuro = (cliente.ruolo || "cliente") === "fornitore";
+  el("custBilledBox").hidden = fornitorePuro && !suoi.length;
+  el("custDueBox").hidden = fornitorePuro && !suoi.length;
+  el("custToPayBox").hidden = daPagare === null;
+  if (daPagare !== null) el("custToPay").textContent = money(daPagare);
+}
+
+/**
+ * Gli acquisti da questo fornitore, dal più recente, con lo stato. Solo se ce n'è almeno uno —
+ * come i progetti — e torna quanto resta da pagare, o `null` se non è un fornitore.
+ */
+async function _drawPurchases() {
+  const suoi = (await allCosts(database)).filter((one) => one.partyId === cliente.id);
+  el("custPurchases").hidden = suoi.length === 0;
+  const body = el("custPurchasesBody");
+  body.textContent = "";
+  if (!suoi.length) return (cliente.ruolo || "cliente") === "cliente" ? null : 0n;
+  const uscite = await allOutlays(database);
+  let daPagare = 0n;
+  for (const record of suoi) {
+    const sue = uscite.filter((one) => one.costId === record.id);
+    const resto = costOwed(record, sue);
+    daPagare += resto;
+    const tr = document.createElement("tr");
+    tr.className = "clickable";
+    tr.tabIndex = 0;
+    const go = () => { location.hash = `#/acquisto/${record.id}`; };
+    tr.addEventListener("click", go);
+    tr.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        go();
+      }
+    });
+    const stato = costState(record, sue, { today: _today() });
+    for (const [valore, classe] of [
+      [record.data ? shownDate(record.data) : "—", "nowrap"],
+      [record.tipo === "spesa" ? (record.categoria || t("costTipoSpesa")) : (record.numero || "—"), "nowrap"],
+      [money(costTotal(record)), "right"],
+      [t(`costState${stato[0].toUpperCase()}${stato.slice(1)}`), stato === "scaduto" ? "nowrap overdue" : "nowrap"],
+    ]) {
+      const td = document.createElement("td");
+      td.textContent = valore;
+      td.className = classe;
+      tr.append(td);
+    }
+    body.append(tr);
+  }
+  return daPagare;
 }
 
 /**
@@ -510,12 +562,14 @@ export async function render(db, id, { afterChange = null } = {}) {
     .filter((row) => row.partyId === record.id)
     .reduce((somma, row) => somma + row.importo, 0n);
 
-  await _drawFigures(suoi, dovuto);
+  const daPagare = await _drawPurchases();
+  await _drawFigures(suoi, dovuto, daPagare);
   _drawContacts();
   _resetComposer();
   await _drawDiary();
   _drawProjects();
   await _drawDocs(suoi);
+  el("custDocsSection").hidden = (record.ruolo || "cliente") === "fornitore" && !suoi.length;
   return true;
 }
 

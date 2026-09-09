@@ -645,7 +645,7 @@
     <div class="table-scroll">
     <table class="rows" id="partiesTable" hidden>
         <thead><tr>
-          <th data-t="f_denominazione"></th><th data-t="f_partitaIva"></th>
+          <th data-t="f_denominazione"></th><th data-t="f_ruolo"></th><th data-t="f_partitaIva"></th>
           <th data-t="f_comune"></th><th data-t="partiesLastContact"></th><th></th>
         </tr></thead>
         <tbody id="partiesBody"></tbody>
@@ -794,8 +794,9 @@
     <p class="note" id="custMeta"></p>
 
     <div class="figures">
-      <div class="figure"><span class="label" data-t="custBilledLabel"></span><span class="value" id="custBilled">—</span></div>
-      <div class="figure"><span class="label" data-t="custDueLabel"></span><span class="value" id="custDue">—</span></div>
+      <div class="figure" id="custBilledBox"><span class="label" data-t="custBilledLabel"></span><span class="value" id="custBilled">—</span></div>
+      <div class="figure" id="custDueBox"><span class="label" data-t="custDueLabel"></span><span class="value" id="custDue">—</span></div>
+      <div class="figure" id="custToPayBox" hidden><span class="label" data-t="custToPayLabel"></span><span class="value" id="custToPay">—</span></div>
     </div>
 
     <div class="section-head">
@@ -852,6 +853,26 @@
       </div>
     </div>
 
+    <!-- Gli acquisti da questo fornitore: solo se ce n'è almeno uno, come i progetti. -->
+    <div id="custPurchases" hidden>
+      <div class="section-head">
+        <h2 data-t="custPurchasesTitle"></h2>
+        <a href="#/acquisti" data-t="homeSeeAll"></a>
+      </div>
+      <div class="table-scroll">
+        <table class="rows">
+          <thead><tr>
+            <th data-t="docsDate"></th><th data-t="purchasesRef"></th>
+            <th class="right" data-t="docsTotal"></th><th data-t="docsState"></th>
+          </tr></thead>
+          <tbody id="custPurchasesBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Su un fornitore puro senza documenti la sezione sta via: «nessun documento» sarebbe
+         una risposta a una domanda che nessuno ha fatto. -->
+    <div id="custDocsSection">
     <div class="section-head">
       <h2 data-t="custDocsTitle"></h2>
     </div>
@@ -864,6 +885,7 @@
         </tr></thead>
         <tbody id="custDocsBody"></tbody>
       </table>
+    </div>
     </div>
   </section>
 

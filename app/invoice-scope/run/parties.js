@@ -479,6 +479,7 @@ export async function render(db, afterChange = null) {
     body.append(_row(
       [
         [person.denominazione],
+        [t(`ruolo${(RUOLI.includes(person.ruolo) ? person.ruolo : "cliente").replace(/^./, (c) => c.toUpperCase())}`)],
         [person.partitaIva || person.codiceFiscale],
         [person.sede?.comune],
         [quando ? shownDate(quando) : ""],
