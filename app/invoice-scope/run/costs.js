@@ -150,6 +150,12 @@ export function costRecord(fields, { company = null } = {}) {
     updated: _now(),
   };
   if (fields.importato) record.importato = fields.importato;
+  // Un acquisto nato da una ricorrenza la ricorda, con il periodo che copre: è così che l'atteso
+  // di quel periodo sparisce, e non compare due volte.
+  if (fields.ricorrenzaId) {
+    record.ricorrenzaId = fields.ricorrenzaId;
+    record.periodo = String(fields.periodo || record.data.slice(0, 7));
+  }
   return record;
 }
 

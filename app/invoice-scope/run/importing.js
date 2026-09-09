@@ -33,6 +33,7 @@ import { totals } from "./totals.js";
 import { from, cmp } from "./decimal.js";
 import { partyRecord, itemRecord } from "./parties.js";
 import { costRecord, taxKind } from "./costs.js";
+import { expected as expectedCosts, matching as matchingExpected } from "./recurring.js";
 import { mul, toString as decimalText } from "./decimal.js";
 import { fiscalCode } from "./parse.js";
 import { t, tf } from "./i18n.js";
@@ -345,6 +346,9 @@ export async function plan(sorgenti, contesto = {}) {
   /** La chiave con cui un acquisto si riconosce: fornitore, numero e data. */
   const costKey = (c) => [c.partyId, _key(c.numero), String(c.data || "").slice(0, 10)].join("|");
   const costiEsistenti = new Set((contesto.costs || []).map(costKey));
+  // Gli attesi delle ricorrenze: una fattura ricevuta dello stesso fornitore nello stesso mese
+  // è quella, e si aggancia — così l'atteso sparisce senza che qualcuno lo confermi a mano.
+  const attesi = expectedCosts(contesto.recurring || [], contesto.costs || [], { company: contesto.company || null });
 
   /**
    * Un documento letto dall'XML come acquisto: i totali dalle righe, l'aliquota quella che pesa di
@@ -374,6 +378,10 @@ export async function plan(sorgenti, contesto = {}) {
       impostaTipo: "iva",
       aliquota: String(aliquota),
       scadenza: (rate[0] || {}).scadenza || null,
+      ...(() => {
+        const atteso = matchingExpected(attesi, { partyId: chi.id, data: doc.data });
+        return atteso ? { ricorrenzaId: atteso.ricorrenzaId, periodo: atteso.periodo } : {};
+      })(),
       righe: doc.righe.map((riga) => ({
         descrizione: riga.descrizione,
         quantita: riga.quantita,
@@ -968,6 +976,7 @@ async function _chosen(event) {
       items: await list(database, "items"),
       docs: await list(database, "docs"),
       costs: await list(database, "costs"),
+      recurring: await list(database, "recurring"),
     }));
   } catch (ignored) {
     await tell(t("impFailed"));

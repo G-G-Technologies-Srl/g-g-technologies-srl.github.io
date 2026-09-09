@@ -343,4 +343,82 @@ await prova("una nota di credito ricevuta: col meno nell'elenco, senza «Paga»,
   await dom.byId("costCancel").fire("click");
 });
 
+// -----------------------------------------------------------------------------------------------------------------
+//  r i c o r r e n z e   e   a t t e s i
+// -----------------------------------------------------------------------------------------------------------------
+
+await prova("senza ricorrenze: l'invito, e niente «In arrivo»", async (db) => {
+  await popola(db);
+  await purchases.renderList(db);
+  assert.equal(dom.byId("recurringEmpty").hidden, false);
+  assert.equal(dom.byId("recurringTable").hidden, true);
+  assert.equal(dom.byId("expectedSection").hidden, true);
+});
+
+await prova("una ricorrenza dal foglio: compare nell'elenco, e gli attesi fino a fine anno con «Conferma»", async (db) => {
+  await popola(db);
+  // La prova di prima ha lasciato aperta la scheda; qui si sta sull'elenco, come nella pagina.
+  dom.byId("screenCost").hidden = true;
+  await purchases.renderList(db);
+  await dom.byId("recurringNew").fire("click");
+  assert.equal(dom.byId("recurringDialog").open, true);
+  const form = dom.byId("recurringForm");
+  assert.deepEqual(form.elements.partyId.children.map((o) => o.value), ["", "f1", "f2"], "i fornitori");
+  assert.equal(form.elements.aliquota.value, "22");
+  form.elements.descrizione.value = "Hosting";
+  form.elements.partyId.value = "f1";
+  form.elements.categoria.value = "software";
+  form.elements.imponibile.value = "390";
+  form.elements.cadenza.value = "mensile";
+  form.elements.giorno.value = "5";
+  form.elements.da.value = "2026-01";
+  await dom.byId("recurringSave").fire("click");
+  assert.equal(dom.byId("recurringDialog").open, false);
+  assert.equal((await list(db, "recurring")).length, 1);
+  assert.equal(dom.count("recurringBody"), 1);
+  assert.match(dom.byId("recurringBody").at(0).allText, /Hosting.*mensile, il 5/);
+
+  // Gli attesi: da questo mese a dicembre.
+  assert.equal(dom.byId("expectedSection").hidden, false);
+  // Dal mese scorso a dicembre.
+  const mesiRimasti = 12 - Number(OGGI.slice(5, 7)) + 2;
+  assert.equal(dom.count("expectedBody"), mesiRimasti);
+  // La prima riga è il mese scorso, in ritardo; si conferma la seconda, quella di questo mese.
+  assert.match(dom.byId("expectedBody").at(0).allText, /in ritardo/);
+  const primo = dom.byId("expectedBody").at(1);
+  assert.match(primo.allText, /Hosting Cloud/);
+  assert.equal(leggibile(primo.at(3).allText), "475,80 €");
+  assert.match(dom.text("expectedTotal"), /fine anno/);
+
+  // «Conferma» apre il foglio dell'acquisto già compilato; il salvataggio porta il legame e
+  // l'atteso di quel mese sparisce.
+  await primo.at(4).at(0).fire("click");
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(dom.byId("costDialog").open, true);
+  const costo = dom.byId("costForm");
+  assert.equal(costo.elements.partyId.value, "f1");
+  assert.equal(costo.elements.imponibile.value, "390.00");
+  assert.equal(costo.elements.descrizione.value, "Hosting");
+  costo.elements.numero.value = "H-2026-09";
+  costo.elements.imponibile.value = "395";
+  await costo.elements.imponibile.fire("input");
+  await dom.byId("costSave").fire("click");
+  const vero = (await list(db, "costs")).find((c) => c.numero === "H-2026-09");
+  assert.ok(vero, "scritto");
+  assert.equal(vero.ricorrenzaId, (await list(db, "recurring"))[0].id);
+  assert.equal(vero.periodo, OGGI.slice(0, 7));
+  assert.equal(vero.imponibile, "395");
+  assert.equal(dom.count("expectedBody"), mesiRimasti - 1, "questo mese non è più atteso");
+
+  // Modifica dalla riga, e cancellazione: gli acquisti confermati restano.
+  await dom.byId("recurringBody").at(0).fire("click");
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(dom.text("recurringDialogTitle"), "Modifica la ricorrenza");
+  assert.equal(form.elements.imponibile.value, "390.00");
+  await dicendoSi(() => dom.byId("recurringDelete").fire("click"));
+  assert.equal((await list(db, "recurring")).length, 0);
+  assert.equal(dom.byId("expectedSection").hidden, true);
+  assert.ok((await list(db, "costs")).find((c) => c.numero === "H-2026-09"));
+});
+
 console.log(`purchases: ${passed} prove passate`);

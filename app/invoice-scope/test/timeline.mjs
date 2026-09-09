@@ -205,6 +205,17 @@ test("con le uscite la linea sta in mezzo, e le due metà hanno la stessa scala"
   assert.equal(money(total(g)), "1000.00");
 });
 
+test("un'uscita attesa sta nella barra, in coda, e non è scaduta", () => {
+  const g = geometry([riga("2026-09-20", "100.00")], { today: OGGI, out: [
+    { ...riga("2026-09-25", "60.00"), attesa: true }, riga("2026-09-26", "40.00", true),
+  ] });
+  const [set] = g.bars;
+  assert.equal(money(set.out), "100.00");
+  assert.equal(money(set.outExpected), "60.00");
+  assert.equal(money(set.outOverdue), "40.00");
+  assert.ok(Math.abs(set.outExpectedH - set.outH * 0.6) < 0.01);
+});
+
 test("un mese che paga più di quanto incassa detta la scala", () => {
   const g = geometry([riga("2026-09-20", "100.00")], { today: OGGI, out: [riga("2026-09-25", "400.00")] });
   assert.equal(money(g.max), "400.00");

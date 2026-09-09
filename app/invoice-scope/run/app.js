@@ -32,6 +32,7 @@ import * as parties from "./parties.js";
 import * as customer from "./customer.js";
 import * as purchases from "./purchases.js";
 import { allCosts, allOutlays } from "./costs.js";
+import { allRecurring } from "./recurring.js";
 import * as home from "./home.js";
 import * as reset from "./reset.js";
 import * as progetti from "./projects.js";
@@ -325,7 +326,8 @@ async function _refresh() {
   const byParty = new Map(db ? (await parties.parties(db)).map((p) => [p.id, p.denominazione]) : []);
   const costs = db ? await allCosts(db) : [];
   const outlays = db ? await allOutlays(db) : [];
-  home.render({ docs, owed, byParty, costs, outlays, company });
+  const recurring = db ? await allRecurring(db) : [];
+  home.render({ docs, owed, byParty, costs, outlays, recurring, company });
 
   el("tracciato").textContent = `FatturaPA ${TRACCIATO.versione} · ${TRACCIATO.dal}`;
   await _drawDocuments(docs);

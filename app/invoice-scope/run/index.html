@@ -131,6 +131,8 @@
       <!-- I due degli acquisti: compaiono con il primo acquisto registrato. -->
       <div class="figure" id="figMargin" hidden><span class="label" data-t="homeMargin"></span><span class="value" id="figMarginValue">—</span><span class="sub" id="figMarginSub"></span></div>
       <div class="figure" id="figToPay" hidden><span class="label" data-t="homeToPay"></span><span class="value" id="figToPayValue">—</span><span class="sub" id="figToPaySub"></span></div>
+      <!-- Il previsionale: con la prima ricorrenza. -->
+      <div class="figure" id="figForecast" hidden><span class="label" data-t="homeForecast"></span><span class="value" id="figForecastValue">—</span><span class="sub" id="figForecastSub"></span></div>
     </div>
 
     <div class="actions">
@@ -154,8 +156,8 @@
 
       <div class="widget wide" id="wMargin" hidden>
         <div class="section-head">
-          <h2 data-t="homeMarginChart"></h2>
-          <span class="legend"><i class="now"></i><span data-t="homeRevenue"></span> <i class="cost"></i><span data-t="homeCosts"></span></span>
+          <h2 id="marginTitle"></h2>
+          <span class="legend"><i class="now"></i><span data-t="homeRevenue"></span> <i class="cost"></i><span data-t="homeCosts"></span> <span id="legendExpected" hidden><i class="expected"></i><span data-t="homeExpectedShort"></span></span></span>
         </div>
         <div class="bars-box" id="chartMargin" role="img"></div>
       </div>
@@ -331,6 +333,44 @@
         </tr></thead>
         <tbody id="purchasesBody"></tbody>
       </table>
+    </div>
+
+    <!-- Quello che sta per arrivare: gli attesi delle ricorrenze fino a fine anno, non ancora
+         confermati da una fattura vera. Solo se ce n'è almeno uno. -->
+    <div id="expectedSection" hidden>
+      <div class="section-head">
+        <h2 data-t="expectedTitle"></h2>
+        <span class="meta" id="expectedTotal"></span>
+      </div>
+      <p class="note" data-t="expectedNote"></p>
+      <div class="table-scroll">
+        <table class="rows">
+          <thead><tr>
+            <th data-t="dueWhen"></th><th data-t="purchasesSupplier"></th><th data-t="colDescription"></th>
+            <th class="right" data-t="docsTotal"></th><th></th>
+          </tr></thead>
+          <tbody id="expectedBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Le ricorrenze: il canone, l'affitto, l'assicurazione. Si scrivono una volta. -->
+    <div id="recurringSection">
+      <div class="section-head">
+        <h2 data-t="recurringTitle"></h2>
+        <button type="button" class="button ghost" id="recurringNew" data-t="recurringNew"></button>
+      </div>
+      <p class="note" data-t="recurringNote"></p>
+      <p class="empty" id="recurringEmpty" data-t="recurringEmpty"></p>
+      <div class="table-scroll">
+        <table class="rows" id="recurringTable" hidden>
+          <thead><tr>
+            <th data-t="colDescription"></th><th data-t="purchasesSupplier"></th><th data-t="colFrequency"></th>
+            <th class="right" data-t="colNet"></th>
+          </tr></thead>
+          <tbody id="recurringBody"></tbody>
+        </table>
+      </div>
     </div>
   </section>
 
@@ -1307,6 +1347,42 @@
       <button type="button" class="button ghost" id="costCancel" data-t="cancel"></button>
       <span class="spacer"></span>
       <button type="button" class="button" id="costSave" data-t="save"></button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Il foglio di una ricorrenza: quello che si sa in anticipo di un costo che torna. -->
+<dialog id="recurringDialog" class="sheet">
+  <form method="dialog" id="recurringForm">
+    <h2 id="recurringDialogTitle"></h2>
+    <div class="form">
+      <label class="wide"><span data-t="f_descrizione"></span><input name="descrizione" autocomplete="off" required></label>
+      <label class="required"><span data-t="f_fornitore"></span>
+        <select name="partyId" required></select>
+        <button type="button" class="link-button" id="recurringPartyNew" data-t="costPartyNew"></button>
+      </label>
+      <label class="narrow"><span data-t="f_categoria"></span><input name="categoria" list="recurringCategories" autocomplete="off"></label>
+      <datalist id="recurringCategories"></datalist>
+      <label class="narrow"><span data-t="f_imponibile"></span><input name="imponibile" inputmode="decimal" required></label>
+      <label class="narrow"><span data-t="f_aliquotaAcquisto"></span><select name="aliquota"></select></label>
+      <label class="narrow"><span data-t="f_cadenza"></span>
+        <select name="cadenza">
+          <option value="mensile" data-t="cadMensile"></option>
+          <option value="trimestrale" data-t="cadTrimestrale"></option>
+          <option value="annuale" data-t="cadAnnuale"></option>
+        </select>
+      </label>
+      <label class="narrow"><span data-t="f_giorno"></span><input name="giorno" type="number" min="1" max="31" inputmode="numeric"></label>
+      <label class="narrow"><span data-t="f_da"></span><input name="da" type="month" required></label>
+      <label class="narrow"><span data-t="f_a"></span><input name="a" type="month"></label>
+      <p class="note wide" data-t="recurringHint"></p>
+    </div>
+    <ul class="sheet-problems" id="recurringProblems" hidden></ul>
+    <div class="actions sheet-actions">
+      <button type="button" class="button ghost" id="recurringCancel" data-t="cancel"></button>
+      <button type="button" class="button ghost danger-text" id="recurringDelete" data-t="del" hidden></button>
+      <span class="spacer"></span>
+      <button type="button" class="button" id="recurringSave" data-t="save"></button>
     </div>
   </form>
 </dialog>

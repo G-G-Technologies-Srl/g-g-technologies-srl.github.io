@@ -28,6 +28,8 @@ export const NAME = "invoice-scope";
 /**
  * The schema's version, and the one number that must move when a store is added.
  *
+ * 5 → 6: `recurring`, i costi ricorrenti da cui nascono gli acquisti attesi.
+ *
  * 4 → 5: `costs` e `outlays`, gli acquisti e i pagamenti in uscita. I clienti prendono `ruolo`
  * — cliente, fornitore, entrambi — e chi non ce l'ha è un cliente, come è sempre stato.
  *
@@ -40,7 +42,7 @@ export const NAME = "invoice-scope";
  * opens once a quarter that is not the previous one. Nothing is migrated: a customer without a diary
  * simply has none, which is the state every existing one starts from.
  */
-export const VERSION = 5;
+export const VERSION = 6;
 
 /**
  * The stores, as `gg/store.js` describes them.
@@ -78,6 +80,11 @@ export const STORES = {
   // I pagamenti in uscita, a parte dagli incassi per la stessa ragione — e perché la zona di
   // cancellazione svuota «documenti e incassi» senza toccare gli acquisti, e viceversa.
   outlays: { keyPath: "id", indexes: { cost: "costId", date: "data" } },
+  // I costi ricorrenti: il canone, l'affitto, l'assicurazione — quello che arriva ogni mese o
+  // ogni anno e si sa già. Da qui l'app genera gli acquisti *attesi* fino a fine anno, che sono
+  // il previsionale: righe calcolate, non scritte, finché una fattura vera non le conferma.
+  // Schema 5 → 6: solo questo store.
+  recurring: { keyPath: "id", indexes: { party: "partyId" } },
   counters: { keyPath: "key" },
   meta: { keyPath: "key" },
 };

@@ -26,6 +26,7 @@ import { from, cmp, toString, ZERO } from "./decimal.js";
 import { parseAmount } from "./parse.js";
 import { parties, openNewParty, isSupplier } from "./parties.js";
 import { openMoney } from "./payments.js";
+import * as attesi from "./expected.js";
 import {
   TIPI, MONOFASE, IVA, CATEGORIE, taxKind, defaultRate, taxOn, costRecord, problems,
   paidOf, owedOn, state, allCosts, allOutlays, saveCost, removeCost, outlaysOf, recordOutlay,
@@ -63,6 +64,9 @@ const filtri = { cerca: "", anno: "", stato: "" };
 
 /** L'imposta è stata scritta a mano: da quel momento il foglio smette di ricalcolarla. */
 let impostaManuale = false;
+
+/** I campi con cui il foglio è stato aperto da un atteso: il legame alla ricorrenza, da tenere. */
+let prefill = null;
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
@@ -235,8 +239,9 @@ function _ricalcola({ forza = false } = {}) {
   el("costTotale").textContent = money(totale);
 }
 
-function _openSheet(record) {
+function _openSheet(record, { proposta = null } = {}) {
   editing = record;
+  prefill = proposta;
   impostaManuale = Boolean(record && record.imposta !== undefined
     && toString(taxOn(record.imponibile, record.aliquota), 2) !== toString(_amount(record.imposta), 2));
   const form = el("costForm");
@@ -247,7 +252,7 @@ function _openSheet(record) {
   el("costTaxLabel").textContent = _taxLabel();
   el("costTaxNote").textContent = t(taxKind(company) === "monofase" ? "costTaxNoteSm" : "costTaxNoteIt");
 
-  const data = record || {};
+  const data = record || proposta || {};
   form.elements.tipo.value = TIPI.includes(data.tipo) ? data.tipo : "fattura";
   form.elements.data.value = data.data || _today();
   form.elements.numero.value = data.numero || "";
@@ -256,7 +261,7 @@ function _openSheet(record) {
   form.elements.imponibile.value = data.imponibile ? toString(_amount(data.imponibile), 2) : "";
   form.elements.imposta.value = data.imposta ? toString(_amount(data.imposta), 2) : "";
   form.elements.scadenza.value = data.scadenza || "";
-  _drawRates(record ? String(data.aliquota ?? "0") : defaultRate(company));
+  _drawRates(record || proposta ? String(data.aliquota ?? "0") : defaultRate(company));
   _drawCategories();
   _tipoCambiato();
   _ricalcola({ forza: !record });
@@ -271,8 +276,10 @@ async function _saveSheet() {
   for (const name of ["tipo", "partyId", "data", "numero", "categoria", "descrizione", "imponibile", "aliquota", "imposta", "scadenza"]) {
     campi[name] = form.elements[name].value;
   }
+  const legame = editing ? { ricorrenzaId: editing.ricorrenzaId, periodo: editing.periodo } : (prefill || {});
   const record = costRecord({ ...campi, id: (editing || {}).id, righe: (editing || {}).righe,
-    origine: (editing || {}).origine, importato: (editing || {}).importato, created: (editing || {}).created },
+    origine: (editing || {}).origine, importato: (editing || {}).importato, created: (editing || {}).created,
+    ricorrenzaId: legame.ricorrenzaId, periodo: legame.periodo },
   { company });
 
   const mancanze = problems(record);
@@ -291,6 +298,7 @@ async function _saveSheet() {
   await saveCost(database, record, { company });
   _close(el("costDialog"));
   editing = null;
+  prefill = null;
   await _redraw();
   if (onChange) await onChange();
 }
@@ -458,6 +466,17 @@ export async function renderList(db, { afterChange = null } = {}) {
     tr.append(azioni);
     body.append(tr);
   }
+
+  // In fondo, quello che sta per arrivare e le ricorrenze: «Conferma» apre questo stesso foglio
+  // già compilato, con il legame alla ricorrenza.
+  await attesi.render(db, {
+    company,
+    afterChange: onChange,
+    onConfirm: async (campi) => {
+      _openSheet(null, { proposta: campi });
+      await _drawSuppliers(campi.partyId);
+    },
+  });
 }
 
 /** La scheda di un acquisto: `#/acquisto/<id>`. `false` se non esiste più, e chi chiama torna all'elenco. */
@@ -550,7 +569,9 @@ export function connect(db, { afterChange = null } = {}) {
   el("costCancel").addEventListener("click", () => {
     _close(el("costDialog"));
     editing = null;
+    prefill = null;
   });
+  attesi.connect(db);
 
   el("costEdit").addEventListener("click", async () => {
     if (!aperto) return;

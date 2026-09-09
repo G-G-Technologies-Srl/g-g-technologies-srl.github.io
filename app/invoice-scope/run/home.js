@@ -25,7 +25,8 @@ import { label as statoLabel } from "./states.js";
 import { signedTotal, editable } from "./model.js";
 import { money, date as shownDate } from "./format.js";
 import * as progetti from "./projects.js";
-import { costOf, payable, taxBalance } from "./costs.js";
+import { costOf, payable, taxBalance, signedTotal as costTotal } from "./costs.js";
+import { expected } from "./recurring.js";
 
 /** Quante righe mostra ogni riquadro. Cinque è quello che si legge senza scorrere. */
 export const ROWS = 5;
@@ -105,7 +106,7 @@ function _row(cells, href) {
  * prima, non l'anno intero. A settembre, «−40% sull'anno scorso» contro dodici mesi sarebbe una
  * notizia falsa.
  */
-export function figures(docs, owed, { today = new Date().toISOString().slice(0, 10), costs = [], outlays = [] } = {}) {
+export function figures(docs, owed, { today = new Date().toISOString().slice(0, 10), costs = [], outlays = [], attesi = [] } = {}) {
   const anno = today.slice(0, 4);
   const scorso = String(Number(anno) - 1);
   const giornoScorso = `${scorso}${today.slice(4)}`;
@@ -137,7 +138,21 @@ export function figures(docs, owed, { today = new Date().toISOString().slice(0, 
   const costiAnno = costs.filter((c) => String(c.data).startsWith(anno)).reduce((sum, c) => sum + costOf(c), 0n);
   const daPagare = payable(costs, outlays, { today });
 
+  // Il previsionale: i costi di quest'anno più gli attesi fino a dicembre. Solo con una
+  // ricorrenza, altrimenti è il numero dei costi con un altro nome.
+  const attesiAnno = attesi.filter((a) => String(a.data).startsWith(anno));
+  const previsti = attesiAnno.reduce((sum, a) => sum + costOf(a), 0n);
+  const limite = new Date(Date.UTC(...today.slice(0, 10).split("-").map((x, i) => Number(x) - (i === 1 ? 1 : 0))) + 30 * 86400000)
+    .toISOString().slice(0, 10);
+  const attesiVicini = attesi.filter((a) => a.data <= limite);
+
   return {
+    haAttesi: attesi.length > 0,
+    attesiQuanti: attesiAnno.length,
+    costiPrevisti: previsti,
+    costiFineAnno: costiAnno + previsti,
+    attesiTrentaGiorni: attesiVicini.reduce((sum, a) => sum + costTotal(a), 0n),
+    attesiTrentaQuanti: attesiVicini.length,
     ricavi,
     costi: costiAnno,
     margine: ricavi - costiAnno,
@@ -229,6 +244,34 @@ export function taxFigures(docs, costs, { today = new Date().toISOString().slice
   };
 }
 
+/**
+ * L'anno solare mese per mese — gennaio–dicembre di quest'anno — con ricavi e costi imponibili e,
+ * nei mesi a venire, i costi attesi dalle ricorrenze. È il grafico del previsionale: la finestra
+ * degli ultimi dodici mesi va bene per «come sta andando», questa per «come finisce l'anno».
+ */
+export function byYear(docs, costs, attesi, { today = new Date().toISOString().slice(0, 10) } = {}) {
+  const anno = Number(today.slice(0, 4));
+  const netti = new Map();
+  for (const doc of _invoiced(docs)) {
+    const chiave = String(doc.data).slice(0, 7);
+    netti.set(chiave, (netti.get(chiave) || 0n) + _net(doc));
+  }
+  const spese = new Map();
+  for (const record of costs) {
+    const chiave = String(record.data).slice(0, 7);
+    spese.set(chiave, (spese.get(chiave) || 0n) + costOf(record));
+  }
+  const previsti = new Map();
+  for (const record of attesi) {
+    const chiave = String(record.data).slice(0, 7);
+    previsti.set(chiave, (previsti.get(chiave) || 0n) + costOf(record));
+  }
+  return Array.from({ length: 12 }, (_, i) => {
+    const chiave = `${anno}-${String(i + 1).padStart(2, "0")}`;
+    return { mese: i + 1, anno, ricavi: netti.get(chiave) || 0n, costi: spese.get(chiave) || 0n, attesi: previsti.get(chiave) || 0n, valore: 0n, prima: 0n };
+  });
+}
+
 /** I clienti con più da incassare, dal più esposto: `{ partyId, importo, scadute }`. */
 export function topParties(owedRows, { limit = ROWS } = {}) {
   const per = new Map();
@@ -310,9 +353,12 @@ export function drafts(docs, { limit = ROWS } = {}) {
 // -----------------------------------------------------------------------------------------------------------------
 
 /** Le barre dei mesi: quest'anno pieno, l'anno scorso dietro, in tinta più chiara. */
-export function drawMonths(container, mesi, { back = "prima", front = "valore", backClass = "before", frontClass = "now", title = "homeMonths", empty = "homeMonthsEmpty" } = {}) {
+export function drawMonths(container, mesi, { back = "prima", front = "valore", backClass = "before", frontClass = "now", title = "homeMonths", empty = "homeMonthsEmpty", stack = null } = {}) {
   container.textContent = "";
-  const massimo = mesi.reduce((max, m) => (m[front] > max ? m[front] : m[back] > max ? m[back] : max), 0n);
+  // Con una terza serie impilata sulla seconda — i costi attesi sopra quelli veri — il massimo
+  // è la somma delle due, o la pila sfonderebbe il riquadro.
+  const dietroDi = (m) => m[back] + (stack ? (m[stack] || 0n) : 0n);
+  const massimo = mesi.reduce((max, m) => (m[front] > max ? m[front] : dietroDi(m) > max ? dietroDi(m) : max), 0n);
   if (massimo === 0n) {
     const nota = document.createElement("p");
     nota.className = "note";
@@ -349,9 +395,17 @@ export function drawMonths(container, mesi, { back = "prima", front = "valore", 
     const titolo = _svg("title");
     titolo.textContent = back === "prima"
       ? `${lettere[m.mese - 1]} ${m.anno}: ${money(m.valore)} · ${m.anno - 1}: ${money(m.prima)}`
-      : `${lettere[m.mese - 1]} ${m.anno}: ${money(m[front])} − ${money(m[back])} = ${money(m[front] - m[back])}`;
+      : `${lettere[m.mese - 1]} ${m.anno}: ${money(m[front])} − ${money(dietroDi(m))} = ${money(m[front] - dietroDi(m))}`
+        + (stack && m[stack] > 0n ? ` (${t("homeExpectedShort")} ${money(m[stack])})` : "");
     davanti.append(titolo);
     svg.append(dietro, davanti);
+    // Gli attesi: impilati sopra i costi veri, tratteggiati, perché non sono ancora successi.
+    if (stack && m[stack] > 0n) {
+      const altezza = scala(m[stack]);
+      svg.append(_svg("rect", {
+        x: x - larghezza, y: H - bottom - prima - altezza, width: larghezza, height: altezza, class: "expected", rx: 2,
+      }));
+    }
     const label = _svg("text", { x, y: H - 6, class: "label", "text-anchor": "middle" });
     label.textContent = lettere[m.mese - 1];
     svg.append(label);
@@ -394,8 +448,9 @@ export function drawParties(container, rows, byParty, { href = (row) => `#/clien
  * Disegna tutto. `docs` sono i documenti dal più recente, `owed` è `summary(db)`, `byParty` i
  * nomi dei clienti per id.
  */
-export function render({ docs, owed, byParty, costs = [], outlays = [], company = null, today = new Date().toISOString().slice(0, 10) }) {
-  const n = figures(docs, owed, { today, costs, outlays });
+export function render({ docs, owed, byParty, costs = [], outlays = [], recurring = [], company = null, today = new Date().toISOString().slice(0, 10) }) {
+  const attesi = expected(recurring, costs, { today, company });
+  const n = figures(docs, owed, { today, costs, outlays, attesi });
 
   el("figYear").textContent = money(n.fatturato);
   el("figYearDelta").textContent = n.delta === null
@@ -429,9 +484,16 @@ export function render({ docs, owed, byParty, costs = [], outlays = [], company 
     el("figMarginSub").textContent = tf("homeMarginSub", { ricavi: money(n.ricavi), costi: money(n.costi) });
     el("figToPayValue").textContent = money(n.daPagare);
     el("figToPayValue").classList.toggle("bad", n.daPagareScadute > 0);
-    el("figToPaySub").textContent = n.daPagareQuante === 0 ? t("homeToPayNone")
+    el("figToPaySub").textContent = (n.daPagareQuante === 0 ? t("homeToPayNone")
       : n.daPagareScadute > 0 ? tf("homeToPayOverdue", { quante: n.daPagareQuante, scadute: n.daPagareScadute })
-        : tf("homeToPaySub", { quante: n.daPagareQuante });
+        : tf("homeToPaySub", { quante: n.daPagareQuante }))
+      + (n.attesiTrentaQuanti ? ` · ${tf("homeToPayExpected", { quante: n.attesiTrentaQuanti, totale: money(n.attesiTrentaGiorni) })}` : "");
+  }
+  // Il previsionale: con almeno una ricorrenza. Costi dell'anno più gli attesi fino a dicembre.
+  el("figForecast").hidden = !n.haAttesi;
+  if (n.haAttesi) {
+    el("figForecastValue").textContent = money(n.costiFineAnno);
+    el("figForecastSub").textContent = tf("homeForecastSub", { attesi: money(n.costiPrevisti), quanti: n.attesiQuanti });
   }
 
   el("homeLists").hidden = docs.length === 0 && costs.length === 0;
@@ -446,11 +508,16 @@ export function render({ docs, owed, byParty, costs = [], outlays = [], company 
 
   // Ricavi e costi, mese per mese: il margine è la differenza fra le due barre, e il titolo di
   // ogni coppia la scrive. Solo con almeno un acquisto.
+  // Con una ricorrenza la finestra diventa l'anno solare, e i mesi a venire portano gli attesi
+  // impilati sui costi, tratteggiati: è il previsionale.
   el("wMargin").hidden = !n.haCosti;
+  el("legendExpected").hidden = !n.haAttesi;
+  el("marginTitle").textContent = t(n.haAttesi ? "homeForecastChart" : "homeMarginChart");
   if (n.haCosti) {
-    drawMonths(el("chartMargin"), mesi, {
+    drawMonths(el("chartMargin"), n.haAttesi ? byYear(docs, costs, attesi, { today }) : mesi, {
       back: "costi", front: "ricavi", backClass: "cost", frontClass: "now",
-      title: "homeMarginChart", empty: "homeMonthsEmpty",
+      title: n.haAttesi ? "homeForecastChart" : "homeMarginChart", empty: "homeMonthsEmpty",
+      stack: n.haAttesi ? "attesi" : null,
     });
   }
 

@@ -28,6 +28,7 @@ import { draft, save, issue, setState } from "./model.js";
 import { recordPayment } from "./schedule.js";
 import { saveActivity } from "./crm.js";
 import { saveCost, recordOutlay } from "./costs.js";
+import { saveRecurring } from "./recurring.js";
 import * as progetti from "./projects.js";
 import { toString } from "./decimal.js";
 
@@ -327,12 +328,19 @@ export async function seed(db) {
   // Gli acquisti: il canone mensile dell'hosting per gli ultimi mesi, tutti pagati, così le barre
   // dei costi hanno una forma; una fattura scaduta da dieci giorni e una spesa che scade fra tre,
   // perché lo scadenzario abbia una metà bassa e la Situazione un «da pagare» con un ritardo.
+  // Il canone è una ricorrenza: i mesi passati sono confermati, quelli che restano fino a
+  // dicembre sono attesi — è il previsionale che la Situazione mostra.
+  const ricorrenza = await saveRecurring(db, {
+    id: "demo-r1", partyId: "demo-f1", descrizione: t("demoCostHosting"), categoria: t("demoCatSoftware"),
+    imponibile: "390.00", aliquota: "22", cadenza: "mensile", giorno: 15, da: _mese(14).slice(0, 7),
+  });
   const acquisto = (fields) => saveCost(db, fields, { company: AZIENDA });
   for (let indietro = 1; indietro <= 8; indietro += 1) {
     const canone = await acquisto({
       tipo: "fattura", partyId: "demo-f1", data: _mese(indietro), numero: `HN-${2026}-${String(120 - indietro).padStart(3, "0")}`,
       categoria: t("demoCatSoftware"), descrizione: t("demoCostHosting"),
       imponibile: "390.00", aliquota: "22", scadenza: _mese(indietro - 1),
+      ricorrenzaId: ricorrenza.id, periodo: _mese(indietro).slice(0, 7),
     });
     await recordOutlay(db, canone, { importo: canone.totale, data: _mese(indietro - 1), conto: AZIENDA.conti[0] });
   }

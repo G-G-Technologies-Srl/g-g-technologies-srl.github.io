@@ -288,6 +288,9 @@ main { padding: 0; flex: 1 1 auto; min-width: 0; }
 
 .figure {
   flex: 1 1 160px;
+  /* Sette riquadri su una riga da sei: il settimo andava a capo largo quanto la riga, e sembrava
+     un'altra cosa. Con un tetto resta un riquadro come gli altri, a sinistra. */
+  max-width: 360px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--fill);
@@ -529,6 +532,7 @@ select:disabled { cursor: default; opacity: 1; color: var(--text); background-im
    la metà bassa non pesa quanto l'alta e si legge come rovescio, non come seconda serie. */
 .tl-out { fill: var(--danger); opacity: 0.35; }
 .tl-out-overdue { fill: var(--danger); opacity: 0.85; }
+.tl-out-expected { fill: var(--panel); stroke: var(--danger); stroke-width: 1.5; stroke-dasharray: 3 3; opacity: 0.8; }
 
 .tl-label { fill: var(--faint); font-size: 11px; font-family: var(--font); }
 .tl-label-now { fill: var(--text); }
@@ -816,6 +820,8 @@ dialog li::before {
 .rows.compact td { padding-top: 8px; padding-bottom: 8px; }
 /* La riga del saldo, nel riquadro delle imposte: la sola che risponde alla domanda. */
 .rows tr.total td { font-weight: 600; }
+/* Una riga attesa nello scadenzario: più chiara, perché non è ancora un debito. */
+.rows tr.expected td { color: var(--faint); }
 @media (max-width: 900px) { .widgets { grid-template-columns: 1fr; } }
 
 /* La riga sotto ogni numero: cosa lo qualifica — «+12% sull'anno scorso», «la più vecchia da 40
@@ -834,6 +840,8 @@ dialog li::before {
 .bars rect.before { fill: var(--border-strong); }
 /* I costi nella tinta di chi deve essere pagato, non in quella del confronto: sono un'altra cosa. */
 .bars rect.cost { fill: var(--danger); opacity: 0.6; }
+/* Gli attesi: vuoti e tratteggiati, perché non sono ancora successi. */
+.bars rect.expected { fill: var(--danger); fill-opacity: 0.12; stroke: var(--danger); stroke-width: 1.5; stroke-dasharray: 3 3; opacity: 0.8; }
 .bars line.axis { stroke: var(--border); stroke-width: 1; }
 .bars text.label { fill: var(--faint); font-size: 11px; font-family: inherit; }
 .legend { display: inline-flex; align-items: center; gap: 6px; color: var(--faint); font-size: 0.82rem; }
@@ -841,6 +849,8 @@ dialog li::before {
 .legend i.now { background: var(--accent); }
 .legend i.before { background: var(--border-strong); margin-left: 10px; }
 .legend i.cost { background: var(--danger); opacity: 0.6; margin-left: 10px; }
+.legend i.expected { background: transparent; border: 1.5px dashed var(--danger); opacity: 0.8; margin-left: 10px; box-sizing: border-box; }
+.legend > span { display: inline-flex; align-items: center; gap: 6px; }
 
 /* Le barre orizzontali dei clienti: nome, barra, cifra. La parte scaduta sopra la barra, più
    scura, così «chi deve di più» e «chi è in ritardo» si vedono nello stesso disegno. */

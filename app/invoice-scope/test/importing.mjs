@@ -931,6 +931,23 @@ await prova("una nota di credito ricevuta entra come nota, con gli importi del f
   assert.equal(piano.costi[0].totale, "1525.00", "positivo nel record, come nel file");
 });
 
+await prova("una fattura ricevuta aggancia l'atteso della ricorrenza dello stesso fornitore e mese", async () => {
+  const { recurringRecord } = await import("../run/recurring.js");
+  const ricorrenza = recurringRecord({ id: "r1", partyId: "x", descrizione: "Hosting", imponibile: "1250", aliquota: "22", cadenza: "mensile", giorno: 1, da: "2026-01" });
+  const db = await openDatabase();
+  const { saveParty } = await import("../run/parties.js");
+  const fornitore = await saveParty(db, { denominazione: "Hosting Cloud S.p.A.", partitaIva: "09876543210", paese: "IT", ruolo: "fornitore" });
+  ricorrenza.partyId = fornitore.id;
+  const piano = await plan([xml("hc.xml", RICEVUTA)], {
+    company: AZIENDA, parties: await list(db, "parties"), recurring: [ricorrenza],
+  });
+  assert.equal(piano.costi[0].ricorrenzaId, "r1");
+  assert.equal(piano.costi[0].periodo, "2026-08");
+  // Un fornitore senza ricorrenze non prende niente.
+  const altro = await plan([xml("hc.xml", RICEVUTA)], { company: AZIENDA, recurring: [ricorrenza] });
+  assert.equal(altro.costi[0].ricorrenzaId, undefined);
+});
+
 await prova("per un'azienda sammarinese il pannello dice che la monofase va aggiunta a mano", async () => {
   const sm = { ...AZIENDA, paese: "SM", partitaIva: "29141", codiceFiscale: "" };
   const piano = await plan([xml("hc.xml", RICEVUTA)], { company: sm });

@@ -26,7 +26,9 @@ import { parties } from "./parties.js";
 import { draw } from "./timeline.js";
 import { control as statoControl } from "./states.js";
 import { openSheet, openMoney } from "./payments.js";
-import { allCosts, allOutlays, payable, recordOutlay, cost as getCost } from "./costs.js";
+import { allCosts, allOutlays, payable, recordOutlay, cost as getCost, signedTotal as costTotal } from "./costs.js";
+import { expected } from "./recurring.js";
+import { list } from "gg/store.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -118,9 +120,16 @@ function _drawOut(rows, people) {
       nota.textContent = ` · ${t("dueOverdue")}`;
       quando.append(nota);
     }
+    if (row.attesa) tr.className = "expected";
     const riferimento = document.createElement("td");
     riferimento.className = "nowrap";
     riferimento.textContent = row.riferimento || "—";
+    if (row.attesa) {
+      const nota = document.createElement("span");
+      nota.className = "meta";
+      nota.textContent = ` · ${t("dueExpected")}`;
+      riferimento.append(nota);
+    }
     const fornitore = document.createElement("td");
     fornitore.className = "nowrap";
     fornitore.textContent = people.get(row.partyId) || "—";
@@ -129,18 +138,27 @@ function _drawOut(rows, people) {
     importo.textContent = _money(row.importo);
     const azioni = document.createElement("td");
     azioni.className = "right actions-cell";
-    const apri = document.createElement("button");
-    apri.type = "button";
-    apri.className = "ghost small row-action";
-    apri.textContent = t("dueOpen");
-    apri.addEventListener("click", () => { location.hash = `#/acquisto/${row.costId}`; });
-    const paga = document.createElement("button");
-    paga.type = "button";
-    paga.className = "ghost small row-action";
-    paga.textContent = t("costPayShort");
-    paga.setAttribute("aria-label", `${t("costPay")} — ${row.riferimento || ""}`);
-    paga.addEventListener("click", () => _paga(row, people));
-    azioni.append(apri, paga);
+    if (row.attesa) {
+      const conferma = document.createElement("button");
+      conferma.type = "button";
+      conferma.className = "ghost small row-action";
+      conferma.textContent = t("expectedConfirm");
+      conferma.addEventListener("click", () => { location.hash = "#/acquisti"; });
+      azioni.append(conferma);
+    } else {
+      const apri = document.createElement("button");
+      apri.type = "button";
+      apri.className = "ghost small row-action";
+      apri.textContent = t("dueOpen");
+      apri.addEventListener("click", () => { location.hash = `#/acquisto/${row.costId}`; });
+      const paga = document.createElement("button");
+      paga.type = "button";
+      paga.className = "ghost small row-action";
+      paga.textContent = t("costPayShort");
+      paga.setAttribute("aria-label", `${t("costPay")} — ${row.riferimento || ""}`);
+      paga.addEventListener("click", () => _paga(row, people));
+      azioni.append(apri, paga);
+    }
     tr.append(quando, riferimento, fornitore, importo, azioni);
     body.append(tr);
   }
@@ -167,16 +185,25 @@ export async function render(db, afterChange = null) {
     const riferimento = record.tipo === "spesa" ? (record.categoria || t("costTipoSpesa")) : (record.numero || "");
     return { ...row, riferimento };
   });
+  // Gli attesi delle ricorrenze, in coda: righe tratteggiate, senza «Paga», con «Conferma» che
+  // porta in Acquisti. Non entrano nel totale da pagare — non sono ancora un debito — ma nel
+  // grafico sì, tratteggiati, perché la domanda del grafico è «cosa esce».
+  const company = await get(db, "company", "company");
+  const attesi = expected(await list(db, "recurring"), costs, { company }).map((a) => ({
+    costId: a.id, partyId: a.partyId, scadenza: a.data, importo: costTotal(a), scaduta: a.scaduta,
+    riferimento: a.descrizione || a.categoria || "", attesa: true,
+  }));
+  const tutte = [...out, ...attesi].sort((a, b) => String(a.scadenza).localeCompare(String(b.scadenza)));
   const totalOut = out.reduce((sum, row) => sum + row.importo, 0n);
 
   el("dueEmpty").hidden = visibili.length > 0;
   el("dueTable").hidden = visibili.length === 0;
   // Con le uscite il totale diventa tre numeri: cosa entra, cosa esce, e la differenza — che è
   // l'unico dei tre che risponde alla domanda.
-  el("dueTotal").textContent = out.length
+  el("dueTotal").textContent = tutte.length
     ? `${t("dueLeft")}: ${_money(total)} · ${t("costOwedLabel")}: ${_money(totalOut)} · ${t("dueNet")}: ${_money(total - totalOut)}`
     : rows.length ? `${t("dueTotal")}: ${_money(total)}` : "";
-  el("dueInTitle").hidden = out.length === 0;
+  el("dueInTitle").hidden = tutte.length === 0;
 
   el("dueFilter").textContent = soloScadute ? t("dueOnlyOverdue") : t("dueAll");
   el("dueFilter").setAttribute("aria-pressed", String(soloScadute));
@@ -186,12 +213,12 @@ export async function render(db, afterChange = null) {
   draw(el("dueChart"), rows, {
     label: _mese,
     money: _money,
-    title: t(out.length ? "dueChartTwoWay" : "dueChart"),
-    out,
+    title: t(tutte.length ? "dueChartTwoWay" : "dueChart"),
+    out: tutte,
   });
 
   const people = new Map((await parties(db)).map((p) => [p.id, p.denominazione]));
-  _drawOut(out, people);
+  _drawOut(tutte, people);
   const body = el("dueBody");
   body.textContent = "";
 

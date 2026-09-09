@@ -12,7 +12,8 @@ import { openDatabase } from "../run/db.js";
 import { toString, from } from "../run/decimal.js";
 import * as progetti from "../run/projects.js";
 import * as plan from "gg/plan-model.js";
-import { figures, byMonth, topParties, projectRows, openQuotes, drafts, taxFigures } from "../run/home.js";
+import { figures, byMonth, byYear, topParties, projectRows, openQuotes, drafts, taxFigures } from "../run/home.js";
+import { recurringRecord, expected } from "../run/recurring.js";
 import { costRecord } from "../run/costs.js";
 import { reset } from "./fake-store.mjs";
 
@@ -179,6 +180,35 @@ await prova("le imposte: il trimestre in corso e l'anno, IVA per l'Italia e mono
   assert.equal(sm.tipo, "monofase");
   assert.equal(soldi(sm.trimestre.monofase), "170.00");
   assert.equal(soldi(sm.trimestre.credito), "0.00");
+});
+
+await prova("il previsionale: costi dell'anno più gli attesi a dicembre, quelli entro 30 giorni, e l'anno solare nel grafico", async () => {
+  const docs = [netta("2026-03-10", 1000, 1220)];
+  const costs = [acquisto("2026-05-01", "300", "22")];
+  const hosting = recurringRecord({ id: "r1", partyId: "s1", descrizione: "Hosting", imponibile: "100", aliquota: "22", cadenza: "mensile", giorno: 20, da: "2026-01" });
+  const attesi = expected([hosting], costs, { today: OGGI, company: { paese: "IT" } });
+  // Da agosto (mese scorso) a dicembre: cinque.
+  assert.equal(attesi.length, 5);
+  const n = figures(docs, { rows: [], overdue: [], total: 0n }, { today: OGGI, costs, attesi });
+  assert.equal(n.haAttesi, true);
+  assert.equal(n.attesiQuanti, 5);
+  assert.equal(soldi(n.costiPrevisti), "500.00", "imponibili: l'IVA non è un costo");
+  assert.equal(soldi(n.costiFineAnno), "800.00");
+  // Entro trenta giorni dal 9 settembre: agosto (in ritardo) e settembre, lordi.
+  assert.equal(n.attesiTrentaQuanti, 2);
+  assert.equal(soldi(n.attesiTrentaGiorni), "244.00");
+
+  const anno = byYear(docs, costs, attesi, { today: OGGI });
+  assert.equal(anno.length, 12);
+  assert.deepEqual([anno[0].mese, anno[11].mese], [1, 12]);
+  assert.equal(soldi(anno[2].ricavi), "1000.00");
+  assert.equal(soldi(anno[4].costi), "300.00");
+  assert.equal(soldi(anno[7].attesi), "100.00", "agosto atteso");
+  assert.equal(soldi(anno[11].attesi), "100.00");
+  assert.equal(soldi(anno[0].attesi), "0.00");
+
+  const senza = figures(docs, { rows: [], overdue: [], total: 0n }, { today: OGGI, costs });
+  assert.equal(senza.haAttesi, false);
 });
 
 // -----------------------------------------------------------------------------------------------------------------

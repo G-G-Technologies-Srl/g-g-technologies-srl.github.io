@@ -89,12 +89,14 @@ function _months(rows, today) {
  * document has one imponibile and not two.
  */
 export function geometry(rows, { today = new Date().toISOString().slice(0, 10), out = [] } = {}) {
+  // Un'uscita `attesa` è una ricorrenza non ancora confermata: sta nella stessa barra, in coda,
+  // tratteggiata — è denaro che uscirà, non che deve.
   const twoWay = out.length > 0;
   const months = _months([...rows, ...out], today);
   const height_ = twoWay ? H2 : H;
   if (!months.length) return { months: [], bars: [], max: ZERO, W, H: height_, PAD, twoWay };
 
-  const totals = new Map(months.map((month) => [month, { total: ZERO, overdue: ZERO, out: ZERO, outOverdue: ZERO }]));
+  const totals = new Map(months.map((month) => [month, { total: ZERO, overdue: ZERO, out: ZERO, outOverdue: ZERO, outExpected: ZERO }]));
   for (const row of rows) {
     const bucket = totals.get(_month(row.scadenza));
     if (!bucket) continue;
@@ -105,7 +107,8 @@ export function geometry(rows, { today = new Date().toISOString().slice(0, 10), 
     const bucket = totals.get(_month(row.scadenza));
     if (!bucket) continue;
     bucket.out = add(bucket.out, row.importo);
-    if (row.scaduta) bucket.outOverdue = add(bucket.outOverdue, row.importo);
+    if (row.attesa) bucket.outExpected = add(bucket.outExpected, row.importo);
+    else if (row.scaduta) bucket.outOverdue = add(bucket.outOverdue, row.importo);
   }
 
   // One scale for both directions: the eye compares the two halves of a month, and two scales
@@ -126,7 +129,7 @@ export function geometry(rows, { today = new Date().toISOString().slice(0, 10), 
   const scale = (value, span) => (max === ZERO ? 0 : Number(value * 1000n / max) / 1000 * span);
 
   const bars = months.map((month, index) => {
-    const { total, overdue, out: uscita, outOverdue } = totals.get(month);
+    const { total, overdue, out: uscita, outOverdue, outExpected } = totals.get(month);
     // An empty month still gets a bar of height zero: the code below can then draw a baseline mark
     // for it without a second branch, and a month with nothing in it reads as nothing rather than
     // as missing.
@@ -142,8 +145,10 @@ export function geometry(rows, { today = new Date().toISOString().slice(0, 10), 
       overdue,
       outH: scale(uscita, down),
       outOverdueH: scale(outOverdue, down),
+      outExpectedH: scale(outExpected, down),
       out: uscita,
       outOverdue,
+      outExpected,
       current: month === _month(today),
     };
   });
@@ -219,6 +224,13 @@ export function draw(container, rows, { today, label, money, title, out = [] }) 
         svg.append(_svg("rect", {
           x: bar.x, y: g.baseline + GAP, width: bar.w, height: bar.outOverdueH, rx: 3,
           class: "tl-out-overdue",
+        }));
+      }
+      // The expected part hangs at the bottom of the bar, dashed: not yet real.
+      if (bar.outExpectedH > 0) {
+        svg.append(_svg("rect", {
+          x: bar.x, y: g.baseline + GAP + bar.outH - bar.outExpectedH, width: bar.w, height: bar.outExpectedH, rx: 3,
+          class: "tl-out-expected",
         }));
       }
       const value = _svg("text", {
