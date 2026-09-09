@@ -10,6 +10,11 @@
 //
 // **Nothing here computes.** `schedule.js` derives the rows from the documents, and it is tested on
 // its own; this file draws them and collects two answers. Same division as `doc.js`.
+//
+// **Due versi, da quando ci sono gli acquisti.** Sopra quello che deve arrivare, sotto quello che
+// deve uscire, e in cima il saldo dei due: è la domanda che lo scadenzario esiste per rispondere —
+// «ce la faccio, questo mese?» — e con una metà sola rispondeva a un'altra. La metà bassa compare
+// solo se c'è almeno un acquisto da pagare: chi non registra i costi vede lo scadenzario di prima.
 
 import { get } from "gg/store.js";
 
@@ -20,7 +25,8 @@ import { summary } from "./schedule.js";
 import { parties } from "./parties.js";
 import { draw } from "./timeline.js";
 import { control as statoControl } from "./states.js";
-import { openSheet } from "./payments.js";
+import { openSheet, openMoney } from "./payments.js";
+import { allCosts, allOutlays, payable, recordOutlay, cost as getCost } from "./costs.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -76,6 +82,70 @@ async function _incassa(row) {
   });
 }
 
+/** Il pagamento in uscita su una riga della metà bassa: lo stesso foglio, con il verbo giusto. */
+async function _paga(row, people) {
+  const record = await getCost(database, row.costId);
+  if (!record) return;
+  await openMoney(database, {
+    titolo: `${people.get(row.partyId) || "—"} · ${row.riferimento || "—"} · ${t("costOwedLabel")} ${_money(row.importo)}`,
+    etichetta: t("costPay"),
+    residuo: row.importo,
+    save: (campi) => recordOutlay(database, record, campi),
+    onDone: async () => {
+      await render(database, onChange);
+      if (onChange) onChange();
+    },
+  });
+}
+
+/** La metà bassa: gli acquisti non saldati, dalla scadenza più vicina. */
+function _drawOut(rows, people) {
+  const visibili = soloScadute ? rows.filter((row) => row.scaduta) : rows;
+  el("dueOutSection").hidden = rows.length === 0;
+  el("dueOutEmpty").hidden = visibili.length > 0;
+  el("dueOutTable").hidden = visibili.length === 0;
+  const body = el("dueOutBody");
+  body.textContent = "";
+  for (const row of visibili) {
+    const tr = document.createElement("tr");
+    const quando = document.createElement("td");
+    quando.className = "nowrap";
+    quando.textContent = row.scadenza ? shownDate(row.scadenza) : "—";
+    if (row.scaduta) {
+      quando.classList.add("overdue");
+      const nota = document.createElement("span");
+      nota.className = "meta";
+      nota.textContent = ` · ${t("dueOverdue")}`;
+      quando.append(nota);
+    }
+    const riferimento = document.createElement("td");
+    riferimento.className = "nowrap";
+    riferimento.textContent = row.riferimento || "—";
+    const fornitore = document.createElement("td");
+    fornitore.className = "nowrap";
+    fornitore.textContent = people.get(row.partyId) || "—";
+    const importo = document.createElement("td");
+    importo.className = "right";
+    importo.textContent = _money(row.importo);
+    const azioni = document.createElement("td");
+    azioni.className = "right actions-cell";
+    const apri = document.createElement("button");
+    apri.type = "button";
+    apri.className = "ghost small row-action";
+    apri.textContent = t("dueOpen");
+    apri.addEventListener("click", () => { location.hash = `#/acquisto/${row.costId}`; });
+    const paga = document.createElement("button");
+    paga.type = "button";
+    paga.className = "ghost small row-action";
+    paga.textContent = t("costPayShort");
+    paga.setAttribute("aria-label", `${t("costPay")} — ${row.riferimento || ""}`);
+    paga.addEventListener("click", () => _paga(row, people));
+    azioni.append(apri, paga);
+    tr.append(quando, riferimento, fornitore, importo, azioni);
+    body.append(tr);
+  }
+}
+
 // -----------------------------------------------------------------------------------------------------------------
 //  p u b l i c
 // -----------------------------------------------------------------------------------------------------------------
@@ -88,9 +158,25 @@ export async function render(db, afterChange = null) {
   const { rows, total } = await summary(db);
   const visibili = soloScadute ? rows.filter((row) => row.scaduta) : rows;
 
+  // Le uscite: gli acquisti non saldati. `payable` sa già cos'è scaduto; qui si aggiunge solo il
+  // riferimento da scrivere nella riga.
+  const costs = await allCosts(db);
+  const byCost = new Map(costs.map((c) => [c.id, c]));
+  const out = payable(costs, await allOutlays(db)).map((row) => {
+    const record = byCost.get(row.costId);
+    const riferimento = record.tipo === "spesa" ? (record.categoria || t("costTipoSpesa")) : (record.numero || "");
+    return { ...row, riferimento };
+  });
+  const totalOut = out.reduce((sum, row) => sum + row.importo, 0n);
+
   el("dueEmpty").hidden = visibili.length > 0;
   el("dueTable").hidden = visibili.length === 0;
-  el("dueTotal").textContent = rows.length ? `${t("dueTotal")}: ${_money(total)}` : "";
+  // Con le uscite il totale diventa tre numeri: cosa entra, cosa esce, e la differenza — che è
+  // l'unico dei tre che risponde alla domanda.
+  el("dueTotal").textContent = out.length
+    ? `${t("dueLeft")}: ${_money(total)} · ${t("costOwedLabel")}: ${_money(totalOut)} · ${t("dueNet")}: ${_money(total - totalOut)}`
+    : rows.length ? `${t("dueTotal")}: ${_money(total)}` : "";
+  el("dueInTitle").hidden = out.length === 0;
 
   el("dueFilter").textContent = soloScadute ? t("dueOnlyOverdue") : t("dueAll");
   el("dueFilter").setAttribute("aria-pressed", String(soloScadute));
@@ -100,10 +186,12 @@ export async function render(db, afterChange = null) {
   draw(el("dueChart"), rows, {
     label: _mese,
     money: _money,
-    title: t("dueChart"),
+    title: t(out.length ? "dueChartTwoWay" : "dueChart"),
+    out,
   });
 
   const people = new Map((await parties(db)).map((p) => [p.id, p.denominazione]));
+  _drawOut(out, people);
   const body = el("dueBody");
   body.textContent = "";
 

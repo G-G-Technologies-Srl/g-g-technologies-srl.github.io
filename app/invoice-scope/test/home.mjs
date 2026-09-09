@@ -12,7 +12,8 @@ import { openDatabase } from "../run/db.js";
 import { toString, from } from "../run/decimal.js";
 import * as progetti from "../run/projects.js";
 import * as plan from "gg/plan-model.js";
-import { figures, byMonth, topParties, projectRows, openQuotes, drafts } from "../run/home.js";
+import { figures, byMonth, topParties, projectRows, openQuotes, drafts, taxFigures } from "../run/home.js";
+import { costRecord } from "../run/costs.js";
 import { reset } from "./fake-store.mjs";
 
 let passed = 0;
@@ -36,6 +37,18 @@ const OGGI = "2026-09-08";
 function fattura(data, totale, extra = {}) {
   return { id: `f-${data}-${totale}`, tipo: "TD01", stato: "emesso", data, numero: "1", partyId: "p1",
     totali: { totale: from(String(totale)).toString(), imponibile: "0", imposta: "0" }, ...extra };
+}
+
+/** La stessa, con l'imponibile: è quello che il margine legge. */
+function netta(data, imponibile, totale, extra = {}) {
+  return fattura(data, totale, { totali: { totale: from(String(totale)).toString(),
+    imponibile: from(String(imponibile)).toString(), imposta: "0" }, ...extra });
+}
+
+/** Un acquisto, dal record vero. `azienda` decide se l'imposta è un costo. */
+function acquisto(data, imponibile, aliquota, { azienda = { paese: "IT" }, scadenza = null, id = null } = {}) {
+  return costRecord({ id: id || `c-${data}-${imponibile}`, tipo: "spesa", partyId: "s1", data, imponibile,
+    aliquota, scadenza }, { company: azienda });
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -88,6 +101,84 @@ await prova("da fatturare dai progetti: le fasi fatte con un importo, di tutti i
   const n = figures([], { rows: [], overdue: [], total: 0n }, { today: OGGI });
   assert.equal(soldi(n.daFatturare), "350.00");
   assert.equal(n.fasiDaFatturare, 2);
+});
+
+// -----------------------------------------------------------------------------------------------------------------
+//  i l   m a r g i n e ,   e   c o s a   d e v o
+// -----------------------------------------------------------------------------------------------------------------
+
+await prova("senza acquisti il margine non c'è; con uno c'è, ed è sugli imponibili", async () => {
+  const docs = [netta("2026-03-10", 1000, 1220), netta("2026-04-10", 200, 244, { tipo: "TD04" })];
+  const vuoto = figures(docs, { rows: [], overdue: [], total: 0n }, { today: OGGI });
+  assert.equal(vuoto.haCosti, false);
+  assert.equal(soldi(vuoto.ricavi), "800.00", "la nota di credito toglie anche qui");
+
+  const costs = [acquisto("2026-05-01", "300", "22"), acquisto("2025-05-01", "999", "22")];
+  const n = figures(docs, { rows: [], overdue: [], total: 0n }, { today: OGGI, costs });
+  assert.equal(n.haCosti, true);
+  assert.equal(soldi(n.costi), "300.00", "l'IVA a credito non è un costo, e l'anno scorso non conta");
+  assert.equal(soldi(n.margine), "500.00");
+});
+
+await prova("per un'azienda sammarinese la monofase è un costo, e il margine la vede", async () => {
+  const docs = [netta("2026-03-10", 1000, 1000)];
+  const costs = [acquisto("2026-05-01", "100", "17", { azienda: { paese: "SM" } })];
+  assert.equal(costs[0].impostaTipo, "monofase");
+  const n = figures(docs, { rows: [], overdue: [], total: 0n }, { today: OGGI, costs });
+  assert.equal(soldi(n.costi), "117.00");
+  assert.equal(soldi(n.margine), "883.00");
+});
+
+await prova("da pagare: gli acquisti aperti, quanti e quanti scaduti, al netto dei pagamenti", async () => {
+  const costs = [
+    acquisto("2026-08-01", "100", "0", { scadenza: "2026-08-31", id: "c1" }),   // scaduto
+    acquisto("2026-09-01", "200", "0", { scadenza: "2026-09-30", id: "c2" }),   // aperto
+    acquisto("2026-09-02", "50", "0", { id: "c3" }),                             // pagato del tutto
+  ];
+  const outlays = [{ id: "o1", costId: "c3", importo: "50.00", data: "2026-09-03" },
+                   { id: "o2", costId: "c2", importo: "20.00", data: "2026-09-03" }];
+  const n = figures([], { rows: [], overdue: [], total: 0n }, { today: OGGI, costs, outlays });
+  assert.equal(soldi(n.daPagare), "280.00");
+  assert.equal(n.daPagareQuante, 2);
+  assert.equal(n.daPagareScadute, 1);
+  assert.deepEqual(n.daPagareRows.map((r) => r.costId), ["c1", "c2"], "dalla scadenza più vicina");
+});
+
+await prova("i mesi portano ricavi e costi, imponibili", async () => {
+  const docs = [netta("2026-09-02", 300, 366), netta("2026-08-02", 100, 122)];
+  const costs = [acquisto("2026-09-05", "120", "22"), acquisto("2026-09-06", "30", "22")];
+  const mesi = byMonth(docs, { today: OGGI, costs });
+  assert.equal(soldi(mesi[11].ricavi), "300.00");
+  assert.equal(soldi(mesi[11].costi), "150.00");
+  assert.equal(soldi(mesi[11].valore), "366.00", "il lordo resta per il confronto con l'anno prima");
+  assert.equal(soldi(mesi[10].ricavi), "100.00");
+  assert.equal(soldi(mesi[10].costi), "0.00");
+});
+
+await prova("le imposte: il trimestre in corso e l'anno, IVA per l'Italia e monofase per San Marino", async () => {
+  const conIva = (data, imponibile, imposta, extra = {}) => fattura(data, 0, { totali: {
+    totale: "0", imponibile: from(String(imponibile)).toString(), imposta: from(String(imposta)).toString() }, ...extra });
+  const docs = [
+    conIva("2026-07-10", 1000, 220),                    // terzo trimestre
+    conIva("2026-09-01", 100, 22, { tipo: "TD04" }),    // una nota di credito toglie
+    conIva("2026-02-10", 500, 110),                     // primo trimestre: solo nell'anno
+    conIva("2025-09-10", 9999, 999),                    // l'anno scorso non conta
+  ];
+  const costs = [acquisto("2026-08-05", "300", "22"), acquisto("2026-03-05", "100", "22")];
+  const it = taxFigures(docs, costs, { today: OGGI, company: { paese: "IT" } });
+  assert.equal(it.tipo, "iva");
+  assert.equal(it.trimestre.numero, 3);
+  assert.equal(soldi(it.trimestre.debito), "198.00");
+  assert.equal(soldi(it.trimestre.credito), "66.00");
+  assert.equal(soldi(it.trimestre.saldo), "132.00");
+  assert.equal(soldi(it.anno.debito), "308.00");
+  assert.equal(soldi(it.anno.credito), "88.00");
+
+  const sm = taxFigures(docs, [acquisto("2026-08-05", "1000", "17", { azienda: { paese: "SM" } })],
+    { today: OGGI, company: { paese: "SM" } });
+  assert.equal(sm.tipo, "monofase");
+  assert.equal(soldi(sm.trimestre.monofase), "170.00");
+  assert.equal(soldi(sm.trimestre.credito), "0.00");
 });
 
 // -----------------------------------------------------------------------------------------------------------------

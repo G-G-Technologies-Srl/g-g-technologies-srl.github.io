@@ -30,6 +30,8 @@ import { NATURE } from "./validate.js";
 import { toString } from "./decimal.js";
 import * as parties from "./parties.js";
 import * as customer from "./customer.js";
+import * as purchases from "./purchases.js";
+import { allCosts, allOutlays } from "./costs.js";
 import * as home from "./home.js";
 import * as reset from "./reset.js";
 import * as progetti from "./projects.js";
@@ -57,6 +59,7 @@ const ROUTES = {
   "#/progetti": "screenProjects",
   "#/scadenzario": "screenDue",
   "#/anagrafiche": "screenParties",
+  "#/acquisti": "screenPurchases",
   "#/azienda": "screenCompany",
   "#/impostazioni": "screenSettings",
 };
@@ -81,6 +84,9 @@ const PARTY_ROUTE = /^#\/cliente\/([^?]+)$/;
 
 /** La scheda di un progetto: `#/progetto/<id>`, per la stessa ragione della scheda di un cliente. */
 const PROJECT_ROUTE = /^#\/progetto\/([^?]+)$/;
+
+/** La scheda di un acquisto: `#/acquisto/<id>`. */
+const COST_ROUTE = /^#\/acquisto\/([^?]+)$/;
 
 // **`paese` and `regimeFiscale` are fields, not constants.** They were hard-coded to IT and RF01,
 // which quietly excluded the two cases this app was written for: a company on the flat-rate scheme,
@@ -185,12 +191,14 @@ async function _route() {
   const document_ = DOC_ROUTE.exec(hash);
   const person = PARTY_ROUTE.exec(hash);
   const lavoro = PROJECT_ROUTE.exec(hash);
+  const acquisto = COST_ROUTE.exec(hash);
   const screen = document_ ? "screenDoc"
     : person ? "screenCustomer"
       : lavoro ? "screenProject"
-        : (ROUTES[hash] ? ROUTES[hash] : "screenHome");
+        : acquisto ? "screenCost"
+          : (ROUTES[hash] ? ROUTES[hash] : "screenHome");
 
-  for (const id of [...Object.values(ROUTES), "screenDoc", "screenCustomer", "screenProject"]) {
+  for (const id of [...Object.values(ROUTES), "screenDoc", "screenCustomer", "screenProject", "screenCost"]) {
     el(id).hidden = id !== screen;
   }
   for (const link of window.document.querySelectorAll("#navbar a")) {
@@ -199,7 +207,8 @@ async function _route() {
     // screen lights Anagrafiche for the same reason.
     const target = document_ ? "#/documenti"
       : person ? "#/anagrafiche"
-        : lavoro ? "#/progetti" : hash;
+        : lavoro ? "#/progetti"
+          : acquisto ? "#/acquisti" : hash;
     link.classList.toggle("here", link.getAttribute("href") === target);
   }
 
@@ -224,6 +233,13 @@ async function _route() {
       return;
     }
   }
+  if (acquisto) {
+    if (!(await purchases.render(db, acquisto[1], { afterChange: _refresh }))) {
+      location.hash = "#/acquisti";
+      return;
+    }
+  }
+  if (screen === "screenPurchases") await purchases.renderList(db, { afterChange: _refresh });
   if (screen === "screenProjects") await project.renderList(db, { afterChange: _refresh });
   if (screen === "screenParties") await parties.render(db, _refresh);
   if (screen === "screenDue") await due.render(db, _refresh);
@@ -263,6 +279,7 @@ async function _demoView(db) {
   switch (view) {
     case "documenti": return "#/documenti";
     case "scadenzario": return "#/scadenzario";
+    case "acquisti": return "#/acquisti";
     case "anagrafiche": return "#/anagrafiche";
     case "progetti": return "#/progetti";
     case "azienda": return "#/azienda";
@@ -306,7 +323,9 @@ async function _refresh() {
   // giro che li chiama.
   const owed = db ? await summary(db) : { rows: [], overdue: [], total: 0n };
   const byParty = new Map(db ? (await parties.parties(db)).map((p) => [p.id, p.denominazione]) : []);
-  home.render({ docs, owed, byParty });
+  const costs = db ? await allCosts(db) : [];
+  const outlays = db ? await allOutlays(db) : [];
+  home.render({ docs, owed, byParty, costs, outlays, company });
 
   el("tracciato").textContent = `FatturaPA ${TRACCIATO.versione} · ${TRACCIATO.dal}`;
   await _drawDocuments(docs);
@@ -826,7 +845,8 @@ async function _reset(group) {
     await _export();
   }
   const pezzi = [
-    ["docs", "dangerCountDocs"], ["payments", "dangerCountPayments"], ["parties", "dangerCountParties"],
+    ["docs", "dangerCountDocs"], ["payments", "dangerCountPayments"], ["costs", "dangerCountCosts"],
+    ["outlays", "dangerCountOutlays"], ["parties", "dangerCountParties"],
     ["items", "dangerCountItems"], ["projects", "dangerCountProjects"],
   ].filter(([store]) => n[store]).map(([store, key]) => (n[store] === 1 ? t(`${key}One`) : tf(key, { n: n[store] })));
   if (group === "all" && n.company) pezzi.push(t("dangerCountCompany"));
@@ -974,7 +994,7 @@ async function main() {
   });
   el("importAll").addEventListener("click", () => el("importFile").click());
   el("importFile").addEventListener("change", _import);
-  for (const [id, group] of [["resetDocs", "docs"], ["resetParties", "parties"], ["resetProjects", "projects"], ["resetAll", "all"]]) {
+  for (const [id, group] of [["resetDocs", "docs"], ["resetCosts", "costs"], ["resetParties", "parties"], ["resetProjects", "projects"], ["resetAll", "all"]]) {
     el(id).addEventListener("click", () => _reset(group));
   }
 
@@ -1011,6 +1031,7 @@ async function main() {
 
   parties.connect(db, _refresh);
   customer.connect(db, { afterChange: _refresh });
+  purchases.connect(db, { afterChange: _refresh });
   project.connect(db, { afterChange: _refresh });
   doc.connect(db);
   due.connect(db, _refresh);

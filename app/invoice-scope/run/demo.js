@@ -27,6 +27,7 @@ import { t } from "./i18n.js";
 import { draft, save, issue, setState } from "./model.js";
 import { recordPayment } from "./schedule.js";
 import { saveActivity } from "./crm.js";
+import { saveCost, recordOutlay } from "./costs.js";
 import * as progetti from "./projects.js";
 import { toString } from "./decimal.js";
 
@@ -81,6 +82,18 @@ const CLIENTI = [
       { id: "demo-c3", nome: "Marta Brandi", ruolo: "Titolare", email: "marta@example.com",
         telefono: "0721 000222", note: "" },
     ],
+  },
+  // Due fornitori, con il ruolo: compaiono nel menù degli acquisti e non in quello dei documenti.
+  // Il secondo è anche cliente — «entrambi» — perché è il caso che il ruolo esiste per coprire.
+  {
+    id: "demo-f1", name: "hosting nuvola s.p.a.", denominazione: "Hosting Nuvola S.p.A.",
+    partitaIva: "03557799008", codiceDestinatario: "", paese: "IT", ruolo: "fornitore",
+    sede: { indirizzo: "Via dei Server", numeroCivico: "1", cap: "20124", comune: "Milano", provincia: "MI" },
+  },
+  {
+    id: "demo-f2", name: "ferramenta zani", denominazione: "Ferramenta Zani",
+    partitaIva: "04668800016", codiceDestinatario: "", paese: "IT", ruolo: "entrambi",
+    sede: { indirizzo: "Via Roma", numeroCivico: "88", cap: "47921", comune: "Rimini", provincia: "RN" },
   },
   // Il cliente sammarinese senza codice destinatario: l'app scrive `2R4GTO8`, che è il codice
   // dell'Ufficio Tributario, e la fattura vuole natura N3.3 con aliquota zero. È il caso che la
@@ -310,6 +323,30 @@ export async function seed(db) {
   // con dentro la misura che ha fatto salire il preventivo.
   plan.createPage(lavoro.id, { title: t("demoProjectPage"), markdown: t("demoProjectPageText") });
   await progetti.flush();
+
+  // Gli acquisti: il canone mensile dell'hosting per gli ultimi mesi, tutti pagati, così le barre
+  // dei costi hanno una forma; una fattura scaduta da dieci giorni e una spesa che scade fra tre,
+  // perché lo scadenzario abbia una metà bassa e la Situazione un «da pagare» con un ritardo.
+  const acquisto = (fields) => saveCost(db, fields, { company: AZIENDA });
+  for (let indietro = 1; indietro <= 8; indietro += 1) {
+    const canone = await acquisto({
+      tipo: "fattura", partyId: "demo-f1", data: _mese(indietro), numero: `HN-${2026}-${String(120 - indietro).padStart(3, "0")}`,
+      categoria: t("demoCatSoftware"), descrizione: t("demoCostHosting"),
+      imponibile: "390.00", aliquota: "22", scadenza: _mese(indietro - 1),
+    });
+    await recordOutlay(db, canone, { importo: canone.totale, data: _mese(indietro - 1), conto: AZIENDA.conti[0] });
+  }
+  const scaduta = await acquisto({
+    tipo: "fattura", partyId: "demo-f1", data: _giorno(-40), numero: "HN-2026-121",
+    categoria: t("demoCatSoftware"), descrizione: t("demoCostServer"),
+    imponibile: "1250.00", aliquota: "22", scadenza: _giorno(-10),
+  });
+  await recordOutlay(db, scaduta, { importo: "500.00", data: _giorno(-12), conto: AZIENDA.conti[0] });
+  await acquisto({
+    tipo: "spesa", partyId: "demo-f2", data: _giorno(-2),
+    categoria: t("demoCatMateriali"), descrizione: t("demoCostBolts"),
+    imponibile: "140.00", aliquota: "22", scadenza: _giorno(3),
+  });
 
   // E una bozza lasciata a metà, perché è lo stato in cui un documento passa la maggior parte del
   // suo tempo e l'unico in cui si può ancora provare qualcosa senza rompere niente.

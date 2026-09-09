@@ -283,7 +283,8 @@ await test("il CSV ha l'intestazione, il BOM e le righe a capo di Windows", asyn
   assert.ok(text.startsWith("﻿"), "manca il BOM: Excel sbaglierebbe gli accenti");
   const lines = text.split("\r\n");
   assert.equal(lines[0].replace("﻿", ""),
-    "tipo;numero;data;cliente;partitaIva;imponibile;imposta;totale;stato;scadenza");
+    "tipo;numero;data;cliente;partitaIva;imponibile;imposta;totale;stato;scadenza;verso;categoria");
+  assert.ok(lines[1].endsWith(";emessa;"), "il verso in coda, la categoria vuota su un documento nostro");
   assert.ok(lines[1].includes("Cliente S.p.A."));
   assert.ok(lines[1].includes("1220.00"));
 });
@@ -307,6 +308,33 @@ await test("il periodo filtra per data, estremi compresi", async () => {
   const text = await csv(db, { from: "2026-08-01", to: "2026-08-31" });
   const righe = text.trim().split("\r\n").slice(1);
   assert.deepEqual(righe.map((r) => r.split(";")[1]), ["2026/0002", "2026/0003"]);
+});
+
+await test("gli acquisti stanno nello stesso file, con il verso, in ordine di data", async () => {
+  const db = await openDatabase();
+  await put(db, "parties", { id: "p1", denominazione: "Cliente S.p.A.", partitaIva: "09876543217" });
+  await put(db, "parties", { id: "s1", denominazione: "Fornitore S.r.l.", partitaIva: "01111111111", ruolo: "fornitore" });
+  await put(db, "docs", issued({ id: "a", data: "2026-08-10" }));
+  await put(db, "costs", { id: "c1", tipo: "fattura", partyId: "s1", data: "2026-08-05", numero: "F-9", categoria: "software",
+    imponibile: "100", imposta: "22.00", totale: "122.00", aliquota: "22", impostaTipo: "iva", scadenza: "2026-09-05" });
+  await put(db, "costs", { id: "c2", tipo: "spesa", partyId: "s1", data: "2026-08-20", numero: "", categoria: "viaggi",
+    imponibile: "30", imposta: "0", totale: "30.00", aliquota: "0", impostaTipo: "nessuna", scadenza: null });
+  await put(db, "outlays", { id: "o1", costId: "c2", importo: "30.00", data: "2026-08-20" });
+  await put(db, "costs", { id: "c3", tipo: "nota", partyId: "s1", data: "2026-08-25", numero: "NC-1", categoria: "",
+    imponibile: "10", imposta: "2.20", totale: "12.20", aliquota: "22", impostaTipo: "iva", scadenza: null });
+  const righe = (await csv(db)).trim().split("\r\n").slice(1).map((r) => r.split(";"));
+  assert.deepEqual(righe.map((r) => r[2]), ["2026-08-05", "2026-08-10", "2026-08-20", "2026-08-25"]);
+  // La nota di credito: TD04, importi come sul documento, stato «nota» perché non si paga.
+  assert.deepEqual([righe[3][0], righe[3][7], righe[3][8], righe[3][10]], ["TD04", "12.20", "nota", "ricevuta"]);
+  assert.deepEqual(righe[0].slice(0, 2), ["TD01", "F-9"]);
+  assert.equal(righe[0][3], "Fornitore S.r.l.");
+  assert.deepEqual(righe[0].slice(5, 12), ["100.00", "22.00", "122.00", "aperto", "2026-09-05", "ricevuta", "software"]);
+  assert.deepEqual(righe[2].slice(0, 1), ["spesa"]);
+  assert.deepEqual(righe[2].slice(8, 12), ["pagato", "2026-08-20", "ricevuta", "viaggi"]);
+  assert.equal(righe[1][10], "emessa");
+  // Il periodo vale anche per loro.
+  const agosto = (await csv(db, { from: "2026-08-06", to: "2026-08-15" })).trim().split("\r\n").slice(1);
+  assert.equal(agosto.length, 1);
 });
 
 await test("una bozza non entra nel CSV, perché non ha un numero", async () => {

@@ -31,7 +31,7 @@ import {
   setType, documents, invoicedBy,
 } from "./model.js";
 import { build } from "./fatturapa.js";
-import { parties, items, party as getParty, openNewParty } from "./parties.js";
+import { isCustomer, parties, items, party as getParty, openNewParty } from "./parties.js";
 import { TIPI, KINDS, kind, has, numero as shownNumber, convertibile } from "./kinds.js";
 import { profileFor } from "./fatturapa.js";
 import { control as statoControl } from "./states.js";
@@ -647,7 +647,9 @@ function _drawSections() {
  * deve trovare il cliente appena creato già nell'elenco e già scelto.
  */
 async function _drawParties(db, scegli = null) {
-  const people = await parties(db);
+  // Un fornitore puro non compare: il documento è emesso, e a lui non si emette niente. Chi era
+  // già scelto resta, anche se nel frattempo è diventato fornitore: il documento non cambia da sé.
+  const people = (await parties(db)).filter((p) => isCustomer(p) || p.id === current.partyId);
   const select = el("docPartySelect");
   select.textContent = "";
   const none = document.createElement("option");

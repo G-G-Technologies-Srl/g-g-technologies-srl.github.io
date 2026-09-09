@@ -38,10 +38,18 @@ function _conta(doc) {
   return kind(doc).deve && OWING.has(doc.stato);
 }
 
-/** The columns of the CSV, in the order an accountant reads them. */
+/**
+ * The columns of the CSV, in the order an accountant reads them.
+ *
+ * `verso` came last, and stays last: the file had been going out with ten columns for a while,
+ * and whoever mapped it on the other side keeps their mapping. `emessa` on our documents,
+ * `ricevuta` on purchases; `cliente` then holds the supplier, because renaming the column would
+ * break the same mapping. `categoria` is filled for purchases only.
+ */
 const COLUMNS = [
   "tipo", "numero", "data", "cliente", "partitaIva",
   "imponibile", "imposta", "totale", "stato", "scadenza",
+  "verso", "categoria",
 ];
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -271,25 +279,32 @@ export async function owedOn(db, docId, options = {}) {
  * decide the export is broken.
  */
 export async function csv(db, { from: start = null, to = null } = {}) {
+  const nelPeriodo = (data) => (!start || data >= start) && (!to || data <= to);
   const docs = (await list(db, "docs"))
     .filter((doc) => doc.numero)
     // **Fiscal documents only.** The accountant is registering VAT, and a quote has nothing to
     // register: it is not a taxable event, it has no place in the VAT ledgers, and a row for it in
     // this file would either be entered by mistake or spotted and queried. Both cost somebody time.
     .filter((doc) => kind(doc).fiscale)
-    .filter((doc) => (!start || doc.data >= start) && (!to || doc.data <= to))
-    .sort((a, b) => String(a.data).localeCompare(String(b.data)));
+    .filter((doc) => nelPeriodo(doc.data));
+
+  // **Purchases go in the same file**, one row each, `verso` telling them apart: the accountant
+  // registers both sides of the same month, and two files are two attachments to lose one of.
+  const costs = (await list(db, "costs")).filter((record) => nelPeriodo(record.data));
+  const outlays = await list(db, "outlays");
+  const paid = new Map();
+  for (const one of outlays) paid.set(one.costId, (paid.get(one.costId) || 0n) + _importo(one.importo));
 
   const people = new Map((await list(db, "parties")).map((p) => [p.id, p]));
 
-  const lines = [COLUMNS.join(";")];
+  const righe = [];
   for (const doc of docs) {
     const party = people.get(doc.partyId) || {};
     const scadenze = ((doc.pagamento || {}).rate || [])
       .map((quota) => quota.scadenza)
       .filter(Boolean)
       .join(" ");
-    lines.push([
+    righe.push({ data: doc.data, campi: [
       doc.tipo,
       doc.numero,
       doc.data,
@@ -300,8 +315,39 @@ export async function csv(db, { from: start = null, to = null } = {}) {
       doc.totali ? toString(BigInt(doc.totali.totale), 2) : "",
       doc.stato,
       scadenze || doc.data,
-    ].map(_field).join(";"));
+      "emessa",
+      "",
+    ] });
   }
+  for (const record of costs) {
+    const party = people.get(record.partyId) || {};
+    const resto = _importo(record.totale) - (paid.get(record.id) || 0n);
+    righe.push({ data: record.data, campi: [
+      record.tipo === "fattura" ? "TD01" : record.tipo === "nota" ? "TD04" : "spesa",
+      record.numero || "",
+      record.data,
+      party.denominazione || "",
+      party.partitaIva || "",
+      toString(_importo(record.imponibile), 2),
+      toString(_importo(record.imposta), 2),
+      toString(_importo(record.totale), 2),
+      record.tipo === "nota" ? "nota" : resto <= 0n ? "pagato" : "aperto",
+      record.scadenza || record.data,
+      "ricevuta",
+      record.categoria || "",
+    ] });
+  }
+  righe.sort((a, b) => String(a.data).localeCompare(String(b.data)));
 
+  const lines = [COLUMNS.join(";"), ...righe.map((r) => r.campi.map(_field).join(";"))];
   return `\ufeff${lines.join("\r\n")}\r\n`;
+}
+
+/** An amount stored as decimal text, as a scaled value; zero when it cannot be read. */
+function _importo(text) {
+  try {
+    return from(String(text || "0"));
+  } catch (ignored) {
+    return ZERO;
+  }
 }

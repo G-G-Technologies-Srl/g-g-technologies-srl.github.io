@@ -38,12 +38,19 @@ import { NATURE } from "./validate.js";
 
 const PARTY_FIELDS = [
   "denominazione", "partitaIva", "codiceFiscale", "codiceDestinatario", "pec", "paese",
+  // **Un fornitore è un cliente senza documenti emessi, non una seconda anagrafica.** Il ruolo dice
+  // in quali menù compare: sul documento chi non è fornitore puro, sull'acquisto chi non è cliente
+  // puro. Se un giorno un fornitore compra, è già qui: si cambia il ruolo, non si ricopia la scheda.
+  "ruolo",
   // **Quello che il cliente porta nei suoi documenti.** L'aliquota da proporre sulle righe nuove e
   // il conto su cui paga: vuoti, valgono quelli dell'azienda. Un cliente estero a zero, o uno che
   // paga su un conto diverso dagli altri, così si scrive una volta e non su ogni fattura.
   "aliquotaPredefinita", "naturaPredefinita", "ibanPredefinito",
 ];
 const SEDE_FIELDS = ["indirizzo", "numeroCivico", "cap", "comune", "provincia"];
+
+/** I ruoli, nell'ordine del menù. Vuoto o sconosciuto vale `cliente`: è quello che c'era prima. */
+export const RUOLI = ["cliente", "fornitore", "entrambi"];
 const ITEM_FIELDS = ["descrizione", "unitaMisura", "prezzoUnitario", "aliquota", "natura", "tm"];
 
 /** What a customer needs before an invoice to them can leave. Shown as a note, never as a block. */
@@ -72,6 +79,7 @@ let conti = [];                                         // the company's bank ac
  * menù. Una funzione sola con un ritorno facoltativo invece di due copie della stessa maschera.
  */
 let dopoIlSalvataggio = null;
+let ruoloNuovo = null;                                  // the role a screen proposes for a new party
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
@@ -175,6 +183,7 @@ function _openParty(record) {
   const data = record || { sede: {} };
   for (const name of PARTY_FIELDS) form.elements[name].value = data[name] || "";
   for (const name of SEDE_FIELDS) form.elements[name].value = (data.sede || {})[name] || "";
+  form.elements.ruolo.value = RUOLI.includes(data.ruolo) ? data.ruolo : (ruoloNuovo || "cliente");
 
   // Il menù mostra il nome; la sigla vera sta nel campo `paese`, che compare solo per «Altro».
   const sigla = (data.paese || "IT").toUpperCase();
@@ -420,6 +429,7 @@ export function partyRecord(fields) {
     : (parseAmount(record.aliquotaPredefinita) ?? "").replace(/\.(\d*?)0+$/, ".$1").replace(/\.$/, "");
   if (String(record.aliquotaPredefinita) !== "0") record.naturaPredefinita = "";
   record.ibanPredefinito = record.ibanPredefinito.replace(/\s/g, "").toUpperCase();
+  record.ruolo = RUOLI.includes(record.ruolo) ? record.ruolo : "cliente";
   record.name = record.denominazione;
   record.updated = new Date().toISOString();
   return record;
@@ -525,9 +535,21 @@ export async function render(db, afterChange = null) {
  * `afterSave` riceve il record appena creato: è quello che permette al documento di sceglierlo nel
  * menù senza che questo file sappia che esiste un documento.
  */
-export function openNewParty({ afterSave = null } = {}) {
+export function openNewParty({ afterSave = null, ruolo = null } = {}) {
   dopoIlSalvataggio = afterSave;
+  ruoloNuovo = ruolo;
   _openParty(null);
+  ruoloNuovo = null;
+}
+
+/** Chi può stare su un documento emesso: tutti tranne i fornitori puri. */
+export function isCustomer(record) {
+  return (record.ruolo || "cliente") !== "fornitore";
+}
+
+/** Chi può stare su un acquisto: tutti tranne i clienti puri. */
+export function isSupplier(record) {
+  return (record.ruolo || "cliente") !== "cliente";
 }
 
 /**

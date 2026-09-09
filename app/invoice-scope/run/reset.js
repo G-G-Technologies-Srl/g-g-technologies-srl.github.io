@@ -22,14 +22,15 @@ import { count, clear } from "gg/store.js";
 /** I gruppi, con gli store che ognuno svuota. L'ordine è quello della schermata. */
 export const GROUPS = {
   docs: ["docs", "payments", "counters"],
+  costs: ["costs", "outlays"],
   parties: ["parties", "items", "activities"],
   projects: ["projects", "pages", "tasks", "assets"],
-  all: ["docs", "payments", "counters", "parties", "items", "activities",
+  all: ["docs", "payments", "counters", "costs", "outlays", "parties", "items", "activities",
     "projects", "pages", "tasks", "assets", "company"],
 };
 
 /** Gli store che finiscono nel riepilogo della domanda: gli altri sono di corredo. */
-export const COUNTED = ["docs", "payments", "parties", "items", "projects"];
+export const COUNTED = ["docs", "payments", "costs", "outlays", "parties", "items", "projects"];
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p u b l i c

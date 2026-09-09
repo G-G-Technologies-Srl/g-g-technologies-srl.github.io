@@ -52,9 +52,9 @@
     "url": "https://ggtechnologies.sm/en/app/invoice-scope/",
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "Any (web browser)",
-    "softwareVersion": "0.38.2",
+    "softwareVersion": "0.39.3",
     "datePublished": "2026-09-03",
-    "dateModified": "2026-09-08",
+    "dateModified": "2026-09-09",
     "license": "https://www.apache.org/licenses/LICENSE-2.0",
     "description": "Prepare invoices, credit notes and quotes, and generate the XML file for Italian electronic invoicing. It runs in the browser: your customers' data stays on your own computer.",
     "inLanguage": "en",
@@ -180,6 +180,11 @@
                  alt="The payment schedule: instalments, the overdue ones, and the payment to record.">
             <span>The payment schedule: instalments, the overdue ones, and the payment to record.</span>
           </a>
+          <a class="app-gallery-item" href="/assets/shot-invoice-scope-acquisti-en.png" target="_blank" rel="noopener">
+            <img src="/assets/shot-invoice-scope-acquisti-en.png" width="1600" height="1000" loading="lazy" decoding="async"
+                 alt="Purchases: received invoices and expenses, with their state and what is left to pay.">
+            <span>Purchases: received invoices and expenses, with their state and what is left to pay.</span>
+          </a>
         </div>
       </figure>
         <div class="app-lists">
@@ -205,7 +210,8 @@
               <li>Checks the document before letting you export it, and says which field, which rule and what to do.</li>
               <li>Keeps the numbering running by year, and refuses two documents with the same number.</li>
               <li>Exports and re-imports everything as a JSON file you can open and read without this app. Choose a folder and it writes the file there by itself at every change, with one copy a day: inside Dropbox or iCloud, the backup travels on its own.</li>
-              <li>Exports a CSV of the period's documents, for whoever keeps the books.</li>
+              <li>Records purchases too: the invoices you receive — from their XML file, or by hand — and expenses without an invoice, with the supplier, the category, the tax and the due date, and the payments you make; a received credit note subtracts by itself. The schedule takes both directions, with the balance at the top; the overview shows the year's margin, revenue and costs month by month, who you owe most, and the quarter's and year's VAT — on sales, on purchases, to pay — to check the accountant's figures. For a San Marino company the single-stage import tax on purchases is recorded as a cost, at its own rate.</li>
+              <li>Exports a CSV of the period for whoever keeps the books: issued documents and purchases in the same file, with a column saying which way each one goes.</li>
               <li>Prints a courtesy copy on your letterhead, with your logo and contact details, which states that it is not the fiscal original.</li>
               <li>Works without a connection, and installs like an application.</li>
             </ul>
@@ -216,7 +222,7 @@
               <li>It does not transmit the file. Neither to the Italian exchange system nor to the San Marino tax office hub: that needs an accredited channel, and this app has none.</li>
               <li>It does not keep the legal archive, which is a separate obligation with requirements of its own.</li>
               <li>It does not sign digitally, so it does not cover invoices to public administration.</li>
-              <li>It does not keep your accounts: no VAT registers, no returns, no ledger.</li>
+              <li>It does not keep your accounts: it records what goes out and what comes in, but produces no VAT registers, returns or ledger. Those stay with whoever keeps the books, with the file the app prepares for them.</li>
               <li>It does not yet handle reverse charge or split payment: they change the arithmetic, and they arrive once they are tested like the rest.</li>
             </ul>
           </div>
@@ -261,6 +267,13 @@
             <div>
               <h4>Customers</h4>
               <p>Every customer has a screen: the people to talk to, the diary of what was said, and their documents beside the two figures that matter.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Purchases</h4>
+              <p>Received invoices and expenses, with their payments. A supplier is a record like a customer, with a role: if one day they buy, they are already there.</p>
             </div>
           </div>
           <div class="fact">
@@ -313,7 +326,7 @@
             </div>
           </div>
         </div>
-        <p class="app-meta"><span><b>Version</b> 0.38.2</span><span><b>Updated</b> 8 September 2026</span><span><b>Licence</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope" rel="noopener">Source code</a></p>
+        <p class="app-meta"><span><b>Version</b> 0.39.3</span><span><b>Updated</b> 9 September 2026</span><span><b>Licence</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope" rel="noopener">Source code</a></p>
       </div>
     </section>
 

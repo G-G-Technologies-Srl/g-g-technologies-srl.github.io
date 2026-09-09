@@ -324,6 +324,10 @@ main { padding: 0; flex: 1 1 auto; min-width: 0; }
 
 .form input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
+/* Un valore che si legge e non si scrive — il totale di un acquisto — nella stessa casella dei
+   campi accanto, senza bordo: così si allinea, e non sembra un campo che rifiuta il tasto. */
+.form output { display: flex; align-items: center; min-height: 40px; padding: 9px 0; font-variant-numeric: tabular-nums; }
+
 .actions { display: flex; gap: 10px; flex-wrap: wrap; flex-basis: 100%; margin-top: 4px; }
 
 .form label.wide { flex: 1 1 100%; }
@@ -521,6 +525,10 @@ select:disabled { cursor: default; opacity: 1; color: var(--text); background-im
 .tl-bar { fill: var(--muted); opacity: 0.55; }
 .tl-bar.tl-now { opacity: 0.8; }
 .tl-overdue { fill: var(--accent); }
+/* Le uscite sotto la linea, nella tinta di chi deve essere pagato: più chiara delle entrate, così
+   la metà bassa non pesa quanto l'alta e si legge come rovescio, non come seconda serie. */
+.tl-out { fill: var(--danger); opacity: 0.35; }
+.tl-out-overdue { fill: var(--danger); opacity: 0.85; }
 
 .tl-label { fill: var(--faint); font-size: 11px; font-family: var(--font); }
 .tl-label-now { fill: var(--text); }
@@ -788,6 +796,8 @@ dialog li::before {
     border-bottom: 1px solid var(--border);
   }
   .widget .rows tr:last-child { border-bottom: 0; }
+  /* L'intestazione del riquadro delle imposte ha una cella vuota che sul telefono resta un trattino: via. */
+  .widget .rows th:empty { display: none; }
   .widget .rows td { display: block; padding: 0; border: 0; white-space: normal; min-width: 0; max-width: none; }
   .widget .rows td:first-child { order: 0; flex: 1 1 auto; }
   .widget .rows td.right { order: 1; margin-left: auto; text-align: right; }
@@ -804,11 +814,16 @@ dialog li::before {
 .widget .rows td:last-child { padding-right: 0; }
 .widget .rows tr:last-child td { border-bottom: 0; }
 .rows.compact td { padding-top: 8px; padding-bottom: 8px; }
+/* La riga del saldo, nel riquadro delle imposte: la sola che risponde alla domanda. */
+.rows tr.total td { font-weight: 600; }
 @media (max-width: 900px) { .widgets { grid-template-columns: 1fr; } }
 
 /* La riga sotto ogni numero: cosa lo qualifica — «+12% sull'anno scorso», «la più vecchia da 40
    giorni» — in corpo piccolo e tinta bassa, perché il numero resta il numero. */
 .figure .sub { display: block; color: var(--faint); font-size: 0.78rem; margin-top: 6px; min-height: 1em; }
+/* Un numero che è una brutta notizia — il margine sotto zero, un acquisto scaduto — nella tinta
+   delle cose da sistemare, non in quella dell'evidenza. */
+.figure .value.bad { color: var(--danger); }
 
 /* Le barre dei mesi: quest'anno nel colore dell'accento, l'anno scorso dietro nel colore del
    bordo. Le lettere dei mesi nel colore delle etichette. Tutto da variabili, così il tema chiaro
@@ -817,12 +832,15 @@ dialog li::before {
 .bars-box svg.bars { width: 100%; height: 170px; display: block; }
 .bars rect.now { fill: var(--accent); }
 .bars rect.before { fill: var(--border-strong); }
+/* I costi nella tinta di chi deve essere pagato, non in quella del confronto: sono un'altra cosa. */
+.bars rect.cost { fill: var(--danger); opacity: 0.6; }
 .bars line.axis { stroke: var(--border); stroke-width: 1; }
 .bars text.label { fill: var(--faint); font-size: 11px; font-family: inherit; }
 .legend { display: inline-flex; align-items: center; gap: 6px; color: var(--faint); font-size: 0.82rem; }
 .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; }
 .legend i.now { background: var(--accent); }
 .legend i.before { background: var(--border-strong); margin-left: 10px; }
+.legend i.cost { background: var(--danger); opacity: 0.6; margin-left: 10px; }
 
 /* Le barre orizzontali dei clienti: nome, barra, cifra. La parte scaduta sopra la barra, più
    scura, così «chi deve di più» e «chi è in ritardo» si vedono nello stesso disegno. */

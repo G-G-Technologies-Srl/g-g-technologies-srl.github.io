@@ -28,6 +28,9 @@ export const NAME = "invoice-scope";
 /**
  * The schema's version, and the one number that must move when a store is added.
  *
+ * 4 → 5: `costs` e `outlays`, gli acquisti e i pagamenti in uscita. I clienti prendono `ruolo`
+ * — cliente, fornitore, entrambi — e chi non ce l'ha è un cliente, come è sempre stato.
+ *
  * 3 → 4: `assets`, le immagini e i file dentro le pagine.
  *
  * 2 → 3: `projects`, `pages` e `tasks`, cioè i progetti con dentro il loro piano.
@@ -37,7 +40,7 @@ export const NAME = "invoice-scope";
  * opens once a quarter that is not the previous one. Nothing is migrated: a customer without a diary
  * simply has none, which is the state every existing one starts from.
  */
-export const VERSION = 4;
+export const VERSION = 5;
 
 /**
  * The stores, as `gg/store.js` describes them.
@@ -67,6 +70,14 @@ export const STORES = {
   // Le immagini e i file dentro le pagine di un progetto. Uno store a parte perché sono byte: un
   // record di `pages` che se li portasse dentro renderebbe pesante ogni lettura del testo.
   assets: { keyPath: "id", indexes: { project: "projectId" } },
+  // Gli acquisti: fatture ricevute e spese senza fattura, con il fornitore in `parties`. Uno store
+  // a parte dai documenti, non un «verso» dentro `docs`: un documento emesso ha numerazione,
+  // stati e controlli del tracciato che un costo non ha, e un solo store con due regole sarebbe
+  // due store che si fingono uno.
+  costs: { keyPath: "id", indexes: { party: "partyId", date: "data", due: "scadenza" } },
+  // I pagamenti in uscita, a parte dagli incassi per la stessa ragione — e perché la zona di
+  // cancellazione svuota «documenti e incassi» senza toccare gli acquisti, e viceversa.
+  outlays: { keyPath: "id", indexes: { cost: "costId", date: "data" } },
   counters: { keyPath: "key" },
   meta: { keyPath: "key" },
 };

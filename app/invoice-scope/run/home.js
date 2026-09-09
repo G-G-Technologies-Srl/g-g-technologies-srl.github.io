@@ -25,6 +25,7 @@ import { label as statoLabel } from "./states.js";
 import { signedTotal, editable } from "./model.js";
 import { money, date as shownDate } from "./format.js";
 import * as progetti from "./projects.js";
+import { costOf, payable, taxBalance } from "./costs.js";
 
 /** Quante righe mostra ogni riquadro. Cinque è quello che si legge senza scorrere. */
 export const ROWS = 5;
@@ -60,6 +61,18 @@ function _invoiced(docs) {
   return docs.filter((doc) => doc.totali && kind(doc).fiscale);
 }
 
+/**
+ * L'imponibile di un documento emesso, con il segno: è quello che entra nel margine.
+ *
+ * Il totale no: per un'azienda italiana l'IVA incassata non è sua, e un margine calcolato sui
+ * lordi direbbe un numero che il commercialista non riconosce.
+ */
+function _net(doc) {
+  let valore = 0n;
+  try { valore = BigInt(doc.totali.imponibile || 0); } catch (ignored) { valore = 0n; }
+  return kind(doc).storna ? -valore : valore;
+}
+
 function _row(cells, href) {
   const tr = document.createElement("tr");
   tr.className = "clickable";
@@ -92,7 +105,7 @@ function _row(cells, href) {
  * prima, non l'anno intero. A settembre, «−40% sull'anno scorso» contro dodici mesi sarebbe una
  * notizia falsa.
  */
-export function figures(docs, owed, { today = new Date().toISOString().slice(0, 10) } = {}) {
+export function figures(docs, owed, { today = new Date().toISOString().slice(0, 10), costs = [], outlays = [] } = {}) {
   const anno = today.slice(0, 4);
   const scorso = String(Number(anno) - 1);
   const giornoScorso = `${scorso}${today.slice(4)}`;
@@ -118,7 +131,21 @@ export function figures(docs, owed, { today = new Date().toISOString().slice(0, 
   const fasi = aperti.flatMap((record) => progetti.billable(record.id));
   const daFatturare = aperti.reduce((sum, record) => sum + progetti.billableTotal(record.id), 0n);
 
+  // Il margine: ricavi meno costi, tutt'e due senza l'imposta che torna. Solo se ci sono acquisti,
+  // altrimenti sarebbe il fatturato con un altro nome.
+  const ricavi = emesse.filter((doc) => String(doc.data).startsWith(anno)).reduce((sum, doc) => sum + _net(doc), 0n);
+  const costiAnno = costs.filter((c) => String(c.data).startsWith(anno)).reduce((sum, c) => sum + costOf(c), 0n);
+  const daPagare = payable(costs, outlays, { today });
+
   return {
+    ricavi,
+    costi: costiAnno,
+    margine: ricavi - costiAnno,
+    haCosti: costs.length > 0,
+    daPagare: daPagare.reduce((sum, row) => sum + row.importo, 0n),
+    daPagareQuante: daPagare.length,
+    daPagareScadute: daPagare.filter((row) => row.scaduta).length,
+    daPagareRows: daPagare,
     fatturato,
     fatturatoScorso,
     delta,
@@ -135,15 +162,23 @@ export function figures(docs, owed, { today = new Date().toISOString().slice(0, 
 /**
  * Il fatturato mese per mese, per gli ultimi dodici mesi, e lo stesso mese dell'anno prima.
  *
- * Restituisce dodici voci, dalla più vecchia alla più recente: `{ mese, anno, valore, prima }`
- * dove `mese` è 1–12 e `prima` è il valore dello stesso mese dell'anno precedente.
+ * Restituisce dodici voci, dalla più vecchia alla più recente: `{ mese, anno, valore, prima,
+ * ricavi, costi }` dove `mese` è 1–12, `prima` è il valore dello stesso mese dell'anno precedente,
+ * e `ricavi` e `costi` sono gli imponibili del mese — il margine è la loro differenza.
  */
-export function byMonth(docs, { today = new Date().toISOString().slice(0, 10) } = {}) {
+export function byMonth(docs, { today = new Date().toISOString().slice(0, 10), costs = [] } = {}) {
   const emesse = _invoiced(docs);
   const totali = new Map();
+  const netti = new Map();
   for (const doc of emesse) {
     const chiave = String(doc.data).slice(0, 7);
     totali.set(chiave, (totali.get(chiave) || 0n) + (signedTotal(doc) || 0n));
+    netti.set(chiave, (netti.get(chiave) || 0n) + _net(doc));
+  }
+  const spese = new Map();
+  for (const record of costs) {
+    const chiave = String(record.data).slice(0, 7);
+    spese.set(chiave, (spese.get(chiave) || 0n) + costOf(record));
   }
   const out = [];
   let anno = Number(today.slice(0, 4));
@@ -151,7 +186,11 @@ export function byMonth(docs, { today = new Date().toISOString().slice(0, 10) } 
   for (let i = 0; i < 12; i += 1) {
     const chiave = `${anno}-${String(mese).padStart(2, "0")}`;
     const prima = `${anno - 1}-${String(mese).padStart(2, "0")}`;
-    out.unshift({ mese, anno, valore: totali.get(chiave) || 0n, prima: totali.get(prima) || 0n });
+    out.unshift({
+      mese, anno,
+      valore: totali.get(chiave) || 0n, prima: totali.get(prima) || 0n,
+      ricavi: netti.get(chiave) || 0n, costi: spese.get(chiave) || 0n,
+    });
     mese -= 1;
     if (mese === 0) {
       mese = 12;
@@ -159,6 +198,35 @@ export function byMonth(docs, { today = new Date().toISOString().slice(0, 10) } 
     }
   }
   return out;
+}
+
+/**
+ * Le imposte del periodo: il trimestre in corso e l'anno a oggi.
+ *
+ * Per un'azienda italiana è la liquidazione — IVA sulle vendite, IVA sugli acquisti, il saldo da
+ * versare o a credito. Per una sammarinese il saldo non esiste, e la riga dice quanta monofase è
+ * stata pagata sugli acquisti. `taxBalance` sa già tutto questo; qui si scelgono i due periodi.
+ * Nessun numero che l'app inventa: è la somma di quello che c'è, e il commercialista fa il resto.
+ */
+export function taxFigures(docs, costs, { today = new Date().toISOString().slice(0, 10), company = null } = {}) {
+  const anno = today.slice(0, 4);
+  const mese = Number(today.slice(5, 7));
+  const primo = Math.floor((mese - 1) / 3) * 3 + 1;
+  const mesi = [primo, primo + 1, primo + 2].map((m) => `${anno}-${String(m).padStart(2, "0")}`);
+  const somma = (periodi) => periodi
+    .map((periodo) => taxBalance(docs, costs, periodo, { company, kindOf: kind }))
+    .reduce((acc, uno) => ({
+      tipo: uno.tipo,
+      debito: acc.debito + uno.debito,
+      credito: acc.credito + uno.credito,
+      saldo: acc.saldo + uno.saldo,
+      monofase: acc.monofase + uno.monofase,
+    }), { debito: 0n, credito: 0n, saldo: 0n, monofase: 0n });
+  return {
+    tipo: taxBalance([], [], anno, { company }).tipo,
+    trimestre: { numero: Math.floor((mese - 1) / 3) + 1, anno, ...somma(mesi) },
+    anno: { anno, ...somma([anno]) },
+  };
 }
 
 /** I clienti con più da incassare, dal più esposto: `{ partyId, importo, scadute }`. */
@@ -242,13 +310,13 @@ export function drafts(docs, { limit = ROWS } = {}) {
 // -----------------------------------------------------------------------------------------------------------------
 
 /** Le barre dei mesi: quest'anno pieno, l'anno scorso dietro, in tinta più chiara. */
-export function drawMonths(container, mesi) {
+export function drawMonths(container, mesi, { back = "prima", front = "valore", backClass = "before", frontClass = "now", title = "homeMonths", empty = "homeMonthsEmpty" } = {}) {
   container.textContent = "";
-  const massimo = mesi.reduce((max, m) => (m.valore > max ? m.valore : m.prima > max ? m.prima : max), 0n);
+  const massimo = mesi.reduce((max, m) => (m[front] > max ? m[front] : m[back] > max ? m[back] : max), 0n);
   if (massimo === 0n) {
     const nota = document.createElement("p");
     nota.className = "note";
-    nota.textContent = t("homeMonthsEmpty");
+    nota.textContent = t(empty);
     container.append(nota);
     return;
   }
@@ -264,22 +332,24 @@ export function drawMonths(container, mesi) {
   const lettere = t("monthLetters").split(" ");
 
   const svg = _svg("svg", { viewBox: `0 0 ${W} ${H}`, class: "bars" });
-  svg.setAttribute("aria-label", t("homeMonths"));
+  svg.setAttribute("aria-label", t(title));
   svg.append(_svg("line", { x1: 0, y1: H - bottom + 0.5, x2: W, y2: H - bottom + 0.5, class: "axis" }));
   mesi.forEach((m, i) => {
     const x = i * passo + passo / 2;
-    const prima = scala(m.prima);
-    const ora = scala(m.valore);
-    // L'anno scorso dietro e spostato a sinistra, quest'anno davanti: si vedono tutt'e due anche
-    // quando uno è molto più alto dell'altro.
+    const prima = scala(m[back]);
+    const ora = scala(m[front]);
+    // La serie di confronto dietro e spostata a sinistra, quella principale davanti: si vedono
+    // tutt'e due anche quando una è molto più alta dell'altra.
     const dietro = _svg("rect", {
-      x: x - larghezza, y: H - bottom - prima, width: larghezza, height: prima, class: "before", rx: 2,
+      x: x - larghezza, y: H - bottom - prima, width: larghezza, height: prima, class: backClass, rx: 2,
     });
     const davanti = _svg("rect", {
-      x, y: H - bottom - ora, width: larghezza, height: ora, class: "now", rx: 2,
+      x, y: H - bottom - ora, width: larghezza, height: ora, class: frontClass, rx: 2,
     });
     const titolo = _svg("title");
-    titolo.textContent = `${lettere[m.mese - 1]} ${m.anno}: ${money(m.valore)} · ${m.anno - 1}: ${money(m.prima)}`;
+    titolo.textContent = back === "prima"
+      ? `${lettere[m.mese - 1]} ${m.anno}: ${money(m.valore)} · ${m.anno - 1}: ${money(m.prima)}`
+      : `${lettere[m.mese - 1]} ${m.anno}: ${money(m[front])} − ${money(m[back])} = ${money(m[front] - m[back])}`;
     davanti.append(titolo);
     svg.append(dietro, davanti);
     const label = _svg("text", { x, y: H - 6, class: "label", "text-anchor": "middle" });
@@ -290,13 +360,13 @@ export function drawMonths(container, mesi) {
 }
 
 /** Barre orizzontali: il nome, la barra, la cifra. La parte scaduta in tinta più scura. */
-export function drawParties(container, rows, byParty) {
+export function drawParties(container, rows, byParty, { href = (row) => `#/cliente/${row.partyId}` } = {}) {
   container.textContent = "";
   const massimo = rows.reduce((max, row) => (row.importo > max ? row.importo : max), 0n);
   for (const row of rows) {
     const riga = document.createElement("a");
     riga.className = "hbar";
-    riga.href = `#/cliente/${row.partyId}`;
+    riga.href = href(row);
     const nome = document.createElement("span");
     nome.className = "name";
     nome.textContent = byParty.get(row.partyId) || "—";
@@ -324,8 +394,8 @@ export function drawParties(container, rows, byParty) {
  * Disegna tutto. `docs` sono i documenti dal più recente, `owed` è `summary(db)`, `byParty` i
  * nomi dei clienti per id.
  */
-export function render({ docs, owed, byParty, today = new Date().toISOString().slice(0, 10) }) {
-  const n = figures(docs, owed, { today });
+export function render({ docs, owed, byParty, costs = [], outlays = [], company = null, today = new Date().toISOString().slice(0, 10) }) {
+  const n = figures(docs, owed, { today, costs, outlays });
 
   el("figYear").textContent = money(n.fatturato);
   el("figYearDelta").textContent = n.delta === null
@@ -348,14 +418,77 @@ export function render({ docs, owed, byParty, today = new Date().toISOString().s
   el("figToBillSub").textContent = n.fasiDaFatturare === 0 ? t("homeToBillNone")
     : n.fasiDaFatturare === 1 ? t("homeToBillOne") : tf("homeToBillSub", { quante: n.fasiDaFatturare });
 
-  el("homeLists").hidden = docs.length === 0;
-  if (!docs.length) return;
+  // I due numeri degli acquisti: compaiono con il primo acquisto registrato. Prima, un margine
+  // uguale al fatturato e uno zero da pagare sarebbero due caselle che dicono «non usi questa
+  // parte», e chi non la usa non deve leggerlo ogni mattina.
+  el("figMargin").hidden = !n.haCosti;
+  el("figToPay").hidden = !n.haCosti;
+  if (n.haCosti) {
+    el("figMarginValue").textContent = money(n.margine);
+    el("figMarginValue").classList.toggle("bad", n.margine < 0n);
+    el("figMarginSub").textContent = tf("homeMarginSub", { ricavi: money(n.ricavi), costi: money(n.costi) });
+    el("figToPayValue").textContent = money(n.daPagare);
+    el("figToPayValue").classList.toggle("bad", n.daPagareScadute > 0);
+    el("figToPaySub").textContent = n.daPagareQuante === 0 ? t("homeToPayNone")
+      : n.daPagareScadute > 0 ? tf("homeToPayOverdue", { quante: n.daPagareQuante, scadute: n.daPagareScadute })
+        : tf("homeToPaySub", { quante: n.daPagareQuante });
+  }
+
+  el("homeLists").hidden = docs.length === 0 && costs.length === 0;
+  if (!docs.length && !costs.length) return;
 
   // Il fatturato per mese.
   const anno = today.slice(0, 4);
   el("legendNow").textContent = anno;
   el("legendBefore").textContent = String(Number(anno) - 1);
-  drawMonths(el("chartMonths"), byMonth(docs, { today }));
+  const mesi = byMonth(docs, { today, costs });
+  drawMonths(el("chartMonths"), mesi);
+
+  // Ricavi e costi, mese per mese: il margine è la differenza fra le due barre, e il titolo di
+  // ogni coppia la scrive. Solo con almeno un acquisto.
+  el("wMargin").hidden = !n.haCosti;
+  if (n.haCosti) {
+    drawMonths(el("chartMargin"), mesi, {
+      back: "costi", front: "ricavi", backClass: "cost", frontClass: "now",
+      title: "homeMarginChart", empty: "homeMonthsEmpty",
+    });
+  }
+
+  // Le imposte del periodo: con almeno una fattura emessa o un acquisto, altrimenti sono zeri.
+  const imposte = taxFigures(docs, costs, { today, company });
+  const haImposte = _invoiced(docs).length > 0 || costs.length > 0;
+  el("wTax").hidden = !haImposte;
+  if (haImposte) {
+    const iva = imposte.tipo === "iva";
+    el("taxTitle").textContent = t(iva ? "homeTaxIva" : "homeTaxMonofase");
+    el("taxQuarterHead").textContent = tf("homeTaxQuarter", { n: imposte.trimestre.numero });
+    el("taxYearHead").textContent = imposte.anno.anno;
+    const righe = iva
+      ? [["homeTaxSales", "debito"], ["homeTaxPurchases", "credito"], ["homeTaxBalance", "saldo"]]
+      : [["homeTaxSales", "debito"], ["homeTaxMonofasePaid", "monofase"]];
+    const body = el("homeTaxBody");
+    body.textContent = "";
+    for (const [chiave, campo] of righe) {
+      const tr = document.createElement("tr");
+      if (campo === "saldo") tr.className = "total";
+      for (const [text, classe] of [
+        [campo === "saldo" && imposte.anno.saldo < 0n ? t("homeTaxCredit") : t(chiave), null],
+        [money(imposte.trimestre[campo]), "right"],
+        [money(imposte.anno[campo]), "right"],
+      ]) {
+        const td = document.createElement("td");
+        td.textContent = text;
+        if (classe) td.className = classe;
+        tr.append(td);
+      }
+      body.append(tr);
+    }
+  }
+
+  // A chi devo di più: come «chi deve di più», nel verso opposto, e con la stessa soglia.
+  const creditori = topParties(n.daPagareRows);
+  el("wSuppliers").hidden = creditori.length < 2;
+  if (creditori.length >= 2) drawParties(el("chartSuppliers"), creditori, byParty, { href: () => "#/acquisti" });
 
   // Le prossime scadenze.
   const prossime = [...owed.rows]

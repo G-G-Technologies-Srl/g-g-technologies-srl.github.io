@@ -564,7 +564,7 @@ await prova("apply scrive clienti, listino e documenti, e li lega", async () => 
   const scritti = await apply(db, piano);
   assert.ok(scritti.lotto, "il lotto identifica l'importazione");
   delete scritti.lotto;
-  assert.deepEqual(scritti, { clienti: 2, listino: 1, documenti: 1, incassi: 0 });
+  assert.deepEqual(scritti, { clienti: 2, listino: 1, documenti: 1, incassi: 0, acquisti: 0 });
 
   const clienti = await list(db, "parties");
   const docs = await list(db, "docs");
@@ -599,7 +599,7 @@ await prova("un piano vuoto non scrive niente", async () => {
   const db = await openDatabase();
   const scritti = await apply(db, await plan([]));
   delete scritti.lotto;
-  assert.deepEqual(scritti, { clienti: 0, listino: 0, documenti: 0, incassi: 0 });
+  assert.deepEqual(scritti, { clienti: 0, listino: 0, documenti: 0, incassi: 0, acquisti: 0 });
   assert.equal((await list(db, "parties")).length, 0);
 });
 
@@ -702,7 +702,7 @@ await prova("l'annullamento toglie tutto il lotto, e riporta il contatore", asyn
     file("r", await xlsx(HEAD_REGISTRO, [registro({ 5: "SI" })])),
   ]));
   const tolti = await undoLast(db);
-  assert.deepEqual(tolti, { clienti: 2, listino: 1, documenti: 1, incassi: 1 });
+  assert.deepEqual(tolti, { clienti: 2, listino: 1, documenti: 1, incassi: 1, acquisti: 0 });
   for (const store of ["parties", "items", "docs", "payments"]) {
     assert.equal((await list(db, store)).length, 0, store);
   }
@@ -777,6 +777,168 @@ await prova("un file rotto non affonda gli altri", async () => {
   assert.deepEqual(piano.fonti[1].problemi, [{ chiave: "impUnreadable" }]);
   assert.equal(piano.clienti.length, 1);
   assert.equal(piano.documenti.length, 1);
+});
+
+// -----------------------------------------------------------------------------------------------------------------
+//  l e   f a t t u r e   r i c e v u t e
+// -----------------------------------------------------------------------------------------------------------------
+
+/** Una fattura che ci manda un fornitore: il cedente è lui, il cessionario siamo noi. */
+const RICEVUTA = `<?xml version="1.0" encoding="UTF-8"?>
+<p:FatturaElettronica versione="FPR12">
+  <FatturaElettronicaHeader>
+    <DatiTrasmissione><ProgressivoInvio>00042</ProgressivoInvio></DatiTrasmissione>
+    <CedentePrestatore>
+      <DatiAnagrafici><IdFiscaleIVA><IdPaese>IT</IdPaese><IdCodice>09876543210</IdCodice></IdFiscaleIVA>
+        <Anagrafica><Denominazione>Hosting Cloud S.p.A.</Denominazione></Anagrafica></DatiAnagrafici>
+      <Sede><Indirizzo>Via dei Server</Indirizzo><NumeroCivico>1</NumeroCivico><CAP>20100</CAP>
+        <Comune>Milano</Comune><Provincia>MI</Provincia><Nazione>IT</Nazione></Sede>
+    </CedentePrestatore>
+    <CessionarioCommittente>
+      <DatiAnagrafici><IdFiscaleIVA><IdPaese>IT</IdPaese><IdCodice>01234567897</IdCodice></IdFiscaleIVA>
+        <Anagrafica><Denominazione>Noi S.r.l.</Denominazione></Anagrafica></DatiAnagrafici>
+      <Sede><Indirizzo>Via Prova</Indirizzo><NumeroCivico>1</NumeroCivico><CAP>40127</CAP>
+        <Comune>Bologna</Comune><Provincia>BO</Provincia><Nazione>IT</Nazione></Sede>
+    </CessionarioCommittente>
+  </FatturaElettronicaHeader>
+  <FatturaElettronicaBody>
+    <DatiGenerali><DatiGeneraliDocumento>
+      <TipoDocumento>TD01</TipoDocumento><Divisa>EUR</Divisa>
+      <Data>2026-08-01</Data><Numero>HC-118</Numero>
+      <ImportoTotaleDocumento>1525.00</ImportoTotaleDocumento>
+      <Causale>Hosting agosto</Causale>
+    </DatiGeneraliDocumento></DatiGenerali>
+    <DatiBeniServizi>
+      <DettaglioLinee><NumeroLinea>1</NumeroLinea><Descrizione>Server</Descrizione>
+        <Quantita>2.00</Quantita><PrezzoUnitario>500.00</PrezzoUnitario><PrezzoTotale>1000.00</PrezzoTotale><AliquotaIVA>22.00</AliquotaIVA></DettaglioLinee>
+      <DettaglioLinee><NumeroLinea>2</NumeroLinea><Descrizione>Dominio</Descrizione>
+        <Quantita>1.00</Quantita><PrezzoUnitario>250.00</PrezzoUnitario><PrezzoTotale>250.00</PrezzoTotale><AliquotaIVA>22.00</AliquotaIVA></DettaglioLinee>
+    </DatiBeniServizi>
+    <DatiPagamento><CondizioniPagamento>TP02</CondizioniPagamento>
+      <DettaglioPagamento><ModalitaPagamento>MP05</ModalitaPagamento><DataScadenzaPagamento>2026-08-31</DataScadenzaPagamento><ImportoPagamento>1525.00</ImportoPagamento></DettaglioPagamento>
+    </DatiPagamento>
+  </FatturaElettronicaBody>
+</p:FatturaElettronica>`;
+
+await prova("il cedente decide il verso: non siamo noi, è una fattura ricevuta, ed è un acquisto", async () => {
+  const piano = await plan([xml("hc.xml", RICEVUTA)], { company: AZIENDA });
+  assert.equal(piano.fonti[0].tipo, "ricevuta");
+  assert.equal(piano.documenti.length, 0, "non è un documento nostro");
+  assert.equal(piano.costi.length, 1);
+  const [c] = piano.costi;
+  assert.equal(c.tipo, "fattura");
+  assert.equal(c.numero, "HC-118");
+  assert.equal(c.data, "2026-08-01");
+  assert.equal(c.imponibile, "1250.00");
+  assert.equal(c.imposta, "275.00");
+  assert.equal(c.totale, "1525.00");
+  assert.equal(c.aliquota, "22");
+  assert.equal(c.impostaTipo, "iva");
+  assert.equal(c.scadenza, "2026-08-31");
+  assert.equal(c.descrizione, "Hosting agosto");
+  assert.equal(c.righe.length, 2);
+  assert.equal(c.righe[0].imponibile, "1000.00");
+  assert.deepEqual(c.origine, { xml: "hc.xml" });
+  // Il fornitore è nuovo, e nasce fornitore.
+  assert.equal(piano.clienti.length, 1);
+  assert.equal(piano.clienti[0].denominazione, "Hosting Cloud S.p.A.");
+  assert.equal(piano.clienti[0].ruolo, "fornitore");
+  assert.equal(c.partyId, piano.clienti[0]._id);
+});
+
+await prova("senza i dati fiscali dell'azienda il file si legge come emesso, come prima", async () => {
+  const piano = await plan([xml("hc.xml", RICEVUTA)], {});
+  assert.equal(piano.fonti[0].tipo, "fattura");
+  assert.equal(piano.documenti.length, 1);
+  assert.equal((piano.costi || []).length, 0);
+});
+
+await prova("la nostra fattura resta nostra anche con l'azienda nel contesto", async () => {
+  const nostra = FATTURA.replace(
+    "<CedentePrestatore><DatiAnagrafici><Anagrafica><Denominazione>Noi</Denominazione></Anagrafica></DatiAnagrafici></CedentePrestatore>",
+    "<CedentePrestatore><DatiAnagrafici><IdFiscaleIVA><IdPaese>IT</IdPaese><IdCodice>01234567897</IdCodice></IdFiscaleIVA>"
+    + "<Anagrafica><Denominazione>Noi</Denominazione></Anagrafica></DatiAnagrafici></CedentePrestatore>",
+  );
+  const piano = await plan([xml("f.xml", nostra)], { company: AZIENDA });
+  assert.equal(piano.fonti[0].tipo, "fattura");
+});
+
+await prova("un cliente che ci manda una fattura diventa «entrambi», e non entra due volte", async () => {
+  const db = await openDatabase();
+  const { saveParty } = await import("../run/parties.js");
+  const cliente = await saveParty(db, { denominazione: "Hosting Cloud S.p.A.", partitaIva: "09876543210", paese: "IT" });
+  assert.equal(cliente.ruolo, "cliente");
+  const piano = await plan([xml("hc.xml", RICEVUTA)], { company: AZIENDA, parties: await list(db, "parties") });
+  assert.equal(piano.clienti.length, 0, "già in anagrafica");
+  assert.deepEqual(piano.promozioni, [cliente.id]);
+  assert.equal(piano.costi[0].partyId, cliente.id);
+  const scritti = await apply(db, piano);
+  assert.equal(scritti.acquisti, 1);
+  const [dopo] = await list(db, "parties");
+  assert.equal(dopo.ruolo, "entrambi");
+  assert.equal(dopo.importato, undefined, "non è del lotto: annullare non lo toglie");
+});
+
+await prova("la stessa fattura ricevuta due volte entra una volta sola", async () => {
+  const db = await openDatabase();
+  await apply(db, await plan([xml("hc.xml", RICEVUTA)], { company: AZIENDA }));
+  const di_nuovo = await plan([xml("hc.xml", RICEVUTA)], {
+    company: AZIENDA, parties: await list(db, "parties"), costs: await list(db, "costs"),
+  });
+  assert.equal(di_nuovo.costi.length, 0);
+  assert.equal(di_nuovo.fonti[0].esistenti, 1);
+  assert.equal(di_nuovo.fonti[0].nuovi, 0);
+  // E nello stesso giro, due copie sono una.
+  const doppio = await plan([xml("a.xml", RICEVUTA), xml("b.xml", RICEVUTA)], { company: AZIENDA });
+  assert.equal(doppio.costi.length, 1);
+});
+
+await prova("un acquisto importato porta la marca, si conta, e l'annullamento lo toglie con i suoi pagamenti", async () => {
+  const db = await openDatabase();
+  const { lotto } = await apply(db, await plan([xml("hc.xml", RICEVUTA)], { company: AZIENDA }));
+  const [c] = await list(db, "costs");
+  assert.equal(c.importato.lotto, lotto);
+  const ultimo = await lastImport(db);
+  assert.equal(ultimo.acquisti, 1);
+  const { recordOutlay } = await import("../run/costs.js");
+  await recordOutlay(db, c, { importo: "500.00", data: "2026-08-10" });
+  const tolti = await undoLast(db);
+  assert.equal(tolti.acquisti, 1);
+  assert.equal(tolti.clienti, 1, "il fornitore nato con il lotto va via con lui");
+  assert.equal((await list(db, "costs")).length, 0);
+  assert.equal((await list(db, "outlays")).length, 0, "nessun pagamento orfano");
+  assert.equal((await list(db, "parties")).length, 0);
+});
+
+await prova("un fornitore usato da un acquisto nostro resta dopo l'annullamento", async () => {
+  const db = await openDatabase();
+  await apply(db, await plan([xml("hc.xml", RICEVUTA)], { company: AZIENDA }));
+  const [fornitore] = await list(db, "parties");
+  const { saveCost } = await import("../run/costs.js");
+  await saveCost(db, { tipo: "spesa", partyId: fornitore.id, data: "2026-09-01", imponibile: "10", aliquota: "0" });
+  await undoLast(db);
+  assert.equal((await list(db, "parties")).length, 1);
+  assert.equal((await list(db, "costs")).length, 1);
+});
+
+await prova("una nota di credito ricevuta entra come nota, con gli importi del file", async () => {
+  const nota = RICEVUTA.replace("<TipoDocumento>TD01</TipoDocumento>", "<TipoDocumento>TD04</TipoDocumento>")
+    .replace("<Numero>HC-118</Numero>", "<Numero>NC-2</Numero>");
+  const piano = await plan([xml("nc.xml", nota)], { company: AZIENDA });
+  assert.equal(piano.costi.length, 1);
+  assert.equal(piano.costi[0].tipo, "nota");
+  assert.equal(piano.costi[0].numero, "NC-2");
+  assert.equal(piano.costi[0].totale, "1525.00", "positivo nel record, come nel file");
+});
+
+await prova("per un'azienda sammarinese il pannello dice che la monofase va aggiunta a mano", async () => {
+  const sm = { ...AZIENDA, paese: "SM", partitaIva: "29141", codiceFiscale: "" };
+  const piano = await plan([xml("hc.xml", RICEVUTA)], { company: sm });
+  assert.equal(piano.fonti[0].tipo, "ricevuta");
+  assert.ok(piano.fonti[0].avvisi.some((a) => a.chiave === "impMonofaseByHand"));
+  assert.equal(piano.costi[0].impostaTipo, "iva", "l'imposta è quella del file, non inventata");
+  const it = await plan([xml("hc.xml", RICEVUTA)], { company: AZIENDA });
+  assert.ok(!it.fonti[0].avvisi.some((a) => a.chiave === "impMonofaseByHand"));
 });
 
 console.log(`importing: ${passed} prove passate`);

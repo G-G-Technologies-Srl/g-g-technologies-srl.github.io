@@ -76,8 +76,29 @@ async function _conti(db) {
  * Risolve `true` se qualcosa è stato registrato, così chi ha chiamato ridisegna una volta sola.
  */
 export async function openSheet(db, doc, { proposta = ZERO, onDone = null } = {}) {
+  const residuo = await owedOn(db, doc.id);
+  return openMoney(db, {
+    titolo: `${t(kind(doc).label)} ${shownNumber(doc)} · ${t("dueLeft")} ${_money(residuo)}`,
+    residuo,
+    proposta,
+    onDone,
+    save: (campi) => recordPayment(db, doc, campi),
+  });
+}
+
+/**
+ * La stessa scheda per un incasso e per un pagamento in uscita: cambiano il titolo, il residuo e
+ * chi scrive il record. Un pagamento a un fornitore è un incasso al contrario, sullo stesso conto,
+ * e due schede diverse per la stessa forma sarebbero due schede che divergono.
+ *
+ * `save` riceve `{ importo, data, conto, nota }` e scrive dove deve; `titolo` è la riga sotto il
+ * titolo; `etichetta` il verbo sul pulsante, «Registra un incasso» se manca.
+ */
+export async function openMoney(db, { titolo, residuo = ZERO, proposta = ZERO, onDone = null, save, etichetta = null }) {
   const form = el("payForm");
   form.reset();
+  el("paySave").textContent = etichetta || t("dueRecord");
+  el("payDialogTitle").textContent = etichetta || t("dueRecord");
 
   const conti = await _conti(db);
   const scelta = form.elements.conto;
@@ -100,11 +121,9 @@ export async function openSheet(db, doc, { proposta = ZERO, onDone = null } = {}
   const predefinito = conti.find((conto) => conto.predefinito) || conti[0];
   scelta.value = predefinito ? predefinito.id : "";
 
-  const residuo = await owedOn(db, doc.id);
   form.elements.importo.value = cmp(proposta, ZERO) > 0 ? toString(proposta, 2) : toString(residuo, 2);
   form.elements.data.value = _oggi();
-  el("payDialogDoc").textContent = `${t(kind(doc).label)} ${shownNumber(doc)} · `
-    + `${t("dueLeft")} ${_money(residuo)}`;
+  el("payDialogDoc").textContent = titolo;
   el("payProblems").hidden = true;
   el("payProblems").textContent = "";
 
@@ -143,7 +162,7 @@ export async function openSheet(db, doc, { proposta = ZERO, onDone = null } = {}
       }
 
       const conto = conti.find((uno) => uno.id === form.elements.conto.value) || null;
-      await recordPayment(db, doc, {
+      await save({
         importo: toString(importo, 2),
         data: form.elements.data.value || _oggi(),
         conto,

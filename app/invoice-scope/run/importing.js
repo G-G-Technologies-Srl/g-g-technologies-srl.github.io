@@ -32,6 +32,8 @@ import { KINDS } from "./kinds.js";
 import { totals } from "./totals.js";
 import { from, cmp } from "./decimal.js";
 import { partyRecord, itemRecord } from "./parties.js";
+import { costRecord, taxKind } from "./costs.js";
+import { mul, toString as decimalText } from "./decimal.js";
 import { fiscalCode } from "./parse.js";
 import { t, tf } from "./i18n.js";
 import { date as shownDate, money } from "./format.js";
@@ -265,6 +267,8 @@ export async function plan(sorgenti, contesto = {}) {
   const listino = [];
   const documenti = [];
   const incassi = [];
+  const costi = [];
+  const promozioni = [];                                // customers that turn out to be suppliers too
 
   /** A customer already here, already queued, or new: always the same one for the same identifier. */
   const cliente = (incoming, fonte) => {
@@ -313,7 +317,14 @@ export async function plan(sorgenti, contesto = {}) {
     return _fatture(sorgente);
   };
 
-  /** One XML file: the documents in it, or the reason it is not one. */
+  /**
+   * One XML file: the documents in it, or the reason it is not one.
+   *
+   * **Il verso lo decide chi l'ha emessa.** Se il cedente è l'azienda, è una fattura sua; se è
+   * qualcun altro, è una fattura ricevuta ed entra fra gli acquisti. Il confronto è sull'identità
+   * fiscale, con lo stesso `_sameParty` dei clienti: senza dati fiscali dell'azienda non c'è niente
+   * da confrontare, e il file si legge come emesso — cioè come prima che gli acquisti esistessero.
+   */
   function _fatture({ name, bytes }) {
     let letto;
     try {
@@ -322,8 +333,59 @@ export async function plan(sorgenti, contesto = {}) {
       const chiave = error instanceof SyntaxError ? "impBrokenXml" : `imp${error.message}`;
       return [{ name, tipo: "ignoto", records: [], scartate: [], problems: [{ chiave }] }];
     }
-    return [{ name, tipo: "fattura", letto, records: [], scartate: [], problems: [] }];
+    const azienda = contesto.company || {};
+    const identificata = Boolean(fiscalCode(azienda.partitaIva || "", azienda.paese) || fiscalCode(azienda.codiceFiscale || "", azienda.paese));
+    const ricevuta = identificata && !_sameParty(
+      { partitaIva: azienda.partitaIva || "", codiceFiscale: azienda.codiceFiscale || "", paese: azienda.paese || "IT", denominazione: azienda.denominazione || "" },
+      letto.mittente,
+    );
+    return [{ name, tipo: ricevuta ? "ricevuta" : "fattura", letto, records: [], scartate: [], problems: [] }];
   }
+
+  /** La chiave con cui un acquisto si riconosce: fornitore, numero e data. */
+  const costKey = (c) => [c.partyId, _key(c.numero), String(c.data || "").slice(0, 10)].join("|");
+  const costiEsistenti = new Set((contesto.costs || []).map(costKey));
+
+  /**
+   * Un documento letto dall'XML come acquisto: i totali dalle righe, l'aliquota quella che pesa di
+   * più, la scadenza dalla prima rata. L'imposta è quella del file — IVA — e si dice: per un'azienda
+   * sammarinese la monofase non sta nel file, e va aggiunta a mano.
+   */
+  const acquisto = (doc, chi, fonte) => {
+    const conTotali = _withTotals(doc);
+    const perAliquota = new Map();
+    const rigaImponibile = (riga) => mul(from(riga.prezzoUnitario || "0"), from(riga.quantita || "1"), 2);
+    for (const riga of doc.righe) {
+      perAliquota.set(riga.aliquota, (perAliquota.get(riga.aliquota) || 0n) + rigaImponibile(riga));
+    }
+    const aliquota = [...perAliquota.entries()].sort((a, b) => (b[1] > a[1] ? 1 : b[1] < a[1] ? -1 : 0))[0]?.[0] || "0";
+    const rate = (doc.pagamento || {}).rate || [];
+    const record = costRecord({
+      // Una nota di credito ricevuta è una nota: i suoi importi restano positivi, come nel
+      // file, e il segno lo mettono i conti.
+      tipo: doc.tipo === "TD04" ? "nota" : "fattura",
+      partyId: chi.id,
+      data: doc.data,
+      numero: doc.numero,
+      categoria: "",
+      descrizione: doc.causale || (doc.righe[0] || {}).descrizione || "",
+      imponibile: decimalText(BigInt(conTotali.totali.imponibile), 2),
+      imposta: decimalText(BigInt(conTotali.totali.imposta), 2),
+      impostaTipo: "iva",
+      aliquota: String(aliquota),
+      scadenza: (rate[0] || {}).scadenza || null,
+      righe: doc.righe.map((riga) => ({
+        descrizione: riga.descrizione,
+        quantita: riga.quantita,
+        prezzoUnitario: riga.prezzoUnitario,
+        aliquota: riga.aliquota,
+        imponibile: decimalText(rigaImponibile(riga), 2),
+      })),
+      origine: { xml: fonte },
+    }, { company: contesto.company || null });
+    record._fonte = fonte;
+    return record;
+  };
 
   for (const sorgente of sorgenti) {
     // **Each file fails on its own.** A workbook with a malformed sheet used to throw out of here
@@ -461,6 +523,28 @@ export async function plan(sorgenti, contesto = {}) {
           if (chiave) chiavi.set(chiave, { id: nuovo.id, ricostruito: false, inPiano: true });
           documenti.push(_withTotals(nuovo));
         }
+      } else if (fonte.tipo === "ricevuta") {
+        // Il fornitore è il cedente, uno per file; i documenti sono i suoi. Un fornitore nuovo
+        // nasce con il ruolo giusto; un cliente che si scopre fornitore diventa «entrambi».
+        const mittente = { ...fonte.letto.mittente, ruolo: "fornitore" };
+        const chi = cliente(mittente, fonte.name);
+        const giaCliente = esistenti.parties.find((p) => p.id === chi.id);
+        if (giaCliente && (giaCliente.ruolo || "cliente") === "cliente" && !promozioni.includes(chi.id)) promozioni.push(chi.id);
+        for (const { doc, avvisi, dichiarato } of fonte.letto.documenti) {
+          const record = acquisto(doc, chi, fonte.name);
+          const chiave = costKey(record);
+          const nuovo = !costiEsistenti.has(chiave);
+          conta(nuovo, _titolo(doc, chi.nome));
+          if (!nuovo) continue;
+          costiEsistenti.add(chiave);
+          costi.push(record);
+          report.avvisi.push(...avvisi);
+          const scarto = _scarto(dichiarato, _withTotals(doc).totali.totale);
+          if (scarto) report.avvisi.push({ chiave: "impTotalDiffers", numero: doc.numero, ...scarto });
+        }
+        if (fonte.letto.documenti.length && taxKind(contesto.company || null) === "monofase") {
+          report.avvisi.push({ chiave: "impMonofaseByHand" });
+        }
       } else if (fonte.tipo === "fattura") {
         for (const { doc, cliente: incoming, avvisi, dichiarato } of fonte.letto.documenti) {
           const chi = cliente(incoming, fonte.name);
@@ -508,7 +592,7 @@ export async function plan(sorgenti, contesto = {}) {
     }
   }
 
-  return { fonti, clienti, listino, documenti, incassi };
+  return { fonti, clienti, listino, documenti, incassi, costi, promozioni };
 }
 
 /**
@@ -528,17 +612,28 @@ export async function plan(sorgenti, contesto = {}) {
  * them again and a document can say where it came from.
  */
 export async function apply(db, piano) {
-  const scritti = { clienti: 0, listino: 0, documenti: 0, incassi: 0 };
+  const scritti = { clienti: 0, listino: 0, documenti: 0, incassi: 0, acquisti: 0 };
   const quando = new Date().toISOString();
   const lotto = globalThis.crypto?.randomUUID?.() || `lotto-${Date.now()}`;
   const marca = (fonte) => ({ lotto, fonte: fonte || "", quando });
   const nota = t("impPaidNote");
 
-  await tx(db, ["parties", "items", "docs", "payments", "counters"], async (scope) => {
+  await tx(db, ["parties", "items", "docs", "payments", "counters", "costs"], async (scope) => {
     for (const record of piano.clienti) {
       const { _id, _riga, _fonte, ...fields } = record;
       await scope.put("parties", { ...partyRecord({ ...fields, id: _id }), importato: marca(_fonte) });
       scritti.clienti += 1;
+    }
+    // Un cliente che ha mandato una fattura è anche un fornitore: il ruolo si allarga, la scheda
+    // resta la sua. Non porta la marca del lotto: annullare l'importazione non deve cancellarlo.
+    for (const id of piano.promozioni || []) {
+      const record = await scope.get("parties", id);
+      if (record) await scope.put("parties", { ...record, ruolo: "entrambi" });
+    }
+    for (const record of piano.costi || []) {
+      const { _fonte, ...fields } = record;
+      await scope.put("costs", { ...fields, importato: marca(_fonte) });
+      scritti.acquisti += 1;
     }
     for (const record of piano.listino) {
       const { _fonte, ...fields } = record;
@@ -603,6 +698,7 @@ export async function lastImport(db) {
     ...(await list(db, "parties")).map((r) => ({ store: "parties", r })),
     ...(await list(db, "items")).map((r) => ({ store: "items", r })),
     ...(await list(db, "payments")).map((r) => ({ store: "payments", r })),
+    ...(await list(db, "costs")).map((r) => ({ store: "costs", r })),
   ].filter(({ r }) => r.importato && r.importato.lotto);
   if (!tutti.length) return null;
 
@@ -618,6 +714,7 @@ export async function lastImport(db) {
     listino: conta("items"),
     documenti: conta("docs"),
     incassi: conta("payments"),
+    acquisti: conta("costs"),
   };
 }
 
@@ -645,13 +742,20 @@ export async function undoLast(db) {
   // a `list` in the middle would be exactly that.
   const docs = await list(db, "docs");
   const altri = docs.filter((d) => !mio(d));
-  const usati = new Set(altri.map((d) => d.partyId).filter(Boolean));
+  const costs = await list(db, "costs");
+  const altriCosti = costs.filter((c) => !mio(c));
+  const usati = new Set([...altri.map((d) => d.partyId), ...altriCosti.map((c) => c.partyId)].filter(Boolean));
   const clienti = await list(db, "parties");
+  const miei = new Set(costs.filter(mio).map((c) => c.id));
   const daTogliere = {
     payments: (await list(db, "payments")).filter(mio),
     docs: docs.filter(mio),
     parties: clienti.filter((c) => mio(c) && !usati.has(c.id)),
     items: (await list(db, "items")).filter(mio),
+    costs: costs.filter(mio),
+    // I pagamenti registrati a mano su un acquisto importato vanno via con lui: un pagamento senza
+    // il suo acquisto è un riferimento a vuoto.
+    outlays: (await list(db, "outlays")).filter((o) => miei.has(o.costId)),
   };
   // The customers that stay lose the mark: from here on they are the company's own. Left marked,
   // `lastImport` would keep finding a batch of one customer, and the undo button would offer to
@@ -659,7 +763,7 @@ export async function undoLast(db) {
   const daTenere = clienti.filter((c) => mio(c) && usati.has(c.id));
   const serie = new Set(daTogliere.docs.map(_serieKey));
 
-  await tx(db, ["parties", "items", "docs", "payments", "counters"], async (scope) => {
+  await tx(db, ["parties", "items", "docs", "payments", "counters", "costs", "outlays"], async (scope) => {
     for (const [store, records] of Object.entries(daTogliere)) {
       for (const r of records) {
         // A completion is undone by putting the reconstruction back, not by removing the invoice.
@@ -683,6 +787,7 @@ export async function undoLast(db) {
     listino: daTogliere.items.length,
     documenti: daTogliere.docs.length,
     incassi: daTogliere.payments.length,
+    acquisti: daTogliere.costs.length,
   };
 }
 
@@ -699,6 +804,7 @@ const ETICHETTE = {
   registro: "impKindRegistro",
   righe: "impKindRighe",
   fattura: "impKindFattura",
+  ricevuta: "impKindRicevuta",
   vecchio: "impKindVecchio",
   ignoto: "impKindIgnoto",
 };
@@ -795,7 +901,7 @@ function _note(piano) {
 
 function _draw(piano) {
   corrente = piano;
-  const nuovi = piano.clienti.length + piano.listino.length + piano.documenti.length;
+  const nuovi = piano.clienti.length + piano.listino.length + piano.documenti.length + (piano.costi || []).length;
   const leggibili = piano.fonti.some((f) => f.tipo !== "ignoto" && f.tipo !== "vecchio");
 
   el("impPanel").hidden = false;
@@ -861,6 +967,7 @@ async function _chosen(event) {
       parties: await list(database, "parties"),
       items: await list(database, "items"),
       docs: await list(database, "docs"),
+      costs: await list(database, "costs"),
     }));
   } catch (ignored) {
     await tell(t("impFailed"));
@@ -883,7 +990,7 @@ async function _go() {
     if (dopo) await dopo();
     // Si arriva dove sono finite le cose, non si resta sulle Impostazioni: ai documenti se ne
     // sono entrati, altrimenti alle anagrafiche. Restare qui lasciava la domanda «e adesso?».
-    location.hash = scritti.documenti ? "#/documenti" : "#/anagrafiche";
+    location.hash = scritti.documenti ? "#/documenti" : scritti.acquisti ? "#/acquisti" : "#/anagrafiche";
   } catch (ignored) {
     await tell(t("impFailed"));
   }

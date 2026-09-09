@@ -31,6 +31,14 @@ const W = 720;
 const H = 180;
 const PAD = { top: 14, right: 8, bottom: 30, left: 8 };
 
+/**
+ * With money going out as well, the picture is taller and the baseline sits in the middle: what
+ * comes in above it, what goes out below. Same scale on both sides, so a month that pays out more
+ * than it takes in is visibly bottom-heavy — which is the one thing this version exists to show.
+ */
+const H2 = 250;
+const GAP = 3;
+
 /** How many months the picture covers at most, so one stray date cannot flatten the rest. */
 const MAX_MONTHS = 14;
 
@@ -80,49 +88,67 @@ function _months(rows, today) {
  * and two bars would let somebody read the total as the sum of them. Same reason the summary of a
  * document has one imponibile and not two.
  */
-export function geometry(rows, { today = new Date().toISOString().slice(0, 10) } = {}) {
-  const months = _months(rows, today);
-  if (!months.length) return { months: [], bars: [], max: ZERO, W, H, PAD };
+export function geometry(rows, { today = new Date().toISOString().slice(0, 10), out = [] } = {}) {
+  const twoWay = out.length > 0;
+  const months = _months([...rows, ...out], today);
+  const height_ = twoWay ? H2 : H;
+  if (!months.length) return { months: [], bars: [], max: ZERO, W, H: height_, PAD, twoWay };
 
-  const totals = new Map(months.map((month) => [month, { total: ZERO, overdue: ZERO }]));
+  const totals = new Map(months.map((month) => [month, { total: ZERO, overdue: ZERO, out: ZERO, outOverdue: ZERO }]));
   for (const row of rows) {
     const bucket = totals.get(_month(row.scadenza));
     if (!bucket) continue;
     bucket.total = add(bucket.total, row.importo);
     if (row.scaduta) bucket.overdue = add(bucket.overdue, row.importo);
   }
+  for (const row of out) {
+    const bucket = totals.get(_month(row.scadenza));
+    if (!bucket) continue;
+    bucket.out = add(bucket.out, row.importo);
+    if (row.scaduta) bucket.outOverdue = add(bucket.outOverdue, row.importo);
+  }
 
+  // One scale for both directions: the eye compares the two halves of a month, and two scales
+  // would make them incomparable without saying so.
   const max = months.reduce((high, month) => {
-    const value = totals.get(month).total;
+    const { total, out: uscita } = totals.get(month);
+    const value = cmp(total, uscita) > 0 ? total : uscita;
     return cmp(value, high) > 0 ? value : high;
   }, ZERO);
 
-  const inner = { w: W - PAD.left - PAD.right, h: H - PAD.top - PAD.bottom };
+  const inner = { w: W - PAD.left - PAD.right, h: height_ - PAD.top - PAD.bottom };
+  const up = twoWay ? (inner.h - GAP) / 2 : inner.h;
+  const down = twoWay ? (inner.h - GAP) / 2 : 0;
+  const baseline = PAD.top + up;
   const slot = inner.w / months.length;
   // A bar narrower than its slot leaves the months visually separate without a rule between them.
   const barW = Math.max(6, Math.min(46, slot * 0.62));
+  const scale = (value, span) => (max === ZERO ? 0 : Number(value * 1000n / max) / 1000 * span);
 
   const bars = months.map((month, index) => {
-    const { total, overdue } = totals.get(month);
+    const { total, overdue, out: uscita, outOverdue } = totals.get(month);
     // An empty month still gets a bar of height zero: the code below can then draw a baseline mark
     // for it without a second branch, and a month with nothing in it reads as nothing rather than
     // as missing.
-    const height = max === ZERO ? 0 : Number(total * 1000n / max) / 1000 * inner.h;
-    const overdueH = max === ZERO ? 0 : Number(overdue * 1000n / max) / 1000 * inner.h;
+    const height = scale(total, up);
     return {
       month,
       x: PAD.left + slot * index + (slot - barW) / 2,
-      y: PAD.top + inner.h - height,
+      y: baseline - height,
       w: barW,
       h: height,
-      overdueH,
+      overdueH: scale(overdue, up),
       total,
       overdue,
+      outH: scale(uscita, down),
+      outOverdueH: scale(outOverdue, down),
+      out: uscita,
+      outOverdue,
       current: month === _month(today),
     };
   });
 
-  return { months, bars, max, W, H, PAD, baseline: PAD.top + inner.h };
+  return { months, bars, max, W, H: height_, PAD, baseline, twoWay };
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -147,8 +173,8 @@ function _svg(name, attributes) {
  * `label` turns a month key into what a person reads, and comes from the caller because it is the
  * one thing here that has a language.
  */
-export function draw(container, rows, { today, label, money, title }) {
-  const g = geometry(rows, { today });
+export function draw(container, rows, { today, label, money, title, out = [] }) {
+  const g = geometry(rows, { today, out });
   container.textContent = "";
   container.hidden = g.bars.length === 0;
   if (!g.bars.length) return g;
@@ -182,6 +208,27 @@ export function draw(container, rows, { today, label, money, title }) {
       }
     }
 
+    // What goes out hangs from the same baseline, in its own tint, overdue at the top where it
+    // touches the line — the mirror of the bar above.
+    if (bar.outH > 0) {
+      svg.append(_svg("rect", {
+        x: bar.x, y: g.baseline + GAP, width: bar.w, height: bar.outH, rx: 3,
+        class: "tl-out",
+      }));
+      if (bar.outOverdueH > 0) {
+        svg.append(_svg("rect", {
+          x: bar.x, y: g.baseline + GAP, width: bar.w, height: bar.outOverdueH, rx: 3,
+          class: "tl-out-overdue",
+        }));
+      }
+      const value = _svg("text", {
+        x: bar.x + bar.w / 2, y: Math.min(g.baseline + GAP + bar.outH + 12, g.H - g.PAD.bottom + 12), "text-anchor": "middle",
+        class: "tl-value",
+      });
+      value.textContent = money(bar.out);
+      svg.append(value);
+    }
+
     const text = _svg("text", {
       x: bar.x + bar.w / 2, y: g.H - 10, "text-anchor": "middle",
       class: bar.current ? "tl-label tl-label-now" : "tl-label",
@@ -208,4 +255,9 @@ export function draw(container, rows, { today, label, money, title }) {
 /** The total of a geometry, for a caption that has to agree with the picture. */
 export function total(g) {
   return g.bars.reduce((sum, bar) => add(sum, bar.total), ZERO);
+}
+
+/** And the total going out, when the picture has that half. */
+export function totalOut(g) {
+  return g.bars.reduce((sum, bar) => add(sum, bar.out || ZERO), ZERO);
 }

@@ -16,7 +16,7 @@
 import assert from "node:assert/strict";
 
 import { from, toString } from "../run/decimal.js";
-import { geometry, total } from "../run/timeline.js";
+import { geometry, total, totalOut } from "../run/timeline.js";
 
 let passed = 0;
 
@@ -170,6 +170,45 @@ test("una riga senza data non entra nel disegno e non sposta il totale", () => {
   const g = geometry([riga("2026-09-10", "100.00"), riga(null, "50.00")], { today: OGGI });
   assert.deepEqual(g.months, ["2026-09"]);
   assert.equal(money(total(g)), "100.00");
+});
+
+// -----------------------------------------------------------------------------------------------------------------
+//  l e   u s c i t e
+// -----------------------------------------------------------------------------------------------------------------
+
+test("senza uscite il disegno è quello di sempre: basso, con la linea in fondo", () => {
+  const g = geometry([riga("2026-09-20", "500.00")], { today: OGGI });
+  assert.equal(g.twoWay, false);
+  assert.equal(g.H, 180);
+  assert.equal(g.bars[0].outH, 0);
+  assert.equal(g.baseline, g.H - g.PAD.bottom);
+});
+
+test("con le uscite la linea sta in mezzo, e le due metà hanno la stessa scala", () => {
+  const g = geometry(
+    [riga("2026-09-20", "1000.00")],
+    { today: OGGI, out: [riga("2026-09-25", "500.00", false), riga("2026-10-05", "200.00", true)] },
+  );
+  assert.equal(g.twoWay, true);
+  assert.deepEqual(g.months, ["2026-09", "2026-10"]);
+  assert.ok(g.baseline < g.H / 2 + 20 && g.baseline > g.H / 2 - 20, "la linea in mezzo");
+  const [set, ott] = g.bars;
+  assert.equal(money(set.total), "1000.00");
+  assert.equal(money(set.out), "500.00");
+  // Metà dell'altezza: stessa scala sopra e sotto.
+  assert.ok(Math.abs(set.outH - set.h / 2) < 0.01, `${set.outH} contro ${set.h / 2}`);
+  // Ottobre non incassa niente e paga 200, di cui tutto scaduto.
+  assert.equal(ott.h, 0);
+  assert.ok(ott.outH > 0);
+  assert.equal(ott.outOverdueH, ott.outH);
+  assert.equal(money(totalOut(g)), "700.00");
+  assert.equal(money(total(g)), "1000.00");
+});
+
+test("un mese che paga più di quanto incassa detta la scala", () => {
+  const g = geometry([riga("2026-09-20", "100.00")], { today: OGGI, out: [riga("2026-09-25", "400.00")] });
+  assert.equal(money(g.max), "400.00");
+  assert.ok(g.bars[0].outH > g.bars[0].h);
 });
 
 console.log(`timeline: ${passed} prove passate`);
