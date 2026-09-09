@@ -298,4 +298,68 @@ prova("le intestazioni si confrontano schiacciate", () => {
   assert.equal(_norm(null), "");
 });
 
+// -----------------------------------------------------------------------------------------------------------------
+//  i l   d e t t a g l i o   r i g h e
+// -----------------------------------------------------------------------------------------------------------------
+
+// L'intestazione dell'«export righe», alla lettera: il documento ripetuto su ogni riga.
+const HEAD_RIGHE = [
+  "Data", "Documento", "Numero", "Serie", "Centro ricavo", "Cliente", "Indirizzo cliente", "Comune",
+  "Provincia", "CAP", "Indirizzo extra", "Valuta orig.", "Categoria/Conto", "Codice", "Nome",
+  "Quantita", "U.M.", "Imponibile", "Non imponibile", "IVA", "Aliquota IVA", "Codice IVA",
+];
+
+function rigaRow(over = {}) {
+  const row = new Array(HEAD_RIGHE.length).fill("");
+  const v = {
+    0: "2026-05-20", 1: "Fattura", 2: "8", 5: "Bianchi Componenti S.r.l.", 6: "Via Verdi 12",
+    7: "Serravalle", 8: "San Marino", 9: "47899", 11: "EUR", 12: "affitto", 13: "consadvance",
+    14: "Affitto Primo Semestre", 15: "1", 17: "900", 18: "0", 19: "0", 20: "0", 21: "Non Imp. Art.8",
+    ...over,
+  };
+  for (const [at, text] of Object.entries(v)) row[Number(at)] = text;
+  return row;
+}
+
+prova("il dettaglio righe si riconosce, e prima del registro", () => {
+  // Porta «Data», «Numero» e «Imponibile» come il registro: chiesto nell'ordine sbagliato
+  // sarebbe un registro con una voce per riga, cioè ogni fattura contata due volte.
+  assert.equal(fic.guess(HEAD_RIGHE), "righe");
+  assert.equal(fic.guess(HEAD_REGISTRO), "registro");
+});
+
+prova("le righe dello stesso documento finiscono insieme, con prezzo e natura", () => {
+  const { records, scartate, problems } = fic.lines(HEAD_RIGHE, [
+    rigaRow(),
+    rigaRow({ 14: "Affitto Secondo Semestre" }),
+    rigaRow({ 2: "9", 0: "2026-06-01", 14: "Consulenza", 15: "3", 17: "1783" }),
+  ]);
+  assert.deepEqual(problems, []);
+  assert.deepEqual(scartate, [], `colonne non riconosciute: ${scartate.join(", ")}`);
+  assert.equal(records.length, 2, "due documenti, non tre righe");
+  const [otto, nove] = records;
+  assert.equal(otto.numero, "8");
+  assert.equal(otto.tipo, "TD01");
+  assert.equal(otto.righe.length, 2);
+  assert.deepEqual(otto.righe[0], {
+    descrizione: "Affitto Primo Semestre", quantita: "1", unitaMisura: "", prezzoUnitario: "900",
+    aliquota: "0", natura: "N3.1",
+  });
+  // Senza la colonna del paese, la provincia «San Marino» dice dov'è il cliente.
+  assert.equal(otto.cliente.paese, "SM");
+  assert.equal(otto.cliente.provincia, "SM");
+  // Tre pezzi per 1783: il prezzo unitario è quello che, per tre, ridà 1783.
+  assert.equal(nove.righe[0].quantita, "3");
+  assert.equal(nove.righe[0].prezzoUnitario, "594.33333333");
+});
+
+prova("un codice IVA a zero sconosciuto lascia la natura vuota, e lo dice una volta", () => {
+  const { records, problems } = fic.lines(HEAD_RIGHE, [
+    rigaRow({ 21: "Esente boh" }), rigaRow({ 14: "Altra", 21: "Esente boh" }),
+  ]);
+  assert.equal(records[0].righe[0].natura, "");
+  assert.equal(problems.length, 1, "una volta per nome, non per riga");
+  assert.equal(problems[0].chiave, "ficNatura");
+});
+
 console.log(`fic: ${passed} prove passate`);

@@ -59,7 +59,7 @@ const PAESI = {
  * Tributario actually registered carries `SM`. So this is not a preference between two spellings: it
  * is the one that a real file proves works.
  */
-const PROVINCE = { RSM: "SM", "R.S.M.": "SM" };
+const PROVINCE = { RSM: "SM", "R.S.M.": "SM", "SAN MARINO": "SM" };
 
 /** Which of their document names is which of our types. */
 const TIPI = {
@@ -89,6 +89,28 @@ const IGNORATE = {
             "prezzo di acquisto", "giacenza"],
   registro: ["centro ricavo", "valuta orig", "contrassegnato", "cassa", "altra cassa",
              "rivalsa", "rit prev", "indirizzo extra"],
+  righe: ["centro ricavo", "valuta orig", "categoria conto", "indirizzo extra", "non imponibile",
+          "iva"],
+};
+
+/**
+ * Their VAT code names, as our `Natura`. Only the ones that turned up: a zero-rate line with a name
+ * not in this table keeps an empty nature and is reported, because the two candidates — `N3.1`
+ * export, `N2.2` out of scope — are a world apart and guessing puts a defensible-looking code on
+ * a line nobody checked.
+ */
+const NATURE = {
+  "non imp art 8": "N3.1",
+  "non imponibile art 8": "N3.1",
+  "non imp art 8 bis": "N3.1",
+  "non imp art 41": "N3.2",
+  "non imp art 71": "N3.3",
+  "non imp art 9": "N3.4",
+  "escluso art 15": "N1",
+  "fuori campo iva": "N2.2",
+  "fuori campo": "N2.2",
+  "esente art 10": "N4",
+  "reverse charge": "N6.9",
 };
 
 /** Column → field, per file. The first spelling is the one the current export uses. */
@@ -134,6 +156,27 @@ const COLONNE = {
     ritenuta: ["rit acconto", "ritenuta acconto", "ritenuta"],
     lordo: ["lordo", "totale"],
   },
+  // The line detail: one row per invoice line, the document repeated on each. This is the file
+  // that gives a register document its real lines.
+  righe: {
+    data: ["data"],
+    tipo: ["documento", "tipo documento", "tipo"],
+    numero: ["numero", "n"],
+    serie: ["serie", "sezionale"],
+    cliente: ["cliente", "denominazione", "ragione sociale"],
+    indirizzo: ["indirizzo cliente", "indirizzo"],
+    comune: ["comune"],
+    provincia: ["provincia"],
+    cap: ["cap"],
+    paese: ["paese", "nazione"],
+    codice: ["codice", "codice prodotto"],
+    nome: ["nome", "descrizione", "nome prodotto servizio"],
+    quantita: ["quantita", "qta", "q ta"],
+    unitaMisura: ["u m", "um", "u d m", "unita di misura"],
+    imponibile: ["imponibile"],
+    aliquota: ["aliquota iva", "aliquota"],
+    codiceIva: ["codice iva", "descrizione aliquota iva", "descrizione iva"],
+  },
 };
 
 /**
@@ -148,6 +191,9 @@ const COLONNE = {
  * So the most specific signature is asked first. Only the register has an amount column.
  */
 const FIRMA = [
+  // The line detail before the register: it carries «Data», «Numero» and «Imponibile» too, and
+  // read as a register it would be twelve documents counted twice. Only the lines have a quantity.
+  ["righe", ["data", "numero", "quantita", "nome"]],
   ["registro", ["data", "numero", "imponibile"]],
   ["listino", ["nome", "prezzoUnitario"]],
   ["clienti", ["denominazione", "partitaIva"]],
@@ -408,6 +454,92 @@ export function register(head, body) {
   });
 
   return { records, scartate, problems };
+}
+
+/**
+ * The line detail, grouped by document: `[{ tipo, data, numero, serie, cliente, righe, _riga }]`.
+ *
+ * **The unit price is what the file does not say.** It carries the line's taxable amount and the
+ * quantity, so the price is one divided by the other — kept at eight decimals, the most the
+ * tracciato allows, so that quantity times price gives back the amount the file stated. With a
+ * quantity of one, which is nearly every line, the price is the amount itself.
+ *
+ * The nature comes from their VAT code name, through `NATURE`; a zero-rate line with a name not in
+ * that table is reported, once per name, and its nature stays empty for the person to fill in.
+ */
+export function lines(head, body) {
+  const { dove, scartate } = _mappa(head, "righe");
+  const perDocumento = new Map();
+  const problems = [];
+  const natureIgnote = new Set();
+
+  body.forEach((row, index) => {
+    const riga = index + 1;
+    const data = _data(_get(row, dove, "data"));
+    if (!data) {
+      problems.push({ riga, chiave: "ficNoDate", valore: _get(row, dove, "data") });
+      return;
+    }
+    const scritto = _get(row, dove, "tipo");
+    const tipo = TIPI[_norm(scritto)];
+    if (!tipo) {
+      problems.push({ riga, chiave: "ficKind", valore: scritto });
+      return;
+    }
+    const numero = _get(row, dove, "numero");
+    const serie = _get(row, dove, "serie");
+    const chiave = `${serie}|${tipo}|${data.slice(0, 4)}|${numero}`;
+
+    const imponibile = _numero(_get(row, dove, "imponibile")) || "0";
+    const quantita = _numero(_get(row, dove, "quantita")) || "1";
+    const aliquota = _numero(_get(row, dove, "aliquota")) || "0";
+    let prezzoUnitario = imponibile;
+    if (quantita !== "1") {
+      const q = Number(quantita);
+      prezzoUnitario = q ? (Number(imponibile) / q).toFixed(8).replace(/\.?0+$/, "") : imponibile;
+    }
+    let natura = "";
+    if (aliquota === "0") {
+      const nome = _norm(_get(row, dove, "codiceIva"));
+      natura = NATURE[nome] || "";
+      if (!natura && nome && !natureIgnote.has(nome)) {
+        natureIgnote.add(nome);
+        problems.push({ riga, chiave: "ficNatura", valore: _get(row, dove, "codiceIva") });
+      }
+    }
+
+    if (!perDocumento.has(chiave)) {
+      perDocumento.set(chiave, {
+        tipo,
+        data,
+        numero,
+        serie,
+        cliente: {
+          denominazione: _get(row, dove, "cliente"),
+          partitaIva: "",
+          codiceFiscale: "",
+          pec: "",
+          codiceDestinatario: "",
+          // Without a country column, the province says it: «RSM» or «San Marino» is a customer
+          // in San Marino, and «IT» there would send the address through the wrong branch.
+          paese: paese(_get(row, dove, "paese")) || (_sede(row, dove).provincia === "SM" ? "SM" : "IT"),
+          ..._sede(row, dove),
+        },
+        righe: [],
+        _riga: riga,
+      });
+    }
+    perDocumento.get(chiave).righe.push({
+      descrizione: _get(row, dove, "nome") || _get(row, dove, "codice"),
+      quantita,
+      unitaMisura: _get(row, dove, "unitaMisura"),
+      prezzoUnitario,
+      aliquota,
+      natura,
+    });
+  });
+
+  return { records: [...perDocumento.values()], scartate, problems };
 }
 
 /** The private helpers, for the tests. Everything here is exercised through the four above as well. */

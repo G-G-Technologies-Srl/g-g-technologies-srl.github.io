@@ -204,6 +204,7 @@ function _foglio(name, sheets, contesto) {
       const aliquota = String((contesto.company || {}).aliquotaPredefinita || "22");
       return { ...fic.items(head, body, { aliquota }), name, tipo: "listino" };
     }
+    if (quale === "righe") return { ...fic.lines(head, body), name, tipo: "righe" };
     return { ...fic.register(head, body), name, tipo: "registro" };
   }
   return { name, tipo: "ignoto", records: [], scartate: [], problems: [] };
@@ -392,6 +393,73 @@ export async function plan(sorgenti, contesto = {}) {
               _fonte: fonte.name,
             });
           }
+        }
+      } else if (fonte.tipo === "righe") {
+        // **The line detail completes what the register sketched.** A register document carries
+        // one reconstructed line with the whole amount; the same document here has its real lines,
+        // which take that line's place — same id, so payments and the schedule stay attached. The
+        // register's totals stay the truth: when the lines add up to something else, the panel
+        // says so with both figures, because a difference is either a rounding or a file to look at.
+        //
+        // Three cases, in the order they are met: the register document is in this same import;
+        // it is already in the store from an earlier one; there is none, and the lines alone are
+        // enough to make the document — everything but the due date, which the register has and
+        // this file does not.
+        for (const entry of fonte.records) {
+          const chi = cliente(entry.cliente, fonte.name);
+          const sagoma = { tipo: entry.tipo, numero: entry.numero, serie: entry.serie, data: entry.data, stato: "x" };
+          const chiave = documentKey(sagoma);
+          const prima = chiave ? chiavi.get(chiave) : null;
+          const nome = _titolo(sagoma, chi.nome);
+
+          if (prima && !prima.ricostruito) {
+            conta(false, nome);
+            continue;
+          }
+          let doc;
+          if (prima && prima.inPiano) {
+            doc = documenti.find((d) => d.id === prima.id);
+          } else if (prima) {
+            doc = esistenti.docs.find((d) => d.id === prima.id);
+          }
+          if (doc) {
+            const primaTotale = doc.totali ? doc.totali.imponibile : null;
+            const completo = _withTotals({ ...doc, righe: entry.righe.map((r) => ({ ...r })), _completa: true, _fonte: fonte.name });
+            completo.righeImportate = true;
+            if (prima.inPiano) {
+              const at = documenti.findIndex((d) => d.id === prima.id);
+              documenti.splice(at, 1, completo);
+            } else {
+              documenti.push(completo);
+            }
+            report.completati = (report.completati || 0) + 1;
+            (report.nomi.completati ||= []).push(nome);
+            // Both amounts are the stored form, already scaled: compared as they are, not through
+            // `_scarto`, which reads a decimal written for a person.
+            if (primaTotale !== null && BigInt(primaTotale) !== BigInt(completo.totali.imponibile)) {
+              report.avvisi.push({
+                chiave: "impLinesDiffer", numero: doc.numero,
+                dichiarato: money(BigInt(primaTotale)), calcolato: money(BigInt(completo.totali.imponibile)),
+              });
+            }
+            continue;
+          }
+          // No register document: the lines make one on their own.
+          const nuovo = draft({
+            tipo: entry.tipo,
+            stato: (KINDS[entry.tipo] || KINDS.TD01).stati[0],
+            data: entry.data,
+            numero: entry.numero,
+            serie: entry.serie || undefined,
+            esportato: true,
+            righe: entry.righe.map((r) => ({ ...r })),
+          });
+          nuovo.partyId = chi.id;
+          nuovo._fonte = fonte.name;
+          nuovo.righeImportate = true;
+          conta(true, nome);
+          if (chiave) chiavi.set(chiave, { id: nuovo.id, ricostruito: false, inPiano: true });
+          documenti.push(_withTotals(nuovo));
         }
       } else if (fonte.tipo === "fattura") {
         for (const { doc, cliente: incoming, avvisi, dichiarato } of fonte.letto.documenti) {
@@ -629,6 +697,7 @@ const ETICHETTE = {
   clienti: "impKindClienti",
   listino: "impKindListino",
   registro: "impKindRegistro",
+  righe: "impKindRighe",
   fattura: "impKindFattura",
   vecchio: "impKindVecchio",
   ignoto: "impKindIgnoto",

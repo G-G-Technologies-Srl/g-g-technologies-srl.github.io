@@ -351,6 +351,89 @@ await prova("importare due volte non duplica niente: clienti (anche sammarinesi)
   }
 });
 
+// -----------------------------------------------------------------------------------------------------------------
+//  i l   d e t t a g l i o   r i g h e
+// -----------------------------------------------------------------------------------------------------------------
+
+const HEAD_RIGHE = ["Data", "Documento", "Numero", "Serie", "Centro ricavo", "Cliente",
+                    "Indirizzo cliente", "Comune", "Provincia", "CAP", "Indirizzo extra", "Valuta orig.",
+                    "Categoria/Conto", "Codice", "Nome", "Quantita", "U.M.", "Imponibile",
+                    "Non imponibile", "IVA", "Aliquota IVA", "Codice IVA"];
+
+function rigaDettaglio(over = {}) {
+  const row = new Array(HEAD_RIGHE.length).fill("");
+  const v = {
+    0: "2026-07-27", 1: "Fattura", 2: "12", 5: "Bianchi Componenti S.r.l.", 6: "Via Verdi 12",
+    7: "Bologna", 8: "BO", 9: "40127", 11: "EUR", 12: "consulenza", 13: "consbasic",
+    14: "Analisi", 15: "1", 17: "3000", 18: "0", 19: "0", 20: "0", 21: "Non Imp. Art.8", ...over,
+  };
+  for (const [at, text] of Object.entries(v)) row[Number(at)] = text;
+  return row;
+}
+const DETTAGLIO_12 = [rigaDettaglio(), rigaDettaglio({ 14: "Sviluppo", 17: "2000" })];
+
+await prova("il dettaglio righe completa la ricostruzione del registro, nello stesso giro", async () => {
+  const piano = await plan([
+    file("r", await xlsx(HEAD_REGISTRO, [registro()])),
+    file("d", await xlsx(HEAD_RIGHE, DETTAGLIO_12)),
+  ]);
+  assert.equal(piano.documenti.length, 1, "un documento, non due");
+  const doc = piano.documenti[0];
+  assert.deepEqual(doc.righe.map((r) => [r.descrizione, r.prezzoUnitario, r.natura]),
+    [["Analisi", "3000", "N3.1"], ["Sviluppo", "2000", "N3.1"]]);
+  assert.equal(doc.totali.imponibile, piano.documenti[0].totali.imponibile);
+  assert.ok(doc.pagamento && doc.pagamento.rate.length === 1, "la scadenza del registro resta");
+  const fonte = piano.fonti[1];
+  assert.equal(fonte.tipo, "righe");
+  assert.equal(fonte.completati, 1);
+  assert.equal(fonte.nuovi, 0);
+  assert.ok(!fonte.avvisi.some((a) => a.chiave === "impLinesDiffer"), "3000 + 2000 fanno i 5000 del registro");
+});
+
+await prova("righe che non tornano con il registro: si prendono, e il pannello dice i due numeri", async () => {
+  const piano = await plan([
+    file("r", await xlsx(HEAD_REGISTRO, [registro()])),
+    file("d", await xlsx(HEAD_RIGHE, [rigaDettaglio({ 17: "4500" })])),
+  ]);
+  const avviso = piano.fonti[1].avvisi.find((a) => a.chiave === "impLinesDiffer");
+  assert.ok(avviso, "avvisato");
+  assert.equal(avviso.numero, "12");
+  assert.match(avviso.dichiarato, /5\.000,00/);
+  assert.match(avviso.calcolato, /4\.500,00/);
+});
+
+await prova("il dettaglio completa una ricostruzione già scritta, e l'annullamento la rimette", async () => {
+  const db = await openDatabase();
+  await apply(db, await plan([file("r", await xlsx(HEAD_REGISTRO, [registro({ 5: "SI" })]))]));
+  const stub = (await list(db, "docs"))[0];
+  const secondo = await plan([file("d", await xlsx(HEAD_RIGHE, DETTAGLIO_12))],
+    { docs: await list(db, "docs"), parties: await list(db, "parties") });
+  assert.equal(secondo.fonti[0].completati, 1);
+  assert.equal(secondo.documenti[0].id, stub.id, "stesso id: l'incasso resta agganciato");
+  await apply(db, secondo);
+  const docs = await list(db, "docs");
+  assert.equal(docs.length, 1);
+  assert.equal(docs[0].righe.length, 2);
+  assert.equal(docs[0].righeImportate, true);
+  assert.equal((await list(db, "payments")).length, 1);
+  await undoLast(db);
+  assert.equal((await list(db, "docs"))[0].righe.length, 1, "torna la ricostruzione");
+});
+
+await prova("senza registro, il dettaglio basta a fare il documento; due volte non lo raddoppia", async () => {
+  const db = await openDatabase();
+  const primo = await plan([file("d", await xlsx(HEAD_RIGHE, DETTAGLIO_12))]);
+  assert.equal(primo.fonti[0].nuovi, 1);
+  assert.equal(primo.documenti[0].righe.length, 2);
+  assert.equal(primo.documenti[0].stato, "inviato");
+  assert.equal(primo.clienti.length, 1, "il cliente nasce dalle righe");
+  await apply(db, primo);
+  const secondo = await plan([file("d", await xlsx(HEAD_RIGHE, DETTAGLIO_12))],
+    { docs: await list(db, "docs"), parties: await list(db, "parties") });
+  assert.equal(secondo.fonti[0].nuovi, 0);
+  assert.equal(secondo.fonti[0].esistenti, 1);
+});
+
 await prova("i file veri di Fatture in Cloud, se sono sul disco: righe dall'XML, completamento, e niente doppioni", async () => {
   // The real exports live in `_src/fonti/fic/`, outside the repository. Two rounds of everything:
   // the XML must carry its own line words, complete the register's sketch of the same invoice,
@@ -384,6 +467,31 @@ await prova("i file veri di Fatture in Cloud, se sono sul disco: righe dall'XML,
     await apply(db, piano);
     assert.deepEqual(await conta(), dopo);
   }
+});
+
+await prova("il dettaglio vero, se è sul disco: completa il registro vero, e i totali tornano", async () => {
+  const dir = new URL("../../../_src/fonti/fic/", import.meta.url);
+  const nomi = ["clienti.xlsx", "documenti.xls", "righe.xls"];
+  if (!nomi.every((n) => fs.existsSync(new URL(n, dir)))) {
+    console.log("  (file veri non presenti: prova saltata)");
+    return;
+  }
+  const db = await openDatabase();
+  const veri = () => nomi.map((n) => ({ name: n, bytes: new Uint8Array(fs.readFileSync(new URL(n, dir))) }));
+  const piano = await plan(veri());
+  const dettaglio = piano.fonti.find((f) => f.tipo === "righe");
+  assert.ok(dettaglio, "il file si riconosce come dettaglio righe");
+  assert.deepEqual(dettaglio.scartate, [], `colonne non riconosciute: ${dettaglio.scartate.join(", ")}`);
+  assert.deepEqual(dettaglio.problemi, [], JSON.stringify(dettaglio.problemi));
+  assert.ok(dettaglio.completati > 0, "completa le fatture del registro");
+  assert.equal(dettaglio.nuovi, 0, "ogni riga ha la sua fattura nel registro");
+  const differenze = dettaglio.avvisi.filter((a) => a.chiave === "impLinesDiffer");
+  assert.deepEqual(differenze, [], "i totali delle righe sono quelli del registro");
+  const conRighe = piano.documenti.filter((d) => d.righeImportate);
+  assert.ok(conRighe.some((d) => d.righe.length >= 2), "una fattura con più righe");
+  assert.ok(conRighe.every((d) => d.righe.every((r) => r.natura === "N3.1")), "art. 8 → N3.1, ovunque");
+  await apply(db, piano);
+  console.log(`  ${dettaglio.completati} fatture completate dal dettaglio vero`);
 });
 
 await prova("un documento importato porta i suoi totali", async () => {

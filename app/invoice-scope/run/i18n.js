@@ -742,8 +742,9 @@ const IT = {
   // validatore, e per la stessa ragione — un messaggio scritto dentro la logica esiste in una lingua
   // sola, e questo è un progetto in cui una correzione a una lingua sola è già finita online.
   impTitle: "Da un altro programma",
-  impNote: "Porti dentro clienti, listino e documenti da Fatture in Cloud, e le fatture in XML da "
-    + "qualsiasi gestionale. Scegli i file così come li scarichi — .xlsx, .xls, XML, anche tutti "
+  impNote: "Porti dentro clienti, listino e documenti da Fatture in Cloud — con il dettaglio delle "
+    + "righe, se esporti anche quello — e le fatture in XML da qualsiasi gestionale. Scegli i file "
+    + "così come li scarichi — .xlsx, .xls, XML, anche tutti "
     + "insieme, anche lo ZIP del backup: prima di scrivere vedi cosa è stato letto, e niente entra "
     + "finché non confermi.",
   impPick: "Scegli i file…",
@@ -762,6 +763,7 @@ const IT = {
   impKindClienti: "Anagrafica clienti",
   impKindListino: "Listino",
   impKindRegistro: "Registro dei documenti",
+  impKindRighe: "Dettaglio righe dei documenti",
   impKindFattura: "Fattura elettronica",
   impKindVecchio: "Foglio Excel del 1995",
   impKindIgnoto: "Non lo riconosco",
@@ -779,7 +781,7 @@ const IT = {
   impPaidNote: "Saldata secondo il registro di Fatture in Cloud",
   impNamesNew: "Nuovi",
   impNamesExisting: "Già presenti",
-  impNamesCompleted: "Completati dall'XML, al posto della ricostruzione",
+  impNamesCompleted: "Completati con le righe vere, al posto della ricostruzione",
   impUndo: "Annulla l'ultima importazione",
   impUndoWhen: "Ultima importazione: {quando} — {clienti} clienti, {listino} voci di listino, "
     + "{documenti} documenti, {incassi} incassi.",
@@ -790,6 +792,8 @@ const IT = {
   impFrom: "Importato da {fonte} il {quando}.",
   emptyImport: "Se arrivi da un altro programma, puoi importare quello che hai.",
   impTotalDiffers: "documento {numero}: il file dichiara {dichiarato}, le righe fanno {calcolato}",
+  impLinesDiffer: "documento {numero}: il registro dice {dichiarato} di imponibile, le righe del "
+    + "dettaglio fanno {calcolato}",
   impBrokenXml: "L'XML è rotto: non si apre.",
   impreadNotFattura: "È un XML, ma non una fattura elettronica.",
   impreadNoBody: "La fattura non ha nessun corpo.",
@@ -798,6 +802,8 @@ const IT = {
   ficCountry: "riga {riga}: «{valore}» non è un paese che sappia nominare, entra come Italia",
   ficNoDate: "riga {riga}: «{valore}» non è una data",
   ficKind: "riga {riga}: «{valore}» non è un tipo di documento che gestisco",
+  ficNatura: "riga {riga}: «{valore}» è un codice IVA a zero che non so tradurre in una natura; la "
+    + "riga entra senza, e va completata prima di uscire come XML",
 
   readKind: "tipo {valore}: non lo gestisco, entra come fattura",
   readNoLines: "nessuna riga di dettaglio",
@@ -1590,8 +1596,9 @@ const EN = {
     + "- Measurements: span 4.20 m, clear height 2.80 m.\n",
 
   impTitle: "From another program",
-  impNote: "Bring customers, price list and documents over from Fatture in Cloud, and XML invoices "
-    + "from any management system. Pick the files as you downloaded them — .xlsx, .xls, XML, all at "
+  impNote: "Bring customers, price list and documents over from Fatture in Cloud — with the line "
+    + "detail, if you export that too — and XML invoices from any management system. Pick the files "
+    + "as you downloaded them — .xlsx, .xls, XML, all at "
     + "once is fine, and so is the backup ZIP: before anything is written you see what was read, and "
     + "nothing goes in until you confirm.",
   impPick: "Choose files…",
@@ -1610,6 +1617,7 @@ const EN = {
   impKindClienti: "Customer list",
   impKindListino: "Price list",
   impKindRegistro: "Document register",
+  impKindRighe: "Document line detail",
   impKindFattura: "Electronic invoice",
   impKindVecchio: "Excel sheet from 1995",
   impKindIgnoto: "Not recognised",
@@ -1627,7 +1635,7 @@ const EN = {
   impPaidNote: "Paid, according to the Fatture in Cloud register",
   impNamesNew: "New",
   impNamesExisting: "Already here",
-  impNamesCompleted: "Completed from the XML, in place of the reconstruction",
+  impNamesCompleted: "Completed with their real lines, in place of the reconstruction",
   impUndo: "Undo the last import",
   impUndoWhen: "Last import: {quando} — {clienti} customers, {listino} price-list lines, "
     + "{documenti} documents, {incassi} payments.",
@@ -1638,6 +1646,8 @@ const EN = {
   impFrom: "Imported from {fonte} on {quando}.",
   emptyImport: "Coming from another program? You can import what you have.",
   impTotalDiffers: "document {numero}: the file states {dichiarato}, the lines add up to {calcolato}",
+  impLinesDiffer: "document {numero}: the register says {dichiarato} taxable, the detail lines add "
+    + "up to {calcolato}",
   impBrokenXml: "The XML is broken: it will not open.",
   impreadNotFattura: "It is XML, but not an electronic invoice.",
   impreadNoBody: "The invoice has no body at all.",
@@ -1646,6 +1656,8 @@ const EN = {
   ficCountry: "row {riga}: «{valore}» is not a country this can name, entered as Italy",
   ficNoDate: "row {riga}: «{valore}» is not a date",
   ficKind: "row {riga}: «{valore}» is not a document type this handles",
+  ficNatura: "row {riga}: «{valore}» is a zero-rate VAT code this cannot turn into a nature; the "
+    + "line comes in without one, and needs it before it goes out as XML",
 
   readKind: "type {valore}: not handled, entered as an invoice",
   readNoLines: "no detail lines",
