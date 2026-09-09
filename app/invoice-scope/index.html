@@ -295,7 +295,7 @@
             <span class="f-dot" aria-hidden="true"></span>
             <div>
               <h4>Aggiornamenti</h4>
-              <p>Da soli. Accanto al nome dell'app c'è la versione; quando ne è pronta una nuova, la scritta lo dice e la tocchi per passare.</p>
+              <p>Da soli. Accanto al nome dell'app c'è la versione; quando ne è pronta una nuova, la scritta lo dice e la tocchi per passare. Per saperlo il browser rilegge un file dell'app dal nostro sito, https://ggtechnologies.sm/app/invoice-scope/run/sw.js: è l'unica richiesta dopo il caricamento, e non porta niente di tuo.</p>
             </div>
           </div>
           <div class="fact">
@@ -328,7 +328,7 @@
           </details>
           <details class="faq-item reveal">
             <summary>Come verifico che i dati dei miei clienti restino qui?</summary>
-            <p>Puoi guardarlo tu. Apri gli strumenti per sviluppatori del browser, scheda «Rete», e usa l'app: dopo il caricamento della pagina non compare nessuna richiesta. Il codice è pubblico, quindi puoi anche leggere cosa fa.</p>
+            <p>Puoi guardarlo tu. Apri gli strumenti per sviluppatori del browser, scheda «Rete», e usa l'app: dopo il caricamento della pagina non compare nessuna richiesta — tranne una, di tanto in tanto: il browser rilegge https://ggtechnologies.sm/app/invoice-scope/run/sw.js, un file dell'app stessa, per sapere se c'è una versione nuova. È una lettura dal nostro sito, e non porta niente di tuo. Il codice è pubblico, quindi puoi anche leggere cosa fa.</p>
           </details>
           <details class="faq-item reveal">
             <summary>Che prove posso controllare prima di fidarmi dei conti?</summary>

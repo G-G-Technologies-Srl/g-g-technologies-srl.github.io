@@ -229,7 +229,7 @@
             <span class="f-dot" aria-hidden="true"></span>
             <div>
               <h4>Updates</h4>
-              <p>On their own. Next to the app's name is its version; when a new one is ready, the line says so and you tap it to switch.</p>
+              <p>On their own. Next to the app's name is its version; when a new one is ready, the line says so and you tap it to switch. To know, the browser re-reads one file of the app from our site, https://ggtechnologies.sm/app/plan-scope/run/sw.js: it is the only request after loading, and it carries nothing of yours.</p>
             </div>
           </div>
           <div class="fact">
@@ -279,7 +279,7 @@
         <div class="faq-list">
           <details class="faq-item reveal">
             <summary>How do I verify my data stays here?</summary>
-            <p>You can check it yourself. Open your browser's developer tools, the Network tab, and use the app: after the page has loaded no request appears. The code is public too, so you can read what it does.</p>
+            <p>You can check it yourself. Open your browser's developer tools, the Network tab, and use the app: after the page has loaded no request appears — except one, now and then: the browser re-reads https://ggtechnologies.sm/app/plan-scope/run/sw.js, a file of the app itself, to know whether a new version exists. It is a read from our site, and it carries nothing of yours. The code is public too, so you can read what it does.</p>
           </details>
           <details class="faq-item reveal">
             <summary>Can two of us work on it?</summary>
