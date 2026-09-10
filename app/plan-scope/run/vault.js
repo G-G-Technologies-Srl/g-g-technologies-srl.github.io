@@ -12,6 +12,12 @@
 // Identity is the `uid` on every record, never the file name: a page renamed by hand is the same
 // page, and a page written in Obsidian without an id gets one the first time the app reads it.
 //
+// People travel the same way. `project.json` carries `people` — a uid, a name and a role — so that
+// a folder can say who works on what to somebody who has none of the cards. What it never carries
+// is a way to reach them: the address book is whoever keeps it, not the project. The list is built
+// by `model.travelling` on the way out and again on the way in, so a file written by hand cannot
+// smuggle an email into somebody else's address book.
+//
 // Pure: `write` turns a payload into `{ path, bytes | text }` entries, `read` turns entries back
 // into a payload. The folder itself is the caller's business, and the tests use a Map.
 

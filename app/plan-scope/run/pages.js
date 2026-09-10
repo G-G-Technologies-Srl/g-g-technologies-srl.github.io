@@ -123,7 +123,6 @@ export function show(visible) {
 export function paintTable(projectId) {
   const project = model.project(projectId);
   if (!project) return;
-  el("pagesTitle").textContent = tf("pagesTitle", { name: project.name || t("projectUntitled") });
   const keys = model.pagePropKeysOf(projectId);
   const all = model.pagesOf(projectId).map((page) => ({ page, props: md.frontmatter(page.markdown).props }));
 

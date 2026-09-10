@@ -23,6 +23,11 @@
 //    dated copies are deleted, those and nothing else, matched by name, in a folder that is not
 //    ours to tidy. The fingerprint and the time of the last write are saved beside the handle,
 //    so that a reopen with nothing changed writes nothing and still says when the last copy was.
+//    A snapshot may also carry **files that do not fit in the text** — Plan Scope's images, which
+//    are blobs and would have to become base64 to travel in JSON. They are written beside it,
+//    named by their content, so the thirty dated copies share one set of pictures instead of
+//    carrying thirty; and they are swept, once a day, only when no copy in the folder names them
+//    any more. Invoice Scope passes none, and writes exactly the one file it wrote before.
 //
 // **Nothing here makes a request.** The folder is the operating system's, and so is whatever
 // carries it elsewhere. Only Chromium browsers on a desktop hand a folder out — `available()` says
@@ -138,6 +143,71 @@ export function linkFolder({ id, load, save, key = "folderHandle" }) {
 }
 
 // -----------------------------------------------------------------------------------------------------------------
+//  p r i v a t e
+// -----------------------------------------------------------------------------------------------------------------
+
+/** The names a dated copy can have, for a prefix: `<prefix>-2026-09-10.json` and nothing else. */
+function _datedNames(prefix) {
+  return new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}-(\\d{4}-\\d{2}-\\d{2})\\.json$`);
+}
+
+/**
+ * One file beside the text, in `dir` or one folder down — the shape `vault.js` lays a project out
+ * in. `false` when the same file is already there: a name that carries its content is a name that
+ * never needs rewriting, and a rewrite is a change a sync client would have to carry.
+ */
+async function _putBeside(dir, { path, bytes }) {
+  const [head, ...rest] = String(path).split("/");
+  const folder = rest.length ? await dir.getDirectoryHandle(head, { create: true }) : dir;
+  const name = rest.length ? rest.join("/") : head;
+  const handle = await folder.getFileHandle(name, { create: true });
+  if ((await handle.getFile()).size === bytes.length) return false;
+  const writable = await handle.createWritable();
+  await writable.write(bytes);
+  await writable.close();
+  return true;
+}
+
+/**
+ * The files that no copy of the archive names any more, gone.
+ *
+ * Every copy in the folder is asked, the dated ones included — a picture taken out of a project
+ * today is exactly what the copy of yesterday is there to give back, and sweeping by «the latest
+ * archive does not name it» would delete it the same afternoon.
+ *
+ * Which folders are ours is **declared, never guessed**: the last picture taken out of an app
+ * leaves nothing to infer a name from, and a sweep that inferred it from what is on disk would
+ * be an app tidying folders that belong to somebody else.
+ */
+async function _sweep(dir, { prefix, dated, referenced, files, folders }) {
+  const wanted = new Set();
+  for (const file of files) wanted.add(String(file.path));
+  for await (const name of dir.keys()) {
+    if (name !== `${prefix}.json` && !dated.test(name)) continue;
+    const handle = await dir.getFileHandle(name);
+    for (const path of referenced(await (await handle.getFile()).text())) wanted.add(String(path));
+  }
+
+  const swept = [];
+  for (const folder of folders) {
+    let handle = null;
+    try {
+      handle = await dir.getDirectoryHandle(folder);
+    } catch (ignored) {
+      continue;                         // an archive named it, nobody ever wrote it
+    }
+    // Collected first, removed after: a folder being read is not a folder to delete from.
+    const gone = [];
+    for await (const name of handle.keys()) if (!wanted.has(`${folder}/${name}`)) gone.push(name);
+    for (const name of gone) {
+      await handle.removeEntry(name);
+      swept.push(`${folder}/${name}`);
+    }
+  }
+  return swept;
+}
+
+// -----------------------------------------------------------------------------------------------------------------
 //  p u b l i c   —   t h e   a r c h i v e
 // -----------------------------------------------------------------------------------------------------------------
 
@@ -146,22 +216,35 @@ export function linkFolder({ id, load, save, key = "folderHandle" }) {
  * prune dated copies beyond `keep` — never below one, because below that the copy just written
  * would go with them. Returns what it did, for the tests.
  *
+ * `files` are what does not fit in the text — an app's images — as `{ path, bytes }`, with at most
+ * one folder in the path. They are written **before** the text that names them: a picture without
+ * its archive is something to tidy up, an archive without its picture is a hole in what somebody
+ * gets back.
+ *
+ * `referenced(text)` says which of those paths a copy of the archive names, and is what makes the
+ * sweeping possible without this file knowing anything about an app's records. `folders` names the
+ * folders the app writes into — `["assets"]` for Plan Scope — and the sweep touches those only.
+ * Without both, nothing is ever swept, which is Invoice Scope's case.
+ *
  * `dir` needs `getFileHandle(name, {create})`, `removeEntry(name)` and `keys()` — the shape of a
- * `FileSystemDirectoryHandle`, and of the fake in the tests.
+ * `FileSystemDirectoryHandle`, and of the fake in the tests — plus `getDirectoryHandle(name,
+ * {create})` when a snapshot carries files.
  */
-export async function writeSnapshot(dir, text, { prefix, today, keep = KEEP_DAYS }) {
+export async function writeSnapshot(dir, text, { prefix, today, keep = KEEP_DAYS,
+                                                 files = [], folders = [], referenced = null }) {
   const latest = `${prefix}.json`;
-  const dated = new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}-(\\d{4}-\\d{2}-\\d{2})\\.json$`);
-  const done = { latest, dated: null, pruned: [] };
+  const dated = _datedNames(prefix);
+  const done = { latest, dated: null, pruned: [], wrote: [], swept: [] };
 
-  const put = async (name) => {
+  const put = async (name, body) => {
     const file = await dir.getFileHandle(name, { create: true });
     const writable = await file.createWritable();
-    await writable.write(text);
+    await writable.write(body);
     await writable.close();
   };
 
-  await put(latest);
+  for (const file of files) if (await _putBeside(dir, file)) done.wrote.push(file.path);
+  await put(latest, text);
 
   const days = [];
   for await (const name of dir.keys()) {
@@ -170,7 +253,7 @@ export async function writeSnapshot(dir, text, { prefix, today, keep = KEEP_DAYS
   }
   if (!days.includes(today)) {
     done.dated = `${prefix}-${today}.json`;
-    await put(done.dated);
+    await put(done.dated, text);
     days.push(today);
   }
 
@@ -181,20 +264,63 @@ export async function writeSnapshot(dir, text, { prefix, today, keep = KEEP_DAYS
     await dir.removeEntry(name);
     done.pruned.push(name);
   }
+
+  // Once a day, when the copy of the day is made: the files no copy names any more.
+  if (done.dated && referenced && folders.length) {
+    done.swept = await _sweep(dir, { prefix, dated, referenced, files, folders });
+  }
   return done;
+}
+
+/**
+ * The copies a folder holds, newest first: the current one, then one per day.
+ *
+ * **Thirty dated copies that nobody can open are thirty copies kept for nobody.** They exist for
+ * the day somebody needs the version from before the mistake, and on that day the app has to have
+ * something to say about them — which means listing them, with the day and the size, so that a
+ * person can tell one from another before choosing. What a copy is put back *into* is the app's
+ * business and differs between the two; finding them is the same everywhere, so it is here.
+ *
+ * `dir` needs `entries()`, and each entry its `kind` and `getFile()`.
+ */
+export async function copies(dir, { prefix }) {
+  const latest = `${prefix}.json`;
+  const dated = _datedNames(prefix);
+  const out = [];
+  for await (const [name, entry] of dir.entries()) {
+    if (entry.kind !== "file") continue;
+    const day = dated.exec(name);
+    if (name !== latest && !day) continue;
+    const file = await entry.getFile();
+    out.push({
+      name,
+      day: day ? day[1] : null,
+      size: file.size,
+      when: new Date(file.lastModified).toISOString(),
+    });
+  }
+  // The current one opens the list, then the days newest first: the order somebody looks in.
+  out.sort((one, other) => (one.day === null ? -1 : other.day === null ? 1 : other.day.localeCompare(one.day)));
+  return out;
 }
 
 /**
  * The archive that writes itself into a linked folder.
  *
  * `folder` is a `linkFolder`; `snapshot()` gives `{ text, fingerprint }` — the fingerprint of the
- * records alone, with any timestamp the text carries left out; `prefix` names the files; `load`
- * and `save` keep `{ fingerprint, lastWrite }` under `stateKey`; `onStatus()` is called when a
- * write lands or a new error appears — and not on «nothing changed», which is the usual case and
- * would otherwise turn a redraw that calls `touch()` into a loop.
+ * records alone, with any timestamp the text carries left out — and, for an app whose records do
+ * not all fit in JSON, `files`; `prefix` names the files; `referenced(text)` is what lets those
+ * files be swept over the `folders` the app declares as its own; `load` and `save` keep
+ * `{ fingerprint, lastWrite }` under `stateKey`; `onStatus()` is called when a write lands or a
+ * new error appears — and not on «nothing changed», which is the usual case and would otherwise
+ * turn a redraw that calls `touch()` into a loop.
+ *
+ * An app carrying files gives their names to the fingerprint too: a picture pasted into a page
+ * moves no text, and an impression taken on the text alone would let it go unwritten.
  */
 export function backupWriter({ folder, snapshot, prefix, load, save, onStatus = () => {},
-                               stateKey = "backupState", lockName = `${prefix}-backup` }) {
+                               referenced = null, folders = [], stateKey = "backupState",
+                               lockName = `${prefix}-backup` }) {
   let fingerprint = null;
   let lastWrite = null;
   let lastError = null;
@@ -219,7 +345,8 @@ export function backupWriter({ folder, snapshot, prefix, load, save, onStatus = 
       await withLock(lockName, async () => {
         const fresh = await snapshot();
         if (fresh.fingerprint === fingerprint) return;
-        await writeSnapshot(folder.handle, fresh.text, { prefix, today: new Date().toISOString().slice(0, 10) });
+        await writeSnapshot(folder.handle, fresh.text, { prefix, referenced, folders,
+          files: fresh.files || [], today: new Date().toISOString().slice(0, 10) });
         fingerprint = fresh.fingerprint;
         lastWrite = new Date().toISOString();
         lastError = null;
@@ -233,16 +360,22 @@ export function backupWriter({ folder, snapshot, prefix, load, save, onStatus = 
     if (happened) onStatus();
   };
 
+  /** A timer that does not keep a process alive: Node has `unref`, the browser does not need it. */
+  const loose = (timer) => {
+    if (timer && typeof timer.unref === "function") timer.unref();
+    return timer;
+  };
+
   const schedule = (delay = WRITE_DELAY_MS) => {
     if (!folder.handle) return;
     clearTimeout(writeTimer);
-    writeTimer = setTimeout(write, delay);
+    writeTimer = loose(setTimeout(write, delay));
   };
 
   /** Catch up once a minute while the app is in front, and the moment it goes to the background. */
   const watch = () => {
     clearInterval(tickTimer);
-    tickTimer = setInterval(() => { if (document.visibilityState === "visible") write(); }, WRITE_EVERY_MS);
+    tickTimer = loose(setInterval(() => { if (document.visibilityState === "visible") write(); }, WRITE_EVERY_MS));
     if (watching) return;
     watching = true;
     document.addEventListener("visibilitychange", () => {

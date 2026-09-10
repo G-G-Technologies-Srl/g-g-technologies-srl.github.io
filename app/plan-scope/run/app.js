@@ -34,12 +34,14 @@ import * as versions from "./versions.js";
 import * as pages from "./pages.js";
 import * as importing from "./importing.js";
 import * as sync from "./sync.js";
+import * as folders from "./folders.js";
+import * as backup from "./backup.js";
 import * as theme from "gg/theme.js";
 import * as io from "gg/io.js";
 import { setup as setupInstall, isInstalled, system } from "gg/install.js";
 import * as update from "gg/update.js";
 import { t, tf, num, otherLang, setLang, resolveLang, missingKeys } from "./i18n.js";
-import { el, node, fill, applyText, snack, hideSnack, longDate, ask } from "./ui.js";
+import { el, node, button, fill, applyText, snack, hideSnack, longDate, bytes, ask } from "./ui.js";
 
 // Ten megabytes. Not a technical limit — IndexedDB would take far more — but the point at which one
 // image starts to be the reason a whole project cannot be exported, and the person who pasted it
@@ -47,7 +49,8 @@ import { el, node, fill, applyText, snack, hideSnack, longDate, ask } from "./ui
 const IMAGE_CAP = 10 * 1024 * 1024;
 const FILE_CAP = 25 * 1024 * 1024;      // an attachment; the archive screen shows what they add up to
 
-const SCREENS = ["home", "project", "page", "plan", "pages", "trash", "awards"];
+const SCREENS = ["home", "project", "page", "plan", "pages", "trash", "awards", "folderScreen",
+  "rubrica", "person"];
 
 let view = "home";
 let projectId = null;
@@ -60,6 +63,22 @@ const demoMode = new URLSearchParams(location.search).get("demo") === "1";
 let recent = [];                        // page ids, most recently opened first, kept in meta
 let days = [];                          // the days the app was opened on, as ISO dates, kept in meta
 let dropping = null;                    // the project whose shared folder the dialog is about to remove
+let personId = null;                    // la scheda aperta, quando si guarda una persona
+let backupLinked = false;               // the local folder is linked and writing: the export reminder rests
+const OTHER = "__other";                // «Un'altra cartella…», in the list of places to share into
+// Come si chiama, nella riga di risalita, la vista aperta del piano.
+const PLAN_VIEWS = { kanban: "viewKanban", calendar: "viewCalendar", timeline: "viewTimeline" };
+// Le schermate che stanno *dentro* un progetto. Le altre — cestino, traguardi, rubrica, la scheda
+// di una persona, le cartelle — non ci stanno, e la riga di risalita non deve dire che ci stanno
+// solo perché un progetto era aperto un momento prima.
+const IN_PROJECT = ["project", "plan", "pages", "page"];
+// I quattro modi di guardare un progetto, e il pulsante di ognuno.
+const VIEWS = [["goBoard", "kanban"], ["goCalendar", "calendar"], ["goTimeline", "timeline"], ["goPages", "pages"]];
+// I campi della scheda di una persona, e il campo del record a cui ognuno corrisponde.
+const PERSON_FIELDS = [["personName", "name"], ["personCompany", "company"], ["personRole", "role"],
+  ["personEmail", "email"], ["personPhone", "phone"]];
+// Che il benvenuto sia già stato visto è un fatto di questo browser, non dei dati: sta anche qui.
+const WELCOMED_KEY = "gg.plan-scope.welcomed";
 
 // Object URLs handed to the images on screen. They are revoked when the page closes: each one holds
 // its blob in memory for as long as it exists, and a session spent moving between pages would
@@ -77,7 +96,8 @@ function _show(name) {
   const changed = name !== view || (name === "page");
   view = name;
   for (const screen of SCREENS) el(screen).hidden = screen !== name;
-  el("goHome").hidden = name === "home";
+  _paintCrumbs();
+  _paintViews();
   // The editor fills the window and scrolls inside itself; every other screen is a document that
   // grows and takes the footer with it. Without this the page itself scrolls while writing, and the
   // app bar — the only way home once the app is installed — leaves the top of the screen.
@@ -135,37 +155,486 @@ async function _openHome() {
   projectId = null;
   pageId = null;
   home.paintHome(await db.room());
+  await _paintBackup();
   await _paintNudge();
   await _paintFolder();
   _show("home");
 }
 
-/** The folder's line on the archive, and the switch on the project: from what `sync` says. */
+/**
+ * Dove sei, e come si risale.
+ *
+ * Prima lo dicevano quattro pulsanti — «Progetti» nella barra, «Torna al progetto» due volte con le
+ * stesse parole, «Torna» dalle pagine — e nessuno dei quattro diceva dove fossi. Questa riga fa
+ * tutt'e due, e conta più di una comodità: installata, l'app gira in una finestra senza il pulsante
+ * indietro del browser, quindi la risalita che disegna l'app è l'unica che c'è.
+ *
+ * L'ultimo pezzo è dove sei: si legge e non si preme, e `aria-current` lo dice anche a chi la riga
+ * la sente invece di vederla.
+ */
+function _paintCrumbs() {
+  const bar = el("crumbs");
+  if (view === "home") {
+    bar.hidden = true;
+    return;
+  }
+  bar.hidden = false;
+
+  const parts = [{ label: t("goHome"), go: () => _openHome() }];
+  const project = projectId && IN_PROJECT.includes(view) ? model.project(projectId) : null;
+  if (project) {
+    parts.push({ label: project.name || t("projectUntitled"), go: () => _openProject(projectId) });
+  }
+  if (view === "trash") parts.push({ label: t("openTrash") });
+  else if (view === "folderScreen") parts.push({ label: t("placesTitle") });
+  else if (view === "rubrica") parts.push({ label: t("rubricaTitle") });
+  else if (view === "person") {
+    parts.push({ label: t("rubricaTitle"), go: () => _openRubrica() });
+    const person = personId ? model.contact(personId) : null;
+    parts.push({ label: person ? person.name || t("personNoName") : t("rubricaTitle") });
+  }
+  else if (view === "awards") parts.push({ label: t("awardsTitle") });
+  else if (view === "pages") parts.push({ label: t("treePages") });
+  else if (view === "plan") parts.push({ label: t(PLAN_VIEWS[plan.state().view] || "viewKanban") });
+  else if (view === "page") parts.push(..._pageCrumbs());
+
+  fill(bar, parts.flatMap((part, index) => {
+    const cells = index === 0 ? [] : [node("span", "sep", "/")];
+    if (part.go) {
+      cells.push(button("", part.label, () => _crumbTo(part.go)));
+    } else {
+      const here = node("span", "here", part.label);
+      here.setAttribute("aria-current", "page");
+      cells.push(here);
+    }
+    return cells;
+  }));
+}
+
+/**
+ * Una pagina di incontro: le righe già in testa, e il cursore dentro.
+ *
+ * Chi torna da una riunione scrive quello che si sono detti, non il formato in cui scriverlo. Le
+ * proprietà sono nella lingua di chi scrive, perché la pagina è un file Markdown che deve restare
+ * leggibile fuori dall'app — e fuori dall'app «con» e «with» li legge una persona, non un parser.
+ */
+function _newMeeting(target, withName = "") {
+  const today = model.todayISO();
+  const head = [
+    "---",
+    `${t("propKind")}: ${t("meetingKind")}`,
+    `${t("propDate")}: ${today}`,
+    `${t("propWith")}: ${withName}`,
+    `${t("propWhere")}: `,
+    "---",
+    "",
+    "",
+  ].join("\n");
+  const page = model.createPage(target, { title: tf("meetingTitle", { date: longDate(today) }) });
+  model.setMarkdown(page.id, head);
+  projectId = target;
+  _openPage(page.id);
+  snack(t("meetingHint"));
+  return page;
+}
+
+/**
+ * «Porta le caselle nel piano»: quello che è rimasto da fare, dal foglio al piano.
+ *
+ * È la seconda metà di «come eravamo rimasti»: le caselle aperte di un incontro diventano attività
+ * del progetto, assegnate a chi era presente. Un passo solo di undo, perché è un gesto solo.
+ *
+ * Le caselle già spuntate restano dove sono: portarle nel piano come «da fare» sarebbe riaprire
+ * quello che l'incontro aveva chiuso.
+ */
+function _boxesToPlan() {
+  const page = pageId ? model.page(pageId) : null;
+  if (!page) return undefined;
+  const text = page.markdown || "";
+  const found = csv.parseTaskList(csv.openBoxes(text));
+  if (!found.length) return snack(t("boxesNone"));
+
+  const props = md.frontmatter(text).props || {};
+  const named = String(props[t("propWith")] || props.con || props.with || "")
+    .split(",").map((one) => one.trim()).filter(Boolean);
+
+  const step = model.batch(() => {
+    for (const one of found) {
+      const task = model.createTask(page.projectId, { title: one.title, end: one.end });
+      if (one.tags.length || one.priority) model.updateTask(task.id, { tags: one.tags, priority: one.priority });
+      // A chi era presente: il primo nome, perché un'attività ha un assegnatario e non un elenco.
+      if (named[0]) model.assignByName(task.id, named[0]);
+    }
+  });
+  const words = found.length === 1 ? t("boxesDoneOne") : tf("boxesDone", { n: num(found.length, 0) });
+  _offerUndo(step, words);
+  return undefined;
+}
+
+/**
+ * Chi lavora a questo progetto, e in che veste.
+ *
+ * Il ruolo si cambia dove si legge, ed è modificabile **anche per una persona di cui qui non c'è la
+ * scheda**: un progetto arrivato da fuori porta nome e ruolo, e correggere «grafico» in
+ * «capoprogetto» non deve costare l'adozione di una persona che magari non interessa avere in
+ * rubrica. Il ruolo è del progetto, e qui si vede.
+ */
+function _paintPeople() {
+  if (!projectId) return;
+  const people = model.peopleOf(projectId);
+  el("peopleNone").hidden = people.length > 0;
+  fill(el("peopleList"), people.map((person) => {
+    const row = node("li", "row-item");
+    const known = model.contactByUid(person.uid);
+    if (known) row.append(button("link", person.name || t("personNoName"), () => _openPerson(known.id)));
+    else row.append(node("span", "", person.name || t("personNoName")));
+
+    const role = node("input", "role-field");
+    role.type = "text";
+    role.value = person.role || "";
+    role.maxLength = 60;
+    role.placeholder = t("peopleRole");
+    role.setAttribute("aria-label", t("peopleRole"));
+    role.addEventListener("input", () => model.setPersonRole(projectId, person.uid, role.value));
+    row.append(role);
+
+    // Una persona che il progetto nomina e che qui non ha una scheda: si adotta con il suo `uid`,
+    // così da quel momento le due copie parlano della stessa persona.
+    if (!known) {
+      row.append(button("ghost small", t("peopleAddToBook"), () => {
+        model.adoptPerson(projectId, person.uid);
+        _paintPeople();
+      }));
+    }
+    row.append(button("ghost small", t("peopleRemove"), () => {
+      model.removePerson(projectId, person.uid);
+      _paintPeople();
+      snack(tf("peopleRemoved", { name: person.name || t("personNoName") }));
+    }));
+    return row;
+  }));
+
+  fill(el("rubricaList"), model.liveContacts().map((one) => {
+    const option = node("option");
+    option.value = one.name;
+    return option;
+  }));
+}
+
+/**
+ * La rubrica: le persone, cercabili per nome, azienda o mestiere.
+ *
+ * Una riga dice il nome, chi è, e in quanti progetti lavora — che è la sola cosa che distingue una
+ * rubrica da un elenco di nomi: dice a cosa serve conoscerla.
+ */
+function _openRubrica() {
+  personId = null;
+  _paintRubrica();
+  _show("rubrica");
+}
+
+function _paintRubrica() {
+  const wanted = el("personSearch").value.trim().toLowerCase();
+  const all = model.liveContacts();
+  const found = !wanted ? all : all.filter((one) => [one.name, one.company, one.role]
+    .some((field) => String(field || "").toLowerCase().includes(wanted)));
+  el("rubricaEmpty").hidden = all.length > 0;
+  fill(el("personList"), found.map((one) => {
+    const row = node("li", "row-item");
+    row.append(button("link", one.name || t("personNoName"), () => _openPerson(one.id)));
+    const said = [];
+    if (one.company) said.push(one.company);
+    if (one.role) said.push(one.role);
+    const where = model.projectsOfContact(one.uid || one.id).length;
+    said.push(where === 0 ? t("rubricaNowhere")
+      : where === 1 ? t("rubricaInOne") : tf("rubricaIn", { n: num(where, 0) }));
+    row.append(node("span", "meta", said.join(" · ")));
+    return row;
+  }));
+}
+
+/**
+ * La scheda di una persona.
+ *
+ * Le tre sezioni sotto i suoi dati sono il motivo per cui la rubrica sta fuori dai progetti: dove
+ * lavora, cosa vi siete detti, come eravate rimasti — tutte e tre **attraverso tutti i progetti**,
+ * che è la domanda a cui una pagina dentro un progetto non poteva rispondere.
+ */
+function _openPerson(id) {
+  const person = model.contact(id);
+  if (!person) return _openRubrica();
+  personId = id;
+  _paintPerson();
+  _show("person");
+  return undefined;
+}
+
+function _paintPerson() {
+  const person = model.contact(personId);
+  if (!person) return;
+  const uid = person.uid || person.id;
+  el("personTitle").textContent = person.name || t("personNoName");
+  for (const [id, field] of PERSON_FIELDS) el(id).value = person[field] || "";
+
+  const where = model.projectsOfContact(uid);
+  el("personProjectsNone").hidden = where.length > 0;
+  fill(el("personProjects"), where.map(({ project, role }) => {
+    const row = node("li", "row-item");
+    row.append(button("link", project.name || t("projectUntitled"), () => _openProject(project.id)));
+    row.append(node("span", "meta", role || t("personNoRole")));
+    return row;
+  }));
+
+  const met = model.pagesAbout(uid);
+  el("personMeetingsNone").hidden = met.length > 0;
+  el("personMeetingsNone").textContent = tf("personMeetingsNone", { name: person.name || "" });
+  fill(el("personMeetings"), met.map(({ page, project, date }) => {
+    const row = node("li", "row-item");
+    row.append(button("link", page.title || t("pageUntitled"), () => _openPage(page.id)));
+    const said = [project.name || t("projectUntitled")];
+    if (date) said.unshift(longDate(date));
+    row.append(node("span", "meta", said.join(" · ")));
+    return row;
+  }));
+
+  const open = model.tasksOfContact(uid);
+  el("personTasksNone").hidden = open.length > 0;
+  fill(el("personTasks"), open.map(({ task, project }) => {
+    const row = node("li", "row-item");
+    row.append(button("link", task.title || t("taskUntitled"), () => {
+      plan.setProject(project.id);
+      _openPlan(project.id);
+      plan.openCard(task.id);
+    }));
+    const said = [project.name || t("projectUntitled")];
+    if (task.end) said.push(longDate(task.end));
+    row.append(node("span", "meta", said.join(" · ")));
+    return row;
+  }));
+}
+
+/**
+ * «Cartelle e copie»: dove stanno i dati.
+ *
+ * Due sezioni e non due dialoghi, perché quello che contengono non è una domanda a cui si risponde
+ * e si chiude: è un elenco di copie e un elenco di cartelle con i loro permessi, cioè uno stato che
+ * si guarda e su cui ogni tanto si fa qualcosa.
+ */
+async function _openPlaces() {
+  el("folderWho").value = sync.who() || "";
+  await _paintPlaces();
+  _show("folderScreen");
+}
+
+/** Le due sezioni, insieme: chi entra le trova già scritte tutt'e due. */
+async function _paintPlaces() {
+  await _paintBackupSection();
+  await _paintFolders();
+  await _paintBackup();
+  await _paintFolder();
+}
+
+/**
+ * Le quattro viste, e quale è accesa.
+ *
+ * Stanno su scheda, piano e pagine — le tre schermate che sono modi di guardare *un progetto*.
+ * Sulla pagina no: lì sei dentro un documento, la riga sopra basta a uscirne, e una quarta barra
+ * prima dell'editor sarebbe l'editor spinto in fondo allo schermo.
+ *
+ * Sulla scheda nessuna è accesa, ed è giusto: la scheda non è una delle quattro, è il posto da cui
+ * si sceglie. Accenderne una direbbe che stai già guardando in quel modo.
+ */
+function _paintViews() {
+  const inside = Boolean(projectId) && ["project", "plan", "pages"].includes(view);
+  el("views").hidden = !inside;
+  if (!inside) return;
+  const now = view === "pages" ? "pages" : view === "plan" ? plan.state().view : null;
+  for (const [id, kind] of VIEWS) {
+    el(id).classList.toggle("on", kind === now);
+    el(id).toggleAttribute("aria-current", kind === now);
+  }
+}
+
+/**
+ * Una delle quattro, da qualunque schermata del progetto.
+ *
+ * Dal piano si cambia vista senza cambiare schermata — è la stessa schermata che disegna in tre
+ * modi; da fuori si entra nel piano già nella vista chiesta, che è quello che la persona ha detto
+ * di volere premendo quel nome.
+ */
+function _goView(kind) {
+  if (!projectId) return undefined;
+  if (kind === "pages") return _openPages(projectId);
+  if (view === "plan") {
+    plan.setView(kind);
+    return undefined;
+  }
+  return _openPlan(projectId, { view: kind });
+}
+
+/**
+ * La pagina aperta e le pagine che la contengono.
+ *
+ * Oltre due antenati si elide con un «…» che porta all'albero: una riga di risalita che va a capo
+ * ha smesso di essere una riga, e la profondità vera di un albero di pagine non ha un limite.
+ */
+function _pageCrumbs() {
+  const page = model.page(pageId);
+  if (!page) return [];
+  const chain = [];
+  let cursor = page.parentId ? model.page(page.parentId) : null;
+  while (cursor) {
+    chain.unshift(cursor);
+    cursor = cursor.parentId ? model.page(cursor.parentId) : null;
+  }
+  const out = [];
+  if (chain.length > 2) {
+    out.push({ label: "…", go: () => _openPages(projectId) });
+    chain.splice(0, chain.length - 2);
+  }
+  for (const one of chain) out.push({ label: one.title || t("pageUntitled"), go: () => _openPage(one.id) });
+  out.push({ label: page.title || t("pageUntitled") });
+  return out;
+}
+
+/**
+ * Una risalita che parte da una pagina esce dalla stessa porta del pulsante che c'era prima: il
+ * testo com'era prende una versione, e le immagini lasciano la memoria.
+ *
+ * Prima questa uscita ce l'aveva solo «Torna al progetto»: chi lasciava una pagina da «Progetti»
+ * nella barra si portava dietro le immagini e non lasciava la versione. Adesso la risalita è una
+ * sola, e fa la stessa cosa da qualunque pezzo la si prenda.
+ */
+async function _crumbTo(go) {
+  if (view === "page" && pageId) {
+    await versions.snapshot(model.page(pageId), { force: true });
+    _releaseImages();
+  }
+  go();
+}
+
+/** The folders' line on the archive, and the switch on the project: from what `sync` says. */
 async function _paintFolder(error = null) {
   const state = await sync.status();
-  el("openFolder").hidden = state.kind === "unavailable";
-  el("sharedLine").hidden = state.kind !== "linked";
-  if (state.kind === "linked" && projectId) _paintShared();
+  el("openPlaces").hidden = state.kind === "unavailable";
+  // La spunta si vede appena il browser sa consegnare una cartella, e non solo quando ce n'è già
+  // una: spuntarla è il gesto che porta a sceglierne una, e nasconderla lascerebbe senza strada.
+  el("sharedLine").hidden = state.kind === "unavailable";
+  if (state.kind !== "unavailable" && projectId) _paintShared();
   const line = el("folderLine");
   if (state.kind === "unavailable" || state.kind === "none") {
     line.hidden = true;
     return;
   }
   line.hidden = false;
-  el("folderResume").hidden = state.kind !== "prompt";
+  el("folderResume").hidden = false;
   if (error) {
     el("folderText").textContent = tf("folderError", { error: error.message || String(error) });
     return;
   }
   if (state.kind === "prompt") {
-    el("folderText").textContent = tf("folderPrompt", { folder: state.folder });
+    el("folderText").textContent = tf("folderPrompt", { names: state.waiting.join(", ") });
     return;
   }
-  el("folderText").textContent = state.lastPull
-    // Local time, as «scritto alle» beside it: sliced from the ISO string it was UTC, and the two
-    // lines disagreed by the whole time zone.
-    ? tf("folderLinked", { folder: state.folder, who: state.who, time: new Date(state.lastPull).toTimeString().slice(0, 5) })
-    : tf("folderNever", { folder: state.folder, who: state.who });
+  // Local time, as «scritto alle» beside it: sliced from the ISO string it was UTC, and the two
+  // lines disagreed by the whole time zone.
+  const time = state.lastPull ? new Date(state.lastPull).toTimeString().slice(0, 5) : null;
+  const many = num(state.folders, 0);
+  el("folderText").textContent = !time ? tf("folderNeverRead", { n: many, who: state.who })
+    : state.folders === 1 ? tf("folderLinkedOne", { who: state.who, time })
+      : tf("folderLinkedMany", { n: many, who: state.who, time });
+}
+
+/**
+ * The folders in the dialog: what each one is, how many projects it holds, and what can be done
+ * to it. A folder waiting for its permission carries the button that asks for it, because the
+ * browser wants a gesture per folder and there is no honest way to ask for four at once.
+ */
+async function _paintFolders() {
+  const list = await folders.all();
+  el("folderEmpty").hidden = list.length > 0;
+  const rows = [];
+  let waiting = 0;
+  for (const one of list) {
+    // Una cartella che è un progetto non ne contiene altri, e chiederglielo vorrebbe dire leggerla
+    // per sapere una cosa che il suo `kind` dice già.
+    const inside = one.state === "granted" && one.kind !== "self" ? await folders.projectsIn(one.id) : [];
+    const unopened = sync.unopened(one.id, inside);
+    const mine = sync.projectsOf(one.id).map((project) => project.name || t("projectUntitled"));
+
+    const row = node("li", "folder-row");
+    row.append(node("span", "who", one.name));
+    const acts = node("span", "acts");
+    if (one.state !== "granted") {
+      acts.append(button("small", t("folderResumeOne"), async () => {
+        await sync.resumeFolder(one.id);
+        await _paintPlaces();
+      }));
+    }
+    if (!one.local) acts.append(button("ghost small", t("folderForget"), () => _forgetFolder(one)));
+    row.append(acts);
+
+    // Cosa c'è dentro, sotto il nome e non accanto: accanto i due si contendono la stessa riga, e
+    // su una cartella con tre progetti vince chi ha il nome più lungo. Sotto, la gerarchia è quella
+    // vera — la cartella è il posto, i progetti sono cosa contiene.
+    const said = mine.slice(0, 3);
+    if (mine.length > 3) said.push(tf("folderMore", { n: num(mine.length - 3, 0) }));
+    if (one.kind === "self") said.push(t("folderIsProject"));
+    else if (unopened.length) {
+      said.push(unopened.length === 1 ? t("folderToOpenOne") : tf("folderToOpenMany", { n: num(unopened.length, 0) }));
+    }
+    if (one.local) said.push(t("folderHere"));
+    if (!said.length) said.push(t("folderNothingIn"));
+    row.append(node("p", "what", said.join(" · ")));
+    rows.push(row);
+
+    // I progetti che stanno lì e qui no, indentati sotto la loro cartella: sono di quella, e
+    // l'indentazione è come l'elenco lo dice senza scriverlo.
+    for (const sub of unopened) {
+      const line = node("li", "folder-row inside");
+      line.append(node("span", "who", sub));
+      const act = node("span", "acts");
+      act.append(button("small", t("folderOpenOne"), () => _openFrom(one.id, sub)));
+      line.append(act);
+      rows.push(line);
+      waiting += 1;
+    }
+  }
+  el("folderNew").hidden = waiting === 0;
+  fill(el("folderItems"), rows);
+}
+
+/** A folder out of the list. The files stay; the projects inside it stop being shared. */
+async function _forgetFolder(one) {
+  if (!(await ask(tf("folderForgetAsk", { folder: one.name }), { ok: t("folderForget") }))) return;
+  await folders.forget(one.id);
+  await sync.pullNow();
+  await _paintFolders();
+  await _repaint();
+}
+
+/**
+ * Where this project goes.
+ *
+ * The question is asked when the switch is ticked and not at the first write, because «who am I
+ * sharing this with» is exactly what somebody is deciding at that moment. With no folder yet there
+ * is nothing to choose between, so the picker opens straight away.
+ */
+async function _askWhere() {
+  const list = folders.forSharing(await folders.all());
+  const options = [...list.map((one) => ({ value: one.id, label: one.name })),
+    { value: OTHER, label: t("shareOther") }];
+  const chosen = options.length === 1 ? OTHER : await ask(t("shareWhere"), { options });
+  if (!chosen) return null;
+  if (chosen !== OTHER) return chosen;
+  const who = sync.who() || String(await ask(t("folderWho"), { value: "" }) || "").trim();
+  if (!who) {
+    snack(t("folderNeedsName"));
+    return null;
+  }
+  const id = await sync.addFolder(who);
+  if (id) await _paintFolders();
+  return id;
 }
 
 /**
@@ -176,13 +645,92 @@ async function _paintFolder(error = null) {
 function _paintShared() {
   const state = sync.projectStatus(projectId);
   const text = el("sharedText");
-  if (state.kind === "off") text.textContent = tf("sharedOff", { folder: state.folder });
+  if (state.kind === "off") text.textContent = t("sharedOff");
   else if (state.kind === "soon") text.textContent = tf("sharedSoon", { folder: state.folder });
   else if (state.kind === "writing") text.textContent = tf("sharedWriting", { folder: state.folder });
   else if (state.kind === "on") {
-    const at = new Date(state.wrote);
-    text.textContent = tf("sharedOn", { folder: state.folder, sub: state.sub, time: at.toTimeString().slice(0, 5) });
+    const time = new Date(state.wrote).toTimeString().slice(0, 5);
+    // Senza sottocartella la cartella è il progetto: è quella che è arrivata da qualcun altro.
+    text.textContent = state.sub
+      ? tf("sharedOn", { folder: state.folder, sub: state.sub, time })
+      : tf("sharedOnSelf", { folder: state.folder, time });
   } else text.textContent = "";
+}
+
+/**
+ * The local folder's line on the archive, from what `backup` says.
+ *
+ * Four states, all said in words, and the same four Invoice Scope says: a browser that hands out
+ * no folder, no folder yet, a folder waiting for its permission again, a folder that is written —
+ * with the time of the last copy, or with what stopped the last one.
+ */
+async function _paintBackup() {
+  const state = await backup.status();
+  backupLinked = state.kind === "linked" && !state.error;
+
+  const line = el("backupLine");
+  if (state.kind === "unavailable" || state.kind === "none") {
+    line.hidden = true;
+    return;
+  }
+  line.hidden = false;
+  el("backupResume").hidden = state.kind !== "prompt";
+  el("backupText").textContent = _backupWords(state);
+}
+
+/** One state, one wording: the line on the archive and the line in the dialog say the same thing. */
+function _backupWords(state) {
+  if (state.kind === "unavailable") return t("backupUnavailable");
+  if (state.kind === "none") return t("backupNone");
+  if (state.kind === "prompt") return tf("backupPrompt", { folder: state.folder });
+  if (state.error) return tf("backupError", { folder: state.folder, error: state.error });
+  if (!state.lastWrite) return tf("backupNever", { folder: state.folder });
+  // Ora locale, come nella riga della cartella condivisa: affettata dalla stringa ISO sarebbe UTC,
+  // e le due righe si contraddirebbero di un fuso intero.
+  const when = new Date(state.lastWrite);
+  return tf("backupLinked", {
+    folder: state.folder,
+    when: `${longDate(state.lastWrite)} ${when.toTimeString().slice(0, 5)}`,
+  });
+}
+
+/** La sezione della copia automatica: dove scrive, e le copie che ci sono da riportare. */
+async function _paintBackupSection() {
+  const state = await backup.status();
+  el("backupStatus").textContent = _backupWords(state);
+  el("backupPick").hidden = state.kind === "unavailable";
+  el("backupPick").textContent = state.kind === "prompt" ? t("backupResume") : t("backupPick");
+  el("backupUnlink").hidden = state.kind === "none" || state.kind === "unavailable";
+  const copies = await backup.copies();
+  el("backupCopiesNone").hidden = copies.length > 0;
+  fill(el("backupCopyList"), copies.map((copy) => {
+    const row = node("li", "row");
+    row.append(node("span", "", copy.day ? longDate(copy.day) : t("backupCopyLatest")));
+    row.append(node("span", "meta", bytes(copy.size)));
+    row.append(node("span", "spacer"));
+    row.append(button("ghost small", t("backupRestore"), () => _restoreCopy(copy.name)));
+    return row;
+  }));
+}
+
+/**
+ * One copy back into the app. Asked first, and in the words of what it does: this replaces what is
+ * here, which is the one thing on this screen that cannot be undone.
+ */
+async function _restoreCopy(name) {
+  if (!(await ask(t("backupRestoreAsk"), { ok: t("backupRestore") }))) return;
+  await db.flush();
+  const outcome = await backup.restore(name);
+  if (!outcome.ok) {
+    snack(tf("backupRestoreFail", { reason: t(outcome.reason) }));
+    return;
+  }
+  model.hydrate(await db.loadAll());
+  await _openHome();
+  snack(tf("backupRestoreDone", {
+    records: num(outcome.restored, 0),
+    images: num(outcome.images || 0, 0),
+  }));
 }
 
 /**
@@ -199,7 +747,9 @@ async function _paintNudge() {
   const needs = !demoMode && model.liveProjects().some((project) => stale(project.exportedAt || project.created)
     && (model.pagesOf(project.id).length || model.tasksOf(project.id).length));
   const quiet = !stale(await db.meta("exportNudge", null));
-  el("exportNudge").hidden = !needs || quiet;
+  // Una cartella locale collegata sta già facendo quello che l'invito chiede: chiederlo lo stesso
+  // sarebbe chiedere a qualcuno di fare una cosa che ha appena finito di fare.
+  el("exportNudge").hidden = backupLinked || !needs || quiet;
 }
 
 /**
@@ -215,6 +765,7 @@ function _openProject(id) {
   projectId = id;
   pageId = null;
   home.paintProject(id);
+  _paintPeople();
   _paintFolder();
   _paintLog(id);
   _show("project");
@@ -303,10 +854,34 @@ function _openGuide() {
   _openProject(guide.id);
 }
 
-/** The welcome has been seen: it does not come back, whatever happens to the projects. */
+/**
+ * The welcome has been seen: it does not come back, whatever happens to the projects.
+ *
+ * **Two locks, and on purpose.** A welcome that comes back is the one interruption nobody forgives
+ * twice, and until now the whole promise rested on a single record in a single store: a database
+ * that fails to open on that one start, a `meta` lost or replaced, a write that does not land, and
+ * the door with two handles is in front of somebody who has already been through it. So the fact
+ * is also written where facts about *this browser* go — beside the one that remembers the install
+ * invitation — and either one is enough to keep the welcome away.
+ *
+ * `localStorage` throws in a private window rather than answering: whoever asks it takes the
+ * refusal and falls back on the database, which is the lock that survives the reboot anyway.
+ */
 async function _welcomed() {
   el("welcomeDialog").close();
-  if (!demoMode) await db.setMeta("welcomed", true);
+  if (demoMode) return;
+  try {
+    localStorage.setItem(WELCOMED_KEY, new Date().toISOString());
+  } catch (ignored) { /* private window, or storage off: the database is the other lock */ }
+  if (db.available()) await db.setMeta("welcomed", true);
+}
+
+/** Whether this browser has been welcomed already. Without a database, nobody is welcomed twice. */
+async function _alreadyWelcomed() {
+  try {
+    if (localStorage.getItem(WELCOMED_KEY)) return true;
+  } catch (ignored) { /* as above */ }
+  return db.available() ? Boolean(await db.meta("welcomed")) : true;
 }
 
 /** The page on screen, reloaded from the model: head, body, properties, tree. */
@@ -492,8 +1067,10 @@ function _badge() {
 /** Repaint whichever screen is up, after a change that could have touched it. */
 async function _repaint() {
   _badge();
+  // Il nome di un progetto o di una pagina può essere appena cambiato, e la riga lo porta.
+  _paintCrumbs();
   if (view === "home") { home.paintHome(await db.room()); await _paintNudge(); await _paintFolder(); }
-  else if (view === "project") { home.paintProject(projectId); await _paintLog(projectId); }
+  else if (view === "project") { home.paintProject(projectId); _paintPeople(); await _paintLog(projectId); }
   else if (view === "plan") plan.paint();
   else if (view === "trash") home.paintTrash();
   else if (view === "page") _paintTree();
@@ -756,6 +1333,8 @@ function _removalText(kind) {
 
 function _applyLanguage() {
   applyText();
+  // La riga di risalita la scrive JavaScript, quindi `applyText` non la raggiunge.
+  _paintCrumbs();
   // **The button says two things**, and which one depends on a fact only `gg/install.js` knows:
   // inside the installed app it stops inviting and says how to remove it. Without this question a
   // change of language wrote the invitation back over «Installata», on an app already there.
@@ -816,7 +1395,8 @@ function _applySoundLabel() {
 }
 
 function _toggleMore(open, which = "page") {
-  for (const [button, menu] of [["pageMore", "pageMoreMenu"], ["planMore", "planMoreMenu"]]) {
+  for (const [button, menu] of [["pageMore", "pageMoreMenu"], ["planMore", "planMoreMenu"],
+    ["appMore", "appMoreMenu"]]) {
     const on = open && button === `${which}More`;
     el(menu).hidden = !on;
     el(button).setAttribute("aria-expanded", on ? "true" : "false");
@@ -832,7 +1412,6 @@ function _applyThemeLabel() {
 // ---- wiring
 
 function _wire() {
-  el("goHome").addEventListener("click", () => _openHome());
   el("search").addEventListener("click", () => search.open());
   // Ctrl+K on Windows and Linux, ⌘K on a Mac: the shortcut every app with a search box has settled
   // on, so it is the one somebody will try. Not while a dialog is up — the card, the menu — because
@@ -930,8 +1509,9 @@ function _wire() {
   });
 
   el("openGuide").addEventListener("click", () => _openGuide());
-  // Esc counts as read: it was on screen, and a welcome that comes back is a nag.
-  el("welcomeDialog").addEventListener("close", () => { if (!demoMode && db.available()) db.setMeta("welcomed", true); });
+  // Esc counts as read: it was on screen, and a welcome that comes back is a nag. La stessa porta
+  // dei tre pulsanti, così i due lucchetti si chiudono comunque si esca.
+  el("welcomeDialog").addEventListener("close", () => { _welcomed(); });
   el("welcomeExample").addEventListener("click", async () => {
     await _welcomed();
     const example = model.liveProjects().find((one) => one.demo);
@@ -990,6 +1570,11 @@ function _wire() {
     _toggleMore(el("planMoreMenu").hidden, "plan");
   });
   el("planMoreMenu").addEventListener("click", () => _toggleMore(false));
+  el("appMore").addEventListener("click", (event) => {
+    event.stopPropagation();
+    _toggleMore(el("appMoreMenu").hidden, "app");
+  });
+  el("appMoreMenu").addEventListener("click", () => _toggleMore(false));
 
   // ---- what leaves, and what comes in
   el("printPage").addEventListener("click", () => outputs.print({ pageId, projectId }));
@@ -1073,17 +1658,11 @@ function _wire() {
   });
 
   el("openPlan").addEventListener("click", () => _openPlan(projectId));
-  el("planBack").addEventListener("click", () => _openProject(projectId));
 
   el("exportProject").addEventListener("click", _exportProject);
   el("exportData").addEventListener("click", _exportData);
 
   // ---- one page
-  el("pageBack").addEventListener("click", async () => {
-    await versions.snapshot(model.page(pageId), { force: true });
-    _releaseImages();
-    _openProject(projectId);
-  });
   el("openVersions").addEventListener("click", () => versions.open(pageId));
   versions.setup({ reload: _reloadPage }, { demo: demoMode });
   el("exportPage").addEventListener("click", _exportPage);
@@ -1115,47 +1694,144 @@ function _wire() {
     body: () => (source ? md.frontmatter(el("pageBody").value).body : editor.markdown()),
     openPage: (id) => _openPage(id),
   });
+  for (const [id, kind] of VIEWS) el(id).addEventListener("click", () => _goView(kind));
+
   el("openPages").addEventListener("click", () => _openPages(projectId));
   // The ring counts the tasks, so its door is the board; the deadlines are dates, so theirs is
   // the calendar. A panel that reports something and cannot be entered is a dead end.
   el("progressGo").addEventListener("click", () => _openPlan(projectId));
   el("dueGo").addEventListener("click", () => _openPlan(projectId, { view: "calendar" }));
-  el("pagesBack").addEventListener("click", () => _openProject(projectId));
 
   // ---- the shared folder
-  el("openFolder").addEventListener("click", async () => {
-    const state = await sync.status();
-    el("folderWho").value = state.who || sync.who() || "";
-    el("folderUnlink").hidden = state.kind === "none";
-    el("folderDialog").showModal();
+  // ---- chi lavora a un progetto
+  el("peopleAll").addEventListener("click", () => _openRubrica());
+  el("newMeeting").addEventListener("click", () => { if (projectId) _newMeeting(projectId); });
+  el("boxesToPlan").addEventListener("click", () => _boxesToPlan());
+  // Da una persona: l'incontro nasce già con il suo nome in testa, che è il gesto vero — nessuno
+  // apre la rubrica per creare una pagina vuota.
+  el("personMeeting").addEventListener("click", async () => {
+    const person = personId ? model.contact(personId) : null;
+    if (!person) return undefined;
+    const where = model.projectsOfContact(person.uid || person.id);
+    if (!where.length) return snack(t("personProjectsNone"));
+    if (where.length === 1) return _newMeeting(where[0].project.id, person.name) && undefined;
+    const chosen = await ask(t("meetingWhere"), {
+      options: where.map(({ project }) => ({ value: project.id, label: project.name || t("projectUntitled") })),
+    });
+    if (chosen) _newMeeting(chosen, person.name);
+    return undefined;
   });
-  el("folderClose").addEventListener("click", () => el("folderDialog").close());
-  el("folderPick").addEventListener("click", async () => {
+  el("addPersonForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const name = el("addPersonName").value.trim();
+    if (!name || !projectId) return;
+    // La porta è una: si cerca prima di creare, così scrivere un nome che c'è già non ne fa un altro.
+    const person = model.contactByName(name) || model.createContact({ name });
+    model.addPerson(projectId, person.id);
+    el("addPersonName").value = "";
+    _paintPeople();
+    snack(tf("peopleAdded", { name: person.name }));
+  });
+
+  // ---- la rubrica
+  el("openRubrica").addEventListener("click", () => _openRubrica());
+  el("personSearch").addEventListener("input", () => _paintRubrica());
+  el("newPerson").addEventListener("click", async () => {
+    const name = String(await ask(t("newPersonAsk"), { value: "" }) || "").trim();
+    if (!name) return undefined;
+    // La porta è una: se c'è già, la si apre invece di farne una seconda.
+    const person = model.contactByName(name) || model.createContact({ name });
+    return _openPerson(person.id);
+  });
+  // I campi si scrivono dove si leggono. Nessun «Salva»: come tutto il resto dell'app.
+  for (const [id, field] of PERSON_FIELDS) {
+    el(id).addEventListener("input", () => {
+      if (!personId) return;
+      model.updateContact(personId, { [field]: el(id).value });
+      // Solo il nome cambia quello che si vede altrove — il titolo qui, e nei progetti che la
+      // nominano — quindi solo il nome fa ridisegnare.
+      if (field === "name") {
+        el("personTitle").textContent = el(id).value || t("personNoName");
+        _paintCrumbs();
+      }
+    });
+  }
+  el("personTrash").addEventListener("click", async () => {
+    const person = personId ? model.contact(personId) : null;
+    if (!person) return undefined;
+    const name = person.name || t("personNoName");
+    if (!(await ask(tf("personTrashAsk", { name }), { ok: t("personTrash") }))) return undefined;
+    model.trashContact(person.id);
+    _openRubrica();
+    return snack(tf("personTrashed", { name }));
+  });
+
+  el("openPlaces").addEventListener("click", () => _openPlaces());
+  // Le due righe di stato sull'archivio portano qui: «riprendi il permesso» è una cosa che si fa
+  // una cartella alla volta, e questa è la schermata dove si vede quale.
+  el("folderResume").addEventListener("click", () => _openPlaces());
+  el("backupResume").addEventListener("click", () => _openPlaces());
+  el("folderAdd").addEventListener("click", async () => {
     const who = el("folderWho").value.trim();
     if (!who) return snack(t("folderNeedsName"));
-    const linked = await sync.link(who);
-    if (!linked) return undefined;
-    el("folderDialog").close();
+    await sync.setWho(who);
+    const id = await sync.addFolder();
+    if (!id) return undefined;
+    await _paintFolders();
+    await _paintFolder();
+    return snack(t("folderAdded"));
+  });
+  el("folderOpen").addEventListener("click", async () => {
+    const who = el("folderWho").value.trim();
+    if (who) await sync.setWho(who);
+    const outcome = await sync.openShared();
+    if (outcome.cancelled) return undefined;
+    if (!outcome.ok) return snack(t("openedNothing"));
     await _repaint();
-    return snack(t("folderDone"));
+    return snack(tf("opened", { name: outcome.project.name || t("projectUntitled") }));
   });
-  el("folderUnlink").addEventListener("click", async () => {
-    await sync.unlink();
-    el("folderDialog").close();
-    await _paintFolder();
-  });
-  el("folderResume").addEventListener("click", async () => {
-    await sync.resume();
-    await _paintFolder();
-  });
-  el("sharedToggle").addEventListener("change", () => {
+  el("sharedToggle").addEventListener("change", async () => {
     if (!projectId) return;
-    model.updateProject(projectId, { shared: el("sharedToggle").checked });
-    if (el("sharedToggle").checked) {
-      sync.share(projectId);
-      snack(t("sharedNow"));
+    if (!el("sharedToggle").checked) {
+      model.updateProject(projectId, { shared: false });
+      _paintShared();
+      return;
     }
+    // La spunta chiede dove, e una domanda annullata rimette la spunta com'era: un progetto
+    // «condiviso» senza una cartella sarebbe condiviso con nessuno, e lo direbbe lo stesso.
+    const where = await _askWhere();
+    if (!where) {
+      el("sharedToggle").checked = false;
+      _paintShared();
+      return;
+    }
+    model.updateProject(projectId, { shared: true });
+    sync.share(projectId, where);
+    snack(t("sharedNow"));
     _paintShared();
+    await _paintFolder();
+  });
+
+  // ---- la cartella locale
+
+  el("backupPick").addEventListener("click", async () => {
+    // Lo stesso pulsante fa le due cose che il momento richiede: scegliere una cartella, o
+    // riprendere quella che c'è. Sono due frasi diverse e un gesto solo.
+    const asking = (await backup.status()).kind === "prompt";
+    const done = asking ? await backup.resume() : await backup.link();
+    if (!done) return undefined;
+    await _paintBackupSection();
+    await _paintBackup();
+    return asking ? undefined : snack(t("backupDone"));
+  });
+  el("backupUnlink").addEventListener("click", async () => {
+    if (!(await ask(t("backupUnlinkAsk"), { ok: t("backupUnlink") }))) return;
+    await backup.unlink();
+    await _paintPlaces();
+  });
+  el("backupResume").addEventListener("click", async () => {
+    await backup.resume();
+    await _paintBackup();
   });
 
   el("exportNudgeOk").addEventListener("click", async () => {
@@ -1376,10 +2052,14 @@ function _connect() {
     hasFolder: (project) => Boolean(sync.folderOf(project)),
     dropFolder: (id) => {
       const project = model.project(id);
-      const folder = sync.folderOf(project);
-      if (!project || !folder) return;
+      const where = sync.folderOf(project);
+      if (!project || !where) return;
       dropping = id;
-      el("dropText").textContent = tf("dropText", { folder });
+      // Una cartella che *è* il progetto è di qualcun altro: lì non si cancella niente, si smette
+      // di seguirla, e il testo lo deve dire prima e non dopo.
+      el("dropText").textContent = where.sub
+        ? tf("dropText", { folder: where.sub })
+        : tf("dropTextSelf", { folder: where.folder });
       el("dropDialog").showModal();
     },
   });
@@ -1403,6 +2083,10 @@ function _connect() {
     // that screen is the one that has to catch up.
     change: () => {
       _remember();
+      // La vista aperta è l'ultimo pezzo della riga di risalita e la pastiglia accesa nel gruppo:
+      // cambiarla cambia dove sei, e tutte e due lo devono dire.
+      _paintCrumbs();
+      _paintViews();
       if (view !== "plan") _repaint();
     },
     moved: () => snack(t("taskMoved"), {
@@ -1515,7 +2199,13 @@ async function _boot() {
   model.connect({
     save: (kind, record) => {
       db.save(_storeOf(kind), record);
+      // Una scheda non appartiene a un progetto e non viaggia: cambiarla non sporca niente. Quello
+      // che viaggia è il nome scritto dentro `people`, e rinominare una persona riscrive i progetti
+      // che la nominano — i quali passano di qui come ogni altra modifica.
       sync.changed(kind === "project" ? record.id : record.projectId);
+      // Ogni modifica è un momento in cui la copia locale può servire: gliene si dà notizia, e
+      // decide lei sull'impronta se c'è davvero qualcosa da scrivere.
+      backup.touch();
     },
     drop: (kind, id) => db.drop(_storeOf(kind), id),
   });
@@ -1581,9 +2271,19 @@ async function _boot() {
   _restoreFromUrl();
   booted = true;
   _badge();
-  // The shared folder wakes up last: it needs the model loaded, the screens wired, and it may
+  // La copia locale si sveglia per prima: la sua cartella è anche una delle cartelle in cui si
+  // può condividere, e chi legge le cartelle la vuole già in mano. Nel dimostrativo non si
+  // collega: lì non c'è niente da tenere.
+  if (!demoMode) await backup.setup({ status: () => { _paintBackup(); } });
+  // E si ridisegna qui: su un browser che una cartella non la consegna, lo scrittore non ha niente
+  // da riferire e non riferisce niente — il pulsante resterebbe acceso su una cosa che non c'è.
+  await _paintBackup();
+
+  // The shared folders wake up last: they need the model loaded, the screens wired, and they may
   // change what is on screen — which `pulled` repaints.
   await sync.setup({
+    // La cartella dell'archivio è anche il primo posto in cui si può condividere.
+    localFolder: () => backup.folderHandle(),
     columns: () => _startingColumns(),
     // Before the folder replaces a page's text, the text is kept as a version.
     snapshot: (page) => versions.snapshot(page, { force: true }),
@@ -1622,13 +2322,15 @@ async function _boot() {
     status: (error) => _paintFolder(error),
   });
 
+
+
   // The awards that depend on the calendar rather than on a tick — ten days, thirty — can only
   // become true here, at the start of a day.
   _cheerUp();
 
   // The first time, once: the example is on screen and nobody has said it is one. Kept in the
   // database and not tied to the projects, so that emptying the archive does not bring it back.
-  if (db.available() && !(await db.meta("welcomed"))) el("welcomeDialog").showModal();
+  if (!(await _alreadyWelcomed())) el("welcomeDialog").showModal();
 
   setupInstall(el("install"), el("installHint"), {
     storageKey: "gg.plan-scope.install",
@@ -1663,6 +2365,7 @@ async function _boot() {
 function _storeOf(kind) {
   if (kind === "project") return db.PROJECTS;
   if (kind === "page") return db.PAGES;
+  if (kind === "contact") return db.CONTACTS;
   return db.TASKS;
 }
 

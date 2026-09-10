@@ -50,7 +50,6 @@
     <span class="meta" id="tagline"></span>
     <!-- After the tagline, not between it and the name: name and tagline are one thing, the way
          back is another. «Progetti», the word of the screen it goes to. -->
-    <button type="button" id="goHome" data-t="goHome" hidden></button>
     <span class="spacer"></span>
     <!-- One box, every project. The lens is in the bar because the question it answers — where
          did I write that — comes up on every screen, not on one. -->
@@ -84,11 +83,51 @@
         <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"></path>
       </svg>
     </button>
+
+    <!-- I comandi dell'archivio, che prima stavano in fila in fondo alla schermata: cinque pulsanti
+         e un numero, sotto la piega su un portatile, e solo lì. Sono cose che si fanno una volta
+         ogni tanto — importare, esportare, aprire il cestino — e stanno dove l'app tiene già quello
+         che si apre di rado. Stesso componente della barra della pagina e di quella del piano. -->
+    <div class="more">
+      <button type="button" id="appMore" class="primary small icon" aria-haspopup="true" aria-expanded="false" data-t-label="appMoreLabel">⋯</button>
+      <div class="more-menu" id="appMoreMenu" hidden>
+        <button type="button" id="importProject" data-t="importProject"></button>
+        <button type="button" id="backupAll" data-t="backupAll"></button>
+        <button type="button" id="openRubrica" data-t="rubricaTitle"></button>
+        <button type="button" id="openTrash" data-t="openTrash"></button>
+        <!-- Una voce sola per le due cartelle, perché portano allo stesso posto. Solo dove il
+             browser sa consegnare una cartella (Chromium, sul computer). -->
+        <button type="button" id="openPlaces" data-t="placesTitle" hidden></button>
+        <!-- The guide is a project like the others; this makes it, once, and opens it. Chosen as a
+             template it was found by the few who read template names. -->
+        <button type="button" id="openGuide" data-t="openGuide"></button>
+      </div>
+    </div>
   </div>
   <p class="hint" id="installHint" hidden></p>
 </header>
 
 <main>
+
+  <!-- Dove sei, e come si risale.
+       Quattro pulsanti dicevano «su» — «Progetti» nella barra, «Torna al progetto» due volte
+       identiche, «Torna» dalle pagine — e nessuno diceva dove fossi. Questa riga fa tutt'e due, e
+       conta più di una comodità: installata, l'app gira in una finestra senza il pulsante indietro
+       del browser, quindi la risalita che disegna l'app è l'unica che c'è. -->
+  <div class="topbars">
+    <nav class="crumbs" id="crumbs" data-t-label="crumbsLabel" hidden></nav>
+
+    <!-- Come guardi questo progetto: quattro modi, una domanda sola, nello stesso posto su tutte
+         le sue schermate. Prima le prime tre stavano nella barra del piano e la quarta da
+         un'altra parte, ed erano la stessa domanda fatta in due posti con parole diverse.
+         Sulla pagina no: lì sei dentro un documento, e per uscirne basta la riga sopra. -->
+    <nav class="views" id="views" data-t-label="viewsLabel" hidden>
+      <button type="button" id="goBoard" data-t="viewKanban"></button>
+      <button type="button" id="goCalendar" data-t="viewCalendar"></button>
+      <button type="button" id="goTimeline" data-t="viewTimeline"></button>
+      <button type="button" id="goPages" data-t="treePages"></button>
+    </nav>
+  </div>
 
   <!-- ------------------------------------------------------------------ archive -->
 
@@ -98,6 +137,8 @@
         <h1 data-t="homeTitle"></h1>
         <button type="button" id="newProject" class="primary" data-t="newProject"></button>
       </div>
+      <!-- Uno stato, non un comando: in fondo a una fila di pulsanti sembrava uno di loro. -->
+      <p class="note" id="storage"></p>
 
       <form class="card form" id="newProjectForm" hidden>
         <label for="projectName" data-t="projectNameLabel"></label>
@@ -125,23 +166,18 @@
       <p class="empty" id="homeEmpty" data-t="homeEmpty" hidden></p>
       <div class="cards" id="projectList"></div>
 
-      <div class="screen-foot">
-        <button type="button" id="importProject" data-t="importProject"></button>
-        <button type="button" id="backupAll" data-t="backupAll"></button>
-        <button type="button" id="openTrash" data-t="openTrash"></button>
-        <!-- The guide is a project like the others; this makes it, once, and opens it. Chosen as a
-             template it was found by the few who read template names. -->
-        <button type="button" id="openGuide" data-t="openGuide"></button>
-        <!-- The shared folder: only where the browser can hand one out (Chromium, desktop). -->
-        <button type="button" id="openFolder" data-t="folderButton" hidden></button>
-        <span class="spacer"></span>
-        <span class="meta" id="storage"></span>
-      </div>
       <!-- The folder's state, when there is one: its name, who we are, when it was last read; and
            the button to take the permission up again when the browser dropped it. -->
       <p class="note folder-line" id="folderLine" hidden>
         <span id="folderText"></span>
-        <button type="button" id="folderResume" class="ghost small" data-t="folderResume" hidden></button>
+        <button type="button" id="folderResume" class="ghost small" data-t="folderSeeAll" hidden></button>
+      </p>
+
+      <!-- E la sua, con lo stesso disegno: dove scrive, quand'è l'ultima copia, e il pulsante per
+           riprendere il permesso quando il browser l'ha lasciato cadere. -->
+      <p class="note folder-line" id="backupLine" hidden>
+        <span id="backupText"></span>
+        <button type="button" id="backupResume" class="ghost small" data-t="backupResume" hidden></button>
       </p>
 
       <!-- Once, and not every time: the nudge shows when the last backup is over two weeks old, and
@@ -205,6 +241,25 @@
           <p class="note" id="dueEmpty" data-t="dueEmpty" hidden></p>
         </div>
 
+        <!-- Chi ci lavora, e in che veste. Si riempie anche da solo: assegnare un'attività a
+             qualcuno lo mette qui, perché è vero — se Marco ha un'attività qui, Marco lavora qui —
+             e un elenco che va tenuto allineato a mano è un elenco che smette di essere vero. -->
+        <div class="card" id="panelPeople">
+          <div class="panel-head">
+            <h2 data-t="peopleTitle"></h2>
+            <span class="spacer"></span>
+            <button type="button" id="peopleAll" class="link small" data-t="peopleAll"></button>
+          </div>
+          <p class="note" id="peopleNone" data-t="peopleNone" hidden></p>
+          <ul class="list" id="peopleList"></ul>
+          <form class="row" id="addPersonForm">
+            <input type="text" id="addPersonName" list="rubricaList" maxlength="120" autocomplete="off"
+                   data-t-placeholder="peopleAdd" data-t-label="peopleAdd">
+            <datalist id="rubricaList"></datalist>
+            <button type="submit" class="ghost small" data-t="peopleAddDo"></button>
+          </form>
+        </div>
+
         <!-- What the shared folder brought in, and when: the strip says it once and goes; whoever
              comes back after lunch reads it here. Only on a shared project, only once there is
              something to read. -->
@@ -226,6 +281,9 @@
           <form class="row" id="newPageForm">
             <input type="text" id="pageField" maxlength="120" autocomplete="off">
             <button type="submit" id="addPage" class="primary" data-t="addPage"></button>
+            <!-- Una pagina con le righe già in testa: chi torna da una riunione scrive quello che si
+                 sono detti, non il formato in cui scriverlo. -->
+            <button type="button" id="newMeeting" data-t="newMeeting"></button>
           </form>
         </div>
 
@@ -280,13 +338,8 @@
        calendar shows up on the board without a reload, because both read the same model. -->
   <section class="screen" id="plan" hidden>
     <div class="pagebar">
-      <button type="button" id="planBack" data-t="planBack"></button>
-      <span class="meta" id="planTitle"></span>
       <span class="spacer"></span>
       <span class="meta" id="planDue"></span>
-      <button type="button" id="viewKanban" data-t="viewKanban"></button>
-      <button type="button" id="viewCalendar" data-t="viewCalendar"></button>
-      <button type="button" id="viewTimeline" data-t="viewTimeline"></button>
       <button type="button" id="filtersOpen" class="ghost small" data-t="filtersOpen"></button>
       <!-- What leaves the plan: a calendar file, a spreadsheet, a page for somebody without the
            app, paper. And what comes in: a pasted list. Behind one button, like the page's. -->
@@ -347,7 +400,6 @@
        view" behind the block editor, which is why the page is stored as Markdown from today. -->
   <section class="screen" id="page" hidden>
     <div class="pagebar">
-      <button type="button" id="pageBack" data-t="pageBack"></button>
       <input type="text" id="pageTitleField" maxlength="120" autocomplete="off" data-t-label="pageTitlePlaceholder" data-t-placeholder="pageTitlePlaceholder" data-t-title="pageTitleHint">
       <span class="spacer"></span>
       <span class="meta" id="saveState"></span>
@@ -370,6 +422,7 @@
           <button type="button" id="movePageDown" data-t="movePageDown"></button>
           <hr>
           <button type="button" id="starPage"></button>
+          <button type="button" id="boxesToPlan" data-t="boxesToPlan"></button>
           <button type="button" id="copyPage" data-t="copyForAssistant"></button>
           <button type="button" id="printPage" data-t="printPage"></button>
           <button type="button" id="exportHtml" data-t="exportHtml"></button>
@@ -427,8 +480,6 @@
        format — the columns are whatever keys the pages carry. -->
   <section class="screen" id="pages" hidden>
     <div class="pagebar">
-      <button type="button" id="pagesBack" data-t="planBack"></button>
-      <span class="meta" id="pagesTitle"></span>
       <span class="spacer"></span>
       <span class="meta" id="pagesCount"></span>
     </div>
@@ -436,6 +487,115 @@
     <div class="table-wrap">
       <table class="pages-table" id="pagesTable"></table>
       <p class="note" id="pagesTableEmpty" data-t="pagesTableEmpty" hidden></p>
+    </div>
+  </section>
+
+  <!-- La rubrica: le persone, che sono la prima cosa di quest'app a non appartenere a un progetto.
+       Sta accanto a «Progetti» e non dentro, perché è lì che vivono: la stessa persona torna su
+       lavori diversi, ed è esattamente quello che una rubrica è. -->
+  <section class="screen" id="rubrica" hidden>
+    <div class="wrap">
+      <div class="screen-head">
+        <h1 data-t="rubricaTitle"></h1>
+        <span class="spacer"></span>
+        <button type="button" id="newPerson" class="primary" data-t="newPerson"></button>
+      </div>
+      <p class="note" data-t="rubricaHint"></p>
+      <input type="search" id="personSearch" autocomplete="off" data-t-placeholder="rubricaSearch" data-t-label="rubricaSearch">
+      <p class="empty" id="rubricaEmpty" data-t="rubricaEmpty" hidden></p>
+      <ul class="list" id="personList"></ul>
+    </div>
+  </section>
+
+  <!-- La scheda di una persona, ed è il pezzo che ripaga la rubrica centrale: chi è, dove lavora,
+       cosa ci siamo detti, e come eravamo rimasti — le ultime due attraverso *tutti* i progetti,
+       che è la domanda a cui le sole pagine dentro un progetto non potevano rispondere. -->
+  <section class="screen" id="person" hidden>
+    <div class="wrap">
+      <div class="screen-head">
+        <h1 id="personTitle"></h1>
+        <span class="spacer"></span>
+        <button type="button" id="personMeeting" data-t="newMeeting"></button>
+        <button type="button" id="personTrash" class="ghost small danger" data-t="personTrash"></button>
+      </div>
+
+      <div class="card" id="personCard">
+        <label for="personName" data-t="personName"></label>
+        <input type="text" id="personName" maxlength="120" autocomplete="off">
+        <label for="personCompany" data-t="personCompany"></label>
+        <input type="text" id="personCompany" maxlength="120" autocomplete="off">
+        <label for="personRole" data-t="personRole"></label>
+        <input type="text" id="personRole" maxlength="80" autocomplete="off">
+        <label for="personEmail" data-t="personEmail"></label>
+        <input type="email" id="personEmail" maxlength="160" autocomplete="off">
+        <label for="personPhone" data-t="personPhone"></label>
+        <input type="text" id="personPhone" maxlength="60" autocomplete="off">
+        <!-- Detto qui, dove si scrivono, e non in una Guida che nessuno apre prima di scrivere. -->
+        <p class="note" data-t="personPrivacy"></p>
+      </div>
+
+      <div class="card">
+        <h2 data-t="personProjectsTitle"></h2>
+        <p class="note" id="personProjectsNone" data-t="personProjectsNone" hidden></p>
+        <ul class="list" id="personProjects"></ul>
+      </div>
+
+      <div class="card">
+        <h2 data-t="personMeetingsTitle"></h2>
+        <p class="note" id="personMeetingsNone" data-t="personMeetingsNone" hidden></p>
+        <ul class="list" id="personMeetings"></ul>
+      </div>
+
+      <div class="card">
+        <h2 data-t="personTasksTitle"></h2>
+        <p class="note" id="personTasksNone" data-t="personTasksNone" hidden></p>
+        <ul class="list" id="personTasks"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dove stanno i dati: la cartella che tiene la copia di tutto, e le cartelle in cui i progetti
+       sono condivisi. Erano due dialoghi, ed erano la cosa sbagliata per quello che contengono —
+       un elenco di trenta copie e un elenco di cartelle con i loro permessi non sono una domanda a
+       cui si risponde e si chiude, sono uno stato che si guarda. Una schermata glielo lascia fare.
+       Si chiama «Cartelle e copie» e non «Archivio» perché in quest'app l'archivio è già la
+       schermata dei progetti, e due cose con lo stesso nome sono una cosa che nessuno trova. -->
+  <section class="screen" id="folderScreen" hidden>
+    <div class="wrap">
+      <div class="screen-head">
+        <h1 data-t="placesTitle"></h1>
+      </div>
+
+      <div class="card">
+        <h2 data-t="backupTitle"></h2>
+        <p data-t="backupHint"></p>
+        <p class="note" data-t="backupNote"></p>
+        <p class="note" id="backupStatus" aria-live="polite"></p>
+        <div class="row">
+          <button type="button" id="backupPick" class="primary" data-t="backupPick"></button>
+          <button type="button" id="backupUnlink" class="ghost small danger" data-t="backupUnlink" hidden></button>
+        </div>
+        <h3 data-t="backupCopies"></h3>
+        <p class="note" id="backupCopiesNone" data-t="backupCopiesNone" hidden></p>
+        <ul class="list" id="backupCopyList"></ul>
+      </div>
+
+      <div class="card">
+        <h2 data-t="folderTitle"></h2>
+        <p data-t="folderHint"></p>
+        <label for="folderWho" data-t="folderWho"></label>
+        <input type="text" id="folderWho" maxlength="60" autocomplete="off">
+        <p class="note" data-t="folderNote"></p>
+        <div class="row">
+          <button type="button" id="folderAdd" class="primary" data-t="folderAdd"></button>
+          <button type="button" id="folderOpen" data-t="folderOpen"></button>
+        </div>
+        <h3 data-t="folderList"></h3>
+        <p class="note" id="folderEmpty" data-t="folderEmpty" hidden></p>
+        <!-- Detto una volta e non su ogni riga: perché quei progetti sono elencati e non sono qui. -->
+        <p class="note" id="folderNew" data-t="folderNewNote" hidden></p>
+        <ul class="list" id="folderItems"></ul>
+      </div>
     </div>
   </section>
 
@@ -684,21 +844,9 @@
   </div>
 </dialog>
 
-<!-- The shared folder, explained once and chosen once. The name is what the other people see on
-     the copies the merge keeps and on the files this browser writes. -->
-<dialog id="folderDialog">
-  <h2 data-t="folderTitle"></h2>
-  <p data-t="folderHint"></p>
-  <label for="folderWho" data-t="folderWho"></label>
-  <input type="text" id="folderWho" maxlength="60" autocomplete="off">
-  <p class="note" data-t="folderNote"></p>
-  <div class="row">
-    <button type="button" id="folderPick" class="primary" data-t="folderPick"></button>
-    <button type="button" id="folderUnlink" class="ghost small danger" data-t="folderUnlink" hidden></button>
-    <span class="spacer"></span>
-    <button type="button" id="folderClose" data-t="menuClose"></button>
-  </div>
-</dialog>
+
+
+
 
 <!-- A task from anywhere, without leaving the screen: Ctrl+N, a title, Enter. -->
 <dialog id="quickDialog">

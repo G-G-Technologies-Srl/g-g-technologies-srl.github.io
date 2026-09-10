@@ -66,7 +66,7 @@ function _filtered() {
     const tagOk = !filters.tags.size
       || (filters.tags.has("") && !tags.length)
       || tags.some((tag) => filters.tags.has(tag));
-    const who = task.assignee || "";
+    const who = task.assigneeUid || "";
     const whoOk = !filters.assignees.size
       || (filters.assignees.has("") && !who)
       || filters.assignees.has(who);
@@ -96,7 +96,7 @@ function _eventOf(task) {
     title: task.title,
     date: task.start && task.start <= task.end ? task.start : task.end,
     end: task.end,
-    description: [project ? project.name : "", task.assignee, task.notes].filter(Boolean).join("\n"),
+    description: [project ? project.name : "", model.assigneeName(task), task.notes].filter(Boolean).join("\n"),
   };
 }
 
@@ -113,10 +113,10 @@ function _fillCard() {
   // a middle-click or a «copy link» gets the real address and not `#`.
   el("cardCalendar").hidden = !task.end;
   if (task.end) el("cardGoogle").href = ics.googleLink(_eventOf(task));
-  el("cardAssignee").value = task.assignee || "";
+  el("cardAssignee").value = model.assigneeName(task);
   el("cardTags").value = (task.tags || []).join(", ");
 
-  fill(el("assigneeList"), model.assigneesOf(projectId).map((name) => {
+  fill(el("assigneeList"), model.peopleOf(projectId).map(({ name }) => {
     const option = document.createElement("option");
     option.value = name;
     return option;
@@ -241,7 +241,6 @@ function _saveCard() {
     start: el("cardStart").value || null,
     end: el("cardEnd").value || null,
     milestone: el("cardMilestone").checked,
-    assignee: el("cardAssignee").value.trim(),
     priority: el("cardPriority").value || null,
     repeat: el("cardRepeat").value || null,
     tags,
@@ -253,8 +252,13 @@ function _saveCard() {
   const same = Object.keys(changes).every((key) => (
     JSON.stringify(changes[key] ?? null) === JSON.stringify(task[key] ?? null)
   ));
-  if (same) return;
-  model.updateTask(cardId, changes);
+  // L'assegnatario passa da una porta sua, perché scrivere un nome può far nascere una persona:
+  // non è un campo come gli altri, ed è confrontato a parte per la stessa ragione.
+  const wanted = el("cardAssignee").value.trim();
+  const moved = wanted !== model.assigneeName(task);
+  if (same && !moved) return;
+  if (!same) model.updateTask(cardId, changes);
+  if (moved) model.assignByName(cardId, wanted);
   on.change();
   paint();
 }
@@ -301,7 +305,8 @@ function _taskCard(task, today) {
   }
   if (task.priority === "high") meta.append(node("span", "badge", t("priorityHigh")));
   if (task.repeat) meta.append(node("span", "who", `↻ ${t(`repeatShort_${task.repeat}`)}`));
-  if (task.assignee) meta.append(node("span", "who", task.assignee));
+  const who = model.assigneeName(task);
+  if (who) meta.append(node("span", "who", who));
   for (const tag of task.tags || []) meta.append(node("span", "tag", tag));
   const checklist = task.checklist || [];
   if (checklist.length) {
@@ -690,7 +695,7 @@ function _paintCalendar() {
 
 function _paintFilters() {
   const tags = model.tagsOf(projectId);
-  const people = model.assigneesOf(projectId);
+  const people = model.peopleOf(projectId);
 
   const tagRow = [node("span", "filter-label", t("filterTag"))];
   for (const tag of tags) {
@@ -700,8 +705,11 @@ function _paintFilters() {
   fill(el("tagFilters"), tagRow);
 
   const whoRow = [node("span", "filter-label", t("filterAssignee"))];
-  for (const name of people) {
-    whoRow.push(_chip(name, filters.assignees.has(name), () => _toggle(filters.assignees, name)));
+  // L'etichetta è il nome, il valore è il riferimento: due persone che si chiamano uguale restano
+  // due, e rinominarne una non svuota il filtro di chi ce l'aveva acceso.
+  for (const person of people) {
+    whoRow.push(_chip(person.name, filters.assignees.has(person.uid),
+      () => _toggle(filters.assignees, person.uid)));
   }
   whoRow.push(_chip(t("filterNoAssignee"), filters.assignees.has(""),
     () => _toggle(filters.assignees, "")));
@@ -759,7 +767,7 @@ export function connect(handlers) {
   el("selectAssign").addEventListener("change", () => {
     const assignee = el("selectAssign").value.trim();
     el("selectAssign").value = "";
-    _applyToSelection((id) => model.updateTask(id, { assignee }), (n) => tf("selectDone", { n: num(n, 0) }));
+    _applyToSelection((id) => model.assignByName(id, assignee), (n) => tf("selectDone", { n: num(n, 0) }));
   });
   el("selectTag").addEventListener("change", () => {
     const tag = el("selectTag").value.trim();
@@ -782,9 +790,6 @@ export function connect(handlers) {
     paint();
   });
 
-  el("viewKanban").addEventListener("click", () => setView("kanban"));
-  el("viewCalendar").addEventListener("click", () => setView("calendar"));
-  el("viewTimeline").addEventListener("click", () => setView("timeline"));
 
   el("cardMore").addEventListener("click", () => {
     extraOpen = !extraOpen;
@@ -797,7 +802,7 @@ export function connect(handlers) {
     // What is in the fields now, not what was saved: the person may have just set the date.
     const task = { ...model.task(cardId), title: el("cardTitleField").value.trim() || model.task(cardId).title,
       start: el("cardStart").value || null, end: el("cardEnd").value || null,
-      notes: el("cardNotes").value, assignee: el("cardAssignee").value.trim() };
+      notes: el("cardNotes").value };
     if (!task.end) return;
     pack.save(ics.fileName(task.title), ics.calendar([_eventOf(task)]), "text/calendar;charset=utf-8");
   });
@@ -893,8 +898,6 @@ export function state() {
 
 export function paint() {
   if (!_project()) return;
-  el("planTitle").textContent = _project().name || t("projectUntitled");
-
   const today = model.todayISO();
   const due = model.dueSoon(projectId, { from: today }).length;
   const late = model.lateCount(projectId, { from: today });
@@ -903,9 +906,6 @@ export function paint() {
     : tf("projectDueWeek", { n: num(due, 0) });
   el("planDue").classList.toggle("late", late > 0);
 
-  el("viewKanban").classList.toggle("accent", view === "kanban");
-  el("viewCalendar").classList.toggle("accent", view === "calendar");
-  el("viewTimeline").classList.toggle("accent", view === "timeline");
   el("board").hidden = view !== "kanban";
   el("calendar").hidden = view !== "calendar";
   el("timeline").hidden = view !== "timeline";
