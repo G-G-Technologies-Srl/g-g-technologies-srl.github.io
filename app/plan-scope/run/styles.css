@@ -408,8 +408,16 @@ html[data-theme="light"] { --late: #a06b09; }
    che non lo sono, così un tipo nuovo entra già vestito.
 
    `appearance: none` perché una casella di ricerca su WebKit arriva con una sua cornice e una sua
-   crocetta, che sono di un'altra app. */
-input:not([type="button"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]),
+   crocetta, che sono di un'altra app.
+
+   Le esclusioni stanno dentro `:where()`, e non è un vezzo: cinque `:not([type=...])` in fila
+   pesano cinque selettori d'attributo, e una regola di base che pesa così tanto vince contro ogni
+   regola che veste un campo dentro un pezzo di interfaccia — `.prop input`, il campo dei tag. Il
+   giorno che la regola è passata dai due tipi all'esclusione, le proprietà di una pagina hanno
+   smesso di essere righe silenziose e sono diventate caselle piene, senza che nessuna riga di
+   quelle regole fosse cambiata. `:where()` pesa zero: la base resta la cosa più
+   facile da scavalcare, che è quello che una base deve essere. */
+input:where(:not([type="button"], [type="checkbox"], [type="radio"], [type="file"], [type="submit"])),
 textarea {
   font: inherit;
   color: inherit;
@@ -422,7 +430,7 @@ textarea {
   -webkit-appearance: none;
 }
 
-input:not([type="button"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]):focus,
+input:where(:not([type="button"], [type="checkbox"], [type="radio"], [type="file"], [type="submit"])):focus,
 textarea:focus { border-color: var(--border-strong); }
 
 input[type="search"]::-webkit-search-decoration,
@@ -1480,7 +1488,10 @@ body.printing .page-props { display: none; }
 .prop { display: flex; align-items: center; gap: 4px; }
 .prop input { font-size: 13px; background: transparent; border-color: transparent; padding: 3px 6px; }
 .prop input:first-child { width: 140px; color: var(--muted); }
-.prop input:nth-of-type(2) { flex: 1 1 auto; min-width: 0; }
+/* Il rientro di `.page-props input` allinea il testo di un campo al margine della pagina, ed è
+   giusto per la chiave, che quel margine ce l'ha. Il valore sta in mezzo alla riga: lì lo stesso
+   rientro si mangiava lo spazio dopo i due punti, che finivano attaccati alla casella. */
+.prop input:nth-of-type(2) { flex: 1 1 auto; min-width: 0; margin-left: 0; }
 .prop input:hover, .prop input:focus { border-color: var(--border); }
 .prop-colon { color: var(--faint); }
 .prop .icon { opacity: 0; }

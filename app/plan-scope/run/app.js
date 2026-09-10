@@ -116,6 +116,7 @@ function _remember(push = false) {
   if (view !== "home") params.set("v", view);
   if (projectId) params.set("p", projectId);
   if (pageId && view === "page") params.set("g", pageId);
+  if (personId && view === "person") params.set("c", personId);
   if (view === "plan") {
     // The board, the month and the filters travel in the address: a filtered view is a thing people
     // send each other, and reloading a page you had filtered should not throw the filter away.
@@ -148,6 +149,16 @@ function _restoreFromUrl() {
   if (wanted === "project" && projectId) return _openProject(projectId);
   if (wanted === "pages" && projectId) return _openPages(projectId);
   if (wanted === "trash") return _openTrash();
+  // Le schermate che stanno fuori dai progetti si scrivevano nell'indirizzo e non si rileggevano:
+  // una ricarica sulla rubrica riportava a casa. Un indirizzo che si scrive è una promessa, e va
+  // mantenuta anche dopo un F5 — o dopo che qualcuno ha messo la pagina fra i preferiti.
+  if (wanted === "person") {
+    const found = params.get("c") ? model.contact(params.get("c")) : null;
+    return found ? _openPerson(found.id) : _openRubrica();
+  }
+  if (wanted === "rubrica") return _openRubrica();
+  if (wanted === "awards") return _openAwards();
+  if (wanted === "folderScreen") return _openPlaces();
   return _openHome();
 }
 
