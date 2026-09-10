@@ -22,8 +22,8 @@
 // `meta` would leave it holding a folder that does not exist.
 
 import { get, put } from "gg/store.js";
-import { collect } from "gg/io.js";
-import { hash, linkFolder, backupWriter } from "gg/folder.js";
+import { collect, restore as putBack } from "gg/io.js";
+import { hash, linkFolder, backupWriter, copies as listCopies } from "gg/folder.js";
 import { NAME, VERSION, EXPORTED } from "./db.js";
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -32,6 +32,7 @@ import { NAME, VERSION, EXPORTED } from "./db.js";
 
 let db = null;
 let writer = null;
+let folder = null;
 
 const load = async (key) => {
   const record = await get(db, "meta", key);
@@ -53,8 +54,9 @@ async function _snapshot() {
 export async function setup(database, { status = () => {} } = {}) {
   db = database;
   if (!db) return;
+  folder = linkFolder({ id: "invoice-scope-backup", load, save, key: "backupFolder" });
   writer = backupWriter({
-    folder: linkFolder({ id: "invoice-scope-backup", load, save, key: "backupFolder" }),
+    folder,
     snapshot: _snapshot,
     prefix: NAME,
     load,
@@ -69,3 +71,35 @@ export function resume() { return writer ? writer.resume() : false; }
 export function unlink() { return writer ? writer.unlink() : undefined; }
 export function touch() { if (writer) writer.touch(); }
 export function status() { return writer ? writer.status() : Promise.resolve({ kind: "none" }); }
+
+/**
+ * The copies in the folder, newest first: the current one, then one per day for thirty days.
+ *
+ * The dated copies have been written since the folder existed, and until now nothing could open
+ * one: they were kept for the day somebody needed the version from before the mistake, and on that
+ * day the app had nothing to say about them. Listing them is what makes them worth writing.
+ */
+export async function copies() {
+  if (!folder || !folder.handle || (await folder.permission()) !== "granted") return [];
+  return listCopies(folder.handle, { prefix: NAME });
+}
+
+/**
+ * One copy back into the archive: the records replace what is here.
+ *
+ * The same door as «Importa un archivio», and the same refusal: `gg/io.js` validates the whole file
+ * before writing a single record, because half a restore is the one outcome with no way back. The
+ * `meta` store is not touched — the folder stays linked, and the copy that is being put back does
+ * not carry a handle anyway.
+ */
+export async function restore(name = `${NAME}.json`) {
+  if (!folder || !folder.handle) return { ok: false, reason: "backupNoFolder" };
+  if ((await folder.permission()) !== "granted") return { ok: false, reason: "backupNoPermission" };
+  let text = null;
+  try {
+    text = await (await (await folder.handle.getFileHandle(name)).getFile()).text();
+  } catch (ignored) {
+    return { ok: false, reason: "backupCopyGone" };
+  }
+  return putBack(db, text, { app: NAME, stores: EXPORTED });
+}
