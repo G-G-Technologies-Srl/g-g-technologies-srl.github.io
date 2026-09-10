@@ -359,7 +359,10 @@ async function _pullFolder(dir, where) {
     if (payload.project.trashedAt) return remember(agreed());
     await _storeAssets(payload, null);
     const { projectId } = _quietly(() => {
-      const adopted = model.adopt(payload, { columns: on.columns() });
+      // `fromOutside`: quello che arriva da una cartella non aggancia le schede di casa per
+      // omonimia. Un nome scritto da qualcun altro su un'attività resta un nome — entra fra le
+      // persone del progetto e basta — finché qualcuno qui non dice «è lei» adottandola.
+      const adopted = model.adopt(payload, { columns: on.columns(), fromOutside: true });
       model.updateProject(adopted.projectId, { shared: true });
       return adopted;
     });
@@ -749,7 +752,12 @@ export function projectStatus(projectId) {
   const project = model.project(projectId);
   if (!project) return { kind: "none" };
   const mark = state.marks[project.uid || project.id] || {};
-  if (!project.shared || !mark.parent) return { kind: "off" };
+  if (!project.shared) return { kind: "off" };
+  // Spuntato e senza cartella non è «non condiviso»: è una promessa rotta, e finché i due stati
+  // erano uno solo la riga diceva «spunta per condividerlo» con la spunta già accesa. Ci si arriva
+  // dalla migrazione della 2.x, dove la cartella era una sola e i progetti condivisi non avevano
+  // un mark da portarsi dietro: il flag è sopravvissuto, la destinazione no.
+  if (!mark.parent) return { kind: "adrift" };
   const where = { folder: folders.name(mark.parent), sub: _subOf(mark, project) };
   if (dirty.has(projectId) || !mark.wrote) return { kind: mark.wrote ? "writing" : "soon", ...where };
   return { kind: "on", ...where, wrote: mark.wrote };

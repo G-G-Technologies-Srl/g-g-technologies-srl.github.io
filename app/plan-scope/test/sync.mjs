@@ -747,4 +747,35 @@ await test("dalla cartella passano i nomi di chi lavora al progetto, e non i lor
   assert.equal(adopted.email, "", "la scheda nasce vuota: i recapiti non li aveva nessuno qui");
 });
 
+await test("un nome scritto da un altro non aggancia la scheda che hai in casa", async () => {
+  const folder = new FakeDir("Dropbox");
+  const giulia = await world("giulia-17", folder);
+  const fiera = giulia.model.createProject({ name: "Fiera" });
+  const stand = giulia.model.createTask(fiera.id, { title: "Stand" });
+  // La forma vecchia, che arriva da un importatore o da un file di prima della rubrica.
+  giulia.model.updateTask(stand.id, { assignee: "Marco Rossi" });
+  giulia.shareIt(fiera.id);
+  await giulia.round();
+
+  // Marco ha in rubrica un suo «Marco Rossi», che non è quello di Giulia.
+  const marco = await world("marco-17", folder, { open: false });
+  const suo = marco.model.createContact({ name: "Marco Rossi", email: "marco@casa.it" });
+  await marco.adopt();
+  await marco.sync.pullNow();
+
+  const theirs = marco.project("Fiera");
+  const card = marco.model.tasksOf(theirs.id).find((task) => task.title === "Stand");
+  const nominato = marco.model.peopleOf(theirs.id).find((one) => one.name === "Marco Rossi");
+  assert.ok(nominato, "il nome arriva: il progetto dice chi ci lavora");
+  assert.equal(marco.model.assigneeName(card), "Marco Rossi", "e la casella lo dice");
+  // Il punto: è un'altra persona. Due «Marco Rossi» su due computer sono due, finché qualcuno qui
+  // non dice il contrario — agganciarli per omonimia sarebbe asserire un'identità proprio dove il
+  // patto è che viaggino i uid e non i nomi.
+  assert.notEqual(nominato.uid, suo.uid || suo.id, "e non è il Marco che ha in rubrica");
+  assert.equal(marco.model.projectsOfContact(suo.uid || suo.id).length, 0,
+    "la sua scheda non è finita in un progetto che non ha mai visto");
+  // E resta il gesto per dire «è lei», che vale come per chiunque arrivi dalla cartella.
+  assert.equal(marco.model.contactByUid(nominato.uid), null, "di lui qui non c'è una scheda");
+});
+
 console.log(`sync: ${passed} prove passate`);
