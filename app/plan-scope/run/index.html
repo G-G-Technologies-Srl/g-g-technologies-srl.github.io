@@ -538,6 +538,14 @@
         <h2 data-t="personProjectsTitle"></h2>
         <p class="note" id="personProjectsNone" data-t="personProjectsNone" hidden></p>
         <ul class="list" id="personProjects"></ul>
+        <!-- Il collegamento fra una persona e un progetto è una relazione a due capi, e finché si
+             poteva toccare da un capo solo — il pannello del progetto — questa scheda era un
+             vicolo cieco: diceva dove lavora e non lasciava aggiungere un posto. -->
+        <form class="row" id="addWhereForm">
+          <select id="addWhereProject" data-t-label="personAddWhere"></select>
+          <button type="submit" class="ghost small" data-t="peopleAddDo"></button>
+        </form>
+        <p class="note" id="addWhereNone" data-t="personAddWhereNone" hidden></p>
       </div>
 
       <div class="card">

@@ -387,13 +387,43 @@ function _paintPerson() {
   el("personTitle").textContent = person.name || t("personNoName");
   for (const [id, field] of PERSON_FIELDS) el(id).value = person[field] || "";
 
+  // Le stesse tre cose che si fanno dal pannello del progetto — il ruolo, e togliere — perché è
+  // la stessa relazione guardata dall'altro capo, e due forme diverse per la stessa cosa sono due
+  // cose da imparare invece di una.
   const where = model.projectsOfContact(uid);
   el("personProjectsNone").hidden = where.length > 0;
   fill(el("personProjects"), where.map(({ project, role }) => {
     const row = node("li", "row-item");
     row.append(button("link", project.name || t("projectUntitled"), () => _openProject(project.id)));
-    row.append(node("span", "meta", role || t("personNoRole")));
+
+    const field = node("input", "role-field");
+    field.type = "text";
+    field.value = role || "";
+    field.maxLength = 60;
+    field.placeholder = t("peopleRole");
+    field.setAttribute("aria-label", t("peopleRole"));
+    field.addEventListener("input", () => model.setPersonRole(project.id, uid, field.value));
+    row.append(field);
+
+    row.append(button("ghost small", t("peopleRemove"), () => {
+      model.removePerson(project.id, uid);
+      _paintPerson();
+      snack(tf("personLeft", { project: project.name || t("projectUntitled") }));
+    }));
     return row;
+  }));
+
+  // Dove si può ancora aggiungerla: i progetti vivi in cui non lavora già. Un progetto qui non si
+  // crea — un progetto ha un nome e una data, e nascerne uno da una scheda di rubrica sarebbe una
+  // porta di servizio per una cosa che ne ha già una sua.
+  const altrove = model.liveProjects().filter((one) => !where.some(({ project }) => project.id === one.id));
+  el("addWhereForm").hidden = altrove.length === 0;
+  el("addWhereNone").hidden = altrove.length > 0 || where.length === 0;
+  fill(el("addWhereProject"), altrove.map((one) => {
+    const option = node("option");
+    option.value = one.id;
+    option.textContent = one.name || t("projectUntitled");
+    return option;
   }));
 
   const met = model.pagesAbout(uid);
@@ -1767,6 +1797,17 @@ function _wire() {
     if (chosen) _newMeeting(chosen, person.name);
     return undefined;
   });
+  el("addWhereForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const person = personId ? model.contact(personId) : null;
+    const chosen = el("addWhereProject").value;
+    if (!person || !chosen) return;
+    model.addPerson(chosen, person.id);
+    _paintPerson();
+    const project = model.project(chosen);
+    snack(tf("personJoined", { project: (project && project.name) || t("projectUntitled") }));
+  });
+
   el("addPersonForm").addEventListener("submit", (event) => {
     event.preventDefault();
     const name = el("addPersonName").value.trim();
