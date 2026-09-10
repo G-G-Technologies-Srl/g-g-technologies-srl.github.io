@@ -155,7 +155,8 @@ const IT = {
   folderLinkedOne: "Condiviso in una cartella · sei {who} · letta alle {time}",
   folderLinkedMany: "Condivisi in {n} cartelle · sei {who} · lette alle {time}",
   folderNeverRead: "Condivisi in {n} cartelle · sei {who} · non ancora lette",
-  folderPrompt: "Aspettano il tuo permesso: {names}. Il browser lo chiede di nuovo a ogni apertura.",
+  folderPrompt: "Aspettano il tuo permesso: {names}. Riprendile una volta ricordando la scelta, "
+    + "oppure installa l'app: allora il browser non lo chiede più.",
   folderNeedsName: "Serve un nome: è quello che vedono gli altri.",
   folderAdded: "Cartella aggiunta. Adesso puoi condividerci un progetto.",
   folderError: "La cartella non si legge o non si scrive: {error}",
@@ -192,8 +193,8 @@ const IT = {
   backupUnavailable: "Questo browser sa aprire una cartella con Chrome o Edge sul computer. Qui "
     + "resta «Esporta tutto», che fa lo stesso file.",
   backupNone: "Nessuna cartella collegata.",
-  backupPrompt: "La cartella «{folder}» aspetta il tuo permesso: il browser lo chiede di nuovo a "
-    + "ogni apertura.",
+  backupPrompt: "La cartella «{folder}» aspetta il tuo permesso: riprendila ricordando la scelta, "
+    + "oppure installa l'app, e il browser non lo chiede più.",
   backupLinked: "Cartella «{folder}» · ultima copia {when}.",
   backupNever: "Cartella «{folder}» · la prima copia arriva alla prossima modifica.",
   backupError: "La cartella «{folder}» risponde {error}. Controlla che esista ancora, o scegline "
@@ -961,7 +962,8 @@ const EN = {
   folderLinkedOne: "Shared in one folder · you are {who} · read at {time}",
   folderLinkedMany: "Shared in {n} folders · you are {who} · read at {time}",
   folderNeverRead: "Shared in {n} folders · you are {who} · not read yet",
-  folderPrompt: "Waiting for your permission: {names}. The browser asks again at every opening.",
+  folderPrompt: "Waiting for your permission: {names}. Take them up once and let the browser "
+    + "remember, or install the app: then it stops asking.",
   folderNeedsName: "A name is needed: it is what the others see.",
   folderAdded: "Folder added. Now you can share a project into it.",
   folderError: "The folder cannot be read or written: {error}",
@@ -998,8 +1000,8 @@ const EN = {
   backupUnavailable: "This browser opens a folder with Chrome or Edge on a computer. Here there is "
     + "“Export everything”, which makes the same file.",
   backupNone: "No folder linked.",
-  backupPrompt: "The folder “{folder}” is waiting for your permission: the browser asks again at "
-    + "every opening.",
+  backupPrompt: "The folder “{folder}” is waiting for your permission: take it up and let the "
+    + "browser remember, or install the app, and it stops asking.",
   backupLinked: "Folder “{folder}” · last copy {when}.",
   backupNever: "Folder “{folder}” · the first copy comes at the next change.",
   backupError: "The folder “{folder}” answers {error}. Check that it is still there, or choose "
