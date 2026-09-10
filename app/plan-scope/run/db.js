@@ -32,7 +32,7 @@ export const DB = "plan-scope";
 // the stores moves, and every version declares the *whole* shape it wants rather than the
 // difference from the last one: `onupgradeneeded` fires from whatever version the visitor happens
 // to have, which on a browser opened twice a year is not the previous one.
-export const DB_VERSION = 2;
+export const DB_VERSION = 3;
 
 // The version of the *records*, which travels inside every export. `restore` refuses a file from a
 // newer schema rather than silently dropping fields it does not know about.
@@ -43,6 +43,7 @@ export const PAGES = "pages";
 export const TASKS = "tasks";
 export const ASSETS = "assets";
 export const VERSIONS = "versions";
+export const CONTACTS = "contacts";
 export const META = "meta";
 
 // The three stores the app reads whole at start carry an index on `project`; the assets store
@@ -56,12 +57,15 @@ export const STORES = {
   // Older texts of a page, read only from the «Versioni» dialog: indexed on the page, because
   // that is the only way they are ever asked for.
   [VERSIONS]: { keyPath: "id", indexes: { page: "pageId" } },
+  // Le persone. Nessun indice sul progetto, ed è la differenza che conta: una persona **non
+  // appartiene a un progetto**, ci lavora — e in quanti ci lavora lo dice il progetto, non lei.
+  [CONTACTS]: { keyPath: "id" },
   [META]: { keyPath: "key" },
 };
 
 // The stores that hold documents, in the order an export writes them. `assets` is not here: its
 // records carry a Blob, which does not survive JSON, and the project export handles it separately.
-export const DOCUMENT_STORES = [PROJECTS, PAGES, TASKS];
+export const DOCUMENT_STORES = [PROJECTS, PAGES, TASKS, CONTACTS];
 
 // How long a change waits before it is written. Long enough that typing does not hit the disk on
 // every keystroke, short enough that nobody notices it. Whatever is pending is also flushed the
@@ -147,12 +151,13 @@ export function available() {
 
 /** The whole working set, in one go. Assets are deliberately not part of it. */
 export async function loadAll() {
-  const [projects, pages, tasks] = await Promise.all([
+  const [projects, pages, tasks, contacts] = await Promise.all([
     store.list(db, PROJECTS),
     store.list(db, PAGES),
     store.list(db, TASKS),
+    store.list(db, CONTACTS),
   ]);
-  return { projects, pages, tasks };
+  return { projects, pages, tasks, contacts };
 }
 
 /** Called with "saving" or "saved" whenever the queue fills or empties. */
@@ -285,6 +290,17 @@ export async function getAsset(id) {
 
 export async function assetsOf(projectId) {
   return _byProject(ASSETS, projectId);
+}
+
+/**
+ * Every image the app holds, whatever project it belongs to.
+ *
+ * Only the local folder asks for this, and it asks because a copy of everything is a copy of
+ * everything: the shared folder reads a project at a time and has `assetsOf` for that. The Blob a
+ * record carries is a reference until somebody reads it, so listing them is not reading them.
+ */
+export async function allAssets() {
+  return db ? store.list(db, ASSETS) : [];
 }
 
 export async function dropAsset(id) {

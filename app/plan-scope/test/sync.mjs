@@ -3,6 +3,12 @@
 // Two people, one folder: what the shared folder does between Giulia's browser and Marco's,
 // without a browser and without a disk.
 //
+// Dalla 3.0 una cartella appartiene a un progetto, non all'app: `world()` aggiunge una madre e poi
+// **apre** i progetti che ci trova, che è quello che una persona fa con «Apri una cartella
+// condivisa…». Il giro di ognuno riapre la madre prima di leggere, così un progetto nuovo messo lì
+// dall'altra persona arriva come arrivava con la scansione della 2.x — con la differenza che qui
+// qualcuno l'ha chiesto.
+//
 // Each person is a *world*: their own `model.js`, `sync.js` and a database in memory, loaded as
 // separate module instances through a query string on the import — the same trick a page cannot
 // use, and the reason this file registers its own resolve hook rather than the one in
@@ -44,9 +50,10 @@ register("data:text/javascript," + encodeURIComponent(`
 `), pathToFileURL("./"));
 
 /** One person's app: model, sync and their memory, wired the way `app.js` wires them. */
-async function world(who, folder) {
+async function world(who, folder, { open = true } = {}) {
   const model = await import(new URL(`../../_lib/plan-model.js?w=${who}`, import.meta.url));
   const sync = await import(new URL(`../run/sync.js?w=${who}`, import.meta.url));
+  const folders = await import(new URL(`../run/folders.js?w=${who}`, import.meta.url));
   const db = await import(new URL(`../test/fake-db.mjs?w=${who}`, import.meta.url));
   const events = { pulled: [], unshared: [], snapshots: [], errors: [] };
   model.connect({
@@ -62,10 +69,22 @@ async function world(who, folder) {
     status: (error) => { if (error) events.errors.push(error); },
   });
   globalThis.window.showDirectoryPicker = async () => folder;
-  assert.equal(await sync.link(who), true);
+  const parent = await sync.addFolder(who);
+  assert.ok(parent, "la cartella è una madre");
   const project = (name) => model.liveProjects().find((one) => one.name === name);
-  const round = async () => { await sync.pullNow(); };
-  return { who, model, sync, db, events, project, round };
+  /** Aprire quello che nella madre non è ancora stato aperto: il gesto, non una scansione. */
+  const adopt = async () => {
+    for (const sub of await folders.projectsIn(parent)) await sync.openFrom(parent, sub);
+  };
+  const round = async () => { if (open) await adopt(); await sync.pullNow(); };
+  if (open) await adopt();
+  const one = { who, model, sync, folders, db, events, project, parent, round, adopt };
+  /** Condividere: la spunta, e la cartella in cui finisce. Nell'app sono un gesto solo. */
+  one.shareIt = (id) => {
+    model.updateProject(id, { shared: true });
+    sync.share(id, parent);
+  };
+  return one;
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -104,6 +123,9 @@ class FakeDir {
     this.kind = "directory";
     this.name = name;
     this.children = new Map();
+    // Il permesso si può mettere a «prompt» per provare la mattina in cui il browser l'ha lasciato
+    // cadere su una cartella e non sulle altre.
+    this.permission = "granted";
   }
 
   async* entries() {
@@ -133,7 +155,16 @@ class FakeDir {
   }
 
   async queryPermission() {
+    return this.permission;
+  }
+
+  async requestPermission() {
+    this.permission = "granted";
     return "granted";
+  }
+
+  async isSameEntry(other) {
+    return other === this;
   }
 
   /** Helpers for the tests: a path read or written by hand, the way Obsidian would. */
@@ -198,8 +229,7 @@ await test("un progetto condiviso finisce nella cartella, e l'altra persona lo t
   const project = giulia.model.createProject({ name: "Fiera" });
   giulia.model.createPage(project.id, { title: "Brief", markdown: "Uno.\n" });
   giulia.model.createTask(project.id, { title: "Stand" });
-  giulia.model.updateProject(project.id, { shared: true });
-  giulia.sync.share(project.id);
+  giulia.shareIt(project.id);
   await giulia.round();
   assert.deepEqual(await folder.list(), ["Fiera"]);
   assert.deepEqual(await folder.list("Fiera"), ["assets", "pages", "project.json"]);
@@ -227,7 +257,7 @@ await test("le modifiche viaggiano in tutte e due le direzioni, e il testo sosti
   const giulia = await world("giulia-2", folder);
   const project = giulia.model.createProject({ name: "Fiera", });
   const brief = giulia.model.createPage(project.id, { title: "Brief", markdown: "Uno.\n" });
-  giulia.model.updateProject(project.id, { shared: true });
+  giulia.shareIt(project.id);
   await giulia.round();
   const marco = await world("marco-2", folder);
   const theirs = marco.project("Fiera");
@@ -255,7 +285,7 @@ await test("la stessa pagina cambiata da tutti e due: nessun paragrafo si perde,
   const giulia = await world("giulia-3", folder);
   const project = giulia.model.createProject({ name: "Fiera" });
   const brief = giulia.model.createPage(project.id, { title: "Scaletta", markdown: "Ore 9.\n" });
-  giulia.model.updateProject(project.id, { shared: true });
+  giulia.shareIt(project.id);
   await giulia.round();
   const marco = await world("marco-3", folder);
   const theirs = marco.project("Fiera");
@@ -290,7 +320,7 @@ await test("il cestino viaggia: attività, pagina e progetto intero", async () =
   const project = giulia.model.createProject({ name: "Fiera" });
   const page = giulia.model.createPage(project.id, { title: "Vecchia", markdown: "X.\n" });
   const task = giulia.model.createTask(project.id, { title: "Stand" });
-  giulia.model.updateProject(project.id, { shared: true });
+  giulia.shareIt(project.id);
   await giulia.round();
   const marco = await world("marco-4", folder);
   const theirs = marco.project("Fiera");
@@ -323,7 +353,7 @@ await test("un file scritto senza aver letto l'ultima scrittura dell'altro non f
   const folder = new FakeDir("Dropbox");
   const giulia = await world("giulia-5", folder);
   const project = giulia.model.createProject({ name: "Fiera" });
-  giulia.model.updateProject(project.id, { shared: true });
+  giulia.shareIt(project.id);
   await giulia.round();
   const marco = await world("marco-5", folder);
   const theirs = marco.project("Fiera");
@@ -356,7 +386,7 @@ await test("una pagina scritta o cambiata in Obsidian entra, una volta sola, e i
   const giulia = await world("giulia-6", folder);
   const project = giulia.model.createProject({ name: "Fiera" });
   const brief = giulia.model.createPage(project.id, { title: "Brief", markdown: "Uno.\n" });
-  giulia.model.updateProject(project.id, { shared: true });
+  giulia.shareIt(project.id);
   await giulia.round();
   const marco = await world("marco-6", folder);
   const theirs = marco.project("Fiera");
@@ -387,7 +417,7 @@ await test("un progetto non più condiviso non riceve e non scrive; una cartella
   const folder = new FakeDir("Dropbox");
   const giulia = await world("giulia-7", folder);
   const project = giulia.model.createProject({ name: "Fiera" });
-  giulia.model.updateProject(project.id, { shared: true });
+  giulia.shareIt(project.id);
   await giulia.round();
   const marco = await world("marco-7", folder);
   const theirs = marco.project("Fiera");
@@ -416,11 +446,11 @@ await test("«Elimina la cartella condivisa»: la cartella sparisce per tutti, i
   const giulia = await world("giulia-9", folder);
   const project = giulia.model.createProject({ name: "Fiera" });
   giulia.model.createTask(project.id, { title: "Stand" });
-  giulia.model.updateProject(project.id, { shared: true });
+  giulia.shareIt(project.id);
   await giulia.round();
   const marco = await world("marco-9", folder);
   const theirs = marco.project("Fiera");
-  assert.equal(giulia.sync.folderOf(giulia.model.project(project.id)), "Fiera");
+  assert.equal(giulia.sync.folderOf(giulia.model.project(project.id)).sub, "Fiera");
 
   giulia.model.trashProject(project.id);
   assert.equal(await giulia.sync.removeFolder(project.id), true);
@@ -444,7 +474,7 @@ await test("una cartella scritta da un'app più nuova non si legge e non si sovr
   const folder = new FakeDir("Dropbox");
   const giulia = await world("giulia-8", folder);
   const project = giulia.model.createProject({ name: "Fiera" });
-  giulia.model.updateProject(project.id, { shared: true });
+  giulia.shareIt(project.id);
   await giulia.round();
   const json = JSON.parse(await folder.readByHand("Fiera/project.json"));
   await folder.writeByHand("Fiera/project.json", JSON.stringify({ ...json, format: 99, tasks: [{ title: "Dal futuro" }] }));
@@ -453,6 +483,268 @@ await test("una cartella scritta da un'app più nuova non si legge e non si sovr
   assert.deepEqual(titles(giulia, project.id), ["Di oggi"], "niente entra");
   assert.equal(JSON.parse(await folder.readByHand("Fiera/project.json")).format, 99, "e niente esce");
   assert.deepEqual(giulia.events.errors, []);
+});
+
+// -----------------------------------------------------------------------------------------------------------------
+//  u n a   c a r t e l l a   p e r   p r o g e t t o
+// -----------------------------------------------------------------------------------------------------------------
+
+/** Le attività scritte nel file di un progetto: quello che l'altra persona vedrà davvero. */
+const written = async (dir, sub) =>
+  JSON.parse(await dir.readByHand(`${sub}/project.json`)).tasks.map((task) => task.title).sort();
+
+await test("due progetti in due cartelle: ognuno va dove è stato messo, e chi ha una non vede l'altra", async () => {
+  const rossi = new FakeDir("Cliente Rossi");
+  const bianchi = new FakeDir("Cliente Bianchi");
+  const giulia = await world("giulia-10", rossi);
+  globalThis.window.showDirectoryPicker = async () => bianchi;
+  const altra = await giulia.sync.addFolder();
+
+  const sito = giulia.model.createProject({ name: "Sito" });
+  giulia.model.createTask(sito.id, { title: "Bozza" });
+  giulia.model.updateProject(sito.id, { shared: true });
+  giulia.sync.share(sito.id, giulia.parent);
+
+  const campagna = giulia.model.createProject({ name: "Campagna" });
+  giulia.model.createTask(campagna.id, { title: "Volantini" });
+  giulia.model.updateProject(campagna.id, { shared: true });
+  giulia.sync.share(campagna.id, altra);
+
+  // E uno che non è condiviso con nessuno, che è il caso più comune di tutti.
+  const interno = giulia.model.createProject({ name: "Bilancio" });
+  await giulia.round();
+
+  assert.deepEqual(await rossi.list(), ["Sito"]);
+  assert.deepEqual(await bianchi.list(), ["Campagna"]);
+  assert.equal(giulia.model.project(interno.id).shared, undefined);
+
+  // Rossi ha in mano la sua cartella, e quello dell'altro cliente non esiste per lui.
+  const marco = await world("marco-10", rossi);
+  assert.ok(marco.project("Sito"), "il suo progetto arriva");
+  assert.equal(marco.project("Campagna"), undefined, "quello dell'altro cliente no");
+  assert.equal(marco.project("Bilancio"), undefined);
+});
+
+await test("una cartella che aspetta il permesso ferma il suo progetto, e non gli altri", async () => {
+  const rossi = new FakeDir("Cliente Rossi");
+  const bianchi = new FakeDir("Cliente Bianchi");
+  const giulia = await world("giulia-11", rossi);
+  globalThis.window.showDirectoryPicker = async () => bianchi;
+  const altra = await giulia.sync.addFolder();
+
+  const sito = giulia.model.createProject({ name: "Sito" });
+  giulia.model.updateProject(sito.id, { shared: true });
+  giulia.sync.share(sito.id, giulia.parent);
+  const campagna = giulia.model.createProject({ name: "Campagna" });
+  giulia.model.updateProject(campagna.id, { shared: true });
+  giulia.sync.share(campagna.id, altra);
+  await giulia.round();
+
+  // Il browser lascia cadere il permesso su una delle due, che è quello che fa ogni mattina.
+  bianchi.permission = "prompt";
+  giulia.model.createTask(sito.id, { title: "Bozza" });
+  giulia.model.createTask(campagna.id, { title: "Volantini" });
+  await giulia.round();
+
+  assert.deepEqual(await written(rossi, "Sito"), ["Bozza"], "l'altra continua a lavorare");
+  assert.deepEqual(await written(bianchi, "Campagna"), [], "questa aspetta, e non si scrive a metà");
+  const stato = await giulia.sync.status();
+  assert.equal(stato.kind, "prompt");
+  assert.deepEqual(stato.waiting, ["Cliente Bianchi"], "e l'archivio dice quale");
+
+  // Ripresa, riparte da dov'era: la modifica di prima non è andata persa.
+  assert.equal(await giulia.sync.resumeFolder(altra), true);
+  assert.deepEqual(await written(bianchi, "Campagna"), ["Volantini"]);
+  assert.equal((await giulia.sync.status()).kind, "linked");
+});
+
+await test("una cartella che è il progetto si apre, e smettere di seguirla non la cancella", async () => {
+  const dropbox = new FakeDir("Dropbox");
+  const giulia = await world("giulia-12", dropbox);
+  const project = giulia.model.createProject({ name: "Fiera" });
+  giulia.model.createTask(project.id, { title: "Stand" });
+  giulia.shareIt(project.id);
+  await giulia.round();
+
+  // Quello che arriva a Marco è la cartella del progetto, e niente sopra: è come Dropbox condivide.
+  const sola = await dropbox.getDirectoryHandle("Fiera");
+  const marco = await world("marco-12", new FakeDir("Vuota"));
+  globalThis.window.showDirectoryPicker = async () => sola;
+  const opened = await marco.sync.openShared();
+  assert.equal(opened.ok, true, "il progetto entra");
+  const theirs = opened.project;
+  assert.equal(theirs.name, "Fiera");
+  assert.equal(theirs.shared, true);
+  assert.deepEqual(titles(marco, theirs.id), ["Stand"]);
+
+  // E da lì in poi è una condivisione come le altre.
+  marco.model.createTask(theirs.id, { title: "Catering" });
+  await marco.round();
+  await giulia.round();
+  assert.deepEqual(titles(giulia, project.id), ["Catering", "Stand"]);
+
+  // Smettere di seguirla lascia in piedi la cartella, che è di qualcun altro.
+  assert.equal(await marco.sync.removeFolder(theirs.id), true);
+  assert.deepEqual(await dropbox.list(), ["Fiera"], "la cartella di Giulia resta dov'è");
+  assert.equal(marco.model.project(theirs.id).shared, false);
+  assert.deepEqual(titles(marco, theirs.id), ["Catering", "Stand"], "e il lavoro resta a Marco");
+});
+
+await test("la cartella condivisa della 2.x diventa una madre, e niente si riscrive", async () => {
+  const folder = new FakeDir("Progetti condivisi");
+  const giulia = await world("giulia-13", folder);
+  const project = giulia.model.createProject({ name: "Fiera" });
+  giulia.model.createTask(project.id, { title: "Stand" });
+  giulia.shareIt(project.id);
+  await giulia.round();
+  const before = JSON.parse(await folder.readByHand("Fiera/project.json"));
+
+  // Il deposito com'era prima della 3.0: un handle solo, e i marks con il nome della sottocartella.
+  const marks = (await giulia.db.meta("sync")).marks;
+  const uid = Object.keys(marks)[0];
+  const { parent, sub, self, ...old } = marks[uid];
+  await giulia.db.setMeta("sync", { who: "giulia-13", marks: { [uid]: { ...old, folder: sub } } });
+  await giulia.db.setMeta("folderHandle", folder);
+  await giulia.db.setMeta("folders", []);
+
+  await giulia.sync.setup({ status: () => {} });
+
+  const dopo = (await giulia.db.meta("sync")).marks[uid];
+  assert.ok(dopo.parent, "il mark adesso dice in quale madre");
+  assert.equal(dopo.sub, "Fiera");
+  assert.equal(dopo.folder, undefined, "e non porta più il vecchio campo");
+  assert.equal(dopo.pushed, old.pushed, "l'impronta è la stessa: non c'è niente da riscrivere");
+  assert.deepEqual(giulia.sync.folderOf(giulia.model.project(project.id)),
+    { folder: "Progetti condivisi", sub: "Fiera" });
+  assert.deepEqual(JSON.parse(await folder.readByHand("Fiera/project.json")), before,
+    "e il file sul disco è lettera per lettera quello di prima");
+});
+
+await test("un progetto messo lì da qualcun altro si vede prima di entrare, e entra quando lo apri", async () => {
+  const folder = new FakeDir("Cliente Rossi");
+  const giulia = await world("giulia-14", folder);
+  const sito = giulia.model.createProject({ name: "Sito" });
+  giulia.model.createTask(sito.id, { title: "Bozza" });
+  giulia.shareIt(sito.id);
+  const campagna = giulia.model.createProject({ name: "Campagna" });
+  giulia.shareIt(campagna.id);
+  await giulia.round();
+
+  // Marco ha la stessa cartella e non ha aperto niente: la 2.x gliene avrebbe messi due in casa.
+  const marco = await world("marco-14", folder, { open: false });
+  assert.deepEqual(marco.model.liveProjects(), [], "niente entra da solo");
+
+  const dentro = await marco.folders.projectsIn(marco.parent);
+  assert.deepEqual(dentro, ["Campagna", "Sito"]);
+  assert.deepEqual(marco.sync.unopened(marco.parent, dentro), ["Campagna", "Sito"],
+    "ma l'app sa che ci sono, e lo dice");
+
+  // Ne apre uno. L'altro resta dov'è, e resta da aprire.
+  const preso = await marco.sync.openFrom(marco.parent, "Sito");
+  assert.equal(preso.name, "Sito");
+  assert.deepEqual(titles(marco, preso.id), ["Bozza"]);
+  assert.equal(marco.model.liveProjects().length, 1);
+  assert.deepEqual(marco.sync.unopened(marco.parent, dentro), ["Campagna"]);
+
+  // E da lì in poi è una condivisione come le altre.
+  marco.model.createTask(preso.id, { title: "Catering" });
+  await marco.sync.pullNow();
+  await giulia.round();
+  assert.deepEqual(titles(giulia, sito.id), ["Bozza", "Catering"]);
+});
+
+await test("l'elenco delle cartelle sa quali progetti tiene ognuna, col nome che hanno qui", async () => {
+  const rossi = new FakeDir("Cliente Rossi");
+  const bianchi = new FakeDir("Cliente Bianchi");
+  const giulia = await world("giulia-15", rossi);
+  globalThis.window.showDirectoryPicker = async () => bianchi;
+  const altra = await giulia.sync.addFolder();
+
+  const sito = giulia.model.createProject({ name: "Sito nuovo" });
+  giulia.model.updateProject(sito.id, { shared: true });
+  giulia.sync.share(sito.id, giulia.parent);
+  const campagna = giulia.model.createProject({ name: "Campagna" });
+  giulia.model.updateProject(campagna.id, { shared: true });
+  giulia.sync.share(campagna.id, giulia.parent);
+  const volantini = giulia.model.createProject({ name: "Volantini" });
+  giulia.model.updateProject(volantini.id, { shared: true });
+  giulia.sync.share(volantini.id, altra);
+  giulia.model.createProject({ name: "Bilancio" });      // di nessuno, e non compare
+  await giulia.round();
+
+  // L'ordine è quello dell'archivio — l'ultimo toccato per primo — e non quello di creazione.
+  assert.deepEqual(giulia.sync.projectsOf(giulia.parent).map((one) => one.name).sort(),
+    ["Campagna", "Sito nuovo"]);
+  assert.deepEqual(giulia.sync.projectsOf(altra).map((one) => one.name), ["Volantini"]);
+
+  // Il nome è quello di qui: Marco apre lo stesso progetto e lo rinomina, e ognuno vede il suo.
+  const marco = await world("marco-15", rossi);
+  const theirs = marco.project("Sito nuovo");
+  marco.model.updateProject(theirs.id, { name: "Il sito dei Rossi" });
+  await marco.round();
+  assert.deepEqual(marco.sync.projectsOf(marco.parent).map((one) => one.name).sort(),
+    ["Campagna", "Il sito dei Rossi"]);
+  await giulia.round();
+  assert.ok(giulia.sync.projectsOf(giulia.parent).some((one) => one.name === "Il sito dei Rossi"),
+    "e il nome viaggia come ogni altro campo del progetto");
+});
+
+await test("dalla cartella passano i nomi di chi lavora al progetto, e non i loro recapiti", async () => {
+  const folder = new FakeDir("Dropbox");
+  const giulia = await world("giulia-16", folder);
+  const fiera = giulia.model.createProject({ name: "Fiera" });
+  const rossi = giulia.model.createContact({
+    name: "Marco Rossini",
+    company: "Studio Rossi",
+    email: "marco@studiorossi.it",
+    phone: "0549 900100",
+  });
+  giulia.model.addPerson(fiera.id, rossi.id, "capoprogetto");
+  const stand = giulia.model.createTask(fiera.id, { title: "Stand" });
+  giulia.model.assignByName(stand.id, "Marco Rossini");
+  giulia.shareIt(fiera.id);
+  await giulia.round();
+
+  // Quello che è finito su disco, letto come lo leggerebbe chiunque apra la cartella.
+  const written = await folder.readByHand("Fiera/project.json");
+  const json = JSON.parse(written);
+  assert.deepEqual(json.project.people, [
+    { uid: rossi.uid, name: "Marco Rossini", role: "capoprogetto" },
+  ]);
+  // La regola, provata sul testo e non sulla forma: in tutta la cartella non c'è un recapito.
+  for (const path of ["Fiera/project.json"]) {
+    const text = await folder.readByHand(path);
+    for (const secret of ["marco@studiorossi.it", "0549 900100", "Studio Rossi"]) {
+      assert.ok(!text.includes(secret), `«${secret}» non esce dalla rubrica (${path})`);
+    }
+  }
+
+  // Marco apre la cartella: sa chi ci lavora e cosa fa, e la rubrica sua resta la sua.
+  const marco = await world("marco-16", folder);
+  const theirs = marco.project("Fiera");
+  assert.deepEqual(marco.model.peopleOf(theirs.id).map((one) => `${one.name} — ${one.role}`),
+    ["Marco Rossini — capoprogetto"]);
+  const card = marco.model.tasksOf(theirs.id).find((task) => task.title === "Stand");
+  assert.equal(marco.model.assigneeName(card), "Marco Rossini", "la casella dice chi, senza la scheda");
+  assert.deepEqual(marco.model.liveContacts(), [], "e in rubrica non è comparso nessuno");
+
+  // Il ruolo lo può correggere anche senza la scheda, e mette del suo: torna indietro tutto.
+  await tick();
+  marco.model.setPersonRole(theirs.id, rossi.uid, "cliente");
+  const giulia2 = marco.model.createContact({ name: "Giulia Bianchi", email: "giulia@example.com" });
+  marco.model.addPerson(theirs.id, giulia2.id, "grafica");
+  await marco.round();
+  await giulia.round();
+  assert.deepEqual(giulia.model.peopleOf(fiera.id).map((one) => `${one.name} — ${one.role}`).sort(),
+    ["Giulia Bianchi — grafica", "Marco Rossini — cliente"]);
+  const back = await folder.readByHand("Fiera/project.json");
+  assert.ok(!back.includes("giulia@example.com"), "e nemmeno al ritorno esce un recapito");
+
+  // Adottarla è un gesto, non una conseguenza: la scheda nasce qui col `uid` di là.
+  marco.model.adoptPerson(theirs.id, rossi.uid);
+  const adopted = marco.model.contactByUid(rossi.uid);
+  assert.equal(adopted.name, "Marco Rossini");
+  assert.equal(adopted.email, "", "la scheda nasce vuota: i recapiti non li aveva nessuno qui");
 });
 
 console.log(`sync: ${passed} prove passate`);

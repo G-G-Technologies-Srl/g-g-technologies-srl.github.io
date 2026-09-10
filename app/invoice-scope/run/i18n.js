@@ -500,6 +500,22 @@ const IT = {
     + "ogni apertura.",
   backupLinked: "Cartella «{folder}» · ultima copia {when}.",
   backupNever: "Cartella «{folder}» · nessuna copia ancora.",
+  backupCopiesTitle: "Le copie nella cartella",
+  backupCopiesNote: "La copia corrente è quella di adesso; le altre sono una al giorno, e "
+    + "arrivano fino a trenta giorni indietro. Servono per il giorno in cui quello che c'è adesso "
+    + "è sbagliato: riportare una copia rimette l'archivio com'era quel giorno.",
+  backupCopyLatest: "Copia corrente",
+  backupCopySize: "{size}",
+  backupRestore: "Riporta questa",
+  backupRestoreAsk: "Riporto l'archivio com'era in questa copia. Documenti, clienti, acquisti e "
+    + "numerazione tornano a quel giorno, e quello che c'è adesso viene sostituito. Non si torna "
+    + "indietro.",
+  backupRestoreDone: "Archivio riportato: {n} record.",
+  backupRestoreBad: "Questa copia non si è potuta riportare: il file non è un archivio di Invoice "
+    + "Scope.",
+  backupNoFolder: "Nessuna cartella collegata.",
+  backupNoPermission: "La cartella aspetta il tuo permesso: riprendila e riprova.",
+  backupCopyGone: "Questa copia non è più nella cartella.",
   backupError: "Non riesco a scrivere nella cartella «{folder}» ({error}). Controlla che esista "
     + "ancora, o scegline un'altra.",
   settingsFormat: "Formato del file",
@@ -1494,6 +1510,21 @@ const EN = {
     + "thirty days. Only one computer writes here: on the other, open the archive with «Import "
     + "an archive». The archive carries the text: the images inside project pages travel in the "
     + "project package, which is a zip.",
+  backupCopiesTitle: "The copies in the folder",
+  backupCopiesNote: "The current copy is how things are now; the others are one a day, going back "
+    + "thirty days. They are there for the day what you have now is wrong: bringing a copy back "
+    + "puts the archive as it was on that day.",
+  backupCopyLatest: "Current copy",
+  backupCopySize: "{size}",
+  backupRestore: "Bring this one back",
+  backupRestoreAsk: "I bring the archive back to how it was in this copy. Documents, customers, "
+    + "purchases and the numbering go back to that day, and what is here now is replaced. There is "
+    + "no undo.",
+  backupRestoreDone: "Archive brought back: {n} records.",
+  backupRestoreBad: "This copy could not be brought back: the file is not an Invoice Scope archive.",
+  backupNoFolder: "No folder linked.",
+  backupNoPermission: "The folder is waiting for your permission: take it up again and try once more.",
+  backupCopyGone: "This copy is no longer in the folder.",
   backupPick: "Choose the folder…",
   backupResume: "Resume the folder",
   backupUnlink: "Unlink the folder",

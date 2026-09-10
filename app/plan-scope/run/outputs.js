@@ -70,6 +70,7 @@ export function exportBoardHtml(projectId) {
   const project = model.project(projectId);
   if (!project) return;
   const html = webpage.boardHtml({
+    who: (task) => model.assigneeName(task),
     title: project.name || t("projectUntitled"),
     subtitle: project.eventDate ? longDate(project.eventDate) : "",
     footer: _footerLine(),
@@ -87,6 +88,7 @@ export function exportCsv(projectId) {
   const labels = [t("fieldTitle"), t("csvColumn"), t("fieldStart"), t("fieldEnd"), t("fieldPriority"),
     t("fieldAssignee"), t("csvTags"), t("milestoneShort"), t("csvDone"), t("csvParent"), t("fieldNotes")];
   const text = csv.tasksCsv(model.tasksOf(projectId), {
+    who: (task) => model.assigneeName(task),
     columns: project.columns,
     labels,
     sep: lang() === "it" ? ";" : ",",
@@ -119,7 +121,7 @@ function _eventOf(task) {
     title: task.title,
     date: task.start && task.start <= task.end ? task.start : task.end,
     end: task.end,
-    description: [where, task.assignee, task.notes].filter(Boolean).join("\n"),
+    description: [where, model.assigneeName(task), task.notes].filter(Boolean).join("\n"),
   };
 }
 
@@ -161,7 +163,7 @@ export async function copyFor(kind, { pageId = null, projectId = null } = {}) {
     const lines = model.tasksOf(projectId).map((task) => [
       `- ${model.isDone(task) ? "[x]" : "[ ]"} ${task.title}`,
       task.end ? `@${task.end}` : "",
-      task.assignee ? `(${task.assignee})` : "",
+      model.assigneeName(task) ? `(${model.assigneeName(task)})` : "",
       ...(task.tags || []).map((tag) => `#${tag}`),
       `— ${nameOf(task.status)}`,
     ].filter(Boolean).join(" "));

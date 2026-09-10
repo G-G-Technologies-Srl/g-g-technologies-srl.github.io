@@ -139,7 +139,9 @@ test("una carta del dimostrativo porta tutto quello che una carta può portare",
   const built = demo.build({ t, model, columns: project().columns });
   const rich = model.tasksOf(built.id).find((task) => (task.checklist || []).length);
   assert.ok(rich, "nessuna attività con una checklist: la bacheca sarebbe una colonna di titoli");
-  assert.equal(rich.assignee, "Giulia");
+  // Il nome si legge dal progetto, non dall'attività: è il punto della rubrica.
+  assert.equal(model.assigneeName(rich), t("demoWho"));
+  assert.deepEqual(model.peopleOf(built.id).map((one) => one.name), [t("demoWho")]);
   assert.equal(rich.priority, "high");
   assert.equal(rich.tags.length, 1);
 });

@@ -175,12 +175,14 @@ export function pageHtml({ title, markdown, subtitle = "", footer = "", images =
  * A board as a document: one section per column, one card per task with its date, owner and
  * tags. `columns` and `tasks` are the project's; `words` carries the labels already translated.
  */
-export function boardHtml({ title, subtitle = "", footer = "", columns, tasks, words, isDone }) {
+export function boardHtml({ title, subtitle = "", footer = "", columns, tasks, words, isDone,
+  who = () => "" }) {
   const sections = columns.map((column) => {
     const cards = tasks.filter((task) => task.status === column.id).map((task) => {
       const bits = [];
       if (task.end) bits.push(`${words.due} ${task.end}`);
-      if (task.assignee) bits.push(task.assignee);
+      const name = who(task);
+      if (name) bits.push(name);
       if (task.tags && task.tags.length) bits.push(task.tags.map((tag) => `#${tag}`).join(" "));
       if (task.milestone) bits.push(words.milestone);
       return `<div class="card${isDone(task) ? " done" : ""}"><div class="title">${_escape(task.title)}</div>${

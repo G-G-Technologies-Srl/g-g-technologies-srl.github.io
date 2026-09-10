@@ -3,11 +3,22 @@
 // The shared folder: projects written as files into a folder the person chose, and read back
 // when somebody else's copy changed them.
 //
-// This is how two people work on one project without a server. Giulia points the app at a
-// folder inside her Dropbox; the app writes each shared project there as `vault.js` lays it out;
-// Dropbox carries the files to Marco; Marco's app, pointed at the same folder, reads them and
-// merges. Nothing here makes a request: the folder is the operating system's, and so is the
-// carrying. `check_apps.py` stays green.
+// This is how two people work on one project without a server. Giulia shares a project into a
+// folder inside her Dropbox; the app writes it there as `vault.js` lays it out; Dropbox carries the
+// files to Marco; Marco opens that folder and his app reads and merges. Nothing here makes a
+// request: the folder is the operating system's, and so is the carrying. `check_apps.py` stays green.
+//
+// **A folder belongs to a project, not to the app.** Until 2.x there was one shared folder with a
+// sub-folder per project, and everything in it was adopted by scanning. That made «shared» a single
+// decision for the whole archive, which is not how anybody works: this project goes to that client,
+// that one to nobody. Now every shared project carries the folder it lives in — a mother and a
+// sub-folder, both resolved by `folders.js`, which counts the permissions — and the reading runs
+// over the shared projects rather than over whatever happens to be on disk.
+//
+// Two things follow, and both are improvements bought rather than found. A project of somebody
+// else's arrives when somebody **opens** it, so nothing is adopted that was not asked for. And the
+// local folder of `backup.js` can hold the shared folders inside it without being mistaken for
+// one: nobody scans anything any more.
 //
 // The rules that keep it from fighting itself, in the order they are needed:
 //
@@ -26,18 +37,20 @@
 //  - a project binned here stays binned here, whatever the folder says, and the binning is
 //    written so that the other copy hears it. Every binned page and task travels too.
 //
-// The folder is a `FileSystemDirectoryHandle`, which only Chromium browsers hand out and which
-// survives in IndexedDB between sessions; the permission does not always, and then the archive
-// shows a button to take it up again. Everything the browser cannot do is reported, not hidden.
-// Two tabs of the same browser take turns through a Web Lock, and read the marks afresh each
-// time, so that a folder is adopted once and not twice. Handle, permission and lock are
-// `gg/folder.js`, shared with the apps that write a plain backup there; the reading and the
+// The folders are `FileSystemDirectoryHandle`s, which only Chromium browsers hand out and which
+// survive in IndexedDB between sessions; the permission does not always, and then the archive shows
+// a button to take it up again — one button per folder, because the browser wants a gesture for
+// each. A folder waiting for its permission stops that project and nothing else. Everything the
+// browser cannot do is reported, not hidden. Two tabs of the same browser take turns through a Web
+// Lock, and read the marks afresh each time. Handles and permissions are `folders.js`; the hash and
+// the lock are `gg/folder.js`, shared with the apps that write a plain backup; the reading and the
 // merging above them are this file's, and nobody else's.
 
 import * as model from "gg/plan-model.js";
 import * as db from "./db.js";
 import * as vault from "./vault.js";
-import { available as folderAvailable, hash as _hash, withLock, linkFolder } from "gg/folder.js";
+import * as folders from "./folders.js";
+import { hash as _hash, withLock } from "gg/folder.js";
 import { t, tf } from "./i18n.js";
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -46,7 +59,6 @@ import { t, tf } from "./i18n.js";
 
 const PUSH_DELAY_MS = 3000;             // typing settles before a project is written
 const PULL_EVERY_MS = 60 * 1000;        // how often the folder is read while the app is in front
-const HANDLE_KEY = "folderHandle";
 const STATE_KEY = "sync";
 const LOCK_NAME = "plan-scope-sync";
 
@@ -55,16 +67,10 @@ const LOCK_NAME = "plan-scope-sync";
 // -----------------------------------------------------------------------------------------------------------------
 
 let on = { pulled() {}, status() {}, unshared() {}, snapshot: async () => undefined, columns: () => undefined };
-// The folder, through the library: `folder.handle` is the `FileSystemDirectoryHandle` once granted.
-// `db.meta` is read lazily because the fake database of the tests is swapped in per world.
-const folder = linkFolder({
-  id: "plan-scope",
-  key: HANDLE_KEY,
-  load: (key) => db.meta(key, null),
-  save: (key, value) => db.setMeta(key, value),
-});
-// marks[uid] = { folder, pushed, exported, readAt, seen, tooNew }:
-//   folder   the sub-folder's name
+// marks[uid] = { parent, sub, self, pushed, exported, readAt, seen, wrote, tooNew }:
+//   parent   the id of the folder it lives in, as `folders.js` knows it
+//   sub      the name of its sub-folder inside that one
+//   self     the folder *is* the project: what a folder opened from somebody else looks like
 //   pushed   fingerprint of this browser's records when they last matched the file; null forces a write
 //   exported the `exported` stamp of the file last read or written
 //   readAt   this browser's clock at that moment — the baseline for «edited here since»
@@ -87,9 +93,36 @@ async function _saveState() {
 }
 
 /** The marks as the database has them: another tab may have moved them since. */
+/**
+ * Un nome di ripiego per questa copia dell'app: `user_k3p9zx`.
+ *
+ * Non è un vezzo, è la fine di una classe di casi vuoti. Il nome firma quello che esce — chi ha
+ * scritto una pagina, quale delle due copie ha lasciato l'altra — e finché poteva essere vuoto
+ * ogni posto che lo mostra doveva ricordarsi di gestire il vuoto, e aggiungere una cartella era
+ * sbarrato da un cancello che chiedeva un nome prima di lasciarti fare qualsiasi cosa.
+ *
+ * Resta comunque un ripiego, e l'app se lo ricorda in `whoAuto`: «user_k3p9zx» a un collega non
+ * dice niente, e i valori predefiniti non li cambia quasi nessuno. Quindi il nome vero si chiede
+ * nell'unico momento in cui comincia a contare — la prima volta che qualcosa esce da qui verso
+ * qualcun altro — col ripiego già scritto nel campo, così è un tasto per tenerlo o sostituirlo.
+ */
+function _madeUpName() {
+  // Sei caratteri presi da un alfabeto senza maiuscole: si legge ad alta voce, si copia a mano, e
+  // in un elenco di cartelle non si confonde con quello accanto. Costruito a ciclo e non tagliando
+  // un `toString(36)`, che ogni tanto ne restituisce meno di sei.
+  const alfabeto = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let coda = "";
+  for (let i = 0; i < 6; i += 1) coda += alfabeto[Math.floor(Math.random() * alfabeto.length)];
+  return `user_${coda}`;
+}
+
 async function _loadState() {
   const stored = await db.meta(STATE_KEY, {});
   state = { who: "", marks: {}, ...stored, who: state.who || stored.who || "" };
+  if (!state.who) {
+    state = { ...state, who: _madeUpName(), whoAuto: true };
+    await _saveState();
+  }
 }
 
 /** Take turns: one tab reads or writes the folder at a time. Without locks, just run. */
@@ -118,17 +151,28 @@ function _localByUid(uid) {
   return [...model.liveProjects(), ...model.trashedProjects()].find((one) => (one.uid || one.id) === uid) || null;
 }
 
-/** Every immediate sub-folder that holds a project.json, as `{ name, handle }`. */
-async function _projectFolders() {
-  const out = [];
-  for await (const [name, handle] of folder.handle.entries()) {
-    if (handle.kind !== "directory") continue;
-    try {
-      await handle.getFileHandle(vault.PROJECT_FILE);
-      out.push({ name, handle });
-    } catch (ignored) { /* a folder of something else */ }
-  }
-  return out;
+/** Where a project's folder is, from its mark: a sub-folder of a mother, or a mother that is one. */
+function _dirOf(mark, name, { create = false } = {}) {
+  return folders.dirOf(mark.parent, mark.self ? null : name, { create });
+}
+
+/** The name of the sub-folder a project belongs in — the one it has, or the one it would get. */
+function _subOf(mark, project) {
+  if (mark.self) return null;
+  return mark.sub || vault.folderName(project);
+}
+
+/**
+ * A project that stops being shared because its folder is not there any more.
+ *
+ * A folder this browser wrote before and cannot find now was removed on purpose, by somebody:
+ * writing it again would undo that. The project stays where it is, and says so.
+ */
+async function _unshare(projectId, uid) {
+  delete state.marks[uid];
+  await _saveState();
+  _quietly(() => model.updateProject(projectId, { shared: false }));
+  on.unshared(model.project(projectId));
 }
 
 /** The files a project folder is made of, with their sizes and times: a change anywhere shows here. */
@@ -236,35 +280,30 @@ function _quietly(fn) {
 /** One project into its folder, if it is shared and changed since the last write. */
 async function _push(projectId) {
   const project = model.project(projectId);
-  if (!project || !project.shared || !folder.handle) return;
+  if (!project || !project.shared) return;
   const uid = project.uid || project.id;
   const mark = state.marks[uid] || {};
-  if (mark.tooNew) return;
+  if (mark.tooNew || !mark.parent) return;
+  // Un permesso caduto non è una cartella sparita: si aspetta il click, e non si tocca niente.
+  if ((await folders.permission(mark.parent)) !== "granted") return;
   const payload = _payloadOf(projectId);
   const pushed = _fingerprint(payload);
   if (mark.pushed && mark.pushed === pushed) return;
-  let dir = null;
-  if (mark.folder) {
-    // A folder this browser wrote before and finds gone was removed on purpose, by somebody:
-    // writing it again would undo that. The project stays, and stops being shared.
-    try {
-      dir = await folder.handle.getDirectoryHandle(mark.folder);
-    } catch (ignored) {
-      delete state.marks[uid];
-      await _saveState();
-      _quietly(() => model.updateProject(projectId, { shared: false }));
-      on.unshared(model.project(projectId));
-      return;
-    }
-  } else {
-    dir = await folder.handle.getDirectoryHandle(vault.folderName(project), { create: true });
+
+  const sub = _subOf(mark, project);
+  // Una cartella già scritta e adesso introvabile è stata tolta apposta; una mai scritta si crea.
+  const dir = await _dirOf(mark, sub, { create: !mark.wrote });
+  if (!dir) {
+    if (mark.wrote) await _unshare(projectId, uid);
+    return;
   }
   const now = new Date();
   const files = vault.write({ ...payload, assets: await _assetsOf(projectId) },
     { by: state.who, now, basedOn: mark.exported || null });
   await _writeFolder(dir, files);
   state.marks[uid] = {
-    folder: mark.folder || vault.folderName(project),
+    ...mark,
+    sub,
     pushed,
     exported: now.toISOString(),
     readAt: now.toISOString(),
@@ -275,21 +314,31 @@ async function _push(projectId) {
   on.status();
 }
 
-/** One folder of the shared one: read if it changed, then adopted, merged, or left alone. */
-async function _pullFolder(name, handle, folderNames) {
-  const listing = await _listing(handle);
-  const known = Object.entries(state.marks).find(([, mark]) => mark.folder === name);
-  if (known && known[1].seen === listing) return;
-  const { entries, stamps } = await _readFolder(handle);
+/** One project's folder: read if it changed, then adopted, merged, or left alone. */
+async function _pullFolder(dir, where) {
+  const listing = await _listing(dir);
+  const here = (mark) => mark.parent === where.parent
+    && (mark.sub || null) === (where.sub || null)
+    && Boolean(mark.self) === Boolean(where.self);
+  const known = Object.values(state.marks).find(here);
+  if (known && known.seen === listing) return;
+  const { entries, stamps } = await _readFolder(dir);
   const payload = vault.read(entries, { newId: model.newId, stamps });
   if (!payload) return;
   const uid = payload.uid || payload.project.uid;
   const mark = state.marks[uid] || {};
-  // The same project in two folders — a rename after the marks were lost — is read from the one
-  // the marks know; the other is left alone rather than merged in turns.
-  if (mark.folder && mark.folder !== name && folderNames.has(mark.folder)) return;
+  // The same project in two folders — the same copy opened twice, from two places — is read from
+  // the one the marks know; the other is left alone rather than merged in turns.
+  if (mark.parent && !here(mark) && await _dirOf(mark, mark.sub)) return;
   const remember = (extra = {}) => {
-    state.marks[uid] = { ...mark, folder: name, seen: listing, ...extra };
+    state.marks[uid] = {
+      ...mark,
+      parent: where.parent,
+      sub: where.sub || null,
+      self: Boolean(where.self),
+      seen: listing,
+      ...extra,
+    };
     return _saveState();
   };
   if (payload.tooNew) return remember({ tooNew: true });
@@ -380,32 +429,41 @@ async function _storeAssets(payload, projectId) {
 }
 
 /**
- * Everything the folder holds that this browser has not read yet: adopted or merged. Returns
- * whether every folder was read — a folder that could not be is no reason to stop the others,
- * but it is a reason not to write over it.
+ * Every shared project read from its own folder: adopted or merged.
+ *
+ * Returns the projects that could **not** be read — so that a write never goes over something not
+ * yet read — or `null` when nothing could be read at all. A folder that fails is no reason to stop
+ * the others: with a folder per project, one client's Drive being unreachable used to mean the
+ * whole archive stopped, and that is exactly the coupling this version takes apart.
  */
 async function _pullAll() {
-  if (!folder.handle) return false;
-  let ok = true;
+  const failed = new Set();
   try {
     await _loadState();
-    const folders = await _projectFolders();
-    const names = new Set(folders.map((one) => one.name));
-    // A folder this browser wrote before and that is gone now was removed on purpose, by
-    // somebody: the project stays, and stops being shared — now, not at the next write.
     for (const project of model.liveProjects()) {
-      const mark = state.marks[project.uid || project.id];
-      if (!project.shared || !mark || !mark.folder || names.has(mark.folder)) continue;
-      delete state.marks[project.uid || project.id];
-      await _saveState();
-      _quietly(() => model.updateProject(project.id, { shared: false }));
-      on.unshared(model.project(project.id));
-    }
-    for (const { name, handle } of folders) {
+      if (!project.shared) continue;
+      const uid = project.uid || project.id;
+      const mark = state.marks[uid];
+      if (!mark || !mark.parent || mark.tooNew) continue;
+      // `seen` è l'impronta della cartella l'ultima volta che l'abbiamo letta o scritta: senza,
+      // quella cartella non esiste ancora — è un progetto appena condiviso, e la prima scrittura
+      // arriva dalla coda subito dopo. Con, la cartella va guardata anche se questo browser non ci
+      // ha mai scritto: è così che chi ha solo ricevuto un progetto si accorge che è sparito.
+      if (!mark.seen) continue;
+      // Un permesso caduto si aspetta; una cartella sparita si prende per quello che è.
+      if ((await folders.permission(mark.parent)) !== "granted") {
+        failed.add(project.id);
+        continue;
+      }
+      const dir = await _dirOf(mark, mark.sub);
+      if (!dir) {
+        await _unshare(project.id, uid);
+        continue;
+      }
       try {
-        await _pullFolder(name, handle, names);
+        await _pullFolder(dir, { parent: mark.parent, sub: mark.sub, self: mark.self });
       } catch (error) {
-        ok = false;
+        failed.add(project.id);
         on.status(error);
       }
     }
@@ -417,22 +475,26 @@ async function _pullAll() {
       if (mark && !mark.tooNew && mark.pushed !== _fingerprint(_payloadOf(project.id))) dirty.add(project.id);
     }
     lastPull = new Date().toISOString();
-    if (ok) on.status();
+    if (!failed.size) on.status();
   } catch (error) {
-    ok = false;
     on.status(error);
+    return null;
   }
-  return ok;
+  return failed;
 }
 
-/** Read, then write what waits. The one path to the folder, so that reading always comes first. */
+/** Read, then write what waits. The one path to a folder, so that reading always comes first. */
 async function _round() {
   return _withLock(async () => {
-    const read = await _pullAll();
-    if (!read) return;
+    const failed = await _pullAll();
+    if (!failed) return;
     const ids = [...dirty];
     dirty.clear();
     for (const id of ids) {
+      if (failed.has(id)) {
+        dirty.add(id);
+        continue;
+      }
       try {
         await _push(id);
       } catch (error) {
@@ -454,10 +516,6 @@ function _schedulePush(delay = PUSH_DELAY_MS) {
   pushTimer = _loose(setTimeout(() => { _round(); }, delay));
 }
 
-function _permission(ask = false) {
-  return folder.permission(ask);
-}
-
 /** Read the folder when the app comes back in front, and once a minute while it is. */
 function _watch() {
   clearInterval(pullTimer);
@@ -473,30 +531,80 @@ function _markAllShared() {
   for (const project of model.liveProjects()) if (project.shared) dirty.add(project.id);
 }
 
+/**
+ * The marks of 2.x — «one folder, and a sub-folder per project» — become «a mother and a
+ * sub-folder».
+ *
+ * Nothing is rewritten and nothing is re-read: `pushed`, `exported`, `readAt` and `seen` stay as
+ * they are, because the files on disk are exactly where they were and the folder is the one already
+ * granted. Somebody who was working in two comes back the next morning to the same projects in the
+ * same places, and to one more thing they can now do.
+ */
+async function _migrateMarks(parent) {
+  if (!parent) return;
+  let moved = false;
+  for (const [uid, mark] of Object.entries(state.marks)) {
+    if (!mark || mark.parent || !mark.folder) continue;
+    const { folder, ...rest } = mark;
+    state.marks[uid] = { ...rest, parent, sub: folder, self: false };
+    moved = true;
+  }
+  if (moved) await _saveState();
+}
+
+/**
+ * A folder read and taken in, from wherever somebody pointed the app at it.
+ *
+ * Behind both «Apri una cartella condivisa…» and «apri questo, che non l'hai ancora aperto»: the
+ * reading and the merging are `_pullFolder`'s, and what is added here is finding the project that
+ * came of it, so that a screen can be opened on it.
+ */
+async function _adopt(dir, where) {
+  let found = null;
+  await _withLock(async () => {
+    await _loadState();
+    await _pullFolder(dir, where);
+    for (const [uid, mark] of Object.entries(state.marks)) {
+      if (mark.parent !== where.parent) continue;
+      if ((mark.sub || null) !== (where.sub || null)) continue;
+      found = _localByUid(uid);
+    }
+  });
+  if (found) {
+    _watch();
+    on.status();
+  }
+  return found;
+}
+
 // -----------------------------------------------------------------------------------------------------------------
 //  p u b l i c
 // -----------------------------------------------------------------------------------------------------------------
 
 /** Whether this browser can hand out a folder at all: Chromium on a desktop, today. */
 export function available() {
-  return folderAvailable();
+  return folders.available();
 }
 
 /**
- * Wake up: the state and the handle come back from the database; the permission may not, and
- * then `status()` answers "prompt" until somebody presses «Riprendi la cartella». Nothing here
- * can stop the app from starting: a folder that fails is reported on the archive.
+ * Wake up: the marks and the folders come back from the database; the permissions may not, and
+ * then the archive says which folders are waiting. Nothing here can stop the app from starting: a
+ * folder that fails is reported on the archive.
+ *
+ * `localFolder()` gives the archive's handle, which `folders.js` shows first among the places to
+ * share into. The single shared folder of 2.x becomes the first mother, and the marks that pointed
+ * at its sub-folders are pointed at it — with nothing rewritten and no permission asked, because
+ * the files are exactly where they were.
  */
 export async function setup(handlers) {
   on = { ...on, ...handlers };
   if (!available()) return;
   try {
     await _loadState();
-    if ((await folder.restore()) === "granted") {
-      _markAllShared();
-      await _round();
-      _watch();
-    }
+    await _migrateMarks(await folders.setup({ local: on.localFolder }));
+    _markAllShared();
+    await _round();
+    _watch();
   } catch (error) {
     on.status(error);
     return;
@@ -504,12 +612,24 @@ export async function setup(handlers) {
   on.status();
 }
 
-/** «Scegli la cartella»: the picker, the permission, the first read. Needs a user gesture. */
-export async function link(who) {
-  if (!(await folder.link())) return false;   // no picker here, or the person closed it
-  // A new folder knows nothing of the old one's marks: everything shared is written afresh.
-  state = { who: String(who || "").trim(), marks: {} };
-  await _saveState();
+/**
+ * «Aggiungi una cartella»: one more place to share into. Needs a user gesture.
+ *
+ * The name comes with it because it is asked for in the same dialog, and because a folder written
+ * by somebody with no name is a folder whose conflict copies are titled by nobody.
+ */
+export async function addFolder(who) {
+  if (who !== undefined) await setWho(who);
+  const id = await folders.add();
+  if (!id) return null;
+  _watch();
+  on.status();
+  return id;
+}
+
+/** «Riprendi la cartella», one folder at a time: the browser wants a gesture for each. */
+export async function resumeFolder(id) {
+  if (!(await folders.resume(id))) return false;
   _markAllShared();
   await _round();
   _watch();
@@ -517,31 +637,60 @@ export async function link(who) {
   return true;
 }
 
-/** «Riprendi la cartella»: ask the permission again, from a click. */
-export async function resume() {
-  if ((await _permission(true)) !== "granted") return false;
-  _markAllShared();
-  _round();
-  _watch();
-  on.status();
-  return true;
+/**
+ * «Apri una cartella condivisa…»: a project of somebody else's, read and adopted.
+ *
+ * This is what replaced the folder scan of 2.x, and the difference is consent: a project arrives
+ * because somebody opened it, not because it turned up in a folder the app was watching. What
+ * comes back is the project, or `null` when the picker was closed or the folder held no project.
+ */
+export async function openShared() {
+  const opened = await folders.adopt();
+  // Il selettore chiuso e una cartella senza progetto sono due risposte diverse, e chi chiama deve
+  // poterle distinguere: la prima non si commenta, la seconda sì.
+  if (!opened) return { ok: false, cancelled: true };
+  const project = await _adopt(opened.handle, { parent: opened.id, sub: null, self: true });
+  if (!project) {
+    await folders.forget(opened.id);
+    return { ok: false };
+  }
+  return { ok: true, project };
 }
 
-/** «Scollega la cartella»: forget the handle; the files on disk stay where they are. */
-export async function unlink() {
-  clearInterval(pullTimer);
-  clearTimeout(pushTimer);
-  await folder.unlink();
-  on.status();
+/**
+ * One project out of a folder already known: «in questa cartella ci sono tre progetti che non hai
+ * ancora aperto», answered one at a time.
+ */
+export async function openFrom(parent, sub) {
+  const dir = await folders.dirOf(parent, sub);
+  if (!dir) return null;
+  return _adopt(dir, { parent, sub, self: false });
 }
 
-/** What the archive shows: the folder's name, who we are, when it was last read. */
+/**
+ * What the archive says: how many folders hold what is shared, which of them are waiting for a
+ * permission, who we are, and when the last reading was.
+ */
 export async function status() {
   if (!available()) return { kind: "unavailable" };
-  const handle = folder.handle;         // «Scollega» can land while the permission is being asked
-  if (!handle) return { kind: "none", who: state.who };
-  const permission = await _permission();
-  return { kind: permission === "granted" ? "linked" : "prompt", folder: handle.name, who: state.who, lastPull };
+  const used = new Map();
+  for (const project of model.liveProjects()) {
+    if (!project.shared) continue;
+    const mark = state.marks[project.uid || project.id];
+    if (!mark || !mark.parent || used.has(mark.parent)) continue;
+    used.set(mark.parent, await folders.permission(mark.parent));
+  }
+  if (!used.size) return { kind: "none", who: state.who };
+  const waiting = [...used].filter(([, state_]) => state_ !== "granted").map(([id]) => folders.name(id));
+  return {
+    kind: waiting.length ? "prompt" : "linked",
+    folders: used.size,
+    // The first name is what a one-folder line says, and most lines are one-folder lines.
+    folder: folders.name([...used.keys()][0]),
+    waiting,
+    who: state.who,
+    lastPull,
+  };
 }
 
 export function who() {
@@ -549,62 +698,126 @@ export function who() {
 }
 
 export async function setWho(name) {
-  state = { ...state, who: String(name || "").trim() };
+  const clean = String(name || "").trim();
+  // Un nome scritto da una persona non è più un ripiego, e da lì in poi non si chiede più.
+  if (!clean) return;
+  state = { ...state, who: clean, whoAuto: false };
   await _saveState();
+}
+
+/** Vero finché il nome è quello che si è dato l'app da sola, e nessuno l'ha confermato. */
+export function whoIsMadeUp() {
+  return Boolean(state.whoAuto);
 }
 
 /** A record of this project changed by the person: it will be written, once typing settles. */
 export function changed(projectId) {
-  if (!folder.handle || !projectId || muted) return;
+  if (!projectId || muted) return;
   const project = model.project(projectId);
   if (!project || !project.shared) return;
   dirty.add(projectId);
   _schedulePush();
 }
 
-/** Read the folder now: after linking, after sharing a project, from a button. */
+/** Read the folders now: after opening one, after sharing a project, from a button. */
 export async function pullNow() {
   await _round();
 }
 
-/** A project just marked shared: written now, whatever the timers say. */
-export function share(projectId) {
+/**
+ * A project shared into a folder: written now, whatever the timers say.
+ *
+ * The folder is chosen here and not at the first write, because «where does this go» is the whole
+ * question a person is answering when they share one project and not another.
+ */
+export function share(projectId, parent) {
+  const project = model.project(projectId);
+  if (!project || !parent) return;
+  const uid = project.uid || project.id;
+  state.marks[uid] = { ...(state.marks[uid] || {}), parent, self: false };
+  _saveState();
   dirty.add(projectId);
   _schedulePush(0);
+  _watch();
 }
 
 /**
- * What the project's screen says under the switch: whether a write is waiting, when the last
- * one was, and into which sub-folder. `kind` is "off", "soon", "writing" or "on".
+ * What the project's screen says under the switch: whether a write is waiting, when the last one
+ * was, and into which folder. `kind` is "off", "soon", "writing" or "on".
  */
 export function projectStatus(projectId) {
   const project = model.project(projectId);
-  if (!folder.handle || !project) return { kind: "none" };
+  if (!project) return { kind: "none" };
   const mark = state.marks[project.uid || project.id] || {};
-  if (!project.shared) return { kind: "off", folder: folder.handle.name };
-  if (dirty.has(projectId) || !mark.wrote) return { kind: mark.wrote ? "writing" : "soon", folder: folder.handle.name, sub: mark.folder || vault.folderName(project) };
-  return { kind: "on", folder: folder.handle.name, sub: mark.folder, wrote: mark.wrote };
-}
-
-/** The name of the sub-folder this browser wrote a project into, or null when it never did. */
-export function folderOf(project) {
-  if (!folder.handle || !project) return null;
-  const mark = state.marks[project.uid || project.id];
-  return mark && mark.folder ? mark.folder : null;
+  if (!project.shared || !mark.parent) return { kind: "off" };
+  const where = { folder: folders.name(mark.parent), sub: _subOf(mark, project) };
+  if (dirty.has(projectId) || !mark.wrote) return { kind: mark.wrote ? "writing" : "soon", ...where };
+  return { kind: "on", ...where, wrote: mark.wrote };
 }
 
 /**
- * «Elimina la cartella condivisa»: the project's folder goes, for everybody. Here the project
- * stops being shared and stays where it is — in the bin, usually. On the other copies the next
- * write finds the folder gone and does the same, and says so.
+ * I progetti che questo browser tiene in quella cartella, con il nome che hanno **qui**.
+ *
+ * Qui, perché il nome di un progetto è di chi ce l'ha: la stessa cartella, sul computer dell'altra
+ * persona, può portare lo stesso progetto con un altro titolo. Chi guarda l'elenco delle cartelle
+ * vuole riconoscere il proprio, non sapere come lo chiama qualcun altro.
+ */
+export function projectsOf(parent) {
+  const out = [];
+  for (const project of model.liveProjects()) {
+    if (!project.shared) continue;
+    const mark = state.marks[project.uid || project.id];
+    if (!mark || mark.parent !== parent) continue;
+    out.push({ id: project.id, name: project.name || "", self: Boolean(mark.self) });
+  }
+  return out;
+}
+
+/**
+ * Of a mother's sub-folders, the ones that are not a project here yet.
+ *
+ * This is the mild answer to the one thing the folder scan of 2.x did well: a project somebody put
+ * beside yours does not appear on its own, but the app knows it is there and says so. Opening it is
+ * still a gesture, and that is the whole difference.
+ */
+export function unopened(parent, names) {
+  const taken = new Set();
+  for (const mark of Object.values(state.marks)) {
+    if (mark.parent === parent && mark.sub) taken.add(mark.sub);
+  }
+  return names.filter((name) => !taken.has(name));
+}
+
+/** Where a project is written: `{ folder, sub }`, or `null` when it is written nowhere. */
+export function folderOf(project) {
+  if (!project) return null;
+  const mark = state.marks[project.uid || project.id];
+  if (!mark || !mark.parent || !mark.wrote) return null;
+  return { folder: folders.name(mark.parent), sub: _subOf(mark, project) };
+}
+
+/**
+ * «Elimina la cartella condivisa»: the project's folder goes, for everybody. Here the project stops
+ * being shared and stays where it is. On the other copies the next write finds the folder gone and
+ * does the same, and says so.
+ *
+ * A folder that *is* the project — one opened from somebody else — is not deleted but let go: it
+ * is not ours, and somebody who stops following a project has not asked to destroy it.
  */
 export async function removeFolder(projectId) {
   const project = model.project(projectId);
-  const sub = folderOf(project);
-  if (!sub) return false;
+  if (!project) return false;
+  const uid = project.uid || project.id;
+  const mark = state.marks[uid];
+  if (!mark || !mark.parent) return false;
   await _withLock(async () => {
-    await folder.handle.removeEntry(sub, { recursive: true });
-    delete state.marks[project.uid || project.id];
+    if (mark.self) {
+      await folders.forget(mark.parent);
+    } else if (mark.sub) {
+      const parent = await folders.dirOf(mark.parent, null);
+      if (parent) await parent.removeEntry(mark.sub, { recursive: true });
+    }
+    delete state.marks[uid];
     dirty.delete(projectId);
     await _saveState();
   });

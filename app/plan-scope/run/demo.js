@@ -66,8 +66,10 @@ export function build({ t, model, columns }) {
   // One task with the things a card can carry, so the board is not a column of bare titles.
   const invite = tasks.find((task) => task.title === t("ev_invite"));
   if (invite) {
+    // Una persona vera, non un nome scritto a mano: il dimostrativo mostra anche la rubrica, e una
+    // stringa lì dentro sarebbe l'unica cosa dell'esempio che non è quello che sembra.
+    model.assignByName(invite.id, t("demoWho"));
     model.updateTask(invite.id, {
-      assignee: "Giulia",
       priority: "high",
       tags: [t("demoTag")],
       checklist: [

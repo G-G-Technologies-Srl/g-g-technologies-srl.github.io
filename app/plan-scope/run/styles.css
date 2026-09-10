@@ -25,6 +25,209 @@ body { height: auto; min-height: 100%; }
 body.fixed { height: 100%; overflow: hidden; }
 
 /* ---------------------------------------------------------------------------------------------
+   lo spazio fra le cose
+   --------------------------------------------------------------------------------------------- */
+
+/* **Lo spazio lo mette il contenitore, non i margini dei figli.**
+
+   `.note` porta `margin-bottom: 0` — voluto, perché in un dialogo serve a staccare la riga dei
+   comandi dal testo — e fuori di lì quello zero incolla al paragrafo la prima scatola che segue.
+   Misurato sull'archivio: **zero pixel** fra «Spazio usato» e il pannello di oggi. Lo stesso vale
+   ogni volta che due elementi con regole di margine diverse si trovano vicini, ed è una classe di
+   difetti, non un difetto: si ripresenta a ogni riga aggiunta a una schermata.
+
+   Una griglia con un solo `gap` la toglie intera. I margini dei figli diretti vanno a zero, così
+   lo spazio ha una sorgente sola e si legge dove è scritto. */
+#home .wrap, #project .wrap, #trash .wrap, #awards .wrap,
+#rubrica .wrap, #person .wrap, #folderScreen .wrap {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+#home .wrap > *, #project .wrap > *, #trash .wrap > *, #awards .wrap > *,
+#rubrica .wrap > *, #person .wrap > *, #folderScreen .wrap > * { margin: 0; }
+
+/* Il ruolo si scrive dove si legge, e la casella resta piccola perché «grafico» è corto: una casella
+   larga come la riga direbbe che ci si aspetta una frase. */
+.role-field { width: 130px; padding: 4px 8px; font-size: 12.5px; }
+
+#panelPeople .row { margin-top: 4px; }
+#panelPeople #addPersonName { flex: 1 1 160px; }
+
+/* ---------------------------------------------------------------------------------------------
+   rubrica
+   --------------------------------------------------------------------------------------------- */
+
+
+
+#person .card { display: grid; gap: 8px; }
+#person .card h2 { margin: 0; }
+#person .card p.note { margin: 0; max-width: 68ch; }
+
+/* Un'etichetta sopra il suo campo, e i campi larghi quanto quello che ci va: un telefono in una
+   casella larga come la finestra è una casella che non dice niente su cosa aspettarsi. */
+#personCard label { font-size: 13px; color: var(--muted); margin-bottom: -4px; }
+#personCard input { width: min(360px, 100%); justify-self: start; }
+#personCard input#personPhone { width: min(220px, 100%); }
+
+#personSearch { width: min(360px, 100%); }
+
+/* Un nome che porta da qualche parte si comporta da collegamento, non da pulsante: qui la riga è
+   fatta di rimandi, e cinque pulsanti in colonna sarebbero cinque comandi invece di un elenco. */
+.row-item button.link {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--accent-text);
+  cursor: pointer;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.row-item button.link:hover { text-decoration: underline; }
+.row-item button.link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.row-item .meta { margin-left: auto; color: var(--faint); font-size: 12px; text-align: right; }
+
+/* ---------------------------------------------------------------------------------------------
+   cartelle e copie
+   --------------------------------------------------------------------------------------------- */
+
+/* **Le due sezioni vengono da due dialoghi, e lì lo spazio glielo dava il dialogo.** `dialog p` ha
+   `margin: 0 0 16px` e `dialog > .row` un margine sopra: fuori di lì quelle regole non valgono più,
+   i paragrafi si schiacciano e il bordo di una scheda tocca quello dell'altra — due sezioni che si
+   leggono come una. Lo spazio va rimesso dove adesso vivono, e come lo mette il resto dell'app:
+   dal contenitore, non da un margine per elemento. */
+
+
+#folderScreen .card { display: grid; gap: 10px; }
+
+#folderScreen .card p { margin: 0; max-width: 68ch; }
+
+#folderScreen .card h3 { margin: 4px 0 0; font-size: 14px; font-weight: 600; }
+
+#folderScreen .card label { font-size: 13px; color: var(--muted); margin-bottom: -4px; }
+
+/* Un nome non è lungo quanto la finestra: la casella dice quanto ci si aspetta che si scriva. */
+#folderScreen .card input[type="text"] { width: min(320px, 100%); justify-self: start; }
+
+/* **Una cartella su due piani.** Il nome sopra con quello che ci si può fare; cosa contiene sotto.
+   Su una riga sola i due si contendono lo spazio e, con tre progetti dentro, vince chi ha il nome
+   più lungo — mentre la gerarchia vera è che la cartella è il posto e i progetti sono il contenuto. */
+.folder-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 2px 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.folder-row:last-child { border-bottom: 0; }
+
+.folder-row .who { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+
+.folder-row .acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+
+.folder-row .what {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--faint);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+/* Un progetto che sta lì e qui no: rientrato sotto la sua cartella, e con il peso di chi non è
+   ancora entrato in casa. */
+.folder-row.inside { padding-left: 20px; }
+.folder-row.inside .who { font-weight: 400; color: var(--muted); }
+
+/* ---------------------------------------------------------------------------------------------
+   crumbs
+   --------------------------------------------------------------------------------------------- */
+
+/* Le due righe in cima si appiccicano insieme, come una cosa sola: appiccicarle separate vorrebbe
+   dire indovinare l'altezza della prima, che va a capo quando i nomi sono lunghi. */
+.topbars {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--bg);
+}
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1px;
+  padding: 7px 18px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+/* Le quattro viste. Pastiglie e non pulsanti: sono un gruppo in cui una è accesa, non quattro
+   comandi indipendenti, e la forma lo deve dire prima del colore. */
+.views {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 18px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.views button {
+  font: inherit;
+  font-size: 13px;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--muted);
+  padding: 4px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.views button:hover { color: var(--text); background: var(--panel-2); }
+.views button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.views button.on {
+  color: var(--accent-text);
+  background: var(--accent-soft);
+  border-color: var(--accent-soft);
+  font-weight: 600;
+}
+
+.crumbs button {
+  max-width: 24ch;
+  padding: 3px 7px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--faint);
+  font: inherit;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crumbs button:hover { color: var(--text); background: var(--panel-2); }
+.crumbs button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* L'ultimo pezzo è dove sei: si legge, non si preme, e non deve sembrare premibile. */
+.crumbs .here {
+  max-width: 34ch;
+  padding: 3px 7px;
+  color: var(--text);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crumbs .sep { color: var(--trace); }
+
+/* ---------------------------------------------------------------------------------------------
    layout
    --------------------------------------------------------------------------------------------- */
 
@@ -198,7 +401,24 @@ html[data-theme="light"] { --late: #a06b09; }
 
 .tpl-lead { font-size: 11.5px; color: var(--faint); line-height: 1.35; }
 
-input[type="text"], input[type="date"], textarea {
+/* **Ogni campo in cui si scrive, non solo quelli che si chiamano «text».** La regola nominava due
+   tipi, e il giorno che sono arrivati una email e una casella di ricerca quei campi hanno preso il
+   vestito del browser in mezzo a quelli dell'app. Elencare i tipi è la forma sbagliata di una
+   regola che vuol dire «tutto quello che si scrive»: qui si dice al contrario, escludendo quelli
+   che non lo sono, così un tipo nuovo entra già vestito.
+
+   `appearance: none` perché una casella di ricerca su WebKit arriva con una sua cornice e una sua
+   crocetta, che sono di un'altra app.
+
+   Le esclusioni stanno dentro `:where()`, e non è un vezzo: cinque `:not([type=...])` in fila
+   pesano cinque selettori d'attributo, e una regola di base che pesa così tanto vince contro ogni
+   regola che veste un campo dentro un pezzo di interfaccia — `.prop input`, il campo dei tag. Il
+   giorno che la regola è passata dai due tipi all'esclusione, le proprietà di una pagina hanno
+   smesso di essere righe silenziose e sono diventate caselle piene, senza che nessuna riga di
+   quelle regole fosse cambiata. `:where()` pesa zero: la base resta la cosa più
+   facile da scavalcare, che è quello che una base deve essere. */
+input:where(:not([type="button"], [type="checkbox"], [type="radio"], [type="file"], [type="submit"])),
+textarea {
   font: inherit;
   color: inherit;
   background: rgba(127, 140, 170, 0.08);
@@ -206,9 +426,15 @@ input[type="text"], input[type="date"], textarea {
   border-radius: var(--radius-sm);
   padding: 8px 10px;
   min-width: 0;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
-input[type="text"]:focus, textarea:focus { border-color: var(--border-strong); }
+input:where(:not([type="button"], [type="checkbox"], [type="radio"], [type="file"], [type="submit"])):focus,
+textarea:focus { border-color: var(--border-strong); }
+
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button { appearance: none; -webkit-appearance: none; }
 
 /* ---------------------------------------------------------------------------------------------
    the archive
@@ -1262,7 +1488,10 @@ body.printing .page-props { display: none; }
 .prop { display: flex; align-items: center; gap: 4px; }
 .prop input { font-size: 13px; background: transparent; border-color: transparent; padding: 3px 6px; }
 .prop input:first-child { width: 140px; color: var(--muted); }
-.prop input:nth-of-type(2) { flex: 1 1 auto; min-width: 0; }
+/* Il rientro di `.page-props input` allinea il testo di un campo al margine della pagina, ed è
+   giusto per la chiave, che quel margine ce l'ha. Il valore sta in mezzo alla riga: lì lo stesso
+   rientro si mangiava lo spazio dopo i due punti, che finivano attaccati alla casella. */
+.prop input:nth-of-type(2) { flex: 1 1 auto; min-width: 0; margin-left: 0; }
 .prop input:hover, .prop input:focus { border-color: var(--border); }
 .prop-colon { color: var(--faint); }
 .prop .icon { opacity: 0; }

@@ -55,6 +55,10 @@ export const DEFAULT_COLUMNS = [
 const projects = new Map();
 const pages = new Map();
 const tasks = new Map();
+// Le persone, e sono la prima cosa qui dentro che **non appartiene a un progetto**: la stessa torna
+// su lavori diversi, ed è quello che una rubrica è. Il ruolo che ha in un progetto non sta qui —
+// sta sul progetto, perché lo stesso Marco è il grafico di uno e il cliente di un altro.
+const contacts = new Map();
 
 let port = { save() {}, drop() {} };
 
@@ -108,6 +112,7 @@ function _now() {
 function _bag(kind) {
   if (kind === "project") return projects;
   if (kind === "page") return pages;
+  if (kind === "contact") return contacts;
   return tasks;
 }
 
@@ -140,6 +145,36 @@ function _copy(record) {
 /** Restore a record to exactly what it was, whatever changed in between. */
 function _restoreTo(kind, before) {
   return () => { _put(kind, _copy(before)); };
+}
+
+/**
+ * Un nome scritto come testo che diventa una persona.
+ *
+ * È la porta unica applicata a quello che arriva da fuori: una bacheca di Trello, un export di
+ * Notion e un file di Plan Scope più vecchio di questa versione portano tutti l'assegnatario come
+ * stringa. Risolverlo qui invece che in ogni importatore vuol dire che gli importatori non sanno
+ * nulla delle persone, e che il giorno che ne arriva un quarto non c'è niente da ricordarsi.
+ */
+function _personFromName(projectId, name) {
+  const clean = String(name || "").trim();
+  if (!clean) return null;
+  const person = contactByName(clean) || createContact({ name: clean });
+  addPerson(projectId, person.id);
+  return person.uid || person.id;
+}
+
+/** Il nome nuovo di una persona, dove i progetti l'avevano scritto. Per `uid`, quindi mai per caso. */
+function _renamePerson(person) {
+  const uid = person.uid || person.id;
+  for (const project of projects.values()) {
+    const people = Array.isArray(project.people) ? project.people : [];
+    if (!people.some((one) => one.uid === uid)) continue;
+    _put("project", {
+      ...project,
+      people: people.map((one) => (one.uid === uid ? { ...one, name: person.name || "" } : one)),
+      updated: _now(),
+    });
+  }
 }
 
 function _touch(projectId) {
@@ -209,13 +244,15 @@ export function connect(sink) {
 }
 
 /** Fill the model from what the database held. Replaces whatever was in memory. */
-export function hydrate({ projects: p = [], pages: g = [], tasks: t = [] } = {}) {
+export function hydrate({ projects: p = [], pages: g = [], tasks: t = [], contacts: c = [] } = {}) {
   projects.clear();
   pages.clear();
   tasks.clear();
+  contacts.clear();
   for (const record of p) projects.set(record.id, record);
   for (const record of g) pages.set(record.id, record);
   for (const record of t) tasks.set(record.id, record);
+  for (const record of c) contacts.set(record.id, record);
   history.length = 0;
 }
 
@@ -231,8 +268,9 @@ export function hydrate({ projects: p = [], pages: g = [], tasks: t = [] } = {})
 export function purge(now = new Date(), { all = false } = {}) {
   // `all` is «Svuota il cestino»: the same destruction, chosen rather than waited for.
   const limit = new Date(now.getTime() - KEEP_DAYS * 86400000).toISOString();
-  const gone = { project: [], page: [], task: [] };
-  for (const [kind, bag] of [["project", projects], ["page", pages], ["task", tasks]]) {
+  const gone = { project: [], page: [], task: [], contact: [] };
+  for (const [kind, bag] of [["project", projects], ["page", pages], ["task", tasks],
+    ["contact", contacts]]) {
     for (const record of [...bag.values()]) {
       if (record.trashedAt && (all || record.trashedAt < limit)) {
         bag.delete(record.id);
@@ -285,6 +323,10 @@ export function createProject({ name, eventDate = null, columns = null } = {}) {
     name: name || "",
     eventDate: eventDate || null,
     columns: _copy(columns || DEFAULT_COLUMNS),
+    // Chi ci lavora, e con che ruolo. Il nome è scritto qui accanto al `uid` e non risolto dalla
+    // scheda: è quello che permette a un progetto arrivato da fuori di dire «Marco Rossi, grafico»
+    // anche a chi la scheda di Marco non ce l'ha, senza che la scheda debba viaggiare.
+    people: [],
     favourite: false,
     exportedAt: null,
     created: stamp,
@@ -302,7 +344,17 @@ export function updateProject(id, changes) {
   // Two copies decide whose name, date and columns to keep by `edited`: by `updated`, a task
   // ticked after the rename would carry the old name back over the new one.
   const own = ["name", "eventDate", "columns"].some((key) => key in changes);
-  _put("project", { ...project, ...changes, updated: stamp, ...(own ? { edited: stamp } : {}) });
+  // Who works on it gets a stamp of its own, and not `edited`, for the same reason `edited` is not
+  // `updated`: assigning a card puts a person on the project, and that must not be enough to carry
+  // an old project name back over somebody's rename.
+  const crowd = "people" in changes;
+  _put("project", {
+    ...project,
+    ...changes,
+    updated: stamp,
+    ...(own ? { edited: stamp } : {}),
+    ...(crowd ? { peopleAt: stamp } : {}),
+  });
   return _step("project", _restoreTo("project", before));
 }
 
@@ -572,7 +624,10 @@ export function createTask(projectId, { title = "", status = null, end = null,
     start: null,
     end,
     priority: null,
-    assignee: "",
+    // Un riferimento, non un nome. Il nome si legge da `people` sul progetto, che è quello che
+    // viaggia: così un'attività arrivata a qualcun altro mostra sempre chi la fa, e non c'è un
+    // secondo posto dove lo stesso nome possa restare indietro.
+    assigneeUid: null,
     tags: [],
     checklist: [],
     blockedBy: [],
@@ -725,23 +780,39 @@ export function setColumns(projectId, columns) {
   return _step("project", _restoreTo("project", before));
 }
 
-/** Every tag in use in a project, and every name that has been typed as an assignee. */
+/** Every tag in use in a project. Chi ci lavora lo dice `peopleOf`, che è un elenco e non una spia. */
 export function tagsOf(projectId) {
   const seen = new Set();
   for (const task of tasksOf(projectId)) for (const tag of task.tags || []) seen.add(tag);
   return [...seen].sort((a, b) => a.localeCompare(b));
 }
 
-export function assigneesOf(projectId) {
-  const seen = new Set();
-  for (const task of tasksOf(projectId)) if (task.assignee) seen.add(task.assignee);
-  return [...seen].sort((a, b) => a.localeCompare(b));
+/** Il nome con cui il progetto di questa attività conosce il suo assegnatario, o vuoto. */
+export function assigneeName(taskRecord) {
+  if (!taskRecord || !taskRecord.assigneeUid) return "";
+  return personName(taskRecord.projectId, taskRecord.assigneeUid);
 }
 
 /**
- * Into the bin, with its sub-tasks: a sub-task without its parent is a line nobody can place.
- * One step undoes the lot.
+ * Assegnare un'attività scrivendo un nome.
+ *
+ * La porta unica, applicata dove si digita in fretta: la persona si cerca, se non c'è nasce, entra
+ * fra chi lavora al progetto, e l'attività punta a lei. Chi scrive «Giulia» sulla bacheca non sta
+ * compilando una scheda, e non gliene viene chiesta una — ma dalla volta dopo Giulia è una persona
+ * vera, con i suoi progetti e le sue attività aperte.
+ *
+ * Un nome vuoto toglie l'assegnatario e non tocca nessuno: disassegnare non è cancellare.
  */
+export function assignByName(taskId, name) {
+  const taskRecord = tasks.get(taskId);
+  if (!taskRecord) return null;
+  const clean = String(name || "").trim();
+  if (!clean) return updateTask(taskId, { assigneeUid: null });
+  const person = contactByName(clean) || createContact({ name: clean });
+  addPerson(taskRecord.projectId, person.id);
+  return updateTask(taskId, { assigneeUid: person.uid || person.id });
+}
+
 export function trashTask(id) {
   const task = tasks.get(id);
   if (!task || task.trashedAt) return null;
@@ -790,6 +861,246 @@ export function parentOf(taskRecord) {
 /** The tasks that are cards on the board: those without a live parent. */
 export function topTasksOf(projectId) {
   return tasksOf(projectId).filter((one) => !parentOf(one));
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  c o n t a c t s
+// -----------------------------------------------------------------------------------------------------------------
+
+/**
+ * A person, from a name and nothing else.
+ *
+ * The same rule as a task: everything after the name is optional and stays optional. Somebody
+ * typing «Giulia» on a board is not answering a form, and a card that demanded a company and an
+ * email before it existed is a card nobody would ever make in that moment — which would push people
+ * back to writing names as loose text, which is the thing this replaces.
+ */
+export function createContact({ name = "", company = "", role = "", email = "", phone = "" } = {}) {
+  const stamp = _now();
+  const id = _id();
+  return _put("contact", {
+    id,
+    uid: id,
+    name,
+    company,
+    role,
+    email,
+    phone,
+    created: stamp,
+    updated: stamp,
+    trashedAt: null,
+  });
+}
+
+/**
+ * A person's card, changed — and the name refreshed wherever a project wrote it down.
+ *
+ * A project keeps the name beside the `uid` so that it can be read without the card. That copy is
+ * what makes a rename a real operation instead of a field edit: without this, correcting a spelling
+ * would leave the old one in every project the person works on. The `uid` makes it exact — no name
+ * is matched against another — so it costs a walk and never guesses.
+ */
+export function updateContact(id, changes) {
+  const person = contacts.get(id);
+  if (!person) return null;
+  const before = _copy(person);
+  const after = _put("contact", { ...person, ...changes, updated: _now() });
+  if (changes.name !== undefined && changes.name !== before.name) _renamePerson(after);
+  return _step("contact", _restoreTo("contact", before));
+}
+
+export function trashContact(id) {
+  const person = contacts.get(id);
+  if (!person || person.trashedAt) return null;
+  const before = _copy(person);
+  const stamp = _now();
+  // I progetti che la nominano non si toccano: `people` porta il nome, quindi continuano a dire chi
+  // ci lavorava. Una scheda tolta non riscrive la storia degli incontri.
+  _put("contact", { ...person, trashedAt: stamp, updated: stamp });
+  return _step("contact", _restoreTo("contact", before));
+}
+
+export function restoreContact(id) {
+  const person = contacts.get(id);
+  if (!person) return null;
+  return _put("contact", { ...person, trashedAt: null, updated: _now() });
+}
+
+export function contact(id) {
+  return contacts.get(id) || null;
+}
+
+/** A person by `uid`, which is what a project writes down and what travels. */
+export function contactByUid(uid) {
+  if (!uid) return null;
+  for (const person of contacts.values()) if ((person.uid || person.id) === uid) return person;
+  return null;
+}
+
+/**
+ * A person by name, ignoring case and stray spaces.
+ *
+ * What makes «one door» work when somebody types: the field looks before it creates, so writing
+ * «giulia » where «Giulia» already exists finds her instead of making a second card.
+ */
+export function contactByName(name) {
+  const wanted = String(name || "").trim().toLowerCase();
+  if (!wanted) return null;
+  for (const person of contacts.values()) {
+    if (!person.trashedAt && String(person.name || "").trim().toLowerCase() === wanted) return person;
+  }
+  return null;
+}
+
+export function liveContacts() {
+  return [...contacts.values()].filter((one) => !one.trashedAt)
+    .sort((a, b) => String(a.name).localeCompare(String(b.name)));
+}
+
+export function trashedContacts() {
+  return [...contacts.values()].filter((one) => one.trashedAt);
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  w h o   w o r k s   o n   w h a t
+// -----------------------------------------------------------------------------------------------------------------
+
+/** Chi lavora a un progetto, con il ruolo che ha lì. */
+export function peopleOf(projectId) {
+  const project = projects.get(projectId);
+  return project && Array.isArray(project.people) ? project.people : [];
+}
+
+/** Il nome con cui questo progetto conosce quella persona, o vuoto. */
+export function personName(projectId, uid) {
+  const found = peopleOf(projectId).find((one) => one.uid === uid);
+  return found ? found.name || "" : "";
+}
+
+/**
+ * Una persona fra chi lavora a un progetto, con un ruolo. Chiamarla di nuovo cambia il ruolo.
+ *
+ * Il nome viene copiato qui, e non risolto ogni volta dalla scheda, per una ragione sola: un
+ * progetto che arriva a qualcun altro deve poter dire chi ci lavora anche a chi le schede non ce
+ * l'ha. È lo stesso motivo per cui la scheda non viaggia.
+ */
+export function addPerson(projectId, contactId, role = null) {
+  const project = projects.get(projectId);
+  const person = contacts.get(contactId);
+  if (!project || !person) return null;
+  const uid = person.uid || person.id;
+  const existing = peopleOf(projectId).find((one) => one.uid === uid);
+  // Senza un ruolo detto, quello che c'era resta: assegnare un'attività a Marco non deve degradarlo
+  // da «capoprogetto» a niente.
+  const kept = role === null ? (existing ? existing.role || "" : "") : role;
+  const rest = peopleOf(projectId).filter((one) => one.uid !== uid);
+  return updateProject(projectId, { people: [...rest, { uid, name: person.name || "", role: kept }] });
+}
+
+export function removePerson(projectId, uid) {
+  const project = projects.get(projectId);
+  if (!project) return null;
+  const rest = peopleOf(projectId).filter((one) => one.uid !== uid);
+  if (rest.length === peopleOf(projectId).length) return null;
+  return updateProject(projectId, { people: rest });
+}
+
+/**
+ * Le attività di una persona, attraverso tutti i progetti.
+ *
+ * È metà della risposta a «come eravamo rimasti»: non un campo da compilare, ma quello che è
+ * rimasto aperto dopo che ci siamo parlati. Ordinate per scadenza, e quelle senza scadenza in
+ * fondo — perché una data è una promessa e il resto è un'intenzione.
+ */
+export function tasksOfContact(uid, { open = true } = {}) {
+  const out = [];
+  for (const one of liveProjects()) {
+    for (const taskRecord of tasksOf(one.id)) {
+      if (taskRecord.assigneeUid !== uid) continue;
+      if (open && isDone(taskRecord)) continue;
+      out.push({ task: taskRecord, project: one });
+    }
+  }
+  return out.sort((a, b) => String(a.task.end || "9999").localeCompare(String(b.task.end || "9999")));
+}
+
+/**
+ * Le pagine che nominano una persona in testa, attraverso tutti i progetti.
+ *
+ * L'altra metà: cosa ci siamo detti. Il confronto è **per nome e non per riferimento**, ed è una
+ * scelta obbligata: quelle righe stanno in testa a un file Markdown, che deve restare leggibile in
+ * Obsidian dentro la cartella condivisa. Un `uid` lì sarebbe una stringa che non dice niente a
+ * nessuno, e il patto di quest'app è che i tuoi appunti restino tuoi anche senza l'app.
+ *
+ * Il nome regge il confronto perché la porta è una: chi scrive un nome crea o ritrova una persona,
+ * quindi due grafie della stessa non si accumulano come farebbero con il testo libero.
+ */
+export function pagesAbout(uid) {
+  const person = contactByUid(uid);
+  const wanted = String(person ? person.name : "").trim().toLowerCase();
+  if (!wanted) return [];
+  const out = [];
+  for (const one of liveProjects()) {
+    for (const pageRecord of pagesOf(one.id)) {
+      const props = frontmatter(pageRecord.markdown || "").props || {};
+      // Le due lingue dell'app, perché la pagina la scrive una persona nella sua.
+      const named = String(props.con || props.with || "").split(",").map((name) => name.trim().toLowerCase());
+      if (!named.includes(wanted)) continue;
+      out.push({ page: pageRecord, project: one, date: String(props.data || props.date || "") });
+    }
+  }
+  return out.sort((a, b) => String(b.date).localeCompare(String(a.date))
+    || String(b.page.updated).localeCompare(String(a.page.updated)));
+}
+
+/**
+ * Il ruolo di una persona in un progetto, **anche quando la sua scheda qui non c'è**.
+ *
+ * È il caso di un progetto arrivato da qualcun altro: porta nome e ruolo, non la scheda. Chi lo
+ * riceve deve poter correggere «grafico» in «capoprogetto» senza prima adottare una persona che
+ * magari non gli interessa avere in rubrica. Il ruolo è del progetto, e questo lo rende vero anche
+ * nel codice.
+ */
+export function setPersonRole(projectId, uid, role) {
+  const people = peopleOf(projectId);
+  if (!people.some((one) => one.uid === uid)) return null;
+  return updateProject(projectId, {
+    people: people.map((one) => (one.uid === uid ? { ...one, role } : one)),
+  });
+}
+
+/**
+ * Una persona che il progetto nomina e di cui qui non c'è la scheda: la scheda nasce.
+ *
+ * Il `uid` è quello che il progetto portava, non uno nuovo, ed è tutto il punto: da quel momento le
+ * due copie parlano della stessa persona, e il collegamento si forma senza confrontare nomi.
+ */
+export function adoptPerson(projectId, uid) {
+  const found = peopleOf(projectId).find((one) => one.uid === uid);
+  if (!found || contactByUid(uid)) return null;
+  const stamp = _now();
+  return _put("contact", {
+    id: _id(),
+    uid,
+    name: found.name || "",
+    company: "",
+    role: "",
+    email: "",
+    phone: "",
+    created: stamp,
+    updated: stamp,
+    trashedAt: null,
+  });
+}
+
+/** I progetti in cui una persona lavora, con il ruolo che ha in ognuno. */
+export function projectsOfContact(uid) {
+  const out = [];
+  for (const project of liveProjects()) {
+    const found = peopleOf(project.id).find((one) => one.uid === uid);
+    if (found) out.push({ project, role: found.role || "" });
+  }
+  return out;
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -978,6 +1289,23 @@ export function search(query) {
 }
 
 /**
+ * What a person is allowed to be, once out of here: a uid, a name and a role in this project.
+ *
+ * This is the one place that says it, and it says it by building the record rather than by
+ * removing fields from it — a field added to the address book tomorrow is out by default, which is
+ * the only way this rule survives being forgotten. A phone number, an email, a company are the
+ * address book's, and the address book belongs to whoever keeps it: a project travels with the
+ * names of the people on it, never with how to reach them.
+ *
+ * It runs on the way out and on the way in, because a file can be written by hand.
+ */
+export function travelling(people) {
+  return (Array.isArray(people) ? people : [])
+    .filter((one) => one && typeof one === "object" && typeof one.uid === "string" && one.uid)
+    .map((one) => ({ uid: one.uid, name: String(one.name || ""), role: String(one.role || "") }));
+}
+
+/**
  * Everything of one project, for the export. Assets are fetched by the caller.
  *
  * `bin` brings the binned records too. A file sent to somebody carries what is live; a shared
@@ -989,7 +1317,7 @@ export function exportable(projectId, { bin = false } = {}) {
   // file sent to a colleague, or written into the shared folder, must not arrive as an example.
   const { demo, guide, ...project } = projects.get(projectId) || {};
   return {
-    project: projects.has(projectId) ? project : null,
+    project: projects.has(projectId) ? { ...project, people: travelling(project.people) } : null,
     pages: bin ? pagesOf(projectId).concat(pagesOf(projectId, { trashed: true })) : pagesOf(projectId),
     tasks: bin ? tasksOf(projectId).concat(tasksOf(projectId, { trashed: true })) : tasksOf(projectId),
   };
@@ -1023,6 +1351,10 @@ export function adopt({ project: incoming, pages: incomingPages = [], tasks: inc
     id: projectId,
     uid: incoming.uid || incoming.id,
     name: name || incoming.name,
+    // Who works on it comes in with the project — a name and a role, never a way to reach them.
+    // The uid is the one the file carried: adopting a person later joins the two copies without
+    // ever comparing names.
+    people: travelling(incoming.people),
     columns: _copy(columns),
     exportedAt: null,
     created: incoming.created || stamp,
@@ -1070,13 +1402,17 @@ export function adopt({ project: incoming, pages: incomingPages = [], tasks: inc
   for (const one of incomingTasks) taskIds.set(one.id, _id());
   for (const one of incomingTasks) {
     const parentId = one.parentId && one.parentId !== one.id ? taskIds.get(one.parentId) || null : null;
+    // `assignee` è la forma vecchia, e arriva da un importatore o da un file di prima: si risolve in
+    // una persona qui, e il campo non entra nel record.
+    const { assignee, ...rest } = one;
     _put("task", {
-      ...one,
+      ...rest,
       id: taskIds.get(one.id),
       uid: one.uid || one.id,
       projectId,
       parentId,
       status: known.has(one.status) ? one.status : columns[0].id,
+      assigneeUid: one.assigneeUid || _personFromName(projectId, assignee),
       blockedBy: (one.blockedBy || []).map((old) => taskIds.get(old)).filter(Boolean),
       trashedAt: one.trashedAt || null,
     });
@@ -1109,7 +1445,10 @@ export function adopt({ project: incoming, pages: incomingPages = [], tasks: inc
  *    file read twice makes one copy, not two;
  *  - the project's name, date and columns: the copy with the later `edited` wins — the stamp
  *    `updateProject` moves, not the one every task moves. Columns are joined by id, in the
- *    winner's order, so a column added on either side survives.
+ *    winner's order, so a column added on either side survives;
+ *  - who works on it: the same, joined by uid, but on `peopleAt` and not on `edited` — assigning a
+ *    card adds a person, and that must not decide whose project name to keep. A person travels as
+ *    a uid, a name and a role, and never as a way to reach them: the address book stays here.
  *
  * `exported` is the caller's baseline for «changed here since»: the moment this copy last agreed
  * with the file, on this clock. One undo step for the whole thing — recorded unless `record` is
@@ -1138,12 +1477,25 @@ export function merge({ project: incoming, pages: incomingPages = [], tasks: inc
       if (!columns.some((one) => one.id === column.id)) columns.push(_copy(column));
     }
     if (columns.length && !columns.some((column) => column.done)) columns[columns.length - 1].done = true;
+    // Who works on it: joined by uid, in the winner's order, the way the columns are. A person put
+    // on the project by either side arrives, and for somebody both sides know the role comes from
+    // the copy where the list was last touched — `peopleAt`, which is that list's own stamp.
+    const takeTheirPeople = String(incoming.peopleAt || "") > String(target.peopleAt || "");
+    const [firstPeople, secondPeople] = takeTheirPeople
+      ? [travelling(incoming.people), travelling(target.people)]
+      : [travelling(target.people), travelling(incoming.people)];
+    const people = [...firstPeople];
+    for (const one of secondPeople) {
+      if (!people.some((other) => other.uid === one.uid)) people.push(one);
+    }
     _put("project", {
       ...target,
       name: takeTheirs && incoming.name ? incoming.name : target.name,
       eventDate: takeTheirs ? (incoming.eventDate || null) : target.eventDate,
       edited: takeTheirs ? incoming.edited : target.edited,
       columns: columns.length ? columns : _copy(target.columns),
+      people,
+      peopleAt: takeTheirPeople ? incoming.peopleAt : target.peopleAt || null,
       updated: stamp,
     });
   }

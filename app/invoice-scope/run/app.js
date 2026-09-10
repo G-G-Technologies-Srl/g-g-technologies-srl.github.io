@@ -18,7 +18,7 @@ import { apply as applyTheme, initial as initialTheme, toggle as toggleTheme } f
 import { download, restore } from "gg/io.js";
 import { get, put, persist } from "gg/store.js";
 
-import { t, tf, lang, otherLang, setLang, resolveLang } from "./i18n.js";
+import { t, tf, num, lang, otherLang, setLang, resolveLang } from "./i18n.js";
 import { ask, tell } from "./ask.js";
 import { openDatabase, isDemo, NAME, VERSION, EXPORTED } from "./db.js";
 import { seed } from "./demo.js";
@@ -839,6 +839,61 @@ async function _drawBackup() {
     line.textContent = tf("backupLinked", { folder: stato.folder,
       when: `${shownDate(stato.lastWrite.slice(0, 10))} ${when.toTimeString().slice(0, 5)}` });
   } else line.textContent = tf("backupNever", { folder: stato.folder });
+  await _drawCopies(stato);
+}
+
+/**
+ * The copies in the folder, each with the day it holds and the way back into it.
+ *
+ * They have been written since the folder existed and until now nothing could open one — which
+ * made thirty days of history thirty files kept for nobody. The current copy opens the list,
+ * because «undo the last thing» is what somebody comes here for most often.
+ */
+async function _drawCopies(stato) {
+  const list = stato.kind === "linked" ? await backup.copies() : [];
+  el("backupCopies").hidden = list.length === 0;
+  const body = el("backupCopyList");
+  body.textContent = "";
+  for (const copia of list) {
+    const riga = document.createElement("div");
+    riga.className = "copy-row";
+
+    const testo = document.createElement("div");
+    const nome = document.createElement("b");
+    nome.textContent = copia.day ? shownDate(copia.day) : t("backupCopyLatest");
+    const peso = document.createElement("p");
+    peso.className = "note";
+    peso.textContent = `${num(Math.round(copia.size / 1024), 0)} kB`;
+    testo.append(nome, peso);
+
+    const pulsante = document.createElement("button");
+    pulsante.type = "button";
+    pulsante.className = "button ghost";
+    pulsante.textContent = t("backupRestore");
+    pulsante.addEventListener("click", () => _restoreCopy(copia.name));
+
+    riga.append(testo, pulsante);
+    body.append(riga);
+  }
+}
+
+/**
+ * One copy back into the archive.
+ *
+ * Asked first, and in the words of what it does: this is the one action on this screen that
+ * replaces everything, and «Riporta» on its own does not say so.
+ */
+async function _restoreCopy(name) {
+  if (!(await ask(t("backupRestoreAsk"), { okLabel: t("backupRestore") }))) return;
+  const esito = await backup.restore(name);
+  if (!esito || !esito.ok) {
+    const detto = ["backupNoFolder", "backupNoPermission", "backupCopyGone"].includes(esito && esito.reason);
+    await tell(t(detto ? esito.reason : "backupRestoreBad"));
+    return;
+  }
+  await tell(tf("backupRestoreDone", { n: num(esito.restored, 0) }));
+  await _loadCompany();
+  await _route();
 }
 
 async function _export() {

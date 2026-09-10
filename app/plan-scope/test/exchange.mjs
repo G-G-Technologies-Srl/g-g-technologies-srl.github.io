@@ -73,7 +73,9 @@ test("il CSV usa il separatore della lingua, mette le virgolette dove servono e 
       assignee: "Giulia", tags: ["stampa", "urgente"], milestone: true, notes: "Riga \"uno\"\nRiga due" },
   ];
   const labels = ["Titolo", "Colonna", "Comincia", "Scade", "Priorità", "Chi", "Tag", "Traguardo", "Fatto", "Parte di", "Note"];
-  const text = csv.tasksCsv(tasks, { columns: [{ id: "todo", name: "Da fare" }], labels, sep: ";" });
+  // `who` è la porta da cui entra il nome: il modello lo sa, e questo file non deve saperlo.
+  const text = csv.tasksCsv(tasks, { columns: [{ id: "todo", name: "Da fare" }], labels, sep: ";",
+    who: (task) => task.assignee || "" });
   assert.ok(text.startsWith("\ufeff"));
   const [head, row] = text.slice(1).split("\r\n");
   assert.equal(head, labels.join(";"));
@@ -149,10 +151,54 @@ test("la bacheca come documento: una sezione per colonna, le carte con le loro r
     ],
     words: { due: "Scade il", milestone: "Traguardo", empty: "Niente" },
     isDone: (task) => task.status === "done",
+    who: (task) => task.assignee || "",
   });
   assert.ok(html.includes("<h2>Da fare <small>(1)</small></h2>"));
   assert.ok(html.includes("Scade il 2026-09-20 · Giulia · #fiera · Traguardo"));
   assert.ok(html.includes('<div class="card done"><div class="title">Brief</div>'));
+});
+
+// -----------------------------------------------------------------------------------------------------------------
+//  l e   c a s e l l e   d i   u n   i n c o n t r o
+// -----------------------------------------------------------------------------------------------------------------
+
+test("dalle caselle di un incontro escono solo quelle aperte", () => {
+  const pagina = [
+    "---",
+    "tipo: incontro",
+    "data: 2026-09-14",
+    "con: Marco Rossi",
+    "---",
+    "",
+    "Rivisto il preventivo dei pannelli.",
+    "",
+    "- [x] mandare il brief          <- fatta durante l'incontro",
+    "- [ ] mandare le misure a Marco @2026-09-20 #stampa",
+    "- [ ] decidere le luci !",
+    "* [ ] chiamare il catering",
+    "- una riga che non è una casella",
+    "- [ ]",
+  ].join("\n");
+
+  const righe = csv.openBoxes(pagina);
+  // Tre: la spuntata non esce, e nemmeno una casella vuota — una riga senza niente scritto non è
+  // una cosa da fare, è una riga che qualcuno ha cominciato e non ha finito.
+  assert.equal(righe.split("\n").length, 3);
+
+  const uscite = csv.parseTaskList(righe);
+  assert.deepEqual(uscite.map((one) => one.title),
+    ["mandare le misure a Marco", "decidere le luci", "chiamare il catering"]);
+  // Una casella già spuntata è una cosa fatta: portarla nel piano riaprirebbe quello che
+  // l'incontro aveva chiuso.
+  assert.ok(!uscite.some((one) => one.title.includes("brief")));
+  assert.equal(uscite[0].end, "2026-09-20");
+  assert.deepEqual(uscite[0].tags, ["stampa"]);
+  assert.equal(uscite[1].priority, "high");
+});
+
+test("un testo senza caselle non ne inventa", () => {
+  assert.equal(csv.openBoxes("Solo appunti.\n\n- un elenco normale\n"), "");
+  assert.equal(csv.openBoxes(""), "");
 });
 
 console.log(`exchange: ${passed} prove passate`);

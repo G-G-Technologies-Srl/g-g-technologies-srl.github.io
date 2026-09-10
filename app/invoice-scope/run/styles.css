@@ -1206,6 +1206,19 @@ dialog li::before {
   padding: 18px 20px 6px;
 }
 .danger-zone h2 { margin-top: 0; color: var(--danger); }
+/* Le copie nella cartella: la stessa forma delle righe della zona di cancellazione — un'etichetta a
+   sinistra, un'azione a destra — perché è la stessa forma, non perché sia la stessa cosa. */
+.copy-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+.copy-row > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.copy-row .note { margin: 0; }
+
 .danger-row {
   display: flex;
   align-items: center;

@@ -369,15 +369,49 @@ test("una bacheca ha sempre esattamente una colonna conclusiva", () => {
   assert.equal(columns.at(-1).done, true);
 });
 
-test("i tag e gli assegnatari si raccolgono da quello che c'è, senza doppioni", () => {
+test("i tag si raccolgono da quello che c'è, senza doppioni", () => {
   const one = project();
-  model.createTask(one.id, { title: "A" });
-  model.updateTask(model.tasksOf(one.id)[0].id, { tags: ["stampa", "urgente"], assignee: "Giulia" });
+  const a = model.createTask(one.id, { title: "A" });
+  model.updateTask(a.id, { tags: ["stampa", "urgente"] });
   const b = model.createTask(one.id, { title: "B" });
-  model.updateTask(b.id, { tags: ["stampa"], assignee: "Giulia" });
-
+  model.updateTask(b.id, { tags: ["stampa"] });
   assert.deepEqual(model.tagsOf(one.id), ["stampa", "urgente"]);
-  assert.deepEqual(model.assigneesOf(one.id), ["Giulia"]);
+});
+
+test("assegnare scrivendo un nome fa nascere la persona e la mette fra chi ci lavora", () => {
+  const one = project();
+  const a = model.createTask(one.id, { title: "A" });
+  const b = model.createTask(one.id, { title: "B" });
+
+  model.assignByName(a.id, "Giulia");
+  const giulia = model.contactByName("Giulia");
+  assert.ok(giulia, "la scheda esiste: chi scrive un nome sulla bacheca non compila un modulo");
+  assert.equal(model.task(a.id).assigneeUid, giulia.uid);
+  assert.deepEqual(model.peopleOf(one.id).map((p) => p.name), ["Giulia"], "e lavora al progetto");
+
+  // La seconda volta la ritrova, e non ne fa una copia.
+  model.assignByName(b.id, "giulia ");
+  assert.equal(model.liveContacts().length, 1);
+  assert.equal(model.task(b.id).assigneeUid, giulia.uid);
+
+  // Il nome sull'attività si legge dal progetto, non dall'attività.
+  assert.equal(model.assigneeName(model.task(a.id)), "Giulia");
+  model.updateContact(giulia.id, { name: "Giulia Bianchi" });
+  assert.equal(model.assigneeName(model.task(a.id)), "Giulia Bianchi", "e segue la scheda");
+
+  // Disassegnare non cancella nessuno.
+  model.assignByName(a.id, "");
+  assert.equal(model.task(a.id).assigneeUid, null);
+  assert.ok(model.contact(giulia.id), "la persona resta");
+});
+
+test("assegnare a chi ha già un ruolo non glielo toglie", () => {
+  const one = project();
+  const marco = model.createContact({ name: "Marco" });
+  model.addPerson(one.id, marco.id, "capoprogetto");
+  const a = model.createTask(one.id, { title: "A" });
+  model.assignByName(a.id, "Marco");
+  assert.equal(model.peopleOf(one.id)[0].role, "capoprogetto");
 });
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -580,7 +614,7 @@ test("su un'attività vince chi ha scritto per ultimo", () => {
   const task = model.createTask(giulia.id, { title: "Stand" });
   const marcoId = model.adopt(fileOf(giulia.id, null)).projectId;
   const theirs = model.tasksOf(marcoId)[0];
-  model.updateTask(theirs.id, { title: "Stand B12", assignee: "Marco" });
+  model.updateTask(theirs.id, { title: "Stand B12", priority: "high" });
   model.updateTask(task.id, { title: "Stand B14" });
   // `updateTask` stamps `updated` with the clock; the merge compares what the records say, so the
   // file's clock is moved by hand — into the past first, then into the future.
@@ -595,7 +629,7 @@ test("su un'attività vince chi ha scritto per ultimo", () => {
   file2.tasks[0].updated = later(now, 50);
   model.merge(file2, giulia.id);
   assert.equal(model.task(task.id).title, "Stand B15", "la loro è più recente: entra");
-  assert.equal(model.task(task.id).assignee, "Marco");
+  assert.equal(model.task(task.id).priority, "high");
 });
 
 test("una pagina cambiata da tutti e due non perde il paragrafo di nessuno", () => {
@@ -834,14 +868,14 @@ test("un mese dopo il 31 gennaio è il 28 febbraio, e la settimana attraversa l'
 test("spuntare un'attività che si ripete fa nascere la prossima, e l'undo la toglie", () => {
   const one = project();
   const task = model.createTask(one.id, { title: "Riunione", end: "2026-09-07" });
-  model.updateTask(task.id, { repeat: "weekly", assignee: "Giulia", tags: ["team"],
+  model.updateTask(task.id, { repeat: "weekly", tags: ["team"],
     checklist: [{ id: "c", text: "Ordine del giorno", done: true }] });
   const outcome = model.toggleDone(task.id);
   assert.equal(outcome.done, true);
   assert.ok(outcome.next, "la prossima occorrenza");
   assert.equal(outcome.next.end, "2026-09-14");
   assert.equal(outcome.next.status, "todo");
-  assert.equal(outcome.next.assignee, "Giulia");
+  assert.equal(outcome.next.assigneeUid, model.task(task.id).assigneeUid, "l'assegnatario segue");
   assert.equal(outcome.next.checklist[0].done, false, "la checklist riparte");
   assert.equal(model.tasksOf(one.id).length, 2);
 
@@ -866,18 +900,232 @@ test("più cambiamenti in un passo solo si annullano con un undo", () => {
   const a = model.createTask(one.id, { title: "A" });
   const b = model.createTask(one.id, { title: "B" });
   const step = model.batch(() => {
-    model.updateTask(a.id, { assignee: "Marco" });
-    model.updateTask(b.id, { assignee: "Marco" });
+    model.updateTask(a.id, { priority: "high" });
+    model.updateTask(b.id, { priority: "high" });
     model.moveTask(a.id, "done");
   });
   assert.ok(step);
-  assert.equal(model.task(b.id).assignee, "Marco");
+  assert.equal(model.task(b.id).priority, "high");
   model.undo();
-  assert.equal(model.task(a.id).assignee, "");
-  assert.equal(model.task(b.id).assignee, "");
+  assert.equal(model.task(a.id).priority, null);
+  assert.equal(model.task(b.id).priority, null);
   assert.equal(model.isDone(model.task(a.id)), false);
   assert.equal(model.canUndo(), false, "un passo solo, non tre");
   assert.equal(model.batch(() => {}), null, "niente da annullare, niente passo");
+});
+
+// -----------------------------------------------------------------------------------------------------------------
+//  l a   r u b r i c a
+// -----------------------------------------------------------------------------------------------------------------
+
+test("una persona nasce da un nome e basta, e vive fuori dai progetti", () => {
+  const marco = model.createContact({ name: "Marco Rossi" });
+  assert.equal(marco.name, "Marco Rossi");
+  assert.equal(marco.uid, marco.id, "ha un uid, come tutto quello che può viaggiare");
+  assert.deepEqual(model.liveContacts().map((one) => one.name), ["Marco Rossi"]);
+  // Nessun progetto di mezzo: è la differenza fra una rubrica e un elenco di assegnatari.
+  assert.equal(model.liveProjects().length, 0);
+});
+
+test("cercare per nome viene prima di creare: è quello che rende una la porta", () => {
+  model.createContact({ name: "Giulia Bianchi" });
+  assert.ok(model.contactByName("giulia bianchi "), "senza badare a maiuscole e spazi");
+  assert.equal(model.contactByName("Marco"), null);
+  model.trashContact(model.contactByName("Giulia Bianchi").id);
+  assert.equal(model.contactByName("Giulia Bianchi"), null, "una nel cestino non si ritrova per nome");
+});
+
+test("una persona sta in un progetto con un ruolo, e il ruolo è del progetto", () => {
+  const fiera = model.createProject({ name: "Fiera" });
+  const sito = model.createProject({ name: "Sito" });
+  const marco = model.createContact({ name: "Marco Rossi" });
+
+  model.addPerson(fiera.id, marco.id, "grafico");
+  model.addPerson(sito.id, marco.id, "cliente");
+
+  assert.deepEqual(model.peopleOf(fiera.id), [{ uid: marco.uid, name: "Marco Rossi", role: "grafico" }]);
+  assert.deepEqual(model.peopleOf(sito.id)[0].role, "cliente", "lo stesso Marco, un ruolo per progetto");
+  assert.deepEqual(model.projectsOfContact(marco.uid).map((one) => one.role).sort(),
+    ["cliente", "grafico"]);
+});
+
+test("aggiungere due volte cambia il ruolo, non fa una seconda riga", () => {
+  const fiera = model.createProject({ name: "Fiera" });
+  const marco = model.createContact({ name: "Marco Rossi" });
+  model.addPerson(fiera.id, marco.id, "grafico");
+  model.addPerson(fiera.id, marco.id, "capoprogetto");
+  assert.equal(model.peopleOf(fiera.id).length, 1);
+  assert.equal(model.peopleOf(fiera.id)[0].role, "capoprogetto");
+});
+
+test("il nome sta scritto nel progetto, ed è quello che lo fa leggere a chi la scheda non ce l'ha", () => {
+  const fiera = model.createProject({ name: "Fiera" });
+  const marco = model.createContact({ name: "Marco Rossi" });
+  model.addPerson(fiera.id, marco.id, "grafico");
+  // È il progetto a portare il nome: la scheda non viaggia, e questa riga è il perché funziona.
+  assert.equal(model.personName(fiera.id, marco.uid), "Marco Rossi");
+});
+
+test("rinominare una persona corregge il nome dove i progetti l'avevano scritto", () => {
+  const fiera = model.createProject({ name: "Fiera" });
+  const sito = model.createProject({ name: "Sito" });
+  const altro = model.createProject({ name: "Senza Marco" });
+  const marco = model.createContact({ name: "Marco Rosi" });     // con un errore di battitura
+  model.addPerson(fiera.id, marco.id, "grafico");
+  model.addPerson(sito.id, marco.id, "cliente");
+
+  model.updateContact(marco.id, { name: "Marco Rossi" });
+
+  assert.equal(model.personName(fiera.id, marco.uid), "Marco Rossi");
+  assert.equal(model.personName(sito.id, marco.uid), "Marco Rossi");
+  assert.deepEqual(model.peopleOf(altro.id), [], "e i progetti che non la nominano restano fermi");
+});
+
+test("una persona nel cestino non porta via il suo nome dai progetti", () => {
+  const fiera = model.createProject({ name: "Fiera" });
+  const marco = model.createContact({ name: "Marco Rossi" });
+  model.addPerson(fiera.id, marco.id, "grafico");
+
+  model.trashContact(marco.id);
+
+  assert.equal(model.contact(marco.id).trashedAt !== null, true);
+  assert.deepEqual(model.liveContacts(), []);
+  // Il progetto continua a dire chi ci lavorava: una scheda tolta non riscrive la storia.
+  assert.equal(model.personName(fiera.id, marco.uid), "Marco Rossi");
+});
+
+test("togliere una persona da un progetto non tocca la sua scheda", () => {
+  const fiera = model.createProject({ name: "Fiera" });
+  const marco = model.createContact({ name: "Marco Rossi" });
+  model.addPerson(fiera.id, marco.id, "grafico");
+  model.removePerson(fiera.id, marco.uid);
+  assert.deepEqual(model.peopleOf(fiera.id), []);
+  assert.ok(model.contact(marco.id), "la persona esiste ancora, semplicemente non lavora più qui");
+});
+
+test("una scheda si annulla come tutto il resto", () => {
+  const marco = model.createContact({ name: "Marco Rosi" });
+  model.updateContact(marco.id, { name: "Marco Rossi" });
+  model.undo();
+  assert.equal(model.contact(marco.id).name, "Marco Rosi");
+  model.trashContact(marco.id);
+  model.undo();
+  assert.equal(model.contact(marco.id).trashedAt, null);
+});
+
+test("le attività aperte di una persona, attraverso i progetti", () => {
+  const fiera = project({ name: "Fiera" });
+  const sito = project({ name: "Sito" });
+  const a = model.createTask(fiera.id, { title: "Stand", end: "2026-10-18" });
+  const b = model.createTask(sito.id, { title: "Bozza", end: "2026-09-30" });
+  const c = model.createTask(fiera.id, { title: "Senza data" });
+  const d = model.createTask(fiera.id, { title: "Di un altro" });
+
+  model.assignByName(a.id, "Marco");
+  const marco = model.contactByName("Marco");
+  model.assignByName(b.id, "Marco");
+  model.assignByName(c.id, "Marco");
+  model.assignByName(d.id, "Giulia");
+
+  // Per scadenza, e quelle senza in fondo: una data è una promessa, il resto un'intenzione.
+  assert.deepEqual(model.tasksOfContact(marco.uid).map((one) => one.task.title),
+    ["Bozza", "Stand", "Senza data"]);
+  assert.deepEqual(model.tasksOfContact(marco.uid).map((one) => one.project.name),
+    ["Sito", "Fiera", "Fiera"], "e dice da quale progetto viene ognuna");
+
+  // Spuntata, esce: «come eravamo rimasti» è quello che resta aperto.
+  model.toggleDone(b.id);
+  assert.deepEqual(model.tasksOfContact(marco.uid).map((one) => one.task.title), ["Stand", "Senza data"]);
+  assert.equal(model.tasksOfContact(marco.uid, { open: false }).length, 3);
+});
+
+test("gli incontri che nominano una persona, attraverso i progetti, dal più recente", () => {
+  const fiera = project({ name: "Fiera" });
+  const sito = project({ name: "Sito" });
+  const marco = model.createContact({ name: "Marco Rossi" });
+
+  const uno = model.createPage(fiera.id, { title: "Primo incontro" });
+  model.setMarkdown(uno.id, "---\ntipo: incontro\ndata: 2026-09-01\ncon: Marco Rossi\n---\n\nVisto il preventivo.\n");
+  const due = model.createPage(sito.id, { title: "Chiamata" });
+  model.setMarkdown(due.id, "---\ntipo: incontro\ndata: 2026-09-14\ncon: Giulia, Marco Rossi\n---\n\nRichiamare.\n");
+  const tre = model.createPage(fiera.id, { title: "Senza di lui" });
+  model.setMarkdown(tre.id, "---\ntipo: incontro\ndata: 2026-09-20\ncon: Giulia\n---\n\nAltro.\n");
+
+  const trovate = model.pagesAbout(marco.uid);
+  assert.deepEqual(trovate.map((one) => one.page.title), ["Chiamata", "Primo incontro"], "dal più recente");
+  assert.deepEqual(trovate.map((one) => one.project.name), ["Sito", "Fiera"]);
+  assert.equal(model.pagesAbout("nessuno").length, 0);
+});
+
+test("il ruolo si cambia anche per una persona di cui qui non c'è la scheda", () => {
+  const fiera = project({ name: "Fiera" });
+  // Com'è un progetto arrivato da fuori: porta nome e ruolo, non la scheda.
+  model.updateProject(fiera.id, { people: [{ uid: "u-marco", name: "Marco Rossi", role: "grafico" }] });
+  assert.equal(model.contactByUid("u-marco"), null, "la scheda qui non c'è");
+
+  model.setPersonRole(fiera.id, "u-marco", "capoprogetto");
+  assert.equal(model.peopleOf(fiera.id)[0].role, "capoprogetto");
+  assert.equal(model.setPersonRole(fiera.id, "nessuno", "x"), null);
+});
+
+test("adottare una persona che il progetto nomina tiene il suo uid", () => {
+  const fiera = project({ name: "Fiera" });
+  model.updateProject(fiera.id, { people: [{ uid: "u-marco", name: "Marco Rossi", role: "grafico" }] });
+
+  const nato = model.adoptPerson(fiera.id, "u-marco");
+  assert.equal(nato.uid, "u-marco", "il uid è quello che il progetto portava, non uno nuovo");
+  assert.equal(nato.name, "Marco Rossi");
+  assert.notEqual(nato.id, "u-marco", "l'id invece è di questo browser");
+  // Da qui in poi le due copie parlano della stessa persona.
+  assert.equal(model.contactByUid("u-marco").id, nato.id);
+  assert.deepEqual(model.projectsOfContact("u-marco").map((one) => one.role), ["grafico"]);
+  assert.equal(model.adoptPerson(fiera.id, "u-marco"), null, "e non se ne fa una seconda");
+});
+
+test("di una persona esce il nome e il ruolo, e nient'altro: la rubrica non viaggia", () => {
+  const fiera = project({ name: "Fiera" });
+  const marco = model.createContact({
+    name: "Marco Rossi",
+    company: "Studio Rossi",
+    email: "marco@studiorossi.it",
+    phone: "0549 900100",
+  });
+  model.addPerson(fiera.id, marco.id, "capoprogetto");
+
+  const uscita = model.exportable(fiera.id);
+  assert.deepEqual(uscita.project.people, [
+    { uid: marco.uid, name: "Marco Rossi", role: "capoprogetto" },
+  ]);
+  // Non «i campi che ci aspettiamo ci siano», ma «non c'è nient'altro»: è la differenza fra una
+  // prova che regge e una che passa finché qualcuno non aggiunge un campo alla scheda.
+  assert.deepEqual(Object.keys(uscita.project.people[0]).sort(), ["name", "role", "uid"]);
+  const scritto = JSON.stringify(uscita);
+  for (const recapito of ["marco@studiorossi.it", "0549 900100", "Studio Rossi"]) {
+    assert.ok(!scritto.includes(recapito), `«${recapito}» non esce`);
+  }
+});
+
+test("e un file scritto a mano non riesce a infilarne uno nell'altro senso", () => {
+  const { projectId } = model.adopt({
+    project: {
+      id: "p-fuori",
+      name: "Da fuori",
+      people: [
+        { uid: "u-marco", name: "Marco Rossi", role: "grafico", email: "marco@altrove.it", phone: "339" },
+        { name: "Senza uid", role: "boh" },                       // niente uid: non è nessuno
+        "una stringa",                                            // niente affatto
+      ],
+    },
+    pages: [],
+    tasks: [],
+  });
+  assert.deepEqual(model.peopleOf(projectId), [
+    { uid: "u-marco", name: "Marco Rossi", role: "grafico" },
+  ]);
+  // E adottarla fa nascere una scheda vuota: quei recapiti non li ha mai avuti nessuno qui.
+  const nato = model.adoptPerson(projectId, "u-marco");
+  assert.equal(nato.email, "");
+  assert.equal(nato.phone, "");
 });
 
 console.log(`model: ${passed} prove passate`);

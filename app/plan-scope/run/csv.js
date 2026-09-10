@@ -32,7 +32,10 @@ function _cell(value, sep) {
  * The spreadsheet. `columns` are the project's, to write the column's name rather than its id;
  * `labels` are the header cells, already in the person's language; `sep` the separator.
  */
-export function tasksCsv(tasks, { columns = [], labels, sep = ";", done = () => false } = {}) {
+// `who` come `done`: chi chiama sa il nome dell'assegnatario, e questo file non deve conoscere
+// il modello per scriverlo in una colonna.
+export function tasksCsv(tasks, { columns = [], labels, sep = ";", done = () => false,
+  who = () => "" } = {}) {
   const nameOf = (status) => {
     const column = columns.find((one) => one.id === status);
     return column ? column.name : status || "";
@@ -49,7 +52,7 @@ export function tasksCsv(tasks, { columns = [], labels, sep = ";", done = () => 
       task.start || "",
       task.end || "",
       task.priority || "",
-      task.assignee || "",
+      who(task),
       (task.tags || []).join(", "),
       task.milestone ? "1" : "",
       done(task) ? "1" : "",
@@ -65,6 +68,18 @@ export function tasksCsv(tasks, { columns = [], labels, sep = ";", done = () => 
  * lines that are only a marker are skipped. Nothing is written: the caller creates the tasks, so
  * that the whole paste is one undo step.
  */
+/**
+ * Le righe di un testo che sono caselle **non spuntate**, per darle a `parseTaskList`.
+ *
+ * Solo quelle aperte, ed è una scelta: una casella già spuntata è una cosa fatta, e portarla nel
+ * piano come «da fare» sarebbe riaprire quello che l'incontro aveva chiuso.
+ */
+export function openBoxes(text) {
+  return String(text || "").split(/\r?\n/)
+    .filter((line) => /^\s*(?:[-*+]\s*)?\[ \]\s*\S/.test(line))
+    .join("\n");
+}
+
 export function parseTaskList(text) {
   const out = [];
   for (const raw of String(text || "").split(/\r?\n/)) {
