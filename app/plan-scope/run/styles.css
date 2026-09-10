@@ -50,7 +50,33 @@ body.fixed { height: 100%; overflow: hidden; }
 
 /* Il ruolo si scrive dove si legge, e la casella resta piccola perché «grafico» è corto: una casella
    larga come la riga direbbe che ci si aspetta una frase. */
-.role-field { width: 130px; padding: 4px 8px; font-size: 12.5px; }
+/* Il ruolo sta accanto al nome perché è del nome, non della riga: leggere «Fiera di settembre ·
+   capoprogetto» è una frase, e la stessa cosa con un vuoto in mezzo sono due dati che si guardano
+   in cagnesco. Silenzioso finché non lo tocchi, come le proprietà di una pagina — un campo con la
+   cornice su ogni riga farebbe leggere l'elenco come un modulo da compilare. */
+.role-field {
+  width: 150px;
+  padding: 4px 8px;
+  font-size: 12.5px;
+  background: transparent;
+  border-color: transparent;
+}
+
+.role-field:hover, .role-field:focus { border-color: var(--border); background: rgba(127, 140, 170, 0.08); }
+
+/* Aggiungere è un'altra cosa dall'elenco che sta sopra, e finché le due si somigliavano il modulo
+   sembrava l'ultima riga: un select che mostra un nome di progetto in fondo a un elenco di
+   progetti dice «anche questo», non «quale?». Lo stacco e la riga di sopra lo dicono senza
+   parole. */
+#addWhereForm {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  gap: 10px;
+  align-items: center;
+}
+
+#addWhereProject { min-width: 220px; }
 
 #panelPeople .row { margin-top: 4px; }
 #panelPeople #addPersonName { flex: 1 1 160px; }
@@ -435,6 +461,28 @@ textarea:focus { border-color: var(--border-strong); }
 
 input[type="search"]::-webkit-search-decoration,
 input[type="search"]::-webkit-search-cancel-button { appearance: none; -webkit-appearance: none; }
+
+/* **E un `select`, che non è «una cosa in cui si scrive» e quindi dalla regola qui sopra resta
+   fuori.** Per un anno l'unico select vestito dell'app è stato quello del cartellino, vestito
+   ricopiando queste stesse cinque dichiarazioni in `#taskCard select`: finché i select stavano
+   tutti lì la copia non si vedeva, e il giorno che ne è arrivato uno nella scheda di una persona
+   si è presentato col vestito del browser in mezzo a quelli dell'app. Una regola ricopiata è una
+   regola che vale dove qualcuno si è ricordato di copiarla.
+
+   La freccia invece resta quella del sistema, e non è una dimenticanza: `appearance: none` la
+   toglierebbe, e un select senza freccia non dice più di potersi aprire — è l'unica cosa che lo
+   distingue da un campo di testo. Per una casella di ricerca vale il contrario, e per questo lì
+   `appearance: none` c'è. */
+select {
+  font: inherit;
+  color: inherit;
+  background: rgba(127, 140, 170, 0.08);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+}
+
+select:hover, select:focus { border-color: var(--border-strong); }
 
 /* ---------------------------------------------------------------------------------------------
    the archive
@@ -1102,15 +1150,6 @@ input.when-field.late { color: var(--late); }
 }
 
 #taskCard input[type="text"], #taskCard textarea, #taskCard select { width: 100%; }
-
-#taskCard select {
-  font: inherit;
-  color: inherit;
-  background: rgba(127, 140, 170, 0.08);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 8px 10px;
-}
 
 .card-dates { display: flex; gap: 12px; }
 

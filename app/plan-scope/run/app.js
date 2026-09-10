@@ -311,6 +311,7 @@ function _paintPeople() {
 
     // Una persona che il progetto nomina e che qui non ha una scheda: si adotta con il suo `uid`,
     // così da quel momento le due copie parlano della stessa persona.
+    row.append(node("span", "spacer"));
     if (!known) {
       row.append(button("ghost small", t("peopleAddToBook"), () => {
         model.adoptPerson(projectId, person.uid);
@@ -405,6 +406,10 @@ function _paintPerson() {
     field.addEventListener("input", () => model.setPersonRole(project.id, uid, field.value));
     row.append(field);
 
+    // «Togli» va in fondo alla riga, non accanto al ruolo: due comandi a nove pixel l'uno
+    // dall'altro, di cui uno distruttivo, si premono per sbaglio — e a distanza si legge anche
+    // che toglie *questa riga*, non il ruolo che ha accanto.
+    row.append(node("span", "spacer"));
     row.append(button("ghost small", t("peopleRemove"), () => {
       model.removePerson(project.id, uid);
       _paintPerson();
@@ -419,12 +424,20 @@ function _paintPerson() {
   const altrove = model.liveProjects().filter((one) => !where.some(({ project }) => project.id === one.id));
   el("addWhereForm").hidden = altrove.length === 0;
   el("addWhereNone").hidden = altrove.length > 0 || where.length === 0;
-  fill(el("addWhereProject"), altrove.map((one) => {
+  // La prima voce è la domanda, non un progetto: un select che mostra «StartUp World Cup» in
+  // fondo a un elenco di progetti sembra una riga dell'elenco — cioè sembra che ci lavori già. Un
+  // campo di testo lo direbbe con un segnaposto; un select non ne ha, e questa è la sua forma.
+  const chiedi = node("option");
+  chiedi.value = "";
+  chiedi.textContent = t("personAddWhere");
+  chiedi.disabled = true;
+  chiedi.selected = true;
+  fill(el("addWhereProject"), [chiedi, ...altrove.map((one) => {
     const option = node("option");
     option.value = one.id;
     option.textContent = one.name || t("projectUntitled");
     return option;
-  }));
+  })]);
 
   const met = model.pagesAbout(uid);
   el("personMeetingsNone").hidden = met.length > 0;
