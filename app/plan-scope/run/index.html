@@ -566,6 +566,15 @@
         <h1 data-t="placesTitle"></h1>
       </div>
 
+      <!-- Il nome sta in testa e fuori dalle due carte perché è di questa copia dell'app, non di
+           una delle due cartelle: è la firma con cui esce tutto quello che esce da qui. Stava in
+           fondo alla seconda carta, dove lo trovava solo chi era già arrivato a condividere. -->
+      <div class="card" id="whoCard">
+        <label for="folderWho" data-t="folderWho"></label>
+        <input type="text" id="folderWho" maxlength="60" autocomplete="off">
+        <p class="note" data-t="folderNote"></p>
+      </div>
+
       <div class="card">
         <h2 data-t="backupTitle"></h2>
         <p data-t="backupHint"></p>
@@ -583,9 +592,6 @@
       <div class="card">
         <h2 data-t="folderTitle"></h2>
         <p data-t="folderHint"></p>
-        <label for="folderWho" data-t="folderWho"></label>
-        <input type="text" id="folderWho" maxlength="60" autocomplete="off">
-        <p class="note" data-t="folderNote"></p>
         <div class="row">
           <button type="button" id="folderAdd" class="primary" data-t="folderAdd"></button>
           <button type="button" id="folderOpen" data-t="folderOpen"></button>

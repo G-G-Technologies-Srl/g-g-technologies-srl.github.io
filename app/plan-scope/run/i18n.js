@@ -157,7 +157,7 @@ const IT = {
   folderNeverRead: "Condivisi in {n} cartelle · sei {who} · non ancora lette",
   folderPrompt: "Aspettano il tuo permesso: {names}. Riprendile una volta ricordando la scelta, "
     + "oppure installa l'app: allora il browser non lo chiede più.",
-  folderNeedsName: "Serve un nome: è quello che vedono gli altri.",
+  whoAsk: "Come ti chiami? Lo vede chi apre le cartelle che condividi.",
   folderAdded: "Cartella aggiunta. Adesso puoi condividerci un progetto.",
   folderError: "La cartella non si legge o non si scrive: {error}",
   shareWhere: "In quale cartella lo metto?",
@@ -964,7 +964,7 @@ const EN = {
   folderNeverRead: "Shared in {n} folders · you are {who} · not read yet",
   folderPrompt: "Waiting for your permission: {names}. Take them up once and let the browser "
     + "remember, or install the app: then it stops asking.",
-  folderNeedsName: "A name is needed: it is what the others see.",
+  whoAsk: "What is your name? Whoever opens the folders you share will see it.",
   folderAdded: "Folder added. Now you can share a project into it.",
   folderError: "The folder cannot be read or written: {error}",
   shareWhere: "Which folder does it go in?",

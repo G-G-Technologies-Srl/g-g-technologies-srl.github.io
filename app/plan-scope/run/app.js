@@ -432,13 +432,16 @@ function _paintPerson() {
  * si guarda e su cui ogni tanto si fa qualcosa.
  */
 async function _openPlaces() {
-  el("folderWho").value = sync.who() || "";
   await _paintPlaces();
   _show("folderScreen");
 }
 
 /** Le due sezioni, insieme: chi entra le trova già scritte tutt'e due. */
 async function _paintPlaces() {
+  // Il nome si dipinge qui e non all'apertura: le cartelle condivise si svegliano dopo il primo
+  // disegno, e un campo riempito una volta sola resta vuoto per sempre su un indirizzo che apre
+  // questa schermata da fermo. Dipingere è dire di nuovo quello che è vero adesso.
+  el("folderWho").value = sync.who() || "";
   await _paintBackupSection();
   await _paintFolders();
   await _paintBackup();
@@ -649,19 +652,33 @@ async function _forgetFolder(one) {
  * sharing this with» is exactly what somebody is deciding at that moment. With no folder yet there
  * is nothing to choose between, so the picker opens straight away.
  */
+/**
+ * Il nome vero, chiesto una volta e nel momento giusto.
+ *
+ * Il momento giusto è questo: da qui in poi qualcosa esce verso qualcun altro, e la firma
+ * `user_k3p9zx` che l'app si è data da sola comincia a essere letta da una persona a cui non dice
+ * niente. Prima di adesso non contava, e chiederlo sarebbe stata una registrazione.
+ *
+ * Il ripiego è già nel campo: si tiene o si sostituisce, e in nessun caso si resta senza nome —
+ * annullare lascia quello che c'è, invece di sbarrare la strada come faceva il cancello di prima.
+ */
+async function _confirmWho() {
+  if (!sync.whoIsMadeUp()) return;
+  const said = await ask(t("whoAsk"), { value: sync.who() });
+  if (said === null) return;
+  await sync.setWho(said);
+  el("folderWho").value = sync.who();
+}
+
 async function _askWhere() {
+  await _confirmWho();
   const list = folders.forSharing(await folders.all());
   const options = [...list.map((one) => ({ value: one.id, label: one.name })),
     { value: OTHER, label: t("shareOther") }];
   const chosen = options.length === 1 ? OTHER : await ask(t("shareWhere"), { options });
   if (!chosen) return null;
   if (chosen !== OTHER) return chosen;
-  const who = sync.who() || String(await ask(t("folderWho"), { value: "" }) || "").trim();
-  if (!who) {
-    snack(t("folderNeedsName"));
-    return null;
-  }
-  const id = await sync.addFolder(who);
+  const id = await sync.addFolder(sync.who());
   if (id) await _paintFolders();
   return id;
 }
@@ -1807,9 +1824,8 @@ function _wire() {
   // e non c'è niente sullo schermo che debba seguirlo lettera per lettera.
   el("folderWho").addEventListener("change", () => sync.setWho(el("folderWho").value.trim()));
   el("folderAdd").addEventListener("click", async () => {
-    const who = el("folderWho").value.trim();
-    if (!who) return snack(t("folderNeedsName"));
-    await sync.setWho(who);
+    await sync.setWho(el("folderWho").value.trim());
+    await _confirmWho();
     const id = await sync.addFolder();
     if (!id) return undefined;
     await _paintFolders();
@@ -1817,8 +1833,8 @@ function _wire() {
     return snack(t("folderAdded"));
   });
   el("folderOpen").addEventListener("click", async () => {
-    const who = el("folderWho").value.trim();
-    if (who) await sync.setWho(who);
+    await sync.setWho(el("folderWho").value.trim());
+    await _confirmWho();
     const outcome = await sync.openShared();
     if (outcome.cancelled) return undefined;
     if (!outcome.ok) return snack(t("openedNothing"));
@@ -2361,6 +2377,13 @@ async function _boot() {
     },
     status: (error) => _paintFolder(error),
   });
+
+  // E adesso che si sono svegliate, la schermata che le mostra va ridisegnata — se è quella
+  // aperta. Le cartelle condivise si svegliano per ultime **per scelta**, quindi qui la cura non è
+  // anticiparle come per la copia locale: è ridipingere quando arrivano. Si vedeva col nome, che
+  // restava un campo vuoto su un indirizzo `?v=folderScreen` mentre il nome c'era: il primo
+  // disegno chiedeva a un modulo che non aveva ancora letto niente.
+  if (view === "folderScreen") await _paintPlaces();
 
   // The awards that depend on the calendar rather than on a tick — ten days, thirty — can only
   // become true here, at the start of a day.

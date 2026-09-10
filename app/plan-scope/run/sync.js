@@ -93,9 +93,36 @@ async function _saveState() {
 }
 
 /** The marks as the database has them: another tab may have moved them since. */
+/**
+ * Un nome di ripiego per questa copia dell'app: `user_k3p9zx`.
+ *
+ * Non è un vezzo, è la fine di una classe di casi vuoti. Il nome firma quello che esce — chi ha
+ * scritto una pagina, quale delle due copie ha lasciato l'altra — e finché poteva essere vuoto
+ * ogni posto che lo mostra doveva ricordarsi di gestire il vuoto, e aggiungere una cartella era
+ * sbarrato da un cancello che chiedeva un nome prima di lasciarti fare qualsiasi cosa.
+ *
+ * Resta comunque un ripiego, e l'app se lo ricorda in `whoAuto`: «user_k3p9zx» a un collega non
+ * dice niente, e i valori predefiniti non li cambia quasi nessuno. Quindi il nome vero si chiede
+ * nell'unico momento in cui comincia a contare — la prima volta che qualcosa esce da qui verso
+ * qualcun altro — col ripiego già scritto nel campo, così è un tasto per tenerlo o sostituirlo.
+ */
+function _madeUpName() {
+  // Sei caratteri presi da un alfabeto senza maiuscole: si legge ad alta voce, si copia a mano, e
+  // in un elenco di cartelle non si confonde con quello accanto. Costruito a ciclo e non tagliando
+  // un `toString(36)`, che ogni tanto ne restituisce meno di sei.
+  const alfabeto = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let coda = "";
+  for (let i = 0; i < 6; i += 1) coda += alfabeto[Math.floor(Math.random() * alfabeto.length)];
+  return `user_${coda}`;
+}
+
 async function _loadState() {
   const stored = await db.meta(STATE_KEY, {});
   state = { who: "", marks: {}, ...stored, who: state.who || stored.who || "" };
+  if (!state.who) {
+    state = { ...state, who: _madeUpName(), whoAuto: true };
+    await _saveState();
+  }
 }
 
 /** Take turns: one tab reads or writes the folder at a time. Without locks, just run. */
@@ -671,8 +698,16 @@ export function who() {
 }
 
 export async function setWho(name) {
-  state = { ...state, who: String(name || "").trim() };
+  const clean = String(name || "").trim();
+  // Un nome scritto da una persona non è più un ripiego, e da lì in poi non si chiede più.
+  if (!clean) return;
+  state = { ...state, who: clean, whoAuto: false };
   await _saveState();
+}
+
+/** Vero finché il nome è quello che si è dato l'app da sola, e nessuno l'ha confermato. */
+export function whoIsMadeUp() {
+  return Boolean(state.whoAuto);
 }
 
 /** A record of this project changed by the person: it will be written, once typing settles. */
