@@ -561,6 +561,24 @@ async function _paintFolder(error = null) {
  * to it. A folder waiting for its permission carries the button that asks for it, because the
  * browser wants a gesture per folder and there is no honest way to ask for four at once.
  */
+/**
+ * Aprire un progetto che sta in una cartella e qui ancora no.
+ *
+ * È il gesto centrale della 4.0 — «niente entra da solo» — e per tre versioni non ha fatto niente:
+ * il pulsante chiamava un nome che nessuno aveva mai definito, e il clic finiva in un
+ * `ReferenceError` che soltanto la console vedeva. Le prove chiamavano `sync.openFrom` diretto,
+ * quindi passavano; `check_apps.py` verifica che ogni `el(id)` esista, non che ogni funzione
+ * chiamata esista. Nessuno dei due controlli poteva vederlo: l'unica cosa che poteva era premere
+ * il pulsante.
+ */
+async function _openFrom(parentId, sub) {
+  const project = await sync.openFrom(parentId, sub);
+  if (!project) return snack(t("openedNothing"));
+  await _repaint();
+  await _paintPlaces();
+  return snack(tf("opened", { name: project.name || t("projectUntitled") }));
+}
+
 async function _paintFolders() {
   const list = await folders.all();
   el("folderEmpty").hidden = list.length > 0;
@@ -1782,6 +1800,12 @@ function _wire() {
   // una cartella alla volta, e questa è la schermata dove si vede quale.
   el("folderResume").addEventListener("click", () => _openPlaces());
   el("backupResume").addEventListener("click", () => _openPlaces());
+  // Il nome si scrive dove si legge, come ogni altro campo dell'app. Lo leggevano solo i due
+  // pulsanti qui sotto, quindi scriverlo e andarsene non lasciava niente: alla ricarica il campo
+  // tornava vuoto, in silenzio, dopo che la persona aveva fatto esattamente quello che l'app le
+  // insegna a fare dappertutto. `change` e non `input` perché è un nome che si scrive una volta,
+  // e non c'è niente sullo schermo che debba seguirlo lettera per lettera.
+  el("folderWho").addEventListener("change", () => sync.setWho(el("folderWho").value.trim()));
   el("folderAdd").addEventListener("click", async () => {
     const who = el("folderWho").value.trim();
     if (!who) return snack(t("folderNeedsName"));
@@ -2279,13 +2303,18 @@ async function _boot() {
 
   _wire();
   _applyLanguage();
+  // La copia locale si sveglia per prima — e adesso è vero anche nell'ordine, non solo nel
+  // commento. Stava dopo `_restoreFromUrl`, e finché «Cartelle e copie» si apriva solo con un
+  // clic la differenza non si vedeva: al clic lo scrittore era pronto da un pezzo. Da quando
+  // quella schermata si riapre da un indirizzo, il primo disegno la trovava con `writer` ancora
+  // `null` — e `status()` risponde «nessuna cartella» quando non ha ancora caricato. La schermata
+  // lo prendeva per un fatto e offriva «Scegli la cartella…», cioè invitava a sostituire una
+  // cartella che c'era. Un dato non ancora letto non è un dato assente, e la differenza si paga
+  // quando l'interfaccia invita a rimediare a un vuoto che non esiste.
+  if (!demoMode) await backup.setup({ status: () => { _paintBackup(); } });
   _restoreFromUrl();
   booted = true;
   _badge();
-  // La copia locale si sveglia per prima: la sua cartella è anche una delle cartelle in cui si
-  // può condividere, e chi legge le cartelle la vuole già in mano. Nel dimostrativo non si
-  // collega: lì non c'è niente da tenere.
-  if (!demoMode) await backup.setup({ status: () => { _paintBackup(); } });
   // E si ridisegna qui: su un browser che una cartella non la consegna, lo scrittore non ha niente
   // da riferire e non riferisce niente — il pulsante resterebbe acceso su una cosa che non c'è.
   await _paintBackup();
@@ -2332,8 +2361,6 @@ async function _boot() {
     },
     status: (error) => _paintFolder(error),
   });
-
-
 
   // The awards that depend on the calendar rather than on a tick — ten days, thirty — can only
   // become true here, at the start of a day.
