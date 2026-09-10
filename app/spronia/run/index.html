@@ -51,10 +51,14 @@
     <span class="brand-block"><span class="brand">SPRONIA</span><button type="button" class="gg-version" id="appVersion" hidden></button></span>
     <span class="meta" data-t="tagline"></span>
     <span class="spacer"></span>
-    <!-- **L'invito a installare non sta qui**, sta nel pannello di fine partita.
-         Nella barra chiedeva di installare un gioco a cui non avevi ancora giocato, e si prendeva
-         sessanta pixel nella riga che su un telefono ne ha già pochi. A fine partita la domanda ha
-         una risposta, ed è la prima volta che ce l'ha. -->
+    <!-- **L'invito a installare sta in due posti**, e non è una svista.
+         Qui perché è dove sta in tutte le altre app, ed è dove uno lo cerca; a fine partita perché
+         lì la domanda ha una risposta — hai appena giocato — ed è la prima volta che ce l'ha.
+         È una domanda sola: risposta in un posto, sparisce da tutt'e due.
+         Nella barra l'etichetta è corta come quella della lingua, «Installa»: la frase intera si
+         prendeva sessanta pixel nella riga che su un telefono ne ha già pochi, ed è il motivo per
+         cui era stata tolta di qui. -->
+    <button type="button" id="installBar" class="ghost small" hidden></button>
     <button type="button" id="lang" class="ghost small"></button>
     <!-- L'icona cambia con lo stato, non solo l'etichetta: l'onda quando suona, la croce quando no.
          Un pulsante che resta identico dopo che l'hai premuto non dice di aver fatto niente, e
@@ -81,6 +85,12 @@
       </svg>
     </button>
   </div>
+
+  <!-- La riga che spiega, sotto la barra e non dentro: su iPhone come si installa — lì non c'è
+       nessun invito da rimandare, installare passa da Condividi — e dentro l'app installata dove
+       sta il comando per toglierla. È una frase, e la barra è una riga di comandi: infilarcela
+       dentro manderebbe a capo i pulsanti proprio sul telefono dove servono. -->
+  <p class="install-line" id="installBarHint" hidden></p>
 
   <!-- La seconda altezza, e volutamente magra: punti, vite e ondata stanno **dentro** il campo,
        disegnati in cifre e teste di cavaliere. Qui resta quello che il campo non può dire senza

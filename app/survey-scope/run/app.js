@@ -23,7 +23,7 @@ import { t, tf, lang, otherLang, setLang, resolveLang, missingKeys } from "./i18
 import { paint, relabel } from "./report.js";
 import { digest, downloadJson, downloadCsv, TOOL_VERSION } from "./export.js";
 import * as theme from "gg/theme.js";
-import { setup as setupInstall } from "gg/install.js";
+import { setup as setupInstall, isInstalled, system } from "gg/install.js";
 import * as update from "gg/update.js";
 import * as store from "gg/store.js";
 import { download, restore, collect } from "gg/io.js";
@@ -412,6 +412,13 @@ function _say(node) {
   return text(node, lang());
 }
 
+/** Where the command to remove the app is, on the system in use. */
+function _removalText(kind) {
+  if (kind === "ios") return t("removalIos");
+  if (kind === "android") return t("removalAndroid");
+  return t("removalDesktop");
+}
+
 function _applyText() {
   document.documentElement.setAttribute("lang", lang());
   // **`_show` invece di `t` per sette stringhe.** Titolo, occhiello, sommario, payoff e durata
@@ -422,7 +429,16 @@ function _applyText() {
   el("lang").textContent = t("langSwitch");
   el("theme").setAttribute("aria-label",
     theme.current() === "light" ? t("themeToDark") : t("themeToLight"));
-  el("install").textContent = t("installButton");
+  // **The button says two things**, and which one depends on a fact only `gg/install.js` knows:
+  // inside the installed app it stops inviting and says how to remove it. Without this question a
+  // change of language wrote the invitation back over «Installata», on an app already there.
+  const installedNow = isInstalled();
+  el("install").textContent = installedNow ? t("removalLabel") : t("installButton");
+  // The line that explains is written when it appears, so the one on screen is written again here:
+  // hidden, it gets its text from the module the next time it is needed.
+  if (!el("installHint").hidden) {
+    el("installHint").textContent = installedNow ? _removalText(system()) : t("installHint");
+  }
   el("backLink").textContent = t("backToPage");
   el("sourceLink").textContent = t("sourceLabel");
   el("errorTitle").textContent = t("errorTitle");
@@ -1877,7 +1893,7 @@ async function _boot() {
   setupInstall(el("install"), el("installHint"), {
     storageKey: "gg.survey-scope.install",
     iosText: t("installHint"),
-    removal: (kind) => t(kind === "ios" ? "removalIos" : kind === "android" ? "removalAndroid" : kind === "label" ? "removalLabel" : "removalDesktop"),
+    removal: (kind) => (kind === "label" ? t("removalLabel") : _removalText(kind)),
   });
 
   // The two key lists compared in the browser as well as before publishing. It costs nothing and

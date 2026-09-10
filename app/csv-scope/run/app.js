@@ -10,7 +10,7 @@ import { summarise } from "./stats.js";
 import { channelSvg, overlayHtml, indexAt } from "./chart.js";
 import * as theme from "gg/theme.js";
 import { mount as mountTable } from "./table.js";
-import { setup as setupInstall } from "gg/install.js";
+import { setup as setupInstall, isInstalled, system } from "gg/install.js";
 import * as update from "gg/update.js";
 import * as history from "./history.js";
 import { download, restore } from "gg/io.js";
@@ -60,6 +60,13 @@ const SCREENS_PER = 5;
 //  t e x t
 // -----------------------------------------------------------------------------------------------------------------
 
+/** Where the command to remove the app is, on the system in use. */
+function _removalText(kind) {
+  if (kind === "ios") return t("removalIos");
+  if (kind === "android") return t("removalAndroid");
+  return t("removalDesktop");
+}
+
 function _applyText() {
   document.documentElement.setAttribute("lang", lang());
   el("tagline").textContent = t("tagline");
@@ -77,7 +84,16 @@ function _applyText() {
   el("sourceLink").textContent = t("sourceLabel");
   el("lang").textContent = t("langSwitch");
   el("theme").setAttribute("aria-label", theme.current() === "light" ? t("themeToDark") : t("themeToLight"));
-  el("install").textContent = t("installButton");
+  // **The button says two things**, and which one depends on a fact only `gg/install.js` knows:
+  // inside the installed app it stops inviting and says how to remove it. Without this question a
+  // change of language wrote the invitation back over «Installata», on an app already there.
+  const installedNow = isInstalled();
+  el("install").textContent = installedNow ? t("removalLabel") : t("installButton");
+  // The line that explains is written when it appears, so the one on screen is written again here:
+  // hidden, it gets its text from the module the next time it is needed.
+  if (!el("installHint").hidden) {
+    el("installHint").textContent = installedNow ? _removalText(system()) : t("installIos");
+  }
   el("viewChart").textContent = t("viewChart");
   el("viewTable").textContent = t("viewTable");
   el("sample").textContent = t("dropSample");
@@ -1035,7 +1051,7 @@ function _start() {
   _keyboardZoom();
   setupInstall(el("install"), el("installHint"),
     { storageKey: "gg.csv-scope.install-dismissed", iosText: t("installIos"),
-      removal: (kind) => t(kind === "ios" ? "removalIos" : kind === "android" ? "removalAndroid" : kind === "label" ? "removalLabel" : "removalDesktop"), });
+      removal: (kind) => (kind === "label" ? t("removalLabel") : _removalText(kind)), });
 
   if (new URLSearchParams(location.search).has("demo")) _demo();
 

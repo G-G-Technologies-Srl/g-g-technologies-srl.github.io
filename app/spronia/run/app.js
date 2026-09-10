@@ -22,7 +22,7 @@ import * as scores from "./scores.js";
 import * as audio from "./audio.js";
 import { autopilot } from "./attract.js";
 import * as theme from "gg/theme.js";
-import { setup as setupInstall } from "gg/install.js";
+import { setup as setupInstall, isInstalled, system } from "gg/install.js";
 import * as update from "gg/update.js";
 import { download, restore } from "gg/io.js";
 
@@ -118,6 +118,13 @@ let bonusShown = -1;                    // l'istante del premio già annunciato
 //  t e x t
 // -----------------------------------------------------------------------------------------------------------------
 
+/** Dove sta il comando per togliere l'app, sul sistema in uso. */
+function _removalText(kind) {
+  if (kind === "ios") return t("removalIos");
+  if (kind === "android") return t("removalAndroid");
+  return t("removalDesktop");
+}
+
 function _applyText() {
   document.title = `SPRONIA — ${t("tagline")}`;
   for (const node of document.querySelectorAll("[data-t]")) {
@@ -138,7 +145,25 @@ function _applyText() {
   el("lang").setAttribute("aria-label", t("langSwitch"));
   el("theme").setAttribute("aria-label",
     theme.current() === "light" ? t("themeToDark") : t("themeToLight"));
-  el("install").textContent = t("installButton");
+  // **I due inviti a installare dicono due cose**, e quale delle due lo sa solo `gg/install.js`:
+  // dentro l'app installata lo stesso pulsante smette di invitare e spiega come toglierla. Senza
+  // questa domanda il cambio di lingua riscriveva «Installata» con l'invito a installare un'app che
+  // è già lì — e il pulsante mostrava un'etichetta e ne faceva un'altra.
+  //
+  // Nella barra l'etichetta è corta come quella della lingua, e per la stessa ragione: la frase
+  // intera manda a capo la riga sul telefono. A fine partita lo spazio c'è, e la frase dice di più.
+  const dentro = isInstalled();
+  el("install").textContent = dentro ? t("removalLabel") : t("installButton");
+  el("installBar").textContent = dentro ? t("removalLabel")
+    : stretto ? t("installShort") : t("installButton");
+
+  // Le due righe che spiegano vengono scritte **quando compaiono**, quindi una lingua cambiata con
+  // la riga già aperta la lasciava in inglese sotto un'app in italiano. Qui si riscrive solo quella
+  // sullo schermo: nascosta, il testo glielo darà `gg/install.js` la prossima volta che serve.
+  for (const riga of [el("installBarHint"), el("installHint")]) {
+    if (riga.hidden) continue;
+    riga.textContent = dentro ? _removalText(system()) : t("installIos");
+  }
   el("full").setAttribute("aria-label",
     document.documentElement.dataset.full ? t("fullOff") : t("fullOn"));
   el("sound").setAttribute("aria-label", audio.isEnabled() ? t("soundOn") : t("soundOff"));
@@ -847,10 +872,12 @@ async function main() {
   el("play2").hidden = !input.canPairUp();
   el("playersNote").hidden = !el("play2").hidden;
 
-  setupInstall(el("install"), el("installHint"), {
+  // Due posti, una domanda sola: la barra — dov'è in tutte le altre app — e il pannello di fine
+  // partita. L'ordine conta: ogni pulsante apre la riga che gli sta accanto.
+  setupInstall([el("installBar"), el("install")], [el("installBarHint"), el("installHint")], {
     storageKey: "gg.spronia.install-dismissed",
     iosText: t("installIos"),
-    removal: (kind) => t(kind === "ios" ? "removalIos" : kind === "android" ? "removalAndroid" : kind === "label" ? "removalLabel" : "removalDesktop"),
+    removal: (kind) => (kind === "label" ? t("removalLabel") : _removalText(kind)),
   });
 
   _toAttract();

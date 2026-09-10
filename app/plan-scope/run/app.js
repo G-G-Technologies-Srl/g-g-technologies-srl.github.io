@@ -36,7 +36,7 @@ import * as importing from "./importing.js";
 import * as sync from "./sync.js";
 import * as theme from "gg/theme.js";
 import * as io from "gg/io.js";
-import { setup as setupInstall } from "gg/install.js";
+import { setup as setupInstall, isInstalled, system } from "gg/install.js";
 import * as update from "gg/update.js";
 import { t, tf, num, otherLang, setLang, resolveLang, missingKeys } from "./i18n.js";
 import { el, node, fill, applyText, snack, hideSnack, longDate, ask } from "./ui.js";
@@ -747,8 +747,25 @@ async function _backup() {
 
 // ---- language and theme
 
+/** Where the command to remove the app is, on the system in use. */
+function _removalText(kind) {
+  if (kind === "ios") return t("removalIos");
+  if (kind === "android") return t("removalAndroid");
+  return t("removalDesktop");
+}
+
 function _applyLanguage() {
   applyText();
+  // **The button says two things**, and which one depends on a fact only `gg/install.js` knows:
+  // inside the installed app it stops inviting and says how to remove it. Without this question a
+  // change of language wrote the invitation back over «Installata», on an app already there.
+  const installedNow = isInstalled();
+  el("install").textContent = installedNow ? t("removalLabel") : t("installButton");
+  // The line that explains is written when it appears, so the one on screen is written again here:
+  // hidden, it gets its text from the module the next time it is needed.
+  if (!el("installHint").hidden) {
+    el("installHint").textContent = installedNow ? _removalText(system()) : t("installHint");
+  }
   home.refreshPlaceholders();
   el("tagline").textContent = t("tagline");
   el("lang").textContent = t("langSwitch");
@@ -1616,7 +1633,7 @@ async function _boot() {
   setupInstall(el("install"), el("installHint"), {
     storageKey: "gg.plan-scope.install",
     iosText: t("installHint"),
-    removal: (kind) => t(kind === "ios" ? "removalIos" : kind === "android" ? "removalAndroid" : kind === "label" ? "removalLabel" : "removalDesktop"),
+    removal: (kind) => (kind === "label" ? t("removalLabel") : _removalText(kind)),
   });
 
   // The two key lists compared in the browser as well as before publishing. It costs nothing and

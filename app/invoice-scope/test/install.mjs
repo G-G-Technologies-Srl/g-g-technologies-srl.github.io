@@ -55,11 +55,21 @@ function browser({ stored = null, alreadyFired = null, installed = false, ios = 
   asNavigator(ios
     ? { userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0)", maxTouchPoints: 5 }
     : { userAgent: "Mozilla/5.0 (X11; Linux x86_64) Chrome/140", maxTouchPoints: 0 });
-  const button = { hidden: true, textContent: "", title: "", handlers: [],
-                   addEventListener(n, fn) { this.handlers.push(fn); },
-                   click() { return Promise.all(this.handlers.map((fn) => fn())); } };
-  const hint = { hidden: true, textContent: "", addEventListener() {} };
-  return { button, hint, store };
+  return { button: pulsante(), hint: riga(), store };
+}
+
+/** Un pulsante finto: quello che il modulo tocca, e i click che restituisce. */
+function pulsante() {
+  return { hidden: true, textContent: "", title: "", handlers: [],
+           addEventListener(n, fn) { this.handlers.push(fn); },
+           click() { return Promise.all(this.handlers.map((fn) => fn())); } };
+}
+
+/** La riga che spiega, accanto al pulsante. */
+function riga() {
+  return { hidden: true, textContent: "", handlers: [],
+           addEventListener(n, fn) { this.handlers.push(fn); },
+           click() { for (const fn of this.handlers) fn(); } };
 }
 
 /** What the browser hands over: an event that can be held, prompted, and answered. */
@@ -173,6 +183,47 @@ await prova("su iPhone non c'è un evento: c'è la frase, e si chiude toccandola
   assert.equal(b.hint.textContent, "Condividi…");
   assert.equal(b.button.hidden, true, "nessun pulsante dove non c'è niente da premere");
   closer();
+  assert.equal(b.store.get(KEY), "no");
+});
+
+await prova("l'invito sta in due posti e resta una domanda sola", async () => {
+  // SPRONIA lo mette nella barra come le altre app **e** nel pannello di fine partita. Lo stato è
+  // uno: quello che il browser offre, il rifiuto e l'installazione sono dell'app, non del pulsante.
+  const b = browser({ alreadyFired: prompt() });
+  const secondo = pulsante();
+  const secondaRiga = riga();
+  setup([b.button, secondo], [b.hint, secondaRiga],
+        { storageKey: KEY, iosText: "Condividi…", removal });
+  assert.equal(b.button.hidden, false);
+  assert.equal(secondo.hidden, false, "l'evento già arrivato li fa comparire tutt'e due");
+  await secondo.click();
+  assert.equal(secondo.hidden, true);
+  assert.equal(b.button.hidden, true, "chiesto da uno, l'altro non ripete la domanda");
+});
+
+await prova("e dentro l'app installata ogni pulsante apre la riga che gli sta accanto", async () => {
+  const b = browser({ installed: true });
+  const secondo = pulsante();
+  const secondaRiga = riga();
+  setup([b.button, secondo], [b.hint, secondaRiga],
+        { storageKey: KEY, iosText: "Condividi…", removal });
+  assert.equal(b.button.textContent, "Installata");
+  assert.equal(secondo.textContent, "Installata");
+  await secondo.click();
+  assert.equal(secondaRiga.hidden, false, "quella accanto a lui");
+  assert.equal(b.hint.hidden, true, "e non l'altra, che sta in un altro punto della pagina");
+});
+
+await prova("su iPhone la frase si chiude una volta sola, in tutt'e due i posti", async () => {
+  const b = browser({ ios: true });
+  const secondaRiga = riga();
+  setup([b.button, pulsante()], [b.hint, secondaRiga],
+        { storageKey: KEY, iosText: "Condividi…", removal });
+  assert.equal(b.hint.hidden, false);
+  assert.equal(secondaRiga.hidden, false);
+  secondaRiga.click();
+  assert.equal(b.hint.hidden, true, "toccata una, spariscono tutt'e due");
+  assert.equal(secondaRiga.hidden, true);
   assert.equal(b.store.get(KEY), "no");
 });
 

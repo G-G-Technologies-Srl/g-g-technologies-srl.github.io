@@ -22,7 +22,7 @@ import * as scores from "./scores.js";
 import { autopilot } from "./attract.js";
 import * as card from "./card.js";
 import * as theme from "gg/theme.js";
-import { setup as setupInstall } from "gg/install.js";
+import { setup as setupInstall, isInstalled, system } from "gg/install.js";
 import * as update from "gg/update.js";
 import { download, restore } from "gg/io.js";
 
@@ -87,6 +87,13 @@ let demoRound = 0;
 //  t e x t
 // -----------------------------------------------------------------------------------------------------------------
 
+/** Where the command to remove the app is, on the system in use. */
+function _removalText(kind) {
+  if (kind === "ios") return t("removalIos");
+  if (kind === "android") return t("removalAndroid");
+  return t("removalDesktop");
+}
+
 function _applyText() {
   document.title = `AstroDroid — ${t("tagline")}`;
   for (const node of document.querySelectorAll("[data-t]")) {
@@ -101,7 +108,16 @@ function _applyText() {
     theme.current() === "light" ? t("themeToDark") : t("themeToLight"));
   el("sound").setAttribute("aria-label", audio.isEnabled() ? t("soundOn") : t("soundOff"));
   el("sound").dataset.sound = audio.isEnabled() ? "on" : "off";
-  el("install").textContent = t("installButton");
+  // **The button says two things**, and which one depends on a fact only `gg/install.js` knows:
+  // inside the installed app it stops inviting and says how to remove it. Without this question a
+  // change of language wrote the invitation back over «Installata», on an app already there.
+  const installedNow = isInstalled();
+  el("install").textContent = installedNow ? t("removalLabel") : t("installButton");
+  // The line that explains is written when it appears, so the one on screen is written again here:
+  // hidden, it gets its text from the module the next time it is needed.
+  if (!el("installHint").hidden) {
+    el("installHint").textContent = installedNow ? _removalText(system()) : t("installIos");
+  }
   _paintHud();
   _paintScores();
 }
@@ -513,7 +529,7 @@ async function main() {
   input.setup(document.body, _command);
   setupInstall(el("install"), el("installHint"),
     { storageKey: "gg.astrodroid.install-dismissed", iosText: t("installIos"),
-      removal: (kind) => t(kind === "ios" ? "removalIos" : kind === "android" ? "removalAndroid" : kind === "label" ? "removalLabel" : "removalDesktop"), });
+      removal: (kind) => (kind === "label" ? t("removalLabel") : _removalText(kind)), });
 
   // A game left running in a background tab is a game being lost while nobody watches.
   document.addEventListener("visibilitychange", () => {

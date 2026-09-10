@@ -267,6 +267,19 @@ main {
    da Condividi — quindi è una frase, e si chiude toccandola. */
 #installHint { cursor: pointer; }
 
+/* La stessa frase, sotto la barra invece che nel pannello: stessa altezza di riga della barra e lo
+   stesso filo sotto, così quando compare sembra una seconda riga della barra e non un avviso
+   appoggiato sopra il gioco. */
+.install-line {
+  margin: 0;
+  padding: 5px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--faint);
+  font-size: 12px;
+  line-height: 1.45;
+  cursor: pointer;
+}
+
 .choose { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; }
 
 /* ---------------------------------------------------------------------------------------------

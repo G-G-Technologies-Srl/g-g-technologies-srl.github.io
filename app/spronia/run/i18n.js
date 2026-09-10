@@ -201,6 +201,8 @@ const IT = {
   versionReload: "Aggiornata: ricarica",
   versionUpToDate: "v{version} · aggiornata",
   installButton: "Installala sul telefono",
+  // Nella barra, dove i pixel sono contati come per la lingua: IT · EN, e qui «Installa».
+  installShort: "Installa",
   installIos: "Per averla sul telefono: Condividi, poi «Aggiungi a Home». Tocca qui per non "
     + "rivederlo.",
   backToPage: "Torna alla scheda",
@@ -358,6 +360,7 @@ const EN = {
   versionReload: "Updated: reload",
   versionUpToDate: "v{version} · up to date",
   installButton: "Put it on your phone",
+  installShort: "Install",
   installIos: "To keep it on your phone: Share, then “Add to Home Screen”. Tap here to stop "
     + "seeing this.",
   backToPage: "Back to the app page",

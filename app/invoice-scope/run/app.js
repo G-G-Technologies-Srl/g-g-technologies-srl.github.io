@@ -12,7 +12,7 @@
 // here is the shell, the company details and the settings, because splitting those out would mean
 // four files that each know about the header.
 
-import { setup as setupInstall } from "gg/install.js";
+import { setup as setupInstall, isInstalled, system } from "gg/install.js";
 import * as update from "gg/update.js";
 import { apply as applyTheme, initial as initialTheme, toggle as toggleTheme } from "gg/theme.js";
 import { download, restore } from "gg/io.js";
@@ -157,10 +157,27 @@ function _drawNewMenu() {
   }
 }
 
+/** Where the command to remove the app is, on the system in use. */
+function _removalText(kind) {
+  if (kind === "ios") return t("removalIos");
+  if (kind === "android") return t("removalAndroid");
+  return t("removalDesktop");
+}
+
 /** Put every `data-t` in the markup into the current language. */
 function _translate() {
   for (const node of document.querySelectorAll("[data-t]")) {
     node.textContent = t(node.dataset.t);
+  }
+  // **The button says two things**, and which one depends on a fact only `gg/install.js` knows:
+  // inside the installed app it stops inviting and says how to remove it. Without this question a
+  // change of language wrote the invitation back over «Installata», on an app already there.
+  const installedNow = isInstalled();
+  el("install").textContent = installedNow ? t("removalLabel") : t("install");
+  // The line that explains is written when it appears, so the one on screen is written again here:
+  // hidden, it gets its text from the module the next time it is needed.
+  if (!el("installHint").hidden) {
+    el("installHint").textContent = installedNow ? _removalText(system()) : t("installIos");
   }
   _drawNewMenu();
   for (const select of [el("companyForm").elements.naturaPredefinita, el("itemNatura")]) _fillNature(select);
@@ -921,7 +938,7 @@ async function main() {
     setupInstall(el("install"), el("installHint"), {
       storageKey: "gg.invoice-scope.install-dismissed",
       iosText: t("installIos"),
-      removal: (kind) => t(kind === "ios" ? "removalIos" : kind === "android" ? "removalAndroid" : kind === "label" ? "removalLabel" : "removalDesktop"),
+      removal: (kind) => (kind === "label" ? t("removalLabel") : _removalText(kind)),
     });
   }
 
