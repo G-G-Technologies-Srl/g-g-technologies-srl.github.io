@@ -301,8 +301,16 @@ await prova("un progetto esce come pacchetto e rientra, con i campi di questa ap
   assert.equal(copia.name, "Capannone");
   assert.equal(copia.partyId, "p1", "il cliente sopravvive al giro nel formato condiviso");
   assert.deepEqual(copia.docIds, ["d1"]);
-  assert.equal(copia.uid, progetti.project(p.id).uid, "e l'identità del progetto resta la stessa");
-  assert.notEqual(copia.id, p.id, "ma la chiave in questo deposito è nuova: sono due copie");
+  assert.notEqual(copia.id, p.id, "la chiave in questo deposito è nuova: sono due copie");
+  // Questa riga diceva «e l'identità del progetto resta la stessa», ed era in contraddizione con
+  // quella qui sopra: due copie con una identità sola. Finché l'identità serviva solo a rileggere
+  // un file non faceva danni; da quando i progetti vanno in cartelle condivise, tutto quello che è
+  // indicizzato per `uid` — dove si scrive, cosa si fonde con cosa — smette di distinguerle, e due
+  // progetti che l'occhio vede affiancati rivendicano la stessa sottocartella. Quindi la copia
+  // prende una identità sua. L'originale tiene la sua, e il file continua a portarla: quello che
+  // non sopravvive non è il giro nel formato, è l'essere due.
+  assert.notEqual(copia.uid, progetti.project(p.id).uid, "e ne ha una sua: due copie, due identità");
+  assert.ok(copia.uid, "che esiste davvero");
   assert.equal(progetti.tasksOf(copia.id)[0].importo, "1000.00");
   assert.match(plan.pagesOf(copia.id)[0].markdown, /undici metri/);
 });

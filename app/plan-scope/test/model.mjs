@@ -1128,4 +1128,24 @@ test("e un file scritto a mano non riesce a infilarne uno nell'altro senso", () 
   assert.equal(nato.phone, "");
 });
 
+test("importare due volte lo stesso file fa due progetti, e con due identità", () => {
+  const file = { project: { id: "p-fuori", uid: "u-fiera", name: "Fiera" }, pages: [], tasks: [] };
+
+  const primo = model.adopt(file);
+  const secondo = model.adopt(file, { name: "Fiera (la copia di Marco)" });
+  assert.notEqual(primo.projectId, secondo.projectId, "due progetti, non uno sovrascritto");
+
+  const a = model.project(primo.projectId);
+  const b = model.project(secondo.projectId);
+  assert.equal(a.uid, "u-fiera", "il primo tiene l'identità del file: è quella che sopravvive all'export");
+  // E il secondo no: due progetti che si vedono affiancati sono due cose, e tutto quello che è
+  // indicizzato per uid — i marks delle cartelle, la fusione — deve poterli distinguere. Con una
+  // identità sola rivendicherebbero la stessa sottocartella e si sovrascriverebbero a vicenda.
+  assert.notEqual(b.uid, "u-fiera", "il secondo ne prende una sua");
+  assert.ok(b.uid, "e ce l'ha davvero");
+
+  const identita = model.liveProjects().map((one) => one.uid || one.id);
+  assert.equal(new Set(identita).size, identita.length, "nessuna identità ripetuta fra i progetti vivi");
+});
+
 console.log(`model: ${passed} prove passate`);

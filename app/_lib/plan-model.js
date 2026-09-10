@@ -155,12 +155,36 @@ function _restoreTo(kind, before) {
  * stringa. Risolverlo qui invece che in ogni importatore vuol dire che gli importatori non sanno
  * nulla delle persone, e che il giorno che ne arriva un quarto non c'è niente da ricordarsi.
  */
-function _personFromName(projectId, name) {
+/**
+ * Un nome scritto su un'attività, risolto in una persona.
+ *
+ * `here` dice da dove arriva quel nome, e cambia tutto. **Scritto qui**, il nome cerca in rubrica e
+ * se non trova crea: è la porta unica per cui due grafie della stessa persona non si accumulano.
+ * **Arrivato da un file**, no — e la ragione è la stessa per cui il § 4 fa viaggiare i `uid` invece
+ * dei nomi: due «Giulia» su due computer sono due persone finché qualcuno non dice il contrario, e
+ * agganciare la scheda di casa a un nome scritto da un altro è asserire un'identità per omonimia,
+ * proprio attraverso il confine dove i nomi non valgono.
+ *
+ * Da fuori il nome resta un nome: entra fra le persone del progetto, con un `uid` suo e **senza
+ * scheda**. Chi riconosce la persona la adotta con un gesto, e da lì in poi le due copie parlano
+ * della stessa — che è esattamente quello che `adoptPerson` fa già per le persone che arrivano
+ * dalla cartella condivisa.
+ */
+function _personFromName(projectId, name, { here = true } = {}) {
   const clean = String(name || "").trim();
   if (!clean) return null;
-  const person = contactByName(clean) || createContact({ name: clean });
-  addPerson(projectId, person.id);
-  return person.uid || person.id;
+  if (here) {
+    const person = contactByName(clean) || createContact({ name: clean });
+    addPerson(projectId, person.id);
+    return person.uid || person.id;
+  }
+  const project = projects.get(projectId);
+  if (!project) return null;
+  const already = peopleOf(projectId).find((one) => String(one.name).trim().toLowerCase() === clean.toLowerCase());
+  if (already) return already.uid;
+  const uid = _id();
+  updateProject(projectId, { people: [...peopleOf(projectId), { uid, name: clean, role: "" }] });
+  return uid;
 }
 
 /** Il nome nuovo di una persona, dove i progetti l'avevano scritto. Per `uid`, quindi mai per caso. */
@@ -1335,7 +1359,7 @@ export function exportable(projectId, { bin = false } = {}) {
  * knows an image reference is a thing at all.
  */
 export function adopt({ project: incoming, pages: incomingPages = [], tasks: incomingTasks = [] },
-  { name = null, columns: fallback = DEFAULT_COLUMNS } = {}) {
+  { name = null, columns: fallback = DEFAULT_COLUMNS, fromOutside = false } = {}) {
   const stamp = _now();
   const projectId = _id();
 
@@ -1346,10 +1370,22 @@ export function adopt({ project: incoming, pages: incomingPages = [], tasks: inc
     ? incoming.columns : fallback;
   if (!columns.some((column) => column.done)) columns[columns.length - 1].done = true;
 
+  // Il `uid` è l'identità che sopravvive all'export, e per questo un progetto importato lo tiene.
+  // Ma tenerlo **quando qui ce n'è già uno che ce l'ha** fa due progetti con una identità sola, e
+  // tutto quello che è indicizzato per uid — i marks delle cartelle, la fusione — smette di
+  // distinguerli: due progetti che l'occhio vede affiancati rivendicano la stessa sottocartella e
+  // si sovrascrivono a vicenda. È lo stesso ragionamento per cui l'`id` è nuovo, applicato al piano
+  // sopra: importare due volte lo stesso file è una cosa ordinaria — «un collega ti manda la sua
+  // copia mentre tu hai ancora la tua» — e le due copie da quel momento sono due cose, non una.
+  // Chi le voleva unite ha `merge`, che è l'altra porta e chiede a quale progetto.
+  const wanted = incoming.uid || incoming.id;
+  // Solo fra i progetti **vivi**: uno nel cestino non contende niente a nessuno, e rifiutargli
+  // l'identità vorrebbe dire che ripescarlo dopo aver reimportato il file lo rende un estraneo.
+  const mine = liveProjects().some((one) => (one.uid || one.id) === wanted);
   _put("project", {
     ...incoming,
     id: projectId,
-    uid: incoming.uid || incoming.id,
+    uid: mine ? _id() : wanted,
     name: name || incoming.name,
     // Who works on it comes in with the project — a name and a role, never a way to reach them.
     // The uid is the one the file carried: adopting a person later joins the two copies without
@@ -1412,7 +1448,7 @@ export function adopt({ project: incoming, pages: incomingPages = [], tasks: inc
       projectId,
       parentId,
       status: known.has(one.status) ? one.status : columns[0].id,
-      assigneeUid: one.assigneeUid || _personFromName(projectId, assignee),
+      assigneeUid: one.assigneeUid || _personFromName(projectId, assignee, { here: !fromOutside }),
       blockedBy: (one.blockedBy || []).map((old) => taskIds.get(old)).filter(Boolean),
       trashedAt: one.trashedAt || null,
     });
