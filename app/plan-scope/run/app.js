@@ -326,11 +326,14 @@ function _paintPeople() {
     return row;
   }));
 
-  fill(el("rubricaList"), model.liveContacts().map((one) => {
+  // Solo chi non lavora già qui: suggerire nomi che sono nella riga sopra è rumore.
+  const noti = model.liveContacts().filter((one) => !people.some((who) => who.uid === (one.uid || one.id)));
+  fill(el("rubricaList"), noti.map((one) => {
     const option = node("option");
     option.value = one.name;
     return option;
   }));
+  el("peopleHint").hidden = noti.length === 0;
 }
 
 /**
@@ -734,7 +737,9 @@ async function _askWhere() {
 function _paintShared() {
   const state = sync.projectStatus(projectId);
   const text = el("sharedText");
+  el("sharedFix").hidden = state.kind !== "adrift";
   if (state.kind === "off") text.textContent = t("sharedOff");
+  else if (state.kind === "adrift") text.textContent = t("sharedAdrift");
   else if (state.kind === "soon") text.textContent = tf("sharedSoon", { folder: state.folder });
   else if (state.kind === "writing") text.textContent = tf("sharedWriting", { folder: state.folder });
   else if (state.kind === "on") {
@@ -1895,6 +1900,18 @@ function _wire() {
     await _repaint();
     return snack(tf("opened", { name: outcome.project.name || t("projectUntitled") }));
   });
+  // Una promessa rotta si ripara con lo stesso gesto con cui si fa la promessa: la domanda su dove
+  // va, senza toccare la spunta che è già accesa.
+  el("sharedFix").addEventListener("click", async () => {
+    if (!projectId) return;
+    const where = await _askWhere();
+    if (!where) return;
+    sync.share(projectId, where);
+    snack(t("sharedNow"));
+    _paintShared();
+    await _paintFolder();
+  });
+
   el("sharedToggle").addEventListener("change", async () => {
     if (!projectId) return;
     if (!el("sharedToggle").checked) {

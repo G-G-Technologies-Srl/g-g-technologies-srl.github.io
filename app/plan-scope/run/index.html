@@ -258,6 +258,11 @@
             <datalist id="rubricaList"></datalist>
             <button type="submit" class="ghost small" data-t="peopleAddDo"></button>
           </form>
+          <!-- L'elenco della rubrica è agganciato al campo da sempre, e non lo scopriva nessuno:
+               un `datalist` compare solo mentre si scrive, quindi chi non sa che c'è va a cercare
+               i nomi in rubrica e torna indietro a memoria. Detto qui, e solo quando c'è davvero
+               qualcuno da suggerire. -->
+          <p class="note" id="peopleHint" data-t="peopleHint" hidden></p>
         </div>
 
         <!-- What the shared folder brought in, and when: the strip says it once and goes; whoever
@@ -317,6 +322,7 @@
           <span data-t="sharedToggle"></span>
         </label>
         <span id="sharedText"></span>
+        <button type="button" id="sharedFix" class="link small" data-t="sharedFix" hidden></button>
       </p>
 
       <div class="screen-foot">
