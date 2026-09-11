@@ -1488,7 +1488,46 @@ dialog.search input[type="search"] { width: 100%; font-size: 16px; }
    the page's properties: one quiet line under the bar */
 .page-column { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
 .page-props { padding: 10px max(16px, calc(50% - 360px)) 0; }
-/* I campi si vestono più sotto, con la riga a cui appartengono. */
+
+/* La testa del file, dentro un riquadro suo.
+
+   Erano due cose sciolte sopra il corpo — i tag e le proprietà — e sciolte si leggevano come la
+   prima riga della pagina invece che come quello che la pagina *ha*. Un fondo appena acceso e una
+   cornice sottile bastano a dirlo: qui non c'è il documento, c'è quello che lo descrive.
+
+   Il riquadro sborda di dieci pixel da tutt'e due i lati e se li riprende come rientro, così il
+   testo dei campi resta sulla stessa riga verticale del testo del corpo: la cornice è un fondo
+   dietro le proprietà, non un blocco che le sposta. Quieto come tutto il resto della testa —
+   niente ombra, niente colore: il colpo d'occhio della pagina sono i suoi blocchi, non questo. */
+.page-head {
+  margin-inline: -10px;
+  padding: 6px 10px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(127, 140, 170, 0.05);
+}
+
+/* Il campo dei tag sta nella testa ma non è una riga di proprietà, quindi la sua veste la dice
+   qui: larga quanto il riquadro e silenziosa finché non la si tocca, come i campi là sotto. */
+#pageTags {
+  width: 100%;
+  display: block;
+  font-size: 13px;
+  background: transparent;
+  border-color: transparent;
+  padding: 3px 6px;
+  margin-left: -6px;
+}
+#pageTags:hover, #pageTags:focus { border-color: var(--border); }
+
+/* Su un telefono il margine della pagina è sedici pixel e non di più: se il riquadro se ne mangia
+   dieci ne restano sei, e sei pixel dal bordo dello schermo si vedono. Lì la cornice rientra e sta
+   dentro il margine come tutto il resto. Sta qui sotto e non nel blocco dei 560 più in alto, che
+   verrebbe prima nel foglio e perderebbe: due regole con lo stesso peso le decide l'ordine. */
+@media (max-width: 560px) {
+  .page-head { margin-inline: 0; }
+}
+
 .row-item .badge.tag { margin-left: 6px; color: var(--muted); }
 
 /* Il pallino del colore di una pagina: un segno solo, grande quanto una lettera, prima del titolo.

@@ -462,12 +462,18 @@
         <!-- The page's properties, above the text and in its column: one line, the tags. Where a
              document keeps what is about it rather than in it. -->
         <div class="page-props">
-          <input type="text" id="pageTags" maxlength="200" autocomplete="off" data-t-label="pageTagsLabel">
-          <!-- The properties: key and value, one line each, kept at the head of the Markdown as
-               the block Obsidian reads. «+» adds a line; a line emptied goes away on its own. -->
-          <div class="props" id="pageProps"></div>
-          <button type="button" id="propAdd" class="ghost small" data-t="propAdd"></button>
-          <datalist id="propKeys"></datalist>
+          <!-- Un riquadro solo attorno a tutta la testa del file: i tag e le proprietà sono quello
+               che sta *sopra* i tre trattini, e il testo della pagina è quello che sta sotto. Erano
+               due cose sciolte sopra il corpo, e chi arrivava da un'altra pagina non sapeva dove
+               finiva l'una e cominciava l'altro. -->
+          <div class="page-head">
+            <input type="text" id="pageTags" maxlength="200" autocomplete="off" data-t-label="pageTagsLabel">
+            <!-- The properties: key and value, one line each, kept at the head of the Markdown as
+                 the block Obsidian reads. «+» adds a line; a line emptied goes away on its own. -->
+            <div class="props" id="pageProps"></div>
+            <button type="button" id="propAdd" class="ghost small" data-t="propAdd"></button>
+            <datalist id="propKeys"></datalist>
+          </div>
         </div>
         <div class="editor" id="editor"></div>
         <textarea id="pageBody" spellcheck="true" data-t-label="sourceView" hidden></textarea>
