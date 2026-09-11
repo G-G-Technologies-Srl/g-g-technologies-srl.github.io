@@ -55,9 +55,15 @@ export const MARKER = {
 // è così che si contorce senza che nessuno debba animarlo, ed è anche perché **quello che si vede
 // uccide** — la scia non è un effetto, è il corpo.
 export const THREAD = {
-  speed: 62,                  // lattice units per second, the leading end
+  speed: 68,                  // lattice units per second, the leading end
   lead: 0.82,                 // the other end goes a little slower, which is what makes it writhe
-  wander: 2.4,                // rad/s of drift in each end's heading
+
+  // La deriva decide quanto il Filo gira il campo, e va bassa e non alta — che è il contrario di
+  // quello che sembra. Girata su, la direzione fa una passeggiata a caso, il percorso si arrotola e
+  // il Filo serpeggia sul posto per mezzo minuto; girata giù, corre dritto, rimbalza e attraversa.
+  // Misurato su quaranta semi, a 0,9 il numero di partite in cui **non trova mai** una linea
+  // lasciata fuori è il più basso.
+  wander: 0.9,                // rad/s of drift in each end's heading
   spread: 9,                  // how far apart the two ends start
   clearance: 3,               // how far it stays off the walls, so `contains` is never asked about
                               // a point sitting exactly on one

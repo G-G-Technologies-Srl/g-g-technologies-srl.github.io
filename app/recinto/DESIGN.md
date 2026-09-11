@@ -7,19 +7,19 @@ vincolo (gira tutto nel browser, non manda niente da nessuna parte), stessa form
 Questo file è il progetto, non il codice. Le regole del catalogo — due lingue, due temi, PWA,
 export e import, anagrafica — stanno in `app/CLAUDE.md` e valgono qui senza essere ripetute.
 
-**Stato.** Fatti i passi 1, 2 e 3 dell'ordine di lavoro: **si gioca**, da tastiera, da mouse e da
-tocco, su quattro arene.
+**Stato.** Fatti i passi 1, 2, 3 e 4: **si gioca e si muore**, da tastiera, da mouse e da tocco, su
+quattro arene.
 
 | | |
 |---|---|
 | `run/geometry.js` | `ringArea2`, `area2`, `contains`, `split`, `meet`, `chainMeets`, `selfCrosses`, `onBoundary`, `canStep`, `stepToward`, `pathTo`, `walkTo`, `nearestOnBoundary` |
 | `run/arenas.js` | quattro arene: rettangolo, anello con isola, elle, esagono |
-| `run/game.js` | mondo, marcatore, taglio, conquista, cattura, separazione, quota, punteggio |
+| `run/game.js` | mondo, marcatore, taglio, conquista, cattura, separazione, quota, punteggio, **il Filo, le vite, il rientro** |
 | `run/render.js` · `run/input.js` · `run/app.js` · `index.html` · `styles.css` | il campo, i due temi, i tre modi di giocare, il ciclo dei fotogrammi |
 | `test/geometry.mjs` · `test/rules.mjs` | verdi, e provati rompendo i moduli apposta |
 
-Manca tutto quello che uccide — Filo, Miccia, Scintille, vite — e poi audio, dimostrazione,
-classifica, PWA, due lingue, scheda.
+Mancano Miccia e Scintille, il secondo Filo, e poi audio, dimostrazione, classifica, PWA, due
+lingue, scheda.
 
 ---
 
@@ -278,6 +278,17 @@ stare fermi.
 
 ### Il Filo — *non stare fuori*
 
+**Com'è fatto, e perché così.** Due capi che vanno per conto loro, tenuti dentro una forbice da un
+guinzaglio che li **sterza** invece di spostarli, e una scia di quello che il segmento fra loro è
+stato. Il contorcersi non è animato da nessuno: esce da lì. E la scia non è un effetto, **è il
+corpo** — ogni segmento disegnato uccide, così non esiste una sagoma di collisione diversa da quella
+che si vede né qualcosa di letale che non fosse sullo schermo.
+
+Due capi senza guinzaglio non si contorcono: divergono, e dopo cinque secondi sono in due angoli
+opposti con mezzo schermo di segmento in mezzo. E la deriva sulla direzione va **bassa**, che è il
+contrario di quello che sembra: girata su, la direzione fa una passeggiata a caso e il Filo
+serpeggia sul posto.
+
 Un nastro di segmenti che si contorce e rimbalza dentro una faccia aperta. Uccide il marcatore
 mentre traccia, e uccide la **linea incompiuta**: toccarla in un punto qualsiasi finisce la vita,
 il che rende pericoloso anche il tratto già lasciato alle spalle.
@@ -303,6 +314,11 @@ Una scintilla al livello 1, una in più ogni due livelli fino al tetto, e accele
 livello: chi tiene il bordo a lungo viene sloggiato.
 
 ### La Miccia — *non stare fermo*
+
+Misurato sul Filo finito, e vale la pena averlo scritto prima di scriverla: **su quaranta partite,
+in una dozzina il Filo non trova mai una linea lasciata fuori nel giro di un minuto.** Vaga, e una
+linea abbandonata in un angolo tranquillo resta lì. Non è un difetto del Filo da tarare via — è che
+a fare la guardia a una linea ferma ci deve pensare un'altra cosa, e quella cosa è questa.
 
 Se il marcatore si ferma mentre sta tracciando, la sua stessa linea comincia a bruciare da dietro.
 La miccia avanza solo mentre sei fermo, non arretra quando riparti, e se ti raggiunge è una vita.
