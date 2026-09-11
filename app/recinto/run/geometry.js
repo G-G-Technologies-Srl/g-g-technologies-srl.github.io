@@ -228,19 +228,33 @@ export function walkTo(face, from, to) {
   return _subdivide(_span(forward) <= _span(backward) ? forward : backward);
 }
 
-// Where on the outline a loose point lands, and how far away it was. This is what turns a finger
-// pressed near a wall into a place the marker can actually stand.
+// Where on the outline a loose point lands, how far away it was, and **which wall it was**. The
+// first two turn a finger pressed near a wall into a place the marker can stand; the third is what
+// a Filo needs in order to bounce off that wall rather than off a guess.
 export function nearestOnBoundary(face, point) {
   let best = null;
+  let edge = null;
   let distance = Infinity;
   for (const ring of face.rings) {
     for (let i = 0, n = ring.length; i < n; i += 1) {
       const q = _closestOn(ring[i], ring[(i + 1) % n], point);
       const d = Math.hypot(q[0] - point[0], q[1] - point[1]);
-      if (d < distance) { distance = d; best = q; }
+      if (d < distance) { distance = d; best = q; edge = [ring[i], ring[(i + 1) % n]]; }
     }
   }
-  return best ? { at: best, distance } : null;
+  return best ? { at: best, distance, edge } : null;
+}
+
+// How far a point is from a segment, and never from the infinite line it sits on: a Filo near the
+// prolongation of a wall it has already passed is not near that wall.
+export function distanceToSegment(point, a, b) {
+  const vx = b[0] - a[0];
+  const vy = b[1] - a[1];
+  const len2 = vx * vx + vy * vy;
+  if (len2 === 0) return Math.hypot(point[0] - a[0], point[1] - a[1]);
+  let t = ((point[0] - a[0]) * vx + (point[1] - a[1]) * vy) / len2;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(point[0] - (a[0] + vx * t), point[1] - (a[1] + vy * t));
 }
 
 // -----------------------------------------------------------------------------------------------------------------
