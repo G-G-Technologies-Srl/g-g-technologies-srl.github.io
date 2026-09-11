@@ -56,11 +56,14 @@ const YES_NO = [["sì", "no"], ["si", "no"], ["true", "false"], ["yes", "no"], [
  * un tipo dichiarato lì dentro sarebbe una parola in più che nessun altro programma capisce. Così
  * il tipo si riconosce — dal valore quando parla da sé, dalla chiave quando il valore è ancora
  * vuoto — e una proprietà scritta a mano fuori dall'app ottiene il selettore gratis.
+ *
+ * Il cancelletto da solo è colore anche sotto una chiave qualsiasi: chi scrive `#` sta chiedendo
+ * un colore, e la riga glielo apre invece di aspettare che indovini sei cifre esadecimali.
  */
 function _propKind(key, value) {
   const clean = String(value || "").trim();
   if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) return "date";
-  if (/^#[0-9a-fA-F]{6}$/.test(clean)) return "color";
+  if (/^#([0-9a-fA-F]{6})?$/.test(clean)) return "color";   // il cancelletto da solo basta
   if (YES_NO.some((pair) => pair.includes(clean.toLowerCase()))) return "bool";
   if (clean) return null;                 // un valore che non è di nessun tipo resta quello che è
   const name = String(key || "").trim().toLowerCase();
@@ -85,7 +88,7 @@ function _propPicker(kind, valueField) {
   if (kind === "bool") {
     const box = document.createElement("input");
     box.type = "checkbox";
-    box.className = "prop-bool";
+    box.className = "prop-picker prop-bool";
     const pair = YES_NO.find((one) => one.includes(valueField.value.trim().toLowerCase())) || YES_NO[0];
     box.checked = valueField.value.trim().toLowerCase() === pair[0];
     box.setAttribute("aria-label", t("propValue"));
@@ -98,16 +101,32 @@ function _propPicker(kind, valueField) {
   const picker = document.createElement("input");
   picker.type = kind;
   picker.className = `prop-picker prop-${kind}`;
-  picker.value = kind === "color" ? (valueField.value.trim() || "#3fb984") : valueField.value.trim();
+  picker.value = kind === "color" ? _colorOf(valueField.value) : valueField.value.trim();
   picker.setAttribute("aria-label", t(kind === "color" ? "propPickColor" : "propPickDate"));
   picker.addEventListener("input", () => { if (picker.value) write(picker.value); });
   return picker;
 }
 
+/** Il colore che la pastiglia deve mostrare: quello scritto, o il verde dell'app se c'è solo `#`. */
+function _colorOf(value) {
+  const clean = String(value || "").trim();
+  return /^#[0-9a-fA-F]{6}$/.test(clean) ? clean : "#3fb984";
+}
+
+/**
+ * Una riga: la chiave, i due punti, il valore, l'attrezzo del tipo e la croce per toglierla.
+ *
+ * Le larghezze stanno nel foglio di stile e si appoggiano a queste due classi. Prima si appoggiavano
+ * a `:first-child` e `:nth-of-type(2)`, e il giorno in cui la riga ha guadagnato un terzo campo la
+ * regola di base — `width: 100%` su ogni campo dentro le proprietà — è tornata a valere per il
+ * selettore: largo quanto la riga, schiacciava la chiave a quattordici pixel e la sua etichetta
+ * spariva. Un nome per ogni campo è più caro da scrivere e non si rompe quando la riga cambia.
+ */
 function _propRow(key, value) {
   const row = node("div", "prop");
   const keyField = document.createElement("input");
   keyField.type = "text";
+  keyField.className = "prop-key";
   keyField.value = key;
   keyField.maxLength = 40;
   keyField.autocomplete = "off";
@@ -116,6 +135,7 @@ function _propRow(key, value) {
   keyField.setAttribute("list", "propKeys");
   const valueField = document.createElement("input");
   valueField.type = "text";
+  valueField.className = "prop-value";
   valueField.value = value;
   valueField.maxLength = 200;
   valueField.autocomplete = "off";
@@ -126,6 +146,10 @@ function _propRow(key, value) {
   // Il selettore si rifà a ogni cambiamento, perché il tipo dipende da quello che c'è scritto:
   // svuotare un campo e riscriverci un colore deve cambiare l'attrezzo, non lasciare quello di
   // prima acceso su una cosa che non è più quella.
+  //
+  // Dove si mette dipende da quanto è largo. La pastiglia del colore e la casella del sì/no sono
+  // piccole e dicono quello che c'è scritto, quindi stanno appiccicate al valore, a sinistra; il
+  // calendario è largo e sta in fondo, dove non sposta il testo di tutte le altre righe.
   let picker = null;
   const dress = () => {
     if (picker) picker.remove();
@@ -133,9 +157,24 @@ function _propRow(key, value) {
     const kind = _propKind(keyField.value, valueField.value);
     if (!kind) return;
     picker = _propPicker(kind, valueField);
-    valueField.after(picker);
+    if (kind === "date") valueField.after(picker);
+    else valueField.before(picker);
   };
   dress();
+
+  // «Un picker che magari si attiva se uno clicca #»: il cancelletto è già lì e vuol dire colore,
+  // quindi la maniglia è lui, e non un bottone in più in fondo alla riga. Vale il clic sul primo
+  // carattere e vale il cancelletto appena scritto — in tutti e due i casi si apre la pastiglia,
+  // che è il selettore nativo del browser.
+  const openColor = () => { if (picker && picker.type === "color") picker.click(); };
+  valueField.addEventListener("click", () => {
+    if (valueField.value.trim().startsWith("#") && valueField.selectionStart <= 1) openColor();
+  });
+  valueField.addEventListener("input", () => {
+    const clean = valueField.value.trim();
+    if (clean === "#") { dress(); openColor(); }
+    else if (picker && picker.type === "color") picker.value = _colorOf(clean);
+  });
 
   row.append(button("ghost small icon", "✕", () => { row.remove(); _readProps(); }, { label: t("propRemove") }));
   keyField.addEventListener("change", () => { dress(); _readProps(); });
@@ -149,7 +188,10 @@ function _readProps() {
   if (!pageId) return;
   const props = {};
   for (const row of el("pageProps").querySelectorAll(".prop")) {
-    const [keyField, valueField] = row.querySelectorAll("input");
+    // Per nome e non per posizione: dentro la riga può esserci anche la pastiglia di un colore,
+    // e sta prima del valore.
+    const keyField = row.querySelector(".prop-key");
+    const valueField = row.querySelector(".prop-value");
     const key = keyField.value.trim().replace(/[^\w-]+/g, "_").replace(/^[^A-Za-z_]+/, "");
     if (!key) continue;
     props[key] = valueField.value.trim();
@@ -175,8 +217,7 @@ export function setup(handlers) {
   on = { ...on, ...handlers };
   el("propAdd").addEventListener("click", () => {
     el("pageProps").append(_propRow("", ""));
-    const fields = el("pageProps").lastElementChild.querySelectorAll("input");
-    fields[0].focus();
+    el("pageProps").lastElementChild.querySelector(".prop-key").focus();
   });
 }
 

@@ -12,7 +12,7 @@
 //    running app means changing the code while somebody has unsaved keystrokes in a page, and
 //    saving them one reload is not worth that.
 
-const VERSION = '4.12.1';
+const VERSION = '4.12.2';
 const CACHE = `plan-scope-v${VERSION}`;
 
 // Every file the app is made of. Kept by hand and checked by _src/check_apps.py against the
