@@ -2307,6 +2307,37 @@ function _connect() {
   });
 }
 
+/**
+ * Quale schermata mostra il dimostrativo, e perché lo decide l'indirizzo.
+ *
+ * `_src/make_screenshots.py` guida un Chrome headless, **che non sa cliccare**: l'unico modo di
+ * dirgli quale schermata fotografare è metterlo nell'URL. Da qui esce la galleria della scheda,
+ * una foto per vista e per lingua, e ognuna mostra una parte diversa dell'app invece di ripetere
+ * sei volte la stessa.
+ *
+ * Le viste sono quelle che hanno qualcosa da far vedere nel dimostrativo. «Cartelle e copie» non
+ * c'è, e non è una dimenticanza: lì non c'è nessuna cartella collegata, e la foto di una schermata
+ * vuota racconterebbe il contrario di quello che quella schermata fa.
+ */
+function _demoView(project, wanted) {
+  if (wanted === "bacheca") return _openPlan(project.id, { view: "kanban" });
+  if (wanted === "calendario") return _openPlan(project.id, { view: "calendar" });
+  if (wanted === "timeline") return _openPlan(project.id, { view: "timeline" });
+  if (wanted === "pagine") return _openPages(project.id);
+  if (wanted === "pagina") {
+    const page = model.pagesOf(project.id)[0];
+    if (page) return _openPage(page.id);
+  }
+  if (wanted === "persona") {
+    const person = model.liveContacts()[0];
+    if (person) return _openPerson(person.id);
+  }
+  // Dalla porta vera, non `home.paintProject` più `_show`: quella coppia disegna metà schermata, e
+  // per tre versioni «Chi ci lavora» nel dimostrativo è rimasto vuoto benché l'esempio assegni
+  // un'attività a qualcuno — cioè l'unico posto in cui si vede quella funzione non la mostrava.
+  return _openProject(project.id);
+}
+
 function _bootDemo() {
   model.connect({ save() {}, drop() {} });
   model.hydrate({});
@@ -2315,8 +2346,7 @@ function _bootDemo() {
   _wire();
   _applyLanguage();
   projectId = project.id;
-  home.paintProject(project.id);
-  _show("project");
+  _demoView(project, new URLSearchParams(location.search).get("view") || "");
 }
 
 async function _boot() {

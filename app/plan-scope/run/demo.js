@@ -79,6 +79,24 @@ export function build({ t, model, columns }) {
     });
   }
 
+  // La rubrica, raccontata invece che nominata. La persona esisteva già — `assignByName` l'ha fatta
+  // nascere — ma la sua scheda era un modulo vuoto: nessun mestiere, nessun ruolo, nessun incontro.
+  // Chi apriva l'esempio vedeva *che* la rubrica c'è, non *a cosa serve*, e le tre domande a cui
+  // quella scheda risponde — dove lavora, cosa vi siete detti, come eravate rimasti — restavano
+  // tutte e tre senza risposta proprio nell'unico posto in cui l'app si presenta.
+  const person = model.contactByName(t("demoWho"));
+  if (person) {
+    model.updateContact(person.id, { company: t("demoCompany"), role: t("demoTrade") });
+    model.addPerson(project.id, person.id, t("demoRole"));
+    // Un incontro: la pagina con `con:` in testa è quella che «Cosa vi siete detti» raccoglie, e le
+    // caselle aperte sono quelle che «porta le caselle nel piano» trasforma in attività.
+    model.createPage(project.id, {
+      title: t("demoMeetTitle"),
+      markdown: `---\ntipo: ${t("meetingKind")}\ndata: ${today}\ncon: ${t("demoWho")}\n---\n\n`
+        + `${t("demoMeetBody")}\n\n- [ ] ${t("demoMeetTodo")}\n`,
+    });
+  }
+
   // Created and never exported: the invitation to make a copy is the one thing this project should
   // say on its own, because it is the habit that protects everything made after it.
   return project;

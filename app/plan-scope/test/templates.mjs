@@ -122,7 +122,17 @@ test("il progetto dimostrativo arriva già in corso", () => {
   const built = demo.build({ t, model, columns: project().columns });
   const done = model.progressOf(built.id);
 
-  assert.equal(model.pagesOf(built.id).length, 5, "le quattro del template più quella di benvenuto");
+  assert.equal(model.pagesOf(built.id).length, 6,
+    "le quattro del template, quella di benvenuto, e l'incontro con la persona in rubrica");
+  // L'incontro non è una pagina in più per fare numero: è quella che «Cosa vi siete detti» raccoglie
+  // sulla scheda di chi ci lavora, ed è l'unico posto in cui il dimostrativo mostra a cosa serve la
+  // rubrica invece di limitarsi ad averla.
+  const incontro = model.pagesOf(built.id).find((page) => /con: /.test(page.markdown || ""));
+  assert.ok(incontro, "l'esempio racconta anche un incontro");
+  const chi = model.liveContacts()[0];
+  assert.ok(chi && chi.company, "e la persona ha una scheda piena, non un modulo vuoto");
+  assert.ok(model.peopleOf(built.id).some((one) => one.role), "con un ruolo nel progetto");
+  assert.equal(model.pagesAbout(chi.uid || chi.id).length, 1, "e l'incontro la nomina");
   assert.equal(done.total, 16);
   assert.ok(done.done > 0, "niente è stato concluso: l'anello sarebbe a zero");
   assert.ok(done.done < done.total, "è tutto concluso: non resterebbe niente da fare");

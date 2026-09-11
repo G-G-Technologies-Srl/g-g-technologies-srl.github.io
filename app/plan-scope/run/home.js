@@ -273,7 +273,11 @@ export function paintProject(id) {
   // repeats is a nag. It goes quiet the moment the project has been exported once.
   el("exportInvite").hidden = Boolean(project.exportedAt) || (!pages.length && !tasks.length);
   el("sharedToggle").checked = Boolean(project.shared);
-  el("demoStrip").hidden = !project.demo;
+  // `shot=1` la toglie: `_src/make_screenshots.py` fotografa proprio il dimostrativo, e una
+  // striscia che dice «questo è un esempio» in cima a ogni immagine della galleria racconta come
+  // è stata fatta la foto invece di cosa fa l'app. Chi apre il dimostrativo la vede eccome.
+  const foto = new URLSearchParams(location.search).get("shot") === "1";
+  el("demoStrip").hidden = !project.demo || foto;
   el("exportedWhen").textContent = project.exportedAt
     ? tf("exportedOn", { date: longDate(project.exportedAt) })
     : "";
