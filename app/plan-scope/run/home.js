@@ -12,6 +12,7 @@
 // to be argued for rather than a thing to be added.
 
 import * as model from "gg/plan-model.js";
+import { glance, colorDot } from "./pages.js";
 import { t, tf, num } from "./i18n.js";
 import { el, node, button, fill, shortDate, longDate, bytes } from "./ui.js";
 
@@ -80,11 +81,19 @@ function _projectCard(project, today) {
  * and a page's deletion belongs inside the page, where the person can see what they are deleting.
  * The rule in the plan is that destructive actions are small *and distant*; a ✕ on every row is
  * small and everywhere.
+ *
+ * Quello che c'è sulla riga, però, è la pagina detta in fretta: il pallino del suo colore prima del
+ * titolo, le pastiglie dei tag, e la sua data in fondo. Sono le due proprietà che si leggono da
+ * lontano, e in un elenco di trenta pagine sono la differenza fra cercare e vedere. Le trova
+ * `glance`, con le stesse regole che riconoscono i tipi nell'editore.
  */
 function _pageRow(page, depth = 0) {
   const row = node("li", `row-item depth-${Math.min(3, depth)}`);
+  const { color, date } = glance(page);
+  if (color) row.append(colorDot(color));
   row.append(button("link grow", page.title || t("pageUntitled"), () => on.openPage(page.id)));
   for (const tag of page.tags || []) row.append(node("span", "badge tag", tag));
+  if (date) row.append(node("span", "meta", longDate(date)));
   return row;
 }
 

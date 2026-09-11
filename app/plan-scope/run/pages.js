@@ -14,7 +14,7 @@
 import * as model from "gg/plan-model.js";
 import * as md from "gg/plan-markdown.js";
 import { t, tf, num } from "./i18n.js";
-import { el, node, button, fill, shortDate } from "./ui.js";
+import { el, node, button, fill, shortDate, longDate } from "./ui.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  s t a t e
@@ -240,6 +240,48 @@ export function show(visible) {
   el("propAdd").hidden = !visible;
 }
 
+/**
+ * Le due proprietà che si leggono da lontano — il colore e la data — per le liste che mostrano
+ * una pagina in una riga sola.
+ *
+ * Le riconosce `_propKind`, cioè le stesse regole che vestono la riga nell'editore: una pagina
+ * scritta a mano fuori dall'app ottiene il pallino e la data senza aver dichiarato niente. Quando
+ * una pagina ha due date — `data:` e `scadenza:` — vince la prima del file, che è quella che chi
+ * scriveva ha messo per prima.
+ */
+export function glance(page) {
+  const props = md.frontmatter(String((page && page.markdown) || "")).props;
+  const out = { color: "", date: "" };
+  for (const [key, value] of Object.entries(props)) {
+    const clean = String(value || "").trim();
+    if (!clean) continue;                   // una chiave senza valore non è niente da mostrare
+    const kind = _propKind(key, clean);
+    if (kind === "color" && !out.color && isColor(clean)) out.color = clean;
+    if (kind === "date" && !out.date) out.date = clean;
+  }
+  return out;
+}
+
+/**
+ * Sei cifre esadecimali e nient'altro.
+ *
+ * Il setaccio è stretto perché il valore finisce in uno `style`, e in uno `style` una cosa come
+ * `url(...)` è una richiesta alla rete: l'app dopo il caricamento non ne fa nessuna, e la testa di
+ * una pagina è testo che può arrivare da una cartella condivisa da qualcun altro. `_propKind` è
+ * più largo apposta — accetta anche il solo cancelletto, perché lì serve ad aprire un selettore —
+ * quindi qui si ricontrolla invece di fidarsi.
+ */
+export function isColor(value) {
+  return /^#[0-9a-fA-F]{6}$/.test(String(value || "").trim());
+}
+
+/** Il pallino: lo stesso segno nella lista delle pagine e nella tabella. */
+export function colorDot(color) {
+  const dot = node("span", "page-dot");
+  dot.style.background = color;
+  return dot;
+}
+
 export function paintTable(projectId) {
   const project = model.project(projectId);
   if (!project) return;
@@ -299,7 +341,15 @@ export function paintTable(projectId) {
     for (const key of keys) {
       const td = node("td");
       const value = String(props[key] || "");
-      if (value) td.append(button("link", value, () => { pagesView.filter = { key, value }; paintTable(projectId); }));
+      if (value) {
+        // Quello che si mostra e quello su cui si filtra sono due cose: il filtro vuole il valore
+        // com'è scritto nel file, la colonna vuole una data che si legga e un colore che si veda.
+        const kind = _propKind(key, value);
+        const chip = button("link", kind === "date" ? longDate(value) : value,
+          () => { pagesView.filter = { key, value }; paintTable(projectId); });
+        if (kind === "color" && isColor(value)) chip.prepend(colorDot(value));
+        td.append(chip);
+      }
       tr.append(td);
     }
     tr.append(node("td", "when", page.updated ? shortDate(String(page.updated).slice(0, 10)) : ""));

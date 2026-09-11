@@ -1490,6 +1490,21 @@ dialog.search input[type="search"] { width: 100%; font-size: 16px; }
 .page-props { padding: 10px max(16px, calc(50% - 360px)) 0; }
 /* I campi si vestono più sotto, con la riga a cui appartengono. */
 .row-item .badge.tag { margin-left: 6px; color: var(--muted); }
+
+/* Il pallino del colore di una pagina: un segno solo, grande quanto una lettera, prima del titolo.
+   Il colore arriva dalla testa del file, quindi lo scrive il modulo dopo averlo passato al setaccio
+   di `isColor` — qui il foglio di stile dà solo la forma. Il bordo sottile serve al bianco e al
+   nero, che senza si perderebbero sul fondo della riga. */
+.page-dot {
+  flex: none;
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid rgba(127, 140, 170, 0.45);
+}
+.row-item .page-dot { margin-right: 1px; }
+.pages-table .page-dot { margin-right: 5px; vertical-align: -1px; }
 body.printing .page-props { display: none; }
 
 /* the shortcuts */
