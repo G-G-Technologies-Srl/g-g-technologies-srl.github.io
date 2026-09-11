@@ -806,11 +806,47 @@ const IT = {
   welcomeGuide: "Leggi la Guida",
   openGuide: "Guida",
   demoTag: "stampa",
+  demoTag2: "stand",
+  demoTag3: "contatti",
   demoCompany: "Studio Bianchi",
   demoTrade: "grafica",
   demoRole: "cura la grafica",
+  // I recapiti dell'esempio: un dominio `.example` — che per definizione non esiste — e un numero
+  // con il prefisso di San Marino e sei zeri, che nessuno può avere. La scheda dice «i recapiti non
+  // escono da questo computer» e con le caselle vuote quella riga non aveva niente da difendere.
+  demoMail: "giulia@studiobianchi.example",
+  demoPhone: "+378 0549 000 000",
+  demoWho2: "Marco",
+  demoCompany2: "Allestimenti Rossi",
+  demoTrade2: "allestimenti",
+  demoRole2: "monta lo stand",
+  demoMail2: "marco@allestimentirossi.example",
+  demoWho3: "Sara",
+  demoTrade3: "commerciale",
+  demoRole3: "tiene i contatti",
+  demoColumn: "In attesa",
+  demoTask1: "Prenotare l'albergo",
+  demoTask2: "Preparare la dimostrazione",
+  demoTask3: "Ordinare i gadget",
+  demoTask4: "Spedire il materiale allo stand",
+  demoMeet2Title: "Incontro con Marco",
+  demoMeet2Body: "Misurato lo spazio: tre metri per due, con la presa di corrente sul lato lungo. "
+    + "I pannelli li porta lui, il tavolo lo portiamo noi.",
+  demoMeet2Todo: "Mandargli le misure del tavolo",
+  demoPropState: "stato",
+  demoPropStateValue: "in corso",
   demoMeetTitle: "Incontro con Giulia",
-  demoMeetBody: "Visto il volantino. Le va bene il formato, chiede di rivedere i colori del fondo prima di mandarlo in stampa.",
+  demoMeetBody: "Visto il volantino. Le va bene il formato, chiede di rivedere i colori del fondo "
+    + "prima di mandarlo in stampa.\n\n"
+    + "## Le due strade\n\n"
+    + "| | Fondo chiaro | Fondo scuro |\n| --- | --- | --- |\n"
+    + "| In stampa | il preventivo che abbiamo | circa il 20% in più |\n"
+    + "| Allo stand | si legge da lontano | si vede meglio la sera |\n\n"
+    + "> [!nota]\n> Si decide entro venerdì: dopo, lo stampatore non garantisce la consegna "
+    + "prima del montaggio.\n\n"
+    + "## Come siamo rimasti\n\n"
+    + "- [x] Mandarle le misure del pannello\n"
+    + "- [ ] Chiedere allo stampatore quanto costa il fondo scuro",
   demoMeetTodo: "Mandarle le due varianti di colore",
   demoWho: "Giulia",
   demoCheck1: "Ripulire l'elenco dei contatti",
@@ -1633,11 +1669,44 @@ const EN = {
   welcomeGuide: "Read the Guide",
   openGuide: "Guide",
   demoTag: "print",
+  demoTag2: "stand",
+  demoTag3: "contacts",
   demoCompany: "Bianchi Studio",
   demoTrade: "designer",
   demoRole: "does the artwork",
+  demoMail: "giulia@bianchistudio.example",
+  demoPhone: "+378 0549 000 000",
+  demoWho2: "Marco",
+  demoCompany2: "Rossi Stands",
+  demoTrade2: "stand builder",
+  demoRole2: "builds the stand",
+  demoMail2: "marco@rossistands.example",
+  demoWho3: "Sara",
+  demoTrade3: "sales",
+  demoRole3: "keeps the contacts",
+  demoColumn: "Waiting",
+  demoTask1: "Book the hotel",
+  demoTask2: "Prepare the demo",
+  demoTask3: "Order the giveaways",
+  demoTask4: "Ship the materials to the stand",
+  demoMeet2Title: "Meeting with Marco",
+  demoMeet2Body: "Measured the space: three metres by two, with the power socket on the long side. "
+    + "He brings the panels, we bring the table.",
+  demoMeet2Todo: "Send him the measurements of the table",
+  demoPropState: "status",
+  demoPropStateValue: "in progress",
   demoMeetTitle: "Meeting with Giulia",
-  demoMeetBody: "Looked at the flyer. She is happy with the format, and asks to revisit the background colours before it goes to print.",
+  demoMeetBody: "Looked at the flyer. She is happy with the format, and asks to revisit the "
+    + "background colours before it goes to print.\n\n"
+    + "## The two options\n\n"
+    + "| | Light background | Dark background |\n| --- | --- | --- |\n"
+    + "| In print | the quote we have | about 20% more |\n"
+    + "| On the stand | reads from a distance | looks better in the evening |\n\n"
+    + "> [!note]\n> To be decided by Friday: after that the printer cannot promise delivery "
+    + "before the stand goes up.\n\n"
+    + "## How we left it\n\n"
+    + "- [x] Send her the panel measurements\n"
+    + "- [ ] Ask the printer what the dark background costs",
   demoMeetTodo: "Send her the two colour options",
   demoWho: "Giulia",
   demoCheck1: "Tidy up the contact list",

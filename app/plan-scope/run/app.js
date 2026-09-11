@@ -2337,7 +2337,10 @@ function _demoView(project, wanted) {
     if (page) return _openPage(page.id);
   }
   if (wanted === "persona") {
-    const person = model.liveContacts()[0];
+    // Quella con la scheda più piena, non la prima dell'elenco: la fotografia deve mostrare le
+    // caselle dei recapiti con qualcosa dentro, che è quello di cui parla la riga sotto di loro.
+    const people = model.liveContacts();
+    const person = people.find((one) => one.email && one.company) || people[0];
     if (person) return _openPerson(person.id);
   }
   // Dalla porta vera, non `home.paintProject` più `_show`: quella coppia disegna metà schermata, e

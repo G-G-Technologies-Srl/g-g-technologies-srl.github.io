@@ -449,6 +449,10 @@ export function paintTree(projectId, currentId, recentIds = []) {
       handle.addEventListener("pointerdown", (event) => _startTreeDrag(event, page.id));
       item.append(handle);
     }
+    // Lo stesso pallino dell'elenco e della tabella: una pagina colorata si ritrova nella colonna
+    // di sinistra senza rileggere i titoli, che è tutto quello che quella colonna deve fare.
+    const { color } = glance(page);
+    if (color) item.append(colorDot(color));
     const link = button(page.id === currentId ? "link tree-link on" : "link tree-link",
       page.title || t("pageUntitled"), () => on.openPage(page.id));
     if (page.id === currentId) link.setAttribute("aria-current", "page");

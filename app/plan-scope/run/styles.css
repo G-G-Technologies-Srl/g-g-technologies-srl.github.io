@@ -1219,6 +1219,7 @@ input.when-field.late { color: var(--late); }
    — and a struck-through grey for a place the model refuses. */
 .tree-item { display: flex; align-items: center; gap: 2px; position: relative; }
 .tree-item .tree-link { flex: 1 1 auto; }
+.tree-item .page-dot { margin-left: 2px; }
 .tree-grip {
   flex: 0 0 auto;
   width: 14px;
