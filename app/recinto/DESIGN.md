@@ -7,9 +7,9 @@ vincolo (gira tutto nel browser, non manda niente da nessuna parte), stessa form
 Questo file è il progetto, non il codice. Le regole del catalogo — due lingue, due temi, PWA,
 export e import, anagrafica — stanno in `app/CLAUDE.md` e valgono qui senza essere ripetute.
 
-**Stato.** Fatti i passi da 1 a 7: **il gioco è finito e si gioca da solo.** Da tastiera, da mouse
-e da tocco, su quattro arene, con due Fili dal livello 3, e c'è un autopilota che lo gioca dal
-principio alla fine.
+**Stato.** Tutti e nove i passi. **L'app è completa e passa i controlli del catalogo**: sette app,
+quarantotto pagine, `check_apps.py` e `check_site.py` verdi. Resta la taratura con le mani sopra,
+che è l'unica cosa che nessuno strumento può fare al posto di qualcuno che ci gioca.
 
 | | |
 |---|---|
@@ -20,18 +20,16 @@ principio alla fine.
 | `run/attract.js` | l'autopilota: la dimostrazione dietro il titolo, e lo strumento con cui si tara |
 | `run/i18n.js` | 41 chiavi per lingua, italiano e inglese, con la macchina presa da `gg/i18n.js` |
 | `run/audio.js` | sintesi, nessun file, e il contesto che si accende al gettone |
-| `index.html` · `app.js` · `styles.css` | la forma del catalogo: import map, due temi, tre interruttori, schermata del titolo |
+| `index.html` · `app.js` · `styles.css` | la forma del catalogo: import map, due temi, schermata del titolo, classifica |
+| `run/scores.js` | classifica su `gg/store.js`, con export e import via `gg/io.js` |
+| `manifest.webmanifest` · `sw.js` · tre icone | installabile, e funzionante senza rete dopo la prima apertura |
+| `_src/apps.py` · `_src/article_art.py` | anagrafica e scheda nelle due lingue, e il disegno della card |
 | `test/geometry.mjs` · `test/rules.mjs` · `test/attract.mjs` | verdi, e provati rompendo i moduli apposta |
 
-Del corredo del catalogo mancano: **classifica con export e import** (`run/scores.js` su
-`gg/store.js` e `gg/io.js`), **PWA** (`manifest.webmanifest`, `sw.js` scritto a mano con l'elenco
-dei file, le tre icone), il **pulsante Installa** su `gg/install.js`, l'**anagrafica e la scheda**
-in `_src/apps.py` nelle due lingue, e l'**esclusione di `run/`** in `_pages()` di `check_site.py`.
-Poi la taratura con le mani sopra.
-
-Finché la chiave `recinto` non è in `apps.py`, `check_apps.py` non vede quest'app: i suoi
-ventiquattro controlli cominciano dal registro. Registrarla è quindi anche il modo di scoprire cosa
-manca.
+L'esclusione di `run/` in `check_site.py` **non è servita**: `_pages()` la scrive già come schema
+(`app/<chiave>/run/index.html`), quindi vale per ogni app presente e futura. Era in elenco perché
+il documento l'aveva prevista app per app, ed è il caso opposto del solito — una cosa fatta meglio
+di come era stata pianificata.
 
 **Quanto costa provare.** `geometry.mjs` e `rules.mjs` sono istantanei; `attract.mjs` gioca dieci
 partite intere e ci mette circa un minuto. È un prezzo da prima della pubblicazione, non da ogni
@@ -519,6 +517,22 @@ paga da sé.
 
 **`check_site.py` va tenuto lontano da `run/`.** L'esclusione si scrive una volta sola, in
 `_pages()`. La barra di condivisione sta sulla scheda, non dentro l'app.
+
+---
+
+## Due difetti che si vedono solo senza rete
+
+**Il service worker registrato da un modulo, e il `load` che è già passato.** La registrazione
+stava dentro un `addEventListener("load", …)`: i moduli girano dopo il documento, e su una pagina
+piccola come questa quel momento è passato prima che il modulo arrivi a chiederlo. Il listener non
+scatta mai, il worker non si registra, e non se ne accorge nessuno — finché qualcuno non prova a
+usare l'app in galleria. Si prova con `document.readyState`, e si verifica staccando la rete.
+
+**E `addAll` che fallisce tutto insieme.** Se **un solo** file dell'elenco di precache non
+risponde, l'installazione del worker fallisce per intero e in silenzio: la registrazione va a buon
+fine, la pagina non dice niente, e l'app semplicemente non funziona offline. È il motivo per cui
+quell'elenco è tenuto a mano e confrontato con la cartella da `check_apps.py`, e il motivo per cui
+la prova vera è una sola: **spegnere la rete e ricaricare.**
 
 ---
 

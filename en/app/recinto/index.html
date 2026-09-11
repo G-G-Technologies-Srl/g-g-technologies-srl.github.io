@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recinto — a vector game in your browser | G&amp;G Technologies</title>
+  <meta name="description" content="Close the fence around what you want to keep, and stay away from what is moving inside it. A coin and a high score table as in an arcade, with no account and no server.">
+  <meta name="author" content="G&amp;G Technologies Srl">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="theme-color" content="#0d1220">
+  <link rel="canonical" href="https://ggtechnologies.sm/en/app/recinto/">
+  <link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/app/recinto/">
+  <link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/app/recinto/">
+  <link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/app/recinto/">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="G&amp;G Technologies">
+  <meta property="og:title" content="Recinto — a vector game in your browser | G&amp;G Technologies">
+  <meta property="og:description" content="Close the fence around what you want to keep, and stay away from what is moving inside it. A coin and a high score table as in an arcade, with no account and no server.">
+  <meta property="og:url" content="https://ggtechnologies.sm/en/app/recinto/">
+  <meta property="og:image" content="https://ggtechnologies.sm/assets/og-app-recinto-en.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="en_GB">
+  <meta property="og:locale:alternate" content="it_IT">
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Recinto — a vector game in your browser | G&amp;G Technologies">
+  <meta name="twitter:description" content="Close the fence around what you want to keep, and stay away from what is moving inside it. A coin and a high score table as in an arcade, with no account and no server.">
+  <meta name="twitter:image" content="https://ggtechnologies.sm/assets/og-app-recinto-en.jpg">
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../../../assets/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../../../assets/favicon-32.png">
+  <script>
+    (function () {
+      var theme = '';
+      try { theme = localStorage.getItem('gg-theme') || ''; } catch (ignored) { /* unavailable */ }
+      if (theme !== 'light' && theme !== 'dark') {
+        theme = (window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+      }
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.classList.add('js');
+    })();
+  </script>
+  <link rel="stylesheet" href="../../../assets/site.css?v=012.9de9a685">
+  <script type="application/ld+json">
+[
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Recinto",
+    "url": "https://ggtechnologies.sm/en/app/recinto/",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Any (web browser)",
+    "softwareVersion": "0.1.0",
+    "datePublished": "2026-09-11",
+    "dateModified": "2026-09-11",
+    "license": "https://www.apache.org/licenses/LICENSE-2.0",
+    "description": "Close the fence around what you want to keep, and stay away from what is moving inside it. A coin and a high score table as in an arcade, with no account and no server.",
+    "inLanguage": "en",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "EUR"
+    },
+    "publisher": {
+      "@id": "https://ggtechnologies.sm/#organization"
+    }
+  }
+]
+  </script>
+</head>
+<body>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs><linearGradient id="icoGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#10b981"/></linearGradient></defs></svg>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs><linearGradient id="artEdge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent-strong)"/></linearGradient><linearGradient id="artPanel" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="var(--panel-2)"/><stop offset="0.6" stop-color="var(--panel)"/></linearGradient><radialGradient id="artGlow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="var(--glow-a)"/><stop offset="1" stop-color="var(--glow-a)" stop-opacity="0"/></radialGradient></defs></svg>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <nav class="nav" aria-label="Main navigation">
+      <a href="/en/" class="brand">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><defs><linearGradient id="ggMark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5eecab"/><stop offset="1" stop-color="#10b981"/></linearGradient><mask id="ggWire"><path d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="#fff" stroke-width="13"/><path d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="#000" stroke-width="10"/></mask></defs><rect class="wire" width="100" height="100" mask="url(#ggWire)"/><path class="lit" d="M66 50 H86 A36 36 0 1 1 50 14" fill="none" stroke="url(#ggMark)" stroke-width="13" stroke-linecap="round"/><circle class="click" cx="50" cy="50" r="9" fill="none" stroke="#34d399" stroke-width="2"/><circle class="led" cx="50" cy="50" r="9"/></svg></span>
+        <span class="brand-text">
+          <span class="brand-name">G&amp;G Technologies</span>
+          <span class="brand-payoff">Powering the future</span>
+        </span>
+      </a>
+
+      <div class="nav-links" id="navLinks">
+        <a href="/en/#services">Services</a>
+        <a href="/en/podz-ai/">Podz.AI</a>
+        <a href="/en/insights/">Insights</a>
+        <a href="/en/app/">Apps</a>
+        <a href="/en/about/">About</a>
+        <a href="/en/#contact">Contact</a>
+      </div>
+
+      <div class="nav-actions">
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Tema chiaro/scuro · Light/dark theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2"/>
+            <path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.2 14.5A8.3 8.3 0 0 1 9.5 3.8a8.3 8.3 0 1 0 10.7 10.7Z"/>
+          </svg>
+        </button>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <span class="current">EN</span>
+          <a href="https://ggtechnologies.sm/app/recinto/" hreflang="it" lang="it">IT</a>
+        </div>
+        <a class="btn btn-primary nav-cta" href="mailto:info@ggtechnologies.sm?subject=Information%20request">Talk to us</a>
+        <button class="menu-toggle" id="menuToggle" aria-label="Menu" aria-expanded="false" aria-controls="navLinks"><span></span></button>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero page-hero">
+      <div class="hero-bg" aria-hidden="true">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+      </div>
+
+      <div class="container">
+        <div>
+          <nav class="breadcrumb" aria-label="Breadcrumb"><ol><li><a href="/en/">Home</a></li><li><a href="/en/app/">Apps</a></li><li aria-current="page">Recinto</li></ol></nav>
+          <div class="kicker">Free and open source app</div>
+          <h1>A line that leaves, turns, <span class="grad-text">and comes back</span>.</h1>
+          <p class="hero-sub">Leave the border, cut across the field and return: whatever is left without the Thread is yours. Double the points for going slowly, and double the time out in the open.</p>
+          <p class="article-tags"><span class="tag-label">Category</span><a class="tag" href="/en/app/?tag=svago">Games</a></p>
+          <div class="hero-ctas">
+            <a class="btn btn-primary" href="/app/recinto/run/">Open the app</a>
+            <a class="btn btn-ghost" href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/recinto" rel="noopener">
+              Source code</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="article-body">
+      <div class="container">
+        <figure class="article-art app-art reveal">
+          <svg viewBox="0 0 1000 340" role="img"
+               aria-labelledby="apprecintoT apprecintoD">
+            <title id="apprecintoT">The cut that separates a piece of the field</title>
+            <desc id="apprecintoD">Inside a closed frame, a line leaves the top edge, runs down diagonally, turns and returns to the left edge. The piece it has separated is marked, and a small diamond sits where it came back.</desc>
+            <ellipse cx="400" cy="156" rx="340" ry="170" fill="url(#artGlow)"/><rect x="40" y="53" width="920" height="233" rx="18" fill="url(#artPanel)" stroke="var(--border)"/><rect x="72" y="66" width="388" height="21" rx="4" fill="url(#artEdge)" opacity="0.92"/><rect x="72" y="101" width="324" height="21" rx="4" fill="url(#artEdge)" opacity="0.86"/><rect x="72" y="135" width="259" height="21" rx="4" fill="url(#artEdge)" opacity="0.80"/><rect x="72" y="170" width="194" height="21" rx="4" fill="url(#artEdge)" opacity="0.74"/><rect x="72" y="205" width="129" height="21" rx="4" fill="url(#artEdge)" opacity="0.68"/><rect x="72" y="239" width="65" height="21" rx="4" fill="url(#artEdge)" opacity="0.62"/><rect x="459.6" y="53.4" width="2.0" height="23.6" rx="1" fill="url(#artEdge)"/><rect x="395.9" y="76.9" width="64.7" height="34.6" rx="1" fill="url(#artEdge)"/><rect x="331.1" y="111.5" width="64.7" height="34.6" rx="1" fill="url(#artEdge)"/><rect x="266.4" y="146.1" width="64.7" height="34.6" rx="1" fill="url(#artEdge)"/><rect x="201.7" y="180.7" width="64.7" height="34.6" rx="1" fill="url(#artEdge)"/><rect x="136.9" y="215.3" width="64.7" height="34.6" rx="1" fill="url(#artEdge)"/><rect x="118" y="231" width="38.3" height="38.3" rx="2" fill="url(#artEdge)" opacity="1.00"/>
+          </svg>
+        </figure>
+
+        <div class="kicker">Why a second game</div>
+        <h2>Same constraint; <span class="grad-text">a different thing to prove</span>.</h2>
+        <div class="about-text reveal">
+          <p>The apps we publish have one thing in common, and it is a technical constraint: they run on the machine of whoever opens them and send nothing anywhere. AstroDroid demonstrated that on an action game. This one demonstrates it on something more demanding: a game that has to **measure** — how much ground you have closed off, to the decimal, for a whole game.</p>
+          <p>A clone of this genre keeps the field as an image and counts coloured pixels. Here the field is a polygon on integer coordinates: the area is exact, the percentage does not depend on the resolution, and the result is the same on every screen. It is the principle of the rest of the catalogue — measure where the data is — applied to a game rather than to a file of readings.</p>
+          <p>The coin is the starting ritual: games are endless, but saying «this one begins now» is worth something. It is also the gesture a browser needs before it will start any audio, so the ritual pays for itself.</p>
+        </div>
+        <div class="app-lists">
+          <div class="app-list does">
+            <h3>What it does</h3>
+            <ul class="ticks">
+              <li>You cut the field and keep the part the Thread did not stay in.</li>
+              <li>Fast stroke or slow stroke: the slow one is worth double the area and leaves you exposed twice as long.</li>
+              <li>Three different threats: the Thread roaming the open field, the Sparks running along the border, and the Fuse eating your line if you stand still.</li>
+              <li>Shutting the Thread inside a tight pocket catches it, instead of killing you.</li>
+              <li>Four arenas, islands included, and a second Thread from the third level.</li>
+              <li>Keyboard, mouse and touch: you point at where to go and the marker goes there, with a dashed line telling you beforehand what will happen.</li>
+              <li>A table with your name in it, asked for at the end of every game.</li>
+              <li>Export and re-import the table as a file, so clearing the browser does not take it away.</li>
+              <li>Works offline after the first visit, and installs as an app.</li>
+            </ul>
+          </div>
+          <div class="app-list does-not">
+            <h3>What it does not do</h3>
+            <ul class="ticks">
+              <li>It does not ask for an account, and has none to ask for.</li>
+              <li>It does not send the score anywhere: the table belongs to this machine, the way the cabinet's belonged to its own.</li>
+              <li>It has no advertising, no purchases, and nothing to unlock by paying.</li>
+              <li>It does not work better online: after the first visit it has no further need of the network.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="kicker">At a glance</div>
+        <div class="about-facts page-facts reveal">
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>High scores</h4>
+              <p>They belong to this browser. They stay here, and you export them whenever you like.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Data</h4>
+              <p>It stays on your computer. After the page has loaded, the app makes no network requests.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Coins</h4>
+              <p>Endless and free. The coin is the starting ritual, not a limit.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Controls</h4>
+              <p>Keyboard, mouse, touch. The same rules for all three.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Licence</h4>
+              <p>Apache-2.0: the code is what the browser downloads, with no build step in between.</p>
+            </div>
+          </div>
+        </div>
+        <p class="app-meta"><span><b>Version</b> 0.1.0</span><span><b>Updated</b> 11 September 2026</span><span><b>Licence</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/recinto" rel="noopener">Source code</a></p>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="kicker">FAQ</div>
+        <h2>Frequently asked questions</h2>
+        <div class="faq-list">
+          <details class="faq-item reveal">
+            <summary>Is it a Qix clone?</summary>
+            <p>The mechanics of the genre are those, and the reference is deliberate: games where you claim ground by cutting it have existed since the late seventies. The name is not — the titles of those games are somebody else's trademark, and using one on a company site would be a different matter. Here the field has exact geometry rather than a grid, the arenas have free shapes with islands in them, and cuts can go diagonally: differences you notice while playing.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>Why is the table not shared?</summary>
+            <p>Because a shared table needs a server to receive the scores, and these apps have none. It is the same choice that makes the game usable with no connection and no account. If you need to compare with somebody, export the file: it holds the whole table.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>Does it play well on a phone?</summary>
+            <p>Yes, and it was designed to rather than adapted afterwards. With a finger you point at where you want to arrive and the marker goes there: near a wall it walks the border, out in the field it cuts, and the dashed line tells you which before you lift your finger. The aim point sits above the finger, so your hand is not covering what you are looking at.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>Is the slow stroke worth it?</summary>
+            <p>It depends on where the Thread is, and that is the whole decision of the game. It is worth double the area and leaves you exposed twice as long, so the right question is not «is it worth it» but «is it worth it now».</p>
+          </details>
+        </div>
+        <!-- Same four buttons as an article, and they point at *this* page and not at run/. The
+             running app is noindex and its canonical already names the scheda: a link passed
+             around to a page that asks not to be indexed collects nothing. -->
+        <div class="share">
+          <span class="share-label">Share</span>
+          <a class="share-btn" href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fggtechnologies.sm%2Fen%2Fapp%2Frecinto%2F" title="Share on LinkedIn" aria-label="Share on LinkedIn" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9h4v12H3zM10 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.77-1.95 4.03 0 4.78 2.5 4.78 5.75V21h-4v-5.6c0-1.34-.03-3.06-1.9-3.06-1.9 0-2.2 1.46-2.2 2.96V21h-4z"/></svg><span>LinkedIn</span></a><a class="share-btn" href="https://x.com/intent/post?url=https%3A%2F%2Fggtechnologies.sm%2Fen%2Fapp%2Frecinto%2F&amp;text=Recinto%20%E2%80%94%20a%20vector%20game%20in%20your%20browser" title="Share on X" aria-label="Share on X" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.3 3h3.1l-6.8 7.75L21.6 21h-6.3l-4.9-6.4L4.8 21H1.7l7.25-8.3L1.9 3h6.45l4.45 5.9Zm-1.1 16.1h1.7L7.9 4.8H6.05Z"/></svg><span>X</span></a><a class="share-btn" href="mailto:?subject=Recinto%20%E2%80%94%20a%20vector%20game%20in%20your%20browser&amp;body=https%3A%2F%2Fggtechnologies.sm%2Fen%2Fapp%2Frecinto%2F" title="Send by email" aria-label="Send by email"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm9 8.1L20 7.2V6.6L12 12 4 6.6v.6Z"/></svg><span>Email</span></a>
+          <button class="share-btn" type="button" data-share-copy="https://ggtechnologies.sm/en/app/recinto/"
+                  data-share-done="Link copied"
+                  title="Copy the link" aria-label="Copy the link">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10.6 13.4a1 1 0 0 1 0-1.4l1.4-1.4a1 1 0 0 1 1.4 1.4l-1.4 1.4a1 1 0 0 1-1.4 0Zm-3.3 5.4a4.5 4.5 0 0 1 0-6.4l2.6-2.6 1.4 1.4-2.6 2.6a2.5 2.5 0 0 0 3.5 3.5l2.6-2.6 1.4 1.4-2.6 2.6a4.5 4.5 0 0 1-6.3 0Zm4-11.2 2.6-2.6a4.5 4.5 0 0 1 6.4 6.4l-2.6 2.6-1.4-1.4 2.6-2.6a2.5 2.5 0 0 0-3.5-3.5l-2.6 2.6Z"/></svg><span>Copy the link</span></button>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="cta-band">
+      <div class="container">
+        <h2>Need the same thing, built for you?</h2>
+        <p class="section-intro">If you have a case where the data stays on the machine of whoever uses it, tell us about it. A person from the team replies, not an automated message.</p>
+        <div class="cta-buttons">
+          <a class="btn btn-primary" href="mailto:info@ggtechnologies.sm?subject=Recinto%20%E2%80%94%20applications%20that%20run%20locally">Email us</a>
+          <a class="btn btn-ghost" href="tel:+3780549900824">Call us</a>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="related-grid">
+          <a class="related-card reveal" href="/en/services/on-premise-ai/">
+            <h3>On-premise AI</h3>
+            <p>How to choose between fully local, hybrid and cloud, starting from your data.</p>
+          </a>
+          <a class="related-card reveal" href="/en/services/artificial-intelligence/">
+            <h3>Artificial Intelligence</h3>
+            <p>Agents that read documents and query your systems, with the measure agreed first.</p>
+          </a>
+          <a class="related-card reveal" href="/en/digisense/">
+            <h3>DigiSense®</h3>
+            <p>What sits underneath, and why your project does not start from scratch.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a href="/en/" class="brand">
+            <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><rect class="wire" width="100" height="100" mask="url(#ggWire)"/><path class="lit" d="M66 50 H86 A36 36 0 1 1 50 14" fill="none" stroke="url(#ggMark)" stroke-width="13" stroke-linecap="round"/><circle class="click" cx="50" cy="50" r="9" fill="none" stroke="#34d399" stroke-width="2"/><circle class="led" cx="50" cy="50" r="9"/></svg></span>
+            G&amp;G Technologies
+          </a>
+          <p>We design and build technology: medical wearables, robotics and artificial intelligence. Podz.AI is built on our DigiSense® framework.</p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Services</h4>
+          <ul>
+            <li><a href="/en/services/medical-wearables/">Medical wearables</a></li>
+            <li><a href="/en/services/robotics-automation/">Robotics &amp; Automation</a></li>
+            <li><a href="/en/services/artificial-intelligence/">Artificial Intelligence</a></li>
+            <li><a href="/en/services/on-premise-ai/">On-premise AI</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Products and research</h4>
+          <ul>
+            <li><a href="/en/podz-ai/">Podz.AI</a></li>
+            <li><a href="/en/projects/home-care-robot/">Home care robot</a></li>
+            <li><a href="/en/digisense/">DigiSense®</a></li>
+            <li><a href="/en/insights/">Insights</a></li>
+            <li><a href="/en/app/">Free apps</a></li>
+            <li><a href="https://ggtechnologies.sm/digisense-releases/" target="_blank" rel="noopener">Podz.AI official website</a></li>
+            <li><a href="https://ggtechnologies.sm/digisense-releases/download.html" target="_blank" rel="noopener">Download Podz.AI</a></li>
+            <li><a href="https://github.com/G-G-Technologies-Srl/digisense-releases/releases" target="_blank" rel="noopener">Podz.AI releases</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contact</h4>
+          <ul>
+            <li><a href="/en/about/">About</a></li>
+            <li><a href="mailto:info@ggtechnologies.sm">info@ggtechnologies.sm</a></li>
+            <li><a href="tel:+3780549900824">+378 0549 900824</a></li>
+            <li><a href="https://www.linkedin.com/company/gg-technologies-srl" target="_blank" rel="noopener">LinkedIn</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-legal">
+        <span>© <span id="year">2026</span> G&amp;G Technologies Srl · Via Marino Moretti 23, 47899 Serravalle (RSM) · C.O.E./VAT SM29141</span>
+        <span>DigiSense® is a registered trademark. This site uses no cookies or trackers.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../../../assets/site.js?v=001.e222d9a6" defer></script>
+</body>
+</html>

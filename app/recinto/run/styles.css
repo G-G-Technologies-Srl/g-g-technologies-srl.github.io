@@ -18,7 +18,7 @@
   --thread: #ff5d73;
   --ghost: #7fa8c9;
 
-  --page: #05070b;
+  --page: #0d1220;        /* uguale a theme_color nel manifesto e alla barra del sito */
   --ink: #dce6f2;
   --muted: #7b8ea6;
   --chip: #131c28;
@@ -41,7 +41,7 @@
     --thread: #bf2a3d;
     --ghost: #6d8ca8;
 
-    --page: #f4f6f9;
+    --page: #f6f8fc;
     --ink: #16202c;
     --muted: #5b6b7d;
     --chip: #ffffff;
@@ -165,3 +165,54 @@ footer.bar button { flex: 1; }
   .bar { padding: 12px 20px; }
   footer.bar button { flex: 0 0 auto; }
 }
+
+/* -----------------------------------------------------------------------------------------------
+   La classifica, e le domande che l'app si fa da sola.
+   Un `<dialog>` e non un `prompt`: gli avvisi del browser hanno il carattere di sistema, il nome
+   del dominio in cima, bloccano tutto, e in finestra installata su iOS a volte non compaiono.
+   ----------------------------------------------------------------------------------------------- */
+
+dialog {
+  width: min(440px, calc(100vw - 32px));
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--chip);
+  color: var(--ink);
+}
+
+dialog::backdrop { background: rgb(0 0 0 / 0.55); }
+dialog h2 { margin: 0 0 2px; }
+dialog p { margin: 6px 0; }
+dialog table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+dialog th, dialog td { padding: 5px 6px; text-align: left; border-bottom: 1px solid var(--line); }
+dialog th { color: var(--muted); font-weight: 500; font-size: 12px; }
+dialog td:nth-child(3), dialog th:nth-child(3),
+dialog td:nth-child(4), dialog th:nth-child(4) { text-align: right; font-variant-numeric: tabular-nums; }
+
+.row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.row button { flex: 1; }
+
+#nameForm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; }
+#nameForm[hidden] { display: none; }
+#nameForm label { color: var(--muted); font-size: 13px; }
+
+input[type="text"] {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--page);
+  color: var(--ink);
+  font: inherit;
+}
+
+.hint {
+  margin: 0;
+  padding: 8px 14px;
+  color: var(--muted);
+  font-size: 13px;
+  border-bottom: 1px solid var(--line);
+}
+
+.hint[hidden] { display: none; }

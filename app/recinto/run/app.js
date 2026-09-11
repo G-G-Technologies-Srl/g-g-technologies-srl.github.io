@@ -57,6 +57,21 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => rend
 
 scores.connect().then((handle) => { db = handle; });
 
+// Il service worker si registra e basta: niente `skipWaiting` di iniziativa della pagina, niente
+// ricarica automatica. Un aggiornamento arriva al prossimo avvio, e scambiare i file sotto
+// qualcuno che è a metà partita è esattamente la cosa da non fare in un gioco.
+if ("serviceWorker" in navigator) {
+  // Aspettare `load` da dentro un modulo è una scommessa persa: i moduli girano dopo il documento,
+  // e su una pagina piccola come questa `load` è **già passato** quando si arriva qui. Il listener
+  // non scatta mai e il service worker non si registra, il che si vede solo provando a stare senza
+  // rete — cioè mai, finché non capita a qualcun altro.
+  const register = () => navigator.serviceWorker
+    .register("./sw.js")
+    .catch(() => { /* senza, l'app gira lo stesso */ });
+  if (document.readyState === "complete") register();
+  else window.addEventListener("load", register);
+}
+
 setupInstall(el("installButton"), el("installHint"),
   { storageKey: "gg.recinto.install-dismissed", iosText: t("installIos") });
 

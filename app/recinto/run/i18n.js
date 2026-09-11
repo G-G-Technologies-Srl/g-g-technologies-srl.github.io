@@ -172,7 +172,7 @@ const EN = {
   nameAsk: "Your name",
   nameSave: "Save",
   namePlaceholder: "three letters will do",
-  placeLine: "You are {place} on this computer.",
+  placeLine: "You are number {place} on this computer.",
   placeNone: "Outside the top ten, this time.",
   finalScore: "{score} points, level {level}",
   storageNote: "The table lives in this browser, the way the cabinet's table lived in its own "

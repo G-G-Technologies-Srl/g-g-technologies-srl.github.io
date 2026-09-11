@@ -308,6 +308,24 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://ggtechnologies.sm/app/recinto/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/app/recinto/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/app/recinto/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/app/recinto/"/>
+    <lastmod>2026-09-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/en/app/recinto/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/app/recinto/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/app/recinto/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/app/recinto/"/>
+    <lastmod>2026-09-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://ggtechnologies.sm/insights/ai-act-dati-clienti/</loc>
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/ai-act-dati-clienti/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/ai-act-client-data/"/>
