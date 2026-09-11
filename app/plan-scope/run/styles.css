@@ -1594,6 +1594,10 @@ body.printing .props, body.printing #propAdd { display: none; }
 .pages-table th { font-size: 11.5px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--faint); }
 .pages-table th .link { font-size: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; padding: 0; }
 .pages-table td .badge.tag { margin-right: 4px; }
+/* Il pallino da solo: un bersaglio di dieci pixel è piccolo per un dito, quindi a crescere è il
+   bottone che lo porta, non il segno. Le sei cifre stanno nel `title` e nell'`aria-label`. */
+.pages-table td .only-dot { padding: 4px 6px; line-height: 0; }
+.pages-table td .only-dot .page-dot { width: 12px; height: 12px; margin-right: 0; }
 .pages-table td.when { font-size: 12px; color: var(--faint); white-space: nowrap; }
 #pagesFilters { padding: 8px 18px; display: flex; gap: 8px; align-items: center; }
 

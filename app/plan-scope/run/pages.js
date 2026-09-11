@@ -344,10 +344,21 @@ export function paintTable(projectId) {
       if (value) {
         // Quello che si mostra e quello su cui si filtra sono due cose: il filtro vuole il valore
         // com'è scritto nel file, la colonna vuole una data che si legga e un colore che si veda.
+        //
+        // E un colore visto è un colore: `#c94f2e` accanto al pallino non aggiunge niente a quello
+        // che il pallino dice già, e in una colonna di sei righe sono sei stringhe da saltare. Le
+        // sei cifre restano dove servono davvero — nel campo dove si scrivono, e qui sotto il
+        // puntatore e sotto il lettore di schermo, che di un pallino non saprebbero che dire.
         const kind = _propKind(key, value);
-        const chip = button("link", kind === "date" ? longDate(value) : value,
+        const swatch = kind === "color" && isColor(value);
+        const chip = button(swatch ? "link only-dot" : "link",
+          swatch ? "" : (kind === "date" ? longDate(value) : value),
           () => { pagesView.filter = { key, value }; paintTable(projectId); });
-        if (kind === "color" && isColor(value)) chip.prepend(colorDot(value));
+        if (swatch) {
+          chip.prepend(colorDot(value));
+          chip.setAttribute("aria-label", `${key}: ${value}`);
+          chip.title = value;
+        }
         td.append(chip);
       }
       tr.append(td);
