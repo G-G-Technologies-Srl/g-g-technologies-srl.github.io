@@ -37,7 +37,7 @@ export function repalette(canvas) {
     edge: read("--edge"),
     cut: read("--cut"),
     marker: read("--marker"),
-    roamer: read("--roamer"),
+    thread: read("--thread"),
     ghost: read("--ghost"),
   };
 }
@@ -96,7 +96,7 @@ export function draw(canvas, world, { preview = null } = {}) {
   }
   if (world.cut) _line(ctx, v, unit, world.cut.chain, palette.cut, 2.5, 14);
 
-  for (const roamer of world.roamers) _dot(ctx, v, unit, roamer.at, palette.roamer, 5, 16);
+  for (const thread of world.threads) _dot(ctx, v, unit, thread.at, palette.thread, 5, 16);
   _marker(ctx, v, unit, world.marker.at, world.cut ? palette.cut : palette.marker);
 }
 

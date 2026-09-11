@@ -2325,7 +2325,11 @@ function _demoView(project, wanted) {
   if (wanted === "timeline") return _openPlan(project.id, { view: "timeline" });
   if (wanted === "pagine") return _openPages(project.id);
   if (wanted === "pagina") {
-    const page = model.pagesOf(project.id)[0];
+    // L'incontro, non la prima: la prima è «Brief», cioè lo scheletro di un template — elenchi
+    // vuoti e una tabella vuota. Fa vedere la struttura e non la scrittura, e la galleria deve
+    // mostrare cos'è una pagina qui dentro: le proprietà in testa, il testo, una casella aperta.
+    const pages = model.pagesOf(project.id);
+    const page = pages.find((one) => /\bcon:|\bwith:/.test(one.markdown || "")) || pages[0];
     if (page) return _openPage(page.id);
   }
   if (wanted === "persona") {

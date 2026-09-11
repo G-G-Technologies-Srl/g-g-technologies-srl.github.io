@@ -9,7 +9,7 @@
 // would cross a wall either lands on it or has its midpoint beyond it, so `canStep` decides with
 // two questions instead of intersecting every step against every edge.
 //
-// `start` is where the marker begins and has to be a point on the outer ring. `roamers` are the
+// `start` is where the marker begins and has to be a point on the outer ring. `threads` are the
 // starting positions of what wanders the open field, in lattice units, kept away from the walls.
 
 export const ARENAS = [
@@ -17,7 +17,7 @@ export const ARENAS = [
     key: "rettangolo",
     rings: [[[0, 0], [256, 0], [256, 192], [0, 192]]],
     start: [128, 0],
-    roamers: [[128, 96]],
+    threads: [[128, 96]],
   },
   {
     key: "anello",
@@ -27,20 +27,20 @@ export const ARENAS = [
       [[96, 72], [96, 120], [160, 120], [160, 72]],
     ],
     start: [128, 0],
-    roamers: [[40, 96]],
+    threads: [[40, 96]],
   },
   {
     key: "elle",
     rings: [[[0, 0], [256, 0], [256, 96], [128, 96], [128, 192], [0, 192]]],
     start: [64, 0],
-    roamers: [[64, 140]],
+    threads: [[64, 140]],
   },
   {
     key: "esagono",
     // Le pareti oblique sono a 45°, come vuole la regola qui sopra.
     rings: [[[48, 0], [208, 0], [256, 48], [256, 144], [208, 192], [48, 192], [0, 144], [0, 48]]],
     start: [128, 0],
-    roamers: [[128, 96]],
+    threads: [[128, 96]],
   },
 ];
 

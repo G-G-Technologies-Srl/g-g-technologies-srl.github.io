@@ -37,7 +37,7 @@ const move = (dx, dy, slow = false) => ({ dx, dy, slow });
 function play(world, intent, steps, pin = null) {
   for (let i = 0; i < steps; i += 1) {
     step(world, intent);
-    if (pin) world.roamers.forEach((roamer, k) => { if (pin[k]) roamer.at = pin[k].slice(); });
+    if (pin) world.threads.forEach((thread, k) => { if (pin[k]) thread.at = pin[k].slice(); });
     if (world.cleared || world.over) break;
   }
   return world;
@@ -50,7 +50,7 @@ function play(world, intent, steps, pin = null) {
 function slice(world, intent, pin = null, cap = 6000) {
   for (let i = 0; i < cap; i += 1) {
     step(world, intent);
-    if (pin) world.roamers.forEach((roamer, k) => { if (pin[k]) roamer.at = pin[k].slice(); });
+    if (pin) world.threads.forEach((thread, k) => { if (pin[k]) thread.at = pin[k].slice(); });
     if (world.events.some((event) => event.kind === "claim")) return world;
     if (world.cleared || world.over) return world;
   }
@@ -151,7 +151,7 @@ const intact = (world) => world.claimed2 + openArea2(world) === world.total2;
   const world = create(1, 5);
   world.marker.at = [0, 8];
   slice(world, move(1, -1), [[2, 2]]);
-  check("il vagante chiuso in una sacca stretta è catturato", world.roamers.length === 0);
+  check("il vagante chiuso in una sacca stretta è catturato", world.threads.length === 0);
   check("e la sacca è tua", world.claimed2 > 0 && intact(world));
   check("preso l'ultimo, il livello è finito", world.cleared);
   check("con il premio della cattura", world.score >= RULES.capture);
@@ -167,7 +167,7 @@ const intact = (world) => world.claimed2 + openArea2(world) === world.total2;
     while (n < 8000 && world.claimed2 === 0) {
       n += 1;
       step(world, move(0, 1, n < 100 ? atStart : later));
-      world.roamers[0].at = [40, 96];
+      world.threads[0].at = [40, 96];
     }
     return n;
   };
@@ -177,7 +177,7 @@ const intact = (world) => world.claimed2 + openArea2(world) === world.total2;
 
 {
   const world = create(1, 5);
-  world.roamers.push({ at: [200, 96], heading: 0 });
+  world.threads.push({ at: [200, 96], heading: 0 });
   slice(world, move(0, 1), [[40, 96], [200, 96]]);
   equal("separati in due, nessuna delle due metà è tua", world.claimed2, 0);
   equal("e le arene aperte diventano due", world.faces.length, 2);
@@ -187,9 +187,9 @@ const intact = (world) => world.claimed2 + openArea2(world) === world.total2;
 // Separare due volte non paga due volte: il premio è per aver capito la mossa, non per ripeterla.
 {
   const world = create(1, 5);
-  world.roamers = [{ at: [40, 96], heading: 0 }, { at: [180, 50], heading: 0 },
+  world.threads = [{ at: [40, 96], heading: 0 }, { at: [180, 50], heading: 0 },
                    { at: [180, 150], heading: 0 }];
-  const pin = world.roamers.map((roamer) => roamer.at.slice());
+  const pin = world.threads.map((thread) => thread.at.slice());
   slice(world, move(0, 1), pin);
   const once = world.score;
   equal("il primo taglio separa", world.faces.length, 2);
@@ -228,7 +228,7 @@ equal("e ha un tetto", quota(create(40, 1)), RULES.quotaMax);
     const world = create(1, seed);
     for (const [intent, steps] of script) play(world, intent, steps);
     return JSON.stringify([world.score, world.claimed2, world.marker.at, world.seed,
-                           world.roamers.map((r) => r.at)]);
+                           world.threads.map((r) => r.at)]);
   };
   equal("lo stesso seme dà la stessa partita", run(2026), run(2026));
   check("un seme diverso dà una partita diversa", run(2026) !== run(2027));

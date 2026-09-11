@@ -50,7 +50,7 @@ export const MARKER = {
   slow: 36,                   // cutting slowly — and worth double
 };
 
-export const ROAMER = {
+export const THREAD = {
   speed: 62,
   clearance: 3,               // how far it stays off the walls, so `contains` is never asked about
 };                            // a point sitting exactly on one
@@ -60,7 +60,7 @@ export const RULES = {
   quota: 0.70,                // of the arena, to clear the level
   quotaStep: 0.02,            // per level
   quotaMax: 0.85,
-  capture2: 2 * 700,          // doubled area: a roamer shut inside anything smaller is caught
+  capture2: 2 * 700,          // doubled area: a thread shut inside anything smaller is caught
   perCell: 5,
   slowBonus: 2,
   perPointOver: 250,          // per percentage point claimed past the quota
@@ -90,7 +90,7 @@ export function create(level = 1, seed = 1) {
     claimed2: 0,
     marker: { at: plan.start.slice(), travel: 0 },
     cut: null,                // { chain, slow, face } while a line is out
-    roamers: plan.roamers.map((at) => ({ at: at.slice(), heading: 0 })),
+    threads: plan.threads.map((at) => ({ at: at.slice(), heading: 0 })),
     lives: RULES.lives,
     score: 0,
     cleared: false,
@@ -98,14 +98,14 @@ export function create(level = 1, seed = 1) {
     separated: false,
     events: [],
   };
-  for (const roamer of world.roamers) roamer.heading = _random(world) * Math.PI * 2;
+  for (const thread of world.threads) thread.heading = _random(world) * Math.PI * 2;
   return world;
 }
 
 export function step(world, intent = NO_INTENT) {
   world.events.length = 0;
   if (world.cleared || world.over) return world;
-  _moveRoamers(world);
+  _moveThreads(world);
   _moveMarker(world, intent);
   return world;
 }
@@ -148,8 +148,8 @@ function _faceIndexAt(world, point) {
   return -1;
 }
 
-function _roamersIn(world, face) {
-  return world.roamers.filter((roamer) => contains(face, roamer.at));
+function _threadsIn(world, face) {
+  return world.threads.filter((thread) => contains(face, thread.at));
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -207,15 +207,15 @@ function _take(world, intent) {
 
 // The rule the whole game comes out of, in the order it reads:
 //
-//   every piece with no roamer in it becomes yours; a piece with a roamer in it but smaller than
-//   the capture threshold becomes yours too, and that roamer is gone.
+//   every piece with no thread in it becomes yours; a piece with a thread in it but smaller than
+//   the capture threshold becomes yours too, and that thread is gone.
 //
-// Splitting two roamers apart is not a third case: it falls out of applying the first line twice,
-// and all that has to be noticed separately is that the number of pieces holding a roamer went up.
+// Splitting two threads apart is not a third case: it falls out of applying the first line twice,
+// and all that has to be noticed separately is that the number of pieces holding a thread went up.
 function _close(world) {
   const index = world.cut.face;
   const slow = world.cut.slow;
-  const before = world.faces.filter((face) => _roamersIn(world, face).length > 0).length;
+  const before = world.faces.filter((face) => _threadsIn(world, face).length > 0).length;
   const parts = split(world.faces[index], world.cut.chain);
 
   const kept = [];
@@ -223,7 +223,7 @@ function _close(world) {
   let gained = 0;
 
   for (const part of parts) {
-    const inside = _roamersIn(world, part);
+    const inside = _threadsIn(world, part);
     if (inside.length === 0) { gained += area2(part); continue; }
     if (area2(part) <= RULES.capture2) {
       gained += area2(part);
@@ -234,14 +234,14 @@ function _close(world) {
   }
 
   world.faces = world.faces.filter((_, i) => i !== index).concat(kept);
-  world.roamers = world.roamers.filter((roamer) => !caught.includes(roamer));
+  world.threads = world.threads.filter((thread) => !caught.includes(thread));
   world.claimed2 += gained;
 
   const points = Math.round((gained / 2) * RULES.perCell * (slow ? RULES.slowBonus : 1) * world.level);
   world.score += points + caught.length * RULES.capture;
   world.events.push({ kind: "claim", gained, points, slow, caught: caught.length });
 
-  const after = world.faces.filter((face) => _roamersIn(world, face).length > 0).length;
+  const after = world.faces.filter((face) => _threadsIn(world, face).length > 0).length;
   if (!world.separated && after > before) {
     world.separated = true;
     world.score += RULES.separation;
@@ -249,7 +249,7 @@ function _close(world) {
   }
 
   world.cut = null;
-  if (progress(world) >= quota(world) || world.roamers.length === 0 || world.faces.length === 0) {
+  if (progress(world) >= quota(world) || world.threads.length === 0 || world.faces.length === 0) {
     const over = Math.max(0, Math.round((progress(world) - quota(world)) * 100));
     world.score += over * RULES.perPointOver;
     world.cleared = true;
@@ -263,28 +263,28 @@ function _close(world) {
 // is yours, which is the only thing the claim rule needs from it. The writhing ribbon, the bounce
 // and the killing come later — but the rule they plug into is real from today rather than stubbed
 // and rewritten around them.
-function _moveRoamers(world) {
-  for (const roamer of world.roamers) {
-    const face = _faceOf(world, roamer.at);
+function _moveThreads(world) {
+  for (const thread of world.threads) {
+    const face = _faceOf(world, thread.at);
     if (!face) continue;
 
     for (let tries = 0; tries < 8; tries += 1) {
       const to = [
-        roamer.at[0] + Math.cos(roamer.heading) * ROAMER.speed * STEP,
-        roamer.at[1] + Math.sin(roamer.heading) * ROAMER.speed * STEP,
+        thread.at[0] + Math.cos(thread.heading) * THREAD.speed * STEP,
+        thread.at[1] + Math.sin(thread.heading) * THREAD.speed * STEP,
       ];
-      if (_clearOf(face, to)) { roamer.at = to; break; }
-      roamer.heading = _random(world) * Math.PI * 2;
+      if (_clearOf(face, to)) { thread.at = to; break; }
+      thread.heading = _random(world) * Math.PI * 2;
     }
   }
 }
 
 // Inside, and not near the edge. The margin is what keeps `contains` from ever being asked about a
 // point sitting exactly on a wall — the one question it has no answer to, and the question that
-// decides which side of a fresh cut this roamer ended up on.
+// decides which side of a fresh cut this thread ended up on.
 function _clearOf(face, point) {
   if (!contains(face, point)) return false;
-  const d = ROAMER.clearance;
+  const d = THREAD.clearance;
   return contains(face, [point[0] - d, point[1]])
       && contains(face, [point[0] + d, point[1]])
       && contains(face, [point[0], point[1] - d])
