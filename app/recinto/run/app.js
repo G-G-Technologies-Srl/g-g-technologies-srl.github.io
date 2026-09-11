@@ -44,6 +44,7 @@ document.getElementById("again").addEventListener("click", () => _start(1));
 
 canvas.addEventListener("pointerdown", () => {
   if (world.cleared) _start(world.level + 1);
+  else if (world.over) _start(1);
 });
 
 requestAnimationFrame(_frame);
@@ -85,9 +86,11 @@ function _numbers() {
   document.getElementById("quota").textContent = `${Math.floor(progress(world) * 100)}%`;
   document.getElementById("goal").textContent = `${Math.round(quota(world) * 100)}%`;
   document.getElementById("score").textContent = world.score.toLocaleString("it-IT");
+  document.getElementById("lives").textContent = String(Math.max(0, world.lives));
   document.getElementById("level").textContent = String(world.level);
   document.getElementById("arena").textContent = world.arena;
 
-  banner.hidden = !world.cleared;
-  if (world.cleared) banner.textContent = "Livello chiuso — tocca il campo per il prossimo";
+  banner.hidden = !world.cleared && !world.over;
+  if (world.over) banner.textContent = "Partita finita — tocca il campo per ricominciare";
+  else if (world.cleared) banner.textContent = "Livello chiuso — tocca il campo per il prossimo";
 }

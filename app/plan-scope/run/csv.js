@@ -24,6 +24,24 @@ function _cell(value, sep) {
   return `"${text.replace(/"/g, "\"\"")}"`;
 }
 
+/** Una riga di vCard spezzata a 75 ottetti, con la continuazione che comincia per spazio. */
+function _fold(line) {
+  const bytes = new TextEncoder().encode(line);
+  if (bytes.length <= 75) return line;
+  const parts = [];
+  let taken = 0;
+  const decoder = new TextDecoder();
+  while (taken < bytes.length) {
+    const room = parts.length ? 74 : 75;    // la continuazione spende un ottetto per lo spazio
+    let end = Math.min(taken + room, bytes.length);
+    // Mai a metà di un carattere: i byte di continuazione in UTF-8 cominciano per 10xxxxxx.
+    while (end > taken && end < bytes.length && (bytes[end] & 0xc0) === 0x80) end -= 1;
+    parts.push((parts.length ? " " : "") + decoder.decode(bytes.slice(taken, end)));
+    taken = end;
+  }
+  return parts.join("\r\n");
+}
+
 // -----------------------------------------------------------------------------------------------------------------
 //  p u b l i c
 // -----------------------------------------------------------------------------------------------------------------
@@ -74,6 +92,61 @@ export function tasksCsv(tasks, { columns = [], labels, sep = ";", done = () => 
  * Solo quelle aperte, ed è una scelta: una casella già spuntata è una cosa fatta, e portarla nel
  * piano come «da fare» sarebbe riaprire quello che l'incontro aveva chiuso.
  */
+/**
+ * La rubrica come foglio di calcolo. Le stesse regole di `tasksCsv`: separatore per lingua,
+ * intestazioni già tradotte da chi chiama.
+ *
+ * `where` è una richiamata come `who` e `done` più sopra: dove lavora una persona lo sa il
+ * modello, e questo file non deve conoscerlo per scriverlo in una colonna.
+ */
+export function contactsCsv(contacts, { labels, sep = ";", where = () => "" } = {}) {
+  const rows = [labels.map((cell) => _cell(cell, sep)).join(sep)];
+  for (const one of contacts) {
+    rows.push([one.name, one.company, one.role, one.email, one.phone, where(one)]
+      .map((cell) => _cell(cell, sep)).join(sep));
+  }
+  return `\ufeff${rows.join("\r\n")}\r\n`;
+}
+
+/**
+ * La rubrica come vCard, che è il formato che la Rubrica del Mac, i Contatti di Google e ogni
+ * telefono aprono senza chiedere niente. Un file solo con dentro tutte le schede: importarle una
+ * per una sarebbe un lavoro, e chi esporta una rubrica la sta spostando, non guardando.
+ *
+ * Versione 3.0 e non 4.0: è quella che aprono tutti. La 4.0 è più pulita — `KIND`, i tipi
+ * dichiarati meglio — e ha vent'anni di lettori in meno.
+ *
+ * **Le righe si spezzano a 75 ottetti**, e non è pedanteria: lo pretende la specifica, e un
+ * programma che la applica alla lettera tronca una riga più lunga invece di leggerla. Il taglio
+ * conta i **byte in UTF-8**, perché una «à» ne occupa due e tagliare a metà di un carattere
+ * produce un file che non si apre.
+ */
+export function vcards(contacts, { note = () => "" } = {}) {
+  const esc = (value) => String(value || "").replace(/\\/g, "\\\\").replace(/[;,]/g, (c) => `\\${c}`)
+    .replace(/\r?\n/g, "\\n");
+  const out = [];
+  for (const one of contacts) {
+    const lines = [
+      "BEGIN:VCARD",
+      "VERSION:3.0",
+      // `N` vuole cognome;nome;…: un nome scritto in un campo solo non si può dividere senza
+      // indovinare, e indovinare su un nome è il modo di scrivere «Rossini» come nome proprio.
+      // Quindi il nome intero va in `FN`, e `N` porta solo quello che si sa per certo.
+      `N:;${esc(one.name)};;;`,
+      `FN:${esc(one.name)}`,
+    ];
+    if (one.company) lines.push(`ORG:${esc(one.company)}`);
+    if (one.role) lines.push(`TITLE:${esc(one.role)}`);
+    if (one.email) lines.push(`EMAIL;TYPE=INTERNET:${esc(one.email)}`);
+    if (one.phone) lines.push(`TEL;TYPE=VOICE:${esc(one.phone)}`);
+    const said = note(one);
+    if (said) lines.push(`NOTE:${esc(said)}`);
+    lines.push("END:VCARD");
+    out.push(...lines.map(_fold));
+  }
+  return `${out.join("\r\n")}\r\n`;
+}
+
 export function openBoxes(text) {
   return String(text || "").split(/\r?\n/)
     .filter((line) => /^\s*(?:[-*+]\s*)?\[ \]\s*\S/.test(line))

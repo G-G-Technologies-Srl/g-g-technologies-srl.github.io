@@ -354,6 +354,8 @@ function _paintRubrica() {
   const found = !wanted ? all : all.filter((one) => [one.name, one.company, one.role]
     .some((field) => String(field || "").toLowerCase().includes(wanted)));
   el("rubricaEmpty").hidden = all.length > 0;
+  el("contactsCsv").hidden = all.length === 0;
+  el("contactsVcf").hidden = all.length === 0;
   fill(el("personList"), found.map((one) => {
     const row = node("li", "row-item");
     row.append(button("link", one.name || t("personNoName"), () => _openPerson(one.id)));
@@ -1847,6 +1849,8 @@ function _wire() {
 
   // ---- la rubrica
   el("openRubrica").addEventListener("click", () => _openRubrica());
+  el("contactsCsv").addEventListener("click", () => outputs.exportContactsCsv());
+  el("contactsVcf").addEventListener("click", () => outputs.exportContactsVcf());
   el("personSearch").addEventListener("input", () => _paintRubrica());
   el("newPerson").addEventListener("click", async () => {
     const name = String(await ask(t("newPersonAsk"), { value: "" }) || "").trim();

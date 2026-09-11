@@ -504,6 +504,11 @@
       <div class="screen-head">
         <h1 data-t="rubricaTitle"></h1>
         <span class="spacer"></span>
+        <!-- Due formati perché servono a due cose: il foglio si guarda, la vCard si importa in una
+             rubrica vera. Restano accanto al comando principale e non dietro un menu: sono due, e
+             un menu per due voci è un clic in più per nascondere niente. -->
+        <button type="button" id="contactsCsv" class="ghost small" data-t="contactsCsv"></button>
+        <button type="button" id="contactsVcf" class="ghost small" data-t="contactsVcf"></button>
         <button type="button" id="newPerson" class="primary" data-t="newPerson"></button>
       </div>
       <p class="note" data-t="rubricaHint"></p>

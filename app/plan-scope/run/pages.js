@@ -40,6 +40,70 @@ function _paintProps() {
   fill(el("pageProps"), rows);
 }
 
+// Le chiavi che nelle due lingue chiedono un tipo, e il tipo che chiedono. Un elenco corto e
+// scritto a mano, come `con:`/`with:` per gli incontri: indovinare dal nome sarebbe peggio che
+// non offrire niente.
+const PROP_KINDS = [
+  [["data", "date", "scadenza", "deadline", "inizio", "start", "fine", "end"], "date"],
+  [["colore", "color", "colour"], "color"],
+];
+const YES_NO = [["sì", "no"], ["si", "no"], ["true", "false"], ["yes", "no"], ["vero", "falso"]];
+
+/**
+ * Il tipo di una proprietà, **riconosciuto e mai memorizzato**.
+ *
+ * La testa di una pagina è testo semplice, perché la pagina deve restare leggibile in Obsidian:
+ * un tipo dichiarato lì dentro sarebbe una parola in più che nessun altro programma capisce. Così
+ * il tipo si riconosce — dal valore quando parla da sé, dalla chiave quando il valore è ancora
+ * vuoto — e una proprietà scritta a mano fuori dall'app ottiene il selettore gratis.
+ */
+function _propKind(key, value) {
+  const clean = String(value || "").trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) return "date";
+  if (/^#[0-9a-fA-F]{6}$/.test(clean)) return "color";
+  if (YES_NO.some((pair) => pair.includes(clean.toLowerCase()))) return "bool";
+  if (clean) return null;                 // un valore che non è di nessun tipo resta quello che è
+  const name = String(key || "").trim().toLowerCase();
+  const found = PROP_KINDS.find(([names]) => names.includes(name));
+  return found ? found[1] : null;
+}
+
+/**
+ * Il selettore che sta **accanto** al campo, non al posto suo.
+ *
+ * Trasformare il campo in un `input[type=date]` costerebbe la libertà che rende utile una testa di
+ * testo: «data: entro settembre» diventerebbe impossibile da scrivere, e quella è una cosa che le
+ * persone scrivono davvero. Così il testo resta sovrano e digitabile, e il selettore ci scrive
+ * dentro — chi vuole il calendario ce l'ha, chi vuole scrivere scrive.
+ */
+function _propPicker(kind, valueField) {
+  const write = (text) => {
+    valueField.value = text;
+    valueField.dispatchEvent(new Event("change", { bubbles: true }));
+  };
+
+  if (kind === "bool") {
+    const box = document.createElement("input");
+    box.type = "checkbox";
+    box.className = "prop-bool";
+    const pair = YES_NO.find((one) => one.includes(valueField.value.trim().toLowerCase())) || YES_NO[0];
+    box.checked = valueField.value.trim().toLowerCase() === pair[0];
+    box.setAttribute("aria-label", t("propValue"));
+    // Si risponde nella lingua in cui la risposta è già scritta: chi ha scritto «true» non se lo
+    // vede diventare «sì» al primo clic.
+    box.addEventListener("change", () => write(box.checked ? pair[0] : pair[1]));
+    return box;
+  }
+
+  const picker = document.createElement("input");
+  picker.type = kind;
+  picker.className = `prop-picker prop-${kind}`;
+  picker.value = kind === "color" ? (valueField.value.trim() || "#3fb984") : valueField.value.trim();
+  picker.setAttribute("aria-label", t(kind === "color" ? "propPickColor" : "propPickDate"));
+  picker.addEventListener("input", () => { if (picker.value) write(picker.value); });
+  return picker;
+}
+
 function _propRow(key, value) {
   const row = node("div", "prop");
   const keyField = document.createElement("input");
@@ -58,9 +122,24 @@ function _propRow(key, value) {
   valueField.placeholder = t("propValue");
   valueField.setAttribute("aria-label", t("propValue"));
   row.append(keyField, node("span", "prop-colon", ":"), valueField);
+
+  // Il selettore si rifà a ogni cambiamento, perché il tipo dipende da quello che c'è scritto:
+  // svuotare un campo e riscriverci un colore deve cambiare l'attrezzo, non lasciare quello di
+  // prima acceso su una cosa che non è più quella.
+  let picker = null;
+  const dress = () => {
+    if (picker) picker.remove();
+    picker = null;
+    const kind = _propKind(keyField.value, valueField.value);
+    if (!kind) return;
+    picker = _propPicker(kind, valueField);
+    valueField.after(picker);
+  };
+  dress();
+
   row.append(button("ghost small icon", "✕", () => { row.remove(); _readProps(); }, { label: t("propRemove") }));
-  keyField.addEventListener("change", _readProps);
-  valueField.addEventListener("change", _readProps);
+  keyField.addEventListener("change", () => { dress(); _readProps(); });
+  valueField.addEventListener("change", () => { dress(); _readProps(); });
   return row;
 }
 

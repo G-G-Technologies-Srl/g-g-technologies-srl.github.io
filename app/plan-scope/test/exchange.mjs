@@ -201,4 +201,54 @@ test("un testo senza caselle non ne inventa", () => {
   assert.equal(csv.openBoxes(""), "");
 });
 
+test("la rubrica esce come foglio e come vCard", () => {
+  const gente = [
+    { name: "Marco Rossini", company: "Studio Rossi", role: "grafico",
+      email: "marco@studiorossi.it", phone: "0549 900100" },
+    { name: "Giulia", company: "", role: "", email: "", phone: "" },
+  ];
+
+  const foglio = csv.contactsCsv(gente, {
+    labels: ["Nome", "Azienda", "Mestiere", "Email", "Telefono", "Progetti"],
+    where: (one) => (one.name === "Marco Rossini" ? "Fiera" : ""),
+  });
+  const righe = foglio.replace(/^\ufeff/, "").trim().split("\r\n");
+  assert.equal(righe.length, 3, "l'intestazione e due persone");
+  assert.equal(righe[1], "Marco Rossini;Studio Rossi;grafico;marco@studiorossi.it;0549 900100;Fiera");
+  assert.ok(foglio.startsWith("\ufeff"), "col segno d'ordine, o Excel non legge gli accenti");
+
+  const carte = csv.vcards(gente);
+  assert.equal((carte.match(/BEGIN:VCARD/g) || []).length, 2, "una scheda per persona, in un file solo");
+  assert.ok(carte.includes("FN:Marco Rossini"));
+  assert.ok(carte.includes("ORG:Studio Rossi"));
+  // Una persona senza recapiti non porta righe vuote: un campo che non c'è si omette, non si
+  // dichiara vuoto — ed è la differenza fra una scheda pulita e una piena di caselle grigie.
+  assert.ok(!/ORG:\r\n/.test(carte), "niente righe senza valore");
+  assert.ok(carte.endsWith("\r\n"));
+});
+
+test("nella vCard il punto e virgola si protegge, e le righe lunghe si spezzano fra i caratteri", () => {
+  // Il punto e virgola separa i campi: uno dentro un valore, non protetto, spacca la scheda.
+  const protetta = csv.vcards([{ name: "Rossi; Marco", company: "A, B e C", email: "", phone: "", role: "" }]);
+  assert.ok(protetta.includes("FN:Rossi\\; Marco"));
+  assert.ok(protetta.includes("ORG:A\\, B e C"));
+
+  // La specifica vuole righe da 75 ottetti, e un lettore che la applica alla lettera **tronca**
+  // quello che eccede invece di leggerlo. Il taglio conta i byte, non i caratteri: una «à» ne
+  // occupa due, e tagliare a metà di un carattere produce un file che non si apre.
+  const lungo = `Società ${"àèìòù".repeat(30)}`;
+  const carta = csv.vcards([{ name: lungo, company: "", role: "", email: "", phone: "" }]);
+  const righe = carta.split("\r\n");
+  for (const riga of righe) {
+    assert.ok(new TextEncoder().encode(riga).length <= 75, `riga di ${riga.length} caratteri troppo lunga`);
+  }
+  assert.ok(righe.some((riga) => riga.startsWith(" ")), "la continuazione comincia per spazio");
+  // E rimettendole insieme si ritrova il nome intero, accenti compresi: si parte dalla riga `FN:`
+  // e si prendono le continuazioni **che la seguono**, togliendo lo spazio che le apre.
+  const inizio = righe.findIndex((riga) => riga.startsWith("FN:"));
+  let rimessa = righe[inizio].slice(3);
+  for (let i = inizio + 1; i < righe.length && righe[i].startsWith(" "); i += 1) rimessa += righe[i].slice(1);
+  assert.equal(rimessa, lungo, "il nome si ricompone intero, senza caratteri rotti");
+});
+
 console.log(`exchange: ${passed} prove passate`);

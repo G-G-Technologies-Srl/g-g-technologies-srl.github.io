@@ -13,8 +13,8 @@
 //
 // Usage:  node app/recinto/test/rules.mjs
 
-import { create, step, progress, quota, NO_INTENT, MARKER, RULES } from "../run/game.js";
-import { area2 } from "../run/geometry.js";
+import { create, step, progress, quota, NO_INTENT, MARKER, RULES, THREAD } from "../run/game.js";
+import { area2, contains, nearestOnBoundary } from "../run/geometry.js";
 import { ARENAS } from "../run/arenas.js";
 
 let failures = 0;
@@ -31,13 +31,30 @@ function equal(name, got, want) {
 
 const move = (dx, dy, slow = false) => ({ dx, dy, slow });
 
-// I vaganti si muovono da soli, e per una prova sulle regole del taglio è rumore: `pin` li rimette
+// I Fili si muovono da soli, e per una prova sulle regole del taglio è rumore: `hold` li rimette
 // dove devono stare a ogni passo. Le prove che riguardano il mondo intero — l'invariante, la
 // ripetibilità — girano senza, che è il punto.
+//
+// Scrive **tutti e due i capi e la scia**, non una posizione sola. La prima versione scriveva
+// `thread.at`, che quando il segnaposto è diventato il Filo ha smesso di esistere: da lì in poi il
+// fermo non fermava più niente e le prove passavano per come cadeva il seme. Un fermo che non ferma
+// non fallisce, tace — ed è il motivo per cui questo commento è più lungo della funzione.
+function hold(world, pin) {
+  if (!pin) return;
+  world.threads.forEach((thread, k) => {
+    if (!pin[k]) return;
+    thread.a.at = pin[k].slice();
+    // Due unità e non quattro: in una sacca stretta un capo largo sporge sulla linea che la sta
+    // chiudendo, e la prova sulla cattura diventa una prova sulla morte.
+    thread.b.at = [pin[k][0] + 2, pin[k][1]];
+    thread.trail.length = 0;
+  });
+}
+
 function play(world, intent, steps, pin = null) {
   for (let i = 0; i < steps; i += 1) {
     step(world, intent);
-    if (pin) world.threads.forEach((thread, k) => { if (pin[k]) thread.at = pin[k].slice(); });
+    hold(world, pin);
     if (world.cleared || world.over) break;
   }
   return world;
@@ -50,7 +67,7 @@ function play(world, intent, steps, pin = null) {
 function slice(world, intent, pin = null, cap = 6000) {
   for (let i = 0; i < cap; i += 1) {
     step(world, intent);
-    if (pin) world.threads.forEach((thread, k) => { if (pin[k]) thread.at = pin[k].slice(); });
+    hold(world, pin);
     if (world.events.some((event) => event.kind === "claim")) return world;
     if (world.cleared || world.over) return world;
   }
@@ -177,7 +194,7 @@ const intact = (world) => world.claimed2 + openArea2(world) === world.total2;
 
 {
   const world = create(1, 5);
-  world.threads.push({ at: [200, 96], heading: 0 });
+  world.threads.push(JSON.parse(JSON.stringify(world.threads[0])));
   slice(world, move(0, 1), [[40, 96], [200, 96]]);
   equal("separati in due, nessuna delle due metà è tua", world.claimed2, 0);
   equal("e le arene aperte diventano due", world.faces.length, 2);
@@ -187,9 +204,10 @@ const intact = (world) => world.claimed2 + openArea2(world) === world.total2;
 // Separare due volte non paga due volte: il premio è per aver capito la mossa, non per ripeterla.
 {
   const world = create(1, 5);
-  world.threads = [{ at: [40, 96], heading: 0 }, { at: [180, 50], heading: 0 },
-                   { at: [180, 150], heading: 0 }];
-  const pin = world.threads.map((thread) => thread.at.slice());
+  const one = JSON.stringify(world.threads[0]);
+  world.threads = [JSON.parse(one), JSON.parse(one), JSON.parse(one)];
+  const pin = [[40, 96], [180, 50], [180, 150]];
+  hold(world, pin);
   slice(world, move(0, 1), pin);
   const once = world.score;
   equal("il primo taglio separa", world.faces.length, 2);
@@ -260,6 +278,127 @@ for (let level = 1; level <= ARENAS.length; level += 1) {
   play(world, NO_INTENT, 300);
   equal("da fermi il marcatore non si muove",
         JSON.stringify([world.marker.at, world.claimed2, world.cut.chain.length]), before);
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  i l   F i l o   e   l e   v i t e
+// -----------------------------------------------------------------------------------------------------------------
+
+// Porta fuori una linea e poi mette il Filo **sulla coda**, lontano dalla punta: è il caso che
+// distingue «il marcatore è letale» da «la linea è letale», e sono due giochi diversi.
+function exposed(seed = 5) {
+  const world = create(1, seed);
+  play(world, move(0, 1), 100, [[40, 96]]);
+  return world;
+}
+
+function across(world, a = [124, 20], b = [132, 20]) {
+  const thread = world.threads[0];
+  thread.a.at = a.slice();
+  thread.b.at = b.slice();
+  thread.trail.length = 0;
+  return world;
+}
+
+{
+  const world = exposed();
+  check("la linea è fuori e la punta è lontana dal Filo", world.cut && world.marker.at[1] > 40,
+        String(world.marker.at));
+  across(world);
+  step(world, move(0, 1));
+  equal("il Filo che tocca la coda della linea toglie una vita", world.lives, RULES.lives - 1);
+  check("e lo dice", world.events.some((event) => event.kind === "death"));
+}
+
+{
+  const world = exposed();
+  const start = world.cut.chain[0].slice();
+  const claimed = world.claimed2;
+  across(world);
+  step(world, move(0, 1));
+  equal("si ricompare dove il taglio era partito", String(world.marker.at), String(start));
+  equal("e la linea non c'è più", world.cut, null);
+  equal("quello che avevi conquistato resta tuo", world.claimed2, claimed);
+}
+
+{
+  const world = exposed();
+  across(world);
+  step(world, move(0, 1));
+  const where = world.marker.at.slice();
+  play(world, move(1, 0), 500, [[128, 20]]);
+  equal("col Filo addosso il controllo non torna", String(world.marker.at), String(where));
+  play(world, move(1, 0), 500, [[40, 150]]);
+  check("appena si allontana, si riparte", world.marker.at[0] > where[0], `fermo in ${world.marker.at}`);
+}
+
+{
+  // Sul bordo il Filo non può niente: ci sta lontano per costruzione, e senza linea fuori non c'è
+  // niente da toccare. Le Scintille, che arrivano dopo, sono la minaccia di quel posto lì.
+  const world = create(1, 5);
+  play(world, move(1, 0), 400, [[130, 6]]);
+  equal("sul bordo il Filo non uccide", world.lives, RULES.lives);
+  equal("e non si è cominciato nessun taglio", world.cut, null);
+}
+
+{
+  // Il Filo che tocca la linea **sul bordo esatto** del riquadro che la contiene. Il rifiuto a buon
+  // mercato che precede il controllo caro va scritto con `>` e non con `>=`, e la differenza si
+  // vede solo qui: una catena dritta ha un riquadro largo zero, e col confronto sbagliato ogni Filo
+  // che la tocca viene scartato prima di essere guardato.
+  const world = exposed();
+  across(world, [128, 20], [140, 20]);
+  step(world, move(0, 1));
+  equal("il Filo che tocca la linea di striscio uccide lo stesso", world.lives, RULES.lives - 1);
+}
+
+{
+  // Quello che si vede uccide: la scia è il corpo, non un effetto.
+  const world = exposed();
+  const thread = world.threads[0];
+  thread.a.at = [40, 96];
+  thread.b.at = [44, 96];
+  thread.trail = [[[124, 20], [132, 20]]];
+  step(world, NO_INTENT);
+  equal("la scia uccide quanto il capo", world.lives, RULES.lives - 1);
+}
+
+{
+  const world = exposed();
+  world.lives = 1;
+  across(world);
+  step(world, move(0, 1));
+  check("a zero vite è finita", world.over);
+  const frozen = String([world.marker.at, world.score, world.claimed2]);
+  play(world, move(1, 0), 300);
+  equal("e dopo non succede più niente", String([world.marker.at, world.score, world.claimed2]), frozen);
+}
+
+// Il Filo non esce mai dalla sua faccia, in nessuna arena: è la condizione che rende `contains` una
+// domanda con risposta nel momento in cui il taglio si chiude.
+for (let level = 1; level <= ARENAS.length; level += 1) {
+  const world = create(level, 31);
+  let escaped = 0;
+  let tooClose = 0;
+  for (let i = 0; i < 4000; i += 1) {
+    step(world, move(0, 1));
+    for (const thread of world.threads) {
+      const face = world.faces.find((f) => contains(f, thread.a.at));
+      if (!face || !contains(face, thread.b.at)) { escaped += 1; continue; }
+      // Il margine dalle pareti non è un dettaglio del rimbalzo: è la promessa che `contains` non
+      // verrà mai interrogato su un punto appoggiato a un muro, cioè l'unica domanda a cui non sa
+      // rispondere — e quella risposta decide da che parte è finito il Filo dopo un taglio.
+      for (const end of [thread.a, thread.b]) {
+        const wall = nearestOnBoundary(face, end.at);
+        if (wall && wall.distance < THREAD.clearance - 1e-9) tooClose += 1;
+      }
+    }
+  }
+  equal(`arena «${world.arena}»: il Filo non esce mai dalla faccia`, escaped, 0);
+  equal(`arena «${world.arena}»: e non si avvicina mai alle pareti più del dovuto`, tooClose, 0);
+  const gap = Math.hypot(world.threads[0].b.at[0] - world.threads[0].a.at[0],
+                         world.threads[0].b.at[1] - world.threads[0].a.at[1]);
+  check(`arena «${world.arena}»: i due capi restano vicini`, gap < THREAD.far * 2, gap.toFixed(1));
 }
 
 // -----------------------------------------------------------------------------------------------------------------

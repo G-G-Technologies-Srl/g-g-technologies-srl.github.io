@@ -23,7 +23,8 @@
 //    be copiable, replayable and writable to disk, which is what makes the attract demo
 //    reproducible, the screenshot stable and a reported defect playable again.
 
-import { area2, contains, onBoundary, canStep, selfCrosses, split } from "./geometry.js";
+import { area2, contains, onBoundary, canStep, selfCrosses, split,
+         chainMeets, nearestOnBoundary, distanceToSegment } from "./geometry.js";
 import { arena } from "./arenas.js";
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -50,10 +51,30 @@ export const MARKER = {
   slow: 36,                   // cutting slowly — and worth double
 };
 
+// Il Filo. Due capi che vanno per conto loro e una scia di quello che il segmento fra loro è stato:
+// è così che si contorce senza che nessuno debba animarlo, ed è anche perché **quello che si vede
+// uccide** — la scia non è un effetto, è il corpo.
 export const THREAD = {
-  speed: 62,
+  speed: 62,                  // lattice units per second, the leading end
+  lead: 0.82,                 // the other end goes a little slower, which is what makes it writhe
+  wander: 2.4,                // rad/s of drift in each end's heading
+  spread: 9,                  // how far apart the two ends start
   clearance: 3,               // how far it stays off the walls, so `contains` is never asked about
-};                            // a point sitting exactly on one
+                              // a point sitting exactly on one
+
+  // Il guinzaglio. Due capi lasciati liberi non si contorcono: divergono, e dopo cinque secondi
+  // sono in due angoli opposti del campo con un segmento lungo mezzo schermo in mezzo. Fuori da
+  // questa forbice ciascuno viene sterzato verso l'altro o via dall'altro, dentro nessuno tocca
+  // niente — ed è nella banda che il Filo fa quello che deve.
+  near: 11,
+  far: 44,
+  tether: 5,                  // rad/s of steering back into the band
+
+  // La scia si campiona, non si prende a ogni passo: a 120 Hz trenta segmenti consecutivi sono lo
+  // stesso segmento trenta volte, da disegnare e contro cui collidere.
+  every: 4,                   // steps between samples
+  trail: 10,                  // samples kept — and every one of them still bites
+};
 
 export const RULES = {
   lives: 3,
@@ -66,6 +87,14 @@ export const RULES = {
   perPointOver: 250,          // per percentage point claimed past the quota
   capture: 3000,
   separation: 5000,
+
+  // Il rientro, e sono due regole che si tengono insieme. Si ricompare **dove il taglio era
+  // partito**: è lì che stavi ragionando, e ributtare il marcatore all'inizio dell'arena punirebbe
+  // due volte lo stesso errore. Nessuna invulnerabilità — ma il controllo non torna finché il Filo
+  // non è lontano, così non esiste la morte che non hai giocato e non esiste nemmeno il secondo
+  // gratis che i giocatori userebbero per attraversare.
+  pause: 1.1,                 // seconds, at least
+  safe: 30,                   // lattice units the Filo must be away before the marker moves again
 };
 
 export const NO_INTENT = Object.freeze({ dx: 0, dy: 0, slow: false });
@@ -90,7 +119,9 @@ export function create(level = 1, seed = 1) {
     claimed2: 0,
     marker: { at: plan.start.slice(), travel: 0 },
     cut: null,                // { chain, slow, face } while a line is out
-    threads: plan.threads.map((at) => ({ at: at.slice(), heading: 0 })),
+    threads: [],
+    waiting: 0,
+    tick: 0,
     lives: RULES.lives,
     score: 0,
     cleared: false,
@@ -98,15 +129,26 @@ export function create(level = 1, seed = 1) {
     separated: false,
     events: [],
   };
-  for (const thread of world.threads) thread.heading = _random(world) * Math.PI * 2;
+  world.threads = plan.threads.map((at) => _spawn(world, at));
   return world;
 }
 
 export function step(world, intent = NO_INTENT) {
   world.events.length = 0;
   if (world.cleared || world.over) return world;
+
   _moveThreads(world);
+
+  // Dopo una morte il Filo continua a girare e il marcatore aspetta. L'attesa finisce quando il
+  // tempo minimo è passato **e** il campo è libero: le due condizioni insieme, non una sola.
+  if (world.waiting > 0) {
+    world.waiting -= STEP;
+    if (world.waiting <= 0 && !_roomToBreathe(world)) world.waiting = STEP;
+    return world;
+  }
+
   _moveMarker(world, intent);
+  if (_touched(world)) _die(world);
   return world;
 }
 
@@ -148,8 +190,12 @@ function _faceIndexAt(world, point) {
   return -1;
 }
 
+// Which Filo is in this piece, asked of **one end** and not of the middle of its body. The middle
+// of a segment whose ends are both inside an L-shaped face can be outside it; an end is inside by
+// its own clearance, always. It is the same question `contains` refuses to answer about a point on
+// a wall, dodged the same way.
 function _threadsIn(world, face) {
-  return world.threads.filter((thread) => contains(face, thread.at));
+  return world.threads.filter((thread) => contains(face, thread.a.at));
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -249,6 +295,7 @@ function _close(world) {
   }
 
   world.cut = null;
+  _reseat(world);
   if (progress(world) >= quota(world) || world.threads.length === 0 || world.faces.length === 0) {
     const over = Math.max(0, Math.round((progress(world) - quota(world)) * 100));
     world.score += over * RULES.perPointOver;
@@ -259,34 +306,170 @@ function _close(world) {
 
 // -----------------------------------------------------------------------------------------------------------------
 
-// A placeholder for the Filo, and deliberately one: it wanders and it decides which side of a cut
-// is yours, which is the only thing the claim rule needs from it. The writhing ribbon, the bounce
-// and the killing come later — but the rule they plug into is real from today rather than stubbed
-// and rewritten around them.
-function _moveThreads(world) {
-  for (const thread of world.threads) {
-    const face = _faceOf(world, thread.at);
-    if (!face) continue;
+// -----------------------------------------------------------------------------------------------------------------
 
-    for (let tries = 0; tries < 8; tries += 1) {
-      const to = [
-        thread.at[0] + Math.cos(thread.heading) * THREAD.speed * STEP,
-        thread.at[1] + Math.sin(thread.heading) * THREAD.speed * STEP,
-      ];
-      if (_clearOf(face, to)) { thread.at = to; break; }
-      thread.heading = _random(world) * Math.PI * 2;
-    }
+function _spawn(world, at) {
+  const heading = _random(world) * Math.PI * 2;
+  const aside = heading + 1.3;
+  return {
+    a: { at: [at[0], at[1]], heading, speed: THREAD.speed },
+    b: {
+      at: [at[0] + Math.cos(aside) * THREAD.spread, at[1] + Math.sin(aside) * THREAD.spread],
+      heading: aside,
+      speed: THREAD.speed * THREAD.lead,
+    },
+    trail: [],
+  };
+}
+
+function _moveThreads(world) {
+  world.tick = (world.tick + 1) % THREAD.every;
+  for (const thread of world.threads) {
+    const face = _faceOf(world, thread.a.at);
+    if (!face) continue;
+    _drift(world, face, thread.a);
+    _drift(world, face, thread.b);
+    _tether(thread);
+    if (world.tick !== 0) continue;
+    thread.trail.push([thread.a.at.slice(), thread.b.at.slice()]);
+    if (thread.trail.length > THREAD.trail) thread.trail.shift();
   }
 }
 
-// Inside, and not near the edge. The margin is what keeps `contains` from ever being asked about a
-// point sitting exactly on a wall — the one question it has no answer to, and the question that
-// decides which side of a fresh cut this thread ended up on.
+// Keeps the two ends within a band of each other by steering, never by moving them: a Filo yanked
+// into place would jump, and a Filo that is steered swims.
+function _tether(thread) {
+  const dx = thread.b.at[0] - thread.a.at[0];
+  const dy = thread.b.at[1] - thread.a.at[1];
+  const gap = Math.hypot(dx, dy);
+  const pull = gap > THREAD.far ? 1 : (gap < THREAD.near ? -1 : 0);
+  if (pull === 0) return;
+
+  const towards = Math.atan2(dy, dx);
+  const turn = THREAD.tether * STEP * pull;
+  thread.a.heading = _steer(thread.a.heading, towards, turn);
+  thread.b.heading = _steer(thread.b.heading, towards + Math.PI, turn);
+}
+
+// Rotates a heading towards another by at most `amount`, the short way round, and away from it when
+// `amount` is negative.
+function _steer(heading, towards, amount) {
+  let gap = ((towards - heading + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+  return heading + Math.sign(gap) * Math.min(Math.abs(gap), Math.abs(amount)) * Math.sign(amount);
+}
+
+// One end, one step. It wanders a little every step — that drift is the whole of the writhing — and
+// it bounces off the wall it actually met rather than simply turning round, which is what makes it
+// look like it is going somewhere.
+function _drift(world, face, end) {
+  end.heading += (_random(world) - 0.5) * THREAD.wander * STEP;
+  const to = [
+    end.at[0] + Math.cos(end.heading) * end.speed * STEP,
+    end.at[1] + Math.sin(end.heading) * end.speed * STEP,
+  ];
+  if (_clearOf(face, to)) { end.at = to; return; }
+
+  const wall = nearestOnBoundary(face, end.at);
+  if (!wall || !wall.edge) { end.heading += Math.PI; return; }
+  const along = Math.atan2(wall.edge[1][1] - wall.edge[0][1], wall.edge[1][0] - wall.edge[0][0]);
+  end.heading = 2 * along - end.heading;
+  // Non si muove in questo passo, e va bene: `end.at` non è mai stato in un posto che non andasse,
+  // quindi il peggio che può fare è restare fermo un fotogramma con la direzione nuova.
+}
+
+// Inside, and no nearer than `clearance` to any wall. That margin is what keeps `contains` from
+// ever being asked about a point sitting on a wall — the one question it has no answer to, and the
+// question that decides which side of a fresh cut this Filo ended up on.
+//
+// The first version probed four points at `clearance` north, south, east and west instead of
+// measuring. It reads like the same thing and is not: near a corner all four probes can sit inside
+// while the corner itself is a tenth of a unit away, which is exactly the promise being broken.
+// Measuring is also **cheaper** — one pass over the edges rather than four.
 function _clearOf(face, point) {
   if (!contains(face, point)) return false;
-  const d = THREAD.clearance;
-  return contains(face, [point[0] - d, point[1]])
-      && contains(face, [point[0] + d, point[1]])
-      && contains(face, [point[0], point[1] - d])
-      && contains(face, [point[0], point[1] + d]);
+  const wall = nearestOnBoundary(face, point);
+  return !wall || wall.distance >= THREAD.clearance;
+}
+
+// The body: every segment still drawn, the live one last. What you can see is what can kill you —
+// there is no invisible hitbox and no lethal thing that was not on the screen.
+function _body(thread) {
+  return thread.trail.concat([[thread.a.at, thread.b.at]]);
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+
+// The whole unfinished line is lethal, not only the end of it where the marker stands. The tail you
+// left behind three seconds ago is still yours, and it is still exposed.
+function _touched(world) {
+  if (!world.cut) return false;
+  const box = _boxOf(world.cut.chain);
+  for (const thread of world.threads) {
+    for (const [a, b] of _body(thread)) {
+      // Un rifiuto a buon mercato prima di quello caro: la catena può essere lunga trecento punti,
+      // e quasi sempre il Filo non è nemmeno dalle sue parti.
+      if (Math.min(a[0], b[0]) > box.x2 || Math.max(a[0], b[0]) < box.x1) continue;
+      if (Math.min(a[1], b[1]) > box.y2 || Math.max(a[1], b[1]) < box.y1) continue;
+      if (chainMeets(world.cut.chain, a, b)) return true;
+    }
+  }
+  return false;
+}
+
+function _boxOf(chain) {
+  let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
+  for (const [x, y] of chain) {
+    if (x < x1) x1 = x;
+    if (x > x2) x2 = x;
+    if (y < y1) y1 = y;
+    if (y > y2) y2 = y;
+  }
+  return { x1, y1, x2, y2 };
+}
+
+function _roomToBreathe(world) {
+  for (const thread of world.threads) {
+    if (distanceToSegment(world.marker.at, thread.a.at, thread.b.at) < RULES.safe) return false;
+  }
+  return true;
+}
+
+function _die(world) {
+  world.marker.at = world.cut ? world.cut.chain[0].slice() : world.marker.at.slice();
+  world.marker.travel = 0;
+  world.cut = null;
+  world.lives -= 1;
+  world.waiting = RULES.pause;
+  world.events.push({ kind: "death", lives: world.lives });
+  if (world.lives <= 0) {
+    world.over = true;
+    world.events.push({ kind: "over" });
+  }
+}
+
+// After a claim the field is a different shape, and a Filo that was fine a moment ago can find
+// itself standing in ground that has just become somebody's. One end decided which piece the Filo
+// belongs to; the other one has to be brought along.
+function _reseat(world) {
+  for (const thread of world.threads) {
+    const face = _faceOf(world, thread.a.at);
+    if (!face) continue;
+    for (const end of [thread.a, thread.b]) {
+      if (_clearOf(face, end.at)) continue;
+      end.at = _pushIn(face, end.at) || thread.a.at.slice();
+    }
+    thread.trail.length = 0;      // la scia apparteneva a un campo che non c'è più
+  }
+}
+
+function _pushIn(face, point) {
+  const wall = nearestOnBoundary(face, point);
+  if (!wall || !wall.edge) return null;
+  const along = Math.atan2(wall.edge[1][1] - wall.edge[0][1], wall.edge[1][0] - wall.edge[0][0]);
+  const step = THREAD.clearance + 1;
+  for (const way of [along + Math.PI / 2, along - Math.PI / 2]) {
+    const candidate = [wall.at[0] + Math.cos(way) * step, wall.at[1] + Math.sin(way) * step];
+    if (_clearOf(face, candidate)) return candidate;
+  }
+  return null;
 }

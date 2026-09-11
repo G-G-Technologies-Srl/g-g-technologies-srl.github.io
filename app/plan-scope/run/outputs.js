@@ -97,6 +97,45 @@ export function exportCsv(projectId) {
   pack.save(`${pack.safeName(project.name)}.csv`, text, "text/csv;charset=utf-8");
 }
 
+/**
+ * La rubrica come foglio di calcolo, e come vCard.
+ *
+ * Due formati e non uno perché servono a due cose diverse: il foglio si guarda e si filtra, la
+ * vCard si **importa** — nella Rubrica del Mac, nei Contatti di Google, in un telefono — senza che
+ * nessuno debba mappare delle colonne a mano. Esportare una rubrica quasi sempre vuol dire
+ * spostarla, e per spostarla il foglio è la strada lunga.
+ *
+ * Escono le persone vive, non il cestino: chi esporta porta via quello che ha, non quello che ha
+ * buttato.
+ */
+export function exportContactsCsv() {
+  const people = model.liveContacts();
+  if (!people.length) return;
+  const labels = [t("personName"), t("personCompany"), t("personRole"), t("personEmail"),
+    t("personPhone"), t("personProjectsTitle")];
+  const text = csv.contactsCsv(people, {
+    labels,
+    sep: lang() === "it" ? ";" : ",",
+    // Dove lavora, in una colonna: è la sola cosa che una rubrica di quest'app sa e che una
+    // rubrica qualsiasi non saprebbe.
+    where: (one) => model.projectsOfContact(one.uid || one.id)
+      .map(({ project, role }) => (role ? `${project.name} (${role})` : project.name)).join(" · "),
+  });
+  pack.save(`${pack.safeName(t("rubricaTitle"), "rubrica")}.csv`, text, "text/csv;charset=utf-8");
+}
+
+export function exportContactsVcf() {
+  const people = model.liveContacts();
+  if (!people.length) return;
+  const text = csv.vcards(people, {
+    // La nota porta dove lavora: in una vCard non c'è un campo per «i progetti», e perdere quel
+    // dato nel passaggio sarebbe perdere l'unica cosa che questa rubrica sa in più.
+    note: (one) => model.projectsOfContact(one.uid || one.id)
+      .map(({ project, role }) => (role ? `${project.name} (${role})` : project.name)).join(", "),
+  });
+  pack.save(`${pack.safeName(t("rubricaTitle"), "rubrica")}.vcf`, text, "text/vcard;charset=utf-8");
+}
+
 /** Every dated task of the project as a calendar file, plus the event itself. */
 export function exportIcs(projectId) {
   const project = model.project(projectId);

@@ -96,8 +96,11 @@ export function draw(canvas, world, { preview = null } = {}) {
   }
   if (world.cut) _line(ctx, v, unit, world.cut.chain, palette.cut, 2.5, 14);
 
-  for (const thread of world.threads) _dot(ctx, v, unit, thread.at, palette.thread, 5, 16);
+  for (const thread of world.threads) _ribbon(ctx, v, unit, thread, palette.thread);
+  // In attesa il marcatore pulsa: il controllo non è tuo e va detto senza scrivere una parola.
+  if (world.waiting > 0) ctx.globalAlpha = 0.35 + 0.4 * Math.abs(Math.sin(world.waiting * 9));
   _marker(ctx, v, unit, world.marker.at, world.cut ? palette.cut : palette.marker);
+  ctx.globalAlpha = 1;
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -143,6 +146,17 @@ function _line(ctx, v, unit, points, colour, width, glow, dash = null) {
   ctx.stroke();
   ctx.setLineDash([]);
   ctx.shadowBlur = 0;
+}
+
+// Il Filo: la scia che sbiadisce e sopra il segmento vivo. Quello che si vede è il corpo — non c'è
+// una sagoma di collisione diversa da questa, e niente che uccida senza essere stato sullo schermo.
+function _ribbon(ctx, v, unit, thread, colour) {
+  thread.trail.forEach((pair, i) => {
+    ctx.globalAlpha = ((i + 1) / (thread.trail.length + 1)) * 0.5;
+    _line(ctx, v, unit, pair, colour, 1.2, 0);
+  });
+  ctx.globalAlpha = 1;
+  _line(ctx, v, unit, [thread.a.at, thread.b.at], colour, 2.4, 18);
 }
 
 function _dot(ctx, v, unit, point, colour, radius, glow) {
