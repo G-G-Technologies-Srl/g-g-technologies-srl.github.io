@@ -640,14 +640,18 @@ await test("un progetto messo lì da qualcun altro si vede prima di entrare, e e
     "ma l'app sa che ci sono, e lo dice");
 
   // Ne apre uno. L'altro resta dov'è, e resta da aprire.
+  // `openFrom` risponde col progetto **e** con `copyOf`: se quella identità qui ce l'aveva già un
+  // altro progetto, chi apre deve poterlo dire invece di lasciare comparire un progetto in più
+  // senza spiegazioni.
   const preso = await marco.sync.openFrom(marco.parent, "Sito");
-  assert.equal(preso.name, "Sito");
-  assert.deepEqual(titles(marco, preso.id), ["Bozza"]);
+  assert.equal(preso.project.name, "Sito");
+  assert.equal(preso.copyOf, null, "qui non ce n'era un'altra copia");
+  assert.deepEqual(titles(marco, preso.project.id), ["Bozza"]);
   assert.equal(marco.model.liveProjects().length, 1);
   assert.deepEqual(marco.sync.unopened(marco.parent, dentro), ["Campagna"]);
 
   // E da lì in poi è una condivisione come le altre.
-  marco.model.createTask(preso.id, { title: "Catering" });
+  marco.model.createTask(preso.project.id, { title: "Catering" });
   await marco.sync.pullNow();
   await giulia.round();
   assert.deepEqual(titles(giulia, sito.id), ["Bozza", "Catering"]);

@@ -66,7 +66,12 @@ const LOCK_NAME = "plan-scope-sync";
 //  s t a t e
 // -----------------------------------------------------------------------------------------------------------------
 
-let on = { pulled() {}, status() {}, unshared() {}, snapshot: async () => undefined, columns: () => undefined };
+let on = {
+  pulled() {}, status() {}, unshared() {}, snapshot: async () => undefined, columns: () => undefined,
+  // Il nome che prende un progetto aperto quando qui ce n'è già uno con quella identità. Di
+  // riserva resta quello che aveva: l'app senza lingua non sa dire «copia».
+  copyTitle: (title) => title,
+};
 // marks[uid] = { parent, sub, self, pushed, exported, readAt, seen, wrote, tooNew }:
 //   parent   the id of the folder it lives in, as `folders.js` knows it
 //   sub      the name of its sub-folder inside that one
@@ -82,6 +87,7 @@ let pushTimer = null;
 let pullTimer = null;
 let muted = false;                      // true while the model is being changed by the folder, not by the person
 let watching = false;
+let copyOf = null;                      // il progetto che aveva già quella identità, all'ultima apertura
 let lastPull = null;                    // ISO instant of the last read, for the status line
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -362,7 +368,12 @@ async function _pullFolder(dir, where) {
       // `fromOutside`: quello che arriva da una cartella non aggancia le schede di casa per
       // omonimia. Un nome scritto da qualcun altro su un'attività resta un nome — entra fra le
       // persone del progetto e basta — finché qualcuno qui non dice «è lei» adottandola.
-      const adopted = model.adopt(payload, { columns: on.columns(), fromOutside: true });
+      const adopted = model.adopt(payload, {
+        columns: on.columns(),
+        fromOutside: true,
+        copyTitle: (title, twin) => on.copyTitle(title, twin),
+      });
+      copyOf = adopted.copyOf;
       model.updateProject(adopted.projectId, { shared: true });
       return adopted;
     });
@@ -564,6 +575,7 @@ async function _migrateMarks(parent) {
  */
 async function _adopt(dir, where) {
   let found = null;
+  copyOf = null;
   await _withLock(async () => {
     await _loadState();
     await _pullFolder(dir, where);
@@ -577,7 +589,7 @@ async function _adopt(dir, where) {
     _watch();
     on.status();
   }
-  return found;
+  return found ? { project: found, copyOf } : null;
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -652,12 +664,12 @@ export async function openShared() {
   // Il selettore chiuso e una cartella senza progetto sono due risposte diverse, e chi chiama deve
   // poterle distinguere: la prima non si commenta, la seconda sì.
   if (!opened) return { ok: false, cancelled: true };
-  const project = await _adopt(opened.handle, { parent: opened.id, sub: null, self: true });
-  if (!project) {
+  const got = await _adopt(opened.handle, { parent: opened.id, sub: null, self: true });
+  if (!got) {
     await folders.forget(opened.id);
     return { ok: false };
   }
-  return { ok: true, project };
+  return { ok: true, project: got.project, copyOf: got.copyOf };
 }
 
 /**

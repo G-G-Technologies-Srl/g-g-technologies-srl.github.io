@@ -1359,7 +1359,8 @@ export function exportable(projectId, { bin = false } = {}) {
  * knows an image reference is a thing at all.
  */
 export function adopt({ project: incoming, pages: incomingPages = [], tasks: incomingTasks = [] },
-  { name = null, columns: fallback = DEFAULT_COLUMNS, fromOutside = false } = {}) {
+  { name = null, columns: fallback = DEFAULT_COLUMNS, fromOutside = false,
+    copyTitle = (title) => title } = {}) {
   const stamp = _now();
   const projectId = _id();
 
@@ -1381,12 +1382,17 @@ export function adopt({ project: incoming, pages: incomingPages = [], tasks: inc
   const wanted = incoming.uid || incoming.id;
   // Solo fra i progetti **vivi**: uno nel cestino non contende niente a nessuno, e rifiutargli
   // l'identità vorrebbe dire che ripescarlo dopo aver reimportato il file lo rende un estraneo.
-  const mine = liveProjects().some((one) => (one.uid || one.id) === wanted);
+  const twin = liveProjects().find((one) => (one.uid || one.id) === wanted) || null;
+  // E se una copia c'era già, il nome lo dice. Una identità nuova assegnata in silenzio lascia la
+  // persona con un progetto in più e nessuna spiegazione — due «Fiera di settembre» affiancati, e
+  // nessuno dei due che racconta da dove viene. È la stessa convenzione con cui una pagina scritta
+  // da tutti e due resta in due copie: chi l'ha fatta nascere, e quando.
+  const title = name || incoming.name;
   _put("project", {
     ...incoming,
     id: projectId,
-    uid: mine ? _id() : wanted,
-    name: name || incoming.name,
+    uid: twin ? _id() : wanted,
+    name: twin ? copyTitle(title, twin) : title,
     // Who works on it comes in with the project — a name and a role, never a way to reach them.
     // The uid is the one the file carried: adopting a person later joins the two copies without
     // ever comparing names.
@@ -1454,7 +1460,9 @@ export function adopt({ project: incoming, pages: incomingPages = [], tasks: inc
     });
   }
 
-  return { projectId };
+  // `copyOf` è il progetto che quella identità ce l'aveva già, e serve a chi chiama per dirlo a
+  // chi guarda: da lì si vede che la strada per unirle, invece di affiancarle, è `merge`.
+  return { projectId, copyOf: twin ? twin.id : null };
 }
 
 /**

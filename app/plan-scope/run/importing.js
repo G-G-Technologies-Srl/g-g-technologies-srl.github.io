@@ -213,7 +213,12 @@ async function _adopt({ replace = null } = {}) {
   let step = null;
   if (replace) step = model.trashProject(replace);
 
-  const { projectId: created } = model.adopt({ ...payload, pages }, { columns: on.startingColumns() });
+  const { projectId: created, copyOf } = model.adopt({ ...payload, pages }, {
+    columns: on.startingColumns(),
+    // Il nome lo dice qui come lo dice la cartella: `tf` c'è già in questo file, e passare da `on`
+    // vorrebbe dire aggiungere una maniglia per una frase sola.
+    copyTitle: (title) => tf("projectCopyOf", { name: title }),
+  });
   for (const asset of assets) {
     await db.putAsset({
       id: asset.id,

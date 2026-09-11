@@ -1146,6 +1146,15 @@ test("importare due volte lo stesso file fa due progetti, e con due identità", 
 
   const identita = model.liveProjects().map((one) => one.uid || one.id);
   assert.equal(new Set(identita).size, identita.length, "nessuna identità ripetuta fra i progetti vivi");
+
+  // E la persona lo vede: `copyOf` dice qual era il gemello, e il nome lo dice sullo schermo. Una
+  // identità nuova assegnata in silenzio lascerebbe due «Fiera» affiancate e nessuna che racconta
+  // da dove viene — che è esattamente come ci si ritrova un progetto in più senza spiegazioni.
+  assert.equal(primo.copyOf, null, "il primo non è copia di niente");
+  assert.equal(secondo.copyOf, primo.projectId, "il secondo dice di chi è copia");
+
+  const terzo = model.adopt(file, { copyTitle: (title) => `${title} (seconda copia)` });
+  assert.equal(model.project(terzo.projectId).name, "Fiera (seconda copia)", "e il nome lo dice");
 });
 
 console.log(`model: ${passed} prove passate`);

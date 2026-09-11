@@ -621,11 +621,18 @@ async function _paintFolder(error = null) {
  * il pulsante.
  */
 async function _openFrom(parentId, sub) {
-  const project = await sync.openFrom(parentId, sub);
-  if (!project) return snack(t("openedNothing"));
+  const got = await sync.openFrom(parentId, sub);
+  if (!got) return snack(t("openedNothing"));
   await _repaint();
   await _paintPlaces();
-  return snack(tf("opened", { name: project.name || t("projectUntitled") }));
+  const name = got.project.name || t("projectUntitled");
+  // Se quella identità qui ce l'aveva già un altro progetto, il nome lo dice e questa riga lo
+  // spiega: sono due, restano due, e la strada per unirle è un'altra.
+  if (got.copyOf) {
+    const twin = model.project(got.copyOf);
+    return snack(tf("openedCopy", { name, other: (twin && twin.name) || t("projectUntitled") }));
+  }
+  return snack(tf("opened", { name }));
 }
 
 async function _paintFolders() {
@@ -1898,7 +1905,12 @@ function _wire() {
     if (outcome.cancelled) return undefined;
     if (!outcome.ok) return snack(t("openedNothing"));
     await _repaint();
-    return snack(tf("opened", { name: outcome.project.name || t("projectUntitled") }));
+    const name = outcome.project.name || t("projectUntitled");
+    if (outcome.copyOf) {
+      const twin = model.project(outcome.copyOf);
+      return snack(tf("openedCopy", { name, other: (twin && twin.name) || t("projectUntitled") }));
+    }
+    return snack(tf("opened", { name }));
   });
   // Una promessa rotta si ripara con lo stesso gesto con cui si fa la promessa: la domanda su dove
   // va, senza toccare la spunta che è già accesa.
@@ -2412,6 +2424,7 @@ async function _boot() {
     // La cartella dell'archivio è anche il primo posto in cui si può condividere.
     localFolder: () => backup.folderHandle(),
     columns: () => _startingColumns(),
+    copyTitle: (title) => tf("projectCopyOf", { name: title }),
     // Before the folder replaces a page's text, the text is kept as a version.
     snapshot: (page) => versions.snapshot(page, { force: true }),
     pulled: async (project, outcome, who) => {
