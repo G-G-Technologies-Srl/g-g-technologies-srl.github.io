@@ -7,19 +7,39 @@ vincolo (gira tutto nel browser, non manda niente da nessuna parte), stessa form
 Questo file è il progetto, non il codice. Le regole del catalogo — due lingue, due temi, PWA,
 export e import, anagrafica — stanno in `app/CLAUDE.md` e valgono qui senza essere ripetute.
 
-**Stato.** Fatti i passi 1, 2, 3 e 4: **si gioca e si muore**, da tastiera, da mouse e da tocco, su
-quattro arene.
+**Stato.** Fatti i passi da 1 a 7: **il gioco è finito e si gioca da solo.** Da tastiera, da mouse
+e da tocco, su quattro arene, con due Fili dal livello 3, e c'è un autopilota che lo gioca dal
+principio alla fine.
 
 | | |
 |---|---|
 | `run/geometry.js` | `ringArea2`, `area2`, `contains`, `split`, `meet`, `chainMeets`, `selfCrosses`, `onBoundary`, `canStep`, `stepToward`, `pathTo`, `walkTo`, `nearestOnBoundary` |
 | `run/arenas.js` | quattro arene: rettangolo, anello con isola, elle, esagono |
-| `run/game.js` | mondo, marcatore, taglio, conquista, cattura, separazione, quota, punteggio, **il Filo, le vite, il rientro** |
+| `run/game.js` | mondo, marcatore, taglio, conquista, cattura, separazione, quota, punteggio, il Filo, le vite, il rientro, **la Miccia e le Scintille** |
 | `run/render.js` · `run/input.js` · `run/app.js` · `index.html` · `styles.css` | il campo, i due temi, i tre modi di giocare, il ciclo dei fotogrammi |
-| `test/geometry.mjs` · `test/rules.mjs` | verdi, e provati rompendo i moduli apposta |
+| `run/attract.js` | l'autopilota: la dimostrazione dietro il titolo, e lo strumento con cui si tara |
+| `run/i18n.js` | 41 chiavi per lingua, italiano e inglese, con la macchina presa da `gg/i18n.js` |
+| `run/audio.js` | sintesi, nessun file, e il contesto che si accende al gettone |
+| `index.html` · `app.js` · `styles.css` | la forma del catalogo: import map, due temi, tre interruttori, schermata del titolo |
+| `test/geometry.mjs` · `test/rules.mjs` · `test/attract.mjs` | verdi, e provati rompendo i moduli apposta |
 
-Mancano Miccia e Scintille, il secondo Filo, e poi audio, dimostrazione, classifica, PWA, due
-lingue, scheda.
+Del corredo del catalogo mancano: **classifica con export e import** (`run/scores.js` su
+`gg/store.js` e `gg/io.js`), **PWA** (`manifest.webmanifest`, `sw.js` scritto a mano con l'elenco
+dei file, le tre icone), il **pulsante Installa** su `gg/install.js`, l'**anagrafica e la scheda**
+in `_src/apps.py` nelle due lingue, e l'**esclusione di `run/`** in `_pages()` di `check_site.py`.
+Poi la taratura con le mani sopra.
+
+Finché la chiave `recinto` non è in `apps.py`, `check_apps.py` non vede quest'app: i suoi
+ventiquattro controlli cominciano dal registro. Registrarla è quindi anche il modo di scoprire cosa
+manca.
+
+**Quanto costa provare.** `geometry.mjs` e `rules.mjs` sono istantanei; `attract.mjs` gioca dieci
+partite intere e ci mette circa un minuto. È un prezzo da prima della pubblicazione, non da ogni
+salvataggio.
+
+**Quanto costa girare.** Un passo di mondo sta sotto il decimo di millisecondo anche a partita
+avanzata, con le facce da trecento lati: a 120 passi al secondo è l'uno per cento del tempo di un
+fotogramma. Il collo di bottiglia non è qui.
 
 ---
 
@@ -313,7 +333,24 @@ verso di marcia. Va scritto una volta, in una funzione sola, con il suo test.
 Una scintilla al livello 1, una in più ogni due livelli fino al tetto, e accelerano dentro il
 livello: chi tiene il bordo a lungo viene sloggiato.
 
+**Il riaggancio, scritto com'è venuto.** L'indice che una Scintilla tiene sulla sua pista è una
+**comodità verificata, non una verità**, e la funzione che lo risolve ha tre gradini in ordine di
+costo: la scommessa — quasi sempre la pista è quella di un fotogramma fa e l'indice è ancora buono,
+due confronti; il ripescaggio — stesso bordo, posto diverso nell'elenco; e il riaggancio vero, per
+quando il bordo su cui correva è stato proprio conquistato via, che va al punto più vicino di quello
+che è rimasto tenendo il verso di marcia. Nessun altro tocca quell'indice.
+
+E le piste ci sono per **ogni anello**, isole comprese: su un'isola si cammina, quindi sull'isola ti
+prendono.
+
 ### La Miccia — *non stare fermo*
+
+**Premere non è muoversi.** La Miccia guarda se il marcatore ha cambiato posto, non se il giocatore
+stava premendo: spingere contro un muro o all'indietro sulla propria linea è stare fermi tanto
+quanto non premere niente, e non c'è niente da distinguere fra le due cose. Ne discende una coda di
+un fotogramma o due quando riparti — il marcatore deve ancora accumulare abbastanza strada per il
+primo passo, e in quei fotogrammi è fermo davvero. La linea non ricresce mai: quello che è bruciato
+è bruciato.
 
 Misurato sul Filo finito, e vale la pena averlo scritto prima di scriverla: **su quaranta partite,
 in una dozzina il Filo non trova mai una linea lasciata fuori nel giro di un minuto.** Vaga, e una
@@ -485,6 +522,84 @@ paga da sé.
 
 ---
 
+## Dietro il titolo si gioca
+
+La schermata del titolo non copre il campo: ci sta sopra, e sotto la dimostrazione continua a
+giocare. È una riga di CSS ed è la prima cosa che qualcuno vede di questo gioco — anche
+letteralmente, perché quella schermata è lo screenshot della scheda.
+
+Il velo va tenuto **leggero**, e la prima versione l'aveva al 78%: tecnicamente la dimostrazione
+c'era, praticamente era un'ombra. La leggibilità del testo la porta il testo, con la sua ombra, non
+il velo. L'unica schermata col velo pieno è quella delle istruzioni, perché lì guardare il campo
+dietro non serve a niente.
+
+---
+
+## L'autopilota non è la dimostrazione: è lo strumento di misura
+
+Nasce per la schermata del titolo — e quella schermata è anche lo screenshot della scheda, quindi
+la prima cosa che qualcuno vede di questo gioco è un gioco giocato invece che un gioco fermo. Ma il
+mestiere vero se l'è preso subito dopo: **è l'unica cosa che risponde alle domande sui numeri.**
+Quanto deve andare veloce il tratto, quanto deve essere alta la quota, quando le Scintille diventano
+insopportabili non si decidono a tavolino. Si decidono giocando quattrocento partite e contando.
+
+Parla la stessa lingua di una persona — una direzione e una velocità di tratto, una volta per passo
+— e non ha accesso privilegiato a niente: legge il mondo che legge il renderer e muore delle stesse
+tre cause. Il suo caso ha un seme **suo**, tenuto separato da quello del mondo: mescolarli
+vorrebbe dire che cambiare come ragiona l'autopilota cambia quello che fanno i Fili, e allora due
+misure non si possono più confrontare.
+
+E ha dovuto imparare una cosa che nessuno aveva scritto: **quando la strada è bloccata, si gira.**
+Una linea in diagonale può incontrare una parete a 45° lasciata da un taglio di prima — il passo
+viene rifiutato, perché non si taglia l'angolo attraverso un muro — e chi tiene la barra dritta
+resta lì appeso finché la Miccia non gli mangia la linea. Le prime tre partite sono finite così,
+tutte e tre.
+
+---
+
+## Il difetto che solo giocare poteva trovare
+
+Dopo qualche taglio succede da solo, senza che nessuno faccia niente di strano: **un pezzo di
+terreno conquistato finisce appoggiato alla parete esterna lungo un tratto intero.** I punti di quel
+tratto stanno su due anelli, e «su quale anello sono» smette di avere risposta — che è la prima
+domanda che si fa `split`, e che rispondeva prendendo il primo anello dell'elenco, cioè quello
+sbagliato la metà delle volte.
+
+Il modo in cui si manifestava è la parte che vale la pena ricordare. Il taglio veniva cucito al
+pezzo sbagliato e produceva **un buco dentro un altro buco** — terreno conquistato dentro terreno
+conquistato, che non vuol dire niente. Il gioco andava avanti per tre tagli con quella faccia in
+pancia, e poi esplodeva altrove, con un messaggio che non nominava né quel punto né quel taglio.
+L'area, nel frattempo, si conservava alla perfezione: l'invariante che ha retto tutto il resto del
+progetto qui non vedeva niente.
+
+La regola è una riga e vale per tutte e due le estremità: **dove due pareti si toccano non si
+stacca e non ci si chiude.** Camminarci sopra resta libero, ed è come si esce di lì. `canStep` sa
+guardare dove il passo arriva, quindi il controllo sulla partenza sta in `game.js`, che è l'unico
+posto che sa che quel passo è l'inizio di un taglio; e `split` rifà la domanda per conto suo, perché
+chi la chiama può non averla fatta.
+
+Adesso ci sono tre reti: la prova di geometria sul caso costruito a mano, il rifiuto in `split`, e
+un invariante di sanità sulle facce che gira dopo ogni conquista per dieci partite intere. Tredici
+minuti di gioco simulato: zero esplosioni, zero facce malate.
+
+---
+
+## Non esiste un posto dove aspettare
+
+È uscita da una prova che falliva, ed è la frase che descrive il gioco finito meglio di qualunque
+altra nel documento.
+
+La prova diceva: «resta fermo con la linea fuori e la Miccia ti prende». Tirava dritto per duemila
+passi e ne collezionava **due**, di morti — perché dopo il rientro il marcatore resta fermo sul
+bordo, e lì arriva la Scintilla. La prova era sbagliata (si ferma alla morte, non all'orologio), ma
+la seconda morte non era un difetto: era il gioco che funzionava.
+
+Le tre minacce insieme non lasciano un posto sicuro dove fermarsi a pensare. Fuori ti trova il
+Filo, sul bordo ti trova la Scintilla, e fermo ti mangia la linea la Miccia. Ora c'è una prova per
+ciascuno dei tre, e quella sulla Scintilla è nata dall'incidente.
+
+---
+
 ## Tre cose che si sono viste solo guardando
 
 Il passo 3 è il primo che produce un'immagine, e ha trovato subito quello che i test non potevano.
@@ -526,7 +641,9 @@ Uno alla volta, e ognuno finisce con qualcosa che si può guardare o provare.
 
 1. **`geometry.js` con i suoi test, prima di ogni altra riga.** Se la geometria non regge, tutto il
    resto va riscritto; se regge, il gioco è quasi meccanica.
-2. **`game.js`: mondo, marcatore, taglio, conquista.** Provato sotto Node.
+2. **`game.js`: mondo, marcatore, taglio, conquista.** Provato sotto Node. Punti e vite passano di
+   livello in livello — senza, ogni livello è una partita nuova con un fondale diverso, ed è stato
+   così per tre passi senza che se ne accorgesse nessuno.
 
    Con **un vagante segnaposto**, e di proposito: la regola della conquista ha bisogno di sapere da
    che parte sta il nemico, e senza nessun nemico si scriverebbe una regola finta — «tieni la parte

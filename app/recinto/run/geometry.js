@@ -134,6 +134,18 @@ export function onBoundary(face, point) {
   return false;
 }
 
+// On how many walls at once? Almost always one, and the answer only matters when it is two.
+//
+// Two rings of the same face can touch — a piece of claimed ground can end up leaning against the
+// outer wall along a whole 45° run, and it happens after a handful of cuts without anybody doing
+// anything strange. A point where they touch belongs to both, and «which ring is this on» stops
+// having an answer. That question is the first thing `split` asks.
+export function wallsAt(face, point) {
+  let many = 0;
+  for (const ring of face.rings) if (_onRing(ring, point)) many += 1;
+  return many;
+}
+
 // -----------------------------------------------------------------------------------------------------------------
 //  i l   p e r c o r s o
 // -----------------------------------------------------------------------------------------------------------------
@@ -192,7 +204,10 @@ export function canStep(face, from, to) {
   const lands = onBoundary(face, to);
   if (onBoundary(face, middle)) return lands ? "walk" : null;
   if (!contains(face, middle)) return null;
-  if (lands) return "close";
+  // Chiudere dove due pareti si toccano non si può, e la ragione è sotto `wallsAt`: lì «su quale
+  // anello sono» non ha risposta, e il taglio verrebbe cucito al pezzo sbagliato. Camminarci sopra
+  // va benissimo — è chiudere che fa la domanda.
+  if (lands) return wallsAt(face, to) > 1 ? null : "close";
   return contains(face, to) ? "open" : null;
 }
 
@@ -226,6 +241,13 @@ export function walkTo(face, from, to) {
   const forward = arc(a.at, b.at);
   const backward = arc(b.at, a.at).reverse();
   return _subdivide(_span(forward) <= _span(backward) ? forward : backward);
+}
+
+// A whole ring unrolled into the lattice points you would stand on walking it, in order. This is
+// the track the Sparx run on: they do not travel a distance along a wall, they occupy a place the
+// marker could also occupy, which is what makes «it caught you» a comparison and not a near miss.
+export function walkRing(ring) {
+  return _subdivide(ring.concat([ring[0]])).slice(0, -1);
 }
 
 // Where on the outline a loose point lands, how far away it was, and **which wall it was**. The
@@ -297,6 +319,12 @@ export function split(face, chain) {
 
   if (!a || !b) throw new Error("split: the chain must begin and end on the boundary of the face");
   if (a.ring === b.ring && a.at === b.at) throw new Error("split: the chain returns to where it started");
+  // La stessa domanda di `canStep`, rifatta qui: chi chiama può non averla fatta, e una risposta
+  // ambigua qui dentro non dà un errore — dà una faccia sbagliata che esplode tre tagli dopo, in
+  // un punto che non nomina né questa funzione né quel taglio.
+  if (wallsAt(face, head) > 1 || wallsAt(face, tail) > 1) {
+    throw new Error("split: the chain ends where two walls touch");
+  }
 
   const inner = chain.slice(1, -1).map((p) => [p[0], p[1]]);
   const rest = a.ring === b.ring ? _divide(rings, a, b, inner) : _bridge(rings, a, b, inner);

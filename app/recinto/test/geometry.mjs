@@ -20,7 +20,7 @@
 
 import { ringArea2, area2, contains, split,
          meet, chainMeets, selfCrosses, onBoundary, pathTo,
-         walkTo, nearestOnBoundary } from "../run/geometry.js";
+         walkTo, nearestOnBoundary, canStep, wallsAt } from "../run/geometry.js";
 
 let failures = 0;
 
@@ -324,6 +324,39 @@ equal("dal bordo esterno a un'isola non si cammina", walkTo(atoll(), [0, 24], [1
   const corner = nearestOnBoundary(field(), [100, -20]);
   check("un punto oltre lo spigolo si appoggia allo spigolo",
         here(corner.at, [64, 0]) && onBoundary(field(), corner.at), String(corner.at));
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  d o v e   d u e   p a r e t i   s i   t o c c a n o
+// -----------------------------------------------------------------------------------------------------------------
+
+// Dopo una manciata di tagli succede da solo, senza che nessuno faccia niente di strano: un pezzo
+// di terreno conquistato finisce appoggiato alla parete esterna lungo un tratto intero. I punti di
+// quel tratto stanno su **due** anelli, e «su quale anello sono» smette di avere risposta — che è
+// la prima domanda che si fa `split`.
+//
+// Non è teoria: l'ha trovato la dimostrazione giocando, e per tre tagli il gioco è andato avanti con
+// una faccia in cui un buco stava dentro un altro buco, prima di esplodere altrove con un messaggio
+// che non nominava né questo punto né quel taglio.
+{
+  const touching = {
+    rings: [
+      [[0, 0], [64, 0], [64, 48], [0, 48]],
+      [[16, 12], [48, 12], [48, 0], [16, 0]],      // appoggiato alla parete di sopra, da 16 a 48
+    ],
+  };
+  equal("il buco appoggiato alla parete è un buco", ringArea2(touching.rings[1]) < 0, true);
+  equal("un punto sul tratto in comune sta su due pareti", wallsAt(touching, [32, 0]), 2);
+  equal("e lo spigolo dove comincia, pure", wallsAt(touching, [16, 0]), 2);
+  equal("un punto normale del bordo ne ha una sola", wallsAt(touching, [8, 0]), 1);
+
+  equal("chiudere lì non si può", canStep(touching, [15, 1], [16, 0]), null);
+  equal("ma il passo di fianco sì", canStep(touching, [15, 1], [15, 0]), "close");
+
+  const chain = [[0, 8], [7, 1], [8, 1], [15, 1], [16, 0]];
+  let refused = false;
+  try { split(touching, chain); } catch (error) { refused = /two walls touch/.test(error.message); }
+  check("e se qualcuno ci prova lo stesso, `split` si rifiuta invece di cucire male", refused);
 }
 
 // -----------------------------------------------------------------------------------------------------------------

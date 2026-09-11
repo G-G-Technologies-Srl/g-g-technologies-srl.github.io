@@ -15,6 +15,7 @@
 
 import { create, step, progress } from "../run/game.js";
 import { mind, think } from "../run/attract.js";
+import { ringArea2, contains, onBoundary } from "../run/geometry.js";
 
 let failures = 0;
 
@@ -24,11 +25,38 @@ function check(name, condition, detail = "") {
   console.log(`  !  ${name}${detail ? `\n       ${detail}` : ""}`);
 }
 
+// Una faccia sana: l'anello esterno è positivo, ogni buco è negativo, ogni buco sta dentro
+// l'esterno, e **nessun buco sta dentro un altro buco**.
+//
+// L'ultima è quella che conta, ed è la ragione per cui questo controllo esiste: un buco dentro un
+// altro buco è terreno conquistato dentro terreno conquistato, che non vuol dire niente. Quando è
+// successo, il gioco è andato avanti per tre tagli prima di esplodere in un punto lontano. Si
+// controlla dopo ogni conquista, perché è l'unico momento in cui le facce cambiano.
+function illness(face) {
+  const outer = face.rings[0];
+  if (ringArea2(outer) <= 0) return "l'anello esterno non è positivo";
+
+  for (let i = 1; i < face.rings.length; i += 1) {
+    const hole = face.rings[i];
+    if (ringArea2(hole) >= 0) return `l'anello ${i} non è un buco`;
+    const probe = hole.find((point) => !onBoundary({ rings: [outer] }, point));
+    if (probe && !contains({ rings: [outer] }, probe)) return `il buco ${i} è fuori dall'esterno`;
+
+    for (let j = 1; j < face.rings.length; j += 1) {
+      if (i === j) continue;
+      const other = face.rings[j];
+      const apart = hole.find((point) => !onBoundary({ rings: [other] }, point));
+      if (apart && contains({ rings: [other] }, apart)) return `il buco ${i} sta dentro il buco ${j}`;
+    }
+  }
+  return null;
+}
+
 // Una partita intera, di livello in livello, come la vedrebbe chi guarda il titolo.
 function demo(seed, cap = 90000) {
   let world = create(1, seed);
   const brain = mind(seed * 7 + 1);
-  const out = { cuts: 0, levels: 0, deaths: [], steps: 0, longestStall: 0, score: 0, best: 0 };
+  const out = { cuts: 0, levels: 0, deaths: [], steps: 0, longestStall: 0, score: 0, best: 0, sick: null };
 
   let frozen = null;
   let still = 0;
@@ -37,9 +65,16 @@ function demo(seed, cap = 90000) {
     step(world, think(world, brain));
     out.steps += 1;
 
+    let claimed = false;
     for (const event of world.events) {
-      if (event.kind === "claim") out.cuts += 1;
+      if (event.kind === "claim") { out.cuts += 1; claimed = true; }
       if (event.kind === "death") out.deaths.push(event.cause);
+    }
+    if (claimed && !out.sick) {
+      for (const face of world.faces) {
+        const bad = illness(face);
+        if (bad) { out.sick = `seme ${seed}, passo ${out.steps}: ${bad}`; break; }
+      }
     }
     out.best = Math.max(out.best, progress(world));
 
@@ -75,6 +110,9 @@ check("e prima o poi perde", games.every((game) => game.over),
 
 // Il controllo che nasce dal difetto: mai più appesi a un muro con la linea fuori. Mezzo secondo di
 // immobilità mentre si taglia è già tantissimo — la Miccia si accende dopo un terzo di secondo.
+const sick = games.map((game) => game.sick).filter(Boolean);
+check("e nessuna faccia si ammala mai", sick.length === 0, sick.join(" · "));
+
 const worst = Math.max(...games.map((game) => game.longestStall));
 check("non resta mai piantato a metà linea", worst < 60, `${worst} passi fermo`);
 

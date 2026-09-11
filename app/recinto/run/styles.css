@@ -11,6 +11,9 @@
   --wall: #2c4361;
   --edge: #5ad1ff;
   --cut: #ffcf5c;
+  --burnt: #5a4a2e;
+  --fuse: #ff9f45;
+  --spark: #b48cff;
   --marker: #ffffff;
   --thread: #ff5d73;
   --ghost: #7fa8c9;
@@ -31,6 +34,9 @@
     --wall: #9db1c6;
     --edge: #0a6ea8;
     --cut: #a86200;
+    --burnt: #cdbfa8;
+    --fuse: #c24a00;
+    --spark: #5b32b0;
     --marker: #0d141d;
     --thread: #bf2a3d;
     --ghost: #6d8ca8;
@@ -45,46 +51,42 @@
 
 * { box-sizing: border-box; }
 
-html, body {
-  height: 100%;
-  margin: 0;
-}
+html, body { height: 100%; margin: 0; }
 
 body {
   display: flex;
   flex-direction: column;
   background: var(--page);
   color: var(--ink);
-  font: 15px/1.4 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font: 15px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   overscroll-behavior: none;
 }
 
-.hud {
+.bar {
   display: flex;
+  align-items: center;
   gap: 8px;
   padding: 10px 12px;
   border-bottom: 1px solid var(--line);
 }
 
+footer.bar { border-bottom: 0; border-top: 1px solid var(--line); }
+.spacer { flex: 1; }
+
 .hud-item {
   display: flex;
   flex-direction: column;
-  flex: 1;
   gap: 2px;
   padding: 6px 10px;
   border-radius: 8px;
   background: var(--chip);
 }
 
-.hud-item b { font-size: 20px; font-variant-numeric: tabular-nums; }
+.hud-item b { font-size: 19px; font-variant-numeric: tabular-nums; }
 .hud-item small { color: var(--muted); font-size: 12px; }
 
-.field {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-}
+.field { position: relative; flex: 1; min-height: 0; }
 
 canvas {
   display: block;
@@ -94,27 +96,57 @@ canvas {
   cursor: crosshair;
 }
 
-.banner {
+/* Le schermate stanno **sopra** il campo e non al posto suo: dietro il titolo la dimostrazione
+   continua a giocare, ed è quello che si vede.
+   Il velo è leggero di proposito. La prima versione copriva al 78% e il risultato era una schermata
+   di titolo con dietro un'ombra: tecnicamente la dimostrazione c'era, praticamente no — e quella
+   schermata è anche lo screenshot della scheda. La leggibilità del testo la porta il testo, con la
+   sua ombra, non il velo. */
+.screen {
   position: absolute;
-  inset: auto 0 12% 0;
-  margin: 0;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
   text-align: center;
-  font-size: 20px;
-  font-weight: 600;
-  text-shadow: 0 1px 12px var(--page);
+  background: radial-gradient(ellipse at center,
+    color-mix(in srgb, var(--page) 74%, transparent) 0%,
+    color-mix(in srgb, var(--page) 34%, transparent) 70%);
 }
 
-.controls {
-  display: flex;
-  gap: 8px;
-  padding: 10px 12px;
-  border-top: 1px solid var(--line);
+.screen h1, .screen h2, .screen p {
+  text-shadow: 0 1px 3px var(--page), 0 0 18px var(--page);
 }
+
+.screen[hidden] { display: none; }
+.screen h1 { margin: 0; font-size: clamp(34px, 9vw, 64px); letter-spacing: 0.02em; }
+.screen h2 { margin: 0 0 4px; font-size: clamp(22px, 5vw, 32px); }
+.screen p { margin: 0; max-width: 52ch; }
+.tagline { color: var(--muted); }
+.small { color: var(--muted); font-size: 13px; }
+
+/* Le istruzioni si leggono, quindi lì il velo è pieno: è l'unica schermata in cui guardare il
+   campo dietro non serve a niente. */
+#howScreen {
+  justify-content: flex-start;
+  overflow-y: auto;
+  gap: 8px;
+  text-align: left;
+  background: color-mix(in srgb, var(--page) 94%, transparent);
+}
+#howScreen p { font-size: 14px; }
+
+#coinButton { animation: pulse 1.6s ease-in-out infinite; }
+
+@keyframes pulse { 50% { opacity: 0.55; } }
+@media (prefers-reduced-motion: reduce) { #coinButton { animation: none; } }
 
 button {
-  flex: 1;
   min-height: 44px;            /* il pollice non è un puntatore */
-  padding: 0 14px;
+  padding: 0 16px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--chip);
@@ -123,13 +155,13 @@ button {
   cursor: pointer;
 }
 
-button[aria-pressed="true"] {
-  border-color: var(--cut);
-  color: var(--cut);
-}
+button:disabled { opacity: 0.4; cursor: default; }
+button[aria-pressed="true"] { border-color: var(--cut); color: var(--cut); }
+.bar button { min-width: 44px; }
+
+footer.bar button { flex: 1; }
 
 @media (min-width: 720px) {
-  .hud, .controls { padding: 12px 20px; }
-  .hud-item { flex: 0 0 auto; min-width: 120px; }
-  button { flex: 0 0 auto; }
+  .bar { padding: 12px 20px; }
+  footer.bar button { flex: 0 0 auto; }
 }

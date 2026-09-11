@@ -23,8 +23,8 @@
 //    be copiable, replayable and writable to disk, which is what makes the attract demo
 //    reproducible, the screenshot stable and a reported defect playable again.
 
-import { area2, contains, onBoundary, canStep, selfCrosses, split,
-         chainMeets, nearestOnBoundary, distanceToSegment } from "./geometry.js";
+import { area2, contains, onBoundary, canStep, selfCrosses, split, wallsAt,
+         chainMeets, nearestOnBoundary, distanceToSegment, walkRing } from "./geometry.js";
 import { arena } from "./arenas.js";
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -82,6 +82,24 @@ export const THREAD = {
   trail: 10,                  // samples kept — and every one of them still bites
 };
 
+// La Miccia. Non è un secondo nemico: è la regola che rende impossibile «esco di un passo e
+// aspetto di vedere cosa fa il Filo», che senza di lei è la strategia ottima e spegne il gioco.
+// Brucia solo mentre stai fermo e **non arretra** quando riparti — quello che hai perso è perso.
+export const FUSE = {
+  grace: 0.35,                // seconds of standing still before it lights
+  speed: 26,                  // lattice units per second along your own line
+};
+
+// Le Scintille. Corrono sul confine delle facce aperte, cioè esattamente dove cammina il
+// marcatore, e ogni conquista riscrive la loro pista insieme al tabellone.
+export const SPARK = {
+  speed: 30,                  // lattice units per second at the start of a level
+  quicken: 1.1,               // extra units per second, for every second the level lasts
+  fastest: 110,
+  first: 3,                   // seconds of grace at the start of a level
+  bite: 1.6,                  // lattice units: near enough is caught
+};
+
 export const RULES = {
   lives: 3,
   quota: 0.70,                // of the arena, to clear the level
@@ -101,6 +119,16 @@ export const RULES = {
   // gratis che i giocatori userebbero per attraversare.
   pause: 1.1,                 // seconds, at least
   safe: 30,                   // lattice units the Filo must be away before the marker moves again
+
+  // Il secondo Filo. Finché due Fili condividono la stessa faccia si ignorano: quello che cambia è
+  // che adesso il taglio che li mette in due regioni diverse esiste, e vale il premio — una mossa
+  // che al primo livello non è nemmeno pensabile.
+  threadsFrom: 3,             // the level the second one turns up
+  threadsMax: 2,
+
+  sparks: 1,                  // at level 1
+  sparksEvery: 2,             // one more every this many levels
+  sparksMax: 4,
 };
 
 export const NO_INTENT = Object.freeze({ dx: 0, dy: 0, slow: false });
@@ -109,7 +137,9 @@ export const NO_INTENT = Object.freeze({ dx: 0, dy: 0, slow: false });
 //  t h e   w o r l d
 // -----------------------------------------------------------------------------------------------------------------
 
-export function create(level = 1, seed = 1) {
+// `carry` è quello che sopravvive al livello: punti e vite. Senza, ogni livello comincia da zero
+// punti e da tre vite — cioè non è un livello, è una partita nuova con un fondale diverso.
+export function create(level = 1, seed = 1, carry = null) {
   const plan = arena(level);
   const face = { rings: plan.rings.map((ring) => ring.map((p) => p.slice())) };
 
@@ -126,16 +156,21 @@ export function create(level = 1, seed = 1) {
     marker: { at: plan.start.slice(), travel: 0 },
     cut: null,                // { chain, slow, face } while a line is out
     threads: [],
+    sparks: [],
     waiting: 0,
+    age: 0,                   // seconds this level has lasted, which is what quickens the Sparx
     tick: 0,
-    lives: RULES.lives,
-    score: 0,
+    lives: carry ? carry.lives : RULES.lives,
+    score: carry ? carry.score : 0,
     cleared: false,
     over: false,
     separated: false,
     events: [],
   };
-  world.threads = plan.threads.map((at) => _spawn(world, at));
+  const many = Math.min(RULES.threadsMax, plan.threads.length,
+                        world.level >= RULES.threadsFrom ? RULES.threadsMax : 1);
+  world.threads = plan.threads.slice(0, many).map((at) => _spawn(world, at));
+  world.sparks = _sparksFor(world);
   return world;
 }
 
@@ -143,18 +178,24 @@ export function step(world, intent = NO_INTENT) {
   world.events.length = 0;
   if (world.cleared || world.over) return world;
 
+  world.age += STEP;
   _moveThreads(world);
+  _moveSparks(world);
 
-  // Dopo una morte il Filo continua a girare e il marcatore aspetta. L'attesa finisce quando il
-  // tempo minimo è passato **e** il campo è libero: le due condizioni insieme, non una sola.
+  // Dopo una morte tutto continua a girare e il marcatore aspetta. L'attesa finisce quando il tempo
+  // minimo è passato **e** il campo è libero: le due condizioni insieme, non una sola.
   if (world.waiting > 0) {
     world.waiting -= STEP;
     if (world.waiting <= 0 && !_roomToBreathe(world)) world.waiting = STEP;
     return world;
   }
 
-  _moveMarker(world, intent);
-  if (_touched(world)) _die(world);
+  const moved = _moveMarker(world, intent);
+  if (world.cut) _burn(world, moved);
+  if (world.cleared || world.over) return world;
+
+  if (_touched(world)) { _die(world, "filo"); return world; }
+  if (_bitten(world)) { _die(world, "scintilla"); return world; }
   return world;
 }
 
@@ -206,9 +247,12 @@ function _threadsIn(world, face) {
 
 // -----------------------------------------------------------------------------------------------------------------
 
+// Restituisce se in questo fotogramma il marcatore ha davvero cambiato posto. Non se ce l'ha
+// messa, non se il giocatore stava premendo: **se si è mosso**. È quello che la Miccia deve sapere,
+// e premere contro un muro è stare fermi quanto non premere niente.
 function _moveMarker(world, intent) {
   const { dx, dy } = intent;
-  if (dx === 0 && dy === 0) { world.marker.travel = 0; return; }
+  if (dx === 0 && dy === 0) { world.marker.travel = 0; return false; }
 
   const speed = world.cut ? (world.cut.slow ? MARKER.slow : MARKER.fast) : MARKER.walk;
   const cost = dx !== 0 && dy !== 0 ? Math.SQRT2 : 1;
@@ -216,12 +260,15 @@ function _moveMarker(world, intent) {
 
   // A guard rather than a plain `while`: at these speeds it takes one step or none, and a bug that
   // made the cost zero would otherwise hang the frame instead of showing itself.
+  let moved = false;
   for (let guard = 0; guard < 4; guard += 1) {
     if (world.marker.travel < cost) break;
     world.marker.travel -= cost;
     if (!_take(world, intent)) { world.marker.travel = 0; break; }
+    moved = true;
     if (world.cleared || world.over) break;
   }
+  return moved;
 }
 
 // One lattice step, or a refusal. Everything the marker can do is one of five outcomes, and which
@@ -240,6 +287,7 @@ function _take(world, intent) {
     const kind = canStep(face, from, to);
     if (kind !== "open" && kind !== "close") return false;
     world.cut.chain.push(to);
+    world.cut.length += _cost(intent);
     world.marker.at = to;
     if (kind === "close") _close(world);
     return true;
@@ -249,9 +297,22 @@ function _take(world, intent) {
   if (kind === "walk") { world.marker.at = to; return true; }
   if (kind !== "open" && kind !== "close") return false;
 
+  // Non si stacca da dove due pareti si toccano, per la stessa ragione per cui non ci si chiude:
+  // lì «da quale anello sono partito» non ha risposta. `canStep` guarda dove il passo **arriva** e
+  // non poteva saperlo — è questo il posto che sa che quel passo è l'inizio di un taglio.
+  // Camminarci sopra resta libero, ed è come si esce di lì.
+  if (wallsAt(face, from) > 1) return false;
+
   // The stroke speed is read here and nowhere else: it is a bet placed on the way out, not a dial
   // turned while the line is already exposed.
-  world.cut = { chain: [from.slice(), to], slow: Boolean(intent.slow), face: index };
+  world.cut = {
+    chain: [from.slice(), to],
+    slow: Boolean(intent.slow),
+    face: index,
+    length: _cost(intent),    // quanto è lunga la linea, tenuta man mano e non ricontata
+    fuse: 0,                  // quanto ne ha già bruciato la Miccia
+    still: 0,                 // da quanto il marcatore non si muove
+  };
   world.marker.at = to;
   if (kind === "close") _close(world);
   return true;
@@ -433,20 +494,202 @@ function _boxOf(chain) {
   return { x1, y1, x2, y2 };
 }
 
+// Libero vuol dire libero da tutto quello che uccide, Scintille comprese — e le Scintille contano
+// più del Filo, perché il marcatore ricompare **sul bordo**, cioè proprio sulla loro pista.
 function _roomToBreathe(world) {
   for (const thread of world.threads) {
     if (distanceToSegment(world.marker.at, thread.a.at, thread.b.at) < RULES.safe) return false;
   }
+  for (const spark of world.sparks) {
+    if (Math.hypot(spark.at[0] - world.marker.at[0], spark.at[1] - world.marker.at[1]) < RULES.safe) {
+      return false;
+    }
+  }
   return true;
 }
 
-function _die(world) {
+function _cost(intent) {
+  return intent.dx !== 0 && intent.dy !== 0 ? Math.SQRT2 : 1;
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+
+// La Miccia brucia solo da fermi, riparte da dove era arrivata e non torna mai indietro. Il minimo
+// di grazia serve perché un fotogramma di esitazione non è stare fermi — e perché a 120 Hz il
+// marcatore cambia posto ogni due passi anche mentre corre.
+function _burn(world, moved) {
+  const cut = world.cut;
+  if (moved) { cut.still = 0; return; }
+
+  cut.still += STEP;
+  if (cut.still < FUSE.grace) return;
+
+  cut.fuse += FUSE.speed * STEP;
+  if (cut.fuse >= cut.length) _die(world, "miccia");
+}
+
+// Dove è arrivata la Miccia, come punto: serve al disegno, e il disegno è l'unico posto che ne ha
+// bisogno — la regola sa già rispondere confrontando due lunghezze.
+export function fuseAt(world) {
+  if (!world.cut || world.cut.fuse <= 0) return null;
+  const chain = world.cut.chain;
+  let left = world.cut.fuse;
+  for (let i = 1; i < chain.length; i += 1) {
+    const dx = chain[i][0] - chain[i - 1][0];
+    const dy = chain[i][1] - chain[i - 1][1];
+    const span = Math.hypot(dx, dy);
+    if (left < span) {
+      const k = left / span;
+      return [chain[i - 1][0] + dx * k, chain[i - 1][1] + dy * k];
+    }
+    left -= span;
+  }
+  return chain[chain.length - 1].slice();
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+
+// Le Scintille corrono sul confine delle facce aperte, srotolato in punti del reticolo: occupano un
+// posto dove anche il marcatore potrebbe stare, così «ti ha preso» è un confronto e non una stima.
+function _sparksFor(world) {
+  const many = Math.min(RULES.sparksMax, RULES.sparks + Math.floor((world.level - 1) / RULES.sparksEvery));
+  const track = _trackAt(world, 0, 0);
+  const start = _nearestOn(track, world.marker.at);
+  const sparks = [];
+  for (let k = 0; k < many; k += 1) {
+    const away = Math.round(track.length * (k + 1) / (many + 1));
+    sparks.push({
+      at: track[(start + away) % track.length].slice(),
+      forward: k % 2 === 0,
+      travel: 0,
+      face: 0,
+      ring: 0,
+      index: (start + away) % track.length,
+    });
+  }
+  return sparks;
+}
+
+function _moveSparks(world) {
+  if (world.age < SPARK.first) return;
+  const speed = Math.min(SPARK.fastest, SPARK.speed + SPARK.quicken * (world.age - SPARK.first));
+
+  for (const spark of world.sparks) {
+    const track = _trackFor(world, spark);
+    if (!track) continue;
+    spark.travel += speed * STEP;
+    while (spark.travel >= 1) {
+      spark.travel -= 1;
+      spark.index = (spark.index + (spark.forward ? 1 : -1) + track.length) % track.length;
+      spark.at = track[spark.index].slice();
+    }
+  }
+}
+
+// Il posto dove una Scintilla sta correndo, ritrovato ogni volta che serve.
+//
+// È l'unico punto del gioco in cui una struttura dati cambia sotto i piedi di qualcuno che la stava
+// percorrendo: a ogni conquista gli anelli sono altri, e l'indice che la Scintilla aveva in mano
+// non indica più niente. Quindi l'indice è una **comodità che viene verificata**, non una verità: se
+// la pista non ha più quel punto lì, la Scintilla si riaggancia al punto più vicino del bordo nuovo
+// e tiene il verso di marcia. Una funzione sola, e nessun altro tocca `spark.index`.
+function _trackFor(world, spark) {
+  // Prima la scommessa: quasi sempre la pista è quella di un fotogramma fa e l'indice è ancora
+  // buono. Costa due confronti.
+  const held = _trackAt(world, spark.face, spark.ring);
+  if (held && _isAt(held, spark.index, spark.at)) return held;
+
+  // Poi il ripescaggio: stesso bordo, posto diverso nell'elenco.
+  for (let f = 0; f < world.faces.length; f += 1) {
+    if (!onBoundary(world.faces[f], spark.at)) continue;
+    for (let r = 0; r < world.faces[f].rings.length; r += 1) {
+      const track = _trackAt(world, f, r);
+      const found = _indexOn(track, spark.at);
+      if (found < 0) continue;
+      spark.face = f;
+      spark.ring = r;
+      spark.index = found;
+      return track;
+    }
+  }
+
+  // E infine il riaggancio vero: il bordo su cui correva non c'è più. Si passa al punto più vicino
+  // di quello che è rimasto, tenendo il verso di marcia.
+  let best = null;
+  let distance = Infinity;
+  for (let f = 0; f < world.faces.length; f += 1) {
+    const found = nearestOnBoundary(world.faces[f], spark.at);
+    if (found && found.distance < distance) { distance = found.distance; best = { f, at: found.at }; }
+  }
+  if (!best) return null;
+
+  for (let r = 0; r < world.faces[best.f].rings.length; r += 1) {
+    const track = _trackAt(world, best.f, r);
+    const found = _indexOn(track, best.at);
+    if (found < 0) continue;
+    spark.face = best.f;
+    spark.ring = r;
+    spark.index = found;
+    spark.at = track[found].slice();
+    return track;
+  }
+  return null;
+}
+
+function _isAt(track, index, at) {
+  const point = track[index];
+  return Boolean(point) && point[0] === at[0] && point[1] === at[1];
+}
+
+// La pista di un anello, srotolata una volta e tenuta lì. Le facce si ricostruiscono a ogni taglio,
+// quindi una faccia nuova nasce senza pista e se la fabbrica al primo passo di una Scintilla — e
+// **ogni** anello ne ha una, isole comprese: su un'isola ci si cammina, quindi ci si viene presi.
+function _trackAt(world, faceIndex, ring) {
+  const face = world.faces[faceIndex];
+  if (!face) return null;
+  if (!face.track) face.track = face.rings.map((r) => walkRing(r));
+  return face.track[ring] || null;
+}
+
+function _indexOn(track, at) {
+  for (let i = 0; i < track.length; i += 1) {
+    if (track[i][0] === at[0] && track[i][1] === at[1]) return i;
+  }
+  return -1;
+}
+
+function _nearestOn(track, at) {
+  let best = 0;
+  let distance = Infinity;
+  for (let i = 0; i < track.length; i += 1) {
+    const d = Math.hypot(track[i][0] - at[0], track[i][1] - at[1]);
+    if (d < distance) { distance = d; best = i; }
+  }
+  return best;
+}
+
+// Una Scintilla prende il marcatore solo mentre è sul bordo. Con la linea fuori il marcatore non è
+// sulla sua pista, e lì la minaccia è un'altra.
+function _bitten(world) {
+  if (world.cut) return false;
+  if (world.age < SPARK.first) return false;
+  for (const spark of world.sparks) {
+    if (Math.hypot(spark.at[0] - world.marker.at[0], spark.at[1] - world.marker.at[1]) <= SPARK.bite) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+
+function _die(world, cause = "filo") {
   world.marker.at = world.cut ? world.cut.chain[0].slice() : world.marker.at.slice();
   world.marker.travel = 0;
   world.cut = null;
   world.lives -= 1;
   world.waiting = RULES.pause;
-  world.events.push({ kind: "death", lives: world.lives });
+  world.events.push({ kind: "death", cause, lives: world.lives });
   if (world.lives <= 0) {
     world.over = true;
     world.events.push({ kind: "over" });

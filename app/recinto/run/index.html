@@ -3,26 +3,132 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="robots" content="noindex">
 <title>Recinto</title>
-<link rel="stylesheet" href="styles.css">
+<meta name="robots" content="noindex, follow">
+<meta name="theme-color" content="#0d1220">
+<meta name="description" content="A vector game of claimed ground, played entirely in your browser.">
+<link rel="canonical" href="https://ggtechnologies.sm/app/recinto/">
+<link rel="stylesheet" href="../../_lib/base.css">
+<link rel="stylesheet" href="./styles.css">
+<script>
+  // Prima della prima pittura, di proposito. Applicato da un modulo girerebbe dopo il foglio di
+  // stile, e l'app lampeggerebbe scura per poi saltare al chiaro a ogni avvio.
+  try {
+    var saved = localStorage.getItem('gg-theme');
+    var light = saved ? saved === 'light'
+      : window.matchMedia('(prefers-color-scheme: light)').matches;
+    if (light) {
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f6f8fc');
+    }
+  } catch (ignored) {}
+
+  // **L'invito a installare, preso al volo.**
+  //
+  // `beforeinstallprompt` è un evento che non aspetta: il browser lo manda appena riconosce l'app
+  // come installabile, e alla seconda visita — con il service worker già attivo e il manifesto già
+  // letto — quel momento arriva **prima che un modulo abbia finito di caricarsi**. Un modulo che si
+  // registra dopo non lo vede mai, e il pulsante non compare.
+  //
+  // Si vede solo su un telefono, ed è per questo che un difetto così resta in piedi: su un computer
+  // l'evento arriva tardi e il pulsante c'è.
+  window.__ggInstall = null;
+  window.addEventListener('beforeinstallprompt', function (event) {
+    event.preventDefault();
+    window.__ggInstall = event;
+    window.dispatchEvent(new Event('gg-installable'));
+  });
+</script>
+<script type="importmap">
+{ "imports": { "gg/": "../../_lib/" } }
+</script>
 </head>
 <body>
-  <header class="hud">
-    <span class="hud-item"><b id="quota">0%</b><small>di <span id="goal">70%</span></small></span>
-    <span class="hud-item"><b id="score">0</b><small>punti</small></span>
-    <span class="hud-item"><b id="lives">3</b><small>vite</small></span>
-    <span class="hud-item"><b id="level">1</b><small id="arena">rettangolo</small></span>
+  <header class="bar">
+    <span class="hud-item"><b id="hudQuota">0%</b><small><span data-t="hudQuota">conquistato</span>
+      <span data-t="hudOf">di</span> <span id="hudGoal">70%</span></small></span>
+    <span class="hud-item"><b id="hudScore">0</b><small data-t="hudScore">punti</small></span>
+    <span class="hud-item"><b id="hudLives">3</b><small data-t="hudLives">vite</small></span>
+    <span class="hud-item"><b id="hudLevel">1</b><small id="hudArena">rettangolo</small></span>
+    <span class="spacer"></span>
+    <button type="button" id="installButton" data-t="installLabel" hidden>Installa</button>
+    <button type="button" id="scoresButton" data-t="scoresTitle">Classifica</button>
+    <button type="button" id="soundButton" aria-pressed="true" data-t-label="soundOn">♪</button>
+    <button type="button" id="themeButton" data-t-label="themeLabel">◐</button>
+    <button type="button" id="langButton" data-t="langLabel">English</button>
   </header>
 
   <main class="field">
-    <canvas id="canvas"></canvas>
-    <p id="banner" class="banner" hidden></p>
+    <canvas id="field"></canvas>
+
+    <section class="screen" id="titleScreen">
+      <h1>Recinto</h1>
+      <p class="tagline" data-t="tagline">Chiudi il recinto, e stai attento a cosa ci resta dentro</p>
+      <button type="button" id="coinButton" data-t="insertCoin">Inserisci un gettone</button>
+      <p class="small" data-t="coinFree">I gettoni sono infiniti: è il rito, non un limite.</p>
+      <button type="button" id="howButton" data-t="howTitle">Come si gioca</button>
+    </section>
+
+    <section class="screen" id="howScreen" hidden>
+      <h2 data-t="howTitle">Come si gioca</h2>
+      <p data-t="howGoal"></p>
+      <p data-t="howKeys"></p>
+      <p data-t="howPointer"></p>
+      <p data-t="howSlow"></p>
+      <p data-t="howFilo"></p>
+      <p data-t="howMiccia"></p>
+      <p data-t="howScintille"></p>
+      <p data-t="howCapture"></p>
+      <button type="button" id="howBack" data-t="start">Start</button>
+    </section>
+
+    <section class="screen" id="endScreen" hidden>
+      <h2 id="endTitle">Livello chiuso</h2>
+      <p id="endWhy" class="small"></p>
+      <p id="endFinal"></p>
+      <form id="nameForm" hidden>
+        <label for="nameField" data-t="nameAsk">Il tuo nome</label>
+        <input type="text" id="nameField" maxlength="12" autocomplete="off" spellcheck="false">
+        <button type="submit" id="nameSave" data-t="nameSave">Salva</button>
+      </form>
+      <p id="endPlace" class="small"></p>
+      <p id="endHint" class="small"></p>
+    </section>
   </main>
 
-  <footer class="controls">
-    <button id="stroke" type="button" aria-pressed="false">Tratto lento <b>×2</b></button>
-    <button id="again" type="button">Ricomincia</button>
+  <p class="hint" id="installHint" hidden></p>
+
+  <dialog id="scoresDialog">
+    <h2 data-t="scoresTitle">Classifica</h2>
+    <p class="small" data-t="scoresOf">di questo computer</p>
+    <table>
+      <thead>
+        <tr>
+          <th data-t="colPlace">#</th>
+          <th data-t="colName">Nome</th>
+          <th data-t="colScore">Punti</th>
+          <th data-t="colLevel">Liv.</th>
+        </tr>
+      </thead>
+      <tbody id="scoreRows"></tbody>
+    </table>
+    <p class="small" id="scoresEmpty" data-t="scoresEmpty">Nessuna partita, per ora.</p>
+    <p class="small" id="scoresTotals"></p>
+    <p class="small" data-t="storageNote"></p>
+    <p class="small" id="ioNote" hidden></p>
+    <div class="row">
+      <button type="button" id="exportButton" data-t="exportLabel">Esporta</button>
+      <button type="button" id="importButton" data-t="importLabel">Importa</button>
+      <button type="button" id="scoresClose" data-t="scoresClose">Chiudi</button>
+    </div>
+    <input type="file" id="importFile" accept="application/json,.json" hidden>
+  </dialog>
+
+  <footer class="bar">
+    <button type="button" id="strokeButton" aria-pressed="false">
+      <span data-t="slowStroke">Tratto lento</span> <b data-t="slowDouble">×2</b>
+    </button>
+    <button type="button" id="againButton" data-t="again">Ricomincia</button>
   </footer>
 
   <script type="module" src="app.js"></script>

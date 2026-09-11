@@ -13,8 +13,9 @@
 //
 // Usage:  node app/recinto/test/rules.mjs
 
-import { create, step, progress, quota, NO_INTENT, MARKER, RULES, THREAD } from "../run/game.js";
-import { area2, contains, nearestOnBoundary } from "../run/geometry.js";
+import { create, step, progress, quota, fuseAt,
+         NO_INTENT, MARKER, RULES, THREAD, FUSE, SPARK } from "../run/game.js";
+import { area2, contains, onBoundary, nearestOnBoundary } from "../run/geometry.js";
 import { ARENAS } from "../run/arenas.js";
 
 let failures = 0;
@@ -399,6 +400,174 @@ for (let level = 1; level <= ARENAS.length; level += 1) {
   const gap = Math.hypot(world.threads[0].b.at[0] - world.threads[0].a.at[0],
                          world.threads[0].b.at[1] - world.threads[0].a.at[1]);
   check(`arena «${world.arena}»: i due capi restano vicini`, gap < THREAD.far * 2, gap.toFixed(1));
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  l a   M i c c i a
+// -----------------------------------------------------------------------------------------------------------------
+
+const LEFT = [[40, 96]];
+
+{
+  const world = exposed();
+  play(world, move(0, 1), 200, LEFT);
+  check("la linea è ancora fuori", world.cut !== null);
+  equal("muovendosi la Miccia non brucia", world.cut.fuse, 0);
+}
+
+// Premere non è muoversi. Spingere in una direzione che il gioco rifiuta — contro un muro, o
+// all'indietro sulla propria linea — è stare fermi tanto quanto non premere niente, e la Miccia non
+// distingue le due cose perché non c'è niente da distinguere.
+{
+  const world = exposed();
+  play(world, move(0, -1), 200, LEFT);
+  check("spingere all'indietro sulla propria linea è stare fermi", world.cut.fuse > 0,
+        String(world.cut.fuse));
+}
+
+{
+  const world = exposed();
+  play(world, NO_INTENT, Math.round(FUSE.grace * 120) - 12, LEFT);
+  equal("dentro la grazia non è ancora accesa", world.cut.fuse, 0);
+  play(world, NO_INTENT, 60, LEFT);
+  check("passata la grazia comincia a bruciare", world.cut.fuse > 0);
+}
+
+{
+  const world = exposed();
+  play(world, NO_INTENT, 150, LEFT);
+  const burnt = world.cut.fuse;
+  check("da fermi mangia la linea", burnt > 0);
+
+  // Un fotogramma o due di coda ci sono, e sono giusti: premere non è essersi mossi, e finché il
+  // marcatore non ha davvero cambiato posto è ancora fermo. Quello che non deve succedere è che la
+  // linea ricresca — la Miccia non restituisce niente.
+  play(world, move(0, 1), 40, LEFT);
+  const settled = world.cut.fuse;
+  check("ripartendo non torna indietro", settled >= burnt, `${settled} < ${burnt}`);
+  play(world, move(0, 1), 120, LEFT);
+  check("la linea è ancora fuori", world.cut !== null);
+  equal("e appena riparte davvero smette di mangiare", world.cut.fuse, settled);
+}
+
+{
+  const world = exposed();
+  play(world, NO_INTENT, 150, LEFT);
+  const spot = fuseAt(world);
+  check("la Miccia ha un posto sulla linea, non solo una lunghezza",
+        spot && spot[0] === 128 && spot[1] > 0 && spot[1] < world.marker.at[1], String(spot));
+}
+
+{
+  // Il Filo è lontano e le Scintille non arrivano su una linea fuori: se qui si muore, si muore
+  // della propria esitazione.
+  //
+  // Ci si ferma **alla morte** e non dopo un tot di passi, e la prima versione di questa prova lo
+  // faceva: tirava dritto per duemila passi e ne collezionava due, perché dopo il rientro il
+  // marcatore resta fermo sul bordo e lì la Scintilla lo raggiunge. Che è il mestiere della
+  // Scintilla, non un difetto — ma di questa prova non fa parte.
+  const world = exposed();
+  let cause = null;
+  for (let i = 0; i < 3000 && !cause; i += 1) {
+    step(world, NO_INTENT);
+    hold(world, LEFT);
+    const death = world.events.find((event) => event.kind === "death");
+    if (death) cause = death.cause;
+  }
+  equal("stando fermi abbastanza la Miccia arriva in fondo", world.lives, RULES.lives - 1);
+  equal("ed è stata lei", cause, "miccia");
+  equal("e si riparte senza linea", world.cut, null);
+}
+
+// E la controprova, che era una sorpresa e adesso è una regola: fermo sul bordo, senza linea fuori,
+// prima o poi la Scintilla arriva. Non esiste un posto dove aspettare.
+{
+  const world = create(1, 5);
+  let cause = null;
+  for (let i = 0; i < 6000 && !cause; i += 1) {
+    step(world, NO_INTENT);
+    hold(world, LEFT);
+    const death = world.events.find((event) => event.kind === "death");
+    if (death) cause = death.cause;
+  }
+  equal("fermi sul bordo, la Scintilla arriva", cause, "scintilla");
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  l e   S c i n t i l l e
+// -----------------------------------------------------------------------------------------------------------------
+
+const spark = (at, forward = true) => ({ at: at.slice(), forward, travel: 0, face: 0, ring: 0, index: -1 });
+
+equal("al primo livello ce n'è una", create(1, 5).sparks.length, RULES.sparks);
+check("crescono di livello in livello", create(5, 5).sparks.length > create(1, 5).sparks.length);
+equal("e hanno un tetto", create(40, 5).sparks.length, RULES.sparksMax);
+
+{
+  const world = create(1, 5);
+  const at = world.sparks[0].at.slice();
+  play(world, NO_INTENT, Math.round(SPARK.first * 120) - 30);
+  equal("all'inizio del livello stanno ferme", String(world.sparks[0].at), String(at));
+  play(world, NO_INTENT, 240);
+  check("poi partono", String(world.sparks[0].at) !== String(at));
+  check("e non lasciano mai il bordo", onBoundary(world.faces[0], world.sparks[0].at),
+        String(world.sparks[0].at));
+}
+
+{
+  const world = create(1, 5);
+  world.age = SPARK.first + 1;
+  world.sparks = [spark([129, 0])];           // l'indice è sbagliato apposta: deve ritrovarsi da sé
+  step(world, NO_INTENT);
+  equal("prendono il marcatore fermo sul bordo", world.lives, RULES.lives - 1);
+}
+
+// Un passo solo dentro il campo: la linea è fuori e il bordo è a un'unità di distanza. È il posto
+// in cui una Scintilla è più vicina al marcatore di quanto lo sarà mai — e non può niente lo stesso,
+// perché il marcatore non è più sulla sua pista.
+{
+  const world = create(1, 5);
+  world.age = SPARK.first + 1;
+  step(world, move(0, 1));
+  step(world, move(0, 1));
+  check("la linea è fuori di un passo", world.cut !== null && world.marker.at[1] === 1,
+        String(world.marker.at));
+  world.sparks = [spark([128, 0])];
+  step(world, NO_INTENT);
+  equal("con la linea fuori il marcatore non è più roba loro", world.lives, RULES.lives);
+}
+
+// Il riaggancio. È l'unico punto del gioco in cui una struttura dati cambia sotto i piedi di
+// qualcuno che la stava percorrendo, e qui il bordo su cui la Scintilla correva viene proprio
+// conquistato via.
+{
+  const world = create(1, 5);
+  world.age = SPARK.first + 1;
+  world.sparks = [spark([200, 0])];
+  slice(world, move(0, 1), LEFT);
+
+  world.sparks[0].at = [200, 0];
+  world.sparks[0].index = 0;
+  check("il bordo su cui correva non c'è più", world.faces.every((face) => !onBoundary(face, [200, 0])));
+
+  step(world, NO_INTENT);
+  check("si riaggancia a quello rimasto",
+        world.faces.some((face) => onBoundary(face, world.sparks[0].at)), String(world.sparks[0].at));
+  check("tenendo il verso di marcia", world.sparks[0].forward === true);
+}
+
+{
+  const world = exposed();
+  across(world);
+  step(world, move(0, 1));
+  const where = world.marker.at.slice();
+  world.age = SPARK.first + 1;
+  for (let i = 0; i < 400; i += 1) {
+    world.sparks = [spark([where[0] + 5, where[1]])];
+    step(world, move(1, 0));
+    hold(world, [[40, 150]]);
+  }
+  equal("e con una Scintilla addosso al rientro il controllo non torna", String(world.marker.at), String(where));
 }
 
 // -----------------------------------------------------------------------------------------------------------------

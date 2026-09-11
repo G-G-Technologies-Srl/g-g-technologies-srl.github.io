@@ -36,6 +36,9 @@ export function repalette(canvas) {
     wall: read("--wall"),
     edge: read("--edge"),
     cut: read("--cut"),
+    burnt: read("--burnt"),
+    fuse: read("--fuse"),
+    spark: read("--spark"),
     marker: read("--marker"),
     thread: read("--thread"),
     ghost: read("--ghost"),
@@ -67,7 +70,7 @@ export function toLattice(canvas, clientX, clientY) {
 //  d r a w
 // -----------------------------------------------------------------------------------------------------------------
 
-export function draw(canvas, world, { preview = null } = {}) {
+export function draw(canvas, world, { preview = null, fuse = null } = {}) {
   const ctx = canvas.getContext("2d");
   if (!palette) repalette(canvas);
   const v = view(canvas);
@@ -94,8 +97,9 @@ export function draw(canvas, world, { preview = null } = {}) {
   if (preview && preview.path && preview.path.length > 1) {
     _line(ctx, v, unit, preview.path, palette.ghost, 1.5, 0, [6, 6]);
   }
-  if (world.cut) _line(ctx, v, unit, world.cut.chain, palette.cut, 2.5, 14);
+  if (world.cut) _cut(ctx, v, unit, world.cut, fuse);
 
+  for (const spark of world.sparks) _dot(ctx, v, unit, spark.at, palette.spark, 3.2, 14);
   for (const thread of world.threads) _ribbon(ctx, v, unit, thread, palette.thread);
   // In attesa il marcatore pulsa: il controllo non è tuo e va detto senza scrivere una parola.
   if (world.waiting > 0) ctx.globalAlpha = 0.35 + 0.4 * Math.abs(Math.sin(world.waiting * 9));
@@ -146,6 +150,28 @@ function _line(ctx, v, unit, points, colour, width, glow, dash = null) {
   ctx.stroke();
   ctx.setLineDash([]);
   ctx.shadowBlur = 0;
+}
+
+// La linea, in due pezzi: quello che la Miccia ha già mangiato e quello che ti resta. Sono due
+// colori e non un'animazione perché è un'informazione, non un effetto — quanta corda hai ancora.
+function _cut(ctx, v, unit, cut, fuse) {
+  if (!fuse) {
+    _line(ctx, v, unit, cut.chain, palette.cut, 2.5, 14);
+    return;
+  }
+  const burnt = [];
+  let left = cut.fuse;
+  for (let i = 1; i < cut.chain.length; i += 1) {
+    burnt.push(cut.chain[i - 1]);
+    const span = Math.hypot(cut.chain[i][0] - cut.chain[i - 1][0], cut.chain[i][1] - cut.chain[i - 1][1]);
+    if (left < span) break;
+    left -= span;
+  }
+  burnt.push(fuse);
+
+  _line(ctx, v, unit, burnt, palette.burnt, 2, 0);
+  _line(ctx, v, unit, [fuse].concat(cut.chain.slice(burnt.length - 1)), palette.cut, 2.5, 14);
+  _dot(ctx, v, unit, fuse, palette.fuse, 3, 20);
 }
 
 // Il Filo: la scia che sbiadisce e sopra il segmento vivo. Quello che si vede è il corpo — non c'è

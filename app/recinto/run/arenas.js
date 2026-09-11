@@ -9,15 +9,16 @@
 // would cross a wall either lands on it or has its midpoint beyond it, so `canStep` decides with
 // two questions instead of intersecting every step against every edge.
 //
-// `start` is where the marker begins and has to be a point on the outer ring. `threads` are the
-// starting positions of what wanders the open field, in lattice units, kept away from the walls.
+// `start` is where the marker begins and has to be a point on the outer ring. `threads` lists the
+// starting positions of the Fili, in lattice units and well clear of the walls — **two each**, and
+// how many of them are actually used is the level's business, not the arena's.
 
 export const ARENAS = [
   {
     key: "rettangolo",
     rings: [[[0, 0], [256, 0], [256, 192], [0, 192]]],
     start: [128, 0],
-    threads: [[128, 96]],
+    threads: [[128, 96], [64, 48]],
   },
   {
     key: "anello",
@@ -27,20 +28,20 @@ export const ARENAS = [
       [[96, 72], [96, 120], [160, 120], [160, 72]],
     ],
     start: [128, 0],
-    threads: [[40, 96]],
+    threads: [[40, 96], [216, 96]],
   },
   {
     key: "elle",
     rings: [[[0, 0], [256, 0], [256, 96], [128, 96], [128, 192], [0, 192]]],
     start: [64, 0],
-    threads: [[64, 140]],
+    threads: [[64, 140], [180, 48]],
   },
   {
     key: "esagono",
     // Le pareti oblique sono a 45°, come vuole la regola qui sopra.
     rings: [[[48, 0], [208, 0], [256, 48], [256, 144], [208, 192], [48, 192], [0, 144], [0, 48]]],
     start: [128, 0],
-    threads: [[128, 96]],
+    threads: [[128, 96], [64, 144]],
   },
 ];
 
