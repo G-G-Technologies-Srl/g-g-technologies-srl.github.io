@@ -42,7 +42,7 @@
       document.documentElement.classList.add('js');
     })();
   </script>
-  <link rel="stylesheet" href="../../../assets/site.css?v=011.38507339">
+  <link rel="stylesheet" href="../../../assets/site.css?v=012.9de9a685">
   <script type="application/ld+json">
 [
   {
@@ -52,7 +52,7 @@
     "url": "https://ggtechnologies.sm/en/app/plan-scope/",
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "Any (web browser)",
-    "softwareVersion": "4.12.0",
+    "softwareVersion": "4.14.0",
     "datePublished": "2026-09-01",
     "dateModified": "2026-09-11",
     "license": "https://www.apache.org/licenses/LICENSE-2.0",
@@ -199,7 +199,6 @@
               <li>Keeps tasks with a date, a priority, an owner, tags, a checklist, sub-tasks and repetition; shows progress and the deadlines of every project in one panel.</li>
               <li>Searches everything with Ctrl+K: pages, tasks, projects, accents aside.</li>
               <li>Exports a project as one file, images included, and imports it back identical — or updates the one you have with a colleague's changes.</li>
-              <li>Also comes out as a PDF from the browser, as a self-contained web page, as an `.ics` calendar, as CSV for Excel, as Markdown.</li>
               <li>Works as two through a shared folder: Dropbox, OneDrive, Google Drive. Pages are Markdown files, readable with Obsidian too.</li>
               <li>Imports a Trello board and a Notion export, as far as they carry over.</li>
               <li>The same project opens in Invoice Scope, which uses this format: there a plan sits beside the quote and the invoices of that job. A project belongs where its money is — if it is a plan and nothing else, it belongs here.</li>
@@ -214,6 +213,38 @@
               <li>The shared folder works on Chrome and Edge, on a computer: Safari, Firefox and phones do not let a web page open a folder. There, the exchange of files remains.</li>
               <li>It sends no reminders while closed: there is no server that could wake up on your behalf. Installed, the icon shows the number of late tasks.</li>
               <li>It uses no AI models: “Copy for an assistant” puts the text on the clipboard, and you choose the assistant.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="kicker app-io-head">What comes in and what goes out</div>
+        <p>No closed formats: what you write comes out as files that open without this app, and what you already wrote elsewhere can come in.</p>
+        <div class="app-lists">
+          <div class="app-list does">
+            <h3>Comes out as</h3>
+            <ul class="ticks">
+              <li>The whole project in a .zip: the data in project.json, the images in assets/. It is the form that survives a change of computer, and it goes back in identical.</li>
+              <li>The data alone in a .json, without images: smaller, and readable in any text editor.</li>
+              <li>A page as .md: Markdown with its tags and properties in the head, the format Obsidian and static site generators read.</li>
+              <li>The project as a folder: project.json, one file per page under pages/, the images in assets/. It is what the app writes into a shared folder, and it opens in Obsidian as it is.</li>
+              <li>The deadlines as .ics: they open in Calendar, Outlook or Google Calendar.</li>
+              <li>The tasks as .csv, for Excel, Numbers or Google Sheets.</li>
+              <li>The address book as .csv and as .vcf (vCard): the second opens in Contacts, Outlook or Google Contacts.</li>
+              <li>A page or the board as a self-contained web page, one file that opens in any browser without the app.</li>
+              <li>As a PDF, from the browser's print, laid out for paper.</li>
+              <li>On the clipboard, as Markdown: “Copy for an AI assistant”, and you choose the assistant.</li>
+              <li>The whole archive in a single file, which is the copy to keep somewhere safe.</li>
+            </ul>
+          </div>
+          <div class="app-list does">
+            <h3>Comes in from</h3>
+            <ul class="ticks">
+              <li>A project of this app (.zip or .json): as a new project, or on top of the one you have, updating it with a colleague's changes.</li>
+              <li>A backup of the archive, to put everything back where it was.</li>
+              <li>A folder of files: a project written as a folder comes back as it is — pages edited in Obsidian included, at the next read.</li>
+              <li>A Trello board (the .json of its export): columns, cards, dates, labels, members and checklists.</li>
+              <li>A Notion export (the .zip): pages with their tree and their images, and tasks from any database that has a name and a status or a date.</li>
+              <li>Text pasted from Word or Google Docs: headings, lists and tables stay what they are instead of becoming one long line.</li>
+              <li>Images and attachments dragged into a page.</li>
             </ul>
           </div>
         </div>
@@ -235,7 +266,7 @@
             <span class="f-dot" aria-hidden="true"></span>
             <div>
               <h4>Export</h4>
-              <p>A project comes out as a `.zip` holding the text as Markdown and the images. It goes back in identical.</p>
+              <p>A project comes out as a .zip holding the text as Markdown and the images, and goes back in identical. But also as a folder of files, .md, .ics, .csv, vCard, a web page or a PDF: the full list is above.</p>
             </div>
           </div>
           <div class="fact">
@@ -291,11 +322,11 @@
             <span class="f-dot" aria-hidden="true"></span>
             <div>
               <h4>Status</h4>
-              <p>Version 2.4. Inside the app there is a Guide, as a project to read in the editor itself, with the trial to run as two before trusting it.</p>
+              <p>In use and maintained: the version number below is the real one, and it turns with every change. Inside the app there is a Guide, as a project to read in the editor itself, with the trial to run as two before trusting it.</p>
             </div>
           </div>
         </div>
-        <p class="app-meta"><span><b>Version</b> 4.12.0</span><span><b>Updated</b> 11 September 2026</span><span><b>Licence</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/plan-scope" rel="noopener">Source code</a></p>
+        <p class="app-meta"><span><b>Version</b> 4.14.0</span><span><b>Updated</b> 11 September 2026</span><span><b>Licence</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/plan-scope" rel="noopener">Source code</a></p>
       </div>
     </section>
 
@@ -326,7 +357,7 @@
           </details>
           <details class="faq-item reveal">
             <summary>What format does my writing come out in?</summary>
-            <p>Markdown, inside the project file or as a single `.md` page. It is plain readable text: it opens in any editor, with or without this app.</p>
+            <p>Markdown, always: inside the project file, as a single .md page, or as a folder with one file per page — which is the same thing Obsidian reads. It is plain text: it opens in any editor, with or without this app. The deadlines also come out as an .ics calendar, the tasks as .csv, the address book as vCard, and a page as a web page or a PDF.</p>
           </details>
           <details class="faq-item reveal">
             <summary>How does this app relate to your work?</summary>
@@ -334,7 +365,7 @@
           </details>
           <details class="faq-item reveal">
             <summary>How does the app update, once installed?</summary>
-            <p>On its own, and it tells you. Next to the app's name is its version, say «v1.2.0». When a new one is ready the line becomes «v1.2.0 → 1.3.0» with a green dot: tap it, the app reloads updated and your data stays where it is. If you do not tap it, the new version comes in at the next opening anyway. If you installed the app before this notice existed, the first time is by hand: close every window of the app and open it again; if the version still does not show next to the name, reload the page with Ctrl+F5, or ⌘⇧R on a Mac. From then on the app takes care of it.</p>
+            <p>On its own, and it tells you. Next to the app's name is its version. When a new one is ready the line shows both — the one you have and the one coming — with a green dot: tap it, the app reloads updated and your data stays where it is. If you do not tap it, the new version comes in at the next opening anyway. If you installed the app before this notice existed, the first time is by hand: close every window of the app and open it again; if the version still does not show next to the name, reload the page with Ctrl+F5, or ⌘⇧R on a Mac. From then on the app takes care of it.</p>
           </details>
           <details class="faq-item reveal">
             <summary>And to remove it?</summary>

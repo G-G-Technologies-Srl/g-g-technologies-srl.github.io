@@ -927,6 +927,8 @@
 /* Screenshot and lists live in the same section as the intro. Split across two sections the
    paddings stacked and left a hole the width of the page between a paragraph and a card. */
 .app-lists { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-top: 34px; }
+/* Il titolino di «entra ed esce»: stacca dalle due liste sopra senza aprire una sezione nuova. */
+.app-io-head { margin-top: 42px; }
 .app-list {
   border: 1px solid var(--border);
   border-radius: var(--radius);

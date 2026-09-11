@@ -42,7 +42,7 @@
       document.documentElement.classList.add('js');
     })();
   </script>
-  <link rel="stylesheet" href="../../assets/site.css?v=011.38507339">
+  <link rel="stylesheet" href="../../assets/site.css?v=012.9de9a685">
   <script type="application/ld+json">
 [
   {
@@ -52,7 +52,7 @@
     "url": "https://ggtechnologies.sm/app/plan-scope/",
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "Any (web browser)",
-    "softwareVersion": "4.12.0",
+    "softwareVersion": "4.14.0",
     "datePublished": "2026-09-01",
     "dateModified": "2026-09-11",
     "license": "https://www.apache.org/licenses/LICENSE-2.0",
@@ -199,7 +199,6 @@
               <li>Tiene le attività con data, priorità, assegnatario, tag, checklist, sottoattività e ripetizione; mostra l'avanzamento e le scadenze di tutti i progetti in un pannello solo.</li>
               <li>Cerca in tutto con Ctrl+K: pagine, attività, progetti, senza badare agli accenti.</li>
               <li>Esporta un progetto in un file solo, immagini comprese, e lo reimporta identico — o aggiorna quello che hai già con le modifiche di un collega.</li>
-              <li>Esce anche come PDF dal browser, come pagina web autosufficiente, come calendario `.ics`, come CSV per Excel, come Markdown.</li>
               <li>Lavora in due attraverso una cartella condivisa: Dropbox, OneDrive, Google Drive. Le pagine sono file Markdown, leggibili anche con Obsidian.</li>
               <li>Importa una bacheca Trello e un export Notion, per quello che si può portare.</li>
               <li>Lo stesso progetto si apre in Invoice Scope, che usa questo formato: lì un piano sta accanto al preventivo e alle fatture di quel lavoro. Un progetto sta dove sta il suo denaro — se è un piano e basta, sta qui.</li>
@@ -214,6 +213,38 @@
               <li>La cartella condivisa funziona su Chrome ed Edge, sul computer: Safari, Firefox e i telefoni non permettono a una pagina web di aprire una cartella. Lì resta lo scambio di file.</li>
               <li>Non manda promemoria a app chiusa: non c'è un server che possa svegliarsi al posto tuo. Installata, l'icona mostra il numero delle attività in ritardo.</li>
               <li>Non usa modelli di intelligenza artificiale: «Copia per un assistente» mette il testo negli appunti, e l'assistente lo scegli tu.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="kicker app-io-head">Quello che entra e quello che esce</div>
+        <p>Nessun formato chiuso: quello che scrivi esce in file che si aprono anche senza questa app, e quello che hai già scritto altrove può entrare.</p>
+        <div class="app-lists">
+          <div class="app-list does">
+            <h3>Esce come</h3>
+            <ul class="ticks">
+              <li>Il progetto intero in un .zip: i dati in project.json e le immagini in assets/. È la forma che sopravvive al cambio di computer, e rientra identica.</li>
+              <li>I soli dati in un .json, senza immagini: più piccolo, e leggibile in qualunque editor di testo.</li>
+              <li>Una pagina in .md: Markdown con tag e proprietà in testa, il formato che Obsidian e i generatori di siti leggono.</li>
+              <li>Il progetto come cartella: project.json, una pagina per file dentro pages/, le immagini in assets/. È quello che l'app scrive nella cartella condivisa, e si apre con Obsidian così com'è.</li>
+              <li>Le scadenze in .ics: si aprono in Calendario, Outlook o Google Calendar.</li>
+              <li>Le attività in .csv, per Excel, Numbers o Fogli Google.</li>
+              <li>La rubrica in .csv e in .vcf (vCard): la seconda si apre in Contatti, Outlook o Google Contatti.</li>
+              <li>Una pagina o la bacheca come pagina web in un file solo, che si apre in qualsiasi browser senza l'app.</li>
+              <li>In PDF, dalla stampa del browser, con l'impaginazione fatta per la carta.</li>
+              <li>Negli appunti, in Markdown: «Copia per un assistente AI», e l'assistente lo scegli tu.</li>
+              <li>Tutto l'archivio in un file solo, che è la copia da mettere al sicuro.</li>
+            </ul>
+          </div>
+          <div class="app-list does">
+            <h3>Entra da</h3>
+            <ul class="ticks">
+              <li>Un progetto di questa app (.zip o .json): come progetto nuovo, oppure sopra quello che hai già, aggiornandolo con le modifiche di un collega.</li>
+              <li>Un backup dell'archivio, per rimettere tutto dov'era.</li>
+              <li>Una cartella di file: un progetto scritto come cartella rientra così com'è — anche le pagine corrette con Obsidian, alla lettura successiva.</li>
+              <li>Una bacheca Trello (il .json dell'esportazione): colonne, carte, date, etichette, membri e checklist.</li>
+              <li>Un export Notion (lo .zip): le pagine con il loro albero e le immagini, e le attività dai database che hanno un nome e uno stato o una data.</li>
+              <li>Testo incollato da Word o Google Docs: titoli, elenchi e tabelle restano quello che sono invece di diventare una riga sola.</li>
+              <li>Immagini e allegati trascinati dentro una pagina.</li>
             </ul>
           </div>
         </div>
@@ -235,7 +266,7 @@
             <span class="f-dot" aria-hidden="true"></span>
             <div>
               <h4>Esportazione</h4>
-              <p>Un progetto esce come file `.zip` con dentro il testo in Markdown e le immagini. Si rimette dentro identico.</p>
+              <p>Un progetto esce come file .zip con dentro il testo in Markdown e le immagini, e si rimette dentro identico. Ma anche come cartella di file, .md, .ics, .csv, vCard, pagina web o PDF: l'elenco completo è qui sopra.</p>
             </div>
           </div>
           <div class="fact">
@@ -291,11 +322,11 @@
             <span class="f-dot" aria-hidden="true"></span>
             <div>
               <h4>Stato</h4>
-              <p>Versione 2.4. Dentro l'app c'è una Guida, come progetto da leggere nell'editor stesso, con la prova da fare in due prima di fidarsi.</p>
+              <p>In uso e aggiornata: il numero di versione qui sotto è quello vero, e si gira a ogni modifica. Dentro l'app c'è una Guida, come progetto da leggere nell'editor stesso, con la prova da fare in due prima di fidarsi.</p>
             </div>
           </div>
         </div>
-        <p class="app-meta"><span><b>Versione</b> 4.12.0</span><span><b>Aggiornata il</b> 11 settembre 2026</span><span><b>Licenza</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/plan-scope" rel="noopener">Codice sorgente</a></p>
+        <p class="app-meta"><span><b>Versione</b> 4.14.0</span><span><b>Aggiornata il</b> 11 settembre 2026</span><span><b>Licenza</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/plan-scope" rel="noopener">Codice sorgente</a></p>
       </div>
     </section>
 
@@ -326,7 +357,7 @@
           </details>
           <details class="faq-item reveal">
             <summary>In che formato escono i miei testi?</summary>
-            <p>In Markdown, dentro il file del progetto o come singola pagina `.md`. È testo semplice e leggibile: si apre in qualunque editor, anche senza questa app.</p>
+            <p>In Markdown, sempre: dentro il file del progetto, come singola pagina .md, o come cartella con una pagina per file — che è la stessa cosa che legge Obsidian. È testo semplice: si apre in qualunque editor, anche senza questa app. Le scadenze escono anche come calendario .ics, le attività come .csv, la rubrica come vCard, e una pagina come sito o come PDF.</p>
           </details>
           <details class="faq-item reveal">
             <summary>Che rapporto c'è fra questa app e il vostro lavoro?</summary>
@@ -334,7 +365,7 @@
           </details>
           <details class="faq-item reveal">
             <summary>Come si aggiorna l'app, una volta installata?</summary>
-            <p>Da sola, e te lo dice. Accanto al nome dell'app c'è la versione, per esempio «v1.2.0». Quando ne è pronta una nuova, la scritta diventa «v1.2.0 → 1.3.0» con un punto verde: la tocchi, l'app si ricarica aggiornata e i tuoi dati restano dove sono. Se non la tocchi, la versione nuova entra comunque alla prossima apertura. Se hai installato l'app prima che esistesse questo avviso, la prima volta va fatto a mano: chiudi tutte le finestre dell'app e riaprila; se accanto al nome la versione non compare ancora, ricarica la pagina con Ctrl+F5, o ⌘⇧R su Mac. Da lì in poi ci pensa l'app.</p>
+            <p>Da sola, e te lo dice. Accanto al nome dell'app c'è la sua versione. Quando ne è pronta una nuova, la scritta mostra tutt'e due — quella che hai e quella che arriva — con un punto verde: la tocchi, l'app si ricarica aggiornata e i tuoi dati restano dove sono. Se non la tocchi, la versione nuova entra comunque alla prossima apertura. Se hai installato l'app prima che esistesse questo avviso, la prima volta va fatto a mano: chiudi tutte le finestre dell'app e riaprila; se accanto al nome la versione non compare ancora, ricarica la pagina con Ctrl+F5, o ⌘⇧R su Mac. Da lì in poi ci pensa l'app.</p>
           </details>
           <details class="faq-item reveal">
             <summary>E per toglierla?</summary>
