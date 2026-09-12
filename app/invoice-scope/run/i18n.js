@@ -548,6 +548,15 @@ const IT = {
     + "è sbagliato: riportare una copia rimette l'archivio com'era quel giorno.",
   backupCopyLatest: "Copia corrente",
   backupCopySize: "{size}",
+  backupChoose: "Scegli cosa fare",
+  backupHeld: "La cartella «{folder}» teneva già delle copie: non ci ho scritto niente. "
+    + "Scegli se riportare quello che c'è o scriverci quello che hai qui.",
+  backupFoundAsk: "Questa cartella tiene già {n} copie, la più recente del {when}. "
+    + "Riporto qui la più recente? Quello che c'è adesso nell'archivio viene sostituito.",
+  backupFoundRestore: "Riporta la copia",
+  backupFoundMineAsk: "Allora scrivo nella cartella l'archivio che hai qui adesso. La copia "
+    + "corrente e quella di oggi vengono sostituite; le copie degli altri giorni restano.",
+  backupFoundMine: "Scrivi quello che ho qui",
   backupRestore: "Riporta questa",
   backupRestoreAsk: "Riporto l'archivio com'era in questa copia. Documenti, clienti, acquisti e "
     + "numerazione tornano a quel giorno, e quello che c'è adesso viene sostituito. Non si torna "
@@ -1598,6 +1607,15 @@ const EN = {
     + "puts the archive as it was on that day.",
   backupCopyLatest: "Current copy",
   backupCopySize: "{size}",
+  backupChoose: "Choose what to do",
+  backupHeld: "The folder “{folder}” already held copies, so nothing was written to it. "
+    + "Choose whether to bring back what is there or write what you have here.",
+  backupFoundAsk: "This folder already holds {n} copies, the most recent from {when}. "
+    + "Shall I bring the most recent one back? What is in the archive now is replaced.",
+  backupFoundRestore: "Bring the copy back",
+  backupFoundMineAsk: "Then I write the archive you have here into the folder. The current copy "
+    + "and today's are replaced; the copies from other days stay.",
+  backupFoundMine: "Write what I have here",
   backupRestore: "Bring this one back",
   backupRestoreAsk: "I bring the archive back to how it was in this copy. Documents, customers, "
     + "purchases and the numbering go back to that day, and what is here now is replaced. There is "

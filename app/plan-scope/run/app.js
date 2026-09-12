@@ -787,6 +787,7 @@ function _backupWords(state) {
   if (state.kind === "unavailable") return t("backupUnavailable");
   if (state.kind === "none") return t("backupNone");
   if (state.kind === "prompt") return tf("backupPrompt", { folder: state.folder });
+  if (state.kind === "held") return tf("backupHeld", { folder: state.folder });
   if (state.error) return tf("backupError", { folder: state.folder, error: state.error });
   if (!state.lastWrite) return tf("backupNever", { folder: state.folder });
   // Ora locale, come nella riga della cartella condivisa: affettata dalla stringa ISO sarebbe UTC,
@@ -803,7 +804,8 @@ async function _paintBackupSection() {
   const state = await backup.status();
   el("backupStatus").textContent = _backupWords(state);
   el("backupPick").hidden = state.kind === "unavailable";
-  el("backupPick").textContent = state.kind === "prompt" ? t("backupResume") : t("backupPick");
+  el("backupPick").textContent = state.kind === "prompt" ? t("backupResume")
+    : state.kind === "held" ? t("backupChoose") : t("backupPick");
   el("backupUnlink").hidden = state.kind === "none" || state.kind === "unavailable";
   const copies = await backup.copies();
   el("backupCopiesNone").hidden = copies.length > 0;
@@ -815,6 +817,49 @@ async function _paintBackupSection() {
     row.append(button("ghost small", t("backupRestore"), () => _restoreCopy(copy.name)));
     return row;
   }));
+}
+
+/**
+ * Cosa fare di una cartella che teneva già delle copie.
+ *
+ * Due risposte e nessuna preselezionata, perché nessuna delle due è ovvia da fuori: chi ha appena
+ * reinstallato vuole indietro la cartella, chi ha appena cambiato computer vuole scriverci quello
+ * che ha. Uscire senza rispondere è la terza, e lascia tutto com'è — la cartella resta collegata e
+ * trattenuta, il pulsante torna a chiedere, e nel frattempo non si scrive niente.
+ */
+async function _chooseForFolder(found) {
+  const newest = found[0];
+  const choice = await ask(tf("backupFoundAsk", {
+    n: num(found.length, 0),
+    when: newest && newest.day ? longDate(newest.day) : t("backupCopyLatest"),
+  }), {
+    options: [
+      { value: "restore", label: t("backupFoundRestore") },
+      { value: "mine", label: t("backupFoundMine") },
+    ],
+  });
+  if (!choice) return snack(t("backupHeldStill"));
+  if (choice === "restore") {
+    await db.flush();
+    const outcome = await backup.restore(newest ? newest.name : undefined);
+    if (!outcome.ok) {
+      snack(tf("backupRestoreFail", { reason: t(outcome.reason) }));
+      return undefined;
+    }
+    model.hydrate(await db.loadAll());
+    await _openHome();
+    await backup.release();
+    await _paintBackupSection();
+    await _paintBackup();
+    return snack(tf("backupRestoreDone", {
+      records: num(outcome.restored, 0),
+      images: num(outcome.images || 0, 0),
+    }));
+  }
+  await backup.release();
+  await _paintBackupSection();
+  await _paintBackup();
+  return snack(t("backupDone"));
 }
 
 /**
@@ -2154,14 +2199,24 @@ function _wire() {
   // ---- la cartella locale
 
   el("backupPick").addEventListener("click", async () => {
-    // Lo stesso pulsante fa le due cose che il momento richiede: scegliere una cartella, o
-    // riprendere quella che c'è. Sono due frasi diverse e un gesto solo.
-    const asking = (await backup.status()).kind === "prompt";
-    const done = asking ? await backup.resume() : await backup.link();
+    // Lo stesso pulsante fa le tre cose che il momento richiede: scegliere una cartella,
+    // riprendere quella che c'è, o rispondere alla domanda rimasta in sospeso su una cartella che
+    // teneva già delle copie. Tre frasi diverse e un gesto solo.
+    const kind = (await backup.status()).kind;
+    if (kind === "held") return _chooseForFolder(await backup.copies());
+    if (kind === "prompt") {
+      if (!(await backup.resume())) return undefined;
+      await _paintBackupSection();
+      return _paintBackup();
+    }
+    const done = await backup.link();
     if (!done) return undefined;
     await _paintBackupSection();
     await _paintBackup();
-    return asking ? undefined : snack(t("backupDone"));
+    // Una cartella che teneva già qualcosa non è stata scritta: la domanda arriva adesso, ed è la
+    // sola strada per cui «collegata» non vuol dire «già sovrascritta».
+    if (done.found && done.found.length) return _chooseForFolder(done.found);
+    return snack(t("backupDone"));
   });
   el("backupUnlink").addEventListener("click", async () => {
     if (!(await ask(t("backupUnlinkAsk"), { ok: t("backupUnlink") }))) return;

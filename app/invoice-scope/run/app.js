@@ -830,13 +830,16 @@ async function _saveCompany(event) {
 async function _drawBackup() {
   const stato = await backup.status();
   backupLinked = stato.kind === "linked" && !stato.error;
-  el("backupPick").hidden = stato.kind !== "none";
+  // Anche da trattenuta il pulsante c'è: è la strada per rispondere a una domanda lasciata aperta.
+  el("backupPick").hidden = stato.kind !== "none" && stato.kind !== "held";
+  el("backupPick").textContent = stato.kind === "held" ? t("backupChoose") : t("backupPick");
   el("backupResume").hidden = stato.kind !== "prompt";
   el("backupUnlink").hidden = stato.kind === "none" || stato.kind === "unavailable";
   const line = el("backupLine");
   if (stato.kind === "unavailable") line.textContent = t("backupUnavailable");
   else if (stato.kind === "none") line.textContent = t("backupNone");
   else if (stato.kind === "prompt") line.textContent = tf("backupPrompt", { folder: stato.folder });
+  else if (stato.kind === "held") line.textContent = tf("backupHeld", { folder: stato.folder });
   else if (stato.error) line.textContent = tf("backupError", { folder: stato.folder, error: stato.error });
   else if (stato.lastWrite) {
     const when = new Date(stato.lastWrite);
@@ -854,7 +857,7 @@ async function _drawBackup() {
  * because «undo the last thing» is what somebody comes here for most often.
  */
 async function _drawCopies(stato) {
-  const list = stato.kind === "linked" ? await backup.copies() : [];
+  const list = stato.kind === "linked" || stato.kind === "held" ? await backup.copies() : [];
   el("backupCopies").hidden = list.length === 0;
   const body = el("backupCopyList");
   body.textContent = "";
@@ -879,6 +882,40 @@ async function _drawCopies(stato) {
     riga.append(testo, pulsante);
     body.append(riga);
   }
+}
+
+/**
+ * Cosa fare di una cartella che teneva già delle copie.
+ *
+ * Due domande in fila e non una a due bottoni, perché qui il no di una domanda sola dovrebbe voler
+ * dire «allora sovrascrivi», e l'Esc darebbe la stessa risposta: la via d'uscita più rapida sarebbe
+ * quella che cancella. Così invece ogni no lascia le cose come stanno, e a sovrascrivere si arriva
+ * solo dicendolo.
+ */
+async function _chooseForFolder(found) {
+  const newest = found && found.length ? found[0] : null;
+  const quando = newest && newest.day ? shownDate(newest.day) : t("backupCopyLatest");
+  if (await ask(tf("backupFoundAsk", { n: num(found.length, 0), when: quando }),
+                { okLabel: t("backupFoundRestore") })) {
+    const esito = await backup.restore(newest ? newest.name : undefined);
+    if (!esito || !esito.ok) {
+      const detto = ["backupNoFolder", "backupNoPermission", "backupCopyGone"].includes(esito && esito.reason);
+      await tell(t(detto ? esito.reason : "backupRestoreBad"));
+      return;
+    }
+    await backup.release();
+    await tell(tf("backupRestoreDone", { n: num(esito.restored, 0) }));
+    await _loadCompany();
+    await _route();
+    await _drawBackup();
+    return;
+  }
+  if (await ask(t("backupFoundMineAsk"), { okLabel: t("backupFoundMine"), danger: true })) {
+    await backup.release();
+    await _drawBackup();
+    return;
+  }
+  await _drawBackup();
 }
 
 /**
@@ -1063,7 +1100,16 @@ async function main() {
   });
   el("exportAll").addEventListener("click", _export);
   el("backupPick").addEventListener("click", async () => {
-    if (await backup.link()) await _drawBackup();
+    // Da trattenuta il pulsante non ricollega niente: riapre la domanda rimasta senza risposta.
+    if ((await backup.status()).kind === "held") {
+      await _chooseForFolder(await backup.copies());
+      return;
+    }
+    const done = await backup.link();
+    if (!done) return;
+    await _drawBackup();
+    // Una cartella che teneva già delle copie non è stata scritta, e adesso si sceglie.
+    if (done.found && done.found.length) await _chooseForFolder(done.found);
   });
   el("backupResume").addEventListener("click", async () => {
     await backup.resume();

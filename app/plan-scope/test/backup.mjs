@@ -113,6 +113,90 @@ await prova("collegare la cartella ci scrive l'archivio e la copia del giorno", 
   assert.deepEqual(payload.assets, []);
 });
 
+await prova("una cartella che ha già delle copie non viene scritta al collegamento", async () => {
+  // Il caso vero: disinstalli l'app, la reinstalli, e ti ritrovi il dimostrativo. Poi ricolleghi la
+  // cartella di sempre aspettandoti di rivedere i tuoi progetti. Se il collegamento scrive, quello
+  // che scrive è il dimostrativo, e va sopra l'archivio corrente e sopra la copia di oggi.
+  dir = folder();
+  const prima = JSON.stringify({ app: "plan-scope", data: { projects: [{ id: "vero", name: "Il mio lavoro" }] } });
+  dir.files.set("plan-scope.json", prima);
+  dir.files.set("plan-scope-2026-09-01.json", prima);
+
+  store.reset();
+  store.records.set("projects", [{ id: "d1", uid: "d1", name: "Esempio", demo: true }]);
+  globalThis.window.showDirectoryPicker = async () => dir;
+  await backup.setup();
+  const esito = await backup.link();
+  await settle();
+
+  assert.equal(dir.files.get("plan-scope.json"), prima,
+    "l'archivio della cartella è stato sovrascritto con quello che c'era in questa copia");
+  const oggi = new Date().toISOString().slice(0, 10);
+  assert.ok(!dir.files.has(`plan-scope-${oggi}.json`),
+    "il collegamento ha aperto la copia di oggi su una cartella che non aveva chiesto di essere scritta");
+  // E lo deve riferire, o chi chiama non ha modo di proporre la scelta.
+  assert.ok(esito && esito.found && esito.found.length >= 2,
+    "il collegamento non dice che nella cartella c'erano già delle copie");
+});
+
+await prova("trattenuta, non scrive nemmeno quando qualcosa cambia", async () => {
+  dir = folder();
+  const prima = JSON.stringify({ app: "plan-scope", data: { projects: [] } });
+  dir.files.set("plan-scope.json", prima);
+  store.reset();
+  store.records.set("projects", [{ id: "d1", uid: "d1", name: "Esempio", demo: true }]);
+  globalThis.window.showDirectoryPicker = async () => dir;
+  await backup.setup();
+  await backup.link();
+
+  // Il timer e ogni «qualcosa è cambiato» passano dalla stessa porta, e quella porta è chiusa.
+  fill();
+  backup.touch();
+  await settle();
+  assert.equal(dir.files.get("plan-scope.json"), prima);
+  assert.equal((await backup.status()).kind, "held");
+});
+
+await prova("trattenuta, un riavvio dell'app non scrive lo stesso", async () => {
+  // Il caso peggiore: si collega, si vede la domanda, si chiude senza rispondere. Se lo stato
+  // trattenuto vivesse solo in memoria, il risveglio dopo scriverebbe in silenzio proprio quello
+  // che il collegamento aveva evitato di scrivere — e dopo una reinstallazione quel «quello» è il
+  // dimostrativo.
+  dir = folder();
+  const prima = JSON.stringify({ app: "plan-scope", data: { projects: [] } });
+  dir.files.set("plan-scope.json", prima);
+  store.reset();
+  store.records.set("projects", [{ id: "d1", uid: "d1", name: "Esempio", demo: true }]);
+  globalThis.window.showDirectoryPicker = async () => dir;
+  await backup.setup();
+  await backup.link();
+
+  await backup.setup();          // l'app riaperta: stessa cartella, stesso deposito
+  await settle();
+  assert.equal(dir.files.get("plan-scope.json"), prima);
+});
+
+await prova("detta la scelta, riprende a scrivere", async () => {
+  dir = folder();
+  dir.files.set("plan-scope.json", JSON.stringify({ app: "plan-scope", data: { projects: [] } }));
+  store.reset();
+  fill();
+  globalThis.window.showDirectoryPicker = async () => dir;
+  await backup.setup();
+  await backup.link();
+  await backup.release();
+  await settle();
+
+  assert.equal(latest().data.projects[0].name, "Rilancio");
+  assert.equal((await backup.status()).kind, "linked");
+});
+
+await prova("una cartella vuota invece si scrive subito, come prima", async () => {
+  await fresh();
+  await settle();
+  assert.ok(dir.files.has("plan-scope.json"));
+});
+
 await prova("un'immagine finisce accanto al testo, e l'archivio la nomina", async () => {
   await fresh();
   store.images.set("a1", store.image("a1", { size: 4 }));

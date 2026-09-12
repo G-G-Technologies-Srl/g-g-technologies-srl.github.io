@@ -327,18 +327,24 @@ export function backupWriter({ folder, snapshot, prefix, load, save, onStatus = 
   let writeTimer = null;
   let tickTimer = null;
   let watching = false;
+  // Trattenuto: la cartella è collegata e non ci si scrive, perché teneva già delle copie e nessuno
+  // ha ancora detto quali delle due versioni vale. Va salvato insieme al resto — se restasse in
+  // memoria, chiudere e riaprire l'app scriverebbe proprio la cosa che il collegamento non ha
+  // voluto scrivere, ed è il riavvio dopo una reinstallazione il momento in cui questo succede.
+  let held = false;
 
-  const saveState = () => save(stateKey, { fingerprint, lastWrite });
+  const saveState = () => save(stateKey, { fingerprint, lastWrite, held });
   const loadState = async () => {
     const state = (await load(stateKey)) || {};
     fingerprint = state.fingerprint || null;
     lastWrite = state.lastWrite || null;
+    held = Boolean(state.held);
   };
 
   const write = async () => {
     clearTimeout(writeTimer);
     writeTimer = null;
-    if (!folder.handle) return;
+    if (!folder.handle || held) return;
     let happened = false;
     try {
       if ((await folder.permission()) !== "granted") return;
@@ -387,6 +393,7 @@ export function backupWriter({ folder, snapshot, prefix, load, save, onStatus = 
     fingerprint = null;
     lastWrite = null;
     lastError = null;
+    held = false;
   };
 
   return {
@@ -406,10 +413,52 @@ export function backupWriter({ folder, snapshot, prefix, load, save, onStatus = 
       onStatus();
     },
 
-    /** «Scegli la cartella…»: a new folder knows nothing, so it is written whatever the state. */
+    /**
+     * «Scegli la cartella…»: si guarda prima di scrivere.
+     *
+     * Qui c'era scritto «una cartella nuova non sa niente, quindi la si scrive qualunque cosa ci
+     * sia» — e la cartella nuova non è quasi mai nuova. Il caso che quella riga non vedeva: si
+     * disinstalla l'app e la si reinstalla, il deposito riparte vuoto e si prende il dimostrativo,
+     * e poi si ricollega la cartella di sempre aspettandosi di rivedere il proprio lavoro. Il
+     * collegamento scriveva, e quello che scriveva era il dimostrativo: sopra l'archivio corrente
+     * e sopra la copia del giorno. Nessun errore, nessuna domanda, il danno fatto in silenzio.
+     *
+     * Quindi: se la cartella tiene già delle copie di quest'app, non si scrive niente e non si
+     * decide niente — si riferisce cosa c'è e si resta **trattenuti**, che è uno stato in cui
+     * nessuna strada scrive, timer compresi. A scegliere è chi ha collegato, con `release()`.
+     *
+     * Torna `false` se il selettore è stato chiuso, altrimenti `{ ok: true, found }`, dove `found`
+     * sono le copie trovate — vuoto quando la cartella era davvero nuova e la si è scritta.
+     */
     async link() {
       if (!(await folder.link())) return false;
       forget();
+      let found = [];
+      // Una cartella che non si lascia leggere non è una cartella piena: si va avanti come prima,
+      // perché fermarsi qui vorrebbe dire non poter più collegare niente.
+      try {
+        found = await copies(folder.handle, { prefix });
+      } catch (ignored) { found = []; }
+      held = found.length > 0;
+      await saveState();
+      if (!held) await write();
+      watch();
+      onStatus();
+      return { ok: true, found };
+    },
+
+    /**
+     * La scelta, detta dopo che il collegamento si è fermato.
+     *
+     * Una sola funzione per le due risposte, perché quello che cambia è cosa c'è nel deposito
+     * quando la si chiama, non cosa fa lei: dopo un ripristino il deposito tiene la cartella e la
+     * riscrittura è una formalità; dopo «scrivi quello che ho qui» il deposito tiene altro e la
+     * riscrittura è la risposta. In tutti e due i casi da qui in poi si scrive di nuovo.
+     */
+    async release() {
+      if (!folder.handle) return false;
+      held = false;
+      fingerprint = null;
       await saveState();
       await write();
       watch();
@@ -448,7 +497,7 @@ export function backupWriter({ folder, snapshot, prefix, load, save, onStatus = 
       if (!folder.handle) return { kind: "none" };
       const permission = await folder.permission();
       return {
-        kind: permission === "granted" ? "linked" : "prompt",
+        kind: permission !== "granted" ? "prompt" : held ? "held" : "linked",
         folder: folder.name,
         lastWrite,
         error: lastError ? (lastError.name || String(lastError)) : null,

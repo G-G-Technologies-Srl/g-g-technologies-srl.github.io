@@ -212,6 +212,14 @@ const IT = {
   backupError: "La cartella «{folder}» risponde {error}. Controlla che esista ancora, o scegline "
     + "un'altra.",
   backupDone: "Cartella collegata. Da adesso la copia si scrive da sola.",
+  backupChoose: "Scegli cosa fare",
+  backupHeld: "La cartella «{folder}» teneva già delle copie: non ci ho scritto niente. "
+    + "Scegli se riportare quello che c'è o scriverci quello che hai qui.",
+  backupHeldStill: "Non ho scritto niente nella cartella. Puoi scegliere quando vuoi.",
+  backupFoundAsk: "Questa cartella tiene già {n} copie, la più recente del {when}. "
+    + "Cosa faccio?",
+  backupFoundRestore: "Riporta qui la copia più recente",
+  backupFoundMine: "Scrivi nella cartella quello che ho qui",
   backupCopies: "Le copie nella cartella",
   backupCopiesNone: "La prima copia arriva appena colleghi la cartella.",
   backupCopyLatest: "Copia corrente",
@@ -1116,6 +1124,14 @@ const EN = {
   backupError: "The folder “{folder}” answers {error}. Check that it is still there, or choose "
     + "another one.",
   backupDone: "Folder linked. From now on the copy writes itself.",
+  backupChoose: "Choose what to do",
+  backupHeld: "The folder “{folder}” already held copies, so nothing was written to it. "
+    + "Choose whether to bring back what is there or write what you have here.",
+  backupHeldStill: "Nothing was written to the folder. You can choose whenever you like.",
+  backupFoundAsk: "This folder already holds {n} copies, the most recent from {when}. "
+    + "What should I do?",
+  backupFoundRestore: "Bring the most recent copy back here",
+  backupFoundMine: "Write what I have here into the folder",
   backupCopies: "The copies in the folder",
   backupCopiesNone: "The first copy comes as soon as you link the folder.",
   backupCopyLatest: "Current copy",

@@ -16,7 +16,7 @@
 //     node --import ./app/invoice-scope/test/loader.mjs app/invoice-scope/test/backup.mjs
 
 import assert from "node:assert/strict";
-import { writeSnapshot, copies, KEEP_DAYS } from "gg/folder.js";
+import { writeSnapshot, copies, backupWriter, KEEP_DAYS } from "gg/folder.js";
 
 const LATEST = "invoice-scope.json";
 const writeInto = (dir, text, options) => writeSnapshot(dir, text, { prefix: "invoice-scope", ...options });
@@ -103,6 +103,79 @@ const day = (n) => new Date(Date.UTC(2026, 8, n)).toISOString().slice(0, 10);   
 // -----------------------------------------------------------------------------------------------------------------
 //  l e   p r o v e
 // -----------------------------------------------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------------------------------------------
+//  i l   c o l l e g a m e n t o
+// -----------------------------------------------------------------------------------------------------------------
+
+// Lo scrittore, quando è collegato, guarda la pagina per sapere quando è davanti: in Node quella
+// pagina non c'è, e senza questo `document` la prova morirebbe su una riga che non sta provando.
+if (typeof globalThis.document === "undefined") {
+  globalThis.document = { visibilityState: "hidden", addEventListener() {} };
+}
+// E `available()` chiede a `window` se questo browser sa aprire una cartella. Qui la risposta deve
+// essere sì, altrimenti `status()` dice «non si può» e la prova non arriva a guardare cosa fa.
+if (typeof globalThis.window === "undefined") {
+  globalThis.window = { showDirectoryPicker: async () => null, addEventListener() {} };
+}
+
+/** Lo scrittore senza browser: quel poco di `folder` che gli serve, e un deposito in memoria. */
+function writerOn(dir, text) {
+  const kept = new Map();
+  const place = {
+    handle: dir,
+    name: "Copie",
+    async permission() { return "granted"; },
+    async link() { place.handle = dir; return true; },
+    async resume() { return true; },
+    async restore() { return "granted"; },
+    async unlink() { place.handle = null; },
+  };
+  return backupWriter({
+    folder: place,
+    prefix: "invoice-scope",
+    snapshot: async () => ({ text, fingerprint: text }),
+    load: async (key) => kept.get(key) || null,
+    save: async (key, value) => { kept.set(key, value); },
+  });
+}
+
+await prova("collegare una cartella che ha già delle copie non la scrive", async () => {
+  // Disinstalli, reinstalli, e ricolleghi la cartella di sempre: quello che l'app ha dentro adesso
+  // è un archivio vuoto, e prima finiva sopra il tuo. Vale per le due app, perché lo scrittore è
+  // lo stesso — questa prova lo dice con il nome di Invoice Scope.
+  const prima = JSON.stringify({ app: "invoice-scope", data: { documenti: [{ id: "vero" }] } });
+  const dir = folder({ "invoice-scope.json": prima, [`invoice-scope-${day(1)}.json`]: prima });
+  const writer = writerOn(dir, JSON.stringify({ app: "invoice-scope", data: { documenti: [] } }));
+  await writer.setup();
+
+  const esito = await writer.link();
+  assert.equal(dir.files.get("invoice-scope.json"), prima);
+  assert.equal(esito.found.length, 2);
+  assert.equal((await writer.status()).kind, "held");
+});
+
+await prova("una cartella vuota si scrive al collegamento, come sempre", async () => {
+  const dir = folder();
+  const mio = JSON.stringify({ app: "invoice-scope", data: { documenti: [{ id: "mio" }] } });
+  const writer = writerOn(dir, mio);
+  await writer.setup();
+  const esito = await writer.link();
+  assert.deepEqual(esito.found, []);
+  assert.equal(dir.files.get("invoice-scope.json"), mio);
+});
+
+await prova("detta la scelta, la cartella si scrive", async () => {
+  const prima = JSON.stringify({ app: "invoice-scope", data: { documenti: [{ id: "vero" }] } });
+  const dir = folder({ "invoice-scope.json": prima });
+  const mio = JSON.stringify({ app: "invoice-scope", data: { documenti: [{ id: "mio" }] } });
+  const writer = writerOn(dir, mio);
+  await writer.setup();
+  await writer.link();
+  await writer.release();
+  assert.equal(dir.files.get("invoice-scope.json"), mio);
+  assert.equal((await writer.status()).kind, "linked");
+});
 
 await prova("la prima scrittura fa il file corrente e la copia del giorno", async () => {
   const dir = folder();

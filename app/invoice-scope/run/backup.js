@@ -68,6 +68,8 @@ export async function setup(database, { status = () => {} } = {}) {
 
 export function link() { return writer ? writer.link() : false; }
 export function resume() { return writer ? writer.resume() : false; }
+/** La scelta, dopo un collegamento che si è fermato davanti a una cartella già piena. */
+export function release() { return writer ? writer.release() : false; }
 export function unlink() { return writer ? writer.unlink() : undefined; }
 export function touch() { if (writer) writer.touch(); }
 export function status() { return writer ? writer.status() : Promise.resolve({ kind: "none" }); }
