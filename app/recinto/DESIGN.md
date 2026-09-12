@@ -1066,6 +1066,84 @@ gioco faceva senza che nessuno sapesse più perché.
 
 ---
 
+## Due difetti che solo un telefono vero poteva dire
+
+«Sul telefono è difficile giocare: non si riesce a raggiungere il bordo perché il clic si ferma a
+diversi pixel, e se strisci sposti tutto lo schermo.» Due frasi, due difetti distinti, tutti e due
+gravi, e nessuno dei due visibile in una prova automatica — le mie giravano in un browser senza
+testa, con un mouse che finge di essere un dito.
+
+**Il primo: la mira stava quarantaquattro pixel sopra il dito, sempre.**
+
+L'alzata esiste per una ragione vera — la mano copre il bersaglio — e per quasi tutto il campo fa
+esattamente quello che deve. Ma verso il fondo dello schermo sotto il dito non c'è più posto, e
+allora l'alzata non scopre il bersaglio: lo **porta via**. Per mirare al muro in basso bisognava
+appoggiare il dito quarantaquattro pixel *sotto* il muro, e sotto il muro c'è il bordo dello
+schermo. Il muro in basso era irraggiungibile, sempre, qualunque cosa facesse il giocatore.
+
+Adesso l'alzata si consuma avvicinandosi al fondo: piena in mezzo al campo, zero sull'ultimo pixel,
+e lì il dito mira esattamente dove appoggia — che è giusto, perché quando si punta un muro non c'è
+niente da guardare sotto la mano.
+
+**E la fascia «sei sul muro» era quattro unità di reticolo, cioè sette pixel.**
+
+Sette pixel sono meno della precisione con cui un dito sa dove sta andando. Col mouse bastavano —
+per il mouse quel numero era stato tarato, e per il mouse funzionava. Col dito il taglio si fermava
+una decina di unità prima del bordo, il recinto non si chiudeva, e la Miccia se lo mangiava.
+
+Lo scarto adesso è in **pixel di schermo**, non in unità di campo, e la ragione sta in una frase:
+non è una proprietà del campo, è la larghezza di un polpastrello, ed è la stessa su ogni telefono.
+Sedici pixel col mouse — su un monitor tipico sono le stesse quattro unità di prima, misurate
+invece che scritte a mano — e ventiquattro col dito, che su un telefono fanno circa dodici unità di
+reticolo. Molte, e giusto così: un taglio che si ferma dodici unità prima del muro non è una scelta
+del giocatore, è una mira che non c'è.
+
+**Il secondo: la pagina si muoveva invece del marcatore.**
+
+`touch-action: none` sul campo c'era già, e non bastava, perché il documento restava scorribile di
+suo per tre ragioni indipendenti — e vanno tolte tutte e tre.
+
+- `height: 100%` su un telefono è l'altezza della finestra **grande**, quella senza la barra degli
+  indirizzi. Con la barra visibile la pagina è più alta di quello che si vede, quindi scorre: di
+  pochi pixel, che è tutto quello che serve perché il dito muova la pagina invece del gioco.
+  `100dvh` è la finestra che c'è adesso, e con `top` e `bottom` già fissati vince su `bottom` — un
+  ripiego che non ha bisogno di `@supports`.
+- Il rimbalzo elastico ai bordi: `overscroll-behavior` stava su `body` e non su `html`, e la
+  propagazione parte da `html`.
+- La pressione lunga, che seleziona testo e apre il menù di sistema proprio mentre si sta tenendo
+  premuto per tagliare. La selezione resta dove serve leggere: istruzioni e classifica.
+
+Più `position: fixed`, che è la cintura oltre alle bretelle: su iOS il documento rimbalza anche
+senza avere niente da scorrere.
+
+---
+
+## Misurare la cosa che si è cambiata, non quello che viene dopo
+
+Vale la pena scriverlo perché mi ha quasi fatto annullare una correzione giusta.
+
+Per provare la mira col dito la prima sonda faceva la cosa ovvia: tocca in fondo allo schermo, tieni
+premuto sette secondi, guarda **quanto terreno hai conquistato**. Prima della correzione: 84%. Dopo:
+15%. Letto così, la correzione aveva rovinato il gioco.
+
+Non era vero. La percentuale dopo sette secondi dipende da dove passa il taglio, da dove sono i
+Fili, da quante volte si muore — da tutto. È una misura a valle, e a valle il segnale che cerchi è
+sepolto sotto il rumore di tutto il resto. Misurando invece **la cosa che avevo cambiato** — dove
+finisce la linea che il gioco ha in mente, un dato che si legge subito dopo il tocco e che non
+dipende da niente altro — il quadro è diventato leggibile in una riga:
+
+| tocco | prima | adesso |
+|---|---|---|
+| ultimo pixel in fondo | `[256,96]`, sul muro | `[256,96]`, sul muro |
+| venti pixel più su | `[244,96]`, **dodici unità dal muro** | `[256,96]`, sul muro |
+| sessanta pixel più su | `[223,96]` | `[223,96]` |
+
+La riga di mezzo è il difetto, la terza dice che una mira davvero dentro al campo resta dentro al
+campo, e l'84% contro 15% non c'entrava niente. *Una misura a valle può dire il contrario della
+verità e sembrare ugualmente convincente.*
+
+---
+
 ## Cosa non fa
 
 Da scrivere nella scheda, ed è la sezione che qualifica il resto:

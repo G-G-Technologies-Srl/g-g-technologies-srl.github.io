@@ -15,12 +15,32 @@
 // wall the marker **walks** the outline, anywhere else it **cuts**, and the preview shows which one
 // before anything is committed.
 
-import { NO_INTENT } from "./game.js";
+import { NO_INTENT, LATTICE } from "./game.js";
 import { aimAt, contains, onBoundary } from "./geometry.js";
 import { toLattice, view } from "./render.js";
 
-const BAND = 4;              // lattice units off the wall that still count as «on the wall»
-const THUMB = 44;            // CSS pixels the aim sits above a finger, so the hand is not on it
+// Quanto scarto conta ancora come «intendevo il muro», in **pixel di schermo**.
+//
+// In pixel e non in unità di reticolo, perché non è una proprietà del campo: è la larghezza di un
+// polpastrello, ed è la stessa su ogni telefono. Quattro unità di reticolo — la misura di prima —
+// sono sette pixel su uno schermo da 360, cioè meno della precisione con cui un dito sa dove sta
+// andando. Col mouse bastavano; col dito il muro non si raggiungeva mai, il taglio si fermava a
+// qualche pixel dal bordo e la Miccia se lo mangiava.
+// Sedici col mouse non è «poco»: su un monitor tipico sono le stesse quattro unità di reticolo
+// che c'erano prima, misurate invece che scritte a mano, più un filo di margine. Ventiquattro col
+// dito sono circa dodici unità di reticolo su un telefono: molto, e giusto così — un taglio che si
+// ferma dodici unità prima del muro non è una scelta del giocatore, è una mira che non c'è.
+const REACH = { mouse: 16, touch: 24 };
+
+// Di quanto la mira sta **sopra** il dito, così la mano non copre il bersaglio.
+//
+// Fissa non poteva funzionare, e questo è il difetto che rendeva il gioco quasi ingiocabile su un
+// telefono: verso il fondo dello schermo sotto il dito non c'è più posto, e quarantaquattro pixel
+// di alzata non scoprono il bersaglio — lo portano via. Il muro in basso era **irraggiungibile**,
+// qualunque cosa facesse il giocatore. Adesso l'alzata si consuma avvicinandosi al fondo: piena in
+// mezzo al campo, zero sull'ultimo pixel, e lì il dito mira esattamente dove appoggia — che è
+// giusto, perché quando si punta un muro non c'è niente da guardare sotto la mano.
+const THUMB = 44;
 
 const KEYS = {
   ArrowLeft: "left", KeyA: "left", ArrowRight: "right", KeyD: "right",
@@ -33,6 +53,7 @@ let aim = null;              // where the pointer is now — for the preview
 let target = null;           // where the marker is actually going
 let dragging = false;
 let byKeyboard = true;
+let byTouch = false;
 let slowly = false;
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -59,8 +80,11 @@ export function setup(canvas) {
   window.addEventListener("blur", () => held.clear());
 
   const place = (event) => {
-    const lift = event.pointerType === "touch" ? THUMB : 0;
-    return toLattice(canvas, event.clientX, event.clientY - lift);
+    byTouch = event.pointerType === "touch";
+    if (!byTouch) return toLattice(canvas, event.clientX, event.clientY);
+    const box = canvas.getBoundingClientRect();
+    const lift = Math.min(THUMB, Math.max(0, box.bottom - event.clientY));
+    return toLattice(canvas, event.clientX, Math.max(box.top, event.clientY - lift));
   };
 
   canvas.addEventListener("pointerdown", (event) => {
@@ -104,7 +128,18 @@ export function plan(world, to = null) {
 
   // Con la linea già fuori non c'è niente da scegliere fra camminare e tagliare — si taglia — ma la
   // fascia lungo il muro serve lo stesso, e serve proprio adesso: è chiudendo che si mira al bordo.
-  return aimAt(face, world.marker.at, where, { band: BAND, walking: !world.cut });
+  return aimAt(face, world.marker.at, where, { band: _band(), walking: !world.cut });
+}
+
+// Lo scarto, dai pixel dello schermo alle unità del reticolo. Passa per `view`, che è l'unico posto
+// che sa quanto è grande il campo adesso: la stessa fascia vale un quarto di campo su un telefono e
+// una briciola su un monitor, e in tutti e due i casi vale un polpastrello.
+function _band() {
+  if (!field) return 4;
+  const scale = view(field).scale;
+  if (!scale) return 4;
+  const ratio = window.devicePixelRatio || 1;
+  return Math.max(2, ((byTouch ? REACH.touch : REACH.mouse) * ratio) / (scale * LATTICE));
 }
 
 // Col campo girato, «giù» sullo schermo non è «giù» nel campo. Il giocatore preme quello che vede,

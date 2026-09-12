@@ -64,16 +64,56 @@
 
 * { box-sizing: border-box; }
 
-html, body { height: 100%; margin: 0; }
+/* **La pagina non si muove, mai.**
+
+   Su un telefono strisciare il dito spostava tutto lo schermo invece del marcatore, ed era il
+   secondo difetto che rendeva il gioco ingiocabile col dito. `touch-action: none` sul campo c'era
+   già e non bastava: il documento restava scorribile di suo. Tre ragioni insieme, e serve
+   toglierle tutte e tre.
+
+   - `height: 100%` su un telefono è l'altezza della finestra **grande**, quella senza la barra
+     degli indirizzi. Con la barra visibile la pagina è più alta di quello che si vede, quindi
+     scorre — di pochi pixel, che è tutto quello che serve perché il dito muova la pagina invece
+     del gioco. `100dvh` è la finestra che c'è adesso.
+   - Il rimbalzo elastico ai bordi: `overscroll-behavior` stava su `body` e non su `html`, e la
+     propagazione parte da `html`.
+   - La pressione lunga, che seleziona testo e apre il menù di sistema proprio mentre si sta
+     tenendo premuto per tagliare. La selezione resta dove serve leggere — istruzioni e classifica.
+
+   `position: fixed` è la cintura oltre alle bretelle: su iOS il documento rimbalza anche senza
+   avere niente da scorrere, e ancorarlo alla finestra è l'unica cosa che lo ferma davvero. */
+
+html {
+  height: 100%;
+  overscroll-behavior: none;
+}
 
 body {
+  position: fixed;
+  inset: 0;
+  /* Con `top` e `bottom` già fissati, un'altezza esplicita vince su `bottom`: dove `dvh` esiste
+     comanda la finestra che c'è adesso, dove non esiste la riga si butta e restano gli ancoraggi.
+     Un fallback che non ha bisogno di `@supports`. */
+  height: 100dvh;
+  margin: 0;
   display: flex;
   flex-direction: column;
   background: var(--page);
   color: var(--ink);
   font: 15px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  overflow: hidden;
   overscroll-behavior: none;
+  touch-action: manipulation;      /* niente doppio tocco che ingrandisce, e niente attesa di 300ms */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Dove si legge, si seleziona: le istruzioni si copiano e un punteggio in classifica pure. */
+#howScreen, dialog {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .bar {
@@ -224,83 +264,6 @@ footer.bar button { flex: 1; }
 @media (min-width: 720px) {
   .bar { padding: 12px 20px; }
   footer.bar button { flex: 0 0 auto; }
-}
-
-/* -----------------------------------------------------------------------------------------------
-   La classifica, e le domande che l'app si fa da sola.
-   Un `<dialog>` e non un `prompt`: gli avvisi del browser hanno il carattere di sistema, il nome
-   del dominio in cima, bloccano tutto, e in finestra installata su iOS a volte non compaiono.
-   ----------------------------------------------------------------------------------------------- */
-
-dialog {
-  width: min(440px, calc(100vw - 32px));
-  padding: 20px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--chip);
-  color: var(--ink);
-}
-
-dialog::backdrop { background: rgb(0 0 0 / 0.55); }
-dialog h2 { margin: 0 0 2px; }
-dialog p { margin: 6px 0; }
-dialog table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-dialog th, dialog td { padding: 5px 6px; text-align: left; border-bottom: 1px solid var(--line); }
-dialog th { color: var(--muted); font-weight: 500; font-size: 12px; }
-dialog td:nth-child(3), dialog th:nth-child(3),
-dialog td:nth-child(4), dialog th:nth-child(4) { text-align: right; font-variant-numeric: tabular-nums; }
-
-.row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.row button { flex: 1; }
-
-#nameForm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; }
-#nameForm[hidden] { display: none; }
-#nameForm label { color: var(--muted); font-size: 13px; }
-
-input[type="text"] {
-  min-height: 44px;
-  padding: 0 12px;
-  border: 1px solid var(--control);
-  border-radius: 8px;
-  background: var(--page);
-  color: var(--ink);
-  font: inherit;
-}
-
-.hint {
-  margin: 0;
-  padding: 8px 14px;
-  color: var(--muted);
-  font-size: 13px;
-  border-bottom: 1px solid var(--line);
-}
-
-.hint[hidden] { display: none; }
-
-/* Il fuoco da tastiera si vede, e si vede **sopra** qualunque sfondo: due anelli, uno chiaro e uno
-   scuro, così l'indicatore non sparisce né sul chip né sul campo. Chi gioca solo da tastiera senza
-   questo non sa su quale bottone si trova, e il gioco è giocabile da tastiera per progetto. */
-
-:focus-visible {
-  outline: 2px solid var(--edge);
-  outline-offset: 2px;
-  box-shadow: 0 0 0 4px var(--page);
-}
-
-canvas:focus-visible { outline-offset: -4px; }
-
-/* Quello che i lettori di schermo devono sentire e nessuno deve vedere. Non `display: none`, che lo
-   toglierebbe anche a loro. */
-.only-spoken {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
 }
 
 /* -----------------------------------------------------------------------------------------------
