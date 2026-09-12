@@ -1229,6 +1229,47 @@ falsi positivi.
 
 ---
 
+## Il comando che c'era e non si vedeva, e tre difetti della stessa famiglia
+
+«Terminato il livello non c'è un bottone per passare al successivo.» Vero: per andare avanti
+bisognava **toccare il campo**, e il campo dietro il velo di una schermata non sembra una cosa che
+si preme. L'unico posto dove lo si leggeva era una riga piccola di suggerimento. Adesso c'è un
+pulsante, prende il fuoco appena la schermata compare, e il tocco sul campo resta come scorciatoia
+per chi l'ha imparata.
+
+Il pulsante era la punta. Sotto c'erano tre difetti, e sono lo stesso difetto tre volte: **un
+ascoltatore di tastiera sulla finestra che non guarda chi ha il fuoco.**
+
+- **A livello chiuso, Invio non continuava: ricominciava.** Il tasto era trattato come dal titolo —
+  «non stai giocando, quindi gettone» — e faceva ripartire la partita da zero. Chi aveva appena
+  chiuso il quinto livello perdeva tutto premendo il tasto più ovvio dello schermo, senza che niente
+  glielo dicesse.
+- **Nel campo del nome della classifica, la barra spaziatrice faceva partire una partita nuova** —
+  e l'Invio che doveva salvare ne faceva partire una e poi ci registrava sopra il punteggio appena
+  azzerato, con il nome giusto e zero punti.
+- **E la «a» non si riusciva a scrivere.** `KeyA` è «sinistra» nella mappa dei comandi, e l'evento
+  veniva annullato: «Gian Angelo» usciva «Gin ngelo». Lo stesso per w, s e d. Il campo del nome
+  serve a una cosa sola, e per metà dei nomi italiani non funzionava.
+
+Un ascoltatore sulla finestra sente **tutto**, anche quello che non è per lui, e finché l'unica cosa
+sullo schermo è un canvas non si nota. Il confine adesso è scritto una volta per ognuno dei due
+ascoltatori, e con le stesse parole: se il fuoco è dentro un campo di testo, un menù a tendina o una
+finestra di dialogo aperta, i tasti sono testo e non comandi.
+
+La schermata di fine aveva anche un difetto suo, più piccolo: il testo non ha chiavi nel markup —
+dipende da com'è andata — e quindi cambiando lingua restava nell'altra. Adesso `_end` si ricorda le
+chiavi e `_words` le riscrive.
+
+**E un difetto che ho introdotto io, preso dalla sonda un minuto dopo.** Avevo dichiarato le due
+variabili nuove accanto alla funzione che le usa, in fondo al file. Ma le funzioni si issano e `let`
+no, e `_words()` gira in fondo all'avvio, cioè *prima* di quella riga: il modulo moriva con «Cannot
+access before initialization» e l'app non partiva per niente — schermo nero, nessuna schermata,
+niente. Le prove sotto Node non lo potevano vedere: `app.js` è l'unico file che non gira lì. È il
+promemoria che il guscio ha bisogno di un browser per essere provato, e che «tanto è una riga» è
+esattamente il pensiero che precede questo genere di errore.
+
+---
+
 ## Cosa non fa
 
 Da scrivere nella scheda, ed è la sezione che qualifica il resto:
