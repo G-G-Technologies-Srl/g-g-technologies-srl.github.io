@@ -1144,6 +1144,62 @@ verità e sembrare ugualmente convincente.*
 
 ---
 
+## La scheda diceva cose vere di un gioco che non esiste più
+
+Tre difetti in una pagina sola, e nessuno dei tre si vedeva rileggendola per conto suo.
+
+**Stampava gli asterischi.** Nel testo c'era `**misurare**`, che è markdown — e quel campo finisce
+dritto dentro un `<p>` senza passare da nessun renderer. Sulla pagina pubblicata, in tutt'e due le
+lingue, si leggeva letteralmente `**misurare**`. Un errore che si vede solo guardando la pagina
+costruita, mai il sorgente: nel sorgente quegli asterischi *sembrano* enfasi.
+
+**Era il modulo di un'altra scheda riempito con parole diverse.** L'introduzione cominciava con la
+stessa identica frase di AstroDroid — «Le app che pubblichiamo hanno una cosa sola in comune, ed è
+un vincolo tecnico…» — e ne ricalcava la struttura paragrafo per paragrafo. La prima volta quella
+struttura era una voce; la seconda è un calco, ed è per questo che suonava sciatta anche se ogni
+singola affermazione era vera. Tre paragrafi sull'azienda e sul vincolo, e alla fine chi leggeva non
+sapeva ancora com'è giocarci.
+
+Adesso l'introduzione racconta il gioco: dove stai e perché devi staccarti; perché le minacce sono
+**tre** e non una, cioè perché ognuna chiude una via di fuga diversa; la scommessa del tratto lento
+e le due mosse che si possono andare a cercare. Il principio del catalogo arriva per ultimo e come
+conseguenza — la percentuale in alto non è una stima, quindi due partite si possono confrontare
+davvero — invece che per primo e come dichiarazione d'intenti. Il vincolo tecnico resta dov'è
+verificabile: nei fatti in breve e nel «cosa non fa».
+
+**E descriveva un gioco che non esiste più.** «Quattro arene» quando sono otto, «un secondo Filo dal
+terzo livello» quando adesso dipende anche da quanto è grande l'arena, e — la peggiore — una risposta
+alle domande frequenti che spiegava con orgoglio che «il punto di mira sta sopra il dito», cioè
+esattamente il difetto che rendeva il bordo irraggiungibile e che era stato corretto un'ora prima.
+
+Non c'è un controllo che possa accorgersene: `check_apps.py` verifica che le due lingue abbiano la
+stessa forma, che le chiavi esistano, che i numeri di versione coincidano — tutte cose che erano a
+posto. *Nessuno strumento sa che «quattro» è diventato «otto».* L'unico rimedio è una regola di
+mestiere: **la scheda fa parte dell'app**, e si cambia nello stesso giro in cui si cambia il gioco,
+non alla fine.
+
+---
+
+## Sostituire testo dentro una struttura che parla due lingue
+
+Cicatrice di mezz'ora, e vale la pena scriverla perché la trappola è invisibile.
+
+Per riscrivere l'introduzione italiana ho preso «da `"intro": [` fino a `"does_title"`». Giusto. Poi
+per quella inglese ho fatto la stessa cosa — e la prima occorrenza di `"intro": [` era ormai quella
+*italiana appena riscritta*, mentre `"does_title"` trovato era quello inglese. Il taglio si è
+mangiato tutto quello che stava in mezzo: l'elenco italiano, i fatti, le domande frequenti e
+l'apertura del blocco inglese. Il file continuava a essere Python valido — per questo `ast.parse`
+non ha detto niente — e si è rotto solo dopo, con un `KeyError: 'en'`.
+
+La lezione non è «stai attento». È che **in una struttura che contiene le stesse chiavi due volte,
+una in italiano e una in inglese, non si sostituisce per ancora**: si trovano prima i confini dei due
+blocchi, si lavora dentro ciascuno separatamente, e si riemette la lista intera invece di rattoppare
+le righe. Lo stesso ragionamento per cui `check_apps.py` esiste — la divergenza fra le due lingue è
+il difetto più frequente di questo progetto — vale anche per gli strumenti che quelle due lingue le
+modificano.
+
+---
+
 ## Cosa non fa
 
 Da scrivere nella scheda, ed è la sezione che qualifica il resto:
