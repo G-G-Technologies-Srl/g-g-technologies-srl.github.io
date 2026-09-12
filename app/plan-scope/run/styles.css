@@ -611,7 +611,7 @@ select:hover, select:focus { border-color: var(--border-strong); }
 .badge.tag, .tag {
   background: var(--tint, transparent);
   color: var(--tint-ink, var(--accent-text));
-  border-color: var(--tint, var(--border));
+  border: 1px solid var(--tint, var(--border));
 }
 
 /* Accesa: un anello intorno, perché il fondo è già occupato dalla tinta. Si vede che è quella a
@@ -940,11 +940,15 @@ input.when-field.late { color: var(--late); }
 
 .task-meta .tag, .task-meta .who {
   font-size: 11px;
-  color: var(--faint);
-  border: 1px solid var(--border);
   border-radius: 999px;
   padding: 0 8px;
 }
+
+/* Il colore e il bordo solo a `.who`. L'etichetta se li porta da sola, e questa riga — discendente,
+   quindi più pesante della base — glieli riscriveva addosso: fondo colorato e testo grigio, il
+   contrario di quello che la tinta serve a fare. Vale la regola già scritta in CLAUDE.md: una
+   regola di base pesa poco, o non è una base. */
+.task-meta .who { color: var(--faint); border: 1px solid var(--border); }
 
 .task-card .later { font-size: 11.5px; justify-self: start; color: var(--late); padding: 2px 6px; }
 
@@ -1629,7 +1633,8 @@ dialog.search input[type="search"] { width: 100%; font-size: 16px; }
   .page-head { margin-inline: 0; }
 }
 
-.row-item .badge.tag { margin-left: 6px; color: var(--muted); }
+/* Solo lo stacco: il colore dell'etichetta lo decide la sua tinta, non la riga che la ospita. */
+.row-item .badge.tag { margin-left: 6px; }
 
 /* Il pallino del colore di una pagina: un segno solo, grande quanto una lettera, prima del titolo.
    Il colore arriva dalla testa del file, quindi lo scrive il modulo dopo averlo passato al setaccio
