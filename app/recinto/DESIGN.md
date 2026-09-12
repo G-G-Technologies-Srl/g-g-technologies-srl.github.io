@@ -1200,6 +1200,35 @@ modificano.
 
 ---
 
+## La domanda che usava il marchio per dire che non lo usava
+
+Fra le domande frequenti della scheda ce n'era una intitolata «È un clone di X?», dove X era il nome
+di un gioco di qualcun altro. La risposta era corretta e perfino scrupolosa: spiegava che le
+meccaniche del genere sono quelle e che il riferimento è voluto, ma che **il nome è un marchio
+altrui e su un sito aziendale non si usa**.
+
+Il problema è che per dirlo lo usava. Nel titolo della domanda, cioè in grassetto, e nel corpo della
+risposta. Una regola enunciata dentro la propria violazione.
+
+Non serviva nemmeno a niente: nessuno arriva su una scheda di un gioco gratuito chiedendosi di quale
+titolo degli anni Settanta sia parente, e se anche se lo chiedesse, le tre differenze elencate lì —
+geometria esatta invece che a griglia, arene di forma libera, tagli in diagonale — sono già dette
+meglio altrove. Tolta, in tutt'e due le lingue.
+
+**E messa fra le frasi vietate**, che è la parte che conta. Una regola che vive solo nella testa di
+chi scrive torna indietro alla prima scheda nuova; una che vive in `BANNED` fa fallire la build.
+
+Togliendola è saltato fuori un buco nella guardia. `_check_banned` spogliava la pagina di script e
+di tag e guardava quello che restava — il testo visibile, e basta. Ma il titolo della scheda del
+browser, la descrizione per i motori di ricerca e i dati strutturati sono **attributi** e contenuto
+di `<script>`: cioè esattamente i tre posti che quel taglio buttava via, ed esattamente i tre in cui
+una parola vietata farebbe il danno peggiore, perché sono quelli che finiscono nei risultati di
+ricerca. Adesso li guarda. Provato mettendo il nome in ciascuno dei tre posti, uno per volta: tre su
+tre segnalati, e le quarantotto pagine restano pulite, quindi la maglia più larga non ha pescato
+falsi positivi.
+
+---
+
 ## Cosa non fa
 
 Da scrivere nella scheda, ed è la sezione che qualifica il resto:
