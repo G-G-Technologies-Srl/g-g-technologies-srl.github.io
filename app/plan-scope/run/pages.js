@@ -14,7 +14,7 @@
 import * as model from "gg/plan-model.js";
 import * as md from "gg/plan-markdown.js";
 import { t, tf, num } from "./i18n.js";
-import { el, node, button, fill, shortDate, longDate } from "./ui.js";
+import { el, node, button, fill, shortDate, longDate, tagHue } from "./ui.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  s t a t e
@@ -335,7 +335,8 @@ export function paintTable(projectId) {
     tr.append(title);
     const tags = node("td");
     for (const tag of page.tags || []) {
-      tags.append(button("badge tag", tag, () => { pagesView.filter = { tag }; paintTable(projectId); }));
+      tags.append(button(`badge tag ${tagHue(tag)}`, tag,
+        () => { pagesView.filter = { tag }; paintTable(projectId); }));
     }
     tr.append(tags);
     for (const key of keys) {

@@ -22,7 +22,7 @@ import * as ics from "gg/ics.js";
 import { SIGN } from "./sign.js";
 import * as pack from "gg/plan-pack.js";
 import { t, tf, num } from "./i18n.js";
-import { el, node, button, fill, shortDate, locale, ask } from "./ui.js";
+import { el, node, button, fill, shortDate, locale, ask, tagHue } from "./ui.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  s t a t e
@@ -311,7 +311,7 @@ function _taskCard(task, today) {
   if (task.repeat) meta.append(node("span", "who", `↻ ${t(`repeatShort_${task.repeat}`)}`));
   const who = model.assigneeName(task);
   if (who) meta.append(node("span", "who", who));
-  for (const tag of task.tags || []) meta.append(node("span", "tag", tag));
+  for (const tag of task.tags || []) meta.append(node("span", `tag ${tagHue(tag)}`, tag));
   const checklist = task.checklist || [];
   if (checklist.length) {
     meta.append(node("span", "when",

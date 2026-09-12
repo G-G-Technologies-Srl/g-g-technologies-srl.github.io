@@ -14,7 +14,7 @@
 import * as model from "gg/plan-model.js";
 import { glance, colorDot } from "./pages.js";
 import { t, tf, num } from "./i18n.js";
-import { el, node, button, fill, shortDate, longDate, bytes } from "./ui.js";
+import { el, node, button, fill, shortDate, longDate, bytes, tagHue } from "./ui.js";
 
 // The ring is a circle of radius 52 in a 120 box: this is how far round it goes.
 const RING = 2 * Math.PI * 52;
@@ -99,7 +99,7 @@ function _projectCard(project, today) {
     const row = node("div", "project-card-tags");
     for (const tag of tags) {
       const lit = picked === tag.toLowerCase();
-      row.append(button(lit ? "badge tag on" : "badge tag", tag, () => _toggleTag(tag)));
+      row.append(button(`badge tag ${tagHue(tag)}${lit ? " on" : ""}`, tag, () => _toggleTag(tag)));
     }
     box.append(row);
   }
@@ -163,7 +163,7 @@ function _pageRow(page, depth = 0) {
   const { color, date } = glance(page);
   if (color) row.append(colorDot(color));
   row.append(button("link grow", page.title || t("pageUntitled"), () => on.openPage(page.id)));
-  for (const tag of page.tags || []) row.append(node("span", "badge tag", tag));
+  for (const tag of page.tags || []) row.append(node("span", `badge tag ${tagHue(tag)}`, tag));
   if (date) row.append(node("span", "meta", longDate(date)));
   return row;
 }

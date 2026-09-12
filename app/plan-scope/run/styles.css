@@ -557,6 +557,78 @@ select:hover, select:focus { border-color: var(--border-strong); }
 .badge.late { border-color: currentColor; }
 
 /* ---------------------------------------------------------------------------------------------
+   le tinte delle etichette
+
+   Otto, e il nome dell'etichetta decide quale — il conto sta in `ui.js`. Servono a una cosa sola:
+   far distinguere una pastiglia dall'altra **senza leggerle**, che è quello che serve quando ce ne
+   sono cinque su una riga. Per questo sono otto e non sedici: oltre, due tinte vicine costringono a
+   leggere lo stesso, e allora tanto valeva lasciarle grigie.
+
+   Due giri di valori, chiaro e scuro, con lo stesso schema del resto del foglio: `:root` è lo
+   scuro, e le due righe sotto sono il chiaro — la scelta esplicita e quella del sistema. Misurate
+   sui due fondi, non dedotte: le stesse tinte che sul blu notte sono limpide, sul quasi-bianco
+   sbiadiscono, e viceversa. */
+:root {
+  --h0: #48c9a9;
+  --h1: #5aa9f0;
+  --h2: #a98ff0;
+  --h3: #ef86b5;
+  --h4: #ef7f5e;
+  --h5: #e0a83c;
+  --h6: #9ec24a;
+  --h7: #4fc2d9;
+}
+
+html[data-theme="light"] {
+  --h0: #12806a;
+  --h1: #1f6fc4;
+  --h2: #6b4fc4;
+  --h3: #b33f76;
+  --h4: #bd4d28;
+  --h5: #8a6410;
+  --h6: #566f14;
+  --h7: #0f6f88;
+}
+
+@media (prefers-color-scheme: light) {
+  html:not([data-theme]) {
+    --h0: #12806a;
+    --h1: #1f6fc4;
+    --h2: #6b4fc4;
+    --h3: #b33f76;
+    --h4: #bd4d28;
+    --h5: #8a6410;
+    --h6: #566f14;
+    --h7: #0f6f88;
+  }
+}
+
+.h0 { --tint: var(--h0); }
+.h1 { --tint: var(--h1); }
+.h2 { --tint: var(--h2); }
+.h3 { --tint: var(--h3); }
+.h4 { --tint: var(--h4); }
+.h5 { --tint: var(--h5); }
+.h6 { --tint: var(--h6); }
+.h7 { --tint: var(--h7); }
+
+/* La tinta sul testo e sul bordo, non sul fondo: una fila di pastiglie piene è una fila di
+   macchie, e quello che si legge è il nome. Il fondo arriva solo quando l'etichetta è accesa. */
+/* Nessun selettore che indovina la classe della tinta: `--tint` o c'è o non c'è, e il valore di
+   riserva dentro `var()` è la pastiglia grigia di prima. Una regola che cercasse «una classe che
+   contiene h» prenderebbe anche `hidden`. */
+.badge.tag, .tag { color: var(--tint, var(--accent-text)); border-color: var(--tint, var(--border)); }
+
+/* Accesa: la tinta diventa anche un velo di fondo, così si vede da lontano quale filtro è in piedi.
+   Due dichiarazioni, e la prima è la riserva: un browser che non sa fare `color-mix` tiene quella e
+   la pastiglia resta leggibile invece di sparire. */
+.badge.tag.on {
+  background: var(--accent-soft);
+  background: color-mix(in srgb, var(--tint, var(--accent)) 20%, transparent);
+  border-color: var(--tint, var(--accent));
+}
+
+/* ---------------------------------------------------------------------------------------------
    lists
    --------------------------------------------------------------------------------------------- */
 

@@ -178,6 +178,31 @@ export function bytes(value) {
   return `${num(size, unit === 0 ? 0 : 1)} ${units[unit]}`;
 }
 
+/**
+ * La tinta di un'etichetta, **calcolata dal suo nome**.
+ *
+ * Otto tinte fisse e un conto sul testo: «cliente» esce sempre dello stesso colore, in questa
+ * schermata e in quella accanto, oggi e l'anno prossimo, sul mio computer e su quello di un
+ * collega che ha aperto lo stesso progetto condiviso.
+ *
+ * **Derivata e non scelta**, ed è una decisione e non una pigrizia. Un colore scelto vorrebbe un
+ * posto dove tenerlo — e quel posto andrebbe deciso: dentro il progetto, e allora la stessa
+ * etichetta cambia colore da un progetto all'altro; fuori, e allora non viaggia con il progetto
+ * che si condivide. Vorrebbe un selettore, e un'etichetta scritta di fretta resterebbe grigia
+ * finché qualcuno non torna a vestirla. Così invece il colore c'è dal primo istante, per tutte, e
+ * non c'è niente da configurare — che è quello che il colore doveva fare: far distinguere una
+ * pastiglia dall'altra senza leggerle.
+ *
+ * Il conto è `djb2`, che su parole corte sparge bene; le tinte sono otto perché a occhio si
+ * distinguono, e sedici no.
+ */
+export function tagHue(tag) {
+  const word = String(tag || "").trim().toLowerCase();
+  let hash = 5381;
+  for (const char of word) hash = ((hash * 33) ^ char.codePointAt(0)) >>> 0;
+  return `h${hash % 8}`;
+}
+
 /** A day, short: "14 ott" / "14 Oct". */
 export function shortDate(iso) {
   if (!iso) return "";
