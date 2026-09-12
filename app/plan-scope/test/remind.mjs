@@ -105,9 +105,9 @@ test("una data che non è una data non produce un momento", () => {
 // -----------------------------------------------------------------------------------------------------------------
 
 const ITEMS = [
-  { id: "t1", date: "2026-09-23", text: "Confermare i fornitori" },
-  { id: "t2", date: "2026-09-28", text: "Scrivere i testi" },
-  { id: "t3", date: "entro settembre", text: "Un giorno" },
+  { id: "t1", date: "2026-09-23", label: "Confermare i fornitori", text: "Confermare i fornitori — 23 set 2026" },
+  { id: "t2", date: "2026-09-28", label: "Scrivere i testi", text: "Scrivere i testi — 28 set 2026" },
+  { id: "t3", date: "entro settembre", label: "Un giorno", text: "Un giorno" },
 ];
 
 test("il digest porta il momento già calcolato, e scarta quello che non ha una data", () => {
@@ -146,11 +146,29 @@ test("matura quando il momento è passato, e una volta sola", () => {
 
   const dopo = remind.ripe(saved, { now: new Date("2026-09-22T10:00:00Z") });
   assert.equal(dopo.length, 1);
-  assert.equal(dopo[0].text, "Confermare i fornitori");
+  assert.equal(dopo[0].label, "Confermare i fornitori");
 
   const detto = { ...saved, said: [dopo[0].key] };
   assert.equal(remind.ripe(detto, { now: new Date("2026-09-22T10:00:00Z") }).length, 0,
     "un promemoria che si ripete a ogni risveglio è un promemoria che si spegne");
+});
+
+// Il difetto che questa prova difende: la frase che il worker mostra viene scritta quando il
+// digest nasce e letta giorni dopo. Con dentro «fra 7 giorni» direbbe un numero sbagliato proprio
+// nel caso per cui lo strato tre esiste — l'app chiusa da un pezzo.
+test("la voce porta la data, non solo una frase che invecchia", () => {
+  const saved = remind.digest(ITEMS, { on: true, days: 1, hour: 9 });
+  const uno = saved.items[0];
+  assert.equal(uno.date, "2026-09-23", "la pagina ricompone «domani» da qui, quando lo scrive");
+  assert.equal(uno.label, "Confermare i fornitori", "la cosa, senza tempo attaccato");
+  assert.ok(!/fra |giorni|domani|oggi/.test(uno.text), "il testo del worker non porta un tempo relativo");
+});
+
+test("il giorno si scrive dalle parti locali, non passando da UTC", () => {
+  // A Roma `new Date(2026, 8, 19).toISOString()` è il 18: mezzanotte locale letta a Greenwich.
+  assert.equal(remind.day(new Date(2026, 8, 19)), "2026-09-19");
+  assert.equal(remind.day(new Date(2026, 0, 1)), "2026-01-01");
+  assert.equal(remind.day(new Date("non una data")), "");
 });
 
 test("con i promemoria spenti non matura niente, per quanto tardi sia", () => {

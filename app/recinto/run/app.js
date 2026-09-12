@@ -22,6 +22,7 @@ import { mind, think } from "./attract.js";
 import * as render from "./render.js";
 import * as input from "./input.js";
 import * as audio from "./audio.js";
+import * as haptics from "./haptics.js";
 import * as scores from "./scores.js";
 import { el } from "gg/dom.js";
 import { download, restore } from "gg/io.js";
@@ -55,6 +56,14 @@ _demo();
 
 window.addEventListener("resize", _fit);
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => render.repalette(canvas));
+
+// «Meno movimento», letto una volta e riletto quando cambia. La preferenza si chiede al sistema in
+// un punto solo e la ascoltano in due: il canvas smette di pulsare, il telefono smette di
+// sussultare. Il foglio di stile la rispettava già per conto suo — ma il canvas e il motore della
+// vibrazione non sanno cosa sia il CSS, e lì la richiesta restava lettera morta.
+const stillness = matchMedia("(prefers-reduced-motion: reduce)");
+stillness.addEventListener("change", _calmness);
+_calmness();
 
 scores.connect().then((handle) => { db = handle; });
 
@@ -254,12 +263,25 @@ function _frame(now) {
 function _live() {
   step(world, input.read(world));
   for (const event of world.events) {
-    if (event.kind === "claim") audio.play(event.caught ? "capture" : "claim");
-    if (event.kind === "separation") audio.play("separation");
-    if (event.kind === "death") { audio.play("death"); _why(event.cause); _say(el("endWhy").textContent); }
-    if (event.kind === "cleared") { audio.play("cleared"); _end("clearedTitle", "clearedHint"); _say(t("clearedTitle")); }
-    if (event.kind === "over") { audio.play("over"); _end("overTitle", "overHint"); _say(t("overTitle")); _ask(); }
+    if (event.kind === "claim") _felt(event.caught ? "capture" : "claim");
+    if (event.kind === "separation") _felt("separation");
+    if (event.kind === "death") { _felt("death"); _why(event.cause); _say(el("endWhy").textContent); }
+    if (event.kind === "cleared") { _felt("cleared"); _end("clearedTitle", "clearedHint"); _say(t("clearedTitle")); }
+    if (event.kind === "over") { _felt("over"); _end("overTitle", "overHint"); _say(t("overTitle")); _ask(); }
   }
+}
+
+// Un evento, due sensi. Passa lo stesso nome a tutti e due e non chiede a nessuno dei due se ha
+// qualcosa da dire: un evento che il suono non canta o che la mano non sente è un caso in meno da
+// ricordare qui, e sono proprio i casi che si dimenticano quando se ne aggiunge uno.
+function _felt(kind) {
+  audio.play(kind);
+  haptics.buzz(kind);
+}
+
+function _calmness() {
+  render.motion(stillness.matches);
+  haptics.motion(stillness.matches);
 }
 
 function _dream() {

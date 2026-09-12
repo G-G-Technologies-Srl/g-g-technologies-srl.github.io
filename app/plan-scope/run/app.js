@@ -1068,6 +1068,10 @@ async function _emptyBin() {
   for (const id of shared) sync.changed(id);
   home.paintTrash();
   _badge();
+  // Il digest sta in una cache che sopravvive agli aggiornamenti apposta, quindi sopravvivrebbe
+  // anche a questo: senza rifarlo, il worker potrebbe annunciare il titolo di un'attività appena
+  // distrutta per sempre. Una promessa di riservatezza vale finché vale anche qui.
+  await _remindDigest();
   snack(t("purged"));
 }
 
@@ -1215,10 +1219,14 @@ async function _remindDigest() {
   for (const project of model.liveProjects()) {
     for (const task of model.tasksOf(project.id)) {
       if (!task.end || model.isDone(task)) continue;
+      const title = task.title || t("taskUntitled");
       items.push({
         id: task.uid || task.id,
         date: task.end,
-        text: tf("remindOne", { title: task.title || t("taskUntitled"), when: _remindWhen(task.end, today) }),
+        label: title,
+        // Assoluto, perché lo mostra il worker e lo mostra giorni dopo averlo letto: «fra 7
+        // giorni» scritto oggi e letto venerdì è un numero sbagliato.
+        text: tf("remindOne", { title, when: longDate(task.end) }),
       });
     }
   }
@@ -1241,14 +1249,17 @@ async function _remindOnOpen() {
   const saved = await _remindDigest();
   const due = remind.ripe(saved, {});
   if (!due.length) return;
-  const first = due[0].text;
+  // Qui il tempo relativo si può dire, perché si scrive e si legge nello stesso istante.
+  const today = model.todayISO();
+  const say = (one) => tf("remindOne", { title: one.label, when: _remindWhen(one.date, today) });
+  const first = say(due[0]);
   const text = due.length === 1 ? first : tf("remindMore", { first, n: num(due.length - 1, 0) });
   snack(text, { action: t("remindSee"), onAction: () => _openHome() });
   await remind.keep(remind.notes(db.DB), { ...saved, said: [...saved.said, ...due.map((one) => one.key)] });
 }
 
 /** Le due righe che cambiano mentre si tocca il modulo: cosa succederà, e cosa il browser permette. */
-function _remindPaint() {
+async function _remindPaint() {
   const settings = remind.clean({
     on: el("remindOn").checked,
     days: el("remindDays").value,
@@ -1269,11 +1280,21 @@ function _remindPaint() {
 
   const state = remind.state();
   el("remindAskRow").hidden = !(settings.on && state === "ask");
-  el("remindState").textContent = !settings.on ? ""
-    : t(state === "no" ? "remindStateNo"
-      : state === "denied" ? "remindStateDenied"
-        : state === "ask" ? "remindStateAsk"
-          : remind.wakes(worker) ? "remindStateYes" : "remindStateSleeps");
+  if (!settings.on) {
+    el("remindState").textContent = "";
+    return;
+  }
+  if (state !== "yes") {
+    el("remindState").textContent = t(state === "no" ? "remindStateNo"
+      : state === "denied" ? "remindStateDenied" : "remindStateAsk");
+    return;
+  }
+  // Permesso non vuol dire registrato: la riga lo chiede al browser invece di dedurlo dall'API.
+  if (!remind.wakes(worker)) {
+    el("remindState").textContent = t("remindStateSleeps");
+    return;
+  }
+  el("remindState").textContent = t(await remind.watching(worker) ? "remindStateYes" : "remindStateWaiting");
 }
 
 async function _openRemind() {
@@ -1281,7 +1302,7 @@ async function _openRemind() {
   el("remindOn").checked = settings.on;
   el("remindDays").value = String(settings.days);
   el("remindHour").value = String(settings.hour);
-  _remindPaint();
+  await _remindPaint();
   el("remindDialog").showModal();
 }
 
@@ -1294,11 +1315,25 @@ async function _saveRemind() {
   if (db.available()) await db.setMeta("remind", settings);
   // Il risveglio si chiede solo se serve e solo se è permesso, e si disdice appena non serve: una
   // registrazione che resta in piedi dopo uno spegnimento è un'app che si sveglia per tacere.
-  if (settings.on && remind.state() === "yes") await remind.watch(worker, { hours: 12 });
-  else await remind.stop(worker);
+  await _remindWatch(settings);
   await _remindDigest();
   el("remindDialog").close();
   snack(t("saveSaved"));
+}
+
+/**
+ * Chiede — o disdice — il risveglio automatico del worker.
+ *
+ * **Si riprova a ogni apertura, e non una volta sola.** Chromium concede
+ * `periodic-background-sync` alle app installate e usate, cioè di solito *dopo* il giorno in cui
+ * una persona accende i promemoria: chiesto solo al salvataggio, il permesso arrivava quando non
+ * lo chiedeva più nessuno e lo strato tre restava spento per sempre senza dirlo.
+ */
+async function _remindWatch(settings) {
+  const one = settings || await _remindSettings();
+  if (one.on && remind.state() === "yes") return remind.watch(worker, { hours: 12 });
+  await remind.stop(worker);
+  return false;
 }
 
 /** Repaint whichever screen is up, after a change that could have touched it. */
@@ -1776,13 +1811,15 @@ function _wire() {
   el("remindForm").addEventListener("submit", (event) => { event.preventDefault(); _saveRemind(); });
   el("remindCancel").addEventListener("click", () => el("remindDialog").close());
   for (const id of ["remindOn", "remindDays", "remindHour"]) {
-    el(id).addEventListener("input", () => _remindPaint());
-    el(id).addEventListener("change", () => _remindPaint());
+    el(id).addEventListener("input", () => { _remindPaint(); });
+    el(id).addEventListener("change", () => { _remindPaint(); });
   }
   // Il permesso si chiede da qui, cioè da un clic su un pulsante che dice cosa sta per succedere.
   el("remindAsk").addEventListener("click", async () => {
     await remind.askPermission();
-    _remindPaint();
+    // Il permesso appena dato apre la porta al risveglio: si chiede subito, non al prossimo avvio.
+    await _remindWatch(null);
+    await _remindPaint();
   });
   el("openTrash").addEventListener("click", () => _openTrash());
   el("trashBack").addEventListener("click", () => _openHome());
@@ -2281,7 +2318,7 @@ function _wire() {
     // di guardare, che è l'unico in cui qualcun altro lo leggerà.
     _remindDigest();
   });
-  window.addEventListener("pagehide", () => db.flush());
+  window.addEventListener("pagehide", () => { db.flush(); _remindDigest(); });
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -2704,7 +2741,7 @@ async function _boot() {
     worker = registration;
     // Il riepilogo dopo il registro, così la riga sullo stato sa già se questo browser sveglia
     // l'app da solo; e mai nel dimostrativo, dove le scadenze sono inventate.
-    if (!demoMode) _remindOnOpen();
+    if (!demoMode) _remindOnOpen().then(() => _remindWatch(null));
   });
 }
 

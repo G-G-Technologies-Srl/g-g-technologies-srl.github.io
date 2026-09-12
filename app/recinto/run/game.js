@@ -25,7 +25,7 @@
 
 import { area2, contains, onBoundary, canStep, selfCrosses, split, wallsAt,
          chainMeets, nearestOnBoundary, distanceToSegment, walkRing } from "./geometry.js";
-import { arena } from "./arenas.js";
+import { arena, lap } from "./arenas.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  m e a s u r e s
@@ -98,6 +98,20 @@ export const SPARK = {
   fastest: 110,
   first: 3,                   // seconds of grace at the start of a level
   bite: 1.6,                  // lattice units: near enough is caught
+
+  // Quello che ogni giro completo dell'elenco delle arene aggiunge alla velocità di partenza.
+  //
+  // È la manopola che **non si ferma mai**, e c'è perché senza di lei il gioco smetteva di
+  // cambiare: dal livello sette la quota è al massimo, i Fili sono due e le Scintille quattro, e
+  // dall'ottavo in poi il numero del livello saliva davanti a una partita identica. Una classifica
+  // che a quel punto premia chi resiste più a lungo invece di chi gioca meglio non misura più
+  // niente.
+  //
+  // Uno spostamento della curva verso l'alto, non una pendenza diversa: `fastest` se lo mangia
+  // dopo un minuto abbondante di livello, e va benissimo — oltre quel tetto non si scappa da
+  // nessuna velocità, e un numero più grande non vorrebbe dire più difficile ma solo più uguale.
+  // Quello che il giro cambia è il primo minuto, che è dove i livelli si decidono.
+  perLap: 9,
 };
 
 export const RULES = {
@@ -125,6 +139,17 @@ export const RULES = {
   // che al primo livello non è nemmeno pensabile.
   threadsFrom: 3,             // the level the second one turns up
   threadsMax: 2,
+
+  // **Un Filo vuole spazio, e l'arena può non averne.** Il secondo Filo compariva al terzo livello
+  // e basta, e nel diamante — che è un terzo di campo — voleva dire due Fili su una superficie
+  // dove uno solo è già stretto: l'autopilota ci moriva tre volte su tre, sempre, con qualunque
+  // seme. Non era difficile, era invivibile, ed era un difetto dell'arena piccola e non del
+  // livello.
+  //
+  // Quindicimila unità a testa è poco meno di un terzo del campo pieno. È il numero che decide, e
+  // decide una volta sola alla nascita del livello: un'arena grande ne prende due, una piccola
+  // resta a uno e non per questo è più facile — ha molto meno posto in cui scappare.
+  roomPerThread: 15000,
 
   sparks: 1,                  // at level 1
   sparksEvery: 2,             // one more every this many levels
@@ -167,7 +192,8 @@ export function create(level = 1, seed = 1, carry = null) {
     separated: false,
     events: [],
   };
-  const many = Math.min(RULES.threadsMax, plan.threads.length,
+  const room = Math.max(1, Math.floor(world.total2 / 2 / RULES.roomPerThread));
+  const many = Math.min(RULES.threadsMax, plan.threads.length, room,
                         world.level >= RULES.threadsFrom ? RULES.threadsMax : 1);
   world.threads = plan.threads.slice(0, many).map((at) => _spawn(world, at));
   world.sparks = _sparksFor(world);
@@ -572,7 +598,9 @@ function _sparksFor(world) {
 
 function _moveSparks(world) {
   if (world.age < SPARK.first) return;
-  const speed = Math.min(SPARK.fastest, SPARK.speed + SPARK.quicken * (world.age - SPARK.first));
+  const speed = Math.min(SPARK.fastest,
+                         SPARK.speed + SPARK.perLap * lap(world.level)
+                                     + SPARK.quicken * (world.age - SPARK.first));
 
   for (const spark of world.sparks) {
     const track = _trackFor(world, spark);

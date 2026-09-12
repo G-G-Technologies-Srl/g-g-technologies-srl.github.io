@@ -152,6 +152,39 @@ canvas {
 }
 #howScreen p { font-size: 14px; }
 
+/* Il testo delle istruzioni ha una larghezza sua, e i titoli la condividono: senza, il centraggio
+   della schermata allinea ogni riga alla propria lunghezza e la colonna si sfrangia. */
+.how-body {
+  width: 100%;
+  max-width: 60ch;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.how-body h3 {
+  margin: 14px 0 0;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-text, var(--ink));
+  text-shadow: 0 1px 3px var(--page);
+}
+
+.how-body h3:first-child { margin-top: 0; }
+
+/* Le istruzioni adesso sono lunghe — è il motivo per cui sono state riscritte — e il pulsante che
+   fa cominciare stava in fondo a millenovecento pixel di scorrimento: per giocare bisognava prima
+   leggere tutto. Appiccicato in basso resta a portata da qualunque punto della pagina, e chi ha
+   letto abbastanza comincia da lì. */
+#howScreen #howBack {
+  position: sticky;
+  bottom: 0;
+  margin-top: 8px;
+  align-self: center;
+  box-shadow: 0 0 0 8px var(--page);
+}
+
 #coinButton { animation: pulse 1.6s ease-in-out infinite; }
 
 @keyframes pulse { 50% { opacity: 0.55; } }
@@ -173,6 +206,20 @@ button[aria-pressed="true"] { border-color: var(--cut); color: var(--cut); }
 .bar button { min-width: 44px; }
 
 footer.bar button { flex: 1; }
+
+/* La versione, sotto il titolo e non nella barra. `base.css` la disegna per l'angolo di una barra
+   di applicazione — dieci pixel e colore tenue — e in mezzo a uno schermo quella misura sparisce.
+   Qui è la riga che si legge prima di inserire il gettone, e quando c'è un aggiornamento è la
+   riga che si preme: quarantaquattro pixel di altezza perché è un pulsante, non una didascalia. */
+#appVersion {
+  margin-top: 14px;
+  min-height: 44px;
+  padding: 0 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+#appVersion:hover { color: var(--ink); background: none; }
 
 @media (min-width: 720px) {
   .bar { padding: 12px 20px; }
@@ -257,42 +304,6 @@ canvas:focus-visible { outline-offset: -4px; }
 }
 
 /* -----------------------------------------------------------------------------------------------
-   Il telefono in verticale.
-
-   Misurato a 360px: la pagina scorreva di lato — 529px di contenuto in 360 di finestra — e «High
-   scores» con i tre interruttori finiva tagliato fuori dallo schermo. Sotto i 560px la barra
-   cambia forma invece di traboccare: i riquadri si stringono, gli interruttori diventano icone, e
-   niente esce dai bordi.
-
-   Quello che il CSS non poteva risolvere — un campo 4:3 dentro uno schermo verticale — non si è
-   risolto qui: si è risolto nel renderer, girando il campo di novanta gradi. Una rotazione è
-   un'isometria, quindi è lo stesso gioco; stirare per riempire non lo sarebbe stato.
-   ----------------------------------------------------------------------------------------------- */
-
-@media (max-width: 560px) {
-  /* Due righe, non una riga stretta. Comprimendo tutto su una sola i bottoni scendevano a 40px —
-     sotto la soglia difesa in ogni altro punto dell'app, e proprio sullo schermo dove il dito è
-     l'unico puntatore. Quaranta pixel di altezza in più sono il prezzo, e li vale: un comando che
-     si manca non è un comando. */
-  .bar { gap: 5px; padding: 7px 8px; flex-wrap: wrap; }
-  .hud-item { padding: 4px 7px; min-width: 0; flex: 1 1 auto; }
-  .hud-item b { font-size: 16px; }
-  .hud-item small { font-size: 10px; }
-
-  /* Il nome dell'arena è la prima cosa che si può perdere: il livello lo dice il numero accanto. */
-  #hudArena { display: none; }
-
-  /* La riga degli interruttori comincia da capo, e la parola resta per chi legge con la voce. */
-  .spacer { flex-basis: 100%; height: 0; }
-  #langButton, #scoresButton { font-size: 0; padding: 0 12px; }
-  #langButton::after { content: "文"; font-size: 15px; }
-  #scoresButton::after { content: "▤"; font-size: 15px; }
-  .bar button { min-width: 44px; flex: 1 1 auto; }
-
-  footer.bar button { flex: 1 1 30%; font-size: 14px; }
-}
-
-/* -----------------------------------------------------------------------------------------------
    La classifica, e le domande che l'app si fa da sola.
    Un `<dialog>` e non un `prompt`: gli avvisi del browser hanno il carattere di sistema, il nome
    del dominio in cima, bloccano tutto, e in finestra installata su iOS a volte non compaiono.
@@ -392,8 +403,14 @@ canvas:focus-visible { outline-offset: -4px; }
   .hud-item b { font-size: 16px; }
   .hud-item small { font-size: 10px; }
 
-  /* Il nome dell'arena è la prima cosa che si può perdere: il livello lo dice il numero accanto. */
-  #hudArena { display: none; }
+  /* Il nome dell'arena restava fuori: era la prima cosa che si poteva perdere, perché il livello lo
+     dice il numero accanto. Con otto arene — e con istruzioni che adesso le chiamano per nome — non
+     lo è più: «8» da solo non dice in che campo stai giocando.
+
+     Misurato prima di rimetterlo, perché la ragione per cui era sparito era vera: a 320, 360 e 390
+     pixel la barra resta alta uguale, il campo non perde un pixel e la pagina non scorre di lato.
+     I riquadri si stringono fra loro e ci sta — e non ci stava, prima che la barra andasse su due
+     righe. Era una scelta giusta che ha smesso di esserlo. */
 
   /* La riga degli interruttori comincia da capo, e la parola resta per chi legge con la voce. */
   .spacer { flex-basis: 100%; height: 0; }
@@ -403,20 +420,4 @@ canvas:focus-visible { outline-offset: -4px; }
   .bar button { min-width: 44px; flex: 1 1 auto; }
 
   footer.bar button { flex: 1 1 30%; font-size: 14px; }
-}
-
-/* Girare il telefono. Compare **solo** in verticale su uno schermo basso, cioè quando il campo
-   diventa davvero una striscia — su un tablet in verticale c'è spazio e non serve dirlo. */
-#rotate { display: none; }
-
-@media (orientation: portrait) and (max-height: 900px) and (max-width: 620px) {
-  #rotate {
-    display: block;
-    margin: 0;
-    padding: 7px 12px;
-    text-align: center;
-    color: var(--muted);
-    font-size: 13px;
-    border-bottom: 1px solid var(--line);
-  }
 }

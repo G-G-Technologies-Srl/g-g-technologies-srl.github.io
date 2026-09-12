@@ -140,9 +140,22 @@ export function onBoundary(face, point) {
 // outer wall along a whole 45° run, and it happens after a handful of cuts without anybody doing
 // anything strange. A point where they touch belongs to both, and «which ring is this on» stops
 // having an answer. That question is the first thing `split` asks.
+//
+// **E un anello può toccare sé stesso**, che è la stessa cosa e per un anno non è stata contata.
+// La prima versione chiedeva «su quanti anelli sta questo punto» e rispondeva uno per un contorno
+// che ci passa due volte: succede a ogni insenatura, cioè ogni volta che un taglio arriva su
+// un'isola. Lì il bordo entra lungo la fenditura, gira l'isola e riesce lungo la stessa fenditura,
+// e ogni punto di quella fenditura — punta compresa — è un posto in cui «da che parte sto» non ha
+// risposta. Un taglio che partiva da lì veniva accettato, `split` sceglieva la prima delle due
+// occorrenze e restituiva un buco con due vertici appoggiati al muro dell'arena: un buco che non
+// è terra circondata ma un pezzo di bordo travestito. Il gioco continuava a tornare i conti giusti
+// e scoppiava quattro tagli dopo, altrove.
+//
+// La domanda giusta è **quante volte il bordo ci passa**, e vale per tutti e due i casi in una
+// riga sola.
 export function wallsAt(face, point) {
   let many = 0;
-  for (const ring of face.rings) if (_onRing(ring, point)) many += 1;
+  for (const ring of face.rings) many += _passes(ring, point);
   return many;
 }
 
@@ -166,6 +179,14 @@ export function wallsAt(face, point) {
 // intersect the step against every edge.
 export function pathTo(face, from, target, limit = 1024) {
   const path = [[from[0], from[1]]];
+
+  // La stessa domanda che `game.js` fa un istante prima di staccare, fatta anche qui — e non per
+  // simmetria. **L'anteprima è la linea che verrà percorsa**: se qui si disegna un taglio che di
+  // là viene rifiutato, il tratteggio ha detto una bugia, e la bugia si scopre premendo e non
+  // vedendo succedere niente. È esattamente quello che faceva sulla fenditura di un'insenatura —
+  // il marcatore aveva otto direzioni legali secondo `canStep`, l'anteprima ne disegnava il
+  // taglio, e il mondo non si muoveva. Di lì si cammina soltanto, ed è così che se ne esce.
+  if (onBoundary(face, from) && wallsAt(face, from) > 1) return path;
 
   for (let n = 0; n < limit; n += 1) {
     const p = path[path.length - 1];
@@ -431,6 +452,21 @@ function _onSegment(a, b, point) {
 // so on the lattice the answer is exact.
 function _turn(a, b, point) {
   return (b[0] - a[0]) * (point[1] - a[1]) - (b[1] - a[1]) * (point[0] - a[0]);
+}
+
+// Quante volte il contorno passa per un punto. Un vertice conta una volta — è l'estremo di due
+// segmenti ma è un passaggio solo — e un punto in mezzo a un segmento pure; quello che fa due è un
+// vertice ripetuto, cioè un contorno che torna a passare di lì.
+function _passes(ring, point) {
+  let many = 0;
+  for (let i = 0; i < ring.length; i += 1) {
+    const from = ring[i];
+    if (from[0] === point[0] && from[1] === point[1]) { many += 1; continue; }
+    const to = ring[(i + 1) % ring.length];
+    if (to[0] === point[0] && to[1] === point[1]) continue;   // lo conta il giro in cui è `from`
+    if (_onSegment(from, to, point)) many += 1;
+  }
+  return many;
 }
 
 function _onRing(ring, point) {

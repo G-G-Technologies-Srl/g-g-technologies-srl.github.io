@@ -397,6 +397,81 @@ equal("dal bordo esterno a un'isola non si cammina", walkTo(atoll(), [0, 24], [1
 }
 
 // -----------------------------------------------------------------------------------------------------------------
+//  l a   p u n t a   d e l l ' i n s e n a t u r a
+// -----------------------------------------------------------------------------------------------------------------
+
+// La cicatrice più cara di tutte, perché il gioco continuava a tornare i conti giusti mentre era
+// già rotto.
+//
+// Un taglio che arriva su un'isola non divide: apre. La faccia resta una e il suo contorno entra
+// lungo la fenditura, gira l'isola e riesce lungo la **stessa** fenditura — un muro di larghezza
+// zero. Su ogni punto di quella fenditura il bordo passa due volte, e «da che parte sto» non ha
+// risposta.
+//
+// `wallsAt` esisteva apposta per rifiutare quei punti, e li lasciava passare tutti: contava su
+// **quanti anelli** stava il punto, e la fenditura è un anello solo percorso due volte. Il taglio
+// successivo partiva dalla punta, `split` sceglieva la prima delle due occorrenze, e restituiva un
+// buco con due vertici appoggiati al muro dell'arena. L'area tornava, la percentuale era giusta,
+// le facce sembravano sane — e quattro tagli dopo, da un'altra parte, il gioco esplodeva con
+// «un buco senza faccia intorno».
+{
+  const anello = {
+    rings: [
+      [[0, 0], [256, 0], [256, 192], [0, 192]],
+      [[96, 72], [96, 120], [160, 120], [160, 72]],
+    ],
+  };
+  const before = area2(anello);
+  const down = [];
+  for (let y = 0; y <= 72; y += 1) down.push([128, y]);
+
+  equal("prima del ponte, sul muro il bordo passa una volta", wallsAt(anello, [128, 0]), 1);
+  equal("e sull'isola pure", wallsAt(anello, [128, 72]), 1);
+
+  const opened = split(anello, down);
+  equal("il taglio fino all'isola non divide: apre", opened.length, 1);
+  equal("e l'area passa dal ponte intatta", area2(opened[0]), before);
+
+  const bay = opened[0];
+  equal("sulla punta dell'insenatura il bordo passa due volte", wallsAt(bay, [128, 72]), 2);
+  equal("e a metà fenditura anche", wallsAt(bay, [128, 36]), 2);
+  // Alla bocca dell'insenatura sono due e non tre: il muro **non** si ferma lì, ci passa una volta
+  // sola — entra nella fenditura e più tardi ne riesce. Tre sarebbe contare il muro due volte.
+  equal("e alla bocca, dove la fenditura tocca il muro, ancora due", wallsAt(bay, [128, 0]), 2);
+
+  // Il resto del bordo non deve essersi ammalato: un contatore troppo generoso rifiuterebbe tagli
+  // legittimi ovunque, e sarebbe un difetto peggiore di quello che sostituisce.
+  equal("ma un punto qualunque del muro resta a uno", wallsAt(bay, [40, 0]), 1);
+  equal("e un angolo dell'arena pure", wallsAt(bay, [0, 0]), 1);
+  equal("e un vertice dell'isola pure", wallsAt(bay, [96, 72]), 1);
+
+  // E la conseguenza: di lì non si chiude.
+  check("chiudere un taglio sulla punta è rifiutato",
+        canStep(bay, [129, 71], [128, 72]) !== "close",
+        String(canStep(bay, [129, 71], [128, 72])));
+
+  let refused = false;
+  try { split(bay, [[128, 72], [129, 71], [130, 70]]); } catch (ignored) { refused = true; }
+  check("e `split` non accetta una catena che parte di lì", refused);
+
+  // E l'anteprima deve dire la **stessa** cosa che farà il mondo.
+  //
+  // Da un punto della fenditura `canStep` risponde ancora «open» in otto direzioni, e ha ragione:
+  // guarda dove il passo *arriva*, e lì arriva dentro la faccia. Ma staccare da lì è vietato, e
+  // quel divieto viveva solo in `game.js`. Per un giro intero le due cose non si sono parlate: il
+  // tratteggio disegnava un taglio di settanta passi, si premeva, e non succedeva niente — cioè
+  // esattamente la bugia che tutta la scelta di rendere `pathTo` senza memoria serve a impedire.
+  //
+  // Trovato misurando una cosa che avevo affermato: che dalla fenditura si potesse sempre almeno
+  // camminare. Si poteva — ed è saltato fuori l'altro difetto, quello accanto.
+  equal("dalla punta non parte nessun taglio", pathTo(bay, [128, 72], [60, 40]).length, 1);
+  equal("e l'anteprima lo dice: di lì si cammina", aimAt(bay, [128, 72], [60, 40]).kind, "walk");
+  equal("a metà fenditura è lo stesso", aimAt(bay, [128, 36], [60, 40]).kind, "walk");
+  equal("ma da un punto di muro qualunque il taglio riparte", aimAt(bay, [40, 0], [60, 40]).kind, "cut");
+  check("e quel taglio è lungo davvero", pathTo(bay, [40, 0], [60, 40]).length > 1);
+}
+
+// -----------------------------------------------------------------------------------------------------------------
 
 console.log(failures === 0
   ? "geometry: tutto a posto"

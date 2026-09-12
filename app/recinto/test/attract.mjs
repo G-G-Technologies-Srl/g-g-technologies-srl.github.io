@@ -15,9 +15,11 @@
 
 import { create, step, progress } from "../run/game.js";
 import { mind, think } from "../run/attract.js";
-import { ringArea2, contains, onBoundary } from "../run/geometry.js";
+import { ringArea2, contains, onBoundary, canStep } from "../run/geometry.js";
 
 let failures = 0;
+
+const WAYS = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]];
 
 function check(name, condition, detail = "") {
   if (condition) return;
@@ -32,8 +34,19 @@ function check(name, condition, detail = "") {
 // altro buco è terreno conquistato dentro terreno conquistato, che non vuol dire niente. Quando è
 // successo, il gioco è andato avanti per tre tagli prima di esplodere in un punto lontano. Si
 // controlla dopo ogni conquista, perché è l'unico momento in cui le facce cambiano.
-function illness(face) {
+function illness(face, wall) {
   const outer = face.rings[0];
+
+  // **E nessun buco si appoggia al muro dell'arena.** Un buco è terra circondata; se il suo
+  // contorno cammina sul muro non è circondata da niente, ed è una faccia che ha già smesso di
+  // voler dire qualcosa. È il controllo che ha trovato il difetto più caro del progetto: l'area
+  // tornava esatta, la percentuale era giusta, tutti gli altri controlli qui sotto passavano, e il
+  // gioco esplodeva cinquecento passi più tardi in un altro livello. Costa un giro di anello per
+  // ogni buco, e solo alle conquiste.
+  for (let i = 1; i < face.rings.length; i += 1) {
+    const on = face.rings[i].filter((point) => onBoundary(wall, point));
+    if (on.length) return `il buco ${i} ha ${on.length} vertici sul muro dell'arena, il primo in ${on[0]}`;
+  }
   if (ringArea2(outer) <= 0) return "l'anello esterno non è positivo";
 
   for (let i = 1; i < face.rings.length; i += 1) {
@@ -56,7 +69,8 @@ function illness(face) {
 function demo(seed, cap = 90000) {
   let world = create(1, seed);
   const brain = mind(seed * 7 + 1);
-  const out = { cuts: 0, levels: 0, deaths: [], steps: 0, longestStall: 0, score: 0, best: 0, sick: null };
+  const out = { cuts: 0, levels: 0, deaths: [], steps: 0, longestStall: 0, score: 0, best: 0,
+                sick: null, trapped: null };
 
   let frozen = null;
   let still = 0;
@@ -72,11 +86,25 @@ function demo(seed, cap = 90000) {
     }
     if (claimed && !out.sick) {
       for (const face of world.faces) {
-        const bad = illness(face);
+        const bad = illness(face, { rings: [world.outline[0]] });
         if (bad) { out.sick = `seme ${seed}, passo ${out.steps}: ${bad}`; break; }
       }
     }
     out.best = Math.max(out.best, progress(world));
+
+    // **Il marcatore ha sempre almeno una mossa.** Nasce dal giro in cui `wallsAt` è diventata più
+    // severa: da quel momento ci sono più punti da cui un taglio non può cominciare, e che
+    // «camminare resta sempre possibile» era una cosa che avevo ragionato e non misurato —
+    // ragionare è esattamente quello che aveva prodotto il difetto. Campionato una volta al
+    // secondo simulato: otto `canStep` a ogni passo costerebbero più di tutta la suite.
+    if (out.steps % 120 === 0 && world.waiting <= 0 && !out.trapped) {
+      const face = world.cut ? world.faces[world.cut.face]
+                             : world.faces.find((f) => onBoundary(f, world.marker.at));
+      if (face && !WAYS.some(([dx, dy]) =>
+            canStep(face, world.marker.at, [world.marker.at[0] + dx, world.marker.at[1] + dy]))) {
+        out.trapped = `seme ${seed}, livello ${world.level} «${world.arena}», in ${world.marker.at}`;
+      }
+    }
 
     if (world.cut && world.waiting <= 0) {
       const at = String(world.marker.at);
@@ -112,6 +140,9 @@ check("e prima o poi perde", games.every((game) => game.over),
 // immobilità mentre si taglia è già tantissimo — la Miccia si accende dopo un terzo di secondo.
 const sick = games.map((game) => game.sick).filter(Boolean);
 check("e nessuna faccia si ammala mai", sick.length === 0, sick.join(" · "));
+
+const trapped = games.map((game) => game.trapped).filter(Boolean);
+check("e il marcatore ha sempre almeno una mossa", trapped.length === 0, trapped.join(" · "));
 
 const worst = Math.max(...games.map((game) => game.longestStall));
 check("non resta mai piantato a metà linea", worst < 60, `${worst} passi fermo`);

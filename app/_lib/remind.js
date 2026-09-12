@@ -136,6 +136,21 @@ export function when(date, { days, hour }) {
   return at;
 }
 
+/**
+ * Un `Date` come giorno scritto, `2026-09-19`, **preso dalle parti locali**.
+ *
+ * `toISOString().slice(0, 10)` su una mezzanotte locale dà il giorno prima ovunque a est di
+ * Londra: a Roma `new Date(2026, 8, 19)` esce `2026-09-18`. È lo stesso errore che `when()` evita
+ * costruendo invece di leggere, ed è qui perché è servito due volte — la seconda l'ho scritto a
+ * mano e l'ho sbagliato.
+ */
+export function day(date) {
+  const at = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(at.getTime())) return "";
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())}`;
+}
+
 // -----------------------------------------------------------------------------------------------------------------
 //  i l   d i g e s t
 // -----------------------------------------------------------------------------------------------------------------
@@ -147,6 +162,13 @@ export function when(date, { days, hour }) {
  * `key` tiene dentro la data: spostare una scadenza è una scadenza nuova, e va detta di nuovo.
  * Quello che è già stato detto resta detto — `said` viaggia col digest — ma solo per le voci che
  * esistono ancora, altrimenti l'elenco cresce per sempre.
+ *
+ * **Ogni voce porta tre cose e non una, e il motivo è un difetto vero.** `text` è la frase che
+ * mostra il worker, e deve essere vera *quando suona*: con dentro «fra 7 giorni», scritto il
+ * giorno in cui il digest è nato, una sveglia che matura quattro giorni dopo dice un numero
+ * sbagliato — e lo strato tre è proprio quello che parla dopo giorni di silenzio. Quindi `text`
+ * porta la data com'è, `label` porta la cosa senza tempo, e `date` sta lì perché la pagina — che
+ * l'orologio ce l'ha davvero — ricomponga «domani» nel momento in cui lo scrive sullo schermo.
  */
 export function digest(items, settings, { heading = "", said = [], now = new Date() } = {}) {
   const one = clean(settings);
@@ -157,6 +179,8 @@ export function digest(items, settings, { heading = "", said = [], now = new Dat
     out.push({
       key: `${item.id}|${item.date}`,
       when: at.toISOString(),
+      date: String(item.date),
+      label: String(item.label || item.text || ""),
       text: String(item.text || ""),
     });
   }
@@ -235,6 +259,23 @@ export async function watch(registration, { hours = 12 } = {}) {
     if (permission.state !== "granted") return false;
     await registration.periodicSync.register(TAG, { minInterval: hours * 60 * 60 * 1000 });
     return true;
+  } catch (ignored) {
+    return false;
+  }
+}
+
+/**
+ * Se il risveglio è **registrato davvero**, chiesto al browser invece che dedotto.
+ *
+ * Serve perché `watch()` può fallire in silenzio per una ragione che passa da sola: Chromium
+ * concede `periodic-background-sync` alle app installate e usate, cioè spesso *dopo* il momento in
+ * cui una persona accende i promemoria. Una riga che dicesse «arrivano anche a finestra chiusa»
+ * guardando se l'API esiste prometterebbe una cosa che non è ancora vera.
+ */
+export async function watching(registration) {
+  if (!wakes(registration)) return false;
+  try {
+    return (await registration.periodicSync.getTags()).includes(TAG);
   } catch (ignored) {
     return false;
   }

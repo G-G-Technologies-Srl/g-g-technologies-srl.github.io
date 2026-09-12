@@ -54,7 +54,6 @@
     <span class="hud-item"><b id="hudLives">3</b><small data-t="hudLives">vite</small></span>
     <span class="hud-item"><b id="hudLevel">1</b><small id="hudArena">rettangolo</small></span>
     <span class="spacer"></span>
-    <button type="button" class="gg-version" id="appVersion" data-t-label="versionOf"></button>
     <button type="button" id="installButton" data-t="installLabel" hidden>Installa</button>
     <button type="button" id="scoresButton" data-t="scoresTitle">Classifica</button>
     <button type="button" id="soundButton" aria-pressed="true" data-t-label="soundOn">♪</button>
@@ -76,18 +75,47 @@
       <button type="button" id="coinButton" data-t="insertCoin">Inserisci un gettone</button>
       <p class="small" data-t="coinFree">I gettoni sono infiniti: è il rito, non un limite.</p>
       <button type="button" id="howButton" data-t="howTitle">Come si gioca</button>
+
+      <!-- La versione sta qui e non nella barra. Nella barra c'era, ed era un numero di dieci
+           pixel che galleggiava fra i punteggi e quattro pulsanti grandi: chi la cercava non la
+           trovava. Qui ha attorno la schermata che si guarda prima di cominciare, ed è anche il
+           posto giusto per la luce dell'aggiornamento — che si accende *prima* della partita e non
+           a metà. Nasce nascosta: dove un service worker non c'è, un pulsante vuoto sarebbe peggio
+           di niente. -->
+      <button type="button" class="gg-version" id="appVersion" data-t-label="versionOf" hidden></button>
     </section>
 
     <section class="screen" id="howScreen" hidden>
       <h2 data-t="howTitle">Come si gioca</h2>
-      <p data-t="howGoal"></p>
-      <p data-t="howKeys"></p>
-      <p data-t="howPointer"></p>
-      <p data-t="howSlow"></p>
-      <p data-t="howFilo"></p>
-      <p data-t="howMiccia"></p>
-      <p data-t="howScintille"></p>
-      <p data-t="howCapture"></p>
+
+      <!-- Otto paragrafi di fila erano una lista di fatti veri e un testo che nessuno finiva: per
+           sapere come si muore bisognava leggere anche come si contano i punti. I titoli non sono
+           decorazione — sono il modo in cui si torna a cercare la cosa che serve, che è quello che
+           si fa davvero con le istruzioni di un gioco. -->
+      <div class="how-body">
+        <h3 data-t="howGoalTitle">Lo scopo</h3>
+        <p data-t="howGoal"></p>
+
+        <h3 data-t="howMoveTitle">Come ci si muove</h3>
+        <p data-t="howKeys"></p>
+        <p data-t="howPointer"></p>
+
+        <h3 data-t="howSlowTitle">Il tratto lento</h3>
+        <p data-t="howSlow"></p>
+
+        <h3 data-t="howDangerTitle">I tre modi di morire</h3>
+        <p data-t="howFilo"></p>
+        <p data-t="howMiccia"></p>
+        <p data-t="howScintille"></p>
+        <p data-t="howDeath"></p>
+
+        <h3 data-t="howPaysTitle">Le due mosse che pagano</h3>
+        <p data-t="howCapture"></p>
+
+        <h3 data-t="howLevelsTitle">I livelli</h3>
+        <p data-t="howGiro"></p>
+      </div>
+
       <button type="button" id="howBack" data-t="start">Start</button>
     </section>
 

@@ -20,6 +20,21 @@ let palette = null;
 // finire in un salvataggio, in una ripetizione o in un test.
 let tails = [];
 
+// «Meno movimento», chiesto al sistema operativo e non a questo gioco. Il foglio di stile lo
+// rispettava già per l'animazione del gettone, ma il canvas non è governato dal CSS: la fiamma
+// pulsava, i raggi tremolavano e il marcatore in attesa lampeggiava lo stesso — cioè proprio le
+// tre cose che si muovono di più, spente ovunque tranne dove sono.
+//
+// Quello che si spegne è il **battito**, non la forma: i raggi restano, di lunghezze diverse, e
+// smettono di cambiare; l'alone resta, e smette di respirare. Niente sparisce, perché quelle forme
+// sono lì per farsi vedere e chi ha chiesto meno movimento non ha chiesto di vedere meno.
+let calm = false;
+
+export function motion(reduce) {
+  calm = Boolean(reduce);
+  return calm;
+}
+
 // -----------------------------------------------------------------------------------------------------------------
 //  t h e   v i e w
 // -----------------------------------------------------------------------------------------------------------------
@@ -124,7 +139,7 @@ export function draw(canvas, world, { preview = null, fuse = null } = {}) {
   world.sparks.forEach((spark, i) => _spark(ctx, v, unit, spark, tails[i] || []));
   for (const thread of world.threads) _ribbon(ctx, v, unit, thread, palette.thread);
   // In attesa il marcatore pulsa: il controllo non è tuo e va detto senza scrivere una parola.
-  if (world.waiting > 0) ctx.globalAlpha = 0.35 + 0.4 * Math.abs(Math.sin(world.waiting * 9));
+  if (world.waiting > 0) ctx.globalAlpha = calm ? 0.5 : 0.35 + 0.4 * Math.abs(Math.sin(world.waiting * 9));
   _marker(ctx, v, unit, world.marker.at, world.cut ? palette.cut : palette.marker);
   ctx.globalAlpha = 1;
 }
@@ -237,7 +252,7 @@ function _spark(ctx, v, unit, spark, tail) {
 
   // I raggi: quattro, di lunghezza diversa, e la differenza dipende da dove si trova — così
   // tremolano muovendosi e restano fermi se lei è ferma.
-  const heat = spark.at[0] * 3 + spark.at[1] * 7;
+  const heat = calm ? 0 : spark.at[0] * 3 + spark.at[1] * 7;
   ctx.strokeStyle = palette.spark;
   ctx.lineWidth = Math.max(1, 1.4 * (window.devicePixelRatio || 1));
   ctx.shadowBlur = 12;
@@ -272,7 +287,7 @@ function _spark(ctx, v, unit, spark, tail) {
 function _burning(ctx, v, unit, at, burnt) {
   const [x, y] = _at(v, unit, at);
   const size = Math.max(4, unit * 1.9);
-  const beat = 0.82 + _wobble(Math.floor(burnt * 6)) * 0.36;
+  const beat = calm ? 1 : 0.82 + _wobble(Math.floor(burnt * 6)) * 0.36;
 
   const halo = ctx.createRadialGradient(x, y, 0, x, y, size * 3.4 * beat);
   halo.addColorStop(0, palette.fuse);
@@ -291,7 +306,7 @@ function _burning(ctx, v, unit, at, burnt) {
   ctx.shadowColor = palette.fuse;
   ctx.beginPath();
   for (let k = 0; k < 5; k += 1) {
-    const seed = Math.floor(burnt * 9) + k * 13;
+    const seed = (calm ? 0 : Math.floor(burnt * 9)) + k * 13;
     const angle = _wobble(seed) * Math.PI * 2;
     const reach = size * (1.4 + _wobble(seed + 3) * 2.2);
     ctx.moveTo(x, y);

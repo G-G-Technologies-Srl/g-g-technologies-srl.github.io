@@ -95,3 +95,5 @@ _src/fonti/
 # carattere di controllo giusto, in `app/invoice-scope/test/`. Da un file vero si copia la **forma**
 # — quali colonne, in che ordine, con che formato di data — mai il contenuto.
 _src/fonti/fic/
+promemoria-invoice.png
+promemoria-plan.png

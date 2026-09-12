@@ -257,6 +257,25 @@ equal("e ha un tetto", quota(create(40, 1)), RULES.quotaMax);
 //  t u t t e   l e   a r e n e ,   l o   s t e s s o   c i c l o
 // -----------------------------------------------------------------------------------------------------------------
 
+// Un buco è terra circondata. Se il contorno di un buco cammina sul muro dell'arena, non è terra
+// circondata: è un pezzo di bordo travestito, cioè una faccia che ha smesso di voler dire qualcosa.
+//
+// **È l'invariante che ha trovato il difetto peggiore del progetto**, e per un giorno è vissuto in
+// una sonda usa-e-getta invece che qui. Sta qui adesso perché è l'unico che vede la malattia
+// *quando comincia*: l'area continuava a tornare esatta, la percentuale era giusta, le facce
+// superavano ogni altro controllo — e il gioco esplodeva cinquecento passi dopo, in un'altra
+// funzione, in un altro livello, su un taglio che nessuno avrebbe collegato a questo.
+function leaning(world) {
+  const wall = { rings: [world.outline[0]] };
+  for (const face of world.faces) {
+    for (let i = 1; i < face.rings.length; i += 1) {
+      const on = face.rings[i].filter((point) => onBoundary(wall, point));
+      if (on.length) return `${on.length} vertici di un buco sul muro dell'arena, il primo in ${on[0]}`;
+    }
+  }
+  return null;
+}
+
 for (let level = 1; level <= ARENAS.length; level += 1) {
   const world = create(level, 11);
   play(world, move(0, 1), 900);
@@ -268,6 +287,7 @@ for (let level = 1; level <= ARENAS.length; level += 1) {
         world.faces.every((face) => face.rings.every((ring) => ring.length >= 3)));
   check(`arena «${world.arena}»: la percentuale sta fra 0 e 1`,
         progress(world) >= 0 && progress(world) <= 1, String(progress(world)));
+  check(`arena «${world.arena}»: nessun buco si appoggia al muro`, !leaning(world), leaning(world) || "");
 }
 
 // Fermarsi non è ancora pericoloso — la Miccia arriva al passo 5 — ma non deve nemmeno muovere

@@ -21,21 +21,49 @@ const IT = {
   startHint: "Invio, oppure il pulsante qui sopra",
 
   howTitle: "Come si gioca",
-  howGoal: "Stacchi dal bordo, tracci una linea nel campo aperto e torni sul bordo: il taglio "
-    + "spezza l'aperto in due e la parte senza il Filo diventa tua. Chiudi la quota e passi "
-    + "di livello.",
-  howKeys: "Frecce o WASD per muoverti, Maiusc per il tratto lento.",
-  howPointer: "Col mouse o col dito indichi dove andare: il marcatore ci va. Vicino a una parete "
-    + "cammina sul bordo, in mezzo al campo taglia — e la linea tratteggiata te lo dice prima.",
-  howSlow: "Il tratto lento vale il doppio all'area e ti lascia scoperto il doppio del tempo. È "
-    + "la scommessa del gioco.",
-  howFilo: "Il Filo uccide la linea che hai fuori, non solo la sua punta. Quello che vedi è il "
-    + "suo corpo: anche la scia.",
-  howMiccia: "Se ti fermi mentre tagli, la tua stessa linea comincia a bruciare da dietro. "
-    + "Premere contro un muro è stare fermi.",
-  howScintille: "Le Scintille corrono sul bordo, cioè dove cammini tu, e accelerano. Ogni "
-    + "conquista cambia il confine e cambia anche la loro pista.",
-  howCapture: "Chiudere il Filo in una sacca stretta non ti uccide: lo cattura, e paga.",
+  howGoalTitle: "Lo scopo",
+  howGoal: "Sei il rombo, e il tuo posto è il bordo del campo. Da lì stacchi, attraversi il campo aperto e "
+    + "torni sul bordo: la linea che ti sei lasciato dietro spezza l'aperto in due, e la parte in cui "
+    + "non è rimasto nessun Filo diventa tua. In alto a sinistra c'è quanto hai preso e quanto te ne "
+    + "serve: arrivato alla quota, il livello è chiuso.",
+  howMoveTitle: "Come ci si muove",
+  howKeys: "Da tastiera: frecce o WASD, in otto direzioni. Maiusc tenuto premuto taglia lento. Invio o barra "
+    + "spaziatrice inseriscono il gettone, Esc o P mettono in pausa.",
+  howPointer: "Col mouse o col dito indichi un punto e il marcatore ci va da solo. La linea tratteggiata mostra "
+    + "la strada prima che tu prema: se il punto è in mezzo al campo è un taglio, se è su una parete o "
+    + "lì vicino è una camminata lungo il bordo. Su un telefono tenuto in verticale il campo si gira di "
+    + "lato da solo, perché così ci sta molto più grande.",
+  howSlowTitle: "Il tratto lento",
+  howSlow: "Tagliando piano il terreno che prendi vale il doppio dei punti, ma ci metti il doppio del tempo "
+    + "— e per tutto quel tempo la tua linea è fuori e può essere colpita. È la scommessa su cui è "
+    + "costruito tutto il gioco: ogni punto in più è un secondo in più di esposizione.",
+  howDangerTitle: "I tre modi di morire",
+  howFilo: "Il Filo è il nastro che si contorce nel campo aperto. Uccide toccando la linea che hai fuori — "
+    + "tutta la linea, non solo la punta — e non può niente contro di te finché sei sul bordo. Anche la "
+    + "scia che si vede dietro di lui è il suo corpo, e morde: qui niente ti uccide senza essere stato "
+    + "sullo schermo. Dal terzo livello i Fili sono due, tranne nelle arene troppo piccole per starci "
+    + "in due.",
+  howMiccia: "La Miccia è la tua stessa linea che prende fuoco. Se ti fermi con la linea fuori, dopo un terzo "
+    + "di secondo la fiamma parte da dove hai staccato e corre verso di te; quando ti raggiunge sei "
+    + "morto. Ripartire la spegne ma non ti restituisce niente: il pezzo mangiato è perso. Premere "
+    + "contro un muro è stare fermi. È la regola per cui non esiste un posto in cui aspettare di vedere "
+    + "cosa fanno gli altri.",
+  howScintille: "Le Scintille sono i puntini bianchi con i raggi, e corrono lungo il bordo — cioè esattamente là "
+    + "dove cammini tu. Sul bordo ti prendono, nel campo aperto non ti sfiorano. Accelerano più il "
+    + "livello dura, e ogni conquista riscrive il bordo e con lui la loro pista: possono arrivare da un "
+    + "lato che un attimo prima non esisteva.",
+  howDeath: "Quando muori riparti da dove il taglio era cominciato, non dall'inizio dell'arena: sbagliare una "
+    + "volta non deve costare anche tutta la strada rifatta. Il controllo però torna tuo solo quando il "
+    + "campo è libero, così non si muore due volte per la stessa distrazione.",
+  howPaysTitle: "Le due mosse che pagano",
+  howCapture: "Chiudere un Filo dentro una sacca abbastanza stretta non ti uccide: lo cattura. La sacca diventa "
+    + "tua e vale 3000 punti. Con due Fili in campo c'è di meglio: un taglio che li lascia in due "
+    + "regioni separate ne vale 5000. Sono le sole due cose che si possono andare a cercare invece che "
+    + "subire.",
+  howLevelsTitle: "I livelli",
+  howGiro: "Le arene sono otto e poi ricominciano da capo, ma non uguali: a ogni giro completo le Scintille "
+    + "partono più veloci. Livello dopo livello sale anche la quota da raggiungere, dal 70% fino "
+    + "all'85%, e cresce il numero di Scintille in campo. Le vite sono tre per tutta la partita.",
 
   hudQuota: "conquistato",
   hudOf: "di",
@@ -63,6 +91,10 @@ const IT = {
   arenaAnello: "anello",
   arenaElle: "elle",
   arenaEsagono: "esagono",
+  arenaCroce: "croce",
+  arenaDiamante: "diamante",
+  arenaScala: "scala",
+  arenaIsole: "isole",
 
   langLabel: "English",
   themeLabel: "Tema",
@@ -119,23 +151,49 @@ const EN = {
   startHint: "Enter, or the button above",
 
   howTitle: "How to play",
-  howGoal: "Leave the border, draw a line across the open field and come back to the border: the "
-    + "cut splits the open ground in two and the half without the Thread becomes yours. Reach "
-    + "the quota and the level is done.",
-  howKeys: "Arrows or WASD to move, Shift for the slow stroke.",
-  howPointer: "With a mouse or a finger you point at where to go and the marker goes there. Near "
-    + "a wall it walks the border, out in the field it cuts — and the dashed line tells you "
-    + "which before you commit.",
-  howSlow: "The slow stroke is worth double the area and leaves you exposed twice as long. It is "
-    + "the bet the game is made of.",
-  howFilo: "The Thread kills the line you have out, not only its tip. What you can see is its "
-    + "body: the trail bites too.",
-  howMiccia: "Stop while cutting and your own line starts burning from behind. Pushing against a "
-    + "wall counts as standing still.",
-  howScintille: "The Sparks run along the border, which is where you walk, and they speed up. "
-    + "Every claim redraws the border and redraws their track with it.",
-  howCapture: "Shutting the Thread inside a tight pocket does not kill you: it catches it, and it "
-    + "pays.",
+  howGoalTitle: "What you are doing",
+  howGoal: "You are the diamond, and your place is the border of the field. From there you leave, cross the "
+    + "open ground and come back to the border: the line you left behind splits the open ground in two, "
+    + "and the part with no Thread left in it becomes yours. Top left shows how much you have taken and "
+    + "how much you need: reach the quota and the level is done.",
+  howMoveTitle: "Moving",
+  howKeys: "On a keyboard: arrows or WASD, in eight directions. Hold Shift to cut slowly. Enter or Space "
+    + "inserts the coin, Esc or P pauses.",
+  howPointer: "With a mouse or a finger you point at a spot and the marker goes there by itself. The dashed "
+    + "line shows the route before you commit: a spot out in the field is a cut, a spot on a wall or "
+    + "near one is a walk along the border. On a phone held upright the field turns sideways on its "
+    + "own, because that way it fits much bigger.",
+  howSlowTitle: "The slow stroke",
+  howSlow: "Cut slowly and the ground you take is worth double the points — but it takes twice as long, and "
+    + "for all that time your line is out and can be hit. That is the bet the whole game is built on: "
+    + "every extra point is another second of exposure.",
+  howDangerTitle: "The three ways to die",
+  howFilo: "The Thread is the ribbon writhing across the open field. It kills by touching the line you have "
+    + "out — the whole line, not only its tip — and it can do nothing to you while you stand on the "
+    + "border. The trail behind it is its body too, and it bites: nothing here kills you without having "
+    + "been on the screen. From the third level there are two Threads, except in arenas too small to "
+    + "hold them.",
+  howMiccia: "The Fuse is your own line catching fire. Stand still with a line out and after a third of a "
+    + "second the flame starts where you left the border and runs towards you; when it arrives, you are "
+    + "dead. Moving again puts it out but gives nothing back: the eaten part is gone. Pushing against a "
+    + "wall counts as standing still. It is the rule that means there is nowhere to wait and see what "
+    + "the others do.",
+  howScintille: "The Sparks are the white dots with rays, and they run along the border — which is exactly where "
+    + "you walk. On the border they catch you; out in the open field they cannot touch you. They speed "
+    + "up the longer a level lasts, and every claim redraws the border and their track with it: one can "
+    + "arrive from a side that did not exist a moment earlier.",
+  howDeath: "When you die you start again where the cut began, not at the start of the arena: one mistake "
+    + "should not cost you the whole walk back as well. But control returns only once the field is "
+    + "clear, so you never die twice for the same lapse.",
+  howPaysTitle: "The two moves that pay",
+  howCapture: "Shutting a Thread inside a tight enough pocket does not kill you: it catches it. The pocket "
+    + "becomes yours and is worth 3000 points. With two Threads out there is better: a cut that leaves "
+    + "them in two separate regions is worth 5000. They are the only two things you can go looking for "
+    + "instead of merely surviving.",
+  howLevelsTitle: "Levels",
+  howGiro: "There are eight arenas and then they come round again — but not the same: every full lap the "
+    + "Sparks start faster. Level by level the quota climbs too, from 70% to 85%, and more Sparks come "
+    + "out. You have three lives for the whole game.",
 
   hudQuota: "claimed",
   hudOf: "of",
@@ -163,6 +221,10 @@ const EN = {
   arenaAnello: "ring",
   arenaElle: "ell",
   arenaEsagono: "hexagon",
+  arenaCroce: "cross",
+  arenaDiamante: "diamond",
+  arenaScala: "stairs",
+  arenaIsole: "islands",
 
   langLabel: "Italiano",
   themeLabel: "Theme",

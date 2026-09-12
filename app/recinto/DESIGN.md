@@ -16,13 +16,13 @@ qui sono girate tutte in Chromium senza testa, cioè con un mouse che finge di e
 
 | | |
 |---|---|
-| `run/geometry.js` | `ringArea2`, `area2`, `contains`, `split`, `meet`, `chainMeets`, `selfCrosses`, `onBoundary`, `canStep`, `stepToward`, `pathTo`, `walkTo`, `nearestOnBoundary` |
-| `run/arenas.js` | quattro arene: rettangolo, anello con isola, elle, esagono |
+| `run/geometry.js` | `ringArea2`, `area2`, `contains`, `split`, `meet`, `chainMeets`, `selfCrosses`, `onBoundary`, `canStep`, `stepToward`, `pathTo`, `walkTo`, `nearestOnBoundary`, `wallsAt`, `aimAt` |
+| `run/arenas.js` | otto arene, in ordine di difficoltà misurata: rettangolo, esagono, scala, croce, elle, diamante, anello con isola, due isole — più il **giro**, cioè quante volte l'elenco è già stato percorso |
 | `run/game.js` | mondo, marcatore, taglio, conquista, cattura, separazione, quota, punteggio, il Filo, le vite, il rientro, **la Miccia e le Scintille** |
 | `run/render.js` · `run/input.js` · `run/app.js` · `index.html` · `styles.css` | il campo, i due temi, i tre modi di giocare, il ciclo dei fotogrammi |
 | `run/attract.js` | l'autopilota: la dimostrazione dietro il titolo, e lo strumento con cui si tara |
-| `run/i18n.js` | 41 chiavi per lingua, italiano e inglese, con la macchina presa da `gg/i18n.js` |
-| `run/audio.js` | sintesi, nessun file, e il contesto che si accende al gettone |
+| `run/i18n.js` | 89 chiavi per lingua, italiano e inglese, con la macchina presa da `gg/i18n.js` |
+| `run/audio.js` · `run/haptics.js` | il suono sintetizzato — nessun file, e il contesto che si accende al gettone — e la vibrazione. Due sensi per gli stessi eventi, e nessuno dei due sa cosa sia una regola del gioco |
 | `index.html` · `app.js` · `styles.css` | la forma del catalogo: import map, due temi, schermata del titolo, classifica |
 | `run/scores.js` | classifica su `gg/store.js`, con export e import via `gg/io.js` |
 | `manifest.webmanifest` · `sw.js` · tre icone | installabile, e funzionante senza rete dopo la prima apertura |
@@ -480,7 +480,7 @@ quello che l'arena era all'inizio**. Se smette di valere, la percentuale sullo s
 un'invenzione e la classifica confronta partite diverse; costa una riga per prova e prende quasi
 tutto il resto. Poi la cattura sotto soglia; la separazione pagata una volta sola *e non due*; la
 scommessa del tratto lento piazzata uscendo e non regolabile per strada; la quota raggiunta che
-chiude il livello; le quattro arene percorse dallo stesso ciclo; e **lo stesso seme che dà la
+chiude il livello; tutte le arene percorse dallo stesso ciclo; e **lo stesso seme che dà la
 stessa partita**. Con la Miccia e le Scintille arriveranno qui la miccia che avanza solo da fermi e
 la scintilla riagganciata al bordo nuovo senza cambiare verso.
 
@@ -834,6 +834,238 @@ conquista — non sull'orologio.
 
 ---
 
+## La punta dell'insenatura, e un contatore che contava la cosa sbagliata
+
+Il difetto più caro di tutti, perché il gioco continuava a tornare i conti giusti mentre era già
+rotto.
+
+Un taglio che arriva su un'isola non divide: **apre**. La faccia resta una e il suo contorno entra
+lungo la fenditura, gira l'isola e riesce lungo la stessa fenditura — un muro di larghezza zero.
+Questo pezzo era previsto, scritto, provato e giusto. Quello che nessuno aveva previsto è la riga
+dopo: su ogni punto di quella fenditura il bordo passa **due volte**, e lì «da che parte sto» non
+ha risposta.
+
+`wallsAt` esisteva apposta per rifiutare quei punti, e li lasciava passare tutti. Chiedeva *su
+quanti anelli sta questo punto*, e la fenditura è un anello solo percorso due volte: rispondeva uno.
+Il taglio successivo poteva quindi partire dalla punta dell'insenatura, `split` sceglieva la prima
+delle due occorrenze del vertice, e restituiva un buco con due vertici appoggiati al muro
+dell'arena — cioè non terra circondata, ma un pezzo di bordo travestito da buco. L'area tornava
+esatta, la percentuale sullo schermo era giusta, le facce superavano i controlli di sanità
+esistenti. Quattro tagli dopo, da tutt'altra parte, il gioco esplodeva con «un buco senza faccia
+intorno».
+
+La domanda giusta è **quante volte il bordo ci passa**, e copre in una riga sola sia due anelli che
+si toccano — il caso per cui `wallsAt` era nata — sia un anello che tocca sé stesso. Un vertice
+conta una volta, un punto in mezzo a un segmento pure; quello che fa due è un vertice ripetuto.
+
+Trovato non giocando e non leggendo, ma con un metodo: eseguire la partita che esplodeva
+controllando **dopo ogni passo** un invariante più stretto di quelli dei test — *nessun vertice di
+un buco sta sul muro dell'arena* — e fermarsi al primo passo in cui smette di valere. Il crash era
+al passo 2 di un livello; la malattia era cominciata 570 passi prima, in un altro livello, su un
+taglio che nessuno avrebbe guardato. Un invariante che si controlla a ogni passo vale dieci sessioni
+di lettura del codice.
+
+La prova adesso c'è, costruisce l'insenatura a mano e ne misura la punta, la bocca e il mezzo. E
+controlla anche il contrario, che è la metà che si dimentica: un angolo dell'arena, un vertice
+dell'isola e un punto qualunque del muro devono restare a uno. Un contatore troppo generoso
+rifiuterebbe tagli legittimi ovunque, e sarebbe un difetto peggiore di quello che sostituisce.
+
+---
+
+## L'ordine delle arene non è un'opinione
+
+Le arene sono otto: rettangolo, esagono, scala, croce, elle, diamante, anello, isole. Le quattro
+nuove sono novanta righe di dati e nessuna riga di `game.js`.
+
+L'ordine in cui compaiono **è** la curva di difficoltà, e per le prime quattro era stato deciso a
+occhio. Misurandolo — ogni arena fatta giocare all'autopilota otto volte con le condizioni identiche
+del primo livello — è venuto fuori che l'anello, che stava al secondo livello, era l'arena più
+difficile di tutte: tre partite chiuse su otto contro le sette o otto delle altre. Il secondo
+livello era il picco della curva.
+
+Adesso l'elenco segue il numero, con due scostamenti voluti e scritti accanto ai dati. Il rettangolo
+resta primo anche se non è il più facile misurato, perché è la forma che si capisce senza
+spiegazioni e il primo livello insegna. E «isole» sta dopo «anello» anche se il numero direbbe il
+contrario, perché due isole dopo una sola è l'ordine in cui si impara.
+
+La prova nuova, `test/arenas.mjs`, controlla le arene **come dati**: orientamento di ogni anello,
+ogni parete diritta o a 45°, vertici interi e dentro il campo, partenza sul bordo e non su un
+vertice, Fili che nascono dentro e lontani dalle pareti. Nessuno di quegli errori si vede guardando
+l'arena: si vedono tre mosse dopo, altrove. È la ragione per cui aggiungerne una adesso costa dieci
+minuti.
+
+---
+
+## Un Filo vuole spazio, e l'arena può non averne
+
+Il secondo Filo compariva al terzo livello e basta. Nel diamante — che è un terzo di campo — voleva
+dire due Fili su una superficie dove uno solo è già stretto: l'autopilota ci moriva tre volte su
+tre, con qualunque seme. Non era difficile, era invivibile, ed era un difetto dell'**arena piccola**
+e non del livello.
+
+Quindicimila unità a testa, poco meno di un terzo del campo pieno: è il numero che decide, una volta
+sola, alla nascita del livello. Un'arena grande ne prende due, una piccola resta a uno — e non per
+questo è più facile, perché ha molto meno posto in cui scappare. Il diamante è passato dal 30% al
+50% di terreno conquistato in media.
+
+Nello stesso giro è saltata fuori la cugina del difetto: il gradino più basso della scala era alto
+64, e l'autopilota chiuso lì dentro con un Filo girava per dodici minuti senza morire e senza
+finire. Una stanza in cui non si può né vincere né perdere non è difficile: è ferma. Adesso il
+gradino più piccolo è 96 × 96, e la prova sull'autopilota ha un tetto sulla durata proprio per
+prendere questo caso — una partita che non finisce è un difetto, non una partita lunga.
+
+---
+
+## Il giro che non finisce
+
+Dal settimo livello la quota era al massimo, i Fili erano due e le Scintille quattro. Dall'ottavo in
+poi il numero del livello saliva davanti a una partita **identica** a quella di dieci livelli prima.
+Una classifica che a quel punto premia chi resiste più a lungo invece di chi gioca meglio non misura
+più niente.
+
+Adesso a ogni giro completo dell'elenco delle arene le Scintille partono nove unità più veloci. È
+uno spostamento della curva verso l'alto, non una pendenza diversa: il tetto se lo mangia dopo un
+minuto abbondante di livello, e va benissimo — oltre quel tetto non si scappa da nessuna velocità, e
+un numero più grande non vorrebbe dire più difficile ma solo più uguale. Quello che il giro cambia è
+il primo minuto, che è dove i livelli si decidono.
+
+Una manopola sola, di proposito. La successiva, se giocando si vedrà che non basta, è un terzo Filo
+— ma quella cambia il gioco e non lo scala, e va decisa con dei dati di gioco vero in mano.
+
+---
+
+## Meno movimento, dove il CSS non arriva
+
+Il foglio di stile rispettava `prefers-reduced-motion` da sempre, per l'unica animazione che
+conosceva: il pulsante del gettone che pulsa. Sul canvas, dove si muove tutto, la richiesta restava
+lettera morta — la fiamma della Miccia pulsava, i raggi delle Scintille tremolavano, il marcatore in
+attesa lampeggiava. Le tre cose che si muovono di più, spente ovunque tranne dove sono.
+
+Quello che si spegne è il **battito**, non la forma. I raggi restano, di lunghezze diverse, e
+smettono di cambiare; l'alone resta e smette di respirare. Niente sparisce, perché quelle forme sono
+lì per farsi vedere e chi ha chiesto meno movimento non ha chiesto di vedere meno. Costa una
+variabile nel renderer e un `calm ? …` in quattro punti, tutti dentro `render.js`: il mondo non sa
+che esista.
+
+La stessa preferenza governa la cosa nuova, la **vibrazione**. Su un telefono è l'unica che può dire
+«è successo» mentre il pollice copre un quarto del campo e la parte che conta è proprio sotto.
+Cattura, separazione, morte, livello chiuso e fine partita hanno ciascuna la sua scossa, corte —
+una vibrazione che dura si sente come un guasto.
+
+**Non passa dall'interruttore del suono**, e non è una dimenticanza. Il suono si spegne per non
+disturbare chi sta intorno, ed è esattamente il momento in cui una vibrazione serve di più, perché è
+quello che resta. L'unico interruttore che la governa è quello del sistema, ed è giusto che sia
+quello: «meno movimento» non parla di animazioni sullo schermo, parla di stimoli, e un telefono che
+sussulta in mano è uno stimolo.
+
+Un punto solo legge la preferenza — `app.js` — e due la ascoltano. Su iOS `navigator.vibrate` non
+esiste: il gioco non cambia, perde una rifinitura.
+
+---
+
+## La versione era sullo schermo, e non la vedeva nessuno
+
+«Non vedo la versione e gli aggiornamenti, hai messo qualcosa a video?». C'era: `v0.8.0`, dieci
+pixel di grigio tenue nella barra in alto, fra i punteggi e quattro pulsanti grandi. Il worker
+rispondeva, il numero arrivava, il pulsante era visibile e cliccabile — e non lo trovava nessuno.
+Nelle altre app del catalogo quella riga sta sotto il nome dell'app, dove ha qualcosa a cui
+appoggiarsi; qui il nome dell'app nella barra non c'è, e il numero galleggiava.
+
+Adesso sta sulla **schermata del titolo**, sotto «Come si gioca», a tredici pixel. È lì che si
+guarda prima di cominciare, ed è anche il momento giusto per la luce dell'aggiornamento: prima della
+partita, non a metà. E nasce `hidden` come nelle altre app — dove un service worker non c'è, un
+pulsante vuoto è peggio di niente.
+
+Vale come regola generale: *un elemento che c'è, è colorato come si deve e supera i controlli di
+contrasto può essere invisibile lo stesso, se non ha niente attorno che lo tenga.* Il contrasto si
+misura sul colore; l'attenzione si misura sul contesto, e non c'è nessuno strumento che la controlli
+al posto tuo.
+
+---
+
+## Le istruzioni erano vere e nessuno le finiva
+
+Otto paragrafi di fila, ognuno esatto, ognuno compresso: «Il tratto lento vale il doppio all'area e
+ti lascia scoperto il doppio del tempo». Vero, e illeggibile se non sai già cosa sia il tratto lento.
+Peggio: i nomi inventati — il Filo, la Miccia, le Scintille — non venivano mai legati a quello che si
+vede sullo schermo, così per riconoscerli bisognava morirci.
+
+La riscrittura non è «frasi più lunghe», è una **struttura**: sei titoli — lo scopo, come ci si
+muove, il tratto lento, i tre modi di morire, le due mosse che pagano, i livelli — e sotto ciascuno
+il testo che serve. I titoli non sono decorazione: sono il modo in cui si torna a cercare la cosa che
+serve, che è quello che si fa davvero con le istruzioni di un gioco. E ogni minaccia adesso comincia
+dicendo **com'è fatta**: il nastro che si contorce, la fiamma che parte da dove hai staccato, i
+puntini bianchi con i raggi.
+
+Allungandole è comparso un difetto che prima non poteva esistere: il pulsante che fa cominciare
+finiva in fondo a millenovecento pixel di scorrimento, e per giocare bisognava prima leggere tutto.
+Adesso è appiccicato in basso. È il genere di cosa che si vede solo aprendo la pagina alla larghezza
+di un telefono e provando a premere il pulsante — non leggendo il CSS.
+
+Nello stesso passaggio il foglio di stile ha restituito una sezione duplicata parola per parola e le
+regole di un `#rotate` che non esiste più da quando il campo si gira da solo. Il codice morto non fa
+danni: fa credere che qualcosa sia ancora vero.
+
+---
+
+## Misurare quello che si è affermato
+
+Chiuso il difetto dell'insenatura, restavano due cose che avevo **ragionato** e non misurato. Le
+ho misurate, e una delle due era falsa.
+
+**La prima era vera.** Rendendo `wallsAt` più severa erano aumentati i punti da cui un taglio non
+può cominciare, e avevo concluso che camminare resta sempre possibile, quindi il marcatore non può
+restare intrappolato. Verificato: ottomila punti di bordo su otto arene, più la fenditura di
+un'insenatura costruita a mano, e non c'è un solo punto senza uscita. Adesso è una prova, non una
+conclusione — sta in `test/arenas.mjs` per il bordo di partenza e in `test/attract.mjs`, campionata
+una volta al secondo simulato, per tutto il resto della partita.
+
+**La seconda era falsa, e il difetto stava lì accanto.** Misurando la prima è saltato fuori che su
+un punto della fenditura `canStep` risponde ancora «open» in otto direzioni — e ha ragione: guarda
+dove il passo *arriva*, e lì arriva dentro la faccia. Ma staccare da lì è vietato, e quel divieto
+viveva in una riga sola, dentro `game.js`. `pathTo` non lo conosceva. Risultato: il tratteggio
+disegnava un taglio di settanta passi, si premeva, e non succedeva niente.
+
+È esattamente la bugia che la scelta di tenere `pathTo` **senza memoria** serve a rendere
+impossibile — *l'anteprima è la linea che verrà percorsa* — solo che la rendeva impossibile per un
+motivo e non per l'altro: garantiva che le due linee avessero la stessa forma, non che la linea
+esistesse. Adesso `pathTo` fa la stessa domanda che fa `game.js` un istante prima di staccare, e
+dalla punta l'anteprima dice «cammina», che è quello che poi succede.
+
+La morale non è sul difetto, è sul metodo. **Una cosa affermata in un commento sembra verificata.**
+Quel «camminarci sopra resta libero, ed è come si esce di lì» era scritto accanto al codice giusto,
+era vero, ed era la metà di una frase la cui altra metà era falsa. Ci sono voluti venti minuti di
+sonda per scoprirlo; senza, sarebbe uscito da un giocatore che preme e non vede succedere niente e
+che non ha nessun modo di raccontare cosa ha fatto.
+
+Nello stesso giro l'invariante che aveva trovato il difetto dell'insenatura — *nessun vertice di un
+buco sta sul muro dell'arena* — è passato dalla sonda usa-e-getta alle suite: `rules.mjs` lo
+controlla su tutte le arene, `attract.mjs` a ogni conquista di ogni partita dimostrativa. Costa un
+giro di anello per buco e solo alle conquiste, e da qui in avanti ogni partita che le prove giocano
+lo verifica gratis. La prova di regressione scritta prima prendeva *quel* difetto se fosse tornato;
+questa prende il prossimo della stessa famiglia, cioè una faccia che si corrompe mentre l'area
+continua a tornare esatta.
+
+---
+
+## Una scelta giusta che aveva smesso di esserlo
+
+Sul telefono il nome dell'arena era nascosto: sotto i 560 pixel la barra non ci stava, e il livello
+lo dice comunque il numero accanto. Era vero quando le arene erano quattro e la barra stava su una
+riga sola.
+
+Non lo è più. Le arene sono otto, le istruzioni adesso le chiamano per nome, e «8» da solo non dice
+in che campo stai giocando. E soprattutto la ragione tecnica è scaduta senza che nessuno lo
+notasse: da quando la barra va su due righe i riquadri si stringono fra loro, e rimettere il nome
+non costa niente — misurato a 320, 360 e 430 pixel, la barra resta alta uguale, il campo non perde
+un pixel, la pagina non scorre di lato e «rettangolo», il nome più lungo, non viene troncato.
+
+Vale come promemoria: le decisioni prese per un vincolo vanno **datate insieme al vincolo**. Questa
+era sopravvissuta di due giri alla ragione che l'aveva prodotta, ed era diventata una cosa che il
+gioco faceva senza che nessuno sapesse più perché.
+
+---
+
 ## Cosa non fa
 
 Da scrivere nella scheda, ed è la sezione che qualifica il resto:
@@ -872,8 +1104,8 @@ Uno alla volta, e ognuno finisce con qualcosa che si può guardare o provare.
 6. **Punteggio, livelli.** ~~Arene di forma libera~~: sono arrivate al passo 2, in `run/arenas.js`.
    Erano previste qui e le ha tirate avanti una ragione sola — `create()` doveva pur partire da
    qualcosa, e quel qualcosa scritto dentro `game.js` sarebbe stato un rettangolo da estirpare
-   dopo. Quattro arene costano quarantanove righe di dati e i test le percorrono tutte con lo
-   stesso ciclo.
+   dopo. Un'arena costa una manciata di righe di dati e i test le percorrono tutte con lo stesso
+   ciclo: erano quattro, adesso sono otto, e `game.js` non se n'è accorto.
 7. **Secondo Filo, cattura, separazione.**
 8. **Audio, attract mode, classifica, PWA, due lingue, due temi.**
 9. **Anagrafica e scheda** in `_src/apps.py`, nelle due lingue, con il riferimento al genere scritto
@@ -888,6 +1120,11 @@ Scritti adesso perché adesso costano una riga.
 - **`split` con le isole.** Il taglio dal bordo esterno a un'isola non spezza la faccia. Se il test
   non c'è, il difetto salta fuori al livello dell'anello, cioè settimane dopo, in una funzione che
   nel frattempo si è dato per buona.
+
+  *Previsto giusto e sottostimato.* La prova c'era e il ponte era corretto: quello che è saltato
+  fuori settimane dopo non era il ponte, era il taglio **successivo** al ponte, che partiva dalla
+  punta dell'insenatura. Il punto pericoloso non era la funzione nominata qui: era lo stato che
+  quella funzione lascia dietro di sé.
 - **Il riaggancio delle Scintille.** È l'unico punto in cui una struttura dati cambia sotto i piedi
   di un'entità che la stava percorrendo. Una funzione sola, un test suo, e non toccarla da altrove.
 - **La taratura del tratto lento.** Se il ×2 non compensa il rischio, nessuno lo usa e metà del

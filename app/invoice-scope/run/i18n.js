@@ -121,6 +121,9 @@ const IT = {
     + "finestra chiusa, quando il browser sveglia l'app — non a un orario preciso.",
   remindStateDenied: "Notifiche negate a questo sito. Si riattivano dalle impostazioni del "
     + "browser, non da qui. Restano il calendario che esporti e il riepilogo all'apertura.",
+  remindStateWaiting: "Notifiche permesse. Il risveglio automatico non è ancora concesso: il "
+    + "browser lo dà alle app installate che si usano un po', e l'app riprova a ogni apertura. "
+    + "Intanto restano il calendario che esporti e il riepilogo all'apertura.",
   remindStateSleeps: "Notifiche permesse. Questo browser però non sveglia l'app da solo: le vedrai "
     + "aprendola, e nel calendario che esporti.",
   remindHeading: "Scadenze",
@@ -1189,6 +1192,9 @@ const EN = {
     + "arrive with the window closed, when the browser wakes the app — not at an exact time.",
   remindStateDenied: "Notifications are blocked for this site. They are turned back on in the "
     + "browser's settings, not here. The calendar you export and the summary on opening remain.",
+  remindStateWaiting: "Notifications allowed. The automatic wake-up has not been granted yet: the "
+    + "browser gives it to installed apps that get used, and the app asks again every time it "
+    + "opens. Meanwhile the calendar you export and the summary on opening remain.",
   remindStateSleeps: "Notifications allowed. This browser does not wake the app on its own, "
     + "though: you will see them when you open it, and in the calendar you export.",
   remindHeading: "Deadlines",
