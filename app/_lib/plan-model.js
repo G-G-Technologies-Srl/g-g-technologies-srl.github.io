@@ -338,7 +338,7 @@ export function canUndo() {
 //  p r o j e c t s
 // -----------------------------------------------------------------------------------------------------------------
 
-export function createProject({ name, eventDate = null, columns = null } = {}) {
+export function createProject({ name, eventDate = null, columns = null, tags = [] } = {}) {
   const stamp = _now();
   const id = _id();
   return _put("project", {
@@ -346,6 +346,10 @@ export function createProject({ name, eventDate = null, columns = null } = {}) {
     uid: id,
     name: name || "",
     eventDate: eventDate || null,
+    // Le stesse etichette che hanno le pagine e le attività, un piano più su: servono a chi ha
+    // dieci progetti e li tiene in testa per categoria — i clienti, gli interni, l'anno — e non
+    // per nome. Viaggiano con il progetto, perché sono una cosa del progetto e non di chi guarda.
+    tags: cleanTags(tags),
     columns: _copy(columns || DEFAULT_COLUMNS),
     // Chi ci lavora, e con che ruolo. Il nome è scritto qui accanto al `uid` e non risolto dalla
     // scheda: è quello che permette a un progetto arrivato da fuori di dire «Marco Rossi, grafico»
@@ -361,20 +365,23 @@ export function createProject({ name, eventDate = null, columns = null } = {}) {
 
 export function updateProject(id, changes) {
   const project = projects.get(id);
+  // Le etichette non entrano mai come sono state battute: la pulizia sta in un posto solo, o due
+  // grafie della stessa finiscono a dividere in due il suo filtro.
+  const wanted = "tags" in (changes || {}) ? { ...changes, tags: cleanTags(changes.tags) } : changes;
   if (!project) return null;
   const before = _copy(project);
   const stamp = _now();
   // `updated` moves for anything inside the project; `edited` only for the project's own fields.
   // Two copies decide whose name, date and columns to keep by `edited`: by `updated`, a task
   // ticked after the rename would carry the old name back over the new one.
-  const own = ["name", "eventDate", "columns"].some((key) => key in changes);
+  const own = ["name", "eventDate", "columns", "tags"].some((key) => key in wanted);
   // Who works on it gets a stamp of its own, and not `edited`, for the same reason `edited` is not
   // `updated`: assigning a card puts a person on the project, and that must not be enough to carry
   // an old project name back over somebody's rename.
-  const crowd = "people" in changes;
+  const crowd = "people" in wanted;
   _put("project", {
     ...project,
-    ...changes,
+    ...wanted,
     updated: stamp,
     ...(own ? { edited: stamp } : {}),
     ...(crowd ? { peopleAt: stamp } : {}),
@@ -802,6 +809,39 @@ export function setColumns(projectId, columns) {
   const before = _copy(project);
   _put("project", { ...project, columns: _copy(columns), updated: _now() });
   return _step("project", _restoreTo("project", before));
+}
+
+/**
+ * Etichette come le scrive una persona — «fiera, cliente , Fiera» — rimesse in ordine.
+ *
+ * Tolti gli spazi, tolti i vuoti, tolti i doppioni **senza badare alle maiuscole**: «Fiera» e
+ * «fiera» sono la stessa etichetta, e due pastiglie uguali su una scheda sono un filtro che si
+ * divide in due. Resta la prima grafia scritta, perché è quella che chi scrive si aspetta di
+ * rileggere.
+ */
+export function cleanTags(tags) {
+  const out = [];
+  const seen = new Set();
+  for (const tag of Array.isArray(tags) ? tags : []) {
+    const clean = String(tag || "").trim();
+    const key = clean.toLowerCase();
+    if (!clean || seen.has(key)) continue;
+    seen.add(key);
+    out.push(clean);
+  }
+  return out;
+}
+
+/** Ogni etichetta in uso sui progetti vivi, una volta sola, in ordine alfabetico. */
+export function projectTags() {
+  const seen = new Map();
+  for (const project of liveProjects()) {
+    for (const tag of project.tags || []) {
+      const key = tag.toLowerCase();
+      if (!seen.has(key)) seen.set(key, tag);
+    }
+  }
+  return [...seen.values()].sort((a, b) => a.localeCompare(b));
 }
 
 /** Every tag in use in a project. Chi ci lavora lo dice `peopleOf`, che è un elenco e non una spia. */

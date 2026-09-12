@@ -165,7 +165,12 @@
       </div>
 
       <p class="empty" id="homeEmpty" data-t="homeEmpty" hidden></p>
+      <!-- Le etichette accese, ognuna con la sua croce, e un modo di togliere tutto in un colpo.
+           La stessa riga che ha la tabella delle pagine, perché è la stessa domanda: «fammi vedere
+           solo questi». Sparisce quando non c'è niente di acceso. -->
+      <div class="filters" id="projectFilters" hidden></div>
       <div class="cards" id="projectList"></div>
+      <p class="empty" id="projectsFiltered" data-t="projectsFiltered" hidden></p>
 
       <!-- The folder's state, when there is one: its name, who we are, when it was last read; and
            the button to take the permission up again when the browser dropped it. -->
@@ -211,6 +216,13 @@
         <h1 id="projectTitle"></h1>
         <button type="button" id="exportProject" class="accent" data-t="exportProject"></button>
       </div>
+
+      <!-- Le etichette del progetto, dove si scrivono. Lo stesso campo quieto dei tag di una
+           pagina, un piano più su: si legge come una riga di testo e diventa pastiglie sulla
+           scheda in «Progetti», dove servono a ritrovare il progetto senza rileggere i nomi. -->
+      <input type="text" id="projectTags" class="tags-field" maxlength="160" autocomplete="off"
+             list="projectTagList" data-t-label="projectTagsLabel" data-t-placeholder="projectTagsLabel">
+      <datalist id="projectTagList"></datalist>
 
       <div class="grid">
         <!-- Every panel is a way into its screen, not only a report of it: the title on the left,
@@ -468,7 +480,7 @@
                due cose sciolte sopra il corpo, e chi arrivava da un'altra pagina non sapeva dove
                finiva l'una e cominciava l'altro. -->
           <div class="page-head">
-            <input type="text" id="pageTags" maxlength="200" autocomplete="off" data-t-label="pageTagsLabel">
+            <input type="text" id="pageTags" class="tags-field" maxlength="200" autocomplete="off" data-t-label="pageTagsLabel">
             <!-- The properties: key and value, one line each, kept at the head of the Markdown as
                  the block Obsidian reads. «+» adds a line; a line emptied goes away on its own. -->
             <div class="props" id="pageProps"></div>

@@ -494,20 +494,47 @@ select:hover, select:focus { border-color: var(--border-strong); }
   gap: 14px;
 }
 
-.project-card {
+/* **La cornice sta sulla scatola e non sul bottone**, da quando la scheda porta anche le pastiglie
+   delle etichette: quelle sono bottoni veri — si filtra cliccandole — e un bottone dentro un
+   bottone non è HTML valido, oltre a essere un clic che ne fa partire due. Così il bottone che apre
+   il progetto è tutta la parte alta, e le pastiglie stanno sotto, dentro la stessa cornice. */
+.project-card-box {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  text-align: left;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: linear-gradient(170deg, var(--panel-2), var(--panel) 60%);
-  padding: 15px 16px 14px;
   min-height: 116px;
 }
 
-.project-card:hover { border-color: var(--border-strong); }
+.project-card-box:hover { border-color: var(--border-strong); }
+
+.project-card {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: none;
+  padding: 15px 16px 14px;
+}
+
+.project-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 0 14px 12px;
+}
+
+/* L'esempio non è un'etichetta: non si clicca e non filtra niente, quindi non deve avere la faccia
+   di quelle che lo fanno. */
+.badge.example { border-style: dashed; color: var(--faint); }
+
+/* Sopra le schede, la riga del filtro non è la testata di una tabella: niente riga di chiusura. */
+#projectFilters { padding: 0 0 12px; border-bottom: 0; }
 
 .project-card-name {
   font-family: var(--font-display);
@@ -1518,7 +1545,10 @@ dialog.search input[type="search"] { width: 100%; font-size: 16px; }
 
 /* Il campo dei tag sta nella testa ma non è una riga di proprietà, quindi la sua veste la dice
    qui: larga quanto il riquadro e silenziosa finché non la si tocca, come i campi là sotto. */
-#pageTags {
+/* Il campo dove si scrivono le etichette — di una pagina, di un progetto. Una classe e non due
+   regole per id: è la stessa cosa in due posti, e la volta che l'ha persa una l'ha persa perché si
+   chiamava con il nome di un altro. Quieto finché non lo si tocca, come tutto il resto della testa. */
+.tags-field {
   width: 100%;
   display: block;
   font-size: 13px;
@@ -1527,7 +1557,7 @@ dialog.search input[type="search"] { width: 100%; font-size: 16px; }
   padding: 3px 6px;
   margin-left: -6px;
 }
-#pageTags:hover, #pageTags:focus { border-color: var(--border); }
+.tags-field:hover, .tags-field:focus { border-color: var(--border); }
 
 /* Su un telefono il margine della pagina è sedici pixel e non di più: se il riquadro se ne mangia
    dieci ne restano sei, e sei pixel dal bordo dello schermo si vedono. Lì la cornice rientra e sta

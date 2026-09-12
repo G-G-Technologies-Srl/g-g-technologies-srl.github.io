@@ -1157,4 +1157,52 @@ test("importare due volte lo stesso file fa due progetti, e con due identità", 
   assert.equal(model.project(terzo.projectId).name, "Fiera (seconda copia)", "e il nome lo dice");
 });
 
+// -----------------------------------------------------------------------------------------------------------------
+//  l e   e t i c h e t t e   d i   u n   p r o g e t t o
+// -----------------------------------------------------------------------------------------------------------------
+
+test("le etichette si puliscono da sole: spazi, vuoti, doppioni", () => {
+  const one = model.createProject({ name: "Fiera", tags: [" cliente ", "", "Fiera", "fiera", "cliente"] });
+  // «Fiera» e «fiera» sono la stessa etichetta: due pastiglie uguali sulla scheda sarebbero un
+  // filtro che si divide in due, e resta la prima grafia perché è quella che chi scrive rilegge.
+  assert.deepEqual(one.tags, ["cliente", "Fiera"]);
+});
+
+test("e si puliscono anche quando arrivano da una modifica", () => {
+  const one = model.createProject({ name: "x" });
+  model.updateProject(one.id, { tags: ["  interno", "interno "] });
+  assert.deepEqual(model.project(one.id).tags, ["interno"]);
+});
+
+// Sono un campo del progetto, quindi contano per `edited` come il nome e la data: due copie che si
+// fondono decidono le etichette con lo stesso metro del nome, e spuntare un'attività non le riporta
+// indietro.
+test("cambiare le etichette è una modifica del progetto, non del suo contenuto", () => {
+  const one = model.createProject({ name: "x" });
+  const before = model.project(one.id).edited || null;
+  model.updateProject(one.id, { tags: ["fiera"] });
+  assert.ok(model.project(one.id).edited);
+  assert.notEqual(model.project(one.id).edited, before);
+});
+
+test("l'elenco di quelle in uso non ripete e non guarda le maiuscole", () => {
+  model.createProject({ name: "a", tags: ["Cliente", "2026"] });
+  model.createProject({ name: "b", tags: ["cliente", "interno"] });
+  assert.deepEqual(model.projectTags(), ["2026", "Cliente", "interno"]);
+});
+
+test("un progetto nel cestino non presta le sue etichette all'elenco", () => {
+  const one = model.createProject({ name: "a", tags: ["sparita"] });
+  model.trashProject(one.id);
+  assert.ok(!model.projectTags().includes("sparita"));
+});
+
+// Le etichette viaggiano, al contrario del marchio dell'esempio: sono una cosa del progetto e non
+// di chi lo guarda, quindi un collega che lo apre le ritrova.
+test("le etichette escono con il progetto", () => {
+  const one = model.createProject({ name: "Fiera", tags: ["cliente"] });
+  const payload = model.exportable(one.id);
+  assert.deepEqual(payload.project.tags, ["cliente"]);
+});
+
 console.log(`model: ${passed} prove passate`);

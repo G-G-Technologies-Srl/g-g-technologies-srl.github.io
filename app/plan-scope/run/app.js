@@ -1986,6 +1986,16 @@ function _wire() {
   });
   for (const [id, kind] of VIEWS) el(id).addEventListener("click", () => _goView(kind));
 
+  // Le etichette del progetto: si scrivono in una riga separate da virgole, e si salvano quando il
+  // campo lascia il fuoco. La pulizia — spazi, vuoti, doppioni — la fa il modello, in un posto solo.
+  el("projectTags").addEventListener("change", () => {
+    if (!projectId) return;
+    model.updateProject(projectId, { tags: el("projectTags").value.split(",") });
+    // Ridisegna per rileggere il campo dal modello: chi ha scritto «fiera, Fiera, » vede sparire il
+    // doppione e la virgola vuota, e impara la regola guardandola invece che leggendola.
+    // Il salvataggio e la cartella condivisa li avvisa il modello da sé, come per ogni modifica.
+    home.paintProject(projectId);
+  });
   el("openPages").addEventListener("click", () => _openPages(projectId));
   // The ring counts the tasks, so its door is the board; the deadlines are dates, so theirs is
   // the calendar. A panel that reports something and cannot be entered is a dead end.
@@ -2345,6 +2355,9 @@ function _startingColumns() {
  */
 function _connect() {
   home.connect({
+    // Il filtro delle etichette cambia cosa si vede in «Progetti», e chi ha la stanza da mostrare
+    // è l'app: la schermata chiede, e questa ridisegna.
+    repaintHome: async () => home.paintHome(await db.room()),
     openProject: (id) => _openProject(id),
     openPage: (id) => _openPage(id),
     toggleTask: async (id) => {

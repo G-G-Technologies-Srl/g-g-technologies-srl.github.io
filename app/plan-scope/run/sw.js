@@ -12,7 +12,7 @@
 //    running app means changing the code while somebody has unsaved keystrokes in a page, and
 //    saving them one reload is not worth that.
 
-const VERSION = '4.16.1';
+const VERSION = '4.17.1';
 const CACHE = `plan-scope-v${VERSION}`;
 
 // La cache dei promemoria, e **l'unica che sopravvive a un aggiornamento**. Il nome non porta la

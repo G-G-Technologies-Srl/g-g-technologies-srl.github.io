@@ -19,7 +19,23 @@ import { el, node, button, fill, shortDate, longDate, bytes } from "./ui.js";
 // The ring is a circle of radius 52 in a 120 box: this is how far round it goes.
 const RING = 2 * Math.PI * 52;
 
-let on = {};
+/**
+ * L'etichetta accesa, in minuscolo, o `null`.
+ *
+ * **Una sola, come il filtro della tabella delle pagine**, e la prima versione ne teneva un
+ * insieme. Il motivo per cui non può: le pastiglie si cliccano *sulle schede*, e appena una si
+ * accende le schede degli altri gruppi spariscono — insieme alle loro pastiglie. Per aggiungere
+ * «interno» a «cliente» bisognerebbe cliccare una cosa che il filtro ha appena tolto di mezzo. Un
+ * filtro multiplo qui vorrebbe una barra con tutte le etichette sempre in vista, cioè un pezzo di
+ * interfaccia in più per una domanda che con dieci progetti nessuno si fa.
+ *
+ * In minuscolo perché «Fiera» e «fiera» sono la stessa etichetta. Vive quanto la schermata e non
+ * più: un filtro che sopravvive alla chiusura è un elenco che il giorno dopo sembra aver perso dei
+ * progetti.
+ */
+let picked = null;
+
+let on = {};   // i gestori che la schermata chiede all'app: aprire, spuntare, e ridisegnare
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
@@ -47,12 +63,17 @@ function _whenLabel(project, today) {
 }
 
 function _projectCard(project, today) {
+  // La scatola porta la cornice, il bottone porta il progetto, e sotto ci stanno le etichette —
+  // che sono bottoni anche loro. Un bottone dentro un bottone non è HTML valido, e un clic su una
+  // pastiglia aprirebbe anche il progetto: è il motivo per cui la scheda è fatta di due pezzi.
+  const box = node("div", "project-card-box");
   const card = node("button", "project-card");
   card.type = "button";
   card.addEventListener("click", () => on.openProject(project.id));
+  box.append(card);
 
   card.append(node("span", "project-card-name", project.name || t("projectUntitled")));
-  if (project.demo) card.append(node("span", "badge tag", t("demoBadge")));
+  if (project.demo) card.append(node("span", "badge example", t("demoBadge")));
 
   const when = node("span", "project-card-when");
   when.append(project.eventDate ? `${shortDate(project.eventDate)} · ${_whenLabel(project, today)}`
@@ -70,7 +91,57 @@ function _projectCard(project, today) {
   else if (soon) badge.textContent = tf("projectDueWeek", { n: num(soon, 0) });
   if (badge.textContent) card.append(badge);
 
-  return card;
+  // Le etichette: si leggono, e si cliccano per restare su quelle. Quella già accesa si spegne,
+  // così la stessa pastiglia fa e disfa — cercare altrove come si toglie un filtro che si è messo
+  // con un clic è il modo più rapido di non usarlo più.
+  const tags = project.tags || [];
+  if (tags.length) {
+    const row = node("div", "project-card-tags");
+    for (const tag of tags) {
+      const lit = picked === tag.toLowerCase();
+      row.append(button(lit ? "badge tag on" : "badge tag", tag, () => _toggleTag(tag)));
+    }
+    box.append(row);
+  }
+
+  return box;
+}
+
+/**
+ * Accende un'etichetta, o la spegne se era già accesa.
+ *
+ * La stessa pastiglia fa e disfa: cercare altrove come si toglie un filtro che si è messo con un
+ * clic è il modo più rapido di smettere di usarlo. Cliccarne un'altra passa a quella, che è quello
+ * che uno si aspetta quando le schede rimaste ne mostrano una nuova.
+ */
+function _toggleTag(tag) {
+  const key = String(tag || "").toLowerCase();
+  picked = picked === key ? null : key;
+  if (on.repaintHome) on.repaintHome();
+}
+
+/** Solo i progetti che portano l'etichetta accesa. Nessuna accesa: tutti. */
+function _picked(projects) {
+  if (!picked) return projects;
+  return projects.filter((project) => (project.tags || []).some((tag) => tag.toLowerCase() === picked));
+}
+
+/** La riga sopra le schede: l'etichetta accesa, e il modo di toglierla. */
+function _paintFilters() {
+  const row = el("projectFilters");
+  row.hidden = !picked;
+  if (!picked) {
+    fill(row, []);
+    return;
+  }
+  const shown = model.projectTags().find((tag) => tag.toLowerCase() === picked) || picked;
+  fill(row, [
+    node("span", "chip on", shown),
+    button("ghost small", t("filterClear"), () => {
+      picked = null;
+      if (on.repaintHome) on.repaintHome();
+    }),
+  ]);
 }
 
 /**
@@ -196,10 +267,16 @@ export function connect(handlers) {
  */
 export function paintHome(room) {
   const today = model.todayISO();
-  const projects = model.liveProjects();
+  const all = model.liveProjects();
+  // Le scadenze seguono il filtro insieme alle schede: «fammi vedere solo i clienti» e poi un
+  // pannello che elenca le scadenze degli altri sarebbe una schermata che risponde a due domande.
+  const projects = _picked(all);
 
+  _paintFilters();
   fill(el("projectList"), projects.map((project) => _projectCard(project, today)));
-  el("homeEmpty").hidden = projects.length > 0;
+  el("homeEmpty").hidden = all.length > 0;
+  // Un filtro che non lascia niente lo dice, invece di mostrare il vuoto di chi non ha progetti.
+  el("projectsFiltered").hidden = !(all.length && !projects.length);
 
   // Everything due across every project, late first. This is what a morning opens the app for, and
   // it is missing from every project card: the cards say *how much*, this says *what*.
@@ -230,6 +307,14 @@ export function paintProject(id) {
   const today = model.todayISO();
 
   el("projectTitle").textContent = project.name || t("projectUntitled");
+  el("projectTags").value = (project.tags || []).join(", ");
+  // L'elenco di quelle già in uso: scrivere «cliente» la seconda volta non deve dipendere dal
+  // ricordarsi come la si era scritta la prima.
+  fill(el("projectTagList"), model.projectTags().map((tag) => {
+    const option = document.createElement("option");
+    option.value = tag;
+    return option;
+  }));
   el("projectWhen").textContent = project.eventDate
     ? `${longDate(project.eventDate)} · ${_whenLabel(project, today)}`
     : t("projectNoDate");
