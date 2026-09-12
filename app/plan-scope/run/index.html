@@ -217,12 +217,18 @@
         <button type="button" id="exportProject" class="accent" data-t="exportProject"></button>
       </div>
 
-      <!-- Le etichette del progetto, dove si scrivono. Lo stesso campo quieto dei tag di una
-           pagina, un piano più su: si legge come una riga di testo e diventa pastiglie sulla
-           scheda in «Progetti», dove servono a ritrovare il progetto senza rileggere i nomi. -->
-      <input type="text" id="projectTags" class="tags-field" maxlength="160" autocomplete="off"
-             list="projectTagList" data-t-label="projectTagsLabel" data-t-placeholder="projectTagsLabel">
-      <datalist id="projectTagList"></datalist>
+      <!-- La testa del progetto: le etichette e gli attributi, dentro una colonna della larghezza
+           di un testo. Gli stessi due pezzi che una pagina ha sopra il suo corpo, con lo stesso
+           editore — quindi anche gli stessi selettori, il calendario e la pastiglia del colore. Un
+           progetto non è un file, quindi qui stanno nel record invece che in una testa di testo. -->
+      <div class="project-head">
+        <input type="text" id="projectTags" class="tags-field" maxlength="160" autocomplete="off"
+               list="projectTagList" data-t-label="projectTagsLabel" data-t-placeholder="projectTagsLabel">
+        <datalist id="projectTagList"></datalist>
+        <div class="props" id="projectProps"></div>
+        <button type="button" id="projectPropAdd" class="ghost small prop-add" data-t="propAdd"></button>
+        <datalist id="projectPropKeys"></datalist>
+      </div>
 
       <div class="grid">
         <!-- Every panel is a way into its screen, not only a report of it: the title on the left,
@@ -484,7 +490,7 @@
             <!-- The properties: key and value, one line each, kept at the head of the Markdown as
                  the block Obsidian reads. «+» adds a line; a line emptied goes away on its own. -->
             <div class="props" id="pageProps"></div>
-            <button type="button" id="propAdd" class="ghost small" data-t="propAdd"></button>
+            <button type="button" id="propAdd" class="ghost small prop-add" data-t="propAdd"></button>
             <datalist id="propKeys"></datalist>
           </div>
         </div>

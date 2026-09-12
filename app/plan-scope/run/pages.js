@@ -36,8 +36,23 @@ const pagesView = { filter: null, sort: "title", up: true };
  * head of the file on change. An emptied key drops its line; the order is the file's.
  */
 function _paintProps() {
-  const rows = Object.entries(head.props).map(([key, value]) => _propRow(key, value));
-  fill(el("pageProps"), rows);
+  editProps(el("pageProps"), head.props, (props) => {
+    const pageId = on.pageId();
+    if (!pageId) return;
+    head = { ...head, props };
+    model.setMarkdown(pageId, md.withFrontmatter(head.props, on.body(), head.extra));
+    _suggest(el("propKeys"), model.pagePropKeysOf(model.page(pageId).projectId));
+  });
+}
+
+/** Le chiavi già in uso, dentro una `datalist`: scrivere la seconda volta non è ricordarsi. */
+function _suggest(list, keys) {
+  if (!list) return;
+  fill(list, keys.map((one) => {
+    const option = document.createElement("option");
+    option.value = one;
+    return option;
+  }));
 }
 
 // Le chiavi che nelle due lingue chiedono un tipo, e il tipo che chiedono. Un elenco corto e
@@ -122,7 +137,7 @@ function _colorOf(value) {
  * selettore: largo quanto la riga, schiacciava la chiave a quattordici pixel e la sua etichetta
  * spariva. Un nome per ogni campo è più caro da scrivere e non si rompe quando la riga cambia.
  */
-function _propRow(key, value) {
+function _propRow(box, key, value, save) {
   const row = node("div", "prop");
   const keyField = document.createElement("input");
   keyField.type = "text";
@@ -176,18 +191,17 @@ function _propRow(key, value) {
     else if (picker && picker.type === "color") picker.value = _colorOf(clean);
   });
 
-  row.append(button("ghost small icon", "✕", () => { row.remove(); _readProps(); }, { label: t("propRemove") }));
-  keyField.addEventListener("change", () => { dress(); _readProps(); });
-  valueField.addEventListener("change", () => { dress(); _readProps(); });
+  const changed = () => _readProps(box, save);
+  row.append(button("ghost small icon", "✕", () => { row.remove(); changed(); }, { label: t("propRemove") }));
+  keyField.addEventListener("change", () => { dress(); changed(); });
+  valueField.addEventListener("change", () => { dress(); changed(); });
   return row;
 }
 
 /** The rows back into the head, and the head back into the file. */
-function _readProps() {
-  const pageId = on.pageId();
-  if (!pageId) return;
+function _readProps(box, save) {
   const props = {};
-  for (const row of el("pageProps").querySelectorAll(".prop")) {
+  for (const row of box.querySelectorAll(".prop")) {
     // Per nome e non per posizione: dentro la riga può esserci anche la pastiglia di un colore,
     // e sta prima del valore.
     const keyField = row.querySelector(".prop-key");
@@ -196,13 +210,7 @@ function _readProps() {
     if (!key) continue;
     props[key] = valueField.value.trim();
   }
-  head = { ...head, props };
-  model.setMarkdown(pageId, md.withFrontmatter(head.props, on.body(), head.extra));
-  fill(el("propKeys"), model.pagePropKeysOf(model.page(pageId).projectId).map((one) => {
-    const option = document.createElement("option");
-    option.value = one;
-    return option;
-  }));
+  save(props);
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -215,10 +223,12 @@ function _readProps() {
  */
 export function setup(handlers) {
   on = { ...on, ...handlers };
-  el("propAdd").addEventListener("click", () => {
-    el("pageProps").append(_propRow("", ""));
-    el("pageProps").lastElementChild.querySelector(".prop-key").focus();
-  });
+  el("propAdd").addEventListener("click", () => addProp(el("pageProps"), (props) => {
+    const pageId = on.pageId();
+    if (!pageId) return;
+    head = { ...head, props };
+    model.setMarkdown(pageId, md.withFrontmatter(head.props, on.body(), head.extra));
+  }));
 }
 
 /** Read the head off a page's Markdown, paint the row, and hand back the body for the editor. */
@@ -250,9 +260,19 @@ export function show(visible) {
  * scriveva ha messo per prima.
  */
 export function glance(page) {
-  const props = md.frontmatter(String((page && page.markdown) || "")).props;
+  return glanceOf(md.frontmatter(String((page && page.markdown) || "")).props);
+}
+
+/**
+ * Lo stesso colpo d'occhio, per chi le proprietà ce le ha già in mano.
+ *
+ * Un progetto non è un file Markdown: i suoi attributi stanno nel record, non in una testa da
+ * leggere. La regola che decide cosa si vede da lontano è però la stessa, e una seconda copia
+ * sarebbe una seconda regola che il giorno dopo dice un'altra cosa.
+ */
+export function glanceOf(props) {
   const out = { color: "", date: "" };
-  for (const [key, value] of Object.entries(props)) {
+  for (const [key, value] of Object.entries(props || {})) {
     const clean = String(value || "").trim();
     if (!clean) continue;                   // una chiave senza valore non è niente da mostrare
     const kind = _propKind(key, clean);
@@ -280,6 +300,24 @@ export function colorDot(color) {
   const dot = node("span", "page-dot");
   dot.style.background = color;
   return dot;
+}
+
+/**
+ * L'editore delle proprietà, prestato a chi ne ha.
+ *
+ * **Lo stesso di prima, con due parametri in più.** Era scritto per la testa di una pagina e basta;
+ * da quando anche un progetto ha i suoi attributi sarebbero state due copie della stessa cosa —
+ * incluse le tre righe delicate che riconoscono il tipo e mettono il selettore giusto. Il
+ * contenitore e chi salva arrivano da fuori, il resto è quello che era.
+ */
+export function editProps(box, props, save) {
+  fill(box, Object.entries(props || {}).map(([key, value]) => _propRow(box, key, value, save)));
+}
+
+/** Una riga vuota in fondo, e il fuoco sulla chiave: il «+» di chi tiene le proprietà. */
+export function addProp(box, save) {
+  box.append(_propRow(box, "", "", save));
+  box.lastElementChild.querySelector(".prop-key").focus();
 }
 
 export function paintTable(projectId) {

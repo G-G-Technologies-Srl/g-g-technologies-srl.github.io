@@ -12,7 +12,7 @@
 // to be argued for rather than a thing to be added.
 
 import * as model from "gg/plan-model.js";
-import { glance, colorDot } from "./pages.js";
+import { glance, glanceOf, colorDot, editProps } from "./pages.js";
 import { t, tf, num } from "./i18n.js";
 import { el, node, button, fill, shortDate, longDate, bytes, tagHue } from "./ui.js";
 
@@ -72,6 +72,10 @@ function _projectCard(project, today) {
   card.addEventListener("click", () => on.openProject(project.id));
   box.append(card);
 
+  // Il pallino del colore che il progetto si è dato negli attributi, prima del nome: lo stesso
+  // segno che hanno le pagine, per la stessa ragione — ritrovare senza rileggere.
+  const seen = glanceOf(project.props);
+  if (seen.color) card.append(colorDot(seen.color));
   card.append(node("span", "project-card-name", project.name || t("projectUntitled")));
   if (project.demo) card.append(node("span", "badge example", t("demoBadge")));
 
@@ -265,6 +269,25 @@ export function connect(handlers) {
  * decided to start something. A screen that only reports its own emptiness leaves the reader to
  * work out the next move, which on a first run is the one thing they do not know.
  */
+/**
+ * Gli attributi del progetto, con l'editore delle pagine.
+ *
+ * Pubblica perché la serve anche il «+»: aggiungere una riga la disegna, e quello che la disegna
+ * deve essere una cosa sola o le due strade si allontanano al primo cambiamento.
+ */
+export function paintProjectProps(id) {
+  const project = model.project(id);
+  if (!project) return;
+  editProps(el("projectProps"), project.props || {}, (props) => {
+    model.updateProject(id, { props });
+    fill(el("projectPropKeys"), model.projectPropKeys().map((key) => {
+      const option = document.createElement("option");
+      option.value = key;
+      return option;
+    }));
+  });
+}
+
 export function paintHome(room) {
   const today = model.todayISO();
   const all = model.liveProjects();
@@ -315,6 +338,7 @@ export function paintProject(id) {
     option.value = tag;
     return option;
   }));
+  paintProjectProps(id);
   el("projectWhen").textContent = project.eventDate
     ? `${longDate(project.eventDate)} · ${_whenLabel(project, today)}`
     : t("projectNoDate");

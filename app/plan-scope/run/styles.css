@@ -559,74 +559,64 @@ select:hover, select:focus { border-color: var(--border-strong); }
 /* ---------------------------------------------------------------------------------------------
    le tinte delle etichette
 
-   Otto, e il nome dell'etichetta decide quale — il conto sta in `ui.js`. Servono a una cosa sola:
+   Dodici, e il nome dell'etichetta decide quale — il conto sta in `ui.js`. Servono a una cosa sola:
    far distinguere una pastiglia dall'altra **senza leggerle**, che è quello che serve quando ce ne
-   sono cinque su una riga. Per questo sono otto e non sedici: oltre, due tinte vicine costringono a
-   leggere lo stesso, e allora tanto valeva lasciarle grigie.
+   sono cinque su una riga. Dodici e non sedici perché a occhio dodici si distinguono ancora, e
+   dodici e non otto perché una tinta calcolata non può promettere che due etichette accanto siano
+   diverse — è aritmetica — e dodici cassetti rendono la coincidenza più rara.
 
-   Due giri di valori, chiaro e scuro, con lo stesso schema del resto del foglio: `:root` è lo
-   scuro, e le due righe sotto sono il chiaro — la scelta esplicita e quella del sistema. Misurate
-   sui due fondi, non dedotte: le stesse tinte che sul blu notte sono limpide, sul quasi-bianco
-   sbiadiscono, e viceversa. */
+   **Il colore è il fondo, e il testo è bianco.** Un bordo colorato su un nome colorato è due volte
+   poco: il nome perde contrasto e la tinta si vede appena. Pieno, la pastiglia si legge da lontano
+   come colore e da vicino come parola.
+
+   **Una palette sola per i due temi**, ed è una conseguenza e non una scorciatoia: quando il colore
+   è il fondo, il tema della pagina smette di contare — il bianco sta sopra la tinta, non sopra la
+   pagina. Le dodici sono scelte per contrasto misurato, non a occhio: contro il bianco stanno fra
+   5,26:1 e 6,37:1, dove la soglia per un testo piccolo è 4,5:1; e contro tutt'e due i fondi —
+   pannello scuro e bianco — stanno fra 2,5:1 e 6,4:1, cioè la pastiglia si stacca sempre. */
 :root {
-  --h0: #48c9a9;
-  --h1: #5aa9f0;
-  --h2: #a98ff0;
-  --h3: #ef86b5;
-  --h4: #ef7f5e;
-  --h5: #e0a83c;
-  --h6: #9ec24a;
-  --h7: #4fc2d9;
+  --h0: #0f7a66;
+  --h1: #0d6d84;
+  --h2: #1f66bd;
+  --h3: #4a57c0;
+  --h4: #6b4ac2;
+  --h5: #8a3aae;
+  --h6: #b03a72;
+  --h7: #b53a3d;
+  --h8: #b34a22;
+  --h9: #8a6410;
+  --h10: #6d6a12;
+  --h11: #4f6b14;
 }
 
-html[data-theme="light"] {
-  --h0: #12806a;
-  --h1: #1f6fc4;
-  --h2: #6b4fc4;
-  --h3: #b33f76;
-  --h4: #bd4d28;
-  --h5: #8a6410;
-  --h6: #566f14;
-  --h7: #0f6f88;
-}
+.h0 { --tint: var(--h0); --tint-ink: #fff; }
+.h1 { --tint: var(--h1); --tint-ink: #fff; }
+.h2 { --tint: var(--h2); --tint-ink: #fff; }
+.h3 { --tint: var(--h3); --tint-ink: #fff; }
+.h4 { --tint: var(--h4); --tint-ink: #fff; }
+.h5 { --tint: var(--h5); --tint-ink: #fff; }
+.h6 { --tint: var(--h6); --tint-ink: #fff; }
+.h7 { --tint: var(--h7); --tint-ink: #fff; }
+.h8 { --tint: var(--h8); --tint-ink: #fff; }
+.h9 { --tint: var(--h9); --tint-ink: #fff; }
+.h10 { --tint: var(--h10); --tint-ink: #fff; }
+.h11 { --tint: var(--h11); --tint-ink: #fff; }
 
-@media (prefers-color-scheme: light) {
-  html:not([data-theme]) {
-    --h0: #12806a;
-    --h1: #1f6fc4;
-    --h2: #6b4fc4;
-    --h3: #b33f76;
-    --h4: #bd4d28;
-    --h5: #8a6410;
-    --h6: #566f14;
-    --h7: #0f6f88;
-  }
-}
-
-.h0 { --tint: var(--h0); }
-.h1 { --tint: var(--h1); }
-.h2 { --tint: var(--h2); }
-.h3 { --tint: var(--h3); }
-.h4 { --tint: var(--h4); }
-.h5 { --tint: var(--h5); }
-.h6 { --tint: var(--h6); }
-.h7 { --tint: var(--h7); }
-
-/* La tinta sul testo e sul bordo, non sul fondo: una fila di pastiglie piene è una fila di
-   macchie, e quello che si legge è il nome. Il fondo arriva solo quando l'etichetta è accesa. */
 /* Nessun selettore che indovina la classe della tinta: `--tint` o c'è o non c'è, e il valore di
    riserva dentro `var()` è la pastiglia grigia di prima. Una regola che cercasse «una classe che
    contiene h» prenderebbe anche `hidden`. */
-.badge.tag, .tag { color: var(--tint, var(--accent-text)); border-color: var(--tint, var(--border)); }
-
-/* Accesa: la tinta diventa anche un velo di fondo, così si vede da lontano quale filtro è in piedi.
-   Due dichiarazioni, e la prima è la riserva: un browser che non sa fare `color-mix` tiene quella e
-   la pastiglia resta leggibile invece di sparire. */
-.badge.tag.on {
-  background: var(--accent-soft);
-  background: color-mix(in srgb, var(--tint, var(--accent)) 20%, transparent);
-  border-color: var(--tint, var(--accent));
+/* Il bianco arriva **insieme** alla tinta, riga per riga, e non da un selettore che prova a
+   indovinare se una classe c'è: senza tinta restano i valori di riserva dentro `var()`, cioè la
+   pastiglia scritta e non piena di prima. Meglio sobria che bianca su niente. */
+.badge.tag, .tag {
+  background: var(--tint, transparent);
+  color: var(--tint-ink, var(--accent-text));
+  border-color: var(--tint, var(--border));
 }
+
+/* Accesa: un anello intorno, perché il fondo è già occupato dalla tinta. Si vede che è quella a
+   filtrare senza cambiarle colore, che sarebbe come rinominarla mentre la si guarda. */
+.badge.tag.on { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* ---------------------------------------------------------------------------------------------
    lists
@@ -1733,8 +1723,15 @@ body.printing .page-props { display: none; }
 .prop-bool { margin: 0 1px; }
 .prop .icon { opacity: 0; }
 .prop:hover .icon, .prop:focus-within .icon { opacity: 1; }
-#propAdd { margin: 4px 0 0 -6px; font-size: 12px; color: var(--faint); }
-#propAdd:hover { color: var(--accent-text); }
+/* Una classe e non un id: lo stesso «+» sta sotto le proprietà di una pagina e sotto quelle di un
+   progetto, e la volta che una delle due si è ritrovata senza vestiti era per un nome. */
+.prop-add { margin: 4px 0 0 -6px; font-size: 12px; color: var(--faint); }
+.prop-add:hover { color: var(--accent-text); }
+
+/* La testa del progetto sta in una colonna larga quanto un testo: le proprietà sono righe di
+   «chiave : valore», e una riga larga quanto lo schermo mette il selettore della data a mezzo metro
+   dalla sua chiave. */
+.project-head { max-width: 720px; margin-top: 10px; }
 body.printing .props, body.printing #propAdd { display: none; }
 
 /* the pages as a table */

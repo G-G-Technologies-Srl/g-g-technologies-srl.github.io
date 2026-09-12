@@ -1996,6 +1996,10 @@ function _wire() {
     // Il salvataggio e la cartella condivisa li avvisa il modello da sé, come per ogni modifica.
     home.paintProject(projectId);
   });
+  el("projectPropAdd").addEventListener("click", () => {
+    if (!projectId) return;
+    pages.addProp(el("projectProps"), (props) => model.updateProject(projectId, { props }));
+  });
   el("openPages").addEventListener("click", () => _openPages(projectId));
   // The ring counts the tasks, so its door is the board; the deadlines are dates, so theirs is
   // the calendar. A panel that reports something and cannot be entered is a dead end.

@@ -338,7 +338,7 @@ export function canUndo() {
 //  p r o j e c t s
 // -----------------------------------------------------------------------------------------------------------------
 
-export function createProject({ name, eventDate = null, columns = null, tags = [] } = {}) {
+export function createProject({ name, eventDate = null, columns = null, tags = [], props = {} } = {}) {
   const stamp = _now();
   const id = _id();
   return _put("project", {
@@ -350,6 +350,11 @@ export function createProject({ name, eventDate = null, columns = null, tags = [
     // dieci progetti e li tiene in testa per categoria — i clienti, gli interni, l'anno — e non
     // per nome. Viaggiano con il progetto, perché sono una cosa del progetto e non di chi guarda.
     tags: cleanTags(tags),
+    // E gli attributi, le stesse coppie chiave-valore che una pagina tiene nella sua testa: la
+    // data di consegna, il colore con cui lo si riconosce, il numero d'ordine del cliente. Qui
+    // stanno nel record e non in un testo, perché un progetto non è un file — ma si scrivono con
+    // lo stesso editore, e si leggono con le stesse regole.
+    props: { ...(props || {}) },
     columns: _copy(columns || DEFAULT_COLUMNS),
     // Chi ci lavora, e con che ruolo. Il nome è scritto qui accanto al `uid` e non risolto dalla
     // scheda: è quello che permette a un progetto arrivato da fuori di dire «Marco Rossi, grafico»
@@ -374,7 +379,7 @@ export function updateProject(id, changes) {
   // `updated` moves for anything inside the project; `edited` only for the project's own fields.
   // Two copies decide whose name, date and columns to keep by `edited`: by `updated`, a task
   // ticked after the rename would carry the old name back over the new one.
-  const own = ["name", "eventDate", "columns", "tags"].some((key) => key in wanted);
+  const own = ["name", "eventDate", "columns", "tags", "props"].some((key) => key in wanted);
   // Who works on it gets a stamp of its own, and not `edited`, for the same reason `edited` is not
   // `updated`: assigning a card puts a person on the project, and that must not be enough to carry
   // an old project name back over somebody's rename.
@@ -828,6 +833,15 @@ export function cleanTags(tags) {
     if (!clean || seen.has(key)) continue;
     seen.add(key);
     out.push(clean);
+  }
+  return out;
+}
+
+/** Ogni chiave di attributo in uso sui progetti vivi, nell'ordine in cui è comparsa. */
+export function projectPropKeys() {
+  const out = [];
+  for (const project of liveProjects()) {
+    for (const key of Object.keys(project.props || {})) if (!out.includes(key)) out.push(key);
   }
   return out;
 }
