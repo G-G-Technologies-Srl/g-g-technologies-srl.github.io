@@ -12,7 +12,7 @@
 //    prossimo avvio. Scambiare i file sotto un'app che sta girando vuol dire cambiare il codice a
 //    qualcuno che è a metà partita.
 
-const VERSION = '0.13.0';
+const VERSION = '0.15.0';
 const CACHE = `recinto-v${VERSION}`;
 
 // Ogni file di cui l'app è fatta, più i moduli condivisi che prende in prestito. Tenuto a mano e

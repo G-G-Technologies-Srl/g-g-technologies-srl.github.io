@@ -104,8 +104,10 @@ function _propPicker(kind, valueField) {
     const box = document.createElement("input");
     box.type = "checkbox";
     box.className = "prop-picker prop-bool";
+    box.dataset.kind = kind;
     const pair = YES_NO.find((one) => one.includes(valueField.value.trim().toLowerCase())) || YES_NO[0];
     box.checked = valueField.value.trim().toLowerCase() === pair[0];
+    box.sync = () => { box.checked = valueField.value.trim().toLowerCase() === pair[0]; };
     box.setAttribute("aria-label", t("propValue"));
     // Si risponde nella lingua in cui la risposta è già scritta: chi ha scritto «true» non se lo
     // vede diventare «sì» al primo clic.
@@ -116,7 +118,13 @@ function _propPicker(kind, valueField) {
   const picker = document.createElement("input");
   picker.type = kind;
   picker.className = `prop-picker prop-${kind}`;
-  picker.value = kind === "color" ? _colorOf(valueField.value) : valueField.value.trim();
+  picker.dataset.kind = kind;
+  // Riallinearsi al testo **senza rinascere**: chi lo usa ha un pannello nativo aperto sopra, e un
+  // elemento tolto dalla pagina se lo porta dietro. Vedi `dress()`.
+  picker.sync = () => {
+    picker.value = kind === "color" ? _colorOf(valueField.value) : valueField.value.trim();
+  };
+  picker.sync();
   picker.setAttribute("aria-label", t(kind === "color" ? "propPickColor" : "propPickDate"));
   picker.addEventListener("input", () => { if (picker.value) write(picker.value); });
   return picker;
@@ -188,10 +196,20 @@ function _propRow(box, key, value, save, { marked = null, onMark = null } = {}) 
 
   let picker = null;
   const dress = () => {
-    if (picker) picker.remove();
-    picker = null;
     shine();
     const kind = _propKind(keyField.value, valueField.value);
+    // **L'attrezzo giusto non si rifà: si riallinea.** Prima questa funzione staccava il selettore
+    // e ne costruiva un altro a ogni cambiamento, anche quando il tipo era lo stesso di un attimo
+    // prima. Sul colore quel ricambio arrivava nel momento peggiore: il pannello nativo scrive
+    // mentre lo usi, ogni scrittura tornava qui, e l'`input[type=color]` che possiede il pannello
+    // spariva dalla pagina portandoselo dietro. Il pannello si chiudeva al primo colore toccato, e
+    // il colore scelto non si faceva mai vedere.
+    if (picker && picker.dataset.kind === kind) {
+      picker.sync();
+      return;
+    }
+    if (picker) picker.remove();
+    picker = null;
     if (!kind) return;
     picker = _propPicker(kind, valueField);
     if (kind === "date") valueField.after(picker);

@@ -65,6 +65,12 @@ let field = null;
 export function setup(canvas) {
   field = canvas;
   window.addEventListener("keydown", (event) => {
+    // **Mentre si scrive, WASD sono lettere.** L'ascoltatore sta sulla finestra e non guardava chi
+    // avesse il fuoco: nel campo del nome della classifica la «a» non si riusciva a scrivere,
+    // perché `KeyA` qui vuol dire «sinistra» e l'evento veniva annullato. Il nome «Gian Angelo»
+    // usciva «Gin ngelo», e la stessa cosa capitava a ogni w, s e d. Chi scrive non sta giocando,
+    // quindi si lascia perdere anche quello che era premuto.
+    if (_typing(event.target)) { held.clear(); return; }
     const key = KEYS[event.code];
     if (!key) return;
     event.preventDefault();
@@ -144,6 +150,14 @@ function _band() {
 
 // Col campo girato, «giù» sullo schermo non è «giù» nel campo. Il giocatore preme quello che vede,
 // quindi la direzione si gira qui — nell'unico posto che conosce sia lo schermo sia il mondo.
+// Il fuoco è in un posto dove i tasti sono testo: un campo, un menù a tendina, una finestra di
+// dialogo aperta. Lo stesso confine vale in `app.js` per Invio e barra spaziatrice, e per la stessa
+// ragione — un ascoltatore sulla finestra sente tutto, anche quello che non è per lui.
+function _typing(node) {
+  if (!node || typeof node.closest !== "function") return false;
+  return Boolean(node.closest('input, textarea, select, [contenteditable="true"], dialog[open]'));
+}
+
 function _asSeen(dx, dy) {
   if (!field || !view(field).turned) return { dx, dy };
   return { dx: dy, dy: -dx };

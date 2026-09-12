@@ -78,9 +78,11 @@ const IT = {
   quit: "Abbandona",
 
   clearedTitle: "Livello chiuso",
-  clearedHint: "Tocca il campo per il prossimo",
+  clearedHint: "Invio, o un tocco sul campo",
   overTitle: "Partita finita",
-  overHint: "Tocca il campo per ricominciare",
+  overHint: "Invio per un altro gettone",
+  nextLevel: "Livello successivo",
+  againCoin: "Un altro gettone",
   again: "Ricomincia",
 
   deathFilo: "Il Filo ha toccato la tua linea",
@@ -208,9 +210,11 @@ const EN = {
   quit: "Give up",
 
   clearedTitle: "Level cleared",
-  clearedHint: "Touch the field for the next one",
+  clearedHint: "Enter, or a touch on the field",
   overTitle: "Game over",
-  overHint: "Touch the field to start again",
+  overHint: "Enter for another coin",
+  nextLevel: "Next level",
+  againCoin: "Another coin",
   again: "Start again",
 
   deathFilo: "The Thread touched your line",

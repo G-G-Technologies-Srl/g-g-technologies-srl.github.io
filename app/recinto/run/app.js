@@ -43,6 +43,15 @@ let db = null;
 let signed = false;                   // il punteggio di questa partita è già finito in classifica?
 let began = 0;
 
+// Quello che il pulsante di fine schermata farà — continuare o ricominciare — e le chiavi di quello
+// che c'è scritto, perché la lingua può cambiare mentre la schermata è lì.
+//
+// **Qui e non accanto a `_end`**, dove stavano per mezz'ora: le funzioni si issano e `let` no, e
+// `_words()` gira in fondo all'avvio, cioè prima. Il modulo moriva sulla prima riga con «Cannot
+// access before initialization» e l'app non partiva per niente.
+let onEnd = null;
+let endKeys = null;
+
 // -----------------------------------------------------------------------------------------------------------------
 //  a v v i o
 // -----------------------------------------------------------------------------------------------------------------
@@ -115,6 +124,7 @@ document.addEventListener("visibilitychange", () => {
 el("howButton").addEventListener("click", () => _show("how"));
 el("howBack").addEventListener("click", _coin);
 el("againButton").addEventListener("click", () => { world = null; _demo(); _show("title"); });
+el("endGo").addEventListener("click", () => { if (onEnd) onEnd(); });
 
 el("strokeButton").addEventListener("click", () => {
   const slow = el("strokeButton").getAttribute("aria-pressed") !== "true";
@@ -144,7 +154,24 @@ window.addEventListener("keydown", (event) => {
     return;
   }
   if (event.code !== "Enter" && event.code !== "Space") return;
-  if (screen !== "playing" && screen !== "paused") { event.preventDefault(); _coin(); }
+
+  // **Mentre si scrive, questi due tasti sono lettere.** L'ascoltatore sta sulla finestra e non
+  // guardava chi avesse il fuoco: battendo il proprio nome nella classifica, lo spazio faceva
+  // partire una partita nuova invece di entrare nel nome — e l'Invio che doveva salvare ne faceva
+  // partire una e poi ci registrava sopra il punteggio appena azzerato. Un difetto che si vede solo
+  // provando a scrivere «Gian Angelo» con lo spazio in mezzo.
+  const target = event.target;
+  if (target && typeof target.closest === "function"
+      && target.closest('input, textarea, select, [contenteditable="true"], dialog[open]')) return;
+
+  if (screen === "playing" || screen === "paused") return;
+  event.preventDefault();
+
+  // **A livello chiuso, Invio continua.** Prima chiamava `_coin()` come dal titolo: la partita
+  // ripartiva da zero e i punti di cinque livelli sparivano senza che niente lo dicesse. Il gettone
+  // è il rito d'avvio di una partita, non di un livello.
+  if (screen === "cleared") { _next(); return; }
+  _coin();
 });
 
 canvas.addEventListener("pointerdown", () => {
@@ -299,12 +326,20 @@ function _why(cause) {
 }
 
 function _end(title, hint) {
+  const cleared = title === "clearedTitle";
+  endKeys = { title, hint };
   el("endTitle").textContent = t(title);
   el("endHint").textContent = t(hint);
   el("endFinal").textContent = "";
   el("endPlace").textContent = "";
   el("nameForm").hidden = true;
-  _show(title === "overTitle" ? "over" : "cleared");
+  onEnd = cleared ? _next : _coin;
+  el("endGo").textContent = cleared ? t("nextLevel") : t("againCoin");
+  _show(cleared ? "cleared" : "over");
+
+  // Il fuoco va sul pulsante solo a livello chiuso. A partita finita lo vuole il campo del nome,
+  // che è la cosa che si sta per fare — e glielo dà `_ask`, un istante dopo.
+  if (cleared) el("endGo").focus();
 }
 
 // La firma si chiede a ogni partita, non solo sulle prime dieci: col gettone infinito una partita
@@ -424,5 +459,13 @@ function _words() {
   }
   el("soundButton").setAttribute("aria-label", audio.enabled() ? t("soundOn") : t("soundOff"));
   el("nameField").placeholder = t("namePlaceholder");
+
+  // La schermata di fine non porta chiavi nel markup — il suo testo dipende da com'è andata — e
+  // cambiando lingua restava nell'altra. Si riscrive da quello che `_end` si è ricordato.
+  if (endKeys && (screen === "cleared" || screen === "over")) {
+    el("endTitle").textContent = t(endKeys.title);
+    el("endHint").textContent = t(endKeys.hint);
+    el("endGo").textContent = t(onEnd === _next ? "nextLevel" : "againCoin");
+  }
   if (world || demo) _numbers(world || demo.world);
 }
