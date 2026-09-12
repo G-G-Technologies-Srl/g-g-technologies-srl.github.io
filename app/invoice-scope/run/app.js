@@ -940,6 +940,10 @@ async function _reset(group) {
   // riscriverebbe alla prima modifica.
   if (group === "projects" || group === "all") await progetti.setup(db);
   if (group === "all") await _loadCompany();
+  // La cache dei promemoria sopravvive agli aggiornamenti apposta, quindi sopravviverebbe anche a
+  // questo: senza rifarla, il worker potrebbe annunciare il numero di una fattura e il nome di un
+  // cliente appena cancellati. Una promessa di riservatezza vale finché vale anche qui.
+  await alarms.refresh(db);
   await tell(t("dangerDone"));
   location.hash = "#/";
   await _refresh();
@@ -1103,26 +1107,38 @@ async function main() {
   // accende, il permesso che si chiede solo da un clic, e lo scadenzario che esce come calendario.
 
   const paintRemind = async () => {
-    const one = remindReading();
+    const one = _remindReading();
+    // Una scadenza d'esempio fra una settimana, con le date vere. `remind.day` e non
+    // `toISOString()`: una mezzanotte locale letta a Greenwich è il giorno prima ovunque a est di
+    // Londra, e questa riga usciva sbagliata di un giorno in Italia.
     const today = new Date();
-    const example = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7);
-    const at = new Date(example);
-    at.setDate(at.getDate() - one.days);
+    const example = remind.day(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7));
+    const at = remind.when(example, one);
     const hour = `${one.hour}:00`;
     const when = one.days
-      ? tf("remindSaysDay", { date: shownDate(at.toISOString().slice(0, 10)), hour })
+      ? tf("remindSaysDay", { date: shownDate(remind.day(at)), hour })
       : tf("remindSaysSame", { hour });
-    el("remindSays").textContent = one.on
-      ? tf("remindSays", { date: shownDate(example.toISOString().slice(0, 10)), when })
+    el("remindSays").textContent = one.on && at
+      ? tf("remindSays", { date: shownDate(example), when })
       : t("remindOff");
 
     const state = remind.state();
     el("remindAsk").hidden = !(one.on && state === "ask");
-    el("remindState").textContent = !one.on ? ""
-      : t(state === "no" ? "remindStateNo"
-        : state === "denied" ? "remindStateDenied"
-          : state === "ask" ? "remindStateAsk"
-            : remind.wakes(worker) ? "remindStateYes" : "remindStateSleeps");
+    if (!one.on) {
+      el("remindState").textContent = "";
+      return;
+    }
+    if (state !== "yes") {
+      el("remindState").textContent = t(state === "no" ? "remindStateNo"
+        : state === "denied" ? "remindStateDenied" : "remindStateAsk");
+      return;
+    }
+    // Permesso non vuol dire registrato: si chiede al browser invece di dedurlo dall'API.
+    if (!remind.wakes(worker)) {
+      el("remindState").textContent = t("remindStateSleeps");
+      return;
+    }
+    el("remindState").textContent = t(await remind.watching(worker) ? "remindStateYes" : "remindStateWaiting");
   };
 
   const settings = await alarms.settings(db);
@@ -1135,14 +1151,18 @@ async function main() {
     el(id).addEventListener("change", () => paintRemind());
   }
   el("remindSave").addEventListener("click", async () => {
-    await alarms.save(db, remindReading());
+    await alarms.save(db, _remindReading());
     await paintRemind();
-    await tell(t("docSaveFirst"));
+    // In linea e non in una finestra: salvare tre campi non è una notizia da fermare la persona.
+    el("remindSaved").hidden = false;
+    setTimeout(() => { el("remindSaved").hidden = true; }, 2500);
   });
   // Il permesso si chiede da qui e da nessun altro posto: chiesto all'avvio, un «no» chiude la
   // porta per sempre e dall'app non si riapre più.
   el("remindAsk").addEventListener("click", async () => {
     await remind.askPermission();
+    // Il permesso appena dato apre la porta al risveglio: si chiede subito, non al prossimo avvio.
+    await alarms.watch(db);
     await paintRemind();
   });
 
@@ -1181,11 +1201,15 @@ async function main() {
   // Closing the tab, switching app on a phone, or the browser reclaiming the page: `pagehide` is
   // the one event that fires in all three, where `beforeunload` is ignored on mobile. The save is
   // best-effort — the page may go before it lands — which is why the deferred save is short.
-  window.addEventListener("pagehide", () => { doc.flush(); progetti.flush(); });
+  // I due momenti che arrivano davvero su un telefono. Qui, oltre a salvare, si rifà il digest dei
+  // promemoria: fermo a com'era all'avvio, la sveglia di domattina annuncerebbe una fattura
+  // incassata mezz'ora fa — e la segnerebbe come detta, quindi senza più modo di correggersi.
+  window.addEventListener("pagehide", () => { doc.flush(); progetti.flush(); alarms.refresh(db); });
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") {
       doc.flush();
       progetti.flush();
+      alarms.refresh(db);
     }
   });
   await _loadCompany();
@@ -1230,7 +1254,7 @@ async function main() {
 }
 
 /** I tre campi del blocco Promemoria, letti insieme e rimessi nei limiti. */
-function remindReading() {
+function _remindReading() {
   return remind.clean({
     on: el("remindOn").checked,
     days: el("remindDays").value,
@@ -1244,6 +1268,9 @@ async function _remindOnOpen() {
   el("remindNote").hidden = !text;
   if (text) el("remindNoteText").textContent = tf("remindNote", { what: text });
   await alarms.badge(db);
+  // Il risveglio si richiede a ogni apertura: il browser lo concede con l'uso, cioè dopo il
+  // giorno in cui una persona accende i promemoria.
+  await alarms.watch(db);
 }
 
 main();

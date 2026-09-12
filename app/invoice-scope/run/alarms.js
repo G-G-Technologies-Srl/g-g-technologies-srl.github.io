@@ -12,12 +12,13 @@
 // qualcuno per una bolletta che nessuno ha ancora mandato è il modo più veloce di far spegnere i
 // promemoria.
 
-import { get, put, list } from "gg/store.js";
+import { get, put } from "gg/store.js";
 import * as remind from "gg/remind.js";
 import * as ics from "gg/ics.js";
 
 import { t, tf, num } from "./i18n.js";
-import { money } from "./format.js";
+import { isDemo } from "./db.js";
+import { money, date as shownDate } from "./format.js";
 import { summary } from "./schedule.js";
 import { allCosts, allOutlays, payable } from "./costs.js";
 import { parties } from "./parties.js";
@@ -41,9 +42,9 @@ let worker = null;
 //  p r i v a t e
 // -----------------------------------------------------------------------------------------------------------------
 
-/** Oggi, come lo scrive il resto dell'app. */
+/** Oggi, come lo scrive il resto dell'app — e dalle parti locali, che è la sola forma giusta. */
 function _today() {
-  return new Date().toISOString().slice(0, 10);
+  return remind.day(new Date());
 }
 
 /** Quanti giorni mancano fra due date scritte, senza passare da un fuso. */
@@ -104,10 +105,25 @@ async function _rows(db) {
   return out.sort((a, b) => String(a.date).localeCompare(String(b.date)));
 }
 
-/** Una riga come si legge in una notifica: cosa, di chi, quando, quanto. */
-function _line(row, today) {
-  const parts = [row.party ? `${row.title} · ${row.party}` : row.title, _when(row.date, today)];
-  return `${parts.filter(Boolean).join(" — ")} · ${money(row.amount)}`;
+/** La cosa, senza tempo attaccato: chi, cosa, quanto. */
+function _label(row) {
+  const who = row.party ? `${row.title} · ${row.party}` : row.title;
+  return `${who} · ${money(row.amount)}`;
+}
+
+/**
+ * La riga che mostra il **worker**, e quindi con la data com'è.
+ *
+ * Il worker la legge giorni dopo che è stata scritta — è il caso per cui esiste — e «fra 3 giorni»
+ * congelato lì dentro sarebbe un numero sbagliato nel momento in cui suona.
+ */
+function _line(row) {
+  return `${_label(row)} — ${shownDate(row.date)}`;
+}
+
+/** E quella che mostra la **pagina**, dove il tempo relativo si scrive e si legge nello stesso istante. */
+function _near(row, today) {
+  return `${_label(row)} — ${_when(row.date, today)}`;
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -134,9 +150,8 @@ export async function settings(db) {
 export async function save(db, wanted) {
   const one = remind.clean(wanted);
   await put(db, "meta", { key: KEY, value: one });
-  if (one.on && remind.state() === "yes") await remind.watch(worker, { hours: 12 });
-  else await remind.stop(worker);
-  await digest(db);
+  await watch(db);
+  await refresh(db);
   return one;
 }
 
@@ -147,13 +162,16 @@ export async function save(db, wanted) {
  * confrontare — la ragione sta scritta per esteso in `gg/remind.js`.
  */
 export async function digest(db) {
-  if (!db) return null;
+  // Il dimostrativo resta fuori: le sue scadenze sono inventate, e `?demo=1` è un indirizzo
+  // pubblico — la cache che il worker legge invece è vera, e una sveglia per una fattura che non
+  // esiste sarebbe la prima cosa che l'esempio fa di male.
+  if (!db || isDemo()) return null;
   const one = await settings(db);
-  const today = _today();
   const items = (await _rows(db)).map((row) => ({
     id: row.id,
     date: row.date,
-    text: _line(row, today),
+    label: _label(row),
+    text: _line(row),
   }));
   const before = await remind.kept(NOTES);
   const saved = remind.digest(items, one, {
@@ -175,7 +193,9 @@ export async function onOpen(db) {
   const saved = await digest(db);
   const due = remind.ripe(saved, {});
   if (!due.length) return null;
-  const first = due[0].text;
+  const today = _today();
+  const say = (one) => `${one.label} — ${_when(one.date, today)}`;
+  const first = say(due[0]);
   const text = due.length === 1 ? first : tf("remindMore", { first, n: num(due.length - 1, 0) });
   await remind.keep(NOTES, { ...saved, said: [...saved.said, ...due.map((one) => one.key)] });
   return text;
@@ -183,11 +203,38 @@ export async function onOpen(db) {
 
 /** Il numero in ritardo sull'icona dell'app installata. Niente quando non c'è niente. */
 export async function badge(db) {
-  if (!navigator.setAppBadge || !db) return;
+  if (!navigator.setAppBadge || !db || isDemo()) return;
   const today = _today();
   const late = (await _rows(db)).filter((row) => row.date < today).length;
   const call = late ? navigator.setAppBadge(late) : navigator.clearAppBadge();
   if (call && call.catch) call.catch(() => {});
+}
+
+/**
+ * Il digest e il numero sull'icona, rifatti insieme.
+ *
+ * **Una porta sola, da chiamare a ogni cambiamento**, perché le due cose invecchiano insieme: se
+ * il digest resta quello dell'avvio, la sveglia di domattina annuncia una fattura incassata ieri —
+ * e la segna come detta, quindi non si corregge più. Vale anche dopo una cancellazione: la cache
+ * dei promemoria sopravvive agli aggiornamenti apposta, quindi sopravviverebbe anche allo
+ * svuotamento dell'archivio.
+ */
+export async function refresh(db) {
+  await digest(db);
+  await badge(db);
+}
+
+/**
+ * Chiede — o disdice — il risveglio automatico, e dice se è andata.
+ *
+ * Si riprova a ogni apertura: Chromium concede `periodic-background-sync` alle app installate e
+ * usate, cioè di solito dopo il giorno in cui una persona accende i promemoria.
+ */
+export async function watch(db) {
+  const one = await settings(db);
+  if (one.on && remind.state() === "yes") return remind.watch(worker, { hours: 12 });
+  await remind.stop(worker);
+  return false;
 }
 
 /**
@@ -200,10 +247,11 @@ export async function badge(db) {
  */
 export async function calendar(db) {
   const one = await settings(db);
-  const today = _today();
   const events = (await _rows(db)).map((row) => ({
     uid: row.id,
-    title: _line(row, today),
+    // Senza tempo relativo: un evento di calendario porta la sua data da sé, e «in ritardo»
+    // scritto nel titolo invecchia dentro il file di chi l'ha importato.
+    title: _label(row),
     date: row.date,
     description: row.party,
   }));

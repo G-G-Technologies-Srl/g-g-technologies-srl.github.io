@@ -333,6 +333,23 @@ main { padding: 0; flex: 1 1 auto; min-width: 0; }
 
 .actions { display: flex; gap: 10px; flex-wrap: wrap; flex-basis: 100%; margin-top: 4px; }
 
+/* «Giorni prima [2] alle ore [8]»: una frase, non un modulo. Le caselle sono vestite come quelle
+   dei moduli — altrimenti su una schermata dove nient'altro lo è escono come controlli di sistema
+   — e larghe quanto il numero, che è la misura che `.rows input.tiny` usa già. */
+.remind-when { align-items: center; }
+.remind-when label { font-size: 0.9rem; color: var(--muted); align-self: center; }
+.remind-when input {
+  background: var(--fill);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 9px 11px;
+  color: var(--text);
+  font: inherit;
+  min-height: 40px;
+  max-width: 76px;
+}
+.remind-when input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
 .form label.wide { flex: 1 1 100%; }
 
 /* ----- i menù a tendina ----- */

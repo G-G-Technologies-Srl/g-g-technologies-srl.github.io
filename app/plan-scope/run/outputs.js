@@ -14,6 +14,7 @@ import * as pack from "gg/plan-pack.js";
 import * as webpage from "./webpage.js";
 import * as csv from "./csv.js";
 import * as ics from "gg/ics.js";
+import { SIGN } from "./sign.js";
 import * as md from "gg/plan-markdown.js";
 import { t, tf, lang } from "./i18n.js";
 import { el, snack, longDate } from "./ui.js";
@@ -154,7 +155,7 @@ export function exportIcs(projectId, { alarm = null } = {}) {
       date: project.eventDate });
   }
   if (!events.length) return snack(t("icsNone"));
-  const text = ics.calendar(events, { name: project.name || t("projectUntitled"), alarm });
+  const text = ics.calendar(events, { name: project.name || t("projectUntitled"), alarm, sign: SIGN });
   return pack.save(ics.fileName(project.name), text, "text/calendar;charset=utf-8");
 }
 

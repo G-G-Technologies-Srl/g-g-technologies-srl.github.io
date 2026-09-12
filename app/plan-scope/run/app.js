@@ -1871,7 +1871,7 @@ function _wire() {
   el("planIcs").addEventListener("click", async () => {
     const alarm = await _remindSettings();
     outputs.exportIcs(projectId, { alarm });
-    if (alarm.on) snack(t("icsAlarm"));
+    if (alarm.on) snack(t("dueIcsAlarm"));
   });
   el("copyPage").addEventListener("click", () => outputs.copyFor("page", { pageId }));
   el("planCopy").addEventListener("click", () => outputs.copyFor("plan", { projectId }));
@@ -2407,6 +2407,8 @@ function _connect() {
   });
 
   plan.connect({
+    // Le impostazioni dei promemoria, per la sveglia dentro il calendario di una singola attività.
+    alarm: () => _remindSettings(),
     // The board writes the address bar and nothing else: what it changed is already in the model.
     // Unless the card was opened from somewhere else — the dashboard's deadlines — in which case
     // that screen is the one that has to catch up.

@@ -12,7 +12,7 @@
 //    a running app means changing the code while somebody is halfway through an invoice, and
 //    saving them one reload is not worth that — here least of all.
 
-const VERSION = '0.42.1';
+const VERSION = '0.42.3';
 const CACHE = `invoice-scope-v${VERSION}`;
 
 // La cache dei promemoria, e **l'unica che sopravvive a un aggiornamento**. Il nome non porta la
@@ -102,6 +102,7 @@ const ASSETS = [
   '../../_lib/dom.js',
   '../../_lib/plan-markdown.js',
   '../../_lib/remind.js',
+  '../../_lib/remind-sw.js',
   '../../_lib/ics.js',
 ];
 
@@ -145,61 +146,15 @@ self.addEventListener('message', (event) => {
 
 // ---- i promemoria ------------------------------------------------------------------------------
 //
-// **Questo worker non sa cos'è una scadenza.** La pagina gli lascia una lista di `{ key, when,
-// text }` con il momento già calcolato e la frase già scritta nella lingua giusta; qui si
-// confrontano due stringhe ISO e si segna cosa è stato detto. Nessun modello, nessun database,
-// nessuna traduzione: le tre cose che, in un file che gira mentre nessuno guarda, non si possono
-// né provare né vedere fallire.
-//
-// `periodicsync` esiste su Chromium e con l'app installata, e la frequenza la decide il browser.
-// Dove non c'è, la pagina dice le stesse cose all'apertura: è il motivo per cui questo blocco può
-// essere così piccolo e non deve promettere niente.
+// Le quaranta righe che decidono cosa dire al risveglio stanno in `_lib/remind-sw.js`, uguali per
+// le due app: `importScripts` è il solo modo che ha uno script classico di prendere codice da
+// fuori, e vale la pena usarlo proprio qui — è il file che gira quando nessuno guarda, e averne
+// due copie voleva dire provarne una.
+importScripts('../../_lib/remind-sw.js');
 
-async function announce() {
-  const cache = await caches.open(NOTES);
-  const hit = await cache.match(new Request(DIGEST));
-  if (!hit) return;
-
-  const saved = await hit.json();
-  if (!saved || !saved.on) return;
-
-  const now = new Date().toISOString();
-  const said = new Set(saved.said || []);
-  const due = (saved.items || []).filter((one) => one.when <= now && !said.has(one.key));
-  if (!due.length) return;
-
-  // Una notifica sola, anche per cinque scadenze: cinque avvisi impilati sono cinque cose da
-  // togliere di mezzo, e chi li toglie non legge la quinta.
-  const body = due.length === 1
-    ? due[0].text
-    : due.slice(0, 3).map((one) => one.text).join('\n');
-  await self.registration.showNotification(saved.heading || 'Invoice Scope', {
-    body,
-    tag: 'gg:due',
-    icon: './icon-192.png',
-    badge: './icon-192.png',
-    data: { count: due.length },
-  });
-
-  for (const one of due) said.add(one.key);
-  await cache.put(new Request(DIGEST), new Response(JSON.stringify({ ...saved, said: [...said] }),
-    { headers: { 'Content-Type': 'application/json' } }));
-}
-
-self.addEventListener('periodicsync', (event) => {
-  if (event.tag === 'gg:due') event.waitUntil(announce());
-});
-
-// Un clic sulla notifica apre l'app se è chiusa, e porta in primo piano quella che c'è già: due
-// finestre della stessa app aperte da un avviso sono un avviso che ha fatto danno.
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  event.waitUntil((async () => {
-    const open = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    for (const client of open) {
-      if (client.url.includes('/app/invoice-scope/run/') && 'focus' in client) return client.focus();
-    }
-    if (self.clients.openWindow) return self.clients.openWindow('./');
-    return undefined;
-  })());
+remindSetup({
+  notes: NOTES,
+  title: 'Invoice Scope',
+  scope: '/app/invoice-scope/run/',
+  digest: DIGEST,
 });

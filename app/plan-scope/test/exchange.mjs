@@ -7,6 +7,7 @@
 import assert from "node:assert/strict";
 
 import * as ics from "gg/ics.js";
+import { SIGN } from "../run/sign.js";
 import * as csv from "../run/csv.js";
 import * as webpage from "../run/webpage.js";
 
@@ -26,7 +27,7 @@ function test(name, fn) {
 const NOW = new Date("2026-09-02T10:15:00Z");
 
 test("un evento è un giorno intero, con la fine esclusa il mattino dopo", () => {
-  const lines = ics.event({ uid: "t1", title: "Stand", date: "2026-09-20" }, { now: NOW });
+  const lines = ics.event({ uid: "t1", title: "Stand", date: "2026-09-20" }, { now: NOW, sign: SIGN });
   assert.ok(lines.includes("DTSTART;VALUE=DATE:20260920"));
   assert.ok(lines.includes("DTEND;VALUE=DATE:20260921"));
   assert.ok(lines.includes("UID:t1@plan-scope.ggtechnologies.sm"));
@@ -249,6 +250,18 @@ test("nella vCard il punto e virgola si protegge, e le righe lunghe si spezzano 
   let rimessa = righe[inizio].slice(3);
   for (let i = inizio + 1; i < righe.length && righe[i].startsWith(" "); i += 1) rimessa += righe[i].slice(1);
   assert.equal(rimessa, lungo, "il nome si ricompone intero, senza caratteri rotti");
+});
+
+// La regola del catalogo: un modulo condiviso non nomina un'app. Il nome della firma sta in
+// `run/sign.js`, e il valore di partenza di `_lib/ics.js` dice solo la società — così un file di
+// Invoice non può uscire dichiarandosi Plan Scope perché qualcuno si è dimenticato la firma.
+test("la firma è dell'app, e la libreria condivisa non nomina nessuno", () => {
+  assert.equal(SIGN.prodid, "-//G&G Technologies//Plan Scope//IT");
+  const nudo = ics.calendar([{ uid: "t", title: "x", date: "2026-10-09" }], { now: NOW });
+  assert.ok(!/Plan Scope|Invoice Scope/.test(nudo), "il valore di partenza nomina un'app");
+  const firmato = ics.calendar([{ uid: "t", title: "x", date: "2026-10-09" }], { now: NOW, sign: SIGN });
+  assert.ok(firmato.includes("PRODID:-//G&G Technologies//Plan Scope//IT"));
+  assert.ok(firmato.includes("UID:t@plan-scope.ggtechnologies.sm"));
 });
 
 // -----------------------------------------------------------------------------------------------------------------

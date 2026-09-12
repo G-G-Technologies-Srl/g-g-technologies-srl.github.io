@@ -828,7 +828,7 @@ const IT = {
   remindWhenLate: "in ritardo",
   remindWhenDays: "fra {n} giorni",
   remindSee: "Vedi",
-  icsAlarm: "Con il promemoria dentro: lo farà suonare il tuo calendario.",
+  dueIcsAlarm: "Con il promemoria dentro: lo farà suonare il tuo calendario.",
 
   demoName: "Fiera di settembre",
   demoBadge: "Esempio",
@@ -1726,7 +1726,7 @@ const EN = {
   remindWhenLate: "late",
   remindWhenDays: "in {n} days",
   remindSee: "See",
-  icsAlarm: "With the reminder inside: your own calendar will sound it.",
+  dueIcsAlarm: "With the reminder inside: your own calendar will sound it.",
 
   demoName: "September trade fair",
   demoBadge: "Example",

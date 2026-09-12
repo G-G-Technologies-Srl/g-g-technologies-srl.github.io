@@ -36,8 +36,15 @@ import * as remind from "./remind.js";
 
 const FOLD_AT = 75;                     // octets per line, per the standard
 
-/** Chi firma il file e sotto che dominio stanno gli `UID`, se l'app non lo dice. */
-export const SIGN = { prodid: "-//G&G Technologies//Plan Scope//IT", domain: "plan-scope.ggtechnologies.sm" };
+/**
+ * Chi firma il file e sotto che dominio stanno gli `UID`, se l'app non lo dice.
+ *
+ * **Neutro, e non il nome di una delle due app.** La regola del catalogo è scritta: un modulo che
+ * nomina un'app non è condiviso, è copiato — e un valore di partenza che dice «Plan Scope» fa
+ * uscire quel nome da un file di Invoice il giorno in cui qualcuno si dimentica di passare la
+ * firma. Qui c'è il nome della società, che è vero per tutt'e due.
+ */
+export const SIGN = { prodid: "-//G&G Technologies//iCalendar//EN", domain: "ggtechnologies.sm" };
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e

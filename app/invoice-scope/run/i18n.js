@@ -126,6 +126,7 @@ const IT = {
     + "Intanto restano il calendario che esporti e il riepilogo all'apertura.",
   remindStateSleeps: "Notifiche permesse. Questo browser però non sveglia l'app da solo: le vedrai "
     + "aprendola, e nel calendario che esporti.",
+  remindSavedNote: "Salvato.",
   remindHeading: "Scadenze",
   remindIn: "Fattura",
   remindOut: "Acquisto",
@@ -1197,6 +1198,7 @@ const EN = {
     + "opens. Meanwhile the calendar you export and the summary on opening remain.",
   remindStateSleeps: "Notifications allowed. This browser does not wake the app on its own, "
     + "though: you will see them when you open it, and in the calendar you export.",
+  remindSavedNote: "Saved.",
   remindHeading: "Deadlines",
   remindIn: "Invoice",
   remindOut: "Purchase",

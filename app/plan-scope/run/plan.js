@@ -19,6 +19,7 @@
 import * as model from "gg/plan-model.js";
 import * as timeline from "./timeline.js";
 import * as ics from "gg/ics.js";
+import { SIGN } from "./sign.js";
 import * as pack from "gg/plan-pack.js";
 import { t, tf, num } from "./i18n.js";
 import { el, node, button, fill, shortDate, locale, ask } from "./ui.js";
@@ -30,7 +31,10 @@ import { el, node, button, fill, shortDate, locale, ask } from "./ui.js";
 let projectId = null;
 let view = "kanban";
 let month = null;                       // the first day of the month on screen, "YYYY-MM-DD"
-let on = { change() {}, moved() {}, trashed() {}, ticked() {}, batched() {} };
+let on = { change() {}, moved() {}, trashed() {}, ticked() {}, batched() {},
+  // Le impostazioni dei promemoria: le tiene l'app, e servono qui per mettere la sveglia
+  // dentro il calendario di una singola attività come già fa quello del progetto.
+  alarm: async () => null };
 let dragging = null;
 let justDragged = false;                // swallows the click the browser sends after a drop
 let cardId = null;                      // the task the dialog is showing
@@ -798,13 +802,17 @@ export function connect(handlers) {
   // «Chiudi» only closes: the `close` handler below does the writing, once. Doing both here made
   // every closed card two steps of undo, because the dialog's own `close` event fired after it.
   el("cardClose").addEventListener("click", () => el("taskCard").close());
-  el("cardIcs").addEventListener("click", () => {
+  el("cardIcs").addEventListener("click", async () => {
     // What is in the fields now, not what was saved: the person may have just set the date.
     const task = { ...model.task(cardId), title: el("cardTitleField").value.trim() || model.task(cardId).title,
       start: el("cardStart").value || null, end: el("cardEnd").value || null,
       notes: el("cardNotes").value };
     if (!task.end) return;
-    pack.save(ics.fileName(task.title), ics.calendar([_eventOf(task)]), "text/calendar;charset=utf-8");
+    // Con la sveglia, come l'esportazione del progetto: era l'unico dei due pulsanti a uscire
+    // senza, cioè lo strato che la scheda chiama «quello che funziona ovunque» funzionava su uno.
+    const alarm = await on.alarm();
+    pack.save(ics.fileName(task.title),
+      ics.calendar([_eventOf(task)], { alarm, sign: SIGN }), "text/calendar;charset=utf-8");
   });
   el("cardDelete").addEventListener("click", () => {
     const task = model.task(cardId);
