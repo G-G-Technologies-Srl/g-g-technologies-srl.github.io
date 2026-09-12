@@ -94,6 +94,7 @@
         <button type="button" id="importProject" data-t="importProject"></button>
         <button type="button" id="backupAll" data-t="backupAll"></button>
         <button type="button" id="openRubrica" data-t="rubricaTitle"></button>
+        <button type="button" id="openRemind" data-t="remindTitle"></button>
         <button type="button" id="openTrash" data-t="openTrash"></button>
         <!-- Una voce sola per le due cartelle, perché portano allo stesso posto. Solo dove il
              browser sa consegnare una cartella (Chromium, sul computer). -->
@@ -894,6 +895,36 @@
 </dialog>
 
 <!-- The shortcuts, on «?». Drawn from the dictionary so that the two languages cannot drift. -->
+<!-- I promemoria delle scadenze. Tre strati, e il dialogo li dice tutti e tre invece di
+     promettere «notifiche» e lasciare che ognuno scopra da sé dove non arrivano. -->
+<dialog id="remindDialog">
+  <h2 data-t="remindTitle"></h2>
+  <p class="note" data-t="remindLead"></p>
+  <form id="remindForm">
+    <label class="check-line">
+      <input type="checkbox" id="remindOn">
+      <span data-t="remindOn"></span>
+    </label>
+    <div class="row remind-when">
+      <label for="remindDays" data-t="remindDays"></label>
+      <input type="number" id="remindDays" min="0" max="30" step="1" inputmode="numeric">
+      <label for="remindHour" data-t="remindHour"></label>
+      <input type="number" id="remindHour" min="0" max="23" step="1" inputmode="numeric">
+    </div>
+    <p class="note" id="remindSays"></p>
+    <!-- Il permesso si chiede da qui e da nessun altro posto: chiesto all'avvio, un «no» chiude
+         la porta per sempre e dall'app non si riapre. -->
+    <div class="row" id="remindAskRow" hidden>
+      <button type="button" id="remindAsk" data-t="remindAsk"></button>
+    </div>
+    <p class="note" id="remindState"></p>
+    <div class="row">
+      <button type="submit" id="remindSave" class="primary" data-t="remindSave"></button>
+      <button type="button" id="remindCancel" data-t="cancelProject"></button>
+    </div>
+  </form>
+</dialog>
+
 <dialog id="keysDialog">
   <h2 data-t="keysTitle"></h2>
   <div id="keysList"></div>

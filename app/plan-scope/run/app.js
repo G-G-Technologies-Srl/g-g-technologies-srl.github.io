@@ -40,8 +40,9 @@ import * as theme from "gg/theme.js";
 import * as io from "gg/io.js";
 import { setup as setupInstall, isInstalled, system } from "gg/install.js";
 import * as update from "gg/update.js";
+import * as remind from "gg/remind.js";
 import { t, tf, num, otherLang, setLang, resolveLang, missingKeys } from "./i18n.js";
-import { el, node, button, fill, applyText, snack, hideSnack, longDate, bytes, ask } from "./ui.js";
+import { el, node, button, fill, applyText, snack, hideSnack, shortDate, longDate, bytes, ask } from "./ui.js";
 
 // Ten megabytes. Not a technical limit — IndexedDB would take far more — but the point at which one
 // image starts to be the reason a whole project cannot be exported, and the person who pasted it
@@ -1167,6 +1168,134 @@ function _badge() {
   if (call && call.catch) call.catch(() => {});
 }
 
+// -----------------------------------------------------------------------------------------------------------------
+//  i   p r o m e m o r i a
+// -----------------------------------------------------------------------------------------------------------------
+
+// Tre strati, e `gg/remind.js` spiega perché sono tre. Qui c'è quello che solo questa app sa: quali
+// sono le sue scadenze, e come si dicono in una riga.
+
+/** Il registro del worker, tenuto da parte: `periodicSync` si registra su quello. */
+let worker = null;
+
+/** Le impostazioni stanno coi dati e non con questo browser: chi esporta se le porta dietro. */
+async function _remindSettings() {
+  if (!db.available()) return remind.clean(remind.DEFAULT);
+  return remind.clean(await db.meta("remind", remind.DEFAULT));
+}
+
+/** Quanto manca, detto come lo direbbe una persona: «oggi», «domani», «fra 5 giorni». */
+function _remindWhen(date, today) {
+  const away = model.daysBetween(today, date);
+  if (away === null) return "";
+  if (away < 0) return t("remindWhenLate");
+  if (away === 0) return t("remindWhenToday");
+  if (away === 1) return t("remindWhenTomorrow");
+  return tf("remindWhenDays", { n: num(away, 0) });
+}
+
+/**
+ * Il digest: le scadenze con il momento già calcolato e la frase già scritta.
+ *
+ * Lo rifà l'app a ogni cambiamento, perché è l'app ad avere il modello e la lingua; il service
+ * worker, quando il browser lo sveglia, trova una lista pronta e confronta due date. Il dimostrativo
+ * resta fuori: le sue scadenze sono inventate, e una sveglia per una fiera che non esiste sarebbe
+ * la prima cosa che l'esempio fa di male.
+ */
+async function _remindDigest() {
+  if (demoMode || !db.available()) return null;
+  const settings = await _remindSettings();
+  const today = model.todayISO();
+  const items = [];
+  for (const project of model.liveProjects()) {
+    for (const task of model.tasksOf(project.id)) {
+      if (!task.end || model.isDone(task)) continue;
+      items.push({
+        id: task.uid || task.id,
+        date: task.end,
+        text: tf("remindOne", { title: task.title || t("taskUntitled"), when: _remindWhen(task.end, today) }),
+      });
+    }
+  }
+  const before = await remind.kept(remind.notes(db.DB));
+  const saved = remind.digest(items, settings, {
+    heading: t("remindHeading"),
+    said: before && before.said ? before.said : [],
+  });
+  await remind.keep(remind.notes(db.DB), saved);
+  return saved;
+}
+
+/**
+ * Quello che è maturato mentre l'app era chiusa, detto all'apertura e una volta sola.
+ *
+ * È lo strato che non manca mai: niente permessi, nessuna API che esista solo su un browser. Parla
+ * solo quando si apre l'app — ma quando si apre, parla.
+ */
+async function _remindOnOpen() {
+  const saved = await _remindDigest();
+  const due = remind.ripe(saved, {});
+  if (!due.length) return;
+  const first = due[0].text;
+  const text = due.length === 1 ? first : tf("remindMore", { first, n: num(due.length - 1, 0) });
+  snack(text, { action: t("remindSee"), onAction: () => _openHome() });
+  await remind.keep(remind.notes(db.DB), { ...saved, said: [...saved.said, ...due.map((one) => one.key)] });
+}
+
+/** Le due righe che cambiano mentre si tocca il modulo: cosa succederà, e cosa il browser permette. */
+function _remindPaint() {
+  const settings = remind.clean({
+    on: el("remindOn").checked,
+    days: el("remindDays").value,
+    hour: el("remindHour").value,
+  });
+
+  // Una scadenza d'esempio fra una settimana, con le date vere: è il modo più corto di far vedere
+  // cosa vuol dire «due giorni prima alle otto» senza spiegarlo a parole.
+  const example = model.addDays(model.todayISO(), 7);
+  const at = remind.when(example, settings);
+  const hour = `${settings.hour}:00`;
+  const when = settings.days
+    ? tf("remindSaysDay", { date: shortDate(model.addDays(example, -settings.days)), hour })
+    : tf("remindSaysSame", { hour });
+  el("remindSays").textContent = settings.on && at
+    ? tf("remindSays", { date: shortDate(example), when })
+    : t("remindOff");
+
+  const state = remind.state();
+  el("remindAskRow").hidden = !(settings.on && state === "ask");
+  el("remindState").textContent = !settings.on ? ""
+    : t(state === "no" ? "remindStateNo"
+      : state === "denied" ? "remindStateDenied"
+        : state === "ask" ? "remindStateAsk"
+          : remind.wakes(worker) ? "remindStateYes" : "remindStateSleeps");
+}
+
+async function _openRemind() {
+  const settings = await _remindSettings();
+  el("remindOn").checked = settings.on;
+  el("remindDays").value = String(settings.days);
+  el("remindHour").value = String(settings.hour);
+  _remindPaint();
+  el("remindDialog").showModal();
+}
+
+async function _saveRemind() {
+  const settings = remind.clean({
+    on: el("remindOn").checked,
+    days: el("remindDays").value,
+    hour: el("remindHour").value,
+  });
+  if (db.available()) await db.setMeta("remind", settings);
+  // Il risveglio si chiede solo se serve e solo se è permesso, e si disdice appena non serve: una
+  // registrazione che resta in piedi dopo uno spegnimento è un'app che si sveglia per tacere.
+  if (settings.on && remind.state() === "yes") await remind.watch(worker, { hours: 12 });
+  else await remind.stop(worker);
+  await _remindDigest();
+  el("remindDialog").close();
+  snack(t("saveSaved"));
+}
+
 /** Repaint whichever screen is up, after a change that could have touched it. */
 async function _repaint() {
   _badge();
@@ -1638,6 +1767,18 @@ function _wire() {
     await importing.receive(file);
   });
   el("backupAll").addEventListener("click", _backup);
+  el("openRemind").addEventListener("click", () => _openRemind());
+  el("remindForm").addEventListener("submit", (event) => { event.preventDefault(); _saveRemind(); });
+  el("remindCancel").addEventListener("click", () => el("remindDialog").close());
+  for (const id of ["remindOn", "remindDays", "remindHour"]) {
+    el(id).addEventListener("input", () => _remindPaint());
+    el(id).addEventListener("change", () => _remindPaint());
+  }
+  // Il permesso si chiede da qui, cioè da un clic su un pulsante che dice cosa sta per succedere.
+  el("remindAsk").addEventListener("click", async () => {
+    await remind.askPermission();
+    _remindPaint();
+  });
   el("openTrash").addEventListener("click", () => _openTrash());
   el("trashBack").addEventListener("click", () => _openHome());
   el("trashPurge").addEventListener("click", () => {
@@ -1685,7 +1826,11 @@ function _wire() {
   el("exportHtml").addEventListener("click", () => outputs.exportPageHtml(pageId));
   el("planHtml").addEventListener("click", () => outputs.exportBoardHtml(projectId));
   el("planCsv").addEventListener("click", () => outputs.exportCsv(projectId));
-  el("planIcs").addEventListener("click", () => outputs.exportIcs(projectId));
+  el("planIcs").addEventListener("click", async () => {
+    const alarm = await _remindSettings();
+    outputs.exportIcs(projectId, { alarm });
+    if (alarm.on) snack(t("icsAlarm"));
+  });
   el("copyPage").addEventListener("click", () => outputs.copyFor("page", { pageId }));
   el("planCopy").addEventListener("click", () => outputs.copyFor("plan", { projectId }));
   el("planPaste").addEventListener("click", () => _openPaste());
@@ -2125,7 +2270,11 @@ function _wire() {
   // The two that actually arrive on a phone. `beforeunload` alone does not, which is why the
   // promise about losing nothing rests on these.
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") db.flush();
+    if (document.visibilityState !== "hidden") return;
+    db.flush();
+    // E il digest, qui e non a ogni ridisegno: deve essere fresco nel momento in cui l'app smette
+    // di guardare, che è l'unico in cui qualcun altro lo leggerà.
+    _remindDigest();
   });
   window.addEventListener("pagehide", () => db.flush());
 }
@@ -2531,6 +2680,7 @@ async function _boot() {
 
   // The library registers the worker, watches for a newer version and shows the line at the foot
   // when one is waiting; offline is a bonus, never a need, so a failure here is a `null`.
+  // Il registro serve ai promemoria — `periodicSync` si registra su quello — quindi si tiene.
   update.setup({
     badge: el("appVersion"),
     texts: {
@@ -2545,6 +2695,11 @@ async function _boot() {
 
       upToDate: (v) => t("versionUpToDate").replace("{version}", v),
     },
+  }).then((registration) => {
+    worker = registration;
+    // Il riepilogo dopo il registro, così la riga sullo stato sa già se questo browser sveglia
+    // l'app da solo; e mai nel dimostrativo, dove le scadenze sono inventate.
+    if (!demoMode) _remindOnOpen();
   });
 }
 

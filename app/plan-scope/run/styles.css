@@ -1157,6 +1157,14 @@ input.when-field.late { color: var(--late); }
 
 .check-line { display: flex !important; align-items: center; gap: 8px; }
 
+/* «Giorni prima [2] alle ore [8]» deve leggersi come una frase, quindi le due caselle sono larghe
+   quanto il numero che contengono e non quanto la riga. */
+.remind-when { align-items: center; gap: 10px; flex-wrap: wrap; }
+.remind-when label { flex: none; font-size: 13px; color: var(--muted); }
+.remind-when input { flex: none; width: 76px; }
+#remindForm { display: grid; gap: 12px; }
+#remindSays { color: var(--accent-text); }
+
 .check-line input { width: auto; }
 
 .card-foot { margin-top: 18px; }

@@ -251,4 +251,28 @@ test("nella vCard il punto e virgola si protegge, e le righe lunghe si spezzano 
   assert.equal(rimessa, lungo, "il nome si ricompone intero, senza caratteri rotti");
 });
 
+// -----------------------------------------------------------------------------------------------------------------
+//  i l   p r o m e m o r i a   d e n t r o   i l   f i l e
+// -----------------------------------------------------------------------------------------------------------------
+
+// È l'unico strato dei tre che arriva su un iPhone e ad app disinstallata, quindi è quello che
+// merita una prova: a suonare è il calendario di chi ha importato, e noi ci mettiamo solo le righe.
+test("acceso, ogni evento del calendario porta la sua sveglia", () => {
+  const text = ics.calendar([{ uid: "t1", title: "Mandare in stampa", date: "2026-10-09" }],
+    { now: NOW, alarm: { on: true, days: 1, hour: 9 } });
+  assert.ok(text.includes("BEGIN:VALARM"));
+  assert.ok(text.includes("TRIGGER:-PT900M"), "un giorno prima alle nove sono quindici ore");
+  // La sveglia sta dentro l'evento: fuori, un calendario la ignora o rifiuta il file.
+  assert.ok(text.indexOf("BEGIN:VALARM") > text.indexOf("BEGIN:VEVENT"));
+  assert.ok(text.indexOf("END:VALARM") < text.indexOf("END:VEVENT"));
+});
+
+test("spento, il file è quello di prima riga per riga", () => {
+  const senza = ics.calendar([{ uid: "t1", title: "x", date: "2026-10-09" }], { now: NOW });
+  const spento = ics.calendar([{ uid: "t1", title: "x", date: "2026-10-09" }],
+    { now: NOW, alarm: { on: false, days: 1, hour: 9 } });
+  assert.equal(spento, senza, "chi non li vuole non deve trovarsi niente in più nel calendario");
+  assert.ok(!senza.includes("VALARM"));
+});
+
 console.log(`exchange: ${passed} prove passate`);

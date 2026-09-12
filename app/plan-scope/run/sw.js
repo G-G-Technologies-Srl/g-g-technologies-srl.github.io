@@ -12,8 +12,17 @@
 //    running app means changing the code while somebody has unsaved keystrokes in a page, and
 //    saving them one reload is not worth that.
 
-const VERSION = '4.14.0';
+const VERSION = '4.15.1';
 const CACHE = `plan-scope-v${VERSION}`;
+
+// La cache dei promemoria, e **l'unica che sopravvive a un aggiornamento**. Il nome non porta la
+// versione apposta: dentro c'è il digest che `gg/remind.js` scrive dalla pagina — le scadenze con
+// il momento in cui vanno dette, già calcolato — e buttarlo a ogni versione nuova spegnerebbe le
+// sveglie proprio nel giorno in cui l'app cambia, senza che nessuno l'abbia chiesto. Il nome deve
+// restare `<chiave dell'app>-remind`: lo stesso che `remind.notes()` costruisce dall'altra parte,
+// e `check_apps.py` controlla che i due dicano la stessa cosa.
+const NOTES = 'plan-scope-remind';
+const DIGEST = './gg-digest';
 
 // Every file the app is made of. Kept by hand and checked by _src/check_apps.py against the
 // directory listing, rather than generated: a checked list keeps the served file identical to the
@@ -73,6 +82,7 @@ const ASSETS = [
   '../../_lib/dom.js',
   '../../_lib/plan-pack.js',
   '../../_lib/plan-model.js',
+  '../../_lib/remind.js',
 ];
 
 self.addEventListener('install', (event) => {
@@ -82,7 +92,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((names) => Promise.all(
-      names.filter((name) => name !== CACHE).map((name) => caches.delete(name)),
+      names.filter((name) => name !== CACHE && name !== NOTES).map((name) => caches.delete(name)),
     )),
   );
 });
@@ -120,4 +130,65 @@ self.addEventListener('message', (event) => {
   const type = event.data && event.data.type;
   if (type === 'gg:version' && event.ports && event.ports[0]) event.ports[0].postMessage(VERSION);
   if (type === 'gg:skip-waiting') self.skipWaiting();
+});
+
+// ---- i promemoria ------------------------------------------------------------------------------
+//
+// **Questo worker non sa cos'è una scadenza.** La pagina gli lascia una lista di `{ key, when,
+// text }` con il momento già calcolato e la frase già scritta nella lingua giusta; qui si
+// confrontano due stringhe ISO e si segna cosa è stato detto. Nessun modello, nessun database,
+// nessuna traduzione: le tre cose che, in un file che gira mentre nessuno guarda, non si possono
+// né provare né vedere fallire.
+//
+// `periodicsync` esiste su Chromium e con l'app installata, e la frequenza la decide il browser.
+// Dove non c'è, la pagina dice le stesse cose all'apertura: è il motivo per cui questo blocco può
+// essere così piccolo e non deve promettere niente.
+
+async function announce() {
+  const cache = await caches.open(NOTES);
+  const hit = await cache.match(new Request(DIGEST));
+  if (!hit) return;
+
+  const saved = await hit.json();
+  if (!saved || !saved.on) return;
+
+  const now = new Date().toISOString();
+  const said = new Set(saved.said || []);
+  const due = (saved.items || []).filter((one) => one.when <= now && !said.has(one.key));
+  if (!due.length) return;
+
+  // Una notifica sola, anche per cinque scadenze: cinque avvisi impilati sono cinque cose da
+  // togliere di mezzo, e chi li toglie non legge la quinta.
+  const body = due.length === 1
+    ? due[0].text
+    : due.slice(0, 3).map((one) => one.text).join('\n');
+  await self.registration.showNotification(saved.heading || 'Plan Scope', {
+    body,
+    tag: 'gg:due',
+    icon: './icon-192.png',
+    badge: './icon-192.png',
+    data: { count: due.length },
+  });
+
+  for (const one of due) said.add(one.key);
+  await cache.put(new Request(DIGEST), new Response(JSON.stringify({ ...saved, said: [...said] }),
+    { headers: { 'Content-Type': 'application/json' } }));
+}
+
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'gg:due') event.waitUntil(announce());
+});
+
+// Un clic sulla notifica apre l'app se è chiusa, e porta in primo piano quella che c'è già: due
+// finestre della stessa app aperte da un avviso sono un avviso che ha fatto danno.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil((async () => {
+    const open = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of open) {
+      if (client.url.includes('/app/plan-scope/run/') && 'focus' in client) return client.focus();
+    }
+    if (self.clients.openWindow) return self.clients.openWindow('./');
+    return undefined;
+  })());
 });

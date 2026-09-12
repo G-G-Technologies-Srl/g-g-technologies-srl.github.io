@@ -12,7 +12,15 @@
 // computer. `UID` is the task's stable identity, so importing the same file twice updates the
 // event in calendars that honour it instead of adding a twin.
 //
+// **Il promemoria viaggia dentro il file.** Un `VALARM` accanto all'evento è l'unico modo che
+// un'app senza server ha di far suonare qualcosa a telefono spento: a suonare è il calendario di
+// chi ha importato, alle nove, anche su un iPhone e anche se l'app non viene più aperta. Le righe
+// le scrive `gg/remind.js`, che sa il conto — «il giorno prima alle nove» sono quindici ore prima
+// di un evento che comincia a mezzanotte, non ventiquattro.
+//
 // Pure: strings in, strings out, and it runs in Node for the tests.
+
+import * as remind from "gg/remind.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -86,7 +94,8 @@ function _fold(line) {
  * One event: `{ uid, title, date, end, description }`. `end` is the last day, inclusive, and
  * defaults to `date`; a task with a start and an end spans the days between.
  */
-export function event({ uid, title, date, end = null, description = "" }, { now = new Date() } = {}) {
+export function event({ uid, title, date, end = null, description = "" },
+  { now = new Date(), alarm = null } = {}) {
   const last = end && end >= date ? end : date;
   return [
     "BEGIN:VEVENT",
@@ -96,12 +105,14 @@ export function event({ uid, title, date, end = null, description = "" }, { now 
     `DTEND;VALUE=DATE:${_day(_dayAfter(last))}`,
     `SUMMARY:${_escape(title)}`,
     ...(description ? [`DESCRIPTION:${_escape(description)}`] : []),
+    // La sveglia sta **dentro** l'evento e prima della sua fine, che è dove la specifica la vuole.
+    ...(alarm && alarm.on ? remind.alarm(alarm, title) : []),
     "END:VEVENT",
   ];
 }
 
 /** A whole calendar file out of a list of events, CRLF line endings and folding included. */
-export function calendar(events, { now = new Date(), name = "" } = {}) {
+export function calendar(events, { now = new Date(), name = "", alarm = null } = {}) {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
@@ -110,7 +121,7 @@ export function calendar(events, { now = new Date(), name = "" } = {}) {
     "METHOD:PUBLISH",
     ...(name ? [`X-WR-CALNAME:${_escape(name)}`] : []),
   ];
-  for (const one of events) lines.push(...event(one, { now }));
+  for (const one of events) lines.push(...event(one, { now, alarm }));
   lines.push("END:VCALENDAR");
   return `${lines.map(_fold).join("\r\n")}\r\n`;
 }

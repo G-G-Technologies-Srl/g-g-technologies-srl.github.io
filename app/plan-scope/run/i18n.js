@@ -791,6 +791,42 @@ const IT = {
   ln_listen: "Raccogliere le prime reazioni",
   ln_fix: "Correggere quello che è emerso",
 
+  // I promemoria. Il dialogo dice tutti e tre gli strati invece di promettere «notifiche»: chi
+  // legge deve poter capire prima, e non dopo, dove la sveglia arriva e dove no.
+  remindTitle: "Promemoria",
+  remindLead: "Quando una scadenza si avvicina, l'app te lo ricorda in tre modi — e quale funziona "
+    + "dipende da dove sei.",
+  remindOn: "Ricordami le scadenze",
+  remindDays: "Giorni prima",
+  remindHour: "alle ore",
+  remindSave: "Salva",
+  remindAsk: "Permetti le notifiche",
+  remindSays: "Una scadenza del {date} te la ricordo {when}.",
+  remindSaysDay: "il {date} alle {hour}",
+  remindSaysSame: "lo stesso giorno alle {hour}",
+  remindOff: "Spenti. Le scadenze restano nel calendario dell'app e sull'icona.",
+  // I tre stati della notifica di sistema, detti come stanno.
+  remindStateNo: "Questo browser non mostra notifiche: restano il calendario che esporti e il "
+    + "riepilogo all'apertura.",
+  remindStateAsk: "Le notifiche di sistema sono da permettere. Senza, restano il calendario che "
+    + "esporti e il riepilogo all'apertura.",
+  remindStateYes: "Notifiche permesse. Con l'app installata su Chrome o Edge arrivano anche a "
+    + "finestra chiusa, quando il browser sveglia l'app — non a un orario preciso.",
+  remindStateDenied: "Notifiche negate a questo sito. Si riattivano dalle impostazioni del "
+    + "browser, non da qui. Restano il calendario che esporti e il riepilogo all'apertura.",
+  remindStateSleeps: "Notifiche permesse. Questo browser però non sveglia l'app da solo: le vedrai "
+    + "aprendola, e nel calendario che esporti.",
+  // Il riepilogo all'apertura, e la notifica: la stessa frase nei due posti.
+  remindHeading: "Scadenze",
+  remindOne: "{title} — {when}",
+  remindMore: "{first} e altre {n}",
+  remindWhenToday: "oggi",
+  remindWhenTomorrow: "domani",
+  remindWhenLate: "in ritardo",
+  remindWhenDays: "fra {n} giorni",
+  remindSee: "Vedi",
+  icsAlarm: "Con il promemoria dentro: lo farà suonare il tuo calendario.",
+
   demoName: "Fiera di settembre",
   demoBadge: "Esempio",
   demoStrip: "Questo è un progetto d'esempio: tocca tutto, cambia, cancella. Quando hai finito, buttalo.",
@@ -1653,6 +1689,38 @@ const EN = {
   ln_watch: "Watch what happens",
   ln_listen: "Gather the first reactions",
   ln_fix: "Fix what came up",
+
+  remindTitle: "Reminders",
+  remindLead: "When a deadline comes close the app reminds you in three ways — and which one works "
+    + "depends on where you are.",
+  remindOn: "Remind me about deadlines",
+  remindDays: "Days before",
+  remindHour: "at",
+  remindSave: "Save",
+  remindAsk: "Allow notifications",
+  remindSays: "A deadline on {date} is announced {when}.",
+  remindSaysDay: "on {date} at {hour}",
+  remindSaysSame: "the same day at {hour}",
+  remindOff: "Off. Deadlines still show in the calendar you export and on the icon.",
+  remindStateNo: "This browser shows no notifications: the calendar you export and the summary on "
+    + "opening remain.",
+  remindStateAsk: "System notifications need your permission. Without it, the calendar you export "
+    + "and the summary on opening remain.",
+  remindStateYes: "Notifications allowed. With the app installed on Chrome or Edge they also "
+    + "arrive with the window closed, when the browser wakes the app — not at an exact time.",
+  remindStateDenied: "Notifications are blocked for this site. They are turned back on in the "
+    + "browser's settings, not here. The calendar you export and the summary on opening remain.",
+  remindStateSleeps: "Notifications allowed. This browser does not wake the app on its own, "
+    + "though: you will see them when you open it, and in the calendar you export.",
+  remindHeading: "Deadlines",
+  remindOne: "{title} — {when}",
+  remindMore: "{first} and {n} more",
+  remindWhenToday: "today",
+  remindWhenTomorrow: "tomorrow",
+  remindWhenLate: "late",
+  remindWhenDays: "in {n} days",
+  remindSee: "See",
+  icsAlarm: "With the reminder inside: your own calendar will sound it.",
 
   demoName: "September trade fair",
   demoBadge: "Example",

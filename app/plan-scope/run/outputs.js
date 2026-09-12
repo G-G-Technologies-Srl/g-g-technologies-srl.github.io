@@ -136,8 +136,14 @@ export function exportContactsVcf() {
   pack.save(`${pack.safeName(t("rubricaTitle"), "rubrica")}.vcf`, text, "text/vcard;charset=utf-8");
 }
 
-/** Every dated task of the project as a calendar file, plus the event itself. */
-export function exportIcs(projectId) {
+/**
+ * Every dated task of the project as a calendar file, plus the event itself.
+ *
+ * Con il promemoria dentro, se è acceso: `alarm` sono le impostazioni di `gg/remind.js`, e da qui
+ * in poi a suonare è il calendario di chi ha importato — alle nove, ad app chiusa, anche su un
+ * telefono dove niente di quello che scriviamo noi potrebbe mai svegliarsi.
+ */
+export function exportIcs(projectId, { alarm = null } = {}) {
   const project = model.project(projectId);
   if (!project) return;
   const events = model.tasksOf(projectId)
@@ -148,7 +154,7 @@ export function exportIcs(projectId) {
       date: project.eventDate });
   }
   if (!events.length) return snack(t("icsNone"));
-  const text = ics.calendar(events, { name: project.name || t("projectUntitled") });
+  const text = ics.calendar(events, { name: project.name || t("projectUntitled"), alarm });
   return pack.save(ics.fileName(project.name), text, "text/calendar;charset=utf-8");
 }
 
