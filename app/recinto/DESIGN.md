@@ -11,9 +11,8 @@ export e import, anagrafica — stanno in `app/CLAUDE.md` e valgono qui senza es
 passa i controlli del catalogo**: sette app, quarantotto pagine, `check_apps.py` e `check_site.py`
 verdi, e axe non trova violazioni su nessuna delle quattro schermate in nessuno dei due temi.
 
-Restano due cose, e nessuna delle due si fa da qui: **provarlo su un telefono vero** — le prove
-sono girate tutte in Chromium senza testa, cioè con un mouse che finge di essere un dito — e **la
-taratura**, che vuole qualcuno che ci giochi.
+Resta **la taratura**, che vuole qualcuno che ci giochi, e una prova su un telefono vero: quelle
+qui sono girate tutte in Chromium senza testa, cioè con un mouse che finge di essere un dito.
 
 | | |
 |---|---|
@@ -524,6 +523,139 @@ paga da sé.
 
 ---
 
+## Il campo si gira, non si stira
+
+Su un telefono in verticale un campo 4:3 diventava una striscia di 360×270 dentro un riquadro di
+360×564: **il quarantotto per cento** dello spazio disponibile, e due fasce nere. Per un gioco
+progettato per il dito era la cosa che stonava di più.
+
+La tentazione è far riempire il campo alla finestra. Non si fa, e non è pignoleria: le misure del
+campo sono quelle su cui la classifica confronta partite diverse — un monitor largo darebbe più
+spazio di manovra di un telefono, e le percentuali confronterebbero giochi diversi.
+
+Ma **stirare e ruotare non sono la stessa cosa.** Una rotazione è un'isometria: stesse aree, stesse
+distanze, stessi angoli. Girato di novanta gradi è lo **stesso identico gioco**, tenuto di traverso.
+Quindi su una finestra più alta che larga il renderer gira il campo, e:
+
+| | prima | adesso |
+|---|---|---|
+| campo su un telefono 360×740 | 360×270 | **360×480** |
+| spazio usato | 48% | 85% |
+
+**E non se ne accorge una riga di `game.js`.** La rotazione vive nella trasformazione del renderer,
+che `input.js` percorre già all'indietro per sapere dove è stato toccato: un solo posto, in due
+direzioni. Il mondo resta quello di sempre, le prove non cambiano di una virgola, e la classifica
+confronta ancora partite identiche.
+
+Ne segue una cosa sola, e va fatta: **i comandi girano con lo schermo.** «Giù» premuto è giù
+guardato, non giù nel campo — la conversione sta in `input.js`, l'unico posto che conosce sia lo
+schermo sia il mondo.
+
+L'invito a girare il telefono, scritto il giorno prima, è stato tolto: adesso in verticale si gioca,
+e il manifesto torna a non avere preferenze sull'orientamento.
+
+---
+
+## Camminare o tagliare: la domanda era sbagliata
+
+Col mouse, cliccando la parete opposta per chiudere il recinto, il marcatore faceva **il giro del
+perimetro**. La regola guardava una cosa sola — «il bersaglio è vicino a un muro?» — ed era la
+risposta corretta alla domanda sbagliata. La domanda è: *da dove sono in piedi, quel punto lo
+raggiungo prima girando o tagliando?*
+
+Tre casi, in ordine, e fra il secondo e il terzo non c'è nessuna soglia inventata:
+
+1. il bersaglio è sul bordo **e** ci si arriva in pochi passi → si cammina, anche se girare
+   l'angolo passerebbe per un pezzetto di campo: è un riposizionamento;
+2. il taglio può partire → si taglia. Se una linea può uscire verso quel punto, è quello che chi la
+   traccia voleva;
+3. il taglio non può nemmeno cominciare → si cammina, quanto serve. È il bersaglio **sulla stessa
+   parete su cui si è in piedi**: di là non si taglia, e non c'è altro da volere.
+
+**E la seconda metà dello stesso difetto**, che si è vista solo provando: cliccando tre pixel prima
+del bordo si mira a un'unità dal muro, il marcatore ci si ferma davanti — perché è lì che gli è
+stato detto di andare — e la Miccia gli mangia la linea mentre aspetta. Mirare vicino a un muro
+vuol dire **quel muro**: il bersaglio si appoggia sul bordo, e il recinto si chiude.
+
+La decisione sta in `geometry.js` e non in `input.js`, così si prova sotto Node: sono otto righe di
+prova e sono il difetto che tornerebbe per primo.
+
+---
+
+## Il telefono in verticale, misurato
+
+A 360 px la pagina **scorreva di lato**: 529 px di contenuto in 360 di finestra, con «High scores»
+e i tre interruttori tagliati fuori dallo schermo. Non si vede a larghezza da scrivania, e nessuna
+delle prove precedenti l'aveva mai chiesto.
+
+La correzione è due righe, ma la prima versione ne ha introdotta un'altra: comprimendo tutto su una
+riga sola i bottoni scendevano a **40 px**, sotto la soglia difesa in ogni altro punto dell'app e
+proprio sullo schermo dove il dito è l'unico puntatore. Ora la barra va **a due righe**: quaranta
+pixel di altezza in più, e li vale — un comando che si manca non è un comando.
+
+**Quello che il CSS non risolve** è che un campo 4:3 dentro uno schermo verticale resta un terzo
+dell'altezza. Le misure del campo non si toccano, perché è su quelle che la classifica confronta
+partite diverse: quindi il manifesto dichiara `landscape` e l'app, in verticale su uno schermo
+basso, chiede di girare il telefono.
+
+---
+
+## Far vedere quello che brucia
+
+Due cose che il giocatore non vedeva, e in un gioco dove si muore per quelle due cose.
+
+**La Scintilla era un puntino di tre pixel appoggiato sopra la linea del bordo** — cioè sopra la
+cosa più luminosa dello schermo. Il contrasto col campo era ottimo (7,5) e non si vedeva lo stesso,
+perché competeva con un muro acceso: un difetto che nessuna misura di contrasto trova, perché non è
+un problema di contrasto. Adesso ha tre cose che il puntino non aveva: una **scia** che dice da che
+parte sta arrivando, un **cuore bianco** che non è del colore di nient'altro sullo schermo, e dei
+**raggi** che rompono la linea invece di starci sopra.
+
+**La Miccia era una linea spenta con un pallino arancione in cima.** Diceva «qui», e quello che
+serve dire è «*qui sta bruciando*». Ora la testa ha tre strati dal freddo al caldo, un alone che
+pulsa, e delle faville che saltano via; la parte già mangiata resta leggibile — è l'informazione
+«quanta corda ti resta» — ma sottile, perché è cenere e non linea.
+
+**Il tremolio è deterministico**, e non è pignoleria: dipende da quanto la Miccia ha bruciato e da
+dove la Scintilla si trova, non da `Math.random`. Così il disegno resta **una funzione del mondo** —
+lo stesso mondo torna a disegnare lo stesso fotogramma, e lo screenshot della scheda resta identico
+a ogni build. Con il caso vero la fiamma sarebbe stata più facile e quella proprietà sarebbe sparita.
+
+La scia delle Scintille vive nel renderer e non nel mondo, di proposito: è decorazione, non regola,
+e una cosa che non decide niente non deve finire in un salvataggio né in un test.
+
+---
+
+## Il riquadro della versione, e una domanda senza risposta
+
+La registrazione del service worker scritta a mano è stata buttata: `gg/update.js` la fa meglio —
+aspetta sullo **stato** e non solo sull'evento `load`, che è esattamente l'errore che avevo fatto —
+e in più dice quello che il worker taceva: che c'è una versione nuova, e che si prende premendo.
+
+Poi il riquadro sotto il nome dell'app è rimasto **vuoto e visibile**. `gg/update.js` chiede la
+versione **al worker**, su un canale, perché la versione vive in `sw.js` e in nessun altro posto —
+e il mio `sw.js` non rispondeva a quella domanda. Nessun errore da nessuna parte: una domanda senza
+risposta non è un'eccezione, è solo un bottone che non dice niente.
+
+---
+
+## Le prove esistono, e adesso qualcuno le lancia
+
+`check_apps.py` controlla ventiquattro cose e nessuna di queste era «le tre suite passano». Ora c'è
+un lanciatore che le esegue tutte, per tutte le app, e la prima volta che è girato ha detto una cosa
+che nessuno sapeva: **32 suite su 68 non partivano nemmeno.** Importano la libreria condivisa come
+`gg/…`, che nel browser risolve la import map e in Node non risolve niente.
+
+Insegnata quella mappa a Node — venti righe fra gli attrezzi, non un `node_modules` in fondo al
+repository, che è precisamente quello che questo catalogo ha scelto di non avere — ne passano
+**51 su 62**. Le undici che restano sono tutte di un'altra app e vogliono un IndexedDB finto: è
+lavoro di quella, e non si scrive di nascosto.
+
+Il lanciatore ha un tetto **per suite** e non per l'insieme, dopo che una prova ferma ad aspettare
+qualcosa che non sarebbe mai arrivato ha bloccato tutte quelle dopo di lei.
+
+---
+
 ## I contrasti si misurano, e misurandoli è saltato fuori il difetto peggiore
 
 La tavolozza era stata scelta a occhio. Misurata con le soglie di WCAG — 4,5 per il testo, 3 per
@@ -540,6 +672,10 @@ più importante che questo gioco disegna:
 non avesse una vista perfetta su un buon monitor — cioè il dato principale del gioco, quello che
 tutta la geometria esatta esiste per calcolare. Alzarlo cambia l'aspetto del gioco, e va bene così:
 adesso quale metà è tua si legge a colpo d'occhio.
+
+Il primo tentativo prendeva il colore più vicino all'originale che passasse il 3:1, e usciva un blu
+squillante. **Il minimo di contrasto non obbliga al massimo di colore**: a parità di luminanza la
+tinta si può dimezzare, e il risultato è lo stesso 3,02 con metà del chiasso.
 
 Il bordo dei bottoni ha portato con sé una distinzione che mancava: **`--line` e `--control` sono
 due ruoli, non due sfumature.** Il primo separa e può essere discreto; il secondo disegna il

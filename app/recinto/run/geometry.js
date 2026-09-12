@@ -250,6 +250,46 @@ export function walkRing(ring) {
   return _subdivide(ring.concat([ring[0]])).slice(0, -1);
 }
 
+// Camminare o tagliare, deciso una volta sola e in un posto che si può provare sotto Node.
+//
+// La prima versione guardava solo se il bersaglio era **vicino a una parete**, e con quella regola
+// cliccare la parete opposta per chiudere il taglio faceva camminare il marcatore tutto intorno al
+// perimetro. Era la risposta letterale alla domanda sbagliata: la domanda non è «quel punto è su un
+// muro», è **«da dove sono, quel punto lo raggiungo prima girando o tagliando?»**.
+//
+// Tre casi, in ordine, e nessuna soglia inventata fra il secondo e il terzo:
+//
+//  1. il bersaglio è sul bordo **e** ci si arriva con pochi passi → si cammina: è un
+//     riposizionamento, anche quando girare un angolo passerebbe per un pezzetto di campo;
+//  2. il taglio può partire → si taglia. Se una linea può uscire verso quel punto, è quello che
+//     chi la traccia voleva;
+//  3. il taglio non può nemmeno cominciare → si cammina, quanto serve. È il caso del bersaglio
+//     **sulla stessa parete su cui si è in piedi**: di là non si taglia, e non c'è altro da volere.
+export function aimAt(face, from, target, { band = 4, stroll = 48, walking = true } = {}) {
+  const near = nearestOnBoundary(face, target);
+  const atWall = Boolean(near) && near.distance <= band;
+
+  if (walking && atWall) {
+    const walk = walkTo(face, from, near.at);
+    if (walk && walk.length > 1 && walk.length <= stroll) return { kind: "walk", path: walk };
+  }
+
+  // **Mirare vicino a un muro vuol dire quel muro.** Senza questa riga, puntare tre pixel prima del
+  // bordo manda il marcatore a un passo dal chiudere: si ferma lì, perché è lì che gli è stato
+  // detto di andare, e la Miccia gli mangia la linea mentre aspetta. Il giocatore però stava
+  // chiudendo il recinto, e il recinto si chiude sul muro.
+  const aim = atWall ? near.at : target;
+
+  const cut = pathTo(face, from, aim);
+  if (cut.length > 1) return { kind: "cut", path: cut };
+
+  if (near) {
+    const walk = walkTo(face, from, near.at);
+    if (walk && walk.length > 1) return { kind: "walk", path: walk };
+  }
+  return { kind: "cut", path: cut };
+}
+
 // Where on the outline a loose point lands, how far away it was, and **which wall it was**. The
 // first two turn a finger pressed near a wall into a place the marker can stand; the third is what
 // a Filo needs in order to bounce off that wall rather than off a guess.

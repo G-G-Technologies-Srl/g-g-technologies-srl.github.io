@@ -70,7 +70,7 @@ const IT = {
   soundOff: "Suono spento",
   fieldLabel: "Campo di gioco. {quota} per cento conquistato su {goal}, {lives} vite, "
     + "livello {level}.",
-  rotateHint: "Gira il telefono: il campo è più largo che alto.",
+  versionOf: "Versione dell'app",
   versionLabel: "v{version}",
   versionNext: "v{current} → {next}",
   versionNextUnknown: "v{current} → nuova",
@@ -170,7 +170,7 @@ const EN = {
   soundOff: "Sound off",
   fieldLabel: "Playing field. {quota} per cent claimed out of {goal}, {lives} lives, "
     + "level {level}.",
-  rotateHint: "Turn your phone: the field is wider than it is tall.",
+  versionOf: "App version",
   versionLabel: "v{version}",
   versionNext: "v{current} → {next}",
   versionNextUnknown: "v{current} → new",

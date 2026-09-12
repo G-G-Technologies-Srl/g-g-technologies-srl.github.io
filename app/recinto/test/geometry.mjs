@@ -20,7 +20,7 @@
 
 import { ringArea2, area2, contains, split,
          meet, chainMeets, selfCrosses, onBoundary, pathTo,
-         walkTo, nearestOnBoundary, canStep, wallsAt } from "../run/geometry.js";
+         walkTo, nearestOnBoundary, canStep, wallsAt, aimAt } from "../run/geometry.js";
 
 let failures = 0;
 
@@ -357,6 +357,43 @@ equal("dal bordo esterno a un'isola non si cammina", walkTo(atoll(), [0, 24], [1
   let refused = false;
   try { split(touching, chain); } catch (error) { refused = /two walls touch/.test(error.message); }
   check("e se qualcuno ci prova lo stesso, `split` si rifiuta invece di cucire male", refused);
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  c a m m i n a r e   o   t a g l i a r e
+// -----------------------------------------------------------------------------------------------------------------
+
+// Il difetto: cliccando la parete **opposta** per chiudere il taglio, il marcatore faceva il giro
+// del perimetro. La regola guardava solo se il bersaglio fosse vicino a un muro — risposta corretta
+// a una domanda sbagliata. La domanda è da dove si è in piedi, non dov'è il bersaglio.
+{
+  const kind = (from, to) => aimAt(field(), from, to).kind;
+
+  equal("la parete opposta si raggiunge tagliando", kind([32, 0], [32, 48]), "cut");
+  equal("da parete a parete, idem", kind([0, 24], [64, 24]), "cut");
+  equal("un punto in mezzo al campo, idem", kind([32, 0], [32, 24]), "cut");
+
+  equal("due passi più in là sulla stessa parete si cammina", kind([32, 0], [40, 0]), "walk");
+  equal("e anche molto più in là, perché di lì non si taglia", kind([32, 0], [4, 0]), "walk");
+
+  // L'angolo: appena girato c'è già campo aperto in mezzo, quindi tecnicamente un taglio si
+  // potrebbe fare. Con pochi passi vince il camminare, che è quello che uno intende.
+  const wedge = aimAt(field(), [4, 0], [0, 4]);
+  equal("girare l'angolo di due passi è camminare", wedge.kind, "walk");
+
+  // Chiudere mirando **vicino** al muro e non esattamente sopra: con un mouse è quello che succede
+  // sempre, e fermarsi a un passo dal chiudere vuol dire restare lì con la Miccia accesa.
+  {
+    const shy = aimAt(field(), [32, 0], [32, 46], { walking: false });
+    const end = shy.path[shy.path.length - 1];
+    check("mirando due unità prima del muro, il taglio arriva al muro",
+          onBoundary(field(), end), `finito in ${end}`);
+    equal("e ci arriva proprio lì sotto", String(end), String([32, 48]));
+  }
+
+  const far = aimAt(field(), [32, 0], [0, 20]);
+  equal("ma su un'altra parete, lontano, è tagliare", far.kind, "cut");
+  check("e il taglio arriva davvero sul bordo", onBoundary(field(), far.path[far.path.length - 1]));
 }
 
 // -----------------------------------------------------------------------------------------------------------------

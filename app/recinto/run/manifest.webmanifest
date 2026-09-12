@@ -8,7 +8,7 @@
   "start_url": "/app/recinto/run/",
   "scope": "/app/recinto/run/",
   "display": "standalone",
-  "orientation": "landscape",
+  "orientation": "any",
   "theme_color": "#0d1220",
   "background_color": "#0d1220",
   "categories": ["games", "entertainment"],

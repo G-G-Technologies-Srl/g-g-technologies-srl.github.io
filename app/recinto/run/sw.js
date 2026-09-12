@@ -12,7 +12,7 @@
 //    prossimo avvio. Scambiare i file sotto un'app che sta girando vuol dire cambiare il codice a
 //    qualcuno che è a metà partita.
 
-const VERSION = '0.3.0';
+const VERSION = '0.8.0';
 const CACHE = `recinto-v${VERSION}`;
 
 // Ogni file di cui l'app è fatta, più i moduli condivisi che prende in prestito. Tenuto a mano e
@@ -75,7 +75,17 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Un aggiornamento si prende quando lo chiede la pagina, mai di iniziativa del worker.
+// Le due cose che la pagina chiede, e sono le uniche.
+//
+// `gg:version` è quella che avevo dimenticato: `gg/update.js` chiede la versione **al worker** e non
+// alla pagina, perché la versione vive qui e in nessun altro posto. Senza risposta il riquadro sotto
+// il nome dell'app resta vuoto — un bottone visibile che non dice niente — e nessun errore lo
+// segnala, perché una domanda senza risposta non è un'eccezione.
+//
+// `gg:skip-waiting` è lo scambio, e arriva solo se qualcuno preme. Mai di iniziativa del worker:
+// cambiare i file sotto un'app che sta girando vuol dire cambiare il codice a chi è a metà partita.
 self.addEventListener('message', (event) => {
-  if (event.data === 'gg-skip-waiting') self.skipWaiting();
+  const type = event.data && event.data.type;
+  if (type === 'gg:version' && event.ports && event.ports[0]) event.ports[0].postMessage(VERSION);
+  if (type === 'gg:skip-waiting') self.skipWaiting();
 });

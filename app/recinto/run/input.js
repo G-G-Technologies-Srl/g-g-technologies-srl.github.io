@@ -16,10 +16,10 @@
 // before anything is committed.
 
 import { NO_INTENT } from "./game.js";
-import { pathTo, walkTo, nearestOnBoundary, contains, onBoundary } from "./geometry.js";
-import { toLattice } from "./render.js";
+import { aimAt, contains, onBoundary } from "./geometry.js";
+import { toLattice, view } from "./render.js";
 
-const BAND = 3;              // lattice units off the wall that still count as «on the wall»
+const BAND = 4;              // lattice units off the wall that still count as «on the wall»
 const THUMB = 44;            // CSS pixels the aim sits above a finger, so the hand is not on it
 
 const KEYS = {
@@ -39,7 +39,10 @@ let slowly = false;
 //  s e t u p
 // -----------------------------------------------------------------------------------------------------------------
 
+let field = null;
+
 export function setup(canvas) {
+  field = canvas;
   window.addEventListener("keydown", (event) => {
     const key = KEYS[event.code];
     if (!key) return;
@@ -99,24 +102,25 @@ export function plan(world, to = null) {
   const face = _faceOf(world);
   if (!face) return null;
 
-  const from = world.marker.at;
-  if (!world.cut) {
-    const near = nearestOnBoundary(face, where);
-    if (near && near.distance <= BAND) {
-      const path = walkTo(face, from, near.at);
-      if (path && path.length > 1) return { kind: "walk", path };
-    }
-  }
-  return { kind: "cut", path: pathTo(face, from, where) };
+  // Con la linea già fuori non c'è niente da scegliere fra camminare e tagliare — si taglia — ma la
+  // fascia lungo il muro serve lo stesso, e serve proprio adesso: è chiudendo che si mira al bordo.
+  return aimAt(face, world.marker.at, where, { band: BAND, walking: !world.cut });
+}
+
+// Col campo girato, «giù» sullo schermo non è «giù» nel campo. Il giocatore preme quello che vede,
+// quindi la direzione si gira qui — nell'unico posto che conosce sia lo schermo sia il mondo.
+function _asSeen(dx, dy) {
+  if (!field || !view(field).turned) return { dx, dy };
+  return { dx: dy, dy: -dx };
 }
 
 export function read(world) {
   if (byKeyboard) {
-    return {
-      dx: (held.has("right") ? 1 : 0) - (held.has("left") ? 1 : 0),
-      dy: (held.has("down") ? 1 : 0) - (held.has("up") ? 1 : 0),
-      slow: slowly || held.has("slow"),
-    };
+    const seen = _asSeen(
+      (held.has("right") ? 1 : 0) - (held.has("left") ? 1 : 0),
+      (held.has("down") ? 1 : 0) - (held.has("up") ? 1 : 0),
+    );
+    return { dx: seen.dx, dy: seen.dy, slow: slowly || held.has("slow") };
   }
   const route = plan(world, target);
   if (!route || route.path.length < 2) return NO_INTENT;
