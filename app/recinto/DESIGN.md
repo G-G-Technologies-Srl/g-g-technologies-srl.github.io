@@ -7,9 +7,13 @@ vincolo (gira tutto nel browser, non manda niente da nessuna parte), stessa form
 Questo file è il progetto, non il codice. Le regole del catalogo — due lingue, due temi, PWA,
 export e import, anagrafica — stanno in `app/CLAUDE.md` e valgono qui senza essere ripetute.
 
-**Stato.** Tutti e nove i passi. **L'app è completa e passa i controlli del catalogo**: sette app,
-quarantotto pagine, `check_apps.py` e `check_site.py` verdi. Resta la taratura con le mani sopra,
-che è l'unica cosa che nessuno strumento può fare al posto di qualcuno che ci gioca.
+**Stato.** Tutti e nove i passi, più il giro di accessibilità e la pausa. **L'app è completa e
+passa i controlli del catalogo**: sette app, quarantotto pagine, `check_apps.py` e `check_site.py`
+verdi, e axe non trova violazioni su nessuna delle quattro schermate in nessuno dei due temi.
+
+Restano due cose, e nessuna delle due si fa da qui: **provarlo su un telefono vero** — le prove
+sono girate tutte in Chromium senza testa, cioè con un mouse che finge di essere un dito — e **la
+taratura**, che vuole qualcuno che ci giochi.
 
 | | |
 |---|---|
@@ -517,6 +521,63 @@ paga da sé.
 
 **`check_site.py` va tenuto lontano da `run/`.** L'esclusione si scrive una volta sola, in
 `_pages()`. La barra di condivisione sta sulla scheda, non dentro l'app.
+
+---
+
+## I contrasti si misurano, e misurandoli è saltato fuori il difetto peggiore
+
+La tavolozza era stata scelta a occhio. Misurata con le soglie di WCAG — 4,5 per il testo, 3 per
+tutto ciò che porta informazione senza essere testo — sono cadute tre coppie, e la prima è la cosa
+più importante che questo gioco disegna:
+
+| | prima | adesso |
+|---|---|---|
+| **conquistato contro campo aperto** | **1,23** | 3,01 |
+| linea già bruciata dalla Miccia | 2,27 | 3,02 |
+| bordo di un bottone | 1,35 | 3,02 |
+
+**A 1,23 la distinzione fra «questo pezzo è tuo» e «questo no» era quasi invisibile** per chiunque
+non avesse una vista perfetta su un buon monitor — cioè il dato principale del gioco, quello che
+tutta la geometria esatta esiste per calcolare. Alzarlo cambia l'aspetto del gioco, e va bene così:
+adesso quale metà è tua si legge a colpo d'occhio.
+
+Il bordo dei bottoni ha portato con sé una distinzione che mancava: **`--line` e `--control` sono
+due ruoli, non due sfumature.** Il primo separa e può essere discreto; il secondo disegna il
+contorno di una cosa che si preme e deve arrivare a 3. Fonderli vuol dire o separatori pesanti o
+bottoni senza contorno.
+
+**E axe non avrebbe visto niente di tutto questo**, perché sono pixel dentro un canvas. Zero
+violazioni automatiche e un difetto grave nello stesso schermo: gli strumenti dicono dove guardare,
+non cosa è importante.
+
+### Il resto del giro
+
+- **Il fuoco da tastiera si vede**, con due anelli — uno chiaro e uno scuro — così non sparisce né
+  sul chip né sul campo. Il gioco è giocabile da tastiera per progetto, e senza indicatore non si
+  sa su quale bottone si è.
+- **Il campo racconta sé stesso.** Per un lettore di schermo un canvas è un rettangolo muto:
+  adesso porta una descrizione — percentuale, vite, livello — riscritta **solo quando cambia**,
+  perché riscriverla a ogni fotogramma vorrebbe dire una voce che parla centoventi volte al secondo.
+  Accanto c'è una regione viva e gentile che dice le morti e i livelli chiusi.
+- **Il campo prende il fuoco con Tab**, perché un comando che si usa e non si raggiunge con la
+  tastiera, per qualcuno, non esiste.
+
+---
+
+## Il gioco si ferma quando smetti di guardarlo
+
+Tre buchi trovati rileggendo, e sono tutti e tre lo stesso buco: **momenti in cui si muore per
+qualcosa che non è una mossa del giocatore.**
+
+- Non c'era la **pausa**. Le stringhe erano nel dizionario dal primo giorno e non le usava nessuno.
+- Cambiando scheda con la linea fuori si tornava morti. Il tetto sul tempo accumulato impedisce che
+  al ritorno venga eseguito mezzo minuto in un colpo solo, ma non impedisce questo. **Una telefonata
+  non è una mossa**, quindi `visibilitychange` mette in pausa.
+- **Aprire la classifica uccideva.** Si leggeva la tabella e intanto la Miccia mangiava la linea.
+  Ora aprirla mette in pausa e chiuderla riprende.
+
+In pausa il tempo accumulato si butta: ripartire non deve mai voler dire recuperare i secondi
+passati a leggere.
 
 ---
 

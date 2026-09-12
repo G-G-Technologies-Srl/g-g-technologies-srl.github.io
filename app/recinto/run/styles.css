@@ -1,17 +1,28 @@
 /* Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0 */
 
 /* Il renderer non conosce nessun colore: li legge da qui. Due temi sono quindi una ripintura, non
-   una seconda tavolozza da tenere allineata a mano. Al passo 8 questi token si agganciano a
-   `_lib/base.css`, che è dove vivono quelli del sito. */
+   una seconda tavolozza da tenere allineata a mano.
+
+   I contrasti sono **misurati**, non scelti a occhio, e le soglie sono quelle di WCAG: 4,5 per il
+   testo, 3 per tutto ciò che porta informazione senza essere testo. Misurandoli è saltata fuori la
+   cosa peggiore di tutta l'app: il terreno conquistato stava a 1,23 contro il campo aperto — cioè
+   la distinzione più importante del gioco, «questo pezzo è tuo», era quasi invisibile per chiunque
+   non avesse una vista perfetta su un buon monitor. Adesso sta sopra 3.
+
+   `--line` e `--control` sono due ruoli e non due sfumature: il primo separa e può essere discreto,
+   il secondo disegna il bordo di una cosa che si preme e deve raggiungere 3. Fonderli vorrebbe dire
+   o separatori pesanti o bottoni senza contorno. */
 
 :root {
   --outside: #05070b;
-  --claimed: #12233a;
+  --claimed: #476081;      /* 3,02 sul campo aperto: si vede quale metà è tua.
+                              Il contrasto è il minimo che serve; la **tinta** è scesa a metà,
+                              perché il minimo di contrasto non obbliga al massimo di colore. */
   --open: #0a0d14;
   --wall: #2c4361;
   --edge: #5ad1ff;
   --cut: #ffcf5c;
-  --burnt: #5a4a2e;
+  --burnt: #6f5c39;        /* 3,02: quanta corda hai già perso resta leggibile */
   --fuse: #ff9f45;
   --spark: #b48cff;
   --marker: #ffffff;
@@ -22,19 +33,20 @@
   --ink: #dce6f2;
   --muted: #7b8ea6;
   --chip: #131c28;
-  --line: #24334a;
+  --line: #24334a;         /* separa, e basta: non porta informazione */
+  --control: #496896;      /* 3,02 sul chip: il bordo di una cosa che si preme */
   color-scheme: dark light;
 }
 
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
     --outside: #e9edf3;
-    --claimed: #c9dcee;
+    --claimed: #7a98b6;
     --open: #ffffff;
     --wall: #9db1c6;
     --edge: #0a6ea8;
     --cut: #a86200;
-    --burnt: #cdbfa8;
+    --burnt: #a9916a;
     --fuse: #c24a00;
     --spark: #5b32b0;
     --marker: #0d141d;
@@ -46,6 +58,7 @@
     --muted: #5b6b7d;
     --chip: #ffffff;
     --line: #d3dbe4;
+    --control: #8097b1;
   }
 }
 
@@ -147,7 +160,7 @@ canvas {
 button {
   min-height: 44px;            /* il pollice non è un puntatore */
   padding: 0 16px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--control);
   border-radius: 8px;
   background: var(--chip);
   color: var(--ink);
@@ -200,7 +213,7 @@ dialog td:nth-child(4), dialog th:nth-child(4) { text-align: right; font-variant
 input[type="text"] {
   min-height: 44px;
   padding: 0 12px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--control);
   border-radius: 8px;
   background: var(--page);
   color: var(--ink);
@@ -216,3 +229,77 @@ input[type="text"] {
 }
 
 .hint[hidden] { display: none; }
+
+/* Il fuoco da tastiera si vede, e si vede **sopra** qualunque sfondo: due anelli, uno chiaro e uno
+   scuro, così l'indicatore non sparisce né sul chip né sul campo. Chi gioca solo da tastiera senza
+   questo non sa su quale bottone si trova, e il gioco è giocabile da tastiera per progetto. */
+
+:focus-visible {
+  outline: 2px solid var(--edge);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--page);
+}
+
+canvas:focus-visible { outline-offset: -4px; }
+
+/* Quello che i lettori di schermo devono sentire e nessuno deve vedere. Non `display: none`, che lo
+   toglierebbe anche a loro. */
+.only-spoken {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* -----------------------------------------------------------------------------------------------
+   Il telefono in verticale.
+
+   Misurato a 360px: la pagina scorreva di lato — 529px di contenuto in 360 di finestra — e «High
+   scores» con i tre interruttori finiva tagliato fuori dallo schermo. Sotto i 560px la barra
+   cambia forma invece di traboccare: i riquadri si stringono, gli interruttori diventano icone, e
+   niente esce dai bordi.
+
+   Resta la tensione che non si risolve col CSS: un campo 4:3 dentro uno schermo verticale si
+   riduce a un terzo dell'altezza, e le misure del campo non si toccano perché è su quelle che la
+   classifica confronta partite diverse. Lì la risposta è girare il telefono, e l'app lo chiede.
+   ----------------------------------------------------------------------------------------------- */
+
+@media (max-width: 560px) {
+  .bar { gap: 5px; padding: 7px 8px; flex-wrap: nowrap; }
+  .hud-item { padding: 4px 7px; min-width: 0; }
+  .hud-item b { font-size: 16px; }
+  .hud-item small { font-size: 10px; }
+
+  /* Il nome dell'arena è la prima cosa che si può perdere: il livello lo dice il numero accanto. */
+  #hudArena { display: none; }
+
+  /* Gli interruttori diventano quello che sono: icone. La parola resta per chi legge con la voce. */
+  #langButton, #scoresButton { font-size: 0; min-width: 40px; padding: 0 8px; }
+  #langButton::after { content: "文"; font-size: 15px; }
+  #scoresButton::after { content: "▤"; font-size: 15px; }
+  .bar button { min-width: 40px; padding: 0 9px; }
+
+  footer.bar { flex-wrap: wrap; }
+  footer.bar button { flex: 1 1 30%; font-size: 14px; }
+}
+
+/* Girare il telefono. Compare **solo** in verticale su uno schermo basso, cioè quando il campo
+   diventa davvero una striscia — su un tablet in verticale c'è spazio e non serve dirlo. */
+#rotate { display: none; }
+
+@media (orientation: portrait) and (max-height: 900px) and (max-width: 620px) {
+  #rotate {
+    display: block;
+    margin: 0;
+    padding: 7px 12px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    border-bottom: 1px solid var(--line);
+  }
+}

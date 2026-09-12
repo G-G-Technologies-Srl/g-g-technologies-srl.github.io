@@ -54,6 +54,7 @@
     <span class="hud-item"><b id="hudLives">3</b><small data-t="hudLives">vite</small></span>
     <span class="hud-item"><b id="hudLevel">1</b><small id="hudArena">rettangolo</small></span>
     <span class="spacer"></span>
+    <button type="button" class="gg-version" id="appVersion"></button>
     <button type="button" id="installButton" data-t="installLabel" hidden>Installa</button>
     <button type="button" id="scoresButton" data-t="scoresTitle">Classifica</button>
     <button type="button" id="soundButton" aria-pressed="true" data-t-label="soundOn">♪</button>
@@ -61,8 +62,15 @@
     <button type="button" id="langButton" data-t="langLabel">English</button>
   </header>
 
+  <p id="rotate" data-t="rotateHint">Gira il telefono: il campo è più largo che alto.</p>
+
   <main class="field">
-    <canvas id="field"></canvas>
+    <!-- Per un lettore di schermo un canvas è un rettangolo muto. `role="img"` più una
+         descrizione che si aggiorna gli danno almeno lo stato; il campo prende il fuoco perché il
+         gioco si gioca da tastiera, e un elemento che si comanda e non si può raggiungere con Tab
+         è un comando che per qualcuno non esiste. -->
+    <canvas id="field" tabindex="0" role="img" aria-label="Campo di gioco"></canvas>
+    <p id="spoken" class="only-spoken" role="status" aria-live="polite"></p>
 
     <section class="screen" id="titleScreen">
       <h1>Recinto</h1>
@@ -83,6 +91,12 @@
       <p data-t="howScintille"></p>
       <p data-t="howCapture"></p>
       <button type="button" id="howBack" data-t="start">Start</button>
+    </section>
+
+    <section class="screen" id="pauseScreen" hidden>
+      <h2 data-t="pause">Pausa</h2>
+      <button type="button" id="resumeButton" data-t="resume">Riprendi</button>
+      <button type="button" id="quitButton" data-t="quit">Abbandona</button>
     </section>
 
     <section class="screen" id="endScreen" hidden>
@@ -131,6 +145,7 @@
     <button type="button" id="strokeButton" aria-pressed="false">
       <span data-t="slowStroke">Tratto lento</span> <b data-t="slowDouble">×2</b>
     </button>
+    <button type="button" id="pauseButton" data-t="pause">Pausa</button>
     <button type="button" id="againButton" data-t="again">Ricomincia</button>
   </footer>
 

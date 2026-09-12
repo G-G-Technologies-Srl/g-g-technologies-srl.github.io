@@ -26,6 +26,7 @@ import * as scores from "./scores.js";
 import { el } from "gg/dom.js";
 import { download, restore } from "gg/io.js";
 import { setup as setupInstall } from "gg/install.js";
+import * as update from "gg/update.js";
 import { apply as applyTheme, initial as initialTheme, toggle as toggleTheme } from "gg/theme.js";
 import { t, tf, lang, setLang, resolveLang, otherLang } from "./i18n.js";
 
@@ -57,31 +58,51 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => rend
 
 scores.connect().then((handle) => { db = handle; });
 
-// Il service worker si registra e basta: niente `skipWaiting` di iniziativa della pagina, niente
-// ricarica automatica. Un aggiornamento arriva al prossimo avvio, e scambiare i file sotto
-// qualcuno che è a metà partita è esattamente la cosa da non fare in un gioco.
+// Il service worker, la versione sotto il nome dell'app, e la cosa di cui il worker taceva: che ce
+// n'è una più nuova che aspetta.
+//
+// Registrarlo a mano si può, e l'avevo fatto — sbagliando nello stesso punto in cui `gg/update.js`
+// dice di aver visto sbagliare tre app: dentro un `addEventListener("load", …)` che in un modulo
+// arriva quando `load` è già passato. Quel modulo aspetta sullo **stato** e non solo sull'evento, e
+// in più dice quello che al giocatore serve sapere: che c'è una versione nuova e che si prende
+// premendo, non a sorpresa mentre sta giocando.
 if ("serviceWorker" in navigator) {
-  // Aspettare `load` da dentro un modulo è una scommessa persa: i moduli girano dopo il documento,
-  // e su una pagina piccola come questa `load` è **già passato** quando si arriva qui. Il listener
-  // non scatta mai e il service worker non si registra, il che si vede solo provando a stare senza
-  // rete — cioè mai, finché non capita a qualcun altro.
-  const register = () => navigator.serviceWorker
-    .register("./sw.js")
-    .catch(() => { /* senza, l'app gira lo stesso */ });
-  if (document.readyState === "complete") register();
-  else window.addEventListener("load", register);
+  update.setup({
+    badge: el("appVersion"),
+    texts: {
+      version: (v) => tf("versionLabel", { version: v }),
+      next: (current, v) => (v ? tf("versionNext", { current, next: v })
+                               : tf("versionNextUnknown", { current })),
+      update: (v) => (v ? tf("versionUpdate", { next: v }) : t("versionUpdateUnknown")),
+      reload: () => t("versionReload"),
+      upToDate: (v) => tf("versionUpToDate", { version: v }),
+    },
+  });
 }
 
 setupInstall(el("installButton"), el("installHint"),
   { storageKey: "gg.recinto.install-dismissed", iosText: t("installIos") });
 
 el("coinButton").addEventListener("click", _coin);
-el("scoresButton").addEventListener("click", _openScores);
+// Leggere la classifica non è una mossa: aprirla mette in pausa, perché altrimenti si muore mentre
+// si legge — e si muore per qualcosa che non si stava nemmeno guardando.
+el("scoresButton").addEventListener("click", () => { _pause(true); _openScores(); });
 el("scoresClose").addEventListener("click", () => el("scoresDialog").close());
+el("scoresDialog").addEventListener("close", () => { if (screen === "paused") _pause(false); });
 el("exportButton").addEventListener("click", _export);
 el("importButton").addEventListener("click", () => el("importFile").click());
 el("importFile").addEventListener("change", _import);
 el("nameForm").addEventListener("submit", _sign);
+el("pauseButton").addEventListener("click", () => _pause(screen !== "paused"));
+el("resumeButton").addEventListener("click", () => _pause(false));
+el("quitButton").addEventListener("click", () => { world = null; _demo(); _show("title"); });
+
+// **Il gioco si ferma quando smetti di guardarlo.** Il tetto sul tempo accumulato impedisce che al
+// ritorno venga eseguito mezzo minuto in un colpo solo, ma non impedisce la cosa peggiore: passi ad
+// un'altra scheda con la linea fuori, e torni morto. Una telefonata non è una mossa del giocatore.
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && screen === "playing") _pause(true);
+});
 el("howButton").addEventListener("click", () => _show("how"));
 el("howBack").addEventListener("click", _coin);
 el("againButton").addEventListener("click", () => { world = null; _demo(); _show("title"); });
@@ -109,8 +130,12 @@ el("langButton").addEventListener("click", () => {
 });
 
 window.addEventListener("keydown", (event) => {
+  if (event.code === "Escape" || event.code === "KeyP") {
+    if (screen === "playing" || screen === "paused") { event.preventDefault(); _pause(screen === "playing"); }
+    return;
+  }
   if (event.code !== "Enter" && event.code !== "Space") return;
-  if (screen !== "playing") { event.preventDefault(); _coin(); }
+  if (screen !== "playing" && screen !== "paused") { event.preventDefault(); _coin(); }
 });
 
 canvas.addEventListener("pointerdown", () => {
@@ -136,6 +161,7 @@ function _coin() {
   pool = 0;
   if (db) scores.addStats(db, { games: 1, coins: 1 });
   _show("playing");
+  el("field").focus();
 }
 
 function _next() {
@@ -153,12 +179,43 @@ function _demo() {
   demo = { world: create(1, seed), brain: mind(seed * 7 + 1) };
 }
 
+// Un cabinato, dopo trenta secondi che nessuno lo tocca, tornava all'attrazione. È anche il motivo
+// per cui quella schermata esiste: uno schermo di «partita finita» che resta lì per un'ora non
+// invita nessuno.
+const IDLE = 30000;
+let idleAt = 0;
+
+function _idle(now) {
+  if (screen !== "over" && screen !== "cleared") { idleAt = 0; return; }
+  if (el("scoresDialog").open || !el("nameForm").hidden) { idleAt = now; return; }
+  if (!idleAt) { idleAt = now; return; }
+  if (now - idleAt < IDLE) return;
+  world = null;
+  _demo();
+  _show("title");
+}
+
 function _show(next) {
+  idleAt = 0;
   screen = next;
   el("titleScreen").hidden = next !== "title";
   el("howScreen").hidden = next !== "how";
+  el("pauseScreen").hidden = next !== "paused";
   el("endScreen").hidden = next !== "cleared" && next !== "over";
   el("strokeButton").disabled = next !== "playing";
+  el("pauseButton").disabled = next !== "playing" && next !== "paused";
+}
+
+// In pausa il mondo non avanza e il tempo accumulato si butta: ripartire non deve mai voler dire
+// recuperare i secondi passati a leggere.
+function _pause(on) {
+  if (!world || world.over || world.cleared) return;
+  if (on && screen !== "playing") return;
+  if (!on && screen !== "paused") return;
+  pool = 0;
+  input.clearTarget();
+  _show(on ? "paused" : "playing");
+  if (!on) el("field").focus();
 }
 
 function _fit() {
@@ -176,6 +233,8 @@ function _frame(now) {
   const showing = world || (demo && demo.world);
   if (!showing) return;
 
+  if (screen === "paused") { pool = 0; render.draw(canvas, showing, {}); return; }
+
   let guard = 0;
   while (pool >= STEP && guard < 240) {
     if (world) _live();
@@ -189,6 +248,7 @@ function _frame(now) {
     fuse: fuseAt(showing),
   });
   _numbers(showing);
+  _idle(now);
 }
 
 function _live() {
@@ -196,9 +256,9 @@ function _live() {
   for (const event of world.events) {
     if (event.kind === "claim") audio.play(event.caught ? "capture" : "claim");
     if (event.kind === "separation") audio.play("separation");
-    if (event.kind === "death") { audio.play("death"); _why(event.cause); }
-    if (event.kind === "cleared") { audio.play("cleared"); _end("clearedTitle", "clearedHint"); }
-    if (event.kind === "over") { audio.play("over"); _end("overTitle", "overHint"); _ask(); }
+    if (event.kind === "death") { audio.play("death"); _why(event.cause); _say(el("endWhy").textContent); }
+    if (event.kind === "cleared") { audio.play("cleared"); _end("clearedTitle", "clearedHint"); _say(t("clearedTitle")); }
+    if (event.kind === "over") { audio.play("over"); _end("overTitle", "overHint"); _say(t("overTitle")); _ask(); }
   }
 }
 
@@ -299,6 +359,28 @@ function _note(line) {
   el("ioNote").hidden = false;
 }
 
+// Quello che il canvas racconta a chi non lo vede, riscritto **solo quando cambia**. Riscriverlo a
+// ogni fotogramma vorrebbe dire un lettore di schermo che parla centoventi volte al secondo.
+let described = "";
+
+function _describe(shown) {
+  const line = tf("fieldLabel", {
+    quota: Math.floor(progress(shown) * 100),
+    goal: Math.round(quota(shown) * 100),
+    lives: Math.max(0, shown.lives),
+    level: shown.level,
+  });
+  if (line === described) return;
+  described = line;
+  el("field").setAttribute("aria-label", line);
+}
+
+// E quello che va **detto** quando succede, invece che mostrato. Una regione viva e gentile: si
+// intromette fra una frase e l'altra, non a metà parola.
+function _say(line) {
+  el("spoken").textContent = line;
+}
+
 function _numbers(shown) {
   el("hudQuota").textContent = `${Math.floor(progress(shown) * 100)}%`;
   el("hudGoal").textContent = `${Math.round(quota(shown) * 100)}%`;
@@ -306,6 +388,7 @@ function _numbers(shown) {
   el("hudLives").textContent = String(Math.max(0, shown.lives));
   el("hudLevel").textContent = String(shown.level);
   el("hudArena").textContent = t(`arena${shown.arena[0].toUpperCase()}${shown.arena.slice(1)}`);
+  _describe(shown);
 }
 
 // Ogni nodo che porta una chiave viene riscritto quando la lingua cambia. Scrivere il testo a mano

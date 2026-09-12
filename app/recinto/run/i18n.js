@@ -68,6 +68,16 @@ const IT = {
   themeLabel: "Tema",
   soundOn: "Suono acceso",
   soundOff: "Suono spento",
+  fieldLabel: "Campo di gioco. {quota} per cento conquistato su {goal}, {lives} vite, "
+    + "livello {level}.",
+  rotateHint: "Gira il telefono: il campo è più largo che alto.",
+  versionLabel: "v{version}",
+  versionNext: "v{current} → {next}",
+  versionNextUnknown: "v{current} → nuova",
+  versionUpdate: "Aggiorna alla versione {next}",
+  versionUpdateUnknown: "Aggiorna alla versione nuova",
+  versionReload: "Aggiornata: ricarica",
+  versionUpToDate: "v{version} · aggiornata",
   installLabel: "Installa",
   installIos: "Su iPhone e iPad si installa dal menu Condividi → «Aggiungi a Home».",
 
@@ -158,6 +168,16 @@ const EN = {
   themeLabel: "Theme",
   soundOn: "Sound on",
   soundOff: "Sound off",
+  fieldLabel: "Playing field. {quota} per cent claimed out of {goal}, {lives} lives, "
+    + "level {level}.",
+  rotateHint: "Turn your phone: the field is wider than it is tall.",
+  versionLabel: "v{version}",
+  versionNext: "v{current} → {next}",
+  versionNextUnknown: "v{current} → new",
+  versionUpdate: "Update to version {next}",
+  versionUpdateUnknown: "Update to the new version",
+  versionReload: "Updated: reload",
+  versionUpToDate: "v{version} · up to date",
   installLabel: "Install",
   installIos: "On iPhone and iPad, install it from the Share menu → «Add to Home Screen».",
 
