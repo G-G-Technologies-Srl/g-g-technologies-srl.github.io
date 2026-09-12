@@ -189,8 +189,8 @@ export function tasksOf(id) {
 }
 
 /** Un progetto nuovo, con il suo cliente. */
-export function create({ name, partyId = "", eventDate = null } = {}) {
-  const record = plan.createProject({ name, eventDate });
+export function create({ name, partyId = "" } = {}) {
+  const record = plan.createProject({ name });
   // `updateProject` restituisce il passo per «annulla», non il progetto: è il modello che offre
   // l'annullamento accanto a ogni modifica. Il record aggiornato si richiede.
   plan.updateProject(record.id, { partyId, docIds: [] });

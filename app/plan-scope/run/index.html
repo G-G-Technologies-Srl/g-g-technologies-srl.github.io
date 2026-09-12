@@ -144,8 +144,17 @@
       <form class="card form" id="newProjectForm" hidden>
         <label for="projectName" data-t="projectNameLabel"></label>
         <input type="text" id="projectName" maxlength="80" autocomplete="off">
-        <label for="projectDate" data-t="projectDateLabel"></label>
-        <input type="date" id="projectDate">
+        <!-- Una data, e come si chiama. Qui c'era «Data dell'evento», addosso a ogni progetto:
+             per una fiera voleva dire qualcosa, per un progetto di sviluppo o di documenti no. Il
+             nome lo scrive chi fa il progetto, e diventa una proprietà come le altre. -->
+        <span class="field-label" id="projectDateLabel"></span>
+        <div class="date-field">
+          <input type="text" id="projectDateKey" class="prop-key" maxlength="40" autocomplete="off"
+                 list="projectDateKeys" data-t-placeholder="projectDateKeyHint"
+                 data-t-label="projectDateKeyHint">
+          <input type="date" id="projectDate" data-t-label="projectDateHint">
+        </div>
+        <datalist id="projectDateKeys"></datalist>
         <!-- The templates, and they are the first thing this app can do for somebody who has never
              organised anything in it: a project that already knows what it is. -->
         <span class="field-label" id="templateLabel"></span>

@@ -138,7 +138,7 @@ export function fromTrello(board, { newId }) {
 
   return {
     project: {
-      id: projectId, name: String(board.name || "Trello"), eventDate: null, columns,
+      id: projectId, name: String(board.name || "Trello"), props: {}, dateKey: null, columns,
       favourite: false, exportedAt: null, created: stamp, updated: stamp, trashedAt: null,
     },
     pages,
@@ -245,7 +245,7 @@ export function fromNotion(entries, { newId, decode, columns, name = "Notion" })
 
   return {
     project: {
-      id: projectId, name, eventDate: null, columns: columnsOut, favourite: false, exportedAt: null,
+      id: projectId, name, props: {}, dateKey: null, columns: columnsOut, favourite: false, exportedAt: null,
       created: stamp, updated: stamp, trashedAt: null,
     },
     pages,

@@ -12,7 +12,7 @@
 // to be argued for rather than a thing to be added.
 
 import * as model from "gg/plan-model.js";
-import { glance, glanceOf, colorDot, editProps } from "./pages.js";
+import { glance, glanceOf, colorDot, editProps, addProp } from "./pages.js";
 import { t, tf, num } from "./i18n.js";
 import { el, node, button, fill, shortDate, longDate, bytes, tagHue } from "./ui.js";
 
@@ -51,10 +51,11 @@ function _dueLabel(iso, today) {
   return shortDate(iso);
 }
 
-/** The event, told as a distance rather than as a date: "fra 43 giorni" is what somebody asks. */
+/** La data, detta come distanza invece che come giorno: «fra 43 giorni» è quello che si chiede. */
 function _whenLabel(project, today) {
-  if (!project.eventDate) return t("projectNoDate");
-  const days = model.daysBetween(today, project.eventDate);
+  const when = model.projectDate(project);
+  if (!when) return t("projectNoDate");
+  const days = model.daysBetween(today, when.value);
   if (days === null) return t("projectNoDate");
   if (days === 0) return t("eventToday");
   if (days === 1) return t("eventTomorrow");
@@ -79,8 +80,11 @@ function _projectCard(project, today) {
   card.append(node("span", "project-card-name", project.name || t("projectUntitled")));
   if (project.demo) card.append(node("span", "badge example", t("demoBadge")));
 
+  // Il nome della data davanti al giorno: senza, «fra 12 giorni» lascia indovinare cosa succede
+  // fra dodici giorni, ed è proprio la cosa che «Data evento» dava per scontata su ogni progetto.
+  const dated = model.projectDate(project);
   const when = node("span", "project-card-when");
-  when.append(project.eventDate ? `${shortDate(project.eventDate)} · ${_whenLabel(project, today)}`
+  when.append(dated ? `${dated.key} · ${shortDate(dated.value)} · ${_whenLabel(project, today)}`
     : t("projectNoDate"));
   card.append(when);
 
@@ -275,17 +279,69 @@ export function connect(handlers) {
  * Pubblica perché la serve anche il «+»: aggiungere una riga la disegna, e quello che la disegna
  * deve essere una cosa sola o le due strade si allontanano al primo cambiamento.
  */
+/**
+ * Come si salvano gli attributi di un progetto, e come si marca la sua data.
+ *
+ * Sta in un posto solo perché i due gesti che li toccano sono due — ridisegnare le righe e
+ * aggiungerne una — e prima il secondo passava da una scorciatoia che salvava e basta: niente
+ * ridisegno, niente conto alla rovescia aggiornato, e una marcatura che poteva restare appesa a
+ * una chiave non più esistente.
+ */
+function _projectProps(id) {
+  const save = (props) => {
+    // Una chiave rinominata o cancellata lascerebbe la marcatura a puntare il vuoto: il conto alla
+    // rovescia sparirebbe senza che la stella lo dica. Si spegne insieme alla sua riga.
+    const before = model.project(id);
+    const key = before.dateKey && props[before.dateKey] !== undefined ? before.dateKey : null;
+    model.updateProject(id, { props, ...(key === before.dateKey ? {} : { dateKey: key }) });
+    fill(el("projectPropKeys"), model.projectPropKeys().map((name) => {
+      const option = document.createElement("option");
+      option.value = name;
+      return option;
+    }));
+    // Niente ridisegno qui: questo salvataggio arriva mentre si scrive, e rifare le righe
+    // toglierebbe il campo da sotto chi le sta scrivendo. Le stelle si aggiornano da sole, perché
+    // leggono `marked` ogni volta invece di ricordarselo.
+    _paintProjectWhen(id);
+    on.repaintHome();
+  };
+  const marking = {
+    marked: () => {
+      const now = model.project(id);
+      return (now && now.dateKey) || null;
+    },
+    onMark: (key) => {
+      model.markProjectDate(id, key);
+      paintProjectProps(id);
+      _paintProjectWhen(id);
+      on.repaintHome();
+    },
+  };
+  return { save, marking };
+}
+
 export function paintProjectProps(id) {
   const project = model.project(id);
   if (!project) return;
-  editProps(el("projectProps"), project.props || {}, (props) => {
-    model.updateProject(id, { props });
-    fill(el("projectPropKeys"), model.projectPropKeys().map((key) => {
-      const option = document.createElement("option");
-      option.value = key;
-      return option;
-    }));
-  });
+  const { save, marking } = _projectProps(id);
+  editProps(el("projectProps"), project.props || {}, save, marking);
+}
+
+/** Una riga nuova in fondo agli attributi del progetto, con la stella già al suo posto. */
+export function addProjectProp(id) {
+  if (!model.project(id)) return;
+  const { save, marking } = _projectProps(id);
+  addProp(el("projectProps"), save, marking);
+}
+
+/** La riga sotto il nome del progetto: quale data conta, quando cade, e fra quanto. */
+function _paintProjectWhen(id) {
+  const project = model.project(id);
+  if (!project) return;
+  const dated = model.projectDate(project);
+  el("projectWhen").textContent = dated
+    ? `${dated.key} · ${longDate(dated.value)} · ${_whenLabel(project, model.todayISO())}`
+    : t("projectNoDate");
 }
 
 export function paintHome(room) {
@@ -339,9 +395,7 @@ export function paintProject(id) {
     return option;
   }));
   paintProjectProps(id);
-  el("projectWhen").textContent = project.eventDate
-    ? `${longDate(project.eventDate)} · ${_whenLabel(project, today)}`
-    : t("projectNoDate");
+  _paintProjectWhen(id);
 
   const { done, total } = model.progressOf(id);
   const share = total ? done / total : 0;

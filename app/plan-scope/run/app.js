@@ -846,7 +846,7 @@ async function _chooseForFolder(found) {
       snack(tf("backupRestoreFail", { reason: t(outcome.reason) }));
       return undefined;
     }
-    model.hydrate(await db.loadAll());
+    await _hydrate();
     await _openHome();
     await backup.release();
     await _paintBackupSection();
@@ -874,7 +874,7 @@ async function _restoreCopy(name) {
     snack(tf("backupRestoreFail", { reason: t(outcome.reason) }));
     return;
   }
-  model.hydrate(await db.loadAll());
+  await _hydrate();
   await _openHome();
   snack(tf("backupRestoreDone", {
     records: num(outcome.restored, 0),
@@ -1118,6 +1118,19 @@ async function _emptyBin() {
   // distrutta per sempre. Una promessa di riservatezza vale finché vale anche qui.
   await _remindDigest();
   snack(t("purged"));
+}
+
+/**
+ * Il modello dal deposito, già normalizzato.
+ *
+ * La normalizzazione è una sola e vale la pena averla in un posto: i progetti fatti quando la data
+ * era un campo a parte la portano ancora lì, e qui diventa una proprietà marcata. Gira a ogni
+ * caricamento perché i caricamenti sono quattro — l'avvio, l'altra scheda, il ripristino da una
+ * copia, l'importazione — e tre su quattro possono far entrare record vecchi a app già aperta.
+ */
+async function _hydrate() {
+  model.hydrate(await db.loadAll());
+  model.migrateEventDates(t("propDateDefault"));
 }
 
 /** Ctrl+N: a new task, into the project on screen or the one chosen in the box. */
@@ -1676,6 +1689,13 @@ function _applyLanguage() {
   el("sourceToggle").textContent = source ? t("richView") : t("sourceView");
   el("blockMenuField").placeholder = t("menuFind");
   el("templateLabel").textContent = t("templateLabel");
+  el("projectDateLabel").textContent = t("projectDateLabel");
+  // I nomi di data già in uso, così il secondo progetto non reinventa la parola del primo.
+  fill(el("projectDateKeys"), model.projectDateNames().map((name) => {
+    const one = document.createElement("option");
+    one.value = name;
+    return one;
+  }));
   _applySoundLabel();
   if (!el("newProjectForm").hidden) _paintTemplates();
   // The card's labels, which are `<label for>` elements rather than buttons: `data-t` would do it,
@@ -1808,19 +1828,24 @@ function _wire() {
     event.preventDefault();
     const name = el("projectName").value.trim();
     if (!name) return el("projectName").focus();
-    const eventDate = el("projectDate").value || null;
+    // La data, se c'è, nasce già come proprietà: una chiave e un giorno. Senza nome ne prende uno
+    // neutro, perché una data senza etichetta è comunque meglio di una data persa.
+    const when = el("projectDate").value || null;
+    const dateKey = when ? (el("projectDateKey").value.trim() || t("propDateDefault")) : null;
     const project = model.createProject({
       name,
-      eventDate,
+      props: when ? { [dateKey]: when } : {},
+      dateKey,
       // The column names are the one thing the model cannot fill in for itself: it has no language,
       // and these are data from the moment the project exists.
       columns: _startingColumns(),
     });
     templates.build(templates.byKey(template), {
-      t, model, projectId: project.id, eventDate,
+      t, model, projectId: project.id, from: when,
     });
     el("projectName").value = "";
     el("projectDate").value = "";
+    el("projectDateKey").value = "";
     el("newProjectForm").hidden = true;
     _openProject(project.id);
   });
@@ -2043,7 +2068,7 @@ function _wire() {
   });
   el("projectPropAdd").addEventListener("click", () => {
     if (!projectId) return;
-    pages.addProp(el("projectProps"), (props) => model.updateProject(projectId, { props }));
+    home.addProjectProp(projectId);
   });
   el("openPages").addEventListener("click", () => _openPages(projectId));
   // The ring counts the tasks, so its door is the board; the deadlines are dates, so theirs is
@@ -2659,7 +2684,7 @@ async function _boot() {
   // some other project, which is exactly the kind of interruption nobody can explain afterwards.
   db.onOtherTabs(async () => {
     const before = pageId ? model.page(pageId) : null;
-    model.hydrate(await db.loadAll());
+    await _hydrate();
     if (view === "page" && pageId) {
       const after = model.page(pageId);
       if (!after || after.trashedAt) return _openHome();
@@ -2683,7 +2708,7 @@ async function _boot() {
 
 
   if (db.available()) {
-    model.hydrate(await db.loadAll());
+    await _hydrate();
     // The only place a record stops existing, and it runs here rather than on a timer: an app
     // nobody opens for a year should not spend that year deleting things.
     model.purge();

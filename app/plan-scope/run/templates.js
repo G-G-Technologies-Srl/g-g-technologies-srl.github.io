@@ -148,8 +148,9 @@ export function byKey(key) {
  * Pages first, so that a child page can be given the id of its parent; then the tasks, in the order
  * they are written above, which is also the order they will read on the board.
  */
-export function build(template, { t, model, projectId, eventDate = null }) {
-  const dated = (offset) => (eventDate && offset !== null ? model.addDays(eventDate, offset) : null);
+export function build(template, { t, model, projectId, from = null }) {
+  // `from` è la data del progetto, quando ce n'è una: i modelli contano i giorni a partire da lì.
+  const dated = (offset) => (from && offset !== null ? model.addDays(from, offset) : null);
 
   const add = (page, parentId) => {
     const made = model.createPage(projectId, {

@@ -338,14 +338,13 @@ export function canUndo() {
 //  p r o j e c t s
 // -----------------------------------------------------------------------------------------------------------------
 
-export function createProject({ name, eventDate = null, columns = null, tags = [], props = {} } = {}) {
+export function createProject({ name, columns = null, tags = [], props = {}, dateKey = null } = {}) {
   const stamp = _now();
   const id = _id();
   return _put("project", {
     id,
     uid: id,
     name: name || "",
-    eventDate: eventDate || null,
     // Le stesse etichette che hanno le pagine e le attività, un piano più su: servono a chi ha
     // dieci progetti e li tiene in testa per categoria — i clienti, gli interni, l'anno — e non
     // per nome. Viaggiano con il progetto, perché sono una cosa del progetto e non di chi guarda.
@@ -355,6 +354,13 @@ export function createProject({ name, eventDate = null, columns = null, tags = [
     // stanno nel record e non in un testo, perché un progetto non è un file — ma si scrivono con
     // lo stesso editore, e si leggono con le stesse regole.
     props: { ...(props || {}) },
+    // Quale delle proprietà è **la** data del progetto: la chiave, non il valore. Prima esisteva un
+    // campo `eventDate` a parte, e con lui la parola «evento» addosso a ogni progetto — che per un
+    // progetto di sviluppo o di documenti non vuol dire niente. Adesso la data sta fra gli
+    // attributi come le altre, si chiama come la chiami tu — «consegna», «rilascio», «fiera» — e
+    // una sola porta il conto alla rovescia. `null` è la risposta giusta per i progetti che una
+    // data non ce l'hanno, che sono tanti.
+    dateKey: dateKey || null,
     columns: _copy(columns || DEFAULT_COLUMNS),
     // Chi ci lavora, e con che ruolo. Il nome è scritto qui accanto al `uid` e non risolto dalla
     // scheda: è quello che permette a un progetto arrivato da fuori di dire «Marco Rossi, grafico»
@@ -379,7 +385,7 @@ export function updateProject(id, changes) {
   // `updated` moves for anything inside the project; `edited` only for the project's own fields.
   // Two copies decide whose name, date and columns to keep by `edited`: by `updated`, a task
   // ticked after the rename would carry the old name back over the new one.
-  const own = ["name", "eventDate", "columns", "tags", "props"].some((key) => key in wanted);
+  const own = ["name", "dateKey", "columns", "tags", "props"].some((key) => key in wanted);
   // Who works on it gets a stamp of its own, and not `edited`, for the same reason `edited` is not
   // `updated`: assigning a card puts a person on the project, and that must not be enough to carry
   // an old project name back over somebody's rename.
@@ -838,6 +844,98 @@ export function cleanTags(tags) {
 }
 
 /** Ogni chiave di attributo in uso sui progetti vivi, nell'ordine in cui è comparsa. */
+/** Una data come la scrive un `input[type=date]`: la sola forma che il conto alla rovescia legge. */
+export function isDay(value) {
+  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value.trim());
+}
+
+/**
+ * La data del progetto: quale, e come si chiama.
+ *
+ * Torna `{ key, value }` — il nome che le hai dato e il giorno — oppure `null`, che è la risposta
+ * per la maggioranza dei progetti. Il nome torna insieme al giorno di proposito: una scheda che
+ * dice «fra 12 giorni» e basta lascia indovinare cosa succede fra dodici giorni, e «Consegna · fra
+ * 12 giorni» no.
+ *
+ * Una chiave che punta a una proprietà cancellata, o a una che adesso tiene un testo invece di una
+ * data, non è un errore da segnalare: è un conto alla rovescia che smette, e il progetto torna a
+ * essere uno senza data.
+ */
+export function projectDate(project) {
+  if (!project || !project.dateKey) return null;
+  const value = (project.props || {})[project.dateKey];
+  return isDay(value) ? { key: project.dateKey, value: String(value).trim() } : null;
+}
+
+/** Le proprietà che potrebbero portare il conto: quelle che tengono una data. */
+export function projectDateKeys(project) {
+  return Object.entries((project && project.props) || {})
+    .filter(([, value]) => isDay(value))
+    .map(([key]) => key);
+}
+
+/** I nomi di data già usati dai progetti: i suggerimenti di chi ne fa un altro. */
+export function projectDateNames() {
+  const seen = new Set();
+  for (const project of projects.values()) {
+    if (project.trashedAt) continue;
+    for (const key of projectDateKeys(project)) seen.add(key);
+  }
+  return [...seen].sort((a, b) => a.localeCompare(b));
+}
+
+/** «Questa conta»: una sola per progetto, e ripetuto sulla stessa smarca. */
+export function markProjectDate(id, key) {
+  const project = projects.get(id);
+  if (!project) return null;
+  const wanted = key && project.dateKey !== key ? String(key) : null;
+  return updateProject(id, { dateKey: wanted });
+}
+
+/**
+ * `eventDate` diventa una proprietà, una volta sola.
+ *
+ * I progetti fatti prima tengono la data in un campo a sé, che la schermata di creazione chiamava
+ * «Data dell'evento» per tutti — anche per un progetto di sviluppo, dove quella parola non vuol
+ * dire niente. Qui quel campo si svuota e il suo giorno va fra gli attributi, sotto il nome che
+ * l'app passa nella lingua in cui sta parlando, e quella proprietà nasce già marcata.
+ *
+ * Il nome lo passa chi chiama perché questo file non ha lingua. Gira a ogni avvio e la seconda
+ * volta non trova più niente da spostare, che è quello che la rende sicura da ripetere: la
+ * condizione è `eventDate`, e dopo il primo giro `eventDate` è vuoto.
+ *
+ * Non tocca `updated` né `edited`: spostare un dato da un campo all'altro non è una modifica fatta
+ * da qualcuno, e se lo fosse due copie condivise si accuserebbero a vicenda di aver cambiato il
+ * progetto ognuna al proprio avvio.
+ */
+export function migrateEventDates(label) {
+  const wanted = String(label || "data").trim() || "data";
+  let moved = 0;
+  for (const project of [...projects.values()]) {
+    if (!project.eventDate) continue;
+    if (!isDay(project.eventDate)) {
+      _put("project", { ...project, eventDate: null });
+      continue;
+    }
+    const props = { ...(project.props || {}) };
+    let key = wanted;
+    // Una chiave già presa da un altro valore non si sovrascrive: si numera. Perdere una proprietà
+    // scritta a mano per far posto a una migrazione sarebbe il danno che questa evita.
+    if (props[key] !== undefined && props[key] !== project.eventDate) {
+      let n = 2;
+      // Con il trattino basso e non con uno spazio: l'editore delle proprietà ripulisce le chiavi
+      // e uno spazio diventerebbe proprio questo, ma un giro dopo — e nel frattempo `dateKey`
+      // punterebbe a un nome che non c'è più.
+      while (props[`${key}_${n}`] !== undefined) n += 1;
+      key = `${key}_${n}`;
+    }
+    props[key] = project.eventDate;
+    _put("project", { ...project, props, dateKey: project.dateKey || key, eventDate: null });
+    moved += 1;
+  }
+  return moved;
+}
+
 export function projectPropKeys() {
   const out = [];
   for (const project of liveProjects()) {
@@ -1589,7 +1687,12 @@ export function merge({ project: incoming, pages: incomingPages = [], tasks: inc
     _put("project", {
       ...target,
       name: takeTheirs && incoming.name ? incoming.name : target.name,
-      eventDate: takeTheirs ? (incoming.eventDate || null) : target.eventDate,
+      // Etichette, attributi e la chiave della data seguono il nome: o si prende la testa di quella
+      // copia, o si tiene la propria. Prenderne metà da una e metà dall'altra vorrebbe dire una
+      // `dateKey` che punta a una proprietà che l'altra copia non ha.
+      tags: takeTheirs ? cleanTags(incoming.tags || []) : (target.tags || []),
+      props: takeTheirs ? { ...(incoming.props || {}) } : { ...(target.props || {}) },
+      dateKey: takeTheirs ? (incoming.dateKey || null) : (target.dateKey || null),
       edited: takeTheirs ? incoming.edited : target.edited,
       columns: columns.length ? columns : _copy(target.columns),
       people,

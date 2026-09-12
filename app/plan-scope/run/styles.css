@@ -1695,6 +1695,23 @@ body.printing .page-props { display: none; }
 .prop input:hover, .prop input:focus { border-color: var(--border); }
 .prop-colon { color: var(--faint); }
 
+/* Il nome della data e il giorno, sulla stessa riga: sono una cosa sola, e due righe le farebbero
+   sembrare due campi indipendenti. Sotto i 420px vanno una sopra l'altra, perché affiancate il
+   nome si riduce a tre lettere. */
+.date-field { display: flex; gap: 8px; align-items: center; }
+.date-field .prop-key { flex: 1 1 auto; min-width: 0; }
+.date-field input[type="date"] { flex: 0 0 auto; }
+
+@media (max-width: 420px) {
+  .date-field { flex-wrap: wrap; }
+  .date-field input[type="date"] { flex: 1 1 100%; }
+}
+
+/* La stella che dice quale data porta il conto alla rovescia. Spenta è un contorno e non pesa più
+   della ✕ accanto; accesa prende il colore d'accento, che in questa app vuol dire «scelto». */
+.prop-mark { color: var(--faint); }
+.prop-mark.on { color: var(--accent); border-color: transparent; background: none; }
+
 /* Gli attrezzi del tipo stanno accanto al campo e non al posto suo, quindi pesano meno di lui:
    niente cornice finché non li si tocca, e la larghezza di quello che mostrano. */
 .prop-picker { flex: none; }
@@ -1728,6 +1745,10 @@ body.printing .page-props { display: none; }
 .prop-bool { margin: 0 1px; }
 .prop .icon { opacity: 0; }
 .prop:hover .icon, .prop:focus-within .icon { opacity: 1; }
+/* La stella accesa fa eccezione, perché non è un comando ma uno stato: quale data porta il conto
+   alla rovescia si deve leggere da fermo, e una cosa che si vede solo passandoci sopra col mouse
+   su un telefono non si vede mai. Spenta resta insieme alla ✕, che di offerte ne bastano poche. */
+.prop .icon.prop-mark.on { opacity: 1; }
 /* Una classe e non un id: lo stesso «+» sta sotto le proprietà di una pagina e sotto quelle di un
    progetto, e la volta che una delle due si è ritrovata senza vestiti era per un nome. */
 .prop-add { margin: 4px 0 0 -6px; font-size: 12px; color: var(--faint); }

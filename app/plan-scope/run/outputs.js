@@ -67,13 +67,19 @@ export async function exportPageHtml(pageId) {
   pack.save(`${pack.safeName(title, "pagina")}.html`, html, "text/html;charset=utf-8");
 }
 
+/** «consegna · 20 novembre 2026», o niente: il sottotitolo di una pagina esportata. */
+function _projectWhen(project) {
+  const dated = model.projectDate(project);
+  return dated ? `${dated.key} · ${longDate(dated.value)}` : "";
+}
+
 export function exportBoardHtml(projectId) {
   const project = model.project(projectId);
   if (!project) return;
   const html = webpage.boardHtml({
     who: (task) => model.assigneeName(task),
     title: project.name || t("projectUntitled"),
-    subtitle: project.eventDate ? longDate(project.eventDate) : "",
+    subtitle: _projectWhen(project),
     footer: _footerLine(),
     columns: project.columns,
     tasks: model.tasksOf(projectId),
@@ -150,9 +156,12 @@ export function exportIcs(projectId, { alarm = null } = {}) {
   const events = model.tasksOf(projectId)
     .filter((task) => task.end)
     .map((task) => _eventOf(task));
-  if (project.eventDate) {
-    events.unshift({ uid: project.uid || project.id, title: project.name || t("projectUntitled"),
-      date: project.eventDate });
+  const dated = model.projectDate(project);
+  if (dated) {
+    // Nel calendario il nome della data fa il titolo insieme a quello del progetto: «Rilancio —
+    // consegna» dice cosa cade quel giorno, «Rilancio» da solo no.
+    events.unshift({ uid: project.uid || project.id,
+      title: `${project.name || t("projectUntitled")} — ${dated.key}`, date: dated.value });
   }
   if (!events.length) return snack(t("icsNone"));
   const text = ics.calendar(events, { name: project.name || t("projectUntitled"), alarm, sign: SIGN });

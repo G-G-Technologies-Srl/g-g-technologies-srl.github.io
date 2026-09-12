@@ -1205,4 +1205,92 @@ test("le etichette escono con il progetto", () => {
   assert.deepEqual(payload.project.tags, ["cliente"]);
 });
 
+// -----------------------------------------------------------------------------------------------------------------
+//  l a   d a t a   d e l   p r o g e t t o
+// -----------------------------------------------------------------------------------------------------------------
+
+test("la data del progetto torna con il nome che le hai dato", () => {
+  const one = model.createProject({ name: "Sito", props: { consegna: "2026-11-20" }, dateKey: "consegna" });
+  assert.deepEqual(model.projectDate(one), { key: "consegna", value: "2026-11-20" });
+});
+
+test("un progetto senza data marcata non ne ha una, anche se di date ne tiene tre", () => {
+  const one = model.createProject({
+    name: "Sito",
+    props: { kickoff: "2026-09-01", consegna: "2026-11-20", collaudo: "2026-12-01" },
+  });
+  assert.equal(model.projectDate(one), null);
+  assert.deepEqual(model.projectDateKeys(one).sort(), ["collaudo", "consegna", "kickoff"]);
+});
+
+test("marcare due volte la stessa smarca, marcarne un'altra sposta", () => {
+  const one = model.createProject({
+    name: "Sito", props: { kickoff: "2026-09-01", consegna: "2026-11-20" }, dateKey: "kickoff",
+  });
+  model.markProjectDate(one.id, "consegna");
+  assert.equal(model.projectDate(model.project(one.id)).key, "consegna");
+  model.markProjectDate(one.id, "consegna");
+  assert.equal(model.projectDate(model.project(one.id)), null);
+});
+
+test("una marcatura che punta a una proprietà sparita non conta più, e non rompe", () => {
+  const one = model.createProject({ name: "Sito", props: { consegna: "2026-11-20" }, dateKey: "consegna" });
+  model.updateProject(one.id, { props: { colore: "#123456" } });
+  assert.equal(model.projectDate(model.project(one.id)), null);
+});
+
+test("una proprietà che non è una data non porta il conto, anche se marcata", () => {
+  const one = model.createProject({ name: "Sito", props: { consegna: "entro settembre" }, dateKey: "consegna" });
+  assert.equal(model.projectDate(one), null);
+});
+
+// -----------------------------------------------------------------------------------------------------------------
+//  l a   m i g r a z i o n e
+// -----------------------------------------------------------------------------------------------------------------
+
+test("un progetto di prima porta la sua data fra gli attributi, già marcata", () => {
+  model.hydrate({ projects: [{ id: "p1", uid: "p1", name: "Fiera", eventDate: "2026-10-14", props: {} }] });
+  assert.equal(model.migrateEventDates("data"), 1);
+  const one = model.project("p1");
+  assert.equal(one.eventDate, null);
+  assert.deepEqual(model.projectDate(one), { key: "data", value: "2026-10-14" });
+});
+
+test("la migrazione ripetuta non sposta niente una seconda volta", () => {
+  model.hydrate({ projects: [{ id: "p1", uid: "p1", name: "Fiera", eventDate: "2026-10-14", props: {} }] });
+  model.migrateEventDates("data");
+  const dopo = { ...model.project("p1") };
+  assert.equal(model.migrateEventDates("data"), 0);
+  assert.deepEqual(model.project("p1"), dopo);
+});
+
+test("una proprietà che si chiama già così non viene sovrascritta", () => {
+  model.hydrate({ projects: [{ id: "p1", uid: "p1", name: "Fiera", eventDate: "2026-10-14",
+                              props: { data: "2026-01-09" } }] });
+  model.migrateEventDates("data");
+  const one = model.project("p1");
+  assert.equal(one.props.data, "2026-01-09", "la proprietà scritta a mano è stata persa");
+  assert.equal(one.props.data_2, "2026-10-14");
+  assert.equal(one.dateKey, "data_2");
+});
+
+test("la migrazione non fa passare il progetto per modificato", () => {
+  model.hydrate({ projects: [{ id: "p1", uid: "p1", name: "Fiera", eventDate: "2026-10-14",
+                              props: {}, updated: "2026-01-01T00:00:00.000Z", edited: null }] });
+  model.migrateEventDates("data");
+  const one = model.project("p1");
+  // Se `updated` si muovesse, due copie condivise si accuserebbero di aver cambiato il progetto
+  // ognuna al proprio avvio, e il vincitore sarebbe chi ha aperto l'app per ultimo.
+  assert.equal(one.updated, "2026-01-01T00:00:00.000Z");
+  assert.equal(one.edited, null);
+});
+
+test("un eventDate che non è una data si butta, e non diventa una proprietà", () => {
+  model.hydrate({ projects: [{ id: "p1", uid: "p1", name: "Fiera", eventDate: "prossimamente", props: {} }] });
+  model.migrateEventDates("data");
+  const one = model.project("p1");
+  assert.equal(one.eventDate, null);
+  assert.deepEqual(one.props, {});
+});
+
 console.log(`model: ${passed} prove passate`);

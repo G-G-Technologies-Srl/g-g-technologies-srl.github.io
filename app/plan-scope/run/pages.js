@@ -137,7 +137,7 @@ function _colorOf(value) {
  * selettore: largo quanto la riga, schiacciava la chiave a quattordici pixel e la sua etichetta
  * spariva. Un nome per ogni campo è più caro da scrivere e non si rompe quando la riga cambia.
  */
-function _propRow(box, key, value, save) {
+function _propRow(box, key, value, save, { marked = null, onMark = null } = {}) {
   const row = node("div", "prop");
   const keyField = document.createElement("input");
   keyField.type = "text";
@@ -165,10 +165,32 @@ function _propRow(box, key, value, save) {
   // Dove si mette dipende da quanto è largo. La pastiglia del colore e la casella del sì/no sono
   // piccole e dicono quello che c'è scritto, quindi stanno appiccicate al valore, a sinistra; il
   // calendario è largo e sta in fondo, dove non sposta il testo di tutte le altre righe.
+  // La stella: «di tutte le date di questo progetto, è questa a portare il conto alla rovescia».
+  // Compare solo sulle righe che tengono davvero una data, perché su una riga di testo non
+  // vorrebbe dire niente — e sparisce da sola se quel valore smette di essere una data.
+  const star = onMark
+    ? button("ghost small icon prop-mark", "☆", () => onMark(keyField.value.trim()),
+             { label: t("propMarkDate") })
+    : null;
+  const shine = () => {
+    if (!star) return;
+    const is = _propKind(keyField.value, valueField.value) === "date";
+    star.hidden = !is;
+    // `marked` si chiede, non si ricorda: chiesto una volta alla costruzione della riga
+    // obbligherebbe a ridisegnare l'elenco per aggiornare le stelle, e ridisegnare mentre qualcuno
+    // sta scrivendo gli stacca il campo da sotto le dita — provato, e succede davvero.
+    const now = typeof marked === "function" ? marked() : marked;
+    const on = is && now && keyField.value.trim() === now;
+    star.textContent = on ? "★" : "☆";
+    star.classList.toggle("on", Boolean(on));
+    star.setAttribute("aria-pressed", on ? "true" : "false");
+  };
+
   let picker = null;
   const dress = () => {
     if (picker) picker.remove();
     picker = null;
+    shine();
     const kind = _propKind(keyField.value, valueField.value);
     if (!kind) return;
     picker = _propPicker(kind, valueField);
@@ -192,6 +214,7 @@ function _propRow(box, key, value, save) {
   });
 
   const changed = () => _readProps(box, save);
+  if (star) row.append(star);
   row.append(button("ghost small icon", "✕", () => { row.remove(); changed(); }, { label: t("propRemove") }));
   keyField.addEventListener("change", () => { dress(); changed(); });
   valueField.addEventListener("change", () => { dress(); changed(); });
@@ -310,13 +333,14 @@ export function colorDot(color) {
  * incluse le tre righe delicate che riconoscono il tipo e mettono il selettore giusto. Il
  * contenitore e chi salva arrivano da fuori, il resto è quello che era.
  */
-export function editProps(box, props, save) {
-  fill(box, Object.entries(props || {}).map(([key, value]) => _propRow(box, key, value, save)));
+export function editProps(box, props, save, marking = {}) {
+  fill(box, Object.entries(props || {})
+    .map(([key, value]) => _propRow(box, key, value, save, marking)));
 }
 
 /** Una riga vuota in fondo, e il fuoco sulla chiave: il «+» di chi tiene le proprietà. */
-export function addProp(box, save) {
-  box.append(_propRow(box, "", "", save));
+export function addProp(box, save, marking = {}) {
+  box.append(_propRow(box, "", "", save, marking));
   box.lastElementChild.querySelector(".prop-key").focus();
 }
 

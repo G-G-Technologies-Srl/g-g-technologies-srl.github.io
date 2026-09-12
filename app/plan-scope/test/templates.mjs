@@ -70,8 +70,8 @@ test("i cinque template esistono, «vuoto» è vuoto davvero e la guida non ha d
     ["event", "blank", "campaign", "launch", "guide"], "sullo schermo il vuoto è secondo");
   // The guide's tasks carry no offset: dated from an event they would be deadlines, and a guide
   // has none. Built with a date, they still come out undated.
-  const guided = project({ eventDate: "2026-10-14" });
-  templates.build(templates.byKey("guide"), { t: (key) => key, model, projectId: guided.id, eventDate: "2026-10-14" });
+  const guided = project({ props: { fiera: "2026-10-14" }, dateKey: "fiera" });
+  templates.build(templates.byKey("guide"), { t: (key) => key, model, projectId: guided.id, from: "2026-10-14" });
   assert.equal(model.pagesOf(guided.id).length, 4);
   assert.ok(model.tasksOf(guided.id).every((task) => task.end === null));
   const blank = templates.byKey("blank");
@@ -82,9 +82,9 @@ test("i cinque template esistono, «vuoto» è vuoto davvero e la guida non ha d
 });
 
 test("l'evento costruisce le pagine annidate e le attività datate", () => {
-  const one = project({ eventDate: "2026-10-14" });
+  const one = project({ props: { fiera: "2026-10-14" }, dateKey: "fiera" });
   templates.build(templates.byKey("event"), {
-    t, model, projectId: one.id, eventDate: "2026-10-14",
+    t, model, projectId: one.id, from: "2026-10-14",
   });
 
   const pages = model.pagesOf(one.id);
@@ -111,7 +111,7 @@ test("l'evento costruisce le pagine annidate e le attività datate", () => {
 test("senza data le attività arrivano senza scadenza", () => {
   // Inventing a schedule from today would be the app asserting something the person never said.
   const one = project();
-  templates.build(templates.byKey("campaign"), { t, model, projectId: one.id, eventDate: null });
+  templates.build(templates.byKey("campaign"), { t, model, projectId: one.id, from: null });
   const tasks = model.tasksOf(one.id);
   assert.equal(tasks.length, 9);
   assert.equal(tasks.every((task) => task.end === null), true);
@@ -169,8 +169,12 @@ test("il progetto dimostrativo arriva già in corso, e già pieno", () => {
   assert.equal(model.pagesAbout(altro.uid || altro.id).length, 1,
     "«cosa vi siete detti» con una riga sola sembra un caso; con due sembra un archivio");
 
-  // La data dell'evento è nel futuro, sempre: è calcolata da oggi, non scritta nel file.
-  assert.ok(built.eventDate > model.todayISO());
+  // La data della fiera è nel futuro, sempre: è calcolata da oggi, non scritta nel file. E sta
+  // fra gli attributi, marcata, perché «evento» non è un campo ma un nome che si sceglie.
+  const when = model.projectDate(built);
+  assert.ok(when, "il dimostrativo non ha una data marcata, e la scheda direbbe «nessuna data»");
+  assert.equal(when.key, t("demoDateKey"));
+  assert.ok(when.value > model.todayISO());
 
   // E non si crede già esportato, perché su questo disco una copia non esiste.
   assert.equal(built.exportedAt, null);
@@ -208,7 +212,8 @@ test("la testa delle pagine porta un colore e una data dove hanno un senso", () 
 
   const dates = heads.map((props) => String(props.data || "")).filter((one) => /^\d{4}-\d{2}-\d{2}$/.test(one));
   assert.equal(dates.length, 3, "il giorno della fiera e i due incontri: le pagine che parlano di un giorno");
-  assert.ok(dates.includes(built.eventDate), "«il giorno» porta la data della fiera, che è di cosa parla");
+  assert.ok(dates.includes(model.projectDate(built).value),
+    "«il giorno» porta la data della fiera, che è di cosa parla");
 
   // I cartellini, che nell'elenco stanno accanto al titolo insieme al pallino.
   assert.ok(model.pagesOf(built.id).filter((page) => (page.tags || []).length).length >= 3);
@@ -218,10 +223,10 @@ test("ogni template si costruisce, e il nome e il sommario vengono chiesti", () 
   // Building all four is also what makes the check below cover all four: it counts the keys the
   // code asks for, and a template nobody builds asks for nothing.
   for (const template of templates.TEMPLATES) {
-    const one = project({ eventDate: "2026-10-14" });
+    const one = project({ props: { fiera: "2026-10-14" }, dateKey: "fiera" });
     t(template.name);
     t(template.lead);
-    templates.build(template, { t, model, projectId: one.id, eventDate: "2026-10-14" });
+    templates.build(template, { t, model, projectId: one.id, from: "2026-10-14" });
     const pages = model.pagesOf(one.id);
     const tasks = model.tasksOf(one.id);
     assert.equal(pages.length + tasks.length > 0, template.key !== "blank",

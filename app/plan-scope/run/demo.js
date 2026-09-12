@@ -34,18 +34,23 @@ import * as templates from "./templates.js";
  */
 export function build({ t, model, columns }) {
   const today = model.todayISO();
-  const eventDate = model.addDays(today, 42);
+  const when = model.addDays(today, 42);
+  // L'esempio è una fiera, quindi la sua data si chiama «fiera»: è anche il modo più corto per far
+  // vedere che il nome della data lo scrive chi fa il progetto, e che «evento» era solo uno dei
+  // nomi possibili.
+  const dateKey = t("demoDateKey");
 
   const project = model.createProject({
     name: t("demoName"),
-    eventDate,
+    props: { [dateKey]: when },
+    dateKey,
     columns,
   });
   // Says so on its card and on its screen, until it is binned: nobody should wonder whose fair
   // this is, or write their own things into it by mistake.
   model.updateProject(project.id, { demo: true });
 
-  templates.build(templates.byKey("event"), { t, model, projectId: project.id, eventDate });
+  templates.build(templates.byKey("event"), { t, model, projectId: project.id, from: when });
 
   // The page that shows what the editor can do — which makes it, not by accident, the page to look
   // at after changing anything about how blocks are drawn.
@@ -217,7 +222,7 @@ export function build({ t, model, columns }) {
     { page: "ev_page_brief", props: { colore: "#3f6fb9" }, extra: { state: true } },
     { page: "ev_page_schedule", props: { colore: "#3fb984" }, tags: ["demoTag2"] },
     { page: "ev_page_suppliers", tags: ["demoTag"] },
-    { page: "ev_page_day", props: { colore: "#c94f2e", data: eventDate }, tags: ["demoTag2"] },
+    { page: "ev_page_day", props: { colore: "#c94f2e", data: when }, tags: ["demoTag2"] },
   ];
   for (const one of HEADS) {
     const page = model.pagesOf(project.id).find((item) => item.title === t(one.page));
