@@ -13,7 +13,7 @@ import * as db from "./db.js";
 import * as pack from "gg/plan-pack.js";
 import * as webpage from "./webpage.js";
 import * as csv from "./csv.js";
-import * as ics from "./ics.js";
+import * as ics from "gg/ics.js";
 import * as md from "gg/plan-markdown.js";
 import { t, tf, lang } from "./i18n.js";
 import { el, snack, longDate } from "./ui.js";

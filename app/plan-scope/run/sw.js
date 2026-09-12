@@ -12,7 +12,7 @@
 //    running app means changing the code while somebody has unsaved keystrokes in a page, and
 //    saving them one reload is not worth that.
 
-const VERSION = '4.15.1';
+const VERSION = '4.15.2';
 const CACHE = `plan-scope-v${VERSION}`;
 
 // La cache dei promemoria, e **l'unica che sopravvive a un aggiornamento**. Il nome non porta la
@@ -45,7 +45,6 @@ const ASSETS = [
   './demo.js',
   './cheer.js',
   './search.js',
-  './ics.js',
   './csv.js',
   './webpage.js',
   './diff.js',
@@ -83,6 +82,7 @@ const ASSETS = [
   '../../_lib/plan-pack.js',
   '../../_lib/plan-model.js',
   '../../_lib/remind.js',
+  '../../_lib/ics.js',
 ];
 
 self.addEventListener('install', (event) => {

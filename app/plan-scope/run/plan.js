@@ -18,7 +18,7 @@
 
 import * as model from "gg/plan-model.js";
 import * as timeline from "./timeline.js";
-import * as ics from "./ics.js";
+import * as ics from "gg/ics.js";
 import * as pack from "gg/plan-pack.js";
 import { t, tf, num } from "./i18n.js";
 import { el, node, button, fill, shortDate, locale, ask } from "./ui.js";

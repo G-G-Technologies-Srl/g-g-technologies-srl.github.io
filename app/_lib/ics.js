@@ -2,6 +2,12 @@
 
 // Deadlines as a calendar file, and as a link that opens Google Calendar already filled in.
 //
+// **In `_lib/` da quando le app con delle scadenze sono due.** Plan Scope esporta le attività di
+// un progetto, Invoice Scope lo scadenzario; il file è lo stesso formato e lo stesso conto, e
+// l'unica cosa che cambia è chi lo firma. Per questo `PRODID` e il dominio degli `UID` si passano
+// da fuori invece di stare scritti qui: un file esportato da Invoice che si dichiarasse Plan Scope
+// sarebbe una bugia piccola e inutile.
+//
 // The app never talks to a calendar service. It writes a `.ics` file — the format every calendar
 // reads, RFC 5545 — and the person opens it: Apple Calendar and Outlook add the events directly,
 // Google imports the file. The link to Google is an `<a href>` the person chooses to follow,
@@ -20,15 +26,18 @@
 //
 // Pure: strings in, strings out, and it runs in Node for the tests.
 
-import * as remind from "gg/remind.js";
+// Dentro `_lib/` i vicini si chiamano per nome: la mappa `gg/` è della pagina, e il loader dei
+// test la risolve rispetto a chi importa. Lo fa già `plan-model.js` con `plan-markdown.js`.
+import * as remind from "./remind.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
 // -----------------------------------------------------------------------------------------------------------------
 
-const PRODID = "-//G&G Technologies//Plan Scope//IT";
-const DOMAIN = "plan-scope.ggtechnologies.sm";
 const FOLD_AT = 75;                     // octets per line, per the standard
+
+/** Chi firma il file e sotto che dominio stanno gli `UID`, se l'app non lo dice. */
+export const SIGN = { prodid: "-//G&G Technologies//Plan Scope//IT", domain: "plan-scope.ggtechnologies.sm" };
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
@@ -95,11 +104,11 @@ function _fold(line) {
  * defaults to `date`; a task with a start and an end spans the days between.
  */
 export function event({ uid, title, date, end = null, description = "" },
-  { now = new Date(), alarm = null } = {}) {
+  { now = new Date(), alarm = null, sign = SIGN } = {}) {
   const last = end && end >= date ? end : date;
   return [
     "BEGIN:VEVENT",
-    `UID:${_escape(uid)}@${DOMAIN}`,
+    `UID:${_escape(uid)}@${sign.domain}`,
     `DTSTAMP:${_stamp(now)}`,
     `DTSTART;VALUE=DATE:${_day(date)}`,
     `DTEND;VALUE=DATE:${_day(_dayAfter(last))}`,
@@ -112,16 +121,16 @@ export function event({ uid, title, date, end = null, description = "" },
 }
 
 /** A whole calendar file out of a list of events, CRLF line endings and folding included. */
-export function calendar(events, { now = new Date(), name = "", alarm = null } = {}) {
+export function calendar(events, { now = new Date(), name = "", alarm = null, sign = SIGN } = {}) {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    `PRODID:${PRODID}`,
+    `PRODID:${sign.prodid}`,
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     ...(name ? [`X-WR-CALNAME:${_escape(name)}`] : []),
   ];
-  for (const one of events) lines.push(...event(one, { now, alarm }));
+  for (const one of events) lines.push(...event(one, { now, alarm, sign }));
   lines.push("END:VCALENDAR");
   return `${lines.map(_fold).join("\r\n")}\r\n`;
 }

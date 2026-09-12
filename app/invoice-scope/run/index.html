@@ -116,6 +116,14 @@
       </ul>
     </div>
 
+    <!-- Quello che è maturato mentre l'app era chiusa. Un pannello e non un avviso che scompare:
+         questa app i suoi avvisi li mette qui, e una scadenza matura non vale meno dell'azienda da
+         compilare. -->
+    <div class="panel warn" id="remindNote" hidden>
+      <p id="remindNoteText"></p>
+      <a class="button ghost" href="#/scadenzario" data-t="remindSee"></a>
+    </div>
+
     <div class="panel warn" id="backupNote" hidden>
       <p data-t="homeBackupNever"></p>
       <a class="button ghost" href="#/impostazioni" data-t="homeBackupGo"></a>
@@ -273,6 +281,7 @@
 
     <div class="actions">
       <button type="button" class="button ghost" id="dueFilter" data-t="dueAll" aria-pressed="false"></button>
+      <button type="button" class="button ghost" id="dueIcs" data-t="dueIcs"></button>
       <span class="ok" id="dueTotal"></span>
     </div>
 
@@ -1048,6 +1057,26 @@
          cartella di Dropbox o iCloud, che poi viaggia da sé. Sta qui, accanto a «Esporta tutto»,
          perché è la stessa cosa fatta dall'app invece che da chi si ricorda. Una macchina scrive,
          le altre leggono con «Importa un archivio»: il perché sta in `backup.js`. -->
+    <!-- I promemoria. Tre strati, e il blocco li dice tutti e tre invece di promettere «notifiche»
+         e lasciare che ognuno scopra da sé dove non arrivano. -->
+    <h2 data-t="remindTitle"></h2>
+    <p class="note" data-t="remindLead"></p>
+    <div id="remindSection">
+      <label class="check"><input type="checkbox" id="remindOn"><span data-t="remindOn"></span></label>
+      <div class="actions remind-when">
+        <label for="remindDays" data-t="remindDays"></label>
+        <input type="number" id="remindDays" min="0" max="30" step="1" inputmode="numeric">
+        <label for="remindHour" data-t="remindHour"></label>
+        <input type="number" id="remindHour" min="0" max="23" step="1" inputmode="numeric">
+      </div>
+      <p class="note" id="remindSays"></p>
+      <div class="actions">
+        <button type="button" class="button" id="remindSave" data-t="remindSave"></button>
+        <button type="button" class="button ghost" id="remindAsk" data-t="remindAsk" hidden></button>
+      </div>
+      <p class="note" id="remindState" aria-live="polite"></p>
+    </div>
+
     <div id="backupSection">
       <h2 data-t="backupTitle"></h2>
       <p class="note" data-t="backupNote"></p>

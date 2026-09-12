@@ -99,6 +99,44 @@ const IT = {
 
   // ---- scadenzario
   navDue: "Scadenzario",
+  // I promemoria dello scadenzario. Le stesse parole di Plan Scope dove la cosa è la stessa: le due
+  // app stanno sulla stessa scrivania, e due nomi per la stessa funzione sono due funzioni.
+  remindTitle: "Promemoria",
+  remindLead: "Quando una scadenza si avvicina, l'app te lo ricorda in tre modi — e quale funziona "
+    + "dipende da dove sei.",
+  remindOn: "Ricordami le scadenze",
+  remindDays: "Giorni prima",
+  remindHour: "alle ore",
+  remindSave: "Salva",
+  remindAsk: "Permetti le notifiche",
+  remindSays: "Una scadenza del {date} te la ricordo {when}.",
+  remindSaysDay: "il {date} alle {hour}",
+  remindSaysSame: "lo stesso giorno alle {hour}",
+  remindOff: "Spenti. Le scadenze restano nello Scadenzario e nel calendario che esporti.",
+  remindStateNo: "Questo browser non mostra notifiche: restano il calendario che esporti e il "
+    + "riepilogo all'apertura.",
+  remindStateAsk: "Le notifiche di sistema sono da permettere. Senza, restano il calendario che "
+    + "esporti e il riepilogo all'apertura.",
+  remindStateYes: "Notifiche permesse. Con l'app installata su Chrome o Edge arrivano anche a "
+    + "finestra chiusa, quando il browser sveglia l'app — non a un orario preciso.",
+  remindStateDenied: "Notifiche negate a questo sito. Si riattivano dalle impostazioni del "
+    + "browser, non da qui. Restano il calendario che esporti e il riepilogo all'apertura.",
+  remindStateSleeps: "Notifiche permesse. Questo browser però non sveglia l'app da solo: le vedrai "
+    + "aprendola, e nel calendario che esporti.",
+  remindHeading: "Scadenze",
+  remindIn: "Fattura",
+  remindOut: "Acquisto",
+  remindMore: "{first} e altre {n}",
+  remindWhenToday: "oggi",
+  remindWhenTomorrow: "domani",
+  remindWhenLate: "in ritardo",
+  remindWhenDays: "fra {n} giorni",
+  remindSee: "Apri lo scadenzario",
+  remindNote: "Mentre non c'eri: {what}",
+  dueIcs: "Esporta come calendario (.ics)",
+  dueIcsNone: "Non c'è niente da mettere in calendario.",
+  dueIcsAlarm: "Con il promemoria dentro: lo farà suonare il tuo calendario.",
+
   dueTitle: "Scadenzario",
   dueEmpty: "Non c'è niente da incassare.",
   dueWhen: "Scadenza",
@@ -1131,6 +1169,42 @@ const EN = {
   homeBackupGo: "Export now",
 
   navDue: "Payments",
+  remindTitle: "Reminders",
+  remindLead: "When a deadline comes close the app reminds you in three ways — and which one works "
+    + "depends on where you are.",
+  remindOn: "Remind me about deadlines",
+  remindDays: "Days before",
+  remindHour: "at",
+  remindSave: "Save",
+  remindAsk: "Allow notifications",
+  remindSays: "A deadline on {date} is announced {when}.",
+  remindSaysDay: "on {date} at {hour}",
+  remindSaysSame: "the same day at {hour}",
+  remindOff: "Off. Deadlines still show on the Payments due screen and in the calendar you export.",
+  remindStateNo: "This browser shows no notifications: the calendar you export and the summary on "
+    + "opening remain.",
+  remindStateAsk: "System notifications need your permission. Without it, the calendar you export "
+    + "and the summary on opening remain.",
+  remindStateYes: "Notifications allowed. With the app installed on Chrome or Edge they also "
+    + "arrive with the window closed, when the browser wakes the app — not at an exact time.",
+  remindStateDenied: "Notifications are blocked for this site. They are turned back on in the "
+    + "browser's settings, not here. The calendar you export and the summary on opening remain.",
+  remindStateSleeps: "Notifications allowed. This browser does not wake the app on its own, "
+    + "though: you will see them when you open it, and in the calendar you export.",
+  remindHeading: "Deadlines",
+  remindIn: "Invoice",
+  remindOut: "Purchase",
+  remindMore: "{first} and {n} more",
+  remindWhenToday: "today",
+  remindWhenTomorrow: "tomorrow",
+  remindWhenLate: "late",
+  remindWhenDays: "in {n} days",
+  remindSee: "Open the schedule",
+  remindNote: "While you were away: {what}",
+  dueIcs: "Export as a calendar (.ics)",
+  dueIcsNone: "There is nothing to put in a calendar.",
+  dueIcsAlarm: "With the reminder inside: your own calendar will sound it.",
+
   dueTitle: "Payments due",
   dueEmpty: "There is nothing to collect.",
   dueWhen: "Due",

@@ -14,6 +14,7 @@
 
 import { setup as setupInstall, isInstalled, system } from "gg/install.js";
 import * as update from "gg/update.js";
+import * as remind from "gg/remind.js";
 import { apply as applyTheme, initial as initialTheme, toggle as toggleTheme } from "gg/theme.js";
 import { download, restore } from "gg/io.js";
 import { get, put, persist } from "gg/store.js";
@@ -45,6 +46,7 @@ import { money, date as shownDate } from "./format.js";
 import { wire as wireImport, refresh as refreshImport } from "./importing.js";
 import { LOGO as BRAND_LOGO } from "./brand.js";
 import * as backup from "./backup.js";
+import * as alarms from "./alarms.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -102,6 +104,8 @@ const COMPANY_FIELDS = [
 const SEDE_FIELDS = ["indirizzo", "numeroCivico", "cap", "comune", "provincia"];
 
 let db = null;
+/** Il registro del service worker: `periodicSync` si registra su quello. */
+let worker = null;
 
 /**
  * The company's bank accounts, while the screen is open.
@@ -1093,6 +1097,68 @@ async function main() {
     anchor.click();
     setTimeout(() => URL.revokeObjectURL(url), 0);
   });
+  // ---- i promemoria ----------------------------------------------------------------------------
+  //
+  // Tre strati, e `gg/remind.js` dice perché sono tre. Qui ci sono i tre comandi: il modulo che li
+  // accende, il permesso che si chiede solo da un clic, e lo scadenzario che esce come calendario.
+
+  const paintRemind = async () => {
+    const one = remindReading();
+    const today = new Date();
+    const example = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7);
+    const at = new Date(example);
+    at.setDate(at.getDate() - one.days);
+    const hour = `${one.hour}:00`;
+    const when = one.days
+      ? tf("remindSaysDay", { date: shownDate(at.toISOString().slice(0, 10)), hour })
+      : tf("remindSaysSame", { hour });
+    el("remindSays").textContent = one.on
+      ? tf("remindSays", { date: shownDate(example.toISOString().slice(0, 10)), when })
+      : t("remindOff");
+
+    const state = remind.state();
+    el("remindAsk").hidden = !(one.on && state === "ask");
+    el("remindState").textContent = !one.on ? ""
+      : t(state === "no" ? "remindStateNo"
+        : state === "denied" ? "remindStateDenied"
+          : state === "ask" ? "remindStateAsk"
+            : remind.wakes(worker) ? "remindStateYes" : "remindStateSleeps");
+  };
+
+  const settings = await alarms.settings(db);
+  el("remindOn").checked = settings.on;
+  el("remindDays").value = String(settings.days);
+  el("remindHour").value = String(settings.hour);
+  await paintRemind();
+  for (const id of ["remindOn", "remindDays", "remindHour"]) {
+    el(id).addEventListener("input", () => paintRemind());
+    el(id).addEventListener("change", () => paintRemind());
+  }
+  el("remindSave").addEventListener("click", async () => {
+    await alarms.save(db, remindReading());
+    await paintRemind();
+    await tell(t("docSaveFirst"));
+  });
+  // Il permesso si chiede da qui e da nessun altro posto: chiesto all'avvio, un «no» chiude la
+  // porta per sempre e dall'app non si riapre più.
+  el("remindAsk").addEventListener("click", async () => {
+    await remind.askPermission();
+    await paintRemind();
+  });
+
+  el("dueIcs").addEventListener("click", async () => {
+    const text = await alarms.calendar(db);
+    if (!text) return tell(t("dueIcsNone"));
+    const url = URL.createObjectURL(new Blob([text], { type: "text/calendar;charset=utf-8" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `scadenzario-${new Date().toISOString().slice(0, 10)}.ics`;
+    anchor.click();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+    const one = await alarms.settings(db);
+    return one.on ? tell(t("dueIcsAlarm")) : undefined;
+  });
+
   for (const id of ["docsNew", "homeNew"]) {
     el(id).addEventListener("click", () => { location.hash = "#/documento"; });
   }
@@ -1153,8 +1219,31 @@ async function main() {
 
         upToDate: (v) => t("versionUpToDate").replace("{version}", v),
       },
+    }).then((registration) => {
+      worker = registration;
+      alarms.connect(registration);
+      // Il riepilogo dopo il registro, così la riga sullo stato sa già se questo browser sveglia
+      // l'app da solo.
+      _remindOnOpen();
     });
   }
+}
+
+/** I tre campi del blocco Promemoria, letti insieme e rimessi nei limiti. */
+function remindReading() {
+  return remind.clean({
+    on: el("remindOn").checked,
+    days: el("remindDays").value,
+    hour: el("remindHour").value,
+  });
+}
+
+/** Il pannello sulla Home con quello che è maturato mentre l'app era chiusa, e il numero sull'icona. */
+async function _remindOnOpen() {
+  const text = await alarms.onOpen(db);
+  el("remindNote").hidden = !text;
+  if (text) el("remindNoteText").textContent = tf("remindNote", { what: text });
+  await alarms.badge(db);
 }
 
 main();

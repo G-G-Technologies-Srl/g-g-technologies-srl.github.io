@@ -1178,7 +1178,12 @@ function _badge() {
 /** Il registro del worker, tenuto da parte: `periodicSync` si registra su quello. */
 let worker = null;
 
-/** Le impostazioni stanno coi dati e non con questo browser: chi esporta se le porta dietro. */
+/**
+ * Le impostazioni stanno nel `meta`, che **non** finisce nell'archivio: `DOCUMENT_STORES` non lo
+ * nomina. Ed è giusto così, e non per caso — il permesso delle notifiche è di questo browser e di
+ * nessun altro, e un'impostazione che viaggiasse senza il suo permesso prometterebbe su un'altra
+ * macchina una sveglia che lì non può suonare.
+ */
 async function _remindSettings() {
   if (!db.available()) return remind.clean(remind.DEFAULT);
   return remind.clean(await db.meta("remind", remind.DEFAULT));

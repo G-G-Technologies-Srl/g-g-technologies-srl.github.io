@@ -6,7 +6,7 @@
 
 import assert from "node:assert/strict";
 
-import * as ics from "../run/ics.js";
+import * as ics from "gg/ics.js";
 import * as csv from "../run/csv.js";
 import * as webpage from "../run/webpage.js";
 
