@@ -52,7 +52,7 @@
     "url": "https://ggtechnologies.sm/en/app/plan-scope/",
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "Any (web browser)",
-    "softwareVersion": "4.14.0",
+    "softwareVersion": "4.15.2",
     "datePublished": "2026-09-01",
     "dateModified": "2026-09-11",
     "license": "https://www.apache.org/licenses/LICENSE-2.0",
@@ -199,6 +199,7 @@
               <li>Keeps tasks with a date, a priority, an owner, tags, a checklist, sub-tasks and repetition; shows progress and the deadlines of every project in one panel.</li>
               <li>Searches everything with Ctrl+K: pages, tasks, projects, accents aside.</li>
               <li>Exports a project as one file, images included, and imports it back identical — or updates the one you have with a colleague's changes.</li>
+              <li>Reminds you of deadlines, in three ways: inside the calendar you export — where your own calendar sounds them, on your phone, with the app closed for months — with a summary when you open the app again, and with a system notification where the browser allows one. You choose how many days before, and at what time.</li>
               <li>Works as two through a shared folder: Dropbox, OneDrive, Google Drive. Pages are Markdown files, readable with Obsidian too.</li>
               <li>Imports a Trello board and a Notion export, as far as they carry over.</li>
               <li>The same project opens in Invoice Scope, which uses this format: there a plan sits beside the quote and the invoices of that job. A project belongs where its money is — if it is a plan and nothing else, it belongs here.</li>
@@ -211,7 +212,7 @@
             <ul class="ticks">
               <li>It does not work in real time: the shared folder is read when the app comes back to the front, then once a minute. A page changed by both at the same moment stays twice, with the other person's name in the title, and you compare them.</li>
               <li>The shared folder works on Chrome and Edge, on a computer: Safari, Firefox and phones do not let a web page open a folder. There, the exchange of files remains.</li>
-              <li>It sends no reminders while closed: there is no server that could wake up on your behalf. Installed, the icon shows the number of late tasks.</li>
+              <li>It does not promise a notification at an exact time: without a server the app cannot wake itself. What it does is in the “Reminders” line above — the reminder inside the calendar you export sounds everywhere; the other two ways depend on the browser.</li>
               <li>It uses no AI models: “Copy for an assistant” puts the text on the clipboard, and you choose the assistant.</li>
             </ul>
           </div>
@@ -226,7 +227,7 @@
               <li>The data alone in a .json, without images: smaller, and readable in any text editor.</li>
               <li>A page as .md: Markdown with its tags and properties in the head, the format Obsidian and static site generators read.</li>
               <li>The project as a folder: project.json, one file per page under pages/, the images in assets/. It is what the app writes into a shared folder, and it opens in Obsidian as it is.</li>
-              <li>The deadlines as .ics: they open in Calendar, Outlook or Google Calendar.</li>
+              <li>The deadlines as .ics, with the reminder inside: they open in Calendar, Outlook or Google Calendar, and your own calendar sounds them.</li>
               <li>The tasks as .csv, for Excel, Numbers or Google Sheets.</li>
               <li>The address book as .csv and as .vcf (vCard): the second opens in Contacts, Outlook or Google Contacts.</li>
               <li>A page or the board as a self-contained web page, one file that opens in any browser without the app.</li>
@@ -326,7 +327,7 @@
             </div>
           </div>
         </div>
-        <p class="app-meta"><span><b>Version</b> 4.14.0</span><span><b>Updated</b> 11 September 2026</span><span><b>Licence</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/plan-scope" rel="noopener">Source code</a></p>
+        <p class="app-meta"><span><b>Version</b> 4.15.2</span><span><b>Updated</b> 11 September 2026</span><span><b>Licence</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/plan-scope" rel="noopener">Source code</a></p>
       </div>
     </section>
 
@@ -354,6 +355,10 @@
           <details class="faq-item reveal">
             <summary>What happens if I clear my browser data?</summary>
             <p>It goes, along with everything else in that browser. With no server your copy is the only one there is: export the projects you care about, and the file sits on your disk like any other.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>Does it warn me when a deadline is coming?</summary>
+            <p>Yes, and it is worth knowing how, because there are three ways and they do not all work everywhere. The first always works: the calendar you export carries the reminder inside the file, so your own calendar sounds it — on your phone, at nine, even if you do not open this app for months. The second always works too: when you open the app again it tells you what came due while you were away. The third is the system notification, and that one depends on the browser: with the app installed on Chrome or Edge it arrives with the window closed, when the browser wakes the app — not at a time we decide, because without a server the app cannot wake itself. On Safari, on iPhone and on Firefox the first two remain. You choose how many days before, and at what time.</p>
           </details>
           <details class="faq-item reveal">
             <summary>What format does my writing come out in?</summary>

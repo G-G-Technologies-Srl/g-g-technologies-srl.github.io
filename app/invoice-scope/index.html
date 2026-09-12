@@ -52,7 +52,7 @@
     "url": "https://ggtechnologies.sm/app/invoice-scope/",
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "Any (web browser)",
-    "softwareVersion": "0.41.7",
+    "softwareVersion": "0.42.1",
     "datePublished": "2026-09-03",
     "dateModified": "2026-09-10",
     "license": "https://www.apache.org/licenses/LICENSE-2.0",
@@ -213,6 +213,7 @@
               <li>Registra anche gli acquisti: le fatture che ricevi — dal loro file XML, o a mano — e le spese senza fattura, con il fornitore, la categoria, l'imposta e la scadenza, e i pagamenti che fai; una nota di credito ricevuta toglie da sola. Lo scadenzario prende i due versi, con il saldo in cima; la Situazione mostra il margine dell'anno, ricavi e costi mese per mese, a chi devi di più, e l'IVA del trimestre e dell'anno — sulle vendite, sugli acquisti, da versare — per controllare i conti del commercialista. Per un'azienda sammarinese l'imposta monofase sugli acquisti si registra come costo, con la sua aliquota.</li>
               <li>Conosce i costi che tornano: scrivi una volta il canone, l'affitto o l'assicurazione, con la cadenza, e l'app li aspetta mese per mese fino a fine anno. La Situazione mostra i costi dell'anno come finiranno, lo scadenzario quello che uscirà; quando la fattura arriva la confermi e la riga attesa sparisce. Una fattura dello stesso fornitore nello stesso mese si aggancia da sola all'importazione.</li>
               <li>Esporta un CSV del periodo per chi tiene la contabilità: documenti emessi e acquisti nello stesso file, con una colonna che dice il verso.</li>
+              <li>Ricorda le scadenze, nei due versi: lo scadenzario esce come calendario .ics — e con il promemoria dentro, così a suonare è il tuo calendario, sul telefono, anche ad app chiusa — con un riepilogo quando riapri l'app, e con una notifica di sistema dove il browser la permette. Quanti giorni prima e a che ora lo decidi tu; installata, l'icona porta il numero di quelle in ritardo.</li>
               <li>Stampa una copia di cortesia su carta intestata, con il tuo logo e i tuoi recapiti, che dichiara di non essere l'originale fiscale.</li>
               <li>Funziona anche senza connessione, e si installa come un'applicazione.</li>
             </ul>
@@ -327,7 +328,7 @@
             </div>
           </div>
         </div>
-        <p class="app-meta"><span><b>Versione</b> 0.41.7</span><span><b>Aggiornata il</b> 10 settembre 2026</span><span><b>Licenza</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope" rel="noopener">Codice sorgente</a></p>
+        <p class="app-meta"><span><b>Versione</b> 0.42.1</span><span><b>Aggiornata il</b> 10 settembre 2026</span><span><b>Licenza</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope" rel="noopener">Codice sorgente</a></p>
       </div>
     </section>
 
@@ -336,6 +337,10 @@
         <div class="kicker">FAQ</div>
         <h2>Domande frequenti</h2>
         <div class="faq-list">
+          <details class="faq-item reveal">
+            <summary>Mi avvisa quando una scadenza si avvicina?</summary>
+            <p>Sì, e conviene sapere come, perché i modi sono tre e non funzionano tutti dappertutto. Il primo vale sempre: lo scadenzario esce come calendario e il promemoria viaggia dentro il file, quindi a suonare è il tuo calendario — sul telefono, alle nove, anche se questa app non la apri per mesi. Il secondo vale sempre anche lui: quando riapri l'app, un pannello dice cosa è maturato mentre non c'eri. Il terzo è la notifica di sistema, e quella dipende dal browser: con l'app installata su Chrome o Edge arriva anche a finestra chiusa, quando il browser sveglia l'app — non a un orario deciso da noi, perché senza un server l'app non può svegliarsi da sola. Su Safari, su iPhone e su Firefox restano i primi due. Quanti giorni prima e a che ora lo scegli tu, nelle impostazioni.</p>
+          </details>
           <details class="faq-item reveal">
             <summary>Posso mandare la fattura direttamente da qui?</summary>
             <p>No, e questo è il confine dell'app. La trasmissione richiede un canale accreditato, una PEC o il portale dell'Agenzia: cose che un programma senza server non può avere. L'app prepara il file corretto, tu lo carichi dove già carichi gli altri.</p>

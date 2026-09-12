@@ -52,7 +52,7 @@
     "url": "https://ggtechnologies.sm/app/plan-scope/",
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "Any (web browser)",
-    "softwareVersion": "4.14.0",
+    "softwareVersion": "4.15.2",
     "datePublished": "2026-09-01",
     "dateModified": "2026-09-11",
     "license": "https://www.apache.org/licenses/LICENSE-2.0",
@@ -199,6 +199,7 @@
               <li>Tiene le attività con data, priorità, assegnatario, tag, checklist, sottoattività e ripetizione; mostra l'avanzamento e le scadenze di tutti i progetti in un pannello solo.</li>
               <li>Cerca in tutto con Ctrl+K: pagine, attività, progetti, senza badare agli accenti.</li>
               <li>Esporta un progetto in un file solo, immagini comprese, e lo reimporta identico — o aggiorna quello che hai già con le modifiche di un collega.</li>
+              <li>Promemoria delle scadenze, in tre modi: dentro il calendario che esporti — e lì suona il tuo calendario, sul telefono, anche ad app chiusa da mesi — con un riepilogo quando riapri l'app, e con una notifica di sistema dove il browser la permette. Quanti giorni prima e a che ora lo decidi tu.</li>
               <li>Lavora in due attraverso una cartella condivisa: Dropbox, OneDrive, Google Drive. Le pagine sono file Markdown, leggibili anche con Obsidian.</li>
               <li>Importa una bacheca Trello e un export Notion, per quello che si può portare.</li>
               <li>Lo stesso progetto si apre in Invoice Scope, che usa questo formato: lì un piano sta accanto al preventivo e alle fatture di quel lavoro. Un progetto sta dove sta il suo denaro — se è un piano e basta, sta qui.</li>
@@ -211,7 +212,7 @@
             <ul class="ticks">
               <li>Non lavora in tempo reale: la cartella condivisa si legge quando l'app torna in primo piano e poi una volta al minuto. Una pagina cambiata da tutti e due nello stesso momento resta doppia, con il nome dell'altro nel titolo, e la confrontate voi.</li>
               <li>La cartella condivisa funziona su Chrome ed Edge, sul computer: Safari, Firefox e i telefoni non permettono a una pagina web di aprire una cartella. Lì resta lo scambio di file.</li>
-              <li>Non manda promemoria a app chiusa: non c'è un server che possa svegliarsi al posto tuo. Installata, l'icona mostra il numero delle attività in ritardo.</li>
+              <li>Non promette una notifica a un orario preciso: senza un server, l'app non può svegliarsi da sola. Quello che fa è nella riga «Promemoria» qui sopra — il promemoria dentro il calendario che esporti suona ovunque, gli altri due modi dipendono dal browser.</li>
               <li>Non usa modelli di intelligenza artificiale: «Copia per un assistente» mette il testo negli appunti, e l'assistente lo scegli tu.</li>
             </ul>
           </div>
@@ -226,7 +227,7 @@
               <li>I soli dati in un .json, senza immagini: più piccolo, e leggibile in qualunque editor di testo.</li>
               <li>Una pagina in .md: Markdown con tag e proprietà in testa, il formato che Obsidian e i generatori di siti leggono.</li>
               <li>Il progetto come cartella: project.json, una pagina per file dentro pages/, le immagini in assets/. È quello che l'app scrive nella cartella condivisa, e si apre con Obsidian così com'è.</li>
-              <li>Le scadenze in .ics: si aprono in Calendario, Outlook o Google Calendar.</li>
+              <li>Le scadenze in .ics, con il promemoria dentro: si aprono in Calendario, Outlook o Google Calendar, e a suonare è il tuo calendario.</li>
               <li>Le attività in .csv, per Excel, Numbers o Fogli Google.</li>
               <li>La rubrica in .csv e in .vcf (vCard): la seconda si apre in Contatti, Outlook o Google Contatti.</li>
               <li>Una pagina o la bacheca come pagina web in un file solo, che si apre in qualsiasi browser senza l'app.</li>
@@ -326,7 +327,7 @@
             </div>
           </div>
         </div>
-        <p class="app-meta"><span><b>Versione</b> 4.14.0</span><span><b>Aggiornata il</b> 11 settembre 2026</span><span><b>Licenza</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/plan-scope" rel="noopener">Codice sorgente</a></p>
+        <p class="app-meta"><span><b>Versione</b> 4.15.2</span><span><b>Aggiornata il</b> 11 settembre 2026</span><span><b>Licenza</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/plan-scope" rel="noopener">Codice sorgente</a></p>
       </div>
     </section>
 
@@ -354,6 +355,10 @@
           <details class="faq-item reveal">
             <summary>Che succede se pulisco i dati del browser?</summary>
             <p>Spariscono, come tutto il resto di quel browser. Senza un server la tua copia è l'unica che esiste: esporta i progetti che ti servono, il file resta sul disco come qualsiasi altro.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>Mi avvisa quando una scadenza si avvicina?</summary>
+            <p>Sì, e conviene sapere come, perché i modi sono tre e non funzionano tutti dappertutto. Il primo vale sempre: il calendario che esporti porta il promemoria dentro il file, quindi a suonare è il tuo calendario — sul telefono, alle nove, anche se questa app non la apri per mesi. Il secondo vale sempre anche lui: quando riapri l'app, ti dice cosa è maturato mentre non c'eri. Il terzo è la notifica di sistema, e quella dipende dal browser: con l'app installata su Chrome o Edge arriva anche a finestra chiusa, quando il browser sveglia l'app — non a un orario deciso da noi, perché senza un server l'app non può svegliarsi da sola. Su Safari, su iPhone e su Firefox restano i primi due. Quanti giorni prima e a che ora lo scegli tu.</p>
           </details>
           <details class="faq-item reveal">
             <summary>In che formato escono i miei testi?</summary>

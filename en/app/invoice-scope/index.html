@@ -52,7 +52,7 @@
     "url": "https://ggtechnologies.sm/en/app/invoice-scope/",
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "Any (web browser)",
-    "softwareVersion": "0.41.7",
+    "softwareVersion": "0.42.1",
     "datePublished": "2026-09-03",
     "dateModified": "2026-09-10",
     "license": "https://www.apache.org/licenses/LICENSE-2.0",
@@ -213,6 +213,7 @@
               <li>Records purchases too: the invoices you receive — from their XML file, or by hand — and expenses without an invoice, with the supplier, the category, the tax and the due date, and the payments you make; a received credit note subtracts by itself. The schedule takes both directions, with the balance at the top; the overview shows the year's margin, revenue and costs month by month, who you owe most, and the quarter's and year's VAT — on sales, on purchases, to pay — to check the accountant's figures. For a San Marino company the single-stage import tax on purchases is recorded as a cost, at its own rate.</li>
               <li>Knows the costs that come back: write the hosting fee, the rent or the insurance once, with its frequency, and the app expects them month by month to the end of the year. The overview shows the year's costs as they will end up, the schedule shows what will go out; when the invoice arrives you confirm it and the expected row disappears. An invoice from the same supplier in the same month attaches by itself when imported.</li>
               <li>Exports a CSV of the period for whoever keeps the books: issued documents and purchases in the same file, with a column saying which way each one goes.</li>
+              <li>Reminds you of what is due, both ways: the schedule comes out as an .ics calendar — with the reminder inside, so your own calendar sounds it, on your phone, with the app closed — with a summary when you open the app again, and with a system notification where the browser allows one. You choose how many days before and at what time; installed, the icon carries the number of overdue ones.</li>
               <li>Prints a courtesy copy on your letterhead, with your logo and contact details, which states that it is not the fiscal original.</li>
               <li>Works without a connection, and installs like an application.</li>
             </ul>
@@ -327,7 +328,7 @@
             </div>
           </div>
         </div>
-        <p class="app-meta"><span><b>Version</b> 0.41.7</span><span><b>Updated</b> 10 September 2026</span><span><b>Licence</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope" rel="noopener">Source code</a></p>
+        <p class="app-meta"><span><b>Version</b> 0.42.1</span><span><b>Updated</b> 10 September 2026</span><span><b>Licence</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope" rel="noopener">Source code</a></p>
       </div>
     </section>
 
@@ -336,6 +337,10 @@
         <div class="kicker">FAQ</div>
         <h2>Frequently asked questions</h2>
         <div class="faq-list">
+          <details class="faq-item reveal">
+            <summary>Does it warn me when something is coming due?</summary>
+            <p>Yes, and it is worth knowing how, because there are three ways and they do not all work everywhere. The first always works: the schedule comes out as a calendar and the reminder travels inside the file, so your own calendar sounds it — on your phone, at nine, even if you do not open this app for months. The second always works too: when you open the app again, a panel says what came due while you were away. The third is the system notification, and that one depends on the browser: with the app installed on Chrome or Edge it arrives with the window closed, when the browser wakes the app — not at a time we decide, because without a server the app cannot wake itself. On Safari, on iPhone and on Firefox the first two remain. You choose how many days before and at what time, in the settings.</p>
+          </details>
           <details class="faq-item reveal">
             <summary>Can I send the invoice straight from here?</summary>
             <p>No, and that is the boundary of the app. Transmission needs an accredited channel, a certified mailbox or the tax agency's portal: things a program with no server cannot have. The app prepares the correct file, and you upload it where you already upload the others.</p>
