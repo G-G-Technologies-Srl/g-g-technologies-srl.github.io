@@ -54,9 +54,9 @@ function _dueLabel(iso, today) {
 /** La data, detta come distanza invece che come giorno: «fra 43 giorni» è quello che si chiede. */
 function _whenLabel(project, today) {
   const when = model.projectDate(project);
-  if (!when) return t("projectNoDate");
+  if (!when) return null;
   const days = model.daysBetween(today, when.value);
-  if (days === null) return t("projectNoDate");
+  if (days === null) return null;
   if (days === 0) return t("eventToday");
   if (days === 1) return t("eventTomorrow");
   if (days > 0) return tf("eventIn", { n: num(days, 0) });
@@ -83,10 +83,11 @@ function _projectCard(project, today) {
   // Il nome della data davanti al giorno: senza, «fra 12 giorni» lascia indovinare cosa succede
   // fra dodici giorni, ed è proprio la cosa che «Data evento» dava per scontata su ogni progetto.
   const dated = model.projectDate(project);
-  const when = node("span", "project-card-when");
-  when.append(dated ? `${dated.key} · ${shortDate(dated.value)} · ${_whenLabel(project, today)}`
-    : t("projectNoDate"));
-  card.append(when);
+  const said = dated && _whenLabel(project, today);
+  // Niente data, niente riga: scrivere «senza data» occupa il posto di un'informazione per dire
+  // che non ce n'è una, e su una dashboard di progetti che una data non ce l'hanno è la parola
+  // che si ripete di più.
+  if (said) card.append(node("span", "project-card-when", `${dated.key} · ${shortDate(dated.value)} · ${said}`));
 
   const { done, total } = model.progressOf(project.id);
   card.append(node("span", "project-card-progress",
@@ -339,9 +340,11 @@ function _paintProjectWhen(id) {
   const project = model.project(id);
   if (!project) return;
   const dated = model.projectDate(project);
-  el("projectWhen").textContent = dated
-    ? `${dated.key} · ${longDate(dated.value)} · ${_whenLabel(project, model.todayISO())}`
-    : t("projectNoDate");
+  const said = dated && _whenLabel(project, model.todayISO());
+  // Nascosta e non svuotata: il trattino davanti all'occhiello lo disegna `.kicker::before`, e con
+  // il testo vuoto resterebbe una lineetta sospesa sopra il nome del progetto.
+  el("projectWhen").hidden = !said;
+  el("projectWhen").textContent = said ? `${dated.key} · ${longDate(dated.value)} · ${said}` : "";
 }
 
 export function paintHome(room) {

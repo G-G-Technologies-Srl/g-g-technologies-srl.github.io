@@ -261,4 +261,15 @@ test("ogni chiave chiesta dai template esiste in italiano e in inglese", () => {
   assert.ok(asked.size > 60, `solo ${asked.size} chiavi chieste: il test non sta coprendo niente`);
 });
 
+test("i modelli che contano i giorni dicono come si chiama il loro giorno-zero", () => {
+  // «Evento», «Campagna» e «Lancio» costruiscono le attività a partire da una data: per loro quel
+  // giorno ha già un nome, e la schermata di creazione lo propone così che la proprietà nasca
+  // battezzata e marcata. «Guida» e «Vuoto» i giorni non li contano, e un nome non lo hanno.
+  for (const one of templates.shown()) {
+    const conta = (one.tasks || []).some((task) => task.offset !== undefined && task.offset !== null);
+    assert.equal(Boolean(one.dateName), conta,
+      `«${one.key}»: conta i giorni ${conta}, ma il nome della data ${Boolean(one.dateName)}`);
+  }
+});
+
 console.log(`templates: ${passed} prove passate, ${asked.size} chiavi verificate`);

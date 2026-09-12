@@ -1439,6 +1439,21 @@ async function _offerUndo(step, message, { also = null } = {}) {
  * dropdown would hide three of them behind a click at the exact moment somebody is deciding whether
  * this app is worth the next five minutes.
  */
+/**
+ * Il nome della data che il modello scelto si aspetta.
+ *
+ * «Evento» conta sedici attività a partire dal giorno dell'evento, «Campagna» nove dalla partenza,
+ * «Lancio» undici dal lancio: per loro quel giorno ha già un nome, e farlo scrivere a mano sarebbe
+ * chiedere una cosa che si sa. Si propone e basta — quello che hai battuto tu non si tocca, e
+ * cambiare modello dopo aver scritto «scadenza bando» non te lo porta via.
+ */
+function _suggestDateName() {
+  const field = el("projectDateKey");
+  if (field.dataset.mine === "yes") return;
+  const one = templates.byKey(template);
+  field.value = one && one.dateName ? t(one.dateName) : "";
+}
+
 function _paintTemplates() {
   const choice = el("templateChoice");
   choice.replaceChildren(...templates.shown().map((one) => {
@@ -1450,6 +1465,7 @@ function _paintTemplates() {
     chip.append(node("span", "tpl-lead", t(one.lead)));
     chip.addEventListener("click", () => {
       template = one.key;
+      _suggestDateName();
       _paintTemplates();
     });
     return chip;
@@ -1812,6 +1828,7 @@ function _wire() {
   // ---- archive
   el("newProject").addEventListener("click", () => {
     el("newProjectForm").hidden = false;
+    _suggestDateName();
     _paintTemplates();
     el("createProject").disabled = !el("projectName").value.trim();
     el("projectName").focus();
@@ -1822,6 +1839,11 @@ function _wire() {
   // like it cannot be done.
   el("projectName").addEventListener("input", () => {
     el("createProject").disabled = !el("projectName").value.trim();
+  });
+  // Da qui in poi il nome della data è di chi l'ha scritto, e cambiare modello non lo sostituisce.
+  // Svuotare il campo restituisce la parola al modello: è il modo di dire «non ne avevo uno mio».
+  el("projectDateKey").addEventListener("input", () => {
+    el("projectDateKey").dataset.mine = el("projectDateKey").value.trim() ? "yes" : "no";
   });
   el("cancelProject").addEventListener("click", () => { el("newProjectForm").hidden = true; });
   el("newProjectForm").addEventListener("submit", async (event) => {
@@ -1846,6 +1868,7 @@ function _wire() {
     el("projectName").value = "";
     el("projectDate").value = "";
     el("projectDateKey").value = "";
+    el("projectDateKey").dataset.mine = "no";
     el("newProjectForm").hidden = true;
     _openProject(project.id);
   });
@@ -1863,6 +1886,8 @@ function _wire() {
     await _welcomed();
     await _openHome();
     el("newProjectForm").hidden = false;
+    _suggestDateName();
+    _paintTemplates();
     el("projectName").focus();
   });
   el("welcomeGuide").addEventListener("click", async () => {

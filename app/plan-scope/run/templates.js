@@ -24,6 +24,10 @@
 export const TEMPLATES = [
   {
     key: "event",
+    // Come si chiama il giorno da cui questo modello conta: diventa il nome della proprietà, e la
+    // proprietà nasce marcata. I modelli che i giorni non li contano — «Guida», «Vuoto» — non lo
+    // dicono, e per loro la riga della data resta quella neutra.
+    dateName: "tpl_event_date",
     name: "tpl_event",
     lead: "tpl_event_lead",
     pages: [
@@ -54,6 +58,7 @@ export const TEMPLATES = [
   },
   {
     key: "campaign",
+    dateName: "tpl_campaign_date",
     name: "tpl_campaign",
     lead: "tpl_campaign_lead",
     pages: [
@@ -74,6 +79,7 @@ export const TEMPLATES = [
   },
   {
     key: "launch",
+    dateName: "tpl_launch_date",
     name: "tpl_launch",
     lead: "tpl_launch_lead",
     pages: [
