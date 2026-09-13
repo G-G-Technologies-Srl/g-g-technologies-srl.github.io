@@ -94,6 +94,55 @@ function _versionOf(worker) {
 export async function setup({ badge, texts, onVersion = () => {}, script = "./sw.js" }) {
   if (!("serviceWorker" in navigator)) return null;
 
+  let current = null;                   // the running version, once the active worker answered
+  let announced = null;                 // the waiting worker on the badge, so it is announced once
+  let asked = false;                    // this page clicked «Aggiorna»: the reload is its own
+  let needsReload = false;              // the hand-over came from elsewhere: the light asks for a click
+  let reloading = false;
+  let confirmTimer = null;
+
+  const reload = () => {
+    if (reloading) return;
+    reloading = true;
+    window.location.reload();
+  };
+
+  const showCurrent = () => {
+    if (!current || announced) return;
+    badge.textContent = texts.version(current);
+    badge.title = "";
+    badge.removeAttribute("aria-label");
+    badge.classList.remove("ready");
+    badge.hidden = false;
+  };
+
+  // **La versione che gira si sa subito, e non ha niente a che vedere con la registrazione.**
+  //
+  // Chi sta servendo questa pagina è già lì: `controller` c'è dal primo istante e risponde in
+  // millisecondi. Eppure per mesi questa riga è arrivata *dopo* `await register(…)`, e con lei
+  // tutto il resto — il riquadro, l'ascolto degli aggiornamenti, i controlli periodici.
+  //
+  // Finché quella promessa pende non si vede **niente**: non «c'è una versione nuova», proprio
+  // nessun numero, il riquadro nascosto come se l'app non avesse una versione. E quella promessa
+  // pende esattamente quando la pagina è più interessante, cioè subito dopo una pubblicazione,
+  // perché è allora che il browser ha un worker nuovo da scaricare e installare. Misurato in
+  // laboratorio: **sessantun secondi** di riquadro vuoto dopo un aggiornamento, e in quei
+  // sessantun secondi la risposta alla domanda «quale versione sto usando?» era: nessuna.
+  //
+  // Adesso il numero compare appena il worker risponde, e la registrazione va per conto suo. Le due
+  // cose non hanno mai avuto motivo di stare in fila.
+  // Torna anche *se* la domanda è stata fatta, non solo com'è andata: un worker di prima di questa
+  // libreria non risponde, e la differenza fra «ha taciuto» e «non gliel'ho chiesto» vale un'attesa
+  // intera. Rifargli la domanda sarebbe un secondo timeout identico, e chi aspetta questa risposta
+  // — l'annuncio della versione nuova — aspetterebbe il doppio per sapere la stessa cosa.
+  const early = (async () => {
+    const now = navigator.serviceWorker.controller;
+    if (!now) return { chiesto: false, versione: null };
+    const versione = await _versionOf(now);
+    if (versione) { current = versione; showCurrent(); onVersion(versione); }
+    return { chiesto: true, versione };
+  })();
+
   // **The wait for `load` belongs here, and it is not ceremony.** Three apps wrapped this call in
   // a listener on `load` so that the registration would not compete with the first paint for
   // bandwidth — and `main()` is asynchronous, so it arrived at the call *after* `load` had already
@@ -112,18 +161,14 @@ export async function setup({ badge, texts, onVersion = () => {}, script = "./sw
     return null;                        // offline on the first visit, or a locked-down browser
   }
 
-  let current = null;                   // the running version, once the active worker answered
-  let announced = null;                 // the waiting worker on the badge, so it is announced once
-  let asked = false;                    // this page clicked «Aggiorna»: the reload is its own
-  let needsReload = false;              // the hand-over came from elsewhere: the light asks for a click
-  let reloading = false;
-  let confirmTimer = null;
-
   // The running version, asked first: the badge at rest needs it, and the badge with a version
   // waiting needs it too — «v0.29.0 → 0.30.0» — so the announcement waits for this answer. On the
   // first visit nobody is in charge yet: `ready` is the promise for exactly that moment.
   const currentKnown = (async () => {
-    const now = navigator.serviceWorker.controller || registration.active;
+    const first = await early;
+    if (first.versione) return current;
+    if (first.chiesto) return null;     // c'era, ha taciuto: è un worker di prima della libreria
+    const now = registration.active;
     if (now) return (current = await _versionOf(now));
     const ready = await Promise.race([
       navigator.serviceWorker.ready,
@@ -132,21 +177,6 @@ export async function setup({ badge, texts, onVersion = () => {}, script = "./sw
     const later = navigator.serviceWorker.controller || (ready && ready.active) || registration.active;
     return (current = await _versionOf(later));
   })();
-
-  const reload = () => {
-    if (reloading) return;
-    reloading = true;
-    window.location.reload();
-  };
-
-  const showCurrent = () => {
-    if (!current || announced) return;
-    badge.textContent = texts.version(current);
-    badge.title = "";
-    badge.removeAttribute("aria-label");
-    badge.classList.remove("ready");
-    badge.hidden = false;
-  };
 
   /** The light in its «click me» state, with the sentence and the label given. */
   const light = (text, label) => {

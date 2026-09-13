@@ -12,7 +12,7 @@
 //    prossimo avvio. Scambiare i file sotto un'app che sta girando vuol dire cambiare il codice a
 //    qualcuno che è a metà partita.
 
-const VERSION = '0.15.0';
+const VERSION = '0.15.1';
 const CACHE = `recinto-v${VERSION}`;
 
 // Ogni file di cui l'app è fatta, più i moduli condivisi che prende in prestito. Tenuto a mano e
@@ -55,8 +55,22 @@ const ASSETS = [
   '../../_lib/io.js',
 ];
 
+// **Ogni file si prende dalla rete, non dalla cache del browser.**
+//
+// `cache.addAll` fa dei fetch normali, e un fetch normale rispetta la cache HTTP. Con un `max-age`
+// di dieci minuti — quello che mette un host statico qualunque — un worker nuovo che si installa
+// poco dopo una pubblicazione si riempie dei file **vecchi**, che lì dentro sono ancora freschi.
+// L'unico che sfugge è `sw.js`, perché quello il browser lo ricontrolla sempre da sé.
+//
+// L'effetto è il peggiore che un aggiornamento possa avere: **l'app dichiara la versione nuova e
+// gira col codice vecchio**, perché il numero di versione viene proprio da questo file. Misurato e
+// non temuto: in prova, la cache che porta il nome della versione nuova conteneva i file della
+// versione precedente.
+//
+// `cache: 'reload'` toglie di mezzo la cache HTTP per questi file, una volta sola, all'installazione.
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)));
+  event.waitUntil(caches.open(CACHE).then(
+    (cache) => cache.addAll(ASSETS.map((url) => new Request(url, { cache: 'reload' })))));
 });
 
 self.addEventListener('activate', (event) => {

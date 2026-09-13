@@ -1270,6 +1270,67 @@ esattamente il pensiero che precede questo genere di errore.
 
 ---
 
+## «Sei sicuro che il worker per l'aggiornamento funzioni?»
+
+No, non lo ero: quel percorso non l'avevo mai provato da un capo all'altro. Provandolo sono venuti
+fuori due difetti, tutti e due in codice condiviso da tutte e sette le app, e tutti e due invisibili
+a qualunque prova che non sia una pubblicazione vera seguita da un browser che aveva già aperto
+l'app prima.
+
+Il banco di prova è questo: si serve la versione vecchia, si aspetta che il service worker prenda il
+comando, si **riscrivono i file al loro posto** come fa una pubblicazione, si ricarica, e si guarda.
+
+**Primo difetto: il riquadro della versione spariva.**
+
+Non «non proponeva l'aggiornamento»: spariva proprio, vuoto e nascosto, come se l'app non avesse una
+versione. La causa è una riga di struttura — in `update.js` tutto stava in fila dietro
+`await navigator.serviceWorker.register(…)`, compreso il numero della versione corrente. Ma quella
+promessa si risolve quando il browser ha finito di controllare e installare l'eventuale worker
+nuovo, cioè **può metterci un minuto proprio dopo una pubblicazione**, che è l'unico momento in cui
+qualcuno guarda quel riquadro. Misurato: sessantun secondi di riquadro vuoto.
+
+Eppure la versione che gira si sa subito: chi sta servendo la pagina è già lì, `controller` c'è dal
+primo istante e risponde in millisecondi. Le due cose non hanno mai avuto motivo di stare in fila.
+Adesso il numero compare al primo respiro e la registrazione va per conto suo.
+
+La correzione ha rotto una prova, ed era la prova ad avere ragione: chiedevo la versione allo stesso
+worker **due volte**, e con un worker di prima di questa libreria — che non risponde — due attese da
+un secondo e mezzo diventavano tre. Da lì la distinzione fra «ha taciuto» e «non gliel'ho chiesto»,
+che vale un'attesa intera.
+
+**Secondo difetto, peggiore: la cache nuova si riempiva di file vecchi.**
+
+`cache.addAll(ASSETS)` fa dei fetch normali, e un fetch normale rispetta la cache HTTP. Con un
+`max-age` di dieci minuti — quello che mette qualunque host statico — il worker nuovo, installandosi
+subito dopo una pubblicazione, si prendeva i file **vecchi**, ancora freschi lì dentro. L'unico a
+sfuggire è `sw.js`, perché quello il browser lo ricontrolla sempre da sé.
+
+E `sw.js` è il file che porta il numero di versione. Il risultato è la peggiore forma di
+aggiornamento sbagliato che esista: **l'app dichiara la versione nuova e gira col codice vecchio.**
+Verificato guardando dentro la cache: `recinto-v0.15.0` conteneva l'`i18n.js` della 0.13.0, e dopo
+l'aggiornamento il pulsante del gettone diceva ancora la parola della versione precedente mentre il
+riquadro diceva 0.15.0. `cache: 'reload'` sulle richieste di `addAll` lo toglie di mezzo, in una
+riga, in tutti e sette i service worker.
+
+**Le due misure, prima e dopo, sullo stesso banco:**
+
+| | prima | dopo |
+|---|---|---|
+| riquadro a +6s dalla pubblicazione | vuoto e nascosto | `v0.13.0` |
+| riquadro quando il controllo finisce | `v0.13.0 → 0.15.0` | `v0.13.0 → 0.15.0` |
+| dopo il clic: versione dichiarata | 0.15.0 | 0.15.0 |
+| dopo il clic: codice che gira | **quello vecchio** | quello nuovo |
+
+I sessantun secondi restano, e non sono nostri: è il browser che decide quando ricontrollare
+`sw.js`. Vanno presi per quello che sono — una misura in Chromium senza testa, dentro un container;
+su una macchina vera possono essere due secondi. Quello che era nostro, e adesso è a posto, è che
+per tutto quel tempo non si vedesse niente.
+
+Le regole sono finite in `app/CLAUDE.md`, dove valgono per tutte le app, e non solo qui: una lezione
+che vive nel diario di un'app sola è una lezione che la prossima app non riceve.
+
+---
+
 ## Cosa non fa
 
 Da scrivere nella scheda, ed è la sezione che qualifica il resto:
