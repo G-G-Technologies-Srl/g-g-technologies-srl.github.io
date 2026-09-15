@@ -1319,6 +1319,21 @@ input.when-field.late { color: var(--late); }
   color: var(--faint);
 }
 
+/* Il segno di un appuntamento sulla linea del tempo. Tratteggiato e non pieno: la riga piena è
+   «oggi», che è una sola e non si discute, e due righe continue dello stesso peso si leggerebbero
+   come due «oggi». Dietro le barre (`z-index` più basso) perché è contesto, non una cosa da
+   prendere e spostare. */
+.tl-meet {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 2px dashed var(--accent);
+  opacity: 0.32;
+  pointer-events: none;
+  z-index: 0;
+}
+
 /* Today, drawn once behind everything: on a plan the question is always "where are we now". */
 .tl-now {
   position: absolute;
@@ -1758,6 +1773,23 @@ dialog.search input[type="search"] { width: 100%; font-size: 16px; }
 @media (max-width: 560px) {
   .page-head { margin-inline: 0; }
 }
+
+/* La riga di un appuntamento. Al posto della casella da spuntare c'è l'ora, perché a un
+   appuntamento non si risponde «fatto» ma «ci sono stato», e una casella accanto a una riunione
+   di ieri chiederebbe di dichiarare finita una cosa che non era da finire. L'ora sta larga quanto
+   «00:00» così i titoli di righe diverse partono allineati. */
+.meet-mark {
+  flex: 0 0 auto;
+  min-width: 38px;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-text);
+  text-align: center;
+}
+
+/* Passato e non «in ritardo»: la differenza fra una cosa che non hai finito e una che è successa
+   senza di te. Smorzata, non gialla — l'ambra qui vorrebbe dire «rimediaci», e non si può. */
+.when.gone { color: var(--faint); }
 
 /* Solo lo stacco: il colore dell'etichetta lo decide la sua tinta, non la riga che la ospita. */
 .row-item .badge.tag { margin-left: 6px; }

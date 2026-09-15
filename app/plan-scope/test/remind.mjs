@@ -30,15 +30,51 @@ function test(name, fn) {
 // -----------------------------------------------------------------------------------------------------------------
 
 test("un'impostazione fuori dai limiti rientra invece di essere rifiutata", () => {
-  assert.deepEqual(remind.clean({ on: true, days: 99, hour: 25 }), { on: true, days: 30, hour: 23 });
-  assert.deepEqual(remind.clean({ on: 1, days: -3, hour: -1 }), { on: true, days: 0, hour: 0 });
-  assert.deepEqual(remind.clean(null), { on: false, days: 1, hour: 9 });
-  assert.deepEqual(remind.clean({ on: true, days: "2", hour: "8" }), { on: true, days: 2, hour: 8 });
+  assert.deepEqual(remind.clean({ on: true, days: 99, hour: 25, before: 5000 }),
+    { on: true, days: 30, hour: 23, before: 1440 });
+  assert.deepEqual(remind.clean({ on: 1, days: -3, hour: -1, before: -10 }),
+    { on: true, days: 0, hour: 0, before: 0 });
+  assert.deepEqual(remind.clean(null), { on: false, days: 1, hour: 9, before: 30 });
+  assert.deepEqual(remind.clean({ on: true, days: "2", hour: "8", before: "45" }),
+    { on: true, days: 2, hour: 8, before: 45 });
+});
+
+// -----------------------------------------------------------------------------------------------------------------
+//  l ' a n t i c i p o   d i   u n   a p p u n t a m e n t o
+// -----------------------------------------------------------------------------------------------------------------
+
+test("un appuntamento suona i suoi minuti prima, non il giorno prima alle nove", () => {
+  const at = remind.whenAt("2026-09-24", "15:00", { before: 30 });
+  assert.equal(at.getFullYear(), 2026);
+  assert.equal(at.getMonth(), 8);
+  assert.equal(at.getDate(), 24);
+  assert.equal(at.getHours(), 14);
+  assert.equal(at.getMinutes(), 30);
+});
+
+test("un anticipo che scavalca la mezzanotte cade il giorno prima", () => {
+  const at = remind.whenAt("2026-09-24", "00:30", { before: 60 });
+  assert.equal(at.getDate(), 23);
+  assert.equal(at.getHours(), 23);
+  assert.equal(at.getMinutes(), 30);
+});
+
+test("senza un'ora non c'è un istante da anticipare", () => {
+  assert.equal(remind.whenAt("2026-09-24", "", { before: 30 }), null);
+  assert.equal(remind.whenAt("", "15:00", { before: 30 }), null);
+  assert.equal(remind.whenAt("2026-09-24", "dopo pranzo", { before: 30 }), null);
+});
+
+test("l'istante si costruisce dalle parti, quindi il fuso non lo sposta", () => {
+  // La stessa trappola di `when()`: `new Date("2026-09-24T15:00")` è a discrezione del browser, e
+  // qui vorrebbe dire una sveglia a un'ora che nessuno ha chiesto.
+  const at = remind.whenAt("2026-09-24", "15:00", { before: 0 });
+  assert.equal(`${at.getHours()}:${String(at.getMinutes()).padStart(2, "0")}`, "15:00");
 });
 
 test("una parola al posto di un numero non porta via il valore buono", () => {
-  assert.deepEqual(remind.clean({ on: true, days: "domani", hour: null }),
-    { on: true, days: 1, hour: 9 }, "torna al valore di partenza, non a zero");
+  assert.deepEqual(remind.clean({ on: true, days: "domani", hour: null, before: "poco" }),
+    { on: true, days: 1, hour: 9, before: 30 }, "torna al valore di partenza, non a zero");
 });
 
 // -----------------------------------------------------------------------------------------------------------------

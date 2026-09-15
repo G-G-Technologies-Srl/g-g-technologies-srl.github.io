@@ -230,21 +230,69 @@ function _paintCrumbs() {
  * proprietà sono nella lingua di chi scrive, perché la pagina è un file Markdown che deve restare
  * leggibile fuori dall'app — e fuori dall'app «con» e «with» li legge una persona, non un parser.
  */
-function _newMeeting(target, withName = "") {
-  const today = model.todayISO();
+/**
+ * «Quando?», prima di scrivere.
+ *
+ * Un appuntamento si prende, e la prima cosa che si sa è il giorno e l'ora. Prima la pagina nasceva
+ * con la data di oggi e la si correggeva subito dopo: il verso previsto era «ho appena finito una
+ * riunione, scrivo il verbale», che è metà dei casi e non tutti.
+ */
+async function _askMeeting(target, withName = "") {
+  el("meetWhat").value = "";
+  el("meetDate").value = model.todayISO();
+  el("meetTime").value = "";
+  el("meetWith").value = withName;
+  el("meetWhere").value = "";
+  fill(el("meetWithList"), model.peopleOf(target).map(({ name }) => {
+    const option = document.createElement("option");
+    option.value = name;
+    return option;
+  }));
+  for (const [id, key] of [["meetWhatLabel", "meetWhat"], ["meetDateLabel", "meetDate"],
+    ["meetTimeLabel", "meetTime"], ["meetWithLabel", "meetWith"], ["meetWhereLabel", "meetWhere"]]) {
+    el(id).textContent = t(key);
+  }
+  el("meetDialog").showModal();
+  el("meetWhat").focus();
+  const said = await new Promise((resolve) => {
+    const close = (outcome) => {
+      el("meetDialog").removeEventListener("close", onClose);
+      if (el("meetDialog").open) el("meetDialog").close();
+      resolve(outcome);
+    };
+    const onClose = () => close(null);
+    el("meetDialog").addEventListener("close", onClose);
+    el("meetForm").onsubmit = (event) => {
+      event.preventDefault();
+      close({ what: el("meetWhat").value.trim(), date: el("meetDate").value,
+        time: el("meetTime").value, with: el("meetWith").value.trim(),
+        where: el("meetWhere").value.trim() });
+    };
+    el("meetCancel").onclick = () => close(null);
+  });
+  if (!said || !said.date) return null;
+  return _newMeeting(target, said);
+}
+
+function _newMeeting(target, said = {}) {
+  const day = said.date || model.todayISO();
   // Solo quello che ha un valore: una proprietà vuota, in questo formato, non esiste — la riga
-  // finisce fra quelle «portate e non lette» e nell'editore non compare. Le caselle da riempire di
-  // un incontro le offre `_paintProps`, che sa di stare guardando un incontro.
+  // finisce fra quelle «portate e non lette» e nell'editore non compare. Le caselle rimaste da
+  // riempire le offre `_paintProps`, che sa di stare guardando un incontro.
   const head = [
     "---",
     `${t("propKind")}: ${t("meetingKind")}`,
-    `${t("propDate")}: ${today}`,
-    ...(withName ? [`${t("propWith")}: ${withName}`] : []),
+    `${t("propDate")}: ${day}`,
+    ...(said.time ? [`${t("propTime")}: ${said.time}`] : []),
+    ...(said.with ? [`${t("propWith")}: ${said.with}`] : []),
+    ...(said.where ? [`${t("propWhere")}: ${said.where}`] : []),
     "---",
     "",
     "",
   ].join("\n");
-  const page = model.createPage(target, { title: tf("meetingTitle", { date: longDate(today) }) });
+  const page = model.createPage(target, {
+    title: said.what || tf("meetingTitle", { date: longDate(day) }),
+  });
   model.setMarkdown(page.id, head);
   projectId = target;
   _openPage(page.id);
@@ -1289,6 +1337,21 @@ async function _remindDigest() {
         text: tf("remindOne", { title, when: longDate(task.end) }),
       });
     }
+    // Gli appuntamenti nello stesso digest, con la loro ora: è la sveglia che per una riunione
+    // conta più che per una scadenza — una consegna che slitta di due ore non è successo niente,
+    // una riunione persa è persa.
+    for (const meeting of model.meetingsOf(project.id)) {
+      const title = meeting.page.title || t("pageUntitled");
+      items.push({
+        id: meeting.page.uid || meeting.page.id,
+        date: meeting.date,
+        time: meeting.time,
+        label: title,
+        text: meeting.time
+          ? tf("remindMeetingAt", { title, when: longDate(meeting.date), time: meeting.time })
+          : tf("remindOne", { title, when: longDate(meeting.date) }),
+      });
+    }
   }
   const before = await remind.kept(remind.notes(db.DB));
   const saved = remind.digest(items, settings, {
@@ -1324,6 +1387,7 @@ async function _remindPaint() {
     on: el("remindOn").checked,
     days: el("remindDays").value,
     hour: el("remindHour").value,
+    before: el("remindBefore").value,
   });
 
   // Una scadenza d'esempio fra una settimana, con le date vere: è il modo più corto di far vedere
@@ -1362,6 +1426,7 @@ async function _openRemind() {
   el("remindOn").checked = settings.on;
   el("remindDays").value = String(settings.days);
   el("remindHour").value = String(settings.hour);
+  el("remindBefore").value = String(settings.before);
   await _remindPaint();
   el("remindDialog").showModal();
 }
@@ -1371,6 +1436,7 @@ async function _saveRemind() {
     on: el("remindOn").checked,
     days: el("remindDays").value,
     hour: el("remindHour").value,
+    before: el("remindBefore").value,
   });
   if (db.available()) await db.setMeta("remind", settings);
   // Il risveglio si chiede solo se serve e solo se è permesso, e si disdice appena non serve: una
@@ -1912,7 +1978,7 @@ function _wire() {
   el("openRemind").addEventListener("click", () => _openRemind());
   el("remindForm").addEventListener("submit", (event) => { event.preventDefault(); _saveRemind(); });
   el("remindCancel").addEventListener("click", () => el("remindDialog").close());
-  for (const id of ["remindOn", "remindDays", "remindHour"]) {
+  for (const id of ["remindOn", "remindDays", "remindHour", "remindBefore"]) {
     el(id).addEventListener("input", () => { _remindPaint(); });
     el(id).addEventListener("change", () => { _remindPaint(); });
   }
@@ -2111,7 +2177,7 @@ function _wire() {
   // ---- the shared folder
   // ---- chi lavora a un progetto
   el("peopleAll").addEventListener("click", () => _openRubrica());
-  el("newMeeting").addEventListener("click", () => { if (projectId) _newMeeting(projectId); });
+  el("newMeeting").addEventListener("click", () => { if (projectId) _askMeeting(projectId); });
   el("boxesToPlan").addEventListener("click", () => _boxesToPlan());
   // Da una persona: l'incontro nasce già con il suo nome in testa, che è il gesto vero — nessuno
   // apre la rubrica per creare una pagina vuota.
@@ -2120,11 +2186,11 @@ function _wire() {
     if (!person) return undefined;
     const where = model.projectsOfContact(person.uid || person.id);
     if (!where.length) return snack(t("personProjectsNone"));
-    if (where.length === 1) return _newMeeting(where[0].project.id, person.name) && undefined;
+    if (where.length === 1) return _askMeeting(where[0].project.id, person.name) && undefined;
     const chosen = await ask(t("meetingWhere"), {
       options: where.map(({ project }) => ({ value: project.id, label: project.name || t("projectUntitled") })),
     });
-    if (chosen) _newMeeting(chosen, person.name);
+    if (chosen) _askMeeting(chosen, person.name);
     return undefined;
   });
   el("addWhereForm").addEventListener("submit", (event) => {

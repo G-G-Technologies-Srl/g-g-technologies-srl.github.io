@@ -73,6 +73,12 @@ function _range(tasks) {
     if (span.start < first) first = span.start;
     if (span.end > last) last = span.end;
   }
+  // La finestra si allarga fino agli appuntamenti: uno segnato dopo l'ultima attività cadrebbe
+  // fuori dal disegno, cioè si vedrebbe solo quando c'è già del lavoro più in là di lui.
+  for (const meeting of model.meetingsOf(projectId)) {
+    if (meeting.date < first) first = meeting.date;
+    if (meeting.date > last) last = meeting.date;
+  }
   return {
     first: model.addDays(first, -MARGIN_DAYS),
     last: model.addDays(last, MARGIN_DAYS),
@@ -281,6 +287,28 @@ function _row(task, range, today) {
   return row;
 }
 
+/**
+ * I segni degli appuntamenti: una riga verticale sul loro giorno, dietro le barre.
+ *
+ * La linea del tempo parla di **quando**, e un appuntamento è la cosa che quando ce l'ha più
+ * definito di tutte: un'ora. Restava fuori, e una fiera con tre riunioni dentro si leggeva come se
+ * quelle tre settimane fossero solo lavoro. Dietro e non davanti, perché è un contesto e non un
+ * elemento da trascinare: dice «quel giorno c'è anche questo», non «sposta me».
+ */
+function _meetMarks(range) {
+  const out = [];
+  for (const meeting of model.meetingsOf(projectId)) {
+    const at = model.daysBetween(range.first, meeting.date);
+    if (at === null || at < 0) continue;
+    const mark = node("div", "tl-meet");
+    mark.style.left = `${TITLE + at * DAY}px`;
+    mark.title = [meeting.time, meeting.page.title || ""].filter(Boolean).join(" ");
+    mark.setAttribute("aria-hidden", "true");
+    out.push(mark);
+  }
+  return out;
+}
+
 function _todayLine(range) {
   const today = model.todayISO();
   const at = model.daysBetween(range.first, today);
@@ -325,6 +353,7 @@ export function paint(tasks) {
   const grid = node("div", "tl-grid");
   const line = _todayLine(range);
   if (line) grid.append(line);
+  for (const mark of _meetMarks(range)) grid.append(mark);
 
   for (const column of project.columns) {
     const here = tasks.filter((task) => task.status === column.id);

@@ -267,6 +267,10 @@
           </div>
           <ul class="list" id="dueList"></ul>
           <p class="note" id="dueEmpty" data-t="dueEmpty" hidden></p>
+          <!-- Qui e non fra i documenti. Un appuntamento è una cosa che succederà, e si prende
+               guardando i giorni: metterlo accanto a «aggiungi una pagina» lo faceva sembrare un
+               verbale da scrivere, che è quello che diventa **dopo**. -->
+          <button type="button" id="newMeeting" class="ghost small" data-t="newMeeting"></button>
         </div>
 
         <!-- Chi ci lavora, e in che veste. Si riempie anche da solo: assegnare un'attività a
@@ -314,9 +318,6 @@
           <form class="row" id="newPageForm">
             <input type="text" id="pageField" maxlength="120" autocomplete="off">
             <button type="submit" id="addPage" class="primary" data-t="addPage"></button>
-            <!-- Una pagina con le righe già in testa: chi torna da una riunione scrive quello che si
-                 sono detti, non il formato in cui scriverlo. -->
-            <button type="button" id="newMeeting" data-t="newMeeting"></button>
           </form>
         </div>
 
@@ -953,6 +954,14 @@
       <label for="remindHour" data-t="remindHour"></label>
       <input type="number" id="remindHour" min="0" max="23" step="1" inputmode="numeric">
     </div>
+    <!-- Un appuntamento si misura in minuti, non in giorni-alle-nove: a una riunione delle 15:00
+         la sveglia serve alle 14:30, e «il giorno prima alle nove» avviserebbe quando non si può
+         ancora fare niente e tacerebbe quando bisogna uscire. -->
+    <div class="row remind-when">
+      <label for="remindBefore" data-t="remindBefore"></label>
+      <input type="number" id="remindBefore" min="0" max="1440" step="5" inputmode="numeric">
+      <span class="meta" data-t="remindBeforeUnit"></span>
+    </div>
     <p class="note" id="remindSays"></p>
     <!-- Il permesso si chiede da qui e da nessun altro posto: chiesto all'avvio, un «no» chiude
          la porta per sempre e dall'app non si riapre. -->
@@ -985,6 +994,37 @@
     <button type="button" id="pasteAdd" class="primary" data-t="pasteAdd"></button>
     <button type="button" id="pasteCancel" data-t="cancelProject"></button>
   </div>
+</dialog>
+
+<!-- «Quando?», che è la prima domanda di un appuntamento. Prima l'incontro nasceva al giorno in
+     cui lo si apriva, perché il verso previsto era «ho appena finito una riunione»: per segnarne
+     una futura si correggeva la data subito dopo, ogni volta. -->
+<dialog id="meetDialog">
+  <h2 data-t="meetTitle"></h2>
+  <form id="meetForm">
+    <label for="meetWhat" id="meetWhatLabel"></label>
+    <input type="text" id="meetWhat" maxlength="120" autocomplete="off">
+    <div class="card-dates">
+      <div>
+        <label for="meetDate" id="meetDateLabel"></label>
+        <input type="date" id="meetDate">
+      </div>
+      <div>
+        <label for="meetTime" id="meetTimeLabel"></label>
+        <input type="time" id="meetTime">
+      </div>
+    </div>
+    <label for="meetWith" id="meetWithLabel"></label>
+    <input type="text" id="meetWith" maxlength="120" autocomplete="off" list="meetWithList">
+    <datalist id="meetWithList"></datalist>
+    <label for="meetWhere" id="meetWhereLabel"></label>
+    <input type="text" id="meetWhere" maxlength="200" autocomplete="off"
+           data-t-placeholder="meetWhereHint">
+    <div class="row card-foot">
+      <button type="submit" id="meetOk" class="primary" data-t="meetOk"></button>
+      <button type="button" id="meetCancel" data-t="cancelProject"></button>
+    </div>
+  </form>
 </dialog>
 
 <dialog id="blockMenu">

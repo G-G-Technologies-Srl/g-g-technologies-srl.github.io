@@ -33,7 +33,12 @@
 // -----------------------------------------------------------------------------------------------------------------
 
 /** Spento, un giorno prima, alle nove: il valore che nessuno deve scegliere per cominciare. */
-export const DEFAULT = { on: false, days: 1, hour: 9 };
+// `before` è l'anticipo degli appuntamenti, in minuti. Sta a parte da `days`/`hour` perché misura
+// una cosa diversa: una scadenza è un giorno, e «il giorno prima alle nove» è la frase giusta; un
+// appuntamento è un istante, e a una riunione delle 15:00 la sveglia serve alle 14:30 — dirle «il
+// giorno prima alle nove» sarebbe avvisare quando non si può ancora fare niente, e tacere quando
+// bisognerebbe uscire di casa.
+export const DEFAULT = { on: false, days: 1, hour: 9, before: 30 };
 
 /** Il tag di `periodicSync`, e il nome sotto cui il digest sta nella cache. */
 export const TAG = "gg:due";
@@ -68,6 +73,7 @@ export function clean(settings) {
     on: Boolean(one.on),
     days: Math.min(30, Math.max(0, _number(one.days, DEFAULT.days))),
     hour: Math.min(23, Math.max(0, _number(one.hour, DEFAULT.hour))),
+    before: Math.min(1440, Math.max(0, _number(one.before, DEFAULT.before))),
   };
 }
 
@@ -137,6 +143,24 @@ export function when(date, { days, hour }) {
 }
 
 /**
+ * Quando suona per un appuntamento: il suo istante, meno l'anticipo.
+ *
+ * Come `when()`, l'istante si **costruisce** dalle parti invece di leggerlo da una stringa: un
+ * `new Date("2026-09-24T15:00")` è a discrezione del browser, e sbagliarlo qui vorrebbe dire una
+ * sveglia a un'ora che nessuno ha chiesto.
+ */
+export function whenAt(date, time, settings) {
+  const day_ = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(date || "").trim());
+  const clock = /^(\d{1,2}):(\d{2})$/.exec(String(time || "").trim());
+  if (!day_ || !clock) return null;
+  const one = clean({ on: true, ...(settings || {}) });
+  const at = new Date(Number(day_[1]), Number(day_[2]) - 1, Number(day_[3]),
+    Number(clock[1]), Number(clock[2]), 0, 0);
+  at.setMinutes(at.getMinutes() - one.before);
+  return at;
+}
+
+/**
  * Un `Date` come giorno scritto, `2026-09-19`, **preso dalle parti locali**.
  *
  * `toISOString().slice(0, 10)` su una mezzanotte locale dà il giorno prima ovunque a est di
@@ -174,10 +198,12 @@ export function digest(items, settings, { heading = "", said = [], now = new Dat
   const one = clean(settings);
   const out = [];
   for (const item of items || []) {
-    const at = when(item.date, one);
+    // Un appuntamento porta la sua ora, e allora la sveglia si misura da quella: `item.time` è
+    // quello che distingue «il giorno prima alle nove» da «mezz'ora prima».
+    const at = item.time ? whenAt(item.date, item.time, one) : when(item.date, one);
     if (!at) continue;
     out.push({
-      key: `${item.id}|${item.date}`,
+      key: `${item.id}|${item.date}${item.time ? `|${item.time}` : ""}`,
       when: at.toISOString(),
       date: String(item.date),
       label: String(item.label || item.text || ""),

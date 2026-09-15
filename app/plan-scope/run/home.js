@@ -261,6 +261,40 @@ function _pageRow(page, depth = 0) {
   return row;
 }
 
+/**
+ * La riga di un appuntamento, che **non** è la riga di un'attività travestita.
+ *
+ * Un appuntamento non si spunta: ci si va. Non è «in ritardo» il giorno dopo, è passato, e una
+ * casella da barrare accanto a una riunione di ieri chiederebbe di dichiarare fatto qualcosa che
+ * non era da fare. Quindi al posto della casella c'è l'orologio, al posto di «in ritardo» c'è la
+ * data e basta, e la riga porta con chi — che di un appuntamento è metà dell'informazione.
+ *
+ * Nella stessa lista delle scadenze, però: la domanda «cosa mi aspetta» è una sola, e due elenchi
+ * accanto costringerebbero a leggerne due per rispondersi.
+ */
+function _meetingRow(meeting, today, { project = null } = {}) {
+  const row = node("li", "row-item opens is-meeting");
+  row.append(node("span", "meet-mark", meeting.time || "·"));
+  row.append(button("link title", meeting.page.title || t("pageUntitled"),
+    () => on.openPage(meeting.page.id)));
+  if (project) row.append(node("span", "meta from", project.name || t("projectUntitled")));
+  if (meeting.with) row.append(node("span", "meta from", meeting.with));
+  row.append(node("span", "spacer"));
+  // Niente `late`: un appuntamento passato è passato, e dirgli «in ritardo» sarebbe rimproverare
+  // qualcuno per una cosa che non si poteva finire in tempo, perché non era da finire.
+  // Mai «in ritardo»: `_dueLabel` quella parola la dice, ed è giusta per una scadenza. Un
+  // appuntamento passato non è arretrato, è successo — o non ci sei andato, e in nessuno dei due
+  // casi c'è qualcosa da recuperare. Passato porta il suo giorno e basta.
+  row.append(meeting.date < today
+    ? node("span", "when gone", shortDate(meeting.date))
+    : node("span", "when", _dueLabel(meeting.date, today)));
+  row.addEventListener("click", (event) => {
+    if (event.target.closest("button")) return;
+    on.openPage(meeting.page.id);
+  });
+  return row;
+}
+
 function _taskRow(task, today, { project = null } = {}) {
   const row = node("li", "row-item opens");
   const done = model.isDone(task);
@@ -447,11 +481,21 @@ export function paintHome(room) {
   // Everything due across every project, late first. This is what a morning opens the app for, and
   // it is missing from every project card: the cards say *how much*, this says *what*.
   const due = projects
-    .flatMap((project) => model.dueSoon(project.id, { from: today })
-      .map((task) => ({ task, project })))
-    .sort((a, b) => a.task.end.localeCompare(b.task.end));
+    .flatMap((project) => [
+      ...model.dueSoon(project.id, { from: today }).map((task) => ({ when: task.end, task, project })),
+      // Gli appuntamenti nella stessa lista: è il pannello che si apre la mattina per sapere cosa
+      // aspetta, e una riunione domani alle 15:00 è esattamente quello. Restavano fuori, e per
+      // vederli bisognava entrare in un progetto e aprire il suo calendario.
+      ...model.meetingsOf(project.id)
+        .filter((one) => one.date >= today || one.date >= model.addDays(today, -7))
+        .map((meeting) => ({ when: meeting.date, meeting, project })),
+    ])
+    // A parità di giorno l'appuntamento viene prima: ha un'ora, quindi un posto nella giornata.
+    .sort((a, b) => a.when.localeCompare(b.when) || (a.meeting ? -1 : 1) - (b.meeting ? -1 : 1));
   el("todayPanel").hidden = projects.length === 0;
-  fill(el("todayList"), due.map(({ task, project }) => _taskRow(task, today, { project })));
+  fill(el("todayList"), due.map((one) => (one.meeting
+    ? _meetingRow(one.meeting, today, { project: one.project })
+    : _taskRow(one.task, today, { project: one.project }))));
   el("todayEmpty").hidden = due.length > 0;
 
   const trash = model.trashedProjects().length;
@@ -492,8 +536,14 @@ export function paintProject(id) {
     : "—";
   el("progressNote").textContent = total ? "" : t("progressNone");
 
-  const due = model.dueSoon(id, { from: today });
-  fill(el("dueList"), due.map((task) => _taskRow(task, today)));
+  const due = [
+    ...model.dueSoon(id, { from: today }).map((task) => ({ when: task.end, task })),
+    ...model.meetingsOf(id).filter((one) => one.date >= today)
+      .map((meeting) => ({ when: meeting.date, meeting })),
+  ].sort((a, b) => a.when.localeCompare(b.when) || (a.meeting ? -1 : 1) - (b.meeting ? -1 : 1));
+  fill(el("dueList"), due.map((one) => (one.meeting
+    ? _meetingRow(one.meeting, today)
+    : _taskRow(one.task, today))));
   el("dueEmpty").hidden = due.length > 0;
 
   // The pages in their tree, not in a flat list: a page written *inside* another one is a chapter of

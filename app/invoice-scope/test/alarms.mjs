@@ -94,7 +94,9 @@ await test("acceso, ogni scadenza porta la sua sveglia; spento, nessuna", async 
 await test("le impostazioni restano scritte, e rientrano nei limiti", async () => {
   const db = await pieno();
   await save(db, { on: true, days: 99, hour: 25 });
-  assert.deepEqual(await settings(db), { on: true, days: 30, hour: 23 });
+  // `before` è l'anticipo degli appuntamenti, che Invoice non ha: le impostazioni sono le stesse
+  // di Plan Scope perché lo scrittore è lo stesso, e il valore di partenza resta quello.
+  assert.deepEqual(await settings(db), { on: true, days: 30, hour: 23, before: 30 });
 });
 
 console.log(`alarms: ${passed} prove passate`);
