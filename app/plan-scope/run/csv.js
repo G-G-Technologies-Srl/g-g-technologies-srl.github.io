@@ -153,16 +153,30 @@ export function openBoxes(text) {
     .join("\n");
 }
 
-export function parseTaskList(text) {
+/**
+ * Una riga, un'attività: «@2026-09-20» la scadenza, «@Giulia» chi se ne occupa, «#stampa» un tag,
+ * «!» in fondo la priorità alta.
+ *
+ * La «@» dice due cose e si capisce da quello che segue: una data è una scadenza, tutto il resto è
+ * una persona. `people` sono i nomi che si prendono interi, spazi compresi — «@Tizio Caio» — e
+ * senza l'elenco «@» prende una parola sola.
+ */
+export function parseTaskList(text, { people = [] } = {}) {
   const out = [];
+  const known = [...people].map((one) => String(one || "").trim()).filter(Boolean)
+    .sort((a, b) => b.length - a.length)
+    .map((one) => one.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const person = new RegExp(`(^|\\s)@(${[...known, "[\\p{L}\\p{N}_][\\p{L}\\p{N}_-]*"].join("|")})(?![\\p{L}\\p{N}_])`, "u");
   for (const raw of String(text || "").split(/\r?\n/)) {
     let line = raw.trim();
     if (!line) continue;
     // The markers a list carries in Markdown, in Word, or in an assistant's answer.
     line = line.replace(/^(?:[-*+•]|\d+[.)])\s+/, "").replace(/^\[[ xX]\]\s*/, "").trim();
     if (!line) continue;
-    const found = { title: "", end: null, tags: [], priority: null };
+    const found = { title: "", end: null, tags: [], priority: null, assignee: null };
     line = line.replace(/@(\d{4}-\d{2}-\d{2})\b/g, (whole, day) => { found.end = day; return " "; });
+    // Una persona sola: un'attività ha un assegnatario, non un elenco. La prima vince.
+    line = line.replace(person, (whole, lead, name) => { found.assignee = found.assignee || name; return lead; });
     line = line.replace(/(?:^|\s)#([\p{L}\p{N}_-]+)/gu, (whole, tag) => { found.tags.push(tag); return " "; });
     if (/!\s*$/.test(line)) {
       found.priority = "high";

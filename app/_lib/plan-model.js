@@ -27,7 +27,7 @@
 // creation, and travels through every export and import. Two copies of a project on two computers
 // have different ids and the same uids, and that is what `merge` matches on.
 
-import { links, frontmatter, withFrontmatter } from "./plan-markdown.js";
+import { links, frontmatter, withFrontmatter, mentions } from "./plan-markdown.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -1351,7 +1351,8 @@ export function pagesAbout(uid) {
       const props = frontmatter(pageRecord.markdown || "").props || {};
       // Le due lingue dell'app, perché la pagina la scrive una persona nella sua.
       const named = String(props.con || props.with || "").split(",").map((name) => name.trim().toLowerCase());
-      if (!named.includes(wanted)) continue;
+      // Oppure nominata nel testo con «@»: una pagina che parla di lei anche senza averla in testa.
+      if (!named.includes(wanted) && !mentions(pageRecord.markdown, [person.name]).length) continue;
       out.push({ page: pageRecord, project: one, date: String(props.data || props.date || "") });
     }
   }

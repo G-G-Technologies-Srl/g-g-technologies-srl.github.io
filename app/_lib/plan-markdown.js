@@ -446,6 +446,8 @@ export function inlineHtml(text) {
   out = out.replace(/`([^`]+)`/g, (whole, code) => `<code>${code}</code>`);
   out = out.replace(/\[\[([^\]]+)\]\]/g,
     (whole, title) => `<a class="wiki" data-page="${title}" href="#">${title}</a>`);
+  out = out.replace(_mentionPattern(),
+    (whole, lead, name) => `${lead}<a class="mention" data-person="${name}" href="#">@${name}</a>`);
   // Only the schemes a link in a document can honestly have. A `javascript:` href in a page from
   // somebody else's export would run on this site's origin, where every app in the catalogue keeps
   // its data; a click inside the editor does not follow it, a Ctrl+click does. Anything else is
@@ -520,6 +522,66 @@ function _unquote(value) {
   }
   if (value.length >= 2 && value.startsWith("'") && value.endsWith("'")) return value.slice(1, -1);
   return value;
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  m e n t i o n s
+// -----------------------------------------------------------------------------------------------------------------
+
+// The people this module knows by name, longest first. `@Tizio Caio` reads as one person only when
+// Tizio Caio is somebody: without the list, `@` takes a single word. The app sets the list when a
+// page opens; this file stays free of the model.
+let people = [];
+
+/** The names `@` may take whole, spaces and all. Order does not matter: they are sorted here. */
+export function setPeople(names) {
+  const seen = new Set();
+  people = [];
+  for (const raw of Array.isArray(names) ? names : []) {
+    const clean = String(raw || "").trim();
+    if (!clean || seen.has(clean.toLowerCase())) continue;
+    seen.add(clean.toLowerCase());
+    people.push(clean);
+  }
+  people.sort((a, b) => b.length - a.length || a.localeCompare(b));
+}
+
+function _rx(text) {
+  return String(text).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * `@Name` in text: at the start, or after a space or a bracket, so that an address like
+ * `mario@example.com` is not two people. A known name wins over a single word, and the match ends
+ * at a boundary, so `@Anna` does not take «Annalisa» — she has her own name.
+ */
+function _mentionPattern() {
+  const known = people.map((name) => _rx(escape(name)));
+  const alts = [...known, "[\\p{L}\\p{N}_][\\p{L}\\p{N}_-]*"].join("|");
+  return new RegExp(`(^|[\\s(\\[])@(${alts})(?![\\p{L}\\p{N}_])`, "giu");
+}
+
+/** Every name this text mentions with `@` — known ones whole, unknown ones one word — once each. */
+export function mentionNames(text) {
+  const out = [];
+  const seen = new Set();
+  for (const found of String(text || "").matchAll(_mentionPattern())) {
+    const name = found[2];
+    if (seen.has(name.toLowerCase())) continue;
+    seen.add(name.toLowerCase());
+    out.push(name);
+  }
+  return out;
+}
+
+/** Of the given names, the ones this text mentions with `@`, without distinguishing the case. */
+export function mentions(text, names) {
+  const body = String(text || "");
+  return (Array.isArray(names) ? names : []).filter((name) => {
+    const clean = String(name || "").trim();
+    if (!clean) return false;
+    return new RegExp(`(^|[\\s(\\[])@${_rx(clean)}(?![\\p{L}\\p{N}_])`, "iu").test(body);
+  });
 }
 
 /** The titles this text links to, for the page that has to resolve them. */

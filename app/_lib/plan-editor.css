@@ -98,6 +98,21 @@
    hand clicks it. Clicking makes the page. */
 .editor a.wiki.missing { text-decoration-style: dotted; opacity: 0.8; }
 
+/* A person named in the text: the accent, as the app paints people everywhere, and no underline —
+   it is a name, not a link to be followed, though it opens the card when pressed. */
+.editor a.mention {
+  color: var(--accent-text);
+  text-decoration: none;
+  font-weight: 500;
+  border-radius: 4px;
+  padding: 0 2px;
+  margin: 0 -2px;
+}
+.editor a.mention:hover { background: var(--accent-soft); }
+
+/* The people menu holds names only: no sample column. */
+.menu-entry.person { grid-template-columns: 1fr; }
+
 .block.lifted { opacity: 0.4; }
 
 /* Where it will land: a line with a dot at its head, so it reads as a place and not as a border

@@ -16,7 +16,7 @@
 
 import assert from "node:assert/strict";
 
-import { parse, serialize, inlineHtml, images, links, assets, frontmatter, withFrontmatter } from "gg/plan-markdown.js";
+import { parse, serialize, inlineHtml, images, links, assets, frontmatter, withFrontmatter, setPeople, mentions, mentionNames } from "gg/plan-markdown.js";
 
 let passed = 0;
 
@@ -357,6 +357,32 @@ test("un collegamento negli asset è un allegato, e l'export sa quali file porta
   assert.ok(html.includes('<a href="https://x.sm" rel="noopener">il sito</a>'));
   const blocks = parse("![](assets/img.png)\n\nVedi [doc](assets/abc.pdf).\n\n| a |\n| --- |\n| [x](assets/t.xlsx) |\n");
   assert.deepEqual(assets(blocks), ["assets/img.png", "assets/abc.pdf", "assets/t.xlsx"]);
+});
+
+// -----------------------------------------------------------------------------------------------------------------
+//  l e   m e n z i o n i
+// -----------------------------------------------------------------------------------------------------------------
+
+test("«@Nome» diventa una menzione: intera se la persona è nota, una parola altrimenti", () => {
+  setPeople(["Tizio Caio", "Anna"]);
+  const html = inlineHtml("ciao @Tizio Caio e @Anna, @Annalisa no, (@Marco) sì");
+  assert.match(html, /<a class="mention" data-person="Tizio Caio" href="#">@Tizio Caio<\/a> e/);
+  assert.match(html, /data-person="Anna" href="#">@Anna<\/a>,/);
+  assert.match(html, /data-person="Annalisa"/, "Annalisa non è Anna con un pezzo attaccato");
+  assert.match(html, /\(<a class="mention" data-person="Marco"/);
+  setPeople([]);
+});
+
+test("l'indirizzo di posta non è due persone, e la «@» in mezzo a una parola resta testo", () => {
+  const html = inlineHtml("scrivi a mario@example.com o a pippo@pluto");
+  assert.doesNotMatch(html, /mention/);
+});
+
+test("i nomi nominati si raccolgono una volta sola, e si cercano per nome senza badare alle maiuscole", () => {
+  setPeople(["Tizio Caio"]);
+  assert.deepEqual(mentionNames("@tizio caio e @Anna, poi ancora @Tizio Caio e @anna"), ["tizio caio", "Anna"]);
+  assert.deepEqual(mentions("Parlato con @tizio caio ieri. @Annalisa", ["Tizio Caio", "Anna", "Marco"]), ["Tizio Caio"]);
+  setPeople([]);
 });
 
 console.log(`markdown: ${passed} prove passate`);

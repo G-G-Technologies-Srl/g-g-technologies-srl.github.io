@@ -58,6 +58,21 @@ function _project() {
   return model.project(projectId);
 }
 
+/** I nomi che «@» prende interi nel campo veloce: chi lavora al progetto, poi la rubrica. */
+function _mentionable() {
+  const out = [];
+  const seen = new Set();
+  const take = (name) => {
+    const clean = String(name || "").trim();
+    if (!clean || seen.has(clean.toLowerCase())) return;
+    seen.add(clean.toLowerCase());
+    out.push(clean);
+  };
+  for (const one of model.peopleOf(projectId)) take(one.name);
+  for (const one of model.liveContacts()) take(one.name);
+  return out;
+}
+
 function _columns() {
   const project = _project();
   return project ? project.columns : [];
@@ -524,11 +539,12 @@ function _columnNode(column, tasks, today, meetings = []) {
   // caso in cui un titolo che finisce davvero con un punto esclamativo sta per perderlo.
   const echo = node("p", "note column-add-echo");
   echo.hidden = true;
-  const read = () => csv.parseTaskList(field.value)[0] || null;
+  const read = () => csv.parseTaskList(field.value, { people: _mentionable() })[0] || null;
   field.addEventListener("input", () => {
     const one = read();
     const bits = [];
     if (one && one.end) bits.push(`${t("fieldEnd")} ${shortDate(one.end)}`);
+    if (one && one.assignee) bits.push(`${t("fieldAssignee")} ${one.assignee}`);
     if (one && one.tags.length) bits.push(one.tags.map((tag) => `#${tag}`).join(" "));
     if (one && one.priority === "high") bits.push(t("priorityHigh"));
     echo.textContent = bits.join(" · ");
@@ -548,6 +564,8 @@ function _columnNode(column, tasks, today, meetings = []) {
     if (one && (one.tags.length || one.priority)) {
       model.updateTask(made.id, { tags: one.tags, priority: one.priority });
     }
+    // «@Giulia»: assegnata, e Giulia fra chi ci lavora — nasce in rubrica se non c'era.
+    if (one && one.assignee) model.assignByName(made.id, one.assignee);
     on.change();
     paint();
     // Three in a row is the normal way this gets used, so the field keeps the caret.

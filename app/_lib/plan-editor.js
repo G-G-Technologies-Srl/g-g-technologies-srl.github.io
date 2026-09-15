@@ -108,7 +108,10 @@ const MENU = [
 // -----------------------------------------------------------------------------------------------------------------
 
 let blocks = [];
-let on = { change() {}, openPage() {}, exists: () => true, image() {}, attachment() {}, moved() {}, removed() {} };
+let on = { change() {}, openPage() {}, exists: () => true, image() {}, attachment() {}, moved() {}, removed() {},
+  // Le persone: chi si può nominare con «@» (l'app passa chi lavora al progetto e la rubrica), e
+  // dove porta il nome quando lo si clicca.
+  people: () => [], openPerson() {}, named() {} };
 
 /**
  * Le parole dell'editor, e la domanda per il collegamento.
@@ -214,6 +217,7 @@ function _fromHtml(root) {
     else if (tag === "del" || tag === "s" || tag === "strike") out += inner ? `~~${inner}~~` : "";
     else if (tag === "code") out += inner ? `\`${inner}\`` : "";
     else if (tag === "a" && child.classList.contains("wiki")) out += `[[${inner}]]`;
+    else if (tag === "a" && child.classList.contains("mention")) out += inner;   // già «@Nome»
     else if (tag === "a") out += `[${inner}](${child.getAttribute("href") || ""})`;
     else out += inner;
   }
@@ -899,7 +903,27 @@ function _keys(event, index, field) {
   if (event.key === "/" && !field.textContent.trim() && block.type === "paragraph") {
     event.preventDefault();
     _openMenu(index, { replace: true });
+    return;
   }
+
+  // `@` opens the people, if there are any to offer — after the browser has typed it, so that a
+  // menu closed without choosing leaves a plain «@» behind, which is what was pressed. Only at the
+  // start or after a space: the «@» of an address is not a person. Not inside code, where text
+  // means what it says.
+  if (event.key === "@" && block.type !== "code" && block.type !== "raw" && on.people().length) {
+    const before = _textBefore(field);
+    if (!before || /[\s(\[]$/.test(before)) setTimeout(() => _openPeople(index, field), 0);
+  }
+}
+
+/** The text of a field up to the caret. */
+function _textBefore(field) {
+  const selection = window.getSelection();
+  if (!selection || !selection.rangeCount) return "";
+  const range = selection.getRangeAt(0).cloneRange();
+  range.selectNodeContents(field);
+  range.setEnd(selection.getRangeAt(0).startContainer, selection.getRangeAt(0).startOffset);
+  return range.toString();
 }
 
 /**
@@ -1294,6 +1318,87 @@ function _chooseBlock(entry) {
   _apply({ index: transform || replace ? index : index + 1, offset: 0 });
 }
 
+// -----------------------------------------------------------------------------------------------------------------
+//  t h e   p e o p l e   m e n u
+// -----------------------------------------------------------------------------------------------------------------
+
+/**
+ * Chi nominare: lo stesso `<dialog>` dei blocchi, con i nomi al posto dei tipi.
+ *
+ * La selezione si tiene da parte mentre la finestra è aperta e si rimette al suo posto prima di
+ * scrivere il nome — come fa già il collegamento — perché il nome va dopo la «@» appena battuta,
+ * non dove la finestra ha lasciato il cursore.
+ */
+function _openPeople(index, field) {
+  const selection = window.getSelection();
+  const range = selection && selection.rangeCount ? selection.getRangeAt(0).cloneRange() : null;
+  menuAt = { index, people: true, field, range };
+  el("blockMenuField").value = "";
+  el("blockMenuTitle").textContent = text("menuPeople");
+  el("blockDuplicate").hidden = true;
+  el("blockDelete").hidden = true;
+  _fillPeople("");
+  el("blockMenu").showModal();
+  el("blockMenuField").focus();
+}
+
+function _fillPeople(query) {
+  const wanted = query.trim().toLowerCase();
+  const found = on.people().filter((name) => !wanted || name.toLowerCase().includes(wanted));
+  fill(el("blockMenuList"), found.map((name) => {
+    const row = node("button", "menu-entry person");
+    row.type = "button";
+    row.append(node("span", "menu-name", name));
+    row.addEventListener("click", () => _choosePerson(name));
+    return row;
+  }));
+  el("blockMenuEmpty").hidden = found.length > 0;
+}
+
+function _choosePerson(name) {
+  if (!menuAt || !menuAt.people) return;
+  const { field, range } = menuAt;
+  menuAt = null;
+  el("blockMenu").close();
+  // Un nome che nessuno offriva è una persona nuova, e lo si dice subito: così «Tizio Caio» si
+  // veste intero, invece di diventare «@Tizio» e una parola.
+  if (!on.people().some((one) => one.toLowerCase() === name.toLowerCase())) on.named(name);
+  _putBack(field, range);
+  // Scritto come battuto, così `input` lo porta nel blocco per la via di tutti; poi un ridisegno,
+  // perché il nome si vesta da menzione subito e non alla prossima apertura della pagina. Lo
+  // spazio viene dopo il ridisegno: in coda al blocco il Markdown lo perderebbe, e la parola dopo
+  // si attaccherebbe al nome.
+  document.execCommand("insertText", false, name);
+  const here = _here();
+  if (here) _apply({ index: here.index, offset: here.offset });
+  const again = _fieldAt(here ? here.index : 0);
+  if (again) { again.focus(); _placeCaret(again, here ? here.offset : 0); }
+  document.execCommand("insertText", false, " ");
+}
+
+/** The caret back where the «@» was typed, before writing after it. */
+function _putBack(field, range) {
+  const selection = window.getSelection();
+  field.focus();
+  if (range && selection) { selection.removeAllRanges(); selection.addRange(range); }
+}
+
+/**
+ * The people menu closed without a choice: what was typed into its search box goes into the page
+ * as it is, after the «@». Somebody writing a name the address book does not know types it into
+ * the box, because that is where the letters land — losing them would punish the one thing the
+ * menu could not offer.
+ */
+function _leavePeople() {
+  if (!menuAt || !menuAt.people) return;
+  const { field, range } = menuAt;
+  const typed = el("blockMenuField").value;
+  menuAt = null;
+  if (!typed.trim()) return;
+  _putBack(field, range);
+  document.execCommand("insertText", false, typed);
+}
+
 function _duplicate() {
   if (!menuAt) return;
   const { index } = menuAt;
@@ -1335,14 +1440,37 @@ export function mount(container, { text: words = null, ask = null, ...handlers }
       on.attachment(file.dataset.src, file.textContent);
       return;
     }
+    const person = event.target.closest ? event.target.closest("a.mention") : null;
+    if (person) {
+      event.preventDefault();
+      on.openPerson(person.dataset.person || person.textContent.replace(/^@/, ""));
+      return;
+    }
     const link = event.target.closest ? event.target.closest("a.wiki") : null;
     if (!link) return;
     event.preventDefault();
     on.openPage(link.dataset.page || link.textContent);
   });
 
-  el("blockMenuField").addEventListener("input", (event) => _fillMenu(event.target.value));
+  el("blockMenuField").addEventListener("input", (event) => (
+    menuAt && menuAt.people ? _fillPeople(event.target.value) : _fillMenu(event.target.value)
+  ));
+  // Invio nel campo di ricerca prende la prima voce: chi scrive «@giu» e preme Invio non vuole
+  // spostare la mano sul mouse.
+  el("blockMenuField").addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    const first = el("blockMenuList").querySelector("button");
+    if (first) { first.click(); return; }
+    // Nessun nome così: quello scritto è la persona, nuova. Entra in rubrica quando la pagina si
+    // chiude, come ogni «@» battuto a mano.
+    const typed = el("blockMenuField").value.trim();
+    if (menuAt && menuAt.people && typed) _choosePerson(typed);
+  });
+  // Chiusa con Esc o con la ✕: le lettere battute nella casella non si perdono.
+  el("blockMenu").addEventListener("close", () => _leavePeople());
   el("blockMenuClose").addEventListener("click", () => {
+    if (menuAt && menuAt.people) _leavePeople();
     menuAt = null;
     el("blockMenu").close();
   });

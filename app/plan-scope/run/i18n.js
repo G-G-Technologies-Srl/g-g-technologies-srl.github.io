@@ -340,8 +340,9 @@ const IT = {
   planMoreLabel: "Altro sul piano",
   pasteOpen: "Incolla un elenco di attività",
   pasteTitle: "Incolla un elenco",
-  pasteHint: "Una riga, un'attività. «@2026-09-20» è la scadenza, «#stampa» un tag, un «!» in fondo "
-    + "la priorità alta. I trattini e le caselle degli elenchi vanno bene così.",
+  pasteHint: "Una riga, un'attività. «@2026-09-20» è la scadenza, «@Giulia» chi se ne occupa, "
+    + "«#stampa» un tag, un «!» in fondo la priorità alta. I trattini e le caselle degli elenchi "
+    + "vanno bene così.",
   pasteCount: "{n} attività pronte",
   pasteNone: "Nessuna riga da leggere.",
   pasteAdd: "Aggiungi alla bacheca",
@@ -491,6 +492,7 @@ const IT = {
   markPageLabel: "Collegamento a una pagina",
   linkPrompt: "Dove porta il collegamento?",
   menuTitle: "Aggiungi un blocco",
+  menuPeople: "Chi?",
   menuChange: "Trasforma in",
   blockDuplicate: "Duplica",
   blockDelete: "Elimina il blocco",
@@ -637,6 +639,9 @@ const IT = {
     + "## Collegare le pagine\n\nScrivi il titolo di una pagina fra doppie parentesi quadre, come "
     + "[[Pianificare]], e diventa un collegamento. Se la pagina non c'è ancora, il collegamento è "
     + "tratteggiato e il clic la crea. In fondo alla colonna di sinistra vedi anche **chi punta qui**.\n\n"
+    + "## Nominare le persone\n\nScrivi «@» e scegli chi: il nome resta nel testo come @Giulia, "
+    + "colorato, e il clic apre la sua scheda in rubrica. Un nome che in rubrica non c'è ci entra da "
+    + "solo quando chiudi la pagina. Nella sua scheda, la persona ritrova le pagine che la nominano.\n\n"
     + "## L'albero delle pagine\n\nLa colonna di sinistra è l'indice del progetto. Da lì aggiungi una "
     + "pagina o una sottopagina, e sposti quelle che ci sono: prendi una riga dalla maniglia ⠿ e "
     + "trascinala. **Su e giù** scegli fra quali righe va; **a destra e a sinistra** scegli il "
@@ -1298,8 +1303,8 @@ const EN = {
   planMoreLabel: "More about the plan",
   pasteOpen: "Paste a list of tasks",
   pasteTitle: "Paste a list",
-  pasteHint: "One line, one task. \"@2026-09-20\" is the deadline, \"#print\" a tag, a trailing \"!\" "
-    + "a high priority. Dashes and list boxes are fine as they are.",
+  pasteHint: "One line, one task. \"@2026-09-20\" is the deadline, \"@Giulia\" who takes it, "
+    + "\"#print\" a tag, a trailing \"!\" a high priority. Dashes and list boxes are fine as they are.",
   pasteCount: "{n} tasks ready",
   pasteNone: "No lines to read.",
   pasteAdd: "Add to the board",
@@ -1447,6 +1452,7 @@ const EN = {
   markPageLabel: "Link to a page",
   linkPrompt: "Where does the link go?",
   menuTitle: "Add a block",
+  menuPeople: "Who?",
   menuChange: "Turn into",
   blockDuplicate: "Duplicate",
   blockDelete: "Delete the block",
@@ -1593,6 +1599,9 @@ const EN = {
     + "## Linking pages\n\nWrite a page's title between double square brackets, like [[Planning]], and "
     + "it becomes a link. If the page is not there yet the link is dotted, and clicking it makes the "
     + "page. At the bottom of the left column you also see **who points here**.\n\n"
+    + "## Naming people\n\nType “@” and pick who: the name stays in the text as @Giulia, coloured, "
+    + "and a click opens their card in the address book. A name that is not in the address book gets "
+    + "in on its own when you close the page. On their card, a person finds the pages that name them.\n\n"
     + "## The tree of pages\n\nThe left column is the project's index. From there you add a page or "
     + "a sub-page, and move the ones there are: take a row by its ⠿ handle and drag it. **Up and "
     + "down** chooses which rows it goes between; **left and right** chooses the level: further "

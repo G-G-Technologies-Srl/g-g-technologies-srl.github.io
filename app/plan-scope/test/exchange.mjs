@@ -113,6 +113,25 @@ test("un elenco incollato diventa attività: marcatori via, data, tag e priorit�
   assert.equal(found[2].priority, null);
 });
 
+test("«@» è una data se segue una data, altrimenti una persona — intera se la rubrica la conosce", () => {
+  const found = csv.parseTaskList([
+    "Chiamare il fornitore @2026-09-20 @Tizio Caio #stampa !",
+    "- [ ] Portare i campioni @giulia",
+    "scrivere a mario@example.com",
+    "@Marco e @Sara insieme",
+  ].join("\n"), { people: ["Tizio Caio", "Giulia"] });
+  assert.deepEqual(found.map((one) => [one.title, one.end, one.assignee]), [
+    ["Chiamare il fornitore", "2026-09-20", "Tizio Caio"],
+    ["Portare i campioni", null, "giulia"],
+    ["scrivere a mario@example.com", null, null],
+    ["e @Sara insieme", null, "Marco"],          // la prima vince, la seconda resta testo
+  ]);
+  assert.deepEqual(found[0].tags, ["stampa"]);
+  assert.equal(found[0].priority, "high");
+  // Senza l'elenco, «@» prende una parola sola.
+  assert.equal(csv.parseTaskList("Vedere @Tizio Caio")[0].assignee, "Tizio");
+});
+
 test("la pagina web autosufficiente porta tutto dentro, immagini comprese, e niente dell'editor", () => {
   const images = new Map([["assets/a.png", "data:image/png;base64,AAAA"]]);
   const html = webpage.pageHtml({

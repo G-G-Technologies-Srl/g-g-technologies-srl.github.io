@@ -74,6 +74,8 @@ function _escape(text) {
 function _inline(text, files = new Map()) {
   return md.inlineHtml(text)
     .replace(/<a class="wiki"[^>]*>(.*?)<\/a>/g, "<em>$1</em>")
+    // A person named with «@»: a name in emphasis, since there is no address book to open here.
+    .replace(/<a class="mention"[^>]*>(.*?)<\/a>/g, "<em>$1</em>")
     // An attachment becomes a download of the bytes carried inside the file, or plain text when
     // the bytes are not there.
     .replace(/<a class="attachment" data-src="([^"]+)" href="#">(.*?)<\/a>/g, (whole, src, label) => (

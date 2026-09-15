@@ -1879,7 +1879,7 @@ dialog.search input[type="search"] { width: 100%; font-size: 16px; }
   body.printing .block { break-inside: avoid; }
   body.printing .callout, body.printing table, body.printing tr, body.printing figure { break-inside: avoid; }
   body.printing h1, body.printing h2, body.printing h3 { break-after: avoid; }
-  body.printing a.wiki { color: inherit; text-decoration: none; }
+  body.printing a.wiki, body.printing a.mention { color: inherit; text-decoration: none; }
 
   /* The title is in the bar, which is hidden: it is printed again, from a copy the app fills in. */
   body.printing .print-title { display: block; font-family: var(--font-display); font-size: 26pt;

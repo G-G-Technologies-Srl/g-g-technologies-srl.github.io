@@ -1526,4 +1526,16 @@ test("i nomi scritti in «con:» entrano in rubrica, chi c'è già resta uno sol
   assert.deepEqual(model.ensureContacts(""), []);
 });
 
+test("una pagina che nomina una persona con «@» parla di lei, come una con «con:»", () => {
+  const one = model.createProject({ name: "Sito" });
+  const anna = model.createContact({ name: "Anna Rossi" });
+  const a = model.createPage(one.id, { title: "Verbale" });
+  model.setMarkdown(a.id, "---\ntipo: incontro\ndata: 2026-09-10\ncon: Anna Rossi\n---\n\nNote.\n");
+  const b = model.createPage(one.id, { title: "Appunti" });
+  model.setMarkdown(b.id, "Sentire @anna rossi per i campioni.\n");
+  const c = model.createPage(one.id, { title: "Altro" });
+  model.setMarkdown(c.id, "Scrivere a anna@example.com.\n");
+  assert.deepEqual(model.pagesAbout(anna.uid).map((x) => x.page.title).sort(), ["Appunti", "Verbale"]);
+});
+
 console.log(`model: ${passed} prove passate`);

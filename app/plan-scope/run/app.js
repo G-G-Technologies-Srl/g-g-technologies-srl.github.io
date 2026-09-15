@@ -56,6 +56,7 @@ const SCREENS = ["home", "project", "page", "plan", "pages", "trash", "awards", 
 let view = "home";
 let projectId = null;
 let pageId = null;
+let writingIn = null;                   // la pagina aperta nell'editore, finché non la si lascia
 let source = false;                     // the source view, off by default and off for most people
 let template = "event";                 // what a new project starts from
 let booted = false;                     // history entries only once the first screen is up
@@ -95,6 +96,7 @@ function _show(name) {
   // Back — and on Android the system's — left the app instead of leaving the screen, and the
   // `popstate` handler below was code that could never run.
   const changed = name !== view || (name === "page");
+  if (view === "page" && name !== "page") _settleMentions();
   view = name;
   for (const screen of SCREENS) el(screen).hidden = screen !== name;
   _paintCrumbs();
@@ -290,6 +292,34 @@ async function _askMeeting(target, withName = "", { meeting = null } = {}) {
   return model.page(meeting.page.id);
 }
 
+/** Chi si può nominare con «@»: chi lavora al progetto aperto, poi la rubrica, senza doppioni. */
+function _mentionable() {
+  const out = [];
+  const seen = new Set();
+  const take = (name) => {
+    const clean = String(name || "").trim();
+    if (!clean || seen.has(clean.toLowerCase())) return;
+    seen.add(clean.toLowerCase());
+    out.push(clean);
+  };
+  if (projectId) for (const one of model.peopleOf(projectId)) take(one.name);
+  for (const one of model.liveContacts()) take(one.name);
+  return out;
+}
+
+/**
+ * Le persone nominate con «@» nel testo della pagina che si sta lasciando entrano in rubrica.
+ *
+ * Alla chiusura e non a ogni tasto: mentre si scrive «@Mar» il nome non è ancora finito, e una
+ * scheda «Mar» sarebbe una scheda sbagliata da cestinare. Chi ha scelto dal menù c'è già.
+ */
+function _settleMentions() {
+  const page = writingIn ? model.page(writingIn) : null;
+  writingIn = null;
+  if (!page || page.trashedAt) return;
+  _welcome(md.mentionNames(md.frontmatter(page.markdown || "").body));
+}
+
 /**
  * Chi è stato nominato e in rubrica non c'era, adesso c'è — e la striscia lo dice, perché una
  * scheda nata da sola è una scheda da completare.
@@ -388,7 +418,7 @@ function _boxesToPlan() {
   const page = pageId ? model.page(pageId) : null;
   if (!page) return undefined;
   const text = page.markdown || "";
-  const found = csv.parseTaskList(csv.openBoxes(text));
+  const found = csv.parseTaskList(csv.openBoxes(text), { people: _mentionable() });
   if (!found.length) return snack(t("boxesNone"));
 
   const props = md.frontmatter(text).props || {};
@@ -399,8 +429,9 @@ function _boxesToPlan() {
     for (const one of found) {
       const task = model.createTask(page.projectId, { title: one.title, end: one.end });
       if (one.tags.length || one.priority) model.updateTask(task.id, { tags: one.tags, priority: one.priority });
-      // A chi era presente: il primo nome, perché un'attività ha un assegnatario e non un elenco.
-      if (named[0]) model.assignByName(task.id, named[0]);
+      // A chi la riga nomina con «@», altrimenti a chi era presente: il primo nome, perché
+      // un'attività ha un assegnatario e non un elenco.
+      if (one.assignee || named[0]) model.assignByName(task.id, one.assignee || named[0]);
     }
   });
   const words = found.length === 1 ? t("boxesDoneOne") : tf("boxesDone", { n: num(found.length, 0) });
@@ -1087,10 +1118,14 @@ function _openPage(id) {
       || model.project(page.projectId).trashedAt) {
     return _openHome();
   }
+  if (writingIn && writingIn !== id) _settleMentions();
   _releaseImages();
   pageId = id;
+  writingIn = id;
   projectId = page.projectId;
   home.paintPage(id);
+  // I nomi che «@» può prendere interi, spazi compresi: chi lavora al progetto e la rubrica.
+  md.setPeople(_mentionable());
   // The properties at the head of the file are not blocks: they are read here, edited in the row
   // under the title, and written back in front of whatever the editor produces.
   editor.load(pages.load(page.markdown));
@@ -1732,14 +1767,14 @@ function _openPaste(prefill = "") {
 }
 
 function _countPaste() {
-  const found = csv.parseTaskList(el("pasteField").value);
+  const found = csv.parseTaskList(el("pasteField").value, { people: _mentionable() });
   el("pasteCount").textContent = found.length ? tf("pasteCount", { n: num(found.length, 0) }) : t("pasteNone");
   el("pasteAdd").disabled = !found.length;
 }
 
 /** The pasted lines become tasks in the first column; one strip, one undo for the lot. */
 function _pasteTasks() {
-  const found = csv.parseTaskList(el("pasteField").value);
+  const found = csv.parseTaskList(el("pasteField").value, { people: _mentionable() });
   el("pasteDialog").close();
   if (!found.length || !projectId) return;
   const made = [];
@@ -1748,6 +1783,7 @@ function _pasteTasks() {
     if (one.tags.length || one.priority) {
       model.updateTask(task.id, { tags: one.tags, priority: one.priority });
     }
+    if (one.assignee) model.assignByName(task.id, one.assignee);
     made.push(task.id);
   }
   plan.paint();
@@ -2771,6 +2807,14 @@ function _connect() {
       action: t("undo"),
       onAction: () => { editor.undo(); snack(t("undone")); },
     }),
+    // «@»: chi si può nominare, dove porta il nome quando lo si clicca, e un nome nuovo scelto
+    // dal menù — che entra in rubrica subito, perché il testo lo vesta intero.
+    people: () => _mentionable(),
+    named: (name) => { _welcome([name]); md.setPeople(_mentionable()); },
+    openPerson: (name) => {
+      const person = model.contactByName(name);
+      return person ? _openPerson(person.id) : _openRubrica();
+    },
     openPage: (title) => {
       const found = _pageByTitle(title);
       if (found) return _openPage(found.id);
