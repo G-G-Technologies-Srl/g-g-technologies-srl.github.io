@@ -42,7 +42,7 @@ import { setup as setupInstall, isInstalled, system } from "gg/install.js";
 import * as update from "gg/update.js";
 import * as remind from "gg/remind.js";
 import { t, tf, num, otherLang, setLang, resolveLang, missingKeys } from "./i18n.js";
-import { el, node, button, fill, applyText, snack, hideSnack, shortDate, longDate, bytes, ask } from "./ui.js";
+import { el, node, button, fill, applyText, snack, hideSnack, shortDate, longDate, bytes, ask, tagHue } from "./ui.js";
 
 // Ten megabytes. Not a technical limit — IndexedDB would take far more — but the point at which one
 // image starts to be the reason a whole project cannot be exported, and the person who pasted it
@@ -244,11 +244,8 @@ async function _askMeeting(target, withName = "", { meeting = null } = {}) {
   el("meetTime").value = editing ? meeting.time : "";
   el("meetWith").value = editing ? meeting.with : withName;
   el("meetWhere").value = editing ? meeting.where : "";
-  fill(el("meetWithList"), model.peopleOf(target).map(({ name }) => {
-    const option = document.createElement("option");
-    option.value = name;
-    return option;
-  }));
+  _paintMeetPeople(target);
+  el("meetWith").oninput = () => _paintMeetPeople(target);
   for (const [id, key] of [["meetWhatLabel", "meetWhat"], ["meetDateLabel", "meetDate"],
     ["meetTimeLabel", "meetTime"], ["meetWithLabel", "meetWith"], ["meetWhereLabel", "meetWhere"]]) {
     el(id).textContent = t(key);
@@ -290,6 +287,44 @@ async function _askMeeting(target, withName = "", { meeting = null } = {}) {
   await _repaint();
   _offerUndo(step, t("meetSaved"));
   return model.page(meeting.page.id);
+}
+
+/**
+ * Le persone da toccare sotto «con chi»: chi lavora al progetto, poi la rubrica.
+ *
+ * Il campo resta testo — si scrive anche chi non è in rubrica — e le pastiglie ci aggiungono o ci
+ * tolgono un nome, con la virgola messa da loro. Accesa è tinta con il colore del nome, lo stesso
+ * che quel nome porta sulla scheda del progetto.
+ */
+function _paintMeetPeople(target) {
+  const names = _splitNames(el("meetWith").value);
+  const has = (name) => names.some((one) => one.toLowerCase() === name.toLowerCase());
+  const offered = [];
+  const seen = new Set();
+  const take = (name) => {
+    const clean = String(name || "").trim();
+    if (!clean || seen.has(clean.toLowerCase())) return;
+    seen.add(clean.toLowerCase());
+    offered.push(clean);
+  };
+  for (const one of model.peopleOf(target)) take(one.name);
+  for (const one of model.liveContacts()) take(one.name);
+  fill(el("meetWithPeople"), offered.map((name) => {
+    const on = has(name);
+    const chip = button(on ? `badge tag ${tagHue(name)} on` : "pick", name, () => {
+      const now = _splitNames(el("meetWith").value);
+      const there = now.some((one) => one.toLowerCase() === name.toLowerCase());
+      const next = there ? now.filter((one) => one.toLowerCase() !== name.toLowerCase()) : [...now, name];
+      el("meetWith").value = next.join(", ");
+      _paintMeetPeople(target);
+    });
+    chip.setAttribute("aria-pressed", on ? "true" : "false");
+    return chip;
+  }));
+}
+
+function _splitNames(text) {
+  return String(text || "").split(",").map((one) => one.trim()).filter(Boolean);
 }
 
 /** Un appuntamento tolto dalla lavagna: la sua pagina va nel cestino, e la striscia offre di riprenderla. */

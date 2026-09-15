@@ -623,14 +623,33 @@ select:hover, select:focus { border-color: var(--border-strong); }
 .project-card-when.soon, .project-card-next.soon { color: var(--text); }
 .project-card-when.late, .project-card-next.late { color: var(--late); }
 
-/* Il prossimo impegno è una riga sola: un titolo lungo si taglia invece di mandare a capo, o due
-   schede accanto avrebbero altezze diverse per il caso di una. */
+/* Il prossimo impegno, a pezzi e non in una stringa, perché i pezzi hanno colori diversi. Il
+   titolo è l'unico che cede spazio e si taglia con i puntini; il giorno e le persone, se non ci
+   stanno accanto, vanno a capo interi — una scheda con la riga in più è meglio di un titolo
+   ridotto a tre lettere per far posto a due pastiglie. */
 .project-card-next {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px 6px;
   max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  min-width: 0;
   white-space: nowrap;
 }
+
+.project-card-next > * { flex: none; }
+
+.project-card-next .next-title { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+.project-card-next .next-time { color: var(--accent-text); font-variant-numeric: tabular-nums; font-weight: 500; }
+
+.project-card-next.is-meeting .next-title { color: var(--text); }
+
+.project-card-next .next-date { color: var(--faint); }
+
+.project-card-next.late .next-date { color: var(--late); }
+
+.project-card-next .next-who { font-size: 10.5px; padding: 0 7px; line-height: 16px; }
 
 /* La barra e il suo numero sulla stessa riga: sono la stessa informazione detta due volte, per chi
    guarda e per chi legge. `margin-top: auto` spinge il blocco in fondo, com'era il solo numero,
@@ -1716,6 +1735,21 @@ dialog.fields .field input, dialog.fields .field select { width: 100%; }
 
 dialog.fields .field-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
+/* Le persone da toccare sotto il campo: pastiglie che vanno a capo, spente finché non sono nel
+   campo, tinte quando ci sono. */
+dialog.fields .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
+dialog.fields .chips button { cursor: pointer; padding: 1px 9px; }
+/* Spenta non è un'etichetta, è un nome offerto: `pick` e non `badge`, così la regola che la
+   smorza non pesa su nessuna etichetta vera. */
+dialog.fields .chips .pick {
+  font-size: 11.5px;
+  color: var(--faint);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+dialog.fields .chips .pick:hover { color: var(--text); border-color: var(--border-strong); }
+dialog.fields .chips .badge.tag.on { outline-offset: 1px; }
+
 dialog.fields .form-foot { margin-top: 8px; }
 
 dialog.fields .form-foot .spacer { flex: 1 1 auto; }
@@ -2018,6 +2052,28 @@ body.printing .page-props { display: none; }
   border-color: transparent;
 }
 .prop-date:hover, .prop-date:focus { border-color: var(--border); }
+/* L'orologio e la tendina delle persone pesano quanto il calendario: senza queste righe prendevano
+   la cornice e il passo della base — un campo da modulo in mezzo a righe silenziose, e l'ora di un
+   appuntamento era il pezzo più grosso della sua pagina. */
+.prop-time {
+  width: 110px;                         /* «09:30 AM» in inglese, con l'orologio in fondo */
+  font-size: 12.5px;
+  padding: 2px 5px;
+  background: transparent;
+  border-color: transparent;
+}
+.prop-time:hover, .prop-time:focus { border-color: var(--border); }
+.prop-time::-webkit-calendar-picker-indicator { opacity: 0.5; cursor: pointer; }
+.prop-time:hover::-webkit-calendar-picker-indicator { opacity: 0.9; }
+.prop-people {
+  max-width: 150px;
+  font-size: 12.5px;
+  color: var(--faint);
+  padding: 2px 5px;
+  background: transparent;
+  border-color: transparent;
+}
+.prop-people:hover, .prop-people:focus { color: var(--text); border-color: var(--border); }
 /* La regola di base toglie `appearance` a tutto quello in cui si scrive, e a un campo data toglie
    anche il calendarietto in fondo: senza, il selettore non si vede e non si sa che c'è. */
 .prop-date::-webkit-calendar-picker-indicator { opacity: 0.5; cursor: pointer; }

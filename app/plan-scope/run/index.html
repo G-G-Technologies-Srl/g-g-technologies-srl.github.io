@@ -1035,8 +1035,10 @@
     </div>
     <div class="field">
       <label for="meetWith" id="meetWithLabel"></label>
-      <input type="text" id="meetWith" maxlength="120" autocomplete="off" list="meetWithList">
-      <datalist id="meetWithList"></datalist>
+      <input type="text" id="meetWith" maxlength="200" autocomplete="off" data-t-placeholder="meetWithMany">
+      <!-- Chi lavora al progetto e la rubrica, da toccare: un nome entra, un altro tocco lo toglie.
+           Una `datalist` completava il campo intero, e al secondo nome cancellava il primo. -->
+      <div class="chips" id="meetWithPeople"></div>
     </div>
     <div class="field">
       <label for="meetWhere" id="meetWhereLabel"></label>

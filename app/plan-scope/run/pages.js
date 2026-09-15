@@ -155,6 +155,10 @@ const PROP_KINDS = [
 /* Un link, o un indirizzo. Il primo si apre nel browser, il secondo nelle mappe: sono le due cose
    che si scrivono dentro «dove» di un incontro, ed è la stessa domanda — «portami lì». */
 const WHERE_KEYS = ["dove", "where", "luogo", "posto", "place"];
+/* Una chiave che vuol dire «le persone»: il valore è un elenco di nomi separati da virgola, e
+   accanto al campo sta una tendina con chi lavora al progetto e la rubrica, da cui un nome si
+   aggiunge senza riscriverlo. */
+const PEOPLE_KEYS = ["con", "with", "chi", "who", "partecipanti", "attendees"];
 const YES_NO = [["sì", "no"], ["si", "no"], ["true", "false"], ["yes", "no"], ["vero", "falso"]];
 
 /**
@@ -169,6 +173,9 @@ const YES_NO = [["sì", "no"], ["si", "no"], ["true", "false"], ["yes", "no"], [
  * un colore, e la riga glielo apre invece di aspettare che indovini sei cifre esadecimali.
  */
 function _propKind(key, value) {
+  // Le persone si riconoscono dalla chiave e non dal valore, perché un elenco di nomi non ha una
+  // forma sua: «Anna» e «Anna, Marco» sono testo, e sotto «con:» sono persone.
+  if (PEOPLE_KEYS.includes(String(key || "").trim().toLowerCase())) return "people";
   const clean = String(value || "").trim();
   if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) return "date";
   if (/^\d{1,2}:\d{2}$/.test(clean)) return "time";
@@ -209,6 +216,8 @@ function _propPicker(kind, valueField) {
     return box;
   }
 
+  if (kind === "people") return _peoplePicker(valueField, write);
+
   const picker = document.createElement("input");
   picker.type = kind;
   picker.className = `prop-picker prop-${kind}`;
@@ -223,6 +232,57 @@ function _propPicker(kind, valueField) {
     t(kind === "color" ? "propPickColor" : kind === "time" ? "propPickTime" : "propPickDate"));
   picker.addEventListener("input", () => { if (picker.value) write(picker.value); });
   return picker;
+}
+
+/**
+ * La tendina delle persone, accanto a «con:».
+ *
+ * Il campo resta testo e resta sovrano — «Anna e il suo commercialista» si deve poter scrivere —
+ * e la tendina ci **aggiunge** un nome invece di sostituirlo: chi c'è già non si ripete, la virgola
+ * la mette lei. Prima chi lavora al progetto, poi il resto della rubrica; una `datalist` non
+ * andava bene perché completa il campo intero, e al secondo nome cancellava il primo.
+ */
+function _peoplePicker(valueField, write) {
+  const picker = document.createElement("select");
+  picker.className = "prop-picker prop-people";
+  picker.dataset.kind = "people";
+  picker.setAttribute("aria-label", t("propPickPerson"));
+  const names = _peopleNames();
+  const first = node("option", "", t("propPickPerson"));
+  first.value = "";
+  picker.append(first, ...names.map((name) => { const one = node("option", "", name); one.value = name; return one; }));
+  picker.sync = () => { picker.value = ""; };
+  picker.hidden = names.length === 0;
+  picker.addEventListener("change", () => {
+    const name = picker.value;
+    picker.value = "";
+    if (!name) return;
+    const now = _splitNames(valueField.value);
+    if (!now.some((one) => one.toLowerCase() === name.toLowerCase())) now.push(name);
+    write(now.join(", "));
+  });
+  return picker;
+}
+
+/** I nomi che si possono offrire: chi lavora a questo progetto, poi la rubrica, senza doppioni. */
+function _peopleNames() {
+  const pageId = on.pageId();
+  const page = pageId ? model.page(pageId) : null;
+  const out = [];
+  const seen = new Set();
+  const take = (name) => {
+    const clean = String(name || "").trim();
+    if (!clean || seen.has(clean.toLowerCase())) return;
+    seen.add(clean.toLowerCase());
+    out.push(clean);
+  };
+  if (page) for (const one of model.peopleOf(page.projectId)) take(one.name);
+  for (const one of model.liveContacts()) take(one.name);
+  return out;
+}
+
+function _splitNames(text) {
+  return String(text || "").split(",").map((one) => one.trim()).filter(Boolean);
 }
 
 /** Una chiave che vuol dire «il posto»: è lì che si scrive un link o un indirizzo. */
@@ -332,7 +392,9 @@ function _propRow(box, key, value, save, { marked = null, onMark = null } = {}) 
     picker = null;
     if (!kind) return;
     picker = _propPicker(kind, valueField);
-    if (kind === "date") valueField.after(picker);
+    // Gli attrezzi larghi — calendario, orologio, tendina delle persone — in fondo alla riga; la
+    // pastiglia del colore e la casella del sì/no, piccole, davanti al valore.
+    if (kind === "date" || kind === "time" || kind === "people") valueField.after(picker);
     else valueField.before(picker);
   };
   dress();

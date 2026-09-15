@@ -66,9 +66,8 @@ function _nextThing(projectId) {
   // nota della settimana scorsa diventava il «prossimo impegno», colorata come arretrata.
   const meeting = model.meetingsAhead(projectId)[0] || null;
   if (meeting) {
-    out.push({ date: meeting.date, rank: 0,
-      title: [meeting.time, meeting.page.title || t("pageUntitled")].filter(Boolean).join(" "),
-      who: meeting.with });
+    out.push({ date: meeting.date, rank: 0, meeting: true, time: meeting.time,
+      title: meeting.page.title || t("pageUntitled"), who: meeting.with });
   }
   out.sort((a, b) => a.date.localeCompare(b.date) || a.rank - b.rank);
   return out[0] || null;
@@ -150,9 +149,17 @@ function _projectCard(project, today) {
   // un'attività — se giovedì c'è una riunione e venerdì scade una consegna, quello che viene
   // prima è la riunione, e una riga che dicesse la consegna direbbe la seconda cosa.
   const next = _nextThing(project.id);
+  // A pezzi e non in una stringa sola: l'ora di un appuntamento in verde, come ovunque nell'app,
+  // il titolo nel colore del testo, il giorno smorzato, e ogni persona nella sua tinta — la stessa
+  // che il suo nome porta fra le etichette. Una riga grigia diceva tutto con la stessa voce.
   if (next) {
-    const line = node("span", `project-card-next ${_urgency(next.date, today)}`);
-    line.append([next.title, shortDate(next.date), next.who].filter(Boolean).join(" · "));
+    const line = node("span", `project-card-next ${_urgency(next.date, today)}${next.meeting ? " is-meeting" : ""}`);
+    if (next.time) line.append(node("span", "next-time", next.time));
+    line.append(node("span", "next-title", next.title));
+    line.append(node("span", "next-date", shortDate(next.date)));
+    for (const name of String(next.who || "").split(",").map((one) => one.trim()).filter(Boolean)) {
+      line.append(node("span", `badge tag next-who ${tagHue(name)}`, name));
+    }
     card.append(line);
   }
 
