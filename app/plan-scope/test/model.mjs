@@ -1327,4 +1327,34 @@ test("un progetto senza date non ha un prossimo impegno", () => {
   assert.equal(model.nextDue(one.id), null);
 });
 
+// -----------------------------------------------------------------------------------------------------------------
+//  c o n t a r e   l e   s c a d e n z e
+// -----------------------------------------------------------------------------------------------------------------
+
+test("dueSoon elenca anche gli arretrati, dueAhead li lascia a lateCount", () => {
+  // Le due servono a cose diverse: una fa la lista delle prossime scadenze — dove gli arretrati
+  // vanno in cima, non fuori — e l'altra fa il numero. Confonderle vuol dire contare due volte le
+  // stesse attività, ed è esattamente quello che succedeva mostrando i due contatori insieme.
+  const one = model.createProject({ name: "Sito" });
+  const oggi = model.todayISO();
+  model.createTask(one.id, { title: "Scaduta", end: model.addDays(oggi, -3) });
+  model.createTask(one.id, { title: "Fra due giorni", end: model.addDays(oggi, 2) });
+  model.createTask(one.id, { title: "Fra venti giorni", end: model.addDays(oggi, 20) });
+
+  assert.equal(model.dueSoon(one.id, { from: oggi }).length, 2, "la lista tiene dentro l'arretrata");
+  assert.equal(model.dueAhead(one.id, { from: oggi }).length, 1, "il conto la lascia fuori");
+  assert.equal(model.lateCount(one.id, { from: oggi }), 1);
+  // E i due numeri messi accanto non contano niente due volte.
+  assert.equal(model.dueAhead(one.id, { from: oggi }).length
+             + model.lateCount(one.id, { from: oggi }), 2);
+});
+
+test("dueAhead lascia fuori quello che è già fatto", () => {
+  const one = model.createProject({ name: "Sito" });
+  const oggi = model.todayISO();
+  const fatta = model.createTask(one.id, { title: "Fatta", end: model.addDays(oggi, 1) });
+  model.toggleDone(fatta.id);
+  assert.equal(model.dueAhead(one.id, { from: oggi }).length, 0);
+});
+
 console.log(`model: ${passed} prove passate`);

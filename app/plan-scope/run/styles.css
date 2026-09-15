@@ -1004,6 +1004,10 @@ input.when-field.late { color: var(--late); }
   padding-bottom: 4px;
 }
 
+/* La riga che dice cosa è stato capito dal campo rapido. Sta sotto il campo e non accanto: accanto
+   dovrebbe stare dentro la riga del pulsante, che su una colonna stretta è già piena. */
+.column-add-echo { margin: 4px 2px 0; font-size: 11.5px; color: var(--accent-text); }
+
 .column-add { margin-top: 8px; }
 
 .column-add input { flex: 1 1 auto; min-width: 0; font-size: 13px; }

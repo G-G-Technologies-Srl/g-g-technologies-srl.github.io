@@ -21,6 +21,7 @@ import * as timeline from "./timeline.js";
 import * as ics from "gg/ics.js";
 import { SIGN } from "./sign.js";
 import * as pack from "gg/plan-pack.js";
+import * as csv from "./csv.js";
 import { t, tf, num } from "./i18n.js";
 import { el, node, button, fill, shortDate, locale, ask, tagHue } from "./ui.js";
 
@@ -443,12 +444,41 @@ function _columnNode(column, tasks, today) {
   const submit = node("button", "primary", t("addTask"));
   submit.type = "submit";
   form.append(submit);
+
+  // **Cosa ho capito**, mentre si scrive. La scrittura breve — `@2026-09-20` la scadenza, `#stampa`
+  // un'etichetta, un `!` in fondo la priorità alta — la conosceva solo il dialogo «Incolla un
+  // elenco», che sta dentro un menù. Nel campo di tutti i giorni quelle stesse parole finivano nel
+  // titolo: «Chiamare il fornitore @2026-09-20 #stampa !» diventava un'attività chiamata così.
+  //
+  // La riga si accende solo quando c'è qualcosa da riferire, e serve a due cose insieme: insegna la
+  // scrittura a chi non la conosce, e mostra a chi la conosce cosa sta per succedere — compreso il
+  // caso in cui un titolo che finisce davvero con un punto esclamativo sta per perderlo.
+  const echo = node("p", "note column-add-echo");
+  echo.hidden = true;
+  const read = () => csv.parseTaskList(field.value)[0] || null;
+  field.addEventListener("input", () => {
+    const one = read();
+    const bits = [];
+    if (one && one.end) bits.push(`${t("fieldEnd")} ${shortDate(one.end)}`);
+    if (one && one.tags.length) bits.push(one.tags.map((tag) => `#${tag}`).join(" "));
+    if (one && one.priority === "high") bits.push(t("priorityHigh"));
+    echo.textContent = bits.join(" · ");
+    echo.hidden = bits.length === 0;
+  });
+
   form.addEventListener("submit", (event) => {
     event.preventDefault();
-    const title = field.value.trim();
+    const one = read();
+    const title = one ? one.title : field.value.trim();
     if (!title) return;
     field.value = "";
-    model.createTask(projectId, { title, status: column.id });
+    echo.hidden = true;
+    const made = model.createTask(projectId, { title, status: column.id, end: (one && one.end) || null });
+    // Etichette e priorità non passano da `createTask`, come già fa l'incolla: si scrivono subito
+    // dopo, sullo stesso record.
+    if (one && (one.tags.length || one.priority)) {
+      model.updateTask(made.id, { tags: one.tags, priority: one.priority });
+    }
     on.change();
     paint();
     // Three in a row is the normal way this gets used, so the field keeps the caret.
@@ -456,6 +486,7 @@ function _columnNode(column, tasks, today) {
     if (again) again.focus();
   });
   wrap.append(form);
+  wrap.append(echo);
   return wrap;
 }
 
@@ -928,11 +959,14 @@ export function state() {
 export function paint() {
   if (!_project()) return;
   const today = model.todayISO();
-  const due = model.dueSoon(projectId, { from: today }).length;
+  // Tutti e due quando ci sono tutti e due: la stessa correzione fatta sulle schede della home.
+  // Con tre arretrati e cinque in settimana questa riga ne diceva tre, e le cinque sparivano.
+  const due = model.dueAhead(projectId, { from: today }).length;
   const late = model.lateCount(projectId, { from: today });
-  el("planDue").textContent = late
-    ? tf("projectLate", { n: num(late, 0) })
-    : tf("projectDueWeek", { n: num(due, 0) });
+  const said = [];
+  if (late) said.push(tf("projectLate", { n: num(late, 0) }));
+  if (due) said.push(tf("projectDueWeek", { n: num(due, 0) }));
+  el("planDue").textContent = said.join(" · ");
   el("planDue").classList.toggle("late", late > 0);
 
   el("board").hidden = view !== "kanban";

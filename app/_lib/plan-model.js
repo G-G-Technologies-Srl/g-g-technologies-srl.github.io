@@ -1359,10 +1359,28 @@ export function isDone(taskRecord) {
  * Late comes first and is not hidden: hiding it is how a deadline is missed twice. What the
  * interface must not do is shout — amber and a way forward, never red.
  */
+/**
+ * Quello che scade entro la settimana, **arretrati compresi**.
+ *
+ * Non ha un limite inferiore, ed è voluto: questa è la lista delle prossime scadenze, e una lista
+ * che lascia fuori le cose già scadute lascia fuori proprio quelle da fare per prime.
+ *
+ * Ma è una trappola per chi conta invece di elencare: `dueSoon(...).length` non è «quante ne
+ * scadono questa settimana», è quella somma più gli arretrati, e chi li mostra tutti e due finisce
+ * per contarne alcune due volte. È già successo. Per contare c'è `dueAhead`.
+ */
 export function dueSoon(projectId, { from = todayISO(), days = SOON_DAYS } = {}) {
   const limit = addDays(from, days);
   return tasksOf(projectId)
     .filter((one) => one.end && !isDone(one) && one.end <= limit)
+    .sort((a, b) => a.end.localeCompare(b.end));
+}
+
+/** Quello che scade da oggi in poi, entro la settimana: gli arretrati li conta `lateCount`. */
+export function dueAhead(projectId, { from = todayISO(), days = SOON_DAYS } = {}) {
+  const limit = addDays(from, days);
+  return tasksOf(projectId)
+    .filter((one) => one.end && !isDone(one) && one.end >= from && one.end <= limit)
     .sort((a, b) => a.end.localeCompare(b.end));
 }
 

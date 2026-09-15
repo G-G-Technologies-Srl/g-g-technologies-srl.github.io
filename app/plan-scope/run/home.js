@@ -134,10 +134,9 @@ function _projectCard(project, today) {
 
   // I due contatori insieme quando ci sono tutti e due. Prima era «se in ritardo, altrimenti in
   // scadenza»: un progetto con tre arretrati e cinque in settimana ne mostrava uno solo, e spariva
-  // quello in più proprio dove ce n'era di più. `dueSoon` conta dentro anche gli arretrati, quindi
-  // il numero della settimana si ricava togliendoli, o i due si sommerebbero addosso.
+  // quello in più proprio dove ce n'era di più.
   const late = model.lateCount(project.id, { from: today });
-  const soon = Math.max(0, model.dueSoon(project.id, { from: today }).length - late);
+  const soon = model.dueAhead(project.id, { from: today }).length;
   const marks = node("span", "project-card-marks");
   if (late) marks.append(node("span", "badge late", tf("projectLate", { n: num(late, 0) })));
   if (soon) marks.append(node("span", "badge soon", tf("projectDueWeek", { n: num(soon, 0) })));
