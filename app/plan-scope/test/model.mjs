@@ -1293,4 +1293,38 @@ test("un eventDate che non è una data si butta, e non diventa una proprietà", 
   assert.deepEqual(one.props, {});
 });
 
+// -----------------------------------------------------------------------------------------------------------------
+//  i l   p r o s s i m o   i m p e g n o
+// -----------------------------------------------------------------------------------------------------------------
+
+test("il prossimo impegno è la data aperta più vicina", () => {
+  const one = model.createProject({ name: "Sito" });
+  model.createTask(one.id, { title: "Dopo", end: "2026-12-01" });
+  model.createTask(one.id, { title: "Prima", end: "2026-10-01" });
+  model.createTask(one.id, { title: "Senza data" });
+  assert.equal(model.nextDue(one.id).title, "Prima");
+});
+
+test("il prossimo impegno salta quello che è già fatto", () => {
+  const one = model.createProject({ name: "Sito" });
+  const done = model.createTask(one.id, { title: "Prima", end: "2026-10-01" });
+  model.createTask(one.id, { title: "Dopo", end: "2026-12-01" });
+  model.toggleDone(done.id);
+  assert.equal(model.nextDue(one.id).title, "Dopo");
+});
+
+test("con tutte le date passate il prossimo impegno c'è lo stesso", () => {
+  // È il progetto su cui serve di più sapere da dove ricominciare: tacere proprio lì vorrebbe dire
+  // tacere nel momento peggiore.
+  const one = model.createProject({ name: "Sito" });
+  model.createTask(one.id, { title: "Vecchia", end: "2020-01-01" });
+  assert.equal(model.nextDue(one.id).title, "Vecchia");
+});
+
+test("un progetto senza date non ha un prossimo impegno", () => {
+  const one = model.createProject({ name: "Sito" });
+  model.createTask(one.id, { title: "Quando capita" });
+  assert.equal(model.nextDue(one.id), null);
+});
+
 console.log(`model: ${passed} prove passate`);

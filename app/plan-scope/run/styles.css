@@ -490,7 +490,10 @@ select:hover, select:focus { border-color: var(--border-strong); }
 
 .cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  /* 250 e non più 220: la scheda adesso porta anche il prossimo impegno — un titolo e una data
+     sulla stessa riga — e a 220 quel titolo si troncava quasi sempre. Sotto i 280 di finestra
+     resta comunque una colonna sola, quindi il telefono non cambia. */
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 14px;
 }
 
@@ -499,13 +502,35 @@ select:hover, select:focus { border-color: var(--border-strong); }
    bottone non è HTML valido, oltre a essere un clic che ne fa partire due. Così il bottone che apre
    il progetto è tutta la parte alta, e le pastiglie stanno sotto, dentro la stessa cornice. */
 .project-card-box {
+  position: relative;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: linear-gradient(170deg, var(--panel-2), var(--panel) 60%);
   min-height: 116px;
+  overflow: hidden;
 }
+
+/* Il segno sul bordo sinistro: chi scorre una dashboard di dieci progetti trova quelli che
+   chiedono attenzione senza leggerli uno per uno. Sta sul bordo e non dentro perché deve valere
+   per la scheda intera, e perché il pallino del colore — che è del progetto, non del suo stato —
+   sta già dentro, accanto al nome. */
+.project-card-box::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: transparent;
+}
+
+/* Un colore solo, due intensità. Inventarne un secondo per «vicina» vorrebbe dire due ambre da
+   distinguere a colpo d'occhio, che è esattamente quello che a colpo d'occhio non si fa; e un
+   valore fisso qui non seguirebbe i due temi, dove `--late` cambia. */
+.project-card-box.edge-late::before { background: var(--late); }
+.project-card-box.edge-soon::before { background: var(--late); opacity: 0.45; }
 
 .project-card-box:hover { border-color: var(--border-strong); }
 
@@ -542,9 +567,83 @@ select:hover, select:focus { border-color: var(--border-strong); }
   line-height: 1.25;
 }
 
-.project-card-when { font-size: 12px; color: var(--faint); }
+.project-card-when, .project-card-next { font-size: 12px; color: var(--faint); }
 
-.project-card-progress { font-size: 13px; color: var(--muted); margin-top: auto; }
+/* Una data lontana resta smorzata, una vicina esce dal grigio, una passata prende l'ambra. Il
+   salto da `--faint` a `--text` è già un cambio di peso, e non costa un colore nuovo. */
+.project-card-when.soon, .project-card-next.soon { color: var(--text); }
+.project-card-when.late, .project-card-next.late { color: var(--late); }
+
+/* Il prossimo impegno è una riga sola: un titolo lungo si taglia invece di mandare a capo, o due
+   schede accanto avrebbero altezze diverse per il caso di una. */
+.project-card-next {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* La barra e il suo numero sulla stessa riga: sono la stessa informazione detta due volte, per chi
+   guarda e per chi legge. `margin-top: auto` spinge il blocco in fondo, com'era il solo numero,
+   così le schede di una fila restano allineate anche con contenuti di lunghezza diversa. */
+.project-card-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: auto;
+}
+
+.project-card-bar {
+  flex: 1 1 auto;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.project-card-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: width 180ms ease;
+}
+
+.project-card-progress { flex: 0 0 auto; font-size: 12px; color: var(--muted); }
+
+/* I contatori e le facce sulla stessa riga, le facce spinte a destra: sono due cose diverse — cosa
+   chiede attenzione, e chi c'è — e affiancate senza uno stacco si leggerebbero come una sola. */
+.project-card-marks {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+}
+
+.project-card-crew { display: flex; gap: 3px; margin-left: auto; }
+
+/* I cerchietti **non** si sovrappongono. Sovrapposti dicono «un gruppo» invece di «tre cose in
+   fila», ed era la prima versione — ma su un nome e cognome il cerchio che segue copriva la seconda
+   lettera di quello prima, e «Marco Rossi» si leggeva «MF». Un mucchietto elegante di iniziali
+   sbagliate vale meno di tre iniziali giuste in fila. */
+.face {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid var(--panel);
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+}
+
+.face.more { color: var(--faint); }
+
 
 .badge {
   font-size: 11.5px;

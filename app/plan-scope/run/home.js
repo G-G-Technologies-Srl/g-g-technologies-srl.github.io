@@ -51,6 +51,22 @@ function _dueLabel(iso, today) {
   return shortDate(iso);
 }
 
+/** In che fascia cade una data: passata, entro una settimana, o lontana. */
+function _urgency(iso, today) {
+  const days = model.daysBetween(today, iso);
+  if (days === null) return "";
+  if (days < 0) return "late";
+  if (days <= 7) return "soon";
+  return "far";
+}
+
+/** Le iniziali di un nome: una per «Giulia», due per «Marco Rossi». */
+function _initials(name) {
+  const words = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return "?";
+  return (words[0][0] + (words.length > 1 ? words[words.length - 1][0] : "")).toUpperCase();
+}
+
 /** La data, detta come distanza invece che come giorno: «fra 43 giorni» è quello che si chiede. */
 function _whenLabel(project, today) {
   const when = model.projectDate(project);
@@ -87,18 +103,64 @@ function _projectCard(project, today) {
   // Niente data, niente riga: scrivere «senza data» occupa il posto di un'informazione per dire
   // che non ce n'è una, e su una dashboard di progetti che una data non ce l'hanno è la parola
   // che si ripete di più.
-  if (said) card.append(node("span", "project-card-when", `${dated.key} · ${shortDate(dated.value)} · ${said}`));
+  // Il colore dice quanto manca: «fra 42 giorni» e «fra 2 giorni» pesavano uguale, ed è il peso
+  // che si legge per primo.
+  if (said) {
+    card.append(node("span", `project-card-when ${_urgency(dated.value, today)}`,
+      `${dated.key} · ${shortDate(dated.value)} · ${said}`));
+  }
 
+  // L'avanzamento come forma, non come conto. «3 di 20» va letto e diviso; una barra si capisce
+  // senza leggerla, e il numero resta accanto per chi il numero lo vuole.
   const { done, total } = model.progressOf(project.id);
-  card.append(node("span", "project-card-progress",
+  const row = node("span", "project-card-bar-row");
+  const bar = node("span", "project-card-bar");
+  const fill_ = node("span", "project-card-bar-fill");
+  fill_.style.width = `${total ? Math.round((done / total) * 100) : 0}%`;
+  bar.append(fill_);
+  row.append(bar);
+  row.append(node("span", "project-card-progress",
     tf("projectProgress", { done: num(done, 0), total: num(total, 0) })));
+  card.append(row);
 
+  // Il prossimo impegno: cosa fare di questo progetto, senza aprirlo.
+  const next = model.nextDue(project.id);
+  if (next) {
+    const line = node("span", `project-card-next ${_urgency(next.end, today)}`);
+    const who = model.assigneeName(next);
+    line.append([next.title || t("taskUntitled"), shortDate(next.end), who].filter(Boolean).join(" · "));
+    card.append(line);
+  }
+
+  // I due contatori insieme quando ci sono tutti e due. Prima era «se in ritardo, altrimenti in
+  // scadenza»: un progetto con tre arretrati e cinque in settimana ne mostrava uno solo, e spariva
+  // quello in più proprio dove ce n'era di più. `dueSoon` conta dentro anche gli arretrati, quindi
+  // il numero della settimana si ricava togliendoli, o i due si sommerebbero addosso.
   const late = model.lateCount(project.id, { from: today });
-  const soon = model.dueSoon(project.id, { from: today }).length;
-  const badge = node("span", late ? "badge late" : "badge");
-  if (late) badge.textContent = tf("projectLate", { n: num(late, 0) });
-  else if (soon) badge.textContent = tf("projectDueWeek", { n: num(soon, 0) });
-  if (badge.textContent) card.append(badge);
+  const soon = Math.max(0, model.dueSoon(project.id, { from: today }).length - late);
+  const marks = node("span", "project-card-marks");
+  if (late) marks.append(node("span", "badge late", tf("projectLate", { n: num(late, 0) })));
+  if (soon) marks.append(node("span", "badge soon", tf("projectDueWeek", { n: num(soon, 0) })));
+
+  // Chi ci lavora, per iniziali. Il modello le sa da sempre e la dashboard non le ha mai dette:
+  // per sapere se un progetto era in mano a qualcuno bisognava aprirlo.
+  const crew = model.peopleOf(project.id);
+  if (crew.length) {
+    const faces = node("span", "project-card-crew");
+    for (const one of crew.slice(0, 3)) {
+      const face = node("span", "face", _initials(one.name));
+      face.title = one.name || "";
+      faces.append(face);
+    }
+    if (crew.length > 3) faces.append(node("span", "face more", `+${crew.length - 3}`));
+    marks.append(faces);
+  }
+  if (marks.childElementCount) card.append(marks);
+
+  // Il segno sul bordo: le schede che chiedono attenzione si trovano scorrendo con la coda
+  // dell'occhio, senza leggerle una per una.
+  const edge = late ? "late" : (next && _urgency(next.end, today)) || (dated && _urgency(dated.value, today));
+  if (edge && edge !== "far") box.classList.add(`edge-${edge}`);
 
   // Le etichette: si leggono, e si cliccano per restare su quelle. Quella già accesa si spegne,
   // così la stessa pastiglia fa e disfa — cercare altrove come si toglie un filtro che si è messo

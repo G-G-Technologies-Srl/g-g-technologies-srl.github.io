@@ -1366,6 +1366,19 @@ export function dueSoon(projectId, { from = todayISO(), days = SOON_DAYS } = {})
     .sort((a, b) => a.end.localeCompare(b.end));
 }
 
+/**
+ * La prossima cosa che scade, aperta e con una data: la più vicina, in ritardo o no.
+ *
+ * Senza limite inferiore di proposito. Un progetto dove è già tutto in ritardo è proprio quello su
+ * cui serve sapere da dove ricominciare, e un «prossimo impegno» che tace quando le date sono tutte
+ * passate tacerebbe nel momento peggiore.
+ */
+export function nextDue(projectId) {
+  return tasksOf(projectId)
+    .filter((one) => one.end && !isDone(one))
+    .sort((a, b) => a.end.localeCompare(b.end))[0] || null;
+}
+
 export function lateCount(projectId, { from = todayISO() } = {}) {
   return tasksOf(projectId).filter((one) => one.end && !isDone(one) && one.end < from).length;
 }
