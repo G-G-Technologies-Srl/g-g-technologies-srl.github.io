@@ -184,6 +184,11 @@ export function boardHtml({ title, subtitle = "", footer = "", columns, tasks, w
       const name = who(task);
       if (name) bits.push(name);
       if (task.tags && task.tags.length) bits.push(task.tags.map((tag) => `#${tag}`).join(" "));
+      // La priorità usciva solo nel CSV: chi manda a un cliente la pagina della bacheca mandava
+      // una bacheca che quella colonna non ce l'ha, pur avendola sullo schermo.
+      if (task.priority && words.priority && words.priority[task.priority]) {
+        bits.push(words.priority[task.priority]);
+      }
       if (task.milestone) bits.push(words.milestone);
       return `<div class="card${isDone(task) ? " done" : ""}"><div class="title">${_escape(task.title)}</div>${
         bits.length ? `<div class="line">${_escape(bits.join(" · "))}</div>` : ""}${

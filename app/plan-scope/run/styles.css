@@ -556,6 +556,11 @@ select:hover, select:focus { border-color: var(--border-strong); }
 
 .badge.late { border-color: currentColor; }
 
+/* Le due priorità non pesano uguale e non si vedono uguale. L'alta resta la pastiglia normale, che
+   in mezzo alle altre si legge; la bassa è smorzata — chi la segna sta dicendo «questa può
+   aspettare», e un cartellino che grida il contrario direbbe la cosa sbagliata. */
+.badge.prio-low { color: var(--faint); border-color: var(--border); }
+
 /* ---------------------------------------------------------------------------------------------
    le tinte delle etichette
 

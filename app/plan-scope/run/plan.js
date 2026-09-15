@@ -315,7 +315,13 @@ function _taskCard(task, today) {
     meta.append(node("span", late ? "when late" : "when",
       late ? `${shortDate(task.end)} · ${t("dueLate")}` : shortDate(task.end)));
   }
-  if (task.priority === "high") meta.append(node("span", "badge", t("priorityHigh")));
+  // Tutte e due le priorità, non solo l'alta. «Bassa» si sceglieva, si salvava, e sulla carta non
+  // compariva niente: identica a un'attività senza priorità. Una scelta che non lascia traccia è
+  // una scelta che l'app ha finto di raccogliere — e il dimostrativo stesso ne marca una bassa,
+  // che quindi nessuno ha mai visto. Pesano diverso e si vedono diverso: l'alta come prima, la
+  // bassa smorzata, perché il senso di segnarla è togliere urgenza, non aggiungerne.
+  if (task.priority === "high") meta.append(node("span", "badge prio-high", t("priorityHigh")));
+  else if (task.priority === "low") meta.append(node("span", "badge prio-low", t("priorityLow")));
   if (task.repeat) meta.append(node("span", "who", `↻ ${t(`repeatShort_${task.repeat}`)}`));
   const who = model.assigneeName(task);
   if (who) meta.append(node("span", "who", who));

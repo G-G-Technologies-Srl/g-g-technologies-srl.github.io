@@ -83,7 +83,8 @@ export function exportBoardHtml(projectId) {
     footer: _footerLine(),
     columns: project.columns,
     tasks: model.tasksOf(projectId),
-    words: { due: t("fieldEnd"), milestone: t("milestoneShort"), empty: t("boardEmptyColumn") },
+    words: { due: t("fieldEnd"), milestone: t("milestoneShort"), empty: t("boardEmptyColumn"),
+             priority: { high: t("priorityHigh"), low: t("priorityLow") } },
     isDone: (task) => model.isDone(task),
   });
   pack.save(`${pack.safeName(project.name)}.html`, html, "text/html;charset=utf-8");
