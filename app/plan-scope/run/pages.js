@@ -20,7 +20,7 @@ import { el, node, button, fill, shortDate, longDate, tagHue } from "./ui.js";
 //  s t a t e
 // -----------------------------------------------------------------------------------------------------------------
 
-let on = { pageId: () => null, body: () => "", openPage() {} };
+let on = { pageId: () => null, body: () => "", openPage() {}, openPerson() {}, told() {} };
 let head = { props: {}, extra: [] };    // the frontmatter of the page on screen; the editor holds the body
 
 // The table's state: one filter at a time — a tag, or a key and a value — and the sort column.
@@ -98,17 +98,25 @@ function _paintKind() {
   if (!meeting) return;
   const today = model.todayISO();
   const days = model.daysBetween(today, meeting.date);
+  let words;
   if (model.meetingAhead(meeting)) {
     const when = meeting.time
       ? tf("kindWhenAt", { day: longDate(meeting.date), time: meeting.time })
       : longDate(meeting.date);
     const far = days === 0 ? t("dueToday") : days === 1 ? t("dueTomorrow")
       : tf("eventIn", { n: num(days, 0) });
-    box.textContent = [t("kindAppointment"), when, far, meeting.with].filter(Boolean).join(" · ");
+    words = [t("kindAppointment"), when, far];
   } else {
-    box.textContent = [tf("kindRecord", { day: longDate(meeting.date) }), meeting.with]
-      .filter(Boolean).join(" · ");
+    words = [tf("kindRecord", { day: longDate(meeting.date) })];
   }
+  // Le persone in fondo, una per una e cliccabili: il nome porta alla scheda in rubrica, che è
+  // dove si trova il telefono di chi si sta per incontrare.
+  const pieces = [node("span", "", words.join(" · "))];
+  for (const name of _splitNames(meeting.with)) {
+    pieces.push(node("span", "", "·"));
+    pieces.push(button("who", name, () => on.openPerson(name), { label: t("propOpenPerson") }));
+  }
+  fill(box, pieces);
 }
 
 function _paintProps() {
@@ -260,6 +268,16 @@ function _peoplePicker(valueField, write) {
     const now = _splitNames(valueField.value);
     if (!now.some((one) => one.toLowerCase() === name.toLowerCase())) now.push(name);
     write(now.join(", "));
+  });
+  // Un nome scritto a mano che in rubrica non c'era, adesso c'è: nasce quando la riga si salva,
+  // e da quel momento la tendina lo offre — anche nelle altre pagine.
+  valueField.addEventListener("change", () => {
+    const made = model.ensureContacts(valueField.value);
+    if (!made.length) return;
+    for (const one of made) { const opt = node("option", "", one.name); opt.value = one.name; picker.append(opt); }
+    picker.hidden = false;
+    on.told(made.length === 1 ? tf("contactsMadeOne", { name: made[0].name })
+      : tf("contactsMade", { n: made.length }));
   });
   return picker;
 }

@@ -1119,6 +1119,31 @@ export function contactByUid(uid) {
  * What makes «one door» work when somebody types: the field looks before it creates, so writing
  * «giulia » where «Giulia» already exists finds her instead of making a second card.
  */
+/**
+ * I nomi scritti in una riga «con:» o nella maschera di un appuntamento, portati in rubrica.
+ *
+ * Chi scrive «con: Luca, Giulia» sta dicendo che quelle due persone esistono: farle cercare e
+ * creare a mano in rubrica, una per una, è chiedere due volte la stessa cosa. Chi c'è già resta
+ * com'è — per nome, senza distinguere le maiuscole — e chi manca nasce con il solo nome, da
+ * completare dalla sua scheda. Nessun passo di undo, come `createContact`: una scheda in più in
+ * rubrica non è un danno da disfare, e si cestina da lì.
+ *
+ * Accetta una stringa con le virgole o un elenco. Torna le schede nuove, perché chi chiama possa
+ * dirlo.
+ */
+export function ensureContacts(names) {
+  const list = Array.isArray(names) ? names : String(names || "").split(",");
+  const created = [];
+  const seen = new Set();
+  for (const raw of list) {
+    const clean = String(raw || "").trim();
+    if (!clean || seen.has(clean.toLowerCase())) continue;
+    seen.add(clean.toLowerCase());
+    if (!contactByName(clean)) created.push(createContact({ name: clean }));
+  }
+  return created;
+}
+
 export function contactByName(name) {
   const wanted = String(name || "").trim().toLowerCase();
   if (!wanted) return null;

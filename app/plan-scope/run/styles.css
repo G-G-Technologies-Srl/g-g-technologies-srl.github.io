@@ -1920,7 +1920,22 @@ dialog.search input[type="search"] { width: 100%; font-size: 16px; }
 /* L'occhiello di un incontro. Davanti, con il colore d'accento: chiede attenzione. Passato,
    smorzato: è una nota, e una nota non chiede niente. Lo stesso `.kicker` della testa del
    progetto, così la parola «occhiello» vuol dire una cosa sola in tutta l'app. */
-.page-kind { margin: 0 0 10px; color: var(--faint); }
+.page-kind { margin: 0 0 10px; color: var(--faint); flex-wrap: wrap; }
+/* Un nome nell'occhiello è un bottone che veste come il testo intorno, con la sottolineatura
+   puntinata a dire che porta da qualche parte. */
+.page-kind .who {
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  border: 0;
+  padding: 0;
+  background: none;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.page-kind .who:hover { color: var(--text); }
 .page-kind.ahead { color: var(--accent-text); }
 .page-kind:not(.ahead)::before { background: var(--border-strong); }
 

@@ -1517,4 +1517,13 @@ test("il corpo della pagina resta com'era sotto la testa riscritta", () => {
   assert.match(model.page(page.id).markdown, /---\n# Ordine del giorno\n\n- \[ \] portare i campioni\n$/);
 });
 
+test("i nomi scritti in «con:» entrano in rubrica, chi c'è già resta uno solo", () => {
+  model.createContact({ name: "Giulia" });
+  const made = model.ensureContacts("giulia, Luca , Tizio Caio, luca, ");
+  assert.deepEqual(made.map((one) => one.name), ["Luca", "Tizio Caio"]);
+  assert.equal(model.liveContacts().length, 3, "Giulia non si sdoppia, Luca nemmeno");
+  assert.deepEqual(model.ensureContacts(["Luca"]), [], "la seconda volta non nasce nessuno");
+  assert.deepEqual(model.ensureContacts(""), []);
+});
+
 console.log(`model: ${passed} prove passate`);

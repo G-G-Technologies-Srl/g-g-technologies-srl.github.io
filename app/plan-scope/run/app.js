@@ -284,9 +284,21 @@ async function _askMeeting(target, withName = "", { meeting = null } = {}) {
   const step = model.updateMeeting(meeting.page.id, said, {
     date: t("propDate"), time: t("propTime"), with: t("propWith"), where: t("propWhere"),
   });
+  _welcome(said.with);
   await _repaint();
   _offerUndo(step, t("meetSaved"));
   return model.page(meeting.page.id);
+}
+
+/**
+ * Chi è stato nominato e in rubrica non c'era, adesso c'è — e la striscia lo dice, perché una
+ * scheda nata da sola è una scheda da completare.
+ */
+function _welcome(names) {
+  const made = model.ensureContacts(names);
+  if (!made.length) return;
+  snack(made.length === 1 ? tf("contactsMadeOne", { name: made[0].name })
+    : tf("contactsMade", { n: made.length }));
 }
 
 /**
@@ -359,6 +371,7 @@ function _newMeeting(target, said = {}) {
   projectId = target;
   _openPage(page.id);
   snack(t("meetingHint"));
+  _welcome(said.with);
   return page;
 }
 
@@ -2217,6 +2230,12 @@ function _wire() {
     pageId: () => pageId,
     body: () => (source ? md.frontmatter(el("pageBody").value).body : editor.markdown()),
     openPage: (id) => _openPage(id),
+    // Un nome nella testa della pagina porta alla sua scheda; se la scheda non c'è, alla rubrica.
+    openPerson: (name) => {
+      const person = model.contactByName(name);
+      return person ? _openPerson(person.id) : _openRubrica();
+    },
+    told: (message) => snack(message),
   });
   for (const [id, kind] of VIEWS) el(id).addEventListener("click", () => _goView(kind));
 
