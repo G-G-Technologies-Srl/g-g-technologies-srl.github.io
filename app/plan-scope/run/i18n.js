@@ -391,6 +391,8 @@ const IT = {
   priorityLow: "Bassa",
   priorityHigh: "Alta",
   fieldRepeat: "Si ripete",
+  fieldRepeatHint: "Quando la spunti, quella resta fatta e ne nasce una nuova, un periodo dopo. "
+    + "Non è una serie: sul calendario e sulla linea del tempo si vede sempre e solo la prossima.",
   repeatNever: "Mai",
   repeatDaily: "Ogni giorno",
   repeatWeekly: "Ogni settimana",
@@ -1315,6 +1317,8 @@ const EN = {
   priorityLow: "Low",
   priorityHigh: "High",
   fieldRepeat: "Repeats",
+  fieldRepeatHint: "When you tick it, that one stays done and a new one appears, a period later. "
+    + "It is not a series: the calendar and the timeline only ever show the next one.",
   repeatNever: "Never",
   repeatDaily: "Every day",
   repeatWeekly: "Every week",

@@ -1724,7 +1724,7 @@ function _applyLanguage() {
     // «Si ripete» aveva la sua etichetta in pagina e nessuno che ci scrivesse dentro: il campo
     // stava sotto una riga vuota. Era invisibile perché stava dietro «Mostra altro», dove una
     // riga vuota sembra spazio.
-    ["cardRepeatLabel", "fieldRepeat"],
+    ["cardRepeatLabel", "fieldRepeat"], ["cardRepeatHint", "fieldRepeatHint"],
     ["cardChecklistLabel", "fieldChecklist"], ["cardBlockedLabel", "fieldBlocked"]]) {
     el(id).textContent = t(key);
   }

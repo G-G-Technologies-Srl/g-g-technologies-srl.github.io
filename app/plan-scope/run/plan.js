@@ -804,6 +804,13 @@ export function connect(handlers) {
 
 
   el("cardMore").addEventListener("click", () => {
+    // **Si scrive prima di ridisegnare**, come ogni altra azione della carta. `_fillCard()` rilegge
+    // gli `input` dal modello, e la carta scrive alla chiusura: senza questa riga, aprire «Mostra
+    // altro» buttava via quello che era stato battuto e non ancora salvato. Scrivere una scadenza
+    // e poi aprire il cassetto per scegliere la ripetizione — cioè il gesto più naturale che ci
+    // sia su questa maschera — perdeva la scadenza, in silenzio. Il commento sulla checklist qui
+    // sopra dice la stessa cosa per il suo caso; a questo pulsante non era arrivato.
+    _saveCard();
     extraOpen = !extraOpen;
     _fillCard();
   });
