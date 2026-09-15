@@ -27,7 +27,7 @@
 // creation, and travels through every export and import. Two copies of a project on two computers
 // have different ids and the same uids, and that is what `merge` matches on.
 
-import { links, frontmatter } from "./plan-markdown.js";
+import { links, frontmatter, withFrontmatter } from "./plan-markdown.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -1286,6 +1286,34 @@ export function meetingAhead(meeting, now = new Date()) {
 /** Gli incontri ancora davanti, cioè gli appuntamenti; il resto sono verbali. */
 export function meetingsAhead(projectId, now = new Date()) {
   return meetingsOf(projectId).filter((one) => meetingAhead(one, now));
+}
+
+/**
+ * L'appuntamento riscritto dalla maschera: il titolo e la testa, in un passo di undo solo.
+ *
+ * Una riga che c'è già tiene la sua chiave — «data» resta «data» anche sotto l'interfaccia
+ * inglese, perché la pagina è un file che una persona legge nella lingua in cui l'ha scritto — e
+ * solo una riga nuova prende il nome che le passa chi la aggiunge. Un valore svuotato toglie la
+ * riga: una proprietà vuota in questo formato non esiste, e lasciarla vuota la farebbe finire fra
+ * quelle «portate e non lette».
+ */
+export function updateMeeting(id, said = {}, keys = {}) {
+  const pageRecord = pages.get(id);
+  if (!pageRecord) return null;
+  const { props, extra, body } = frontmatter(pageRecord.markdown || "");
+  const set = (names, fallback, value) => {
+    const key = names.find((one) => Object.prototype.hasOwnProperty.call(props, one)) || fallback;
+    if (!key) return;
+    const clean = String(value == null ? "" : value).trim();
+    if (clean) props[key] = clean;
+    else delete props[key];
+  };
+  set(["data", "date"], keys.date, said.date);
+  set(["ora", "time", "orario"], keys.time, said.time);
+  set(["con", "with"], keys.with, said.with);
+  set(["dove", "where"], keys.where, said.where);
+  const title = String(said.what == null ? "" : said.what).trim() || pageRecord.title;
+  return updatePage(id, { title, markdown: withFrontmatter(props, body, extra) });
 }
 
 export function pagesAbout(uid) {

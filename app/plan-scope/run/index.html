@@ -270,7 +270,7 @@
           <!-- Qui e non fra i documenti. Un appuntamento è una cosa che succederà, e si prende
                guardando i giorni: metterlo accanto a «aggiungi una pagina» lo faceva sembrare un
                verbale da scrivere, che è quello che diventa **dopo**. -->
-          <button type="button" id="newMeeting" class="ghost small" data-t="newMeeting"></button>
+          <button type="button" id="newMeeting" class="accent wide" data-t="meetNew"></button>
         </div>
 
         <!-- Chi ci lavora, e in che veste. Si riempie anche da solo: assegnare un'attività a
@@ -284,11 +284,11 @@
           </div>
           <p class="note" id="peopleNone" data-t="peopleNone" hidden></p>
           <ul class="list" id="peopleList"></ul>
-          <form class="row" id="addPersonForm">
+          <form class="row quick-add" id="addPersonForm">
             <input type="text" id="addPersonName" list="rubricaList" maxlength="120" autocomplete="off"
                    data-t-placeholder="peopleAdd" data-t-label="peopleAdd">
             <datalist id="rubricaList"></datalist>
-            <button type="submit" class="ghost small" data-t="peopleAddDo"></button>
+            <button type="submit" class="primary" data-t="peopleAddDo"></button>
           </form>
           <!-- L'elenco della rubrica è agganciato al campo da sempre, e non lo scopriva nessuno:
                un `datalist` compare solo mentre si scrive, quindi chi non sa che c'è va a cercare
@@ -315,7 +315,7 @@
           </div>
           <ul class="list" id="pageList"></ul>
           <p class="note" id="pagesEmpty" data-t="pagesEmpty" hidden></p>
-          <form class="row" id="newPageForm">
+          <form class="row quick-add" id="newPageForm">
             <input type="text" id="pageField" maxlength="120" autocomplete="off">
             <button type="submit" id="addPage" class="primary" data-t="addPage"></button>
           </form>
@@ -329,7 +329,7 @@
           </div>
           <ul class="list" id="taskList"></ul>
           <p class="note" id="tasksEmpty" data-t="tasksEmpty" hidden></p>
-          <form class="row" id="newTaskForm">
+          <form class="row quick-add" id="newTaskForm">
             <input type="text" id="taskField" maxlength="160" autocomplete="off">
             <button type="submit" id="addTask" class="primary" data-t="addTask"></button>
           </form>
@@ -1011,30 +1011,44 @@
 <!-- «Quando?», che è la prima domanda di un appuntamento. Prima l'incontro nasceva al giorno in
      cui lo si apriva, perché il verso previsto era «ho appena finito una riunione»: per segnarne
      una futura si correggeva la data subito dopo, ogni volta. -->
-<dialog id="meetDialog">
-  <h2 data-t="meetTitle"></h2>
+<!-- La stessa maschera per prenderlo e per correggerlo: aperta da una scheda della lavagna porta
+     i valori della pagina, e in fondo le due cose che si fanno a un appuntamento già preso —
+     andare alle note, o toglierlo. Le etichette sopra le caselle e le caselle larghe quanto la
+     riga: le regole della scheda attività sono sue e non arrivano qui, e senza le proprie il
+     modulo si impaginava come testo corrente. -->
+<dialog id="meetDialog" class="fields">
+  <h2 id="meetTitle" data-t="meetTitle"></h2>
   <form id="meetForm">
-    <label for="meetWhat" id="meetWhatLabel"></label>
-    <input type="text" id="meetWhat" maxlength="120" autocomplete="off">
-    <div class="card-dates">
-      <div>
+    <div class="field">
+      <label for="meetWhat" id="meetWhatLabel"></label>
+      <input type="text" id="meetWhat" maxlength="120" autocomplete="off">
+    </div>
+    <div class="field-pair">
+      <div class="field">
         <label for="meetDate" id="meetDateLabel"></label>
-        <input type="date" id="meetDate">
+        <input type="date" id="meetDate" required>
       </div>
-      <div>
+      <div class="field">
         <label for="meetTime" id="meetTimeLabel"></label>
         <input type="time" id="meetTime">
       </div>
     </div>
-    <label for="meetWith" id="meetWithLabel"></label>
-    <input type="text" id="meetWith" maxlength="120" autocomplete="off" list="meetWithList">
-    <datalist id="meetWithList"></datalist>
-    <label for="meetWhere" id="meetWhereLabel"></label>
-    <input type="text" id="meetWhere" maxlength="200" autocomplete="off"
-           data-t-placeholder="meetWhereHint">
-    <div class="row card-foot">
+    <div class="field">
+      <label for="meetWith" id="meetWithLabel"></label>
+      <input type="text" id="meetWith" maxlength="120" autocomplete="off" list="meetWithList">
+      <datalist id="meetWithList"></datalist>
+    </div>
+    <div class="field">
+      <label for="meetWhere" id="meetWhereLabel"></label>
+      <input type="text" id="meetWhere" maxlength="200" autocomplete="off"
+             data-t-placeholder="meetWhereHint">
+    </div>
+    <div class="row form-foot">
       <button type="submit" id="meetOk" class="primary" data-t="meetOk"></button>
       <button type="button" id="meetCancel" data-t="cancelProject"></button>
+      <span class="spacer"></span>
+      <button type="button" id="meetOpen" class="ghost small" data-t="meetOpen" hidden></button>
+      <button type="button" id="meetTrash" class="ghost small" data-t="meetTrash" hidden></button>
     </div>
   </form>
 </dialog>

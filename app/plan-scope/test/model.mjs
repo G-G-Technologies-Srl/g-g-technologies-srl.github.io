@@ -1463,4 +1463,58 @@ test("il momento si costruisce dalle parti: il fuso non lo sposta", () => {
   assert.equal(at.getDate(), 24);
 });
 
+// -----------------------------------------------------------------------------------------------------------------
+//  l ' a p p u n t a m e n t o   c o r r e t t o   d a l l a   m a s c h e r a
+// -----------------------------------------------------------------------------------------------------------------
+
+const CHIAVI = { date: "data", time: "ora", with: "con", where: "dove" };
+
+test("correggere un appuntamento riscrive titolo e testa, e si annulla in un passo", () => {
+  const one = model.createProject({ name: "Sito" });
+  const page = incontro(one.id, ["tipo: incontro", "data: 2026-09-24", "ora: 15:00", "con: Anna"]);
+  model.updatePage(page.id, { title: "Prima riunione" });
+  const step = model.updateMeeting(page.id, { what: "Riunione spostata", date: "2026-09-25",
+    time: "10:30", with: "Anna, Marco", where: "Rimini" }, CHIAVI);
+  const [found] = model.meetingsOf(one.id);
+  assert.equal(found.page.title, "Riunione spostata");
+  assert.deepEqual([found.date, found.time, found.with, found.where],
+    ["2026-09-25", "10:30", "Anna, Marco", "Rimini"]);
+  // L'ora va fra virgolette, come YAML vuole per un valore con i due punti.
+  assert.match(model.page(page.id).markdown, /^---\ntipo: incontro\ndata: 2026-09-25\nora: "10:30"\ncon: Anna, Marco\ndove: Rimini\n---/);
+  model.undoStep(step);
+  const [back] = model.meetingsOf(one.id);
+  assert.equal(back.page.title, "Prima riunione");
+  assert.deepEqual([back.date, back.time, back.with, back.where], ["2026-09-24", "15:00", "Anna", ""]);
+});
+
+test("una riga che c'è tiene la sua chiave, una nuova prende quella di chi la aggiunge", () => {
+  const one = model.createProject({ name: "Sito" });
+  const page = incontro(one.id, ["type: meeting", "date: 2026-09-24", "with: Anna"]);
+  model.updateMeeting(page.id, { date: "2026-09-26", time: "09:00", with: "Anna", where: "" }, CHIAVI);
+  const text = model.page(page.id).markdown;
+  assert.match(text, /\ndate: 2026-09-26\n/, "la data resta «date»");
+  assert.match(text, /\nora: "09:00"\n/, "l'ora, che non c'era, arriva in italiano");
+  assert.doesNotMatch(text, /dove|where/, "un valore vuoto non scrive nessuna riga");
+});
+
+test("svuotare un valore toglie la riga, e il titolo vuoto tiene quello di prima", () => {
+  const one = model.createProject({ name: "Sito" });
+  const page = incontro(one.id, ["tipo: incontro", "data: 2026-09-24", "ora: 15:00", "dove: Rimini"]);
+  model.updatePage(page.id, { title: "Sopralluogo" });
+  model.updateMeeting(page.id, { what: "", date: "2026-09-24", time: "", with: "", where: "" }, CHIAVI);
+  const [found] = model.meetingsOf(one.id);
+  assert.equal(found.page.title, "Sopralluogo");
+  assert.equal(found.time, "");
+  assert.equal(found.where, "");
+  assert.doesNotMatch(model.page(page.id).markdown, /\nora:|\ndove:/);
+});
+
+test("il corpo della pagina resta com'era sotto la testa riscritta", () => {
+  const one = model.createProject({ name: "Sito" });
+  const page = incontro(one.id, ["tipo: incontro", "data: 2026-09-24"]);
+  model.setMarkdown(page.id, `${model.page(page.id).markdown}# Ordine del giorno\n\n- [ ] portare i campioni\n`);
+  model.updateMeeting(page.id, { date: "2026-09-25" }, CHIAVI);
+  assert.match(model.page(page.id).markdown, /---\n# Ordine del giorno\n\n- \[ \] portare i campioni\n$/);
+});
+
 console.log(`model: ${passed} prove passate`);

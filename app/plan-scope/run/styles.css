@@ -68,6 +68,55 @@ body.fixed { height: 100%; overflow: hidden; }
    sembrava l'ultima riga: un select che mostra un nome di progetto in fondo a un elenco di
    progetti dice «anche questo», non «quale?». Lo stacco e la riga di sopra lo dicono senza
    parole. */
+/* **L'inserimento veloce è un'altra cosa dall'elenco che ha sopra.**
+
+   Nei pannelli del progetto e nelle colonne della lavagna il campo «Aggiungi» stava attaccato
+   all'ultima riga, con gli stessi bordi e la stessa aria di una voce in più: un modulo travestito
+   da riga. Qui si stacca con una riga e un respiro, il campo perde la cornice e diventa una riga
+   scritta a matita, e il segno «+» davanti dice cosa fa prima ancora di leggere il suggerimento.
+   La cornice torna quando il campo è in mano, così si vede dove si sta scrivendo. Un solo
+   disegno, lo stesso ovunque si aggiunga qualcosa: persone, pagine, attività, colonne. */
+.row.quick-add {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.quick-add::before {
+  content: "+";
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 17px;
+  line-height: 1;
+  color: var(--accent-text);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  pointer-events: none;
+}
+
+.quick-add input {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: transparent;
+  border-color: transparent;
+  padding-left: 6px;
+}
+
+.quick-add input::placeholder { color: var(--faint); }
+
+.quick-add input:hover, .quick-add input:focus {
+  background: rgba(127, 140, 170, 0.08);
+  border-color: var(--border-strong);
+}
+
+.quick-add .primary { flex: none; padding: 6px 12px; }
+
 #addWhereForm {
   margin-top: 12px;
   padding-top: 12px;
@@ -1010,7 +1059,50 @@ input.when-field.late { color: var(--late); }
 
 .column-add { margin-top: 8px; }
 
-.column-add input { flex: 1 1 auto; min-width: 0; font-size: 13px; }
+/* `width: 0` e base zero: la riga non va più a capo, e la larghezza naturale di un campo di testo
+   — venti caratteri — spingerebbe la colonna oltre i suoi 268px. Il campo prende quello che resta
+   fra il «+» e il pulsante, che è quanto deve prendere. */
+.column-add input { flex: 1 1 0; width: 0; min-width: 0; font-size: 13px; }
+
+/* ---- an appointment on the board
+
+   Una scheda che non si trascina e non si spunta: sta nella colonna che il giorno le assegna —
+   davanti in «da fare», oggi in «in corso», passata oggi in «fatto» — e domani non c'è più,
+   perché è diventata un verbale. Il verde dice «non è un'attività» come lo dice già nel
+   calendario e nei prossimi impegni. */
+.task-card.is-meeting {
+  background: linear-gradient(170deg, var(--accent-soft), var(--panel) 70%);
+  border-color: rgba(52, 211, 153, 0.35);
+  touch-action: auto;                   /* non si trascina: il dito deve poter scorrere la colonna */
+}
+
+.task-card.is-meeting .meet-mark { min-width: 0; padding-top: 2px; font-weight: 500; }
+
+.task-card.is-meeting .title { flex: 1 1 auto; }
+
+.task-card.is-meeting .badge.meet {
+  color: var(--accent-text);
+  border-color: rgba(52, 211, 153, 0.45);
+  background: none;
+}
+
+.task-card.is-meeting .where { font-size: 11px; color: var(--faint); min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+
+.task-card.is-meeting .meet-x {
+  flex: none;
+  margin: -4px -6px -4px auto;
+  color: var(--faint);
+  font-size: 12px;
+  opacity: 0;
+}
+
+.task-card.is-meeting:hover .meet-x, .task-card.is-meeting:focus-within .meet-x,
+.task-card.is-meeting .meet-x:focus-visible { opacity: 1; }
+
+@media (hover: none) { .task-card.is-meeting .meet-x { opacity: 1; } }
+
+.task-card.is-meeting.is-gone { opacity: 0.62; }
 
 .column-new {
   flex: 0 0 190px;
@@ -1605,6 +1697,34 @@ dialog.ask { width: min(420px, calc(100vw - 32px)); }
 dialog.ask p { color: var(--text); font-size: 14.5px; line-height: 1.55; margin: 0 0 12px; }
 dialog.ask p:focus { outline: none; }
 dialog.ask input, dialog.ask select { width: 100%; margin-bottom: 14px; font-size: 15px; }
+
+/* A form in a dialog: the label over its field, the field as wide as the row, a pair side by
+   side when the two values are read together (a day and its hour). Nothing of this comes from
+   `#taskCard`, whose rules are scoped to it on purpose — without its own, the appointment dialog
+   laid labels and fields out as running text. `fields` and not `form`: `.form` is the class of the
+   settings sheets, and it sets `display: grid` — on a `<dialog>` that would keep it on screen
+   after `close()`, because a closed dialog is hidden by `display: none` and nothing else. */
+dialog.fields { width: min(460px, calc(100vw - 32px)); max-width: none; }
+
+dialog.fields form { display: grid; gap: 12px; }
+
+dialog.fields .field { display: grid; gap: 4px; min-width: 0; }
+
+dialog.fields .field label { font-size: 12.5px; color: var(--faint); }
+
+dialog.fields .field input, dialog.fields .field select { width: 100%; }
+
+dialog.fields .field-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+dialog.fields .form-foot { margin-top: 8px; }
+
+dialog.fields .form-foot .spacer { flex: 1 1 auto; }
+
+@media (max-width: 420px) {
+  dialog.fields .field-pair { grid-template-columns: 1fr; }
+  /* Sul telefono le due cose secondarie vanno a capo insieme, non una sì e una no. */
+  dialog.fields .form-foot .spacer { flex-basis: 100%; }
+}
 
 /* The menu's footer: what can be done to a block on the left, the way out on the right. */
 .menu-foot { margin-top: 14px; }

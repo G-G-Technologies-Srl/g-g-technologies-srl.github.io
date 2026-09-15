@@ -38,7 +38,10 @@ let on = { change() {}, moved() {}, trashed() {}, ticked() {}, batched() {},
   alarm: async () => null,
   // Aprire la pagina di un incontro: il calendario adesso ne disegna anche loro, e cliccarne uno
   // deve portare dove si scrive cosa vi siete detti.
-  openPage() {} };
+  openPage() {},
+  // La scheda di un appuntamento sulla lavagna: cliccarla apre la maschera con cui si è preso, la
+  // ✕ lo toglie. Tutte e due le cose le fa l'app, che ha la maschera e il cestino.
+  editMeeting() {}, trashMeeting() {} };
 let dragging = null;
 let justDragged = false;                // swallows the click the browser sends after a drop
 let cardId = null;                      // the task the dialog is showing
@@ -409,13 +412,74 @@ function _taskCard(task, today) {
   return card;
 }
 
-function _columnNode(column, tasks, today) {
+/**
+ * Un appuntamento sulla lavagna.
+ *
+ * Non è un'attività e non lo finge: niente casella da spuntare, niente trascinamento, niente
+ * selezione. È una cosa che succederà a un'ora, e la scheda dice quella — l'ora grande a sinistra
+ * dove l'attività ha la casella, poi con chi e dove. Cliccarla apre la maschera dell'appuntamento,
+ * non la pagina: sulla lavagna si sistemano giorno e ora, le note stanno un passo più in là.
+ */
+function _meetingCard(meeting, today) {
+  const card = node("div", "task-card is-meeting");
+  card.dataset.meeting = meeting.page.id;
+  card.tabIndex = 0;
+  if (!model.meetingAhead(meeting)) card.classList.add("is-gone");
+
+  const head = node("div", "task-head");
+  head.append(node("span", "meet-mark", meeting.time || "·"));
+  head.append(node("span", "title", meeting.page.title || t("pageUntitled")));
+  head.append(button("ghost small icon meet-x", "✕", (event) => {
+    event.stopPropagation();
+    on.trashMeeting(meeting);
+  }, { label: t("meetTrash") }));
+  card.append(head);
+
+  const meta = node("div", "task-meta");
+  meta.append(node("span", "badge meet", t("kindAppointment")));
+  meta.append(node("span", "when", meeting.date === today ? t("dueToday") : shortDate(meeting.date)));
+  if (meeting.with) meta.append(node("span", "who", meeting.with));
+  card.append(meta);
+  if (meeting.where) card.append(node("span", "where", meeting.where));
+
+  card.addEventListener("click", (event) => {
+    if (event.target.closest("button")) return;
+    on.editMeeting(meeting);
+  });
+  card.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && event.target === card) on.editMeeting(meeting);
+  });
+  return card;
+}
+
+/**
+ * La colonna di un appuntamento, decisa dal giorno e non da nessuno.
+ *
+ * Davanti nel tempo sta in «da fare»; il giorno stesso, finché non è passato, in «in corso» —
+ * cioè nella seconda colonna aperta, o nella prima se la lavagna ne ha una sola; passato oggi, in
+ * quella che chiude. Di ieri non ce n'è: è un verbale, e i verbali stanno fra i documenti. La
+ * lavagna così racconta la giornata da sola, e l'appuntamento la attraversa da sinistra a destra
+ * come farebbe un'attività — senza che nessuno lo sposti.
+ */
+function _meetingColumn(meeting, today) {
+  const columns = _columns();
+  if (!columns.length) return null;
+  const open = columns.filter((one) => !one.done);
+  const first = open[0] || columns[0];
+  const doing = open[1] || first;
+  const done = columns.find((one) => one.done) || columns[columns.length - 1];
+  if (meeting.date > today) return first.id;
+  if (meeting.date < today) return null;
+  return model.meetingAhead(meeting) ? doing.id : done.id;
+}
+
+function _columnNode(column, tasks, today, meetings = []) {
   const wrap = node("div", "column");
   wrap.dataset.column = column.id;
 
   const head = node("div", "column-head");
   head.append(node("span", "column-name", column.name || ""));
-  head.append(node("span", "column-count", num(tasks.length, 0)));
+  head.append(node("span", "column-count", num(tasks.length + meetings.length, 0)));
   head.append(node("span", "spacer"));
   head.append(button("ghost small icon", "✎", () => _renameColumn(column),
     { label: t("columnRename") }));
@@ -431,10 +495,12 @@ function _columnNode(column, tasks, today) {
 
   const list = node("div", "column-list");
   list.dataset.drop = column.id;
-  fill(list, tasks.map((task) => _taskCard(task, today)));
+  // Gli appuntamenti prima delle attività: hanno un'ora, e un'ora si legge in cima.
+  fill(list, [...meetings.map((meeting) => _meetingCard(meeting, today)),
+    ...tasks.map((task) => _taskCard(task, today))]);
   wrap.append(list);
 
-  const form = node("form", "row column-add");
+  const form = node("form", "row column-add quick-add");
   const field = document.createElement("input");
   field.type = "text";
   field.maxLength = 160;
@@ -531,10 +597,17 @@ function _paintBoard() {
   const tasks = _filtered().filter((task) => !model.parentOf(task));
   const board = el("board");
 
+  // Gli appuntamenti, solo a lavagna piena: un filtro per etichetta o per persona chiede «le
+  // attività di», e un appuntamento non ha né l'una né l'altra.
+  const meetings = (filters.tags.size || filters.assignees.size) ? []
+    : model.meetingsOf(projectId).map((meeting) => ({ meeting, column: _meetingColumn(meeting, today) }))
+      .filter((one) => one.column);
+
   const columns = _columns().map((column) => _columnNode(
     column,
     tasks.filter((task) => task.status === column.id),
     today,
+    meetings.filter((one) => one.column === column.id).map((one) => one.meeting),
   ));
 
   columns.push(button("column-new", t("columnAdd"), () => {
@@ -635,8 +708,9 @@ function _startDrag(event, task, card) {
     if (day) day.classList.add("drop-here");
     if (!column) return;
 
-    // Where in the column: above the first card whose middle is below the pointer.
-    const cards = [...column.querySelectorAll(".task-card")].filter((one) => one !== card);
+    // Where in the column: above the first card whose middle is below the pointer. Le schede degli
+    // appuntamenti non contano: l'indice è fra le attività, e loro stanno sopra tutte.
+    const cards = [...column.querySelectorAll(".task-card:not(.is-meeting)")].filter((one) => one !== card);
     let at = cards.length;
     for (let i = 0; i < cards.length; i += 1) {
       const rect = cards[i].getBoundingClientRect();

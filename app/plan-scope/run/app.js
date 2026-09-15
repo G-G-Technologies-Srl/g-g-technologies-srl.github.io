@@ -237,12 +237,13 @@ function _paintCrumbs() {
  * con la data di oggi e la si correggeva subito dopo: il verso previsto era «ho appena finito una
  * riunione, scrivo il verbale», che è metà dei casi e non tutti.
  */
-async function _askMeeting(target, withName = "") {
-  el("meetWhat").value = "";
-  el("meetDate").value = model.todayISO();
-  el("meetTime").value = "";
-  el("meetWith").value = withName;
-  el("meetWhere").value = "";
+async function _askMeeting(target, withName = "", { meeting = null } = {}) {
+  const editing = Boolean(meeting);
+  el("meetWhat").value = editing ? (meeting.page.title || "") : "";
+  el("meetDate").value = editing ? meeting.date : model.todayISO();
+  el("meetTime").value = editing ? meeting.time : "";
+  el("meetWith").value = editing ? meeting.with : withName;
+  el("meetWhere").value = editing ? meeting.where : "";
   fill(el("meetWithList"), model.peopleOf(target).map(({ name }) => {
     const option = document.createElement("option");
     option.value = name;
@@ -252,6 +253,12 @@ async function _askMeeting(target, withName = "") {
     ["meetTimeLabel", "meetTime"], ["meetWithLabel", "meetWith"], ["meetWhereLabel", "meetWhere"]]) {
     el(id).textContent = t(key);
   }
+  // La stessa maschera per prendere un appuntamento e per correggerlo: cambiano il titolo, il
+  // verbo sul pulsante, e in fondo compaiono le due cose che si fanno a uno già preso.
+  el("meetTitle").textContent = t(editing ? "meetEditTitle" : "meetTitle");
+  el("meetOk").textContent = t(editing ? "meetSave" : "meetOk");
+  el("meetOpen").hidden = !editing;
+  el("meetTrash").hidden = !editing;
   el("meetDialog").showModal();
   el("meetWhat").focus();
   const said = await new Promise((resolve) => {
@@ -269,9 +276,29 @@ async function _askMeeting(target, withName = "") {
         where: el("meetWhere").value.trim() });
     };
     el("meetCancel").onclick = () => close(null);
+    el("meetOpen").onclick = () => close({ open: true });
+    el("meetTrash").onclick = () => close({ trash: true });
   });
-  if (!said || !said.date) return null;
-  return _newMeeting(target, said);
+  if (!said) return null;
+  if (said.open) { _openPage(meeting.page.id); return meeting.page; }
+  if (said.trash) { _trashMeeting(meeting); return null; }
+  if (!said.date) return null;
+  if (!editing) return _newMeeting(target, said);
+  const step = model.updateMeeting(meeting.page.id, said, {
+    date: t("propDate"), time: t("propTime"), with: t("propWith"), where: t("propWhere"),
+  });
+  await _repaint();
+  _offerUndo(step, t("meetSaved"));
+  return model.page(meeting.page.id);
+}
+
+/** Un appuntamento tolto dalla lavagna: la sua pagina va nel cestino, e la striscia offre di riprenderla. */
+async function _trashMeeting(meeting) {
+  const page = model.page(meeting.page.id);
+  if (!page) return;
+  const step = model.trashPage(page.id);
+  await _repaint();
+  _offerUndo(step, tf("trashedPage", { name: page.title || t("pageUntitled") }));
 }
 
 function _newMeeting(target, said = {}) {
@@ -2620,6 +2647,9 @@ function _connect() {
     alarm: () => _remindSettings(),
     // Un incontro sul calendario porta alla sua pagina, che è dove l'incontro vive.
     openPage: (id) => _openPage(id),
+    // La scheda di un appuntamento sulla lavagna: la maschera per correggerlo, o il cestino.
+    editMeeting: (meeting) => _askMeeting(meeting.page.projectId, "", { meeting }),
+    trashMeeting: (meeting) => _trashMeeting(meeting),
     // The board writes the address bar and nothing else: what it changed is already in the model.
     // Unless the card was opened from somewhere else — the dashboard's deadlines — in which case
     // that screen is the one that has to catch up.
