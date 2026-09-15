@@ -1124,6 +1124,12 @@ input.when-field.late { color: var(--late); }
 
 .cal-entry.is-done { opacity: 0.55; text-decoration: line-through; }
 
+/* Un incontro sul calendario: con il colore d'accento in testa, perché ha un'ora e un posto dove
+   essere. Passato è smorzato ma non barrato: un verbale non è una cosa finita, è una cosa
+   successa, e la riga sopra direbbe «fatto» a una cosa che non era da fare. */
+.cal-entry.is-meeting { color: var(--accent-text); }
+.cal-entry.is-meeting.is-gone { opacity: 0.5; }
+
 .cal-entry.late { color: var(--late); }
 
 .cal-more { font-size: 11px; color: var(--faint); }
@@ -1333,6 +1339,10 @@ input.when-field.late { color: var(--late); }
   pointer-events: none;
   z-index: 0;
 }
+
+/* Passato: la stessa linea, più smorzata. Un verbale sta sulla linea del tempo come memoria, non
+   come richiesta. */
+.tl-meet.is-gone { opacity: 0.14; }
 
 /* Today, drawn once behind everything: on a plan the question is always "where are we now". */
 .tl-now {
@@ -1749,6 +1759,13 @@ dialog.search input[type="search"] { width: 100%; font-size: 16px; }
   border-radius: var(--radius-sm);
   background: rgba(127, 140, 170, 0.05);
 }
+
+/* L'occhiello di un incontro. Davanti, con il colore d'accento: chiede attenzione. Passato,
+   smorzato: è una nota, e una nota non chiede niente. Lo stesso `.kicker` della testa del
+   progetto, così la parola «occhiello» vuol dire una cosa sola in tutta l'app. */
+.page-kind { margin: 0 0 10px; color: var(--faint); }
+.page-kind.ahead { color: var(--accent-text); }
+.page-kind:not(.ahead)::before { background: var(--border-strong); }
 
 /* Il campo dei tag sta nella testa ma non è una riga di proprietà, quindi la sua veste la dice
    qui: larga quanto il riquadro e silenziosa finché non la si tocca, come i campi là sotto. */

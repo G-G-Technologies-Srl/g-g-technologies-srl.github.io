@@ -300,7 +300,7 @@ function _meetMarks(range) {
   for (const meeting of model.meetingsOf(projectId)) {
     const at = model.daysBetween(range.first, meeting.date);
     if (at === null || at < 0) continue;
-    const mark = node("div", "tl-meet");
+    const mark = node("div", `tl-meet${model.meetingAhead(meeting) ? "" : " is-gone"}`);
     mark.style.left = `${TITLE + at * DAY}px`;
     mark.title = [meeting.time, meeting.page.title || ""].filter(Boolean).join(" ");
     mark.setAttribute("aria-hidden", "true");

@@ -81,7 +81,38 @@ function _followDate(pageId, before, after) {
   if (field) field.value = title;
 }
 
+/**
+ * L'occhiello di un incontro: cosa è, quando, con chi.
+ *
+ * Lo scrive la regola del momento: appuntamento finché il suo istante è davanti, verbale dopo. Si
+ * ridisegna a ogni cambio della testa, quindi spostare la data lo aggiorna sotto gli occhi.
+ */
+function _paintKind() {
+  const box = el("pageKind");
+  if (!box) return;
+  const pageId = on.pageId();
+  const page = pageId ? model.page(pageId) : null;
+  const meeting = page ? model.meetingsOf(page.projectId).find((one) => one.page.id === page.id) : null;
+  box.hidden = !meeting;
+  box.classList.toggle("ahead", Boolean(meeting && model.meetingAhead(meeting)));
+  if (!meeting) return;
+  const today = model.todayISO();
+  const days = model.daysBetween(today, meeting.date);
+  if (model.meetingAhead(meeting)) {
+    const when = meeting.time
+      ? tf("kindWhenAt", { day: longDate(meeting.date), time: meeting.time })
+      : longDate(meeting.date);
+    const far = days === 0 ? t("dueToday") : days === 1 ? t("dueTomorrow")
+      : tf("eventIn", { n: num(days, 0) });
+    box.textContent = [t("kindAppointment"), when, far, meeting.with].filter(Boolean).join(" · ");
+  } else {
+    box.textContent = [tf("kindRecord", { day: longDate(meeting.date) }), meeting.with]
+      .filter(Boolean).join(" · ");
+  }
+}
+
 function _paintProps() {
+  _paintKind();
   editProps(el("pageProps"), head.props, (props) => {
     const pageId = on.pageId();
     if (!pageId) return;
@@ -91,12 +122,14 @@ function _paintProps() {
     model.setMarkdown(pageId, md.withFrontmatter(head.props, on.body(), head.extra));
     if (dateKey) _followDate(pageId, was, String(props[dateKey] || ""));
     _suggest(el("propKeys"), model.pagePropKeysOf(model.page(pageId).projectId));
+    _paintKind();
   });
   for (const name of _meetingRows()) addProp(el("pageProps"), (props) => {
     const pageId = on.pageId();
     if (!pageId) return;
     head = { ...head, props };
     model.setMarkdown(pageId, md.withFrontmatter(head.props, on.body(), head.extra));
+    _paintKind();
   }, {}, { key: name, focus: false });
 }
 

@@ -62,8 +62,9 @@ function _nextThing(projectId) {
   const task = model.nextDue(projectId);
   if (task) out.push({ date: task.end, title: task.title || t("taskUntitled"),
     who: model.assigneeName(task), rank: 1 });
-  const meeting = model.meetingsOf(projectId).find((one) => one.date >= model.todayISO())
-    || model.meetingsOf(projectId).at(-1);
+  // Solo quello ancora davanti. Prima, se di futuri non ce n'erano, ripiegava sull'ultimo: una
+  // nota della settimana scorsa diventava il «prossimo impegno», colorata come arretrata.
+  const meeting = model.meetingsAhead(projectId)[0] || null;
   if (meeting) {
     out.push({ date: meeting.date, rank: 0,
       title: [meeting.time, meeting.page.title || t("pageUntitled")].filter(Boolean).join(" "),
@@ -486,8 +487,9 @@ export function paintHome(room) {
       // Gli appuntamenti nella stessa lista: è il pannello che si apre la mattina per sapere cosa
       // aspetta, e una riunione domani alle 15:00 è esattamente quello. Restavano fuori, e per
       // vederli bisognava entrare in un progetto e aprire il suo calendario.
-      ...model.meetingsOf(project.id)
-        .filter((one) => one.date >= today || one.date >= model.addDays(today, -7))
+      // Solo gli appuntamenti, cioè gli incontri ancora davanti. Un verbale della settimana
+      // scorsa non è «cosa mi aspetta», e prima stava qui lo stesso.
+      ...model.meetingsAhead(project.id)
         .map((meeting) => ({ when: meeting.date, meeting, project })),
     ])
     // A parità di giorno l'appuntamento viene prima: ha un'ora, quindi un posto nella giornata.
@@ -538,8 +540,7 @@ export function paintProject(id) {
 
   const due = [
     ...model.dueSoon(id, { from: today }).map((task) => ({ when: task.end, task })),
-    ...model.meetingsOf(id).filter((one) => one.date >= today)
-      .map((meeting) => ({ when: meeting.date, meeting })),
+    ...model.meetingsAhead(id).map((meeting) => ({ when: meeting.date, meeting })),
   ].sort((a, b) => a.when.localeCompare(b.when) || (a.meeting ? -1 : 1) - (b.meeting ? -1 : 1));
   fill(el("dueList"), due.map((one) => (one.meeting
     ? _meetingRow(one.meeting, today)

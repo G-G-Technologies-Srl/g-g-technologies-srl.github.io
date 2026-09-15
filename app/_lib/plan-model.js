@@ -1249,6 +1249,45 @@ export function meetingsOf(projectId, { kinds = [] } = {}) {
   return out.sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
 }
 
+/**
+ * La regola del momento: un incontro è un appuntamento finché il suo momento non è passato, dopo è
+ * un verbale.
+ *
+ * Nessun tipo nuovo e nessun segno da mettere a mano. La stessa pagina cambia natura da sola quando
+ * l'orologio la supera, che è quello che succede nella realtà: alle 14:59 è un appuntamento, alle
+ * 17:00 è una riunione da verbalizzare. Senza questa regola le note di ieri suonavano come una
+ * sveglia e la conversazione della settimana scorsa stava in «cosa mi aspetta».
+ *
+ * Il momento è il giorno e l'ora. **Senza ora, l'incontro è davanti solo se il giorno è ancora
+ * domani o oltre**: un incontro di oggi senza ora è quasi sempre una nota scritta dopo averlo
+ * fatto, e trattarlo come «ancora davanti» fino a mezzanotte vorrebbe dire rimetterlo nella lista
+ * del mattino di chi l'ha appena chiuso. L'appuntamento di oggi senza ora — raro, perché chi lo
+ * prende l'ora la sa — è il prezzo, e si paga con un'ora scritta.
+ *
+ * L'istante si costruisce dalle parti, mai da una stringa: `new Date("2026-09-24T15:00")` è a
+ * discrezione del browser.
+ */
+export function meetingMoment(meeting) {
+  const day_ = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(meeting && meeting.date || ""));
+  if (!day_) return null;
+  const clock = /^(\d{1,2}):(\d{2})$/.exec(String(meeting.time || ""));
+  if (!clock) return null;
+  return new Date(Number(day_[1]), Number(day_[2]) - 1, Number(day_[3]),
+    Number(clock[1]), Number(clock[2]), 0, 0);
+}
+
+export function meetingAhead(meeting, now = new Date()) {
+  if (!meeting || !isDay(meeting.date)) return false;
+  const at = meetingMoment(meeting);
+  if (at) return at.getTime() > now.getTime();
+  return meeting.date > todayISO(now);
+}
+
+/** Gli incontri ancora davanti, cioè gli appuntamenti; il resto sono verbali. */
+export function meetingsAhead(projectId, now = new Date()) {
+  return meetingsOf(projectId).filter((one) => meetingAhead(one, now));
+}
+
 export function pagesAbout(uid) {
   const person = contactByUid(uid);
   const wanted = String(person ? person.name : "").trim().toLowerCase();

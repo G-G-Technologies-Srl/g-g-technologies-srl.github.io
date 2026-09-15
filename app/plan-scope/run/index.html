@@ -375,6 +375,9 @@
     <div class="pagebar">
       <span class="spacer"></span>
       <span class="meta" id="planDue"></span>
+      <!-- La porta che mancava: chi lavora sulla bacheca prende un appuntamento da qui, senza
+           passare dalla pagina del progetto o dalla scheda di una persona. -->
+      <button type="button" id="planMeeting" class="ghost small" data-t="newMeeting"></button>
       <button type="button" id="filtersOpen" class="ghost small" data-t="filtersOpen"></button>
       <!-- What leaves the plan: a calendar file, a spreadsheet, a page for somebody without the
            app, paper. And what comes in: a pasted list. Behind one button, like the page's. -->
@@ -495,6 +498,11 @@
                che sta *sopra* i tre trattini, e il testo della pagina è quello che sta sotto. Erano
                due cose sciolte sopra il corpo, e chi arrivava da un'altra pagina non sapeva dove
                finiva l'una e cominciava l'altro. -->
+          <!-- Cosa è questa pagina, quando è un incontro: «Appuntamento · giovedì 17 alle 15:00 ·
+               fra 2 giorni» finché il momento è davanti, «Incontro del 10 settembre · con Marco»
+               dopo. Cambia da solo quando l'orologio la supera. Senza questa riga un appuntamento
+               e il suo verbale erano la stessa pagina con la stessa faccia. -->
+          <p class="kicker page-kind" id="pageKind" hidden></p>
           <div class="page-head">
             <input type="text" id="pageTags" class="tags-field" maxlength="200" autocomplete="off" data-t-label="pageTagsLabel">
             <!-- The properties: key and value, one line each, kept at the head of the Markdown as
@@ -561,7 +569,11 @@
       <div class="screen-head">
         <h1 id="personTitle"></h1>
         <span class="spacer"></span>
-        <button type="button" id="personMeeting" data-t="newMeeting"></button>
+        <!-- Due verbi: prendere un appuntamento (chiede quando) e segnare una conversazione avuta
+             (nasce oggi, senza ora, quindi è già un verbale e non suona mai). Un pulsante solo
+             faceva passare ogni nota per un impegno. -->
+        <button type="button" id="personNote" data-t="newNote"></button>
+        <button type="button" id="personMeeting" class="ghost small" data-t="newMeeting"></button>
         <button type="button" id="personTrash" class="ghost small danger" data-t="personTrash"></button>
       </div>
 

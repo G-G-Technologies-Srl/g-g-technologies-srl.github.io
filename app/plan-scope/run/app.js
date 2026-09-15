@@ -1340,16 +1340,20 @@ async function _remindDigest() {
     // Gli appuntamenti nello stesso digest, con la loro ora: è la sveglia che per una riunione
     // conta più che per una scadenza — una consegna che slitta di due ore non è successo niente,
     // una riunione persa è persa.
-    for (const meeting of model.meetingsOf(project.id)) {
+    // Solo gli appuntamenti **con un'ora**. Senza ora non c'è un istante da anticipare, e la
+    // misura «il giorno prima alle nove» è quella di una scadenza, non di una riunione. E solo
+    // quelli ancora davanti: il digest prendeva tutti gli incontri, `ripe()` fa suonare ciò che ha
+    // un istante già passato, e le note di ieri suonavano come una sveglia per una riunione già
+    // avvenuta. Una notifica sbagliata insegna a ignorarle tutte.
+    for (const meeting of model.meetingsAhead(project.id)) {
+      if (!meeting.time) continue;
       const title = meeting.page.title || t("pageUntitled");
       items.push({
         id: meeting.page.uid || meeting.page.id,
         date: meeting.date,
         time: meeting.time,
         label: title,
-        text: meeting.time
-          ? tf("remindMeetingAt", { title, when: longDate(meeting.date), time: meeting.time })
-          : tf("remindOne", { title, when: longDate(meeting.date) }),
+        text: tf("remindMeetingAt", { title, when: longDate(meeting.date), time: meeting.time }),
       });
     }
   }
@@ -2181,18 +2185,28 @@ function _wire() {
   el("boxesToPlan").addEventListener("click", () => _boxesToPlan());
   // Da una persona: l'incontro nasce già con il suo nome in testa, che è il gesto vero — nessuno
   // apre la rubrica per creare una pagina vuota.
-  el("personMeeting").addEventListener("click", async () => {
+  // Le due porte della scheda passano dalla stessa scelta del progetto; cambia solo quello che
+  // succede dopo: l'appuntamento chiede quando, la nota nasce adesso.
+  const _fromPerson = async (then) => {
     const person = personId ? model.contact(personId) : null;
     if (!person) return undefined;
     const where = model.projectsOfContact(person.uid || person.id);
     if (!where.length) return snack(t("personProjectsNone"));
-    if (where.length === 1) return _askMeeting(where[0].project.id, person.name) && undefined;
+    if (where.length === 1) return then(where[0].project.id, person.name) && undefined;
     const chosen = await ask(t("meetingWhere"), {
       options: where.map(({ project }) => ({ value: project.id, label: project.name || t("projectUntitled") })),
     });
-    if (chosen) _askMeeting(chosen, person.name);
+    if (chosen) then(chosen, person.name);
     return undefined;
-  });
+  };
+  el("personMeeting").addEventListener("click", () => _fromPerson((target, name) => _askMeeting(target, name)));
+  // «Nota»: ho parlato con questa persona, mi segno cosa ci siamo detti. Oggi, senza ora — che per
+  // la regola del momento è già un verbale: non entra in nessuna lista e non suona mai.
+  el("personNote").addEventListener("click", () => _fromPerson((target, name) => _newMeeting(target, {
+    date: model.todayISO(), with: name,
+  })));
+  // E dalla bacheca, dove si lavora.
+  el("planMeeting").addEventListener("click", () => { if (projectId) _askMeeting(projectId); });
   el("addWhereForm").addEventListener("submit", (event) => {
     event.preventDefault();
     const person = personId ? model.contact(personId) : null;

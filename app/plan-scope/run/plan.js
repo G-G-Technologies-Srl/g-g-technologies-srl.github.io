@@ -743,7 +743,9 @@ function _paintCalendar() {
     for (const one of here.slice(0, 3)) {
       if (one.kind === "meeting") {
         const { meeting } = one;
-        const entry = node("div", "cal-entry is-meeting");
+        // Un verbale resta sul calendario — è anche memoria, e «il 10 ho visto Marco» ha valore —
+        // ma smorzato, perché non chiede più niente a nessuno.
+        const entry = node("div", `cal-entry is-meeting${model.meetingAhead(meeting) ? "" : " is-gone"}`);
         entry.dataset.page = meeting.page.id;
         // L'ora davanti al titolo: su un calendario è la prima cosa che si cerca, e un incontro
         // senza ora si legge lo stesso — quel giorno c'è, non si sa quando.

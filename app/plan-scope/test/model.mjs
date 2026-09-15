@@ -1415,4 +1415,52 @@ test("un'ora scritta male non diventa un'ora", () => {
   assert.equal(model.meetingsOf(one.id)[0].time, "");
 });
 
+// -----------------------------------------------------------------------------------------------------------------
+//  l a   r e g o l a   d e l   m o m e n t o
+// -----------------------------------------------------------------------------------------------------------------
+
+// Un «adesso» fermo: giovedì 24 settembre 2026, le 15:00, costruito dalle parti come fa il modello.
+const ADESSO = new Date(2026, 8, 24, 15, 0, 0, 0);
+const m = (date, time = "") => ({ date, time });
+
+test("un incontro con un'ora è davanti finché quell'ora non è passata", () => {
+  assert.equal(model.meetingAhead(m("2026-09-24", "15:01"), ADESSO), true, "fra un minuto");
+  assert.equal(model.meetingAhead(m("2026-09-24", "15:00"), ADESSO), false, "adesso è già iniziato");
+  assert.equal(model.meetingAhead(m("2026-09-24", "14:59"), ADESSO), false, "un minuto fa");
+  assert.equal(model.meetingAhead(m("2026-09-25", "09:00"), ADESSO), true, "domani mattina");
+  assert.equal(model.meetingAhead(m("2026-09-10", "15:00"), ADESSO), false, "due settimane fa");
+});
+
+test("senza ora, è davanti solo da domani in poi", () => {
+  // La nota su un incontro fatto oggi non deve stare in «cosa mi aspetta» fino a mezzanotte: chi
+  // l'ha scritta l'ha appena chiuso. L'appuntamento di oggi senza ora è il prezzo, e si paga con
+  // un'ora scritta.
+  assert.equal(model.meetingAhead(m("2026-09-25"), ADESSO), true, "domani, tutto il giorno");
+  assert.equal(model.meetingAhead(m("2026-09-24"), ADESSO), false, "oggi senza ora: è una nota");
+  assert.equal(model.meetingAhead(m("2026-09-23"), ADESSO), false, "ieri");
+});
+
+test("una data che non è una data non è mai davanti", () => {
+  assert.equal(model.meetingAhead(m("prossimamente", "15:00"), ADESSO), false);
+  assert.equal(model.meetingAhead(null, ADESSO), false);
+});
+
+test("meetingsAhead lascia i verbali fuori e tiene gli appuntamenti", () => {
+  const one = model.createProject({ name: "Sito" });
+  incontro(one.id, ["tipo: incontro", "data: 2026-09-10", "ora: 15:00", "con: Marco"]);   // fatto
+  incontro(one.id, ["tipo: incontro", "data: 2026-09-24", "con: Sara"]);                  // oggi, nota
+  incontro(one.id, ["tipo: incontro", "data: 2026-09-24", "ora: 17:00", "con: Anna"]);   // oggi, dopo
+  incontro(one.id, ["tipo: incontro", "data: 2026-10-01", "con: Luca"]);                  // futuro
+  const avanti = model.meetingsAhead(one.id, ADESSO).map((x) => x.with);
+  assert.deepEqual(avanti, ["Anna", "Luca"]);
+  assert.equal(model.meetingsOf(one.id).length, 4, "i verbali non spariscono, restano solo fuori dalle liste");
+});
+
+test("il momento si costruisce dalle parti: il fuso non lo sposta", () => {
+  const at = model.meetingMoment(m("2026-09-24", "15:00"));
+  assert.equal(at.getHours(), 15);
+  assert.equal(at.getMinutes(), 0);
+  assert.equal(at.getDate(), 24);
+});
+
 console.log(`model: ${passed} prove passate`);
