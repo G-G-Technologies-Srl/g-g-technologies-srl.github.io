@@ -352,6 +352,25 @@ main { padding: 0; flex: 1 1 auto; min-width: 0; }
 
 .form label.wide { flex: 1 1 100%; }
 
+/* ----- il cliente per esteso, sotto il campo che ne dice il nome ----- */
+
+/* Riquadro minore del vocabolario — un filo e niente più — perché è una lettura e non un comando:
+   qui non si scrive, si controlla che il documento stia andando a chi deve. */
+.party-detail {
+  flex: 1 1 100%;
+  margin: -6px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+/* L'identificativo fiscale si legge cifra per cifra, come sull'estratto conto: allineato, o due
+   codici simili si distinguono solo contando. */
+.party-detail-line { font-variant-numeric: tabular-nums; }
+
 /* ----- i menù a tendina ----- */
 
 /* **Sono `<select>` nativi, e restano nativi.** Un elenco disegnato a mano si porta dietro tutto

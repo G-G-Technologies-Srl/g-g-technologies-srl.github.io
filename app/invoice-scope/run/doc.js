@@ -23,6 +23,8 @@ import { ask, tell } from "./ask.js";
 import { toString, from } from "./decimal.js";
 import { totals } from "./totals.js";
 import { money, amount, rate as shownRate } from "./format.js";
+import { addressLines, deliveryLine } from "./address.js";
+import { quote as instalments } from "./schedule.js";
 import { parseAmount, parseOptional } from "./parse.js";
 import { NATURE as ALL_NATURE, validate } from "./validate.js";
 import { describe } from "./problems.js";
@@ -137,6 +139,7 @@ function _usualIban() {
 /** Il cliente è cambiato su una bozza: si rilegge la sua scheda e l'IBAN si ripropone. */
 async function _partyChanged() {
   party = current.partyId ? await getParty(database, current.partyId) : null;
+  _drawParty();
   if (!editable(current) || !has(current, "pagamento")) return;
   const iban = _usualIban();
   if (!iban) return;
@@ -396,6 +399,33 @@ function _drawSummary() {
 
 
 /**
+ * The customer as the document names them: the same lines that go on the sheet.
+ *
+ * **A name alone is not an identification.** The field above is a menu, and a menu shows what it
+ * was told to show — two companies of the same family read the same there, and the thing that
+ * tells them apart is the COE or the VAT number. That identifier is also what the file carries to
+ * the SdI and what the recipient checks first, so the screen that issues the document has to show
+ * it without asking anybody to open another screen.
+ *
+ * Read-only, and built by `address.js` rather than here: this screen draws, it does not compose.
+ * With nothing to say — no address, no identifier, no electronic recipient — the block is not an
+ * empty box, it is absent.
+ */
+function _drawParty() {
+  const box = el("docPartyDetail");
+  box.textContent = "";
+  const righe = party ? [...addressLines(party), deliveryLine(party)].filter(Boolean) : [];
+  box.hidden = righe.length === 0;
+  // `textContent` on every line: each of these strings is somebody's data.
+  for (const riga of righe) {
+    const line = document.createElement("div");
+    line.className = "party-detail-line";
+    line.textContent = riga;
+    box.append(line);
+  }
+}
+
+/**
  * The instalments, drawn from the document.
  *
  * They live on the document and not in the `payments` store, and the distinction is worth writing
@@ -411,6 +441,9 @@ function _drawDue() {
 
   const body = el("payBody");
   body.textContent = "";
+  // Quanto varrà ogni rata lasciata in bianco: la stessa divisione che fanno lo scadenzario e il
+  // foglio stampato, chiesta a `schedule.js` invece che rifatta qui.
+  const quote = instalments(rate, totals(current).totale);
   rate.forEach((quota, index) => {
     const tr = document.createElement("tr");
 
@@ -435,7 +468,10 @@ function _drawDue() {
     value.inputMode = "decimal";
     value.className = "small";
     value.value = leggibile(quota.importo);
-    value.placeholder = amount(totals(current).totale, 2);
+    // **Il segnaposto è la quota, non il totale.** Era il totale del documento su ogni riga, quindi
+    // due rate in bianco suggerivano il doppio di quello che il cliente deve — e la carta, che la
+    // divisione la faceva già, stampava la metà di quello che lo schermo prometteva.
+    value.placeholder = amount(quote[index], 2);
     value.disabled = !editable(current);
     value.setAttribute("aria-label", `${t("docTotale")} — ${t("f_scadenza")} ${index + 1}`);
     value.addEventListener("input", () => {
@@ -927,6 +963,7 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
   el("docIncassiSection").hidden = !mostraIncassi;
   if (mostraIncassi) await renderPayments(db, current, { onChange: onSaved });
 
+  _drawParty();
   _drawSections();
   _drawLines();
   _drawDue();

@@ -1211,6 +1211,44 @@ export function tasksOfContact(uid, { open = true } = {}) {
  * Il nome regge il confronto perché la porta è una: chi scrive un nome crea o ritrova una persona,
  * quindi due grafie della stessa non si accumulano come farebbero con il testo libero.
  */
+/** Un'ora come la scrive un `input[type=time]`. Niente secondi: un incontro non li ha. */
+export function isTime(value) {
+  return typeof value === "string" && /^\d{2}:\d{2}$/.test(value.trim());
+}
+
+/**
+ * Gli incontri di un progetto: le pagine che si dichiarano tali nella loro testa.
+ *
+ * Un incontro **è** una pagina, e non un record a parte: è la pagina che porta le note, le persone
+ * e il giro «le caselle diventano attività», cioè tutto quello per cui un incontro si scrive. Qui
+ * si legge soltanto la sua testa, per poterlo mettere dove stanno le date — il calendario, le
+ * prossime scadenze, il file da dare a un calendario vero.
+ *
+ * Le due lingue, perché la testa la scrive una persona nella sua, e questo file non ne ha una.
+ */
+export function meetingsOf(projectId, { kinds = [] } = {}) {
+  const wanted = new Set(kinds.map((one) => String(one).trim().toLowerCase()).filter(Boolean));
+  const out = [];
+  for (const pageRecord of pagesOf(projectId)) {
+    const props = frontmatter(pageRecord.markdown || "").props || {};
+    const kind = String(props.tipo || props.type || "").trim().toLowerCase();
+    if (!kind || (wanted.size && !wanted.has(kind))) continue;
+    const date = String(props.data || props.date || "").trim();
+    if (!isDay(date)) continue;
+    const time = String(props.ora || props.time || props.orario || "").trim();
+    out.push({
+      page: pageRecord,
+      date,
+      time: isTime(time) ? time : "",
+      with: String(props.con || props.with || "").trim(),
+      where: String(props.dove || props.where || "").trim(),
+    });
+  }
+  // Per giorno, e dentro il giorno per ora: quello senza ora viene prima, come una cosa che quel
+  // giorno c'è ma non si sa quando.
+  return out.sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+}
+
 export function pagesAbout(uid) {
   const person = contactByUid(uid);
   const wanted = String(person ? person.name : "").trim().toLowerCase();

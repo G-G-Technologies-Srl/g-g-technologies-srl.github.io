@@ -72,13 +72,35 @@ test("solo i documenti fiscali entrano nello scadenzario", () => {
   assert.deepEqual(TIPI.filter((tipo) => KINDS[tipo].deve), ["TD01", "TD24"]);
 });
 
-test("i documenti interni hanno una serie, i fiscali no", () => {
+test("le fatture non portano una sigla, tutto il resto sì", () => {
   assert.equal(KINDS.preventivo.serie, "PR");
   assert.equal(KINDS.ddt.serie, "DDT");
-  for (const tipo of TIPI_FISCALI) assert.equal(KINDS[tipo].serie, "");
+  // Le fatture, immediate e differite, sono il documento senza sigla: è il numero che l'azienda
+  // usa da sempre. La nota di credito la porta, perché altrimenti si legge come una fattura.
+  assert.equal(KINDS.TD01.serie, "");
+  assert.equal(KINDS.TD24.serie, "");
+  assert.equal(KINDS.TD04.serie, "NC");
   // Due tipi con la stessa sigla renderebbero indistinguibili due numeri letti al telefono.
   const sigle = TIPI.map((tipo) => KINDS[tipo].serie).filter(Boolean);
   assert.equal(new Set(sigle).size, sigle.length);
+});
+
+test("ogni tipo dichiara la sequenza da cui esce il suo numero", () => {
+  for (const tipo of TIPI) assert.ok(KINDS[tipo].sequenza, `${tipo} non dice da quale contatore nasce`);
+  // **Una differita è una fattura.** Finché la sequenza era il tipo, le due uscivano tutte e due
+  // come «2026/0001»: il deposito le accettava — la chiave unica contiene il tipo — e per il
+  // cliente e per il commercialista erano due documenti con lo stesso numero.
+  assert.equal(KINDS.TD01.sequenza, KINDS.TD24.sequenza);
+  // E una nota di credito non lo è: ha il suo contatore, e la sua sigla lo dichiara.
+  assert.notEqual(KINDS.TD04.sequenza, KINDS.TD01.sequenza);
+  // Chi ha una sigla ha una sequenza sua: due sequenze diverse sotto la stessa sigla darebbero di
+  // nuovo due numeri identici, che è il difetto da cui viene questo campo.
+  const perSigla = new Map();
+  for (const tipo of TIPI) {
+    const sigla = KINDS[tipo].serie;
+    if (perSigla.has(sigla)) assert.equal(perSigla.get(sigla), KINDS[tipo].sequenza, `«${sigla}» sta su due sequenze`);
+    perSigla.set(sigla, KINDS[tipo].sequenza);
+  }
 });
 
 test("ogni tipo ha un'etichetta che segue la convenzione delle chiavi", () => {

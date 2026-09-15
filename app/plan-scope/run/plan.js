@@ -35,7 +35,10 @@ let month = null;                       // the first day of the month on screen,
 let on = { change() {}, moved() {}, trashed() {}, ticked() {}, batched() {},
   // Le impostazioni dei promemoria: le tiene l'app, e servono qui per mettere la sveglia
   // dentro il calendario di una singola attività come già fa quello del progetto.
-  alarm: async () => null };
+  alarm: async () => null,
+  // Aprire la pagina di un incontro: il calendario adesso ne disegna anche loro, e cliccarne uno
+  // deve portare dove si scrive cosa vi siete detti.
+  openPage() {} };
 let dragging = null;
 let justDragged = false;                // swallows the click the browser sends after a drop
 let cardId = null;                      // the task the dialog is showing
@@ -702,11 +705,27 @@ function _paintCalendar() {
   const offset = (first.getDay() + 6) % 7;          // getDay is Sunday-first; the grid is not
   const start = new Date(first.getFullYear(), first.getMonth(), 1 - offset);
 
+  // Sul calendario ci sta quello che ha una data, e un incontro ne ha una: fino a ieri il
+  // calendario del progetto disegnava solo le attività, e una riunione segnata su una pagina non
+  // si vedeva in nessuno dei posti dove si guardano i giorni.
   const byDay = new Map();
+  const put = (day, one) => {
+    if (!byDay.has(day)) byDay.set(day, []);
+    byDay.get(day).push(one);
+  };
   for (const task of _filtered()) {
     if (!task.end) continue;
-    if (!byDay.has(task.end)) byDay.set(task.end, []);
-    byDay.get(task.end).push(task);
+    put(task.end, { kind: "task", task });
+  }
+  for (const meeting of model.meetingsOf(projectId)) put(meeting.date, { kind: "meeting", meeting });
+  // Dentro un giorno: prima chi ha un'ora, in ordine d'orologio, poi il resto.
+  for (const list of byDay.values()) {
+    list.sort((a, b) => {
+      const at = a.kind === "meeting" ? a.meeting.time : "";
+      const bt = b.kind === "meeting" ? b.meeting.time : "";
+      if (at && bt) return at.localeCompare(bt);
+      return at ? -1 : bt ? 1 : 0;
+    });
   }
 
   const cells = [];
@@ -721,7 +740,20 @@ function _paintCalendar() {
     cell.append(node("span", "cal-number", num(date.getDate(), 0)));
 
     const here = byDay.get(iso) || [];
-    for (const task of here.slice(0, 3)) {
+    for (const one of here.slice(0, 3)) {
+      if (one.kind === "meeting") {
+        const { meeting } = one;
+        const entry = node("div", "cal-entry is-meeting");
+        entry.dataset.page = meeting.page.id;
+        // L'ora davanti al titolo: su un calendario è la prima cosa che si cerca, e un incontro
+        // senza ora si legge lo stesso — quel giorno c'è, non si sa quando.
+        entry.append(node("span", "", [meeting.time, meeting.page.title || t("pageUntitled")]
+          .filter(Boolean).join(" ")));
+        entry.addEventListener("click", () => on.openPage(meeting.page.id));
+        cell.append(entry);
+        continue;
+      }
+      const { task } = one;
       const entry = node("div", "cal-entry");
       entry.dataset.task = task.id;
       if (task.milestone) entry.classList.add("is-milestone");

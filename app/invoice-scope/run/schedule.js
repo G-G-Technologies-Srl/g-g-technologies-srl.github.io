@@ -83,12 +83,22 @@ function _field(value) {
  * scadenzario del dimostrativo in un browser vero: «da incassare» era più alto del fatturato, che
  * per un'azienda senza acconti è impossibile.
  *
+ *
+ * **Esportata, perché i posti che la fanno sono tre.** Lo scadenzario, il foglio stampato e il
+ * campo della maschera dicono quanto vale una rata, e per due versioni l'hanno detto in tre modi:
+ * la carta stampava 1.952,00 e lo schermo suggeriva 3.904,00 per la stessa rata. Una regola
+ * riscritta dove serve è una regola che si corregge in un posto e resta sbagliata negli altri.
  * L'arrotondamento va ai centesimi e il resto sulla prima, come si dividono tre rate su cento euro:
  * 33,34 · 33,33 · 33,33. Sommano al totale, che è la condizione che `validate.js` chiede quando gli
  * importi sono scritti tutti a mano.
  */
-function _quote(rate, totale) {
-  const scritte = rate.map((quota) => (quota.importo === undefined ? null : from(quota.importo)));
+export function quote(rate, totale) {
+  // Vuoto, assente o nullo sono la stessa cosa: «questa rata non lo dice». Il campo della maschera
+  // svuotato lascia `undefined`, un file importato può lasciare `""`, e i due devono pesare uguale.
+  const scritte = rate.map((quota) => {
+    const scritto = quota.importo;
+    return scritto === undefined || scritto === null || scritto === "" ? null : from(scritto);
+  });
   const quante = scritte.filter((importo) => importo === null).length;
   if (!quante) return scritte;
 
@@ -165,7 +175,7 @@ export async function schedule(db, { today = new Date().toISOString().slice(0, 1
 
     // No instalments means payable on receipt: one row, on the document's own date.
     const parts = rate.length
-      ? _quote(rate, totale).map((importo, i) => ({
+      ? quote(rate, totale).map((importo, i) => ({
         scadenza: rate[i].scadenza || doc.data,
         importo,
       }))

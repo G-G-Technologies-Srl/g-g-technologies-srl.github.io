@@ -1357,4 +1357,62 @@ test("dueAhead lascia fuori quello che è già fatto", () => {
   assert.equal(model.dueAhead(one.id, { from: oggi }).length, 0);
 });
 
+// -----------------------------------------------------------------------------------------------------------------
+//  g l i   i n c o n t r i
+// -----------------------------------------------------------------------------------------------------------------
+
+const incontro = (projectId, righe) => {
+  const page = model.createPage(projectId, { title: "Incontro" });
+  model.setMarkdown(page.id, ["---", ...righe, "---", "", ""].join("\n"));
+  return page;
+};
+
+test("un incontro si legge dalla testa della sua pagina", () => {
+  const one = model.createProject({ name: "Sito" });
+  incontro(one.id, ["tipo: incontro", "data: 2026-09-24", "ora: 15:00",
+                    "con: Giulia", "dove: https://meet.google.com/abc"]);
+  const found = model.meetingsOf(one.id);
+  assert.equal(found.length, 1);
+  assert.equal(found[0].date, "2026-09-24");
+  assert.equal(found[0].time, "15:00");
+  assert.equal(found[0].with, "Giulia");
+  assert.equal(found[0].where, "https://meet.google.com/abc");
+});
+
+test("una pagina che non si dichiara un incontro non lo è", () => {
+  const one = model.createProject({ name: "Sito" });
+  incontro(one.id, ["data: 2026-09-24", "ora: 15:00"]);
+  assert.deepEqual(model.meetingsOf(one.id), []);
+});
+
+test("un incontro senza una data vera resta fuori: sul calendario non saprebbe dove stare", () => {
+  const one = model.createProject({ name: "Sito" });
+  incontro(one.id, ["tipo: incontro", "data: prossimamente"]);
+  assert.deepEqual(model.meetingsOf(one.id), []);
+});
+
+test("gli incontri escono in ordine di giorno, e nel giorno di orologio", () => {
+  const one = model.createProject({ name: "Sito" });
+  incontro(one.id, ["tipo: incontro", "data: 2026-09-24", "ora: 16:00"]);
+  incontro(one.id, ["tipo: incontro", "data: 2026-09-20"]);
+  incontro(one.id, ["tipo: incontro", "data: 2026-09-24", "ora: 09:30"]);
+  assert.deepEqual(model.meetingsOf(one.id).map((x) => `${x.date} ${x.time}`.trim()),
+    ["2026-09-20", "2026-09-24 09:30", "2026-09-24 16:00"]);
+});
+
+test("l'inglese della testa vale quanto l'italiano", () => {
+  const one = model.createProject({ name: "Sito" });
+  incontro(one.id, ["type: meeting", "date: 2026-09-24", "time: 15:00", "with: Anna", "where: Rimini"]);
+  const [found] = model.meetingsOf(one.id);
+  assert.equal(found.with, "Anna");
+  assert.equal(found.where, "Rimini");
+  assert.equal(found.time, "15:00");
+});
+
+test("un'ora scritta male non diventa un'ora", () => {
+  const one = model.createProject({ name: "Sito" });
+  incontro(one.id, ["tipo: incontro", "data: 2026-09-24", "ora: dopo pranzo"]);
+  assert.equal(model.meetingsOf(one.id)[0].time, "");
+});
+
 console.log(`model: ${passed} prove passate`);

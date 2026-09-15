@@ -15,6 +15,7 @@
 import assert from "node:assert/strict";
 
 import { openDatabase, documentKey } from "../run/db.js";
+import { numero as shownNumber } from "../run/kinds.js";
 import {
   draft, editable, save, issue, reopen, setState, setType, creditNote, convert, convertMany,
   discard, documents, invoicedBy, markExported, nextProgressivo, NUMERAZIONI,
@@ -198,7 +199,7 @@ await test("se l'emissione fallisce dopo il contatore, il numero non si perde", 
   failOnWrite(null);
 
   // Niente è rimasto scritto: il contatore è dove era, e la prima fattura buona prende il numero 1.
-  assert.equal(await get(db, "counters", "doc||TD01|2026"), undefined);
+  assert.equal(await get(db, "counters", "doc||fattura|2026"), undefined);
   const ok = await issue(db, await save(db, newDoc()), CONTEXT);
   assert.equal(ok.numero, "2026/0001");
 });
@@ -215,7 +216,7 @@ await test("se il ritorno in bozza fallisce a metà, il documento resta emesso e
   const ancora = await get(db, "docs", issued.id);
   assert.equal(ancora.stato, "emesso");
   assert.equal(ancora.numero, "2026/0001");
-  assert.equal((await get(db, "counters", "doc||TD01|2026")).value, 1);
+  assert.equal((await get(db, "counters", "doc||fattura|2026")).value, 1);
   // E si può ancora emettere: è la conseguenza che contava.
   assert.equal((await issue(db, await save(db, newDoc()), CONTEXT)).numero, "2026/0002");
 });
@@ -348,14 +349,58 @@ await test("la nota di credito nasce bozza, collegata, e con importi positivi", 
   assert.equal(nota.righe[0].prezzoUnitario, "80.00");
 });
 
-await test("la nota di credito prende un numero della sua serie", async () => {
+await test("la nota di credito ha una serie sua, e si legge diversa da una fattura", async () => {
   const db = await openDatabase();
   const issued = await issue(db, await save(db, newDoc()), CONTEXT);
   const nota = await issue(db, await save(db, creditNote(issued)), CONTEXT);
-  // Contatore separato per tipo: la nota è la prima del suo, la fattura resta la prima del suo.
-  assert.equal(nota.numero, "2026/0001");
   assert.equal(nota.tipo, "TD04");
+  assert.equal(nota.serie, "NC", "la serie è quella delle note, non quella della fattura stornata");
+  // Il contatore è suo, quindi il numero riparte da uno — ma quello che si scrive e si cita porta
+  // la sigla davanti, ed è l'unica cosa che impedisce di chiamarle tutte e due «2026/0001».
+  assert.equal(nota.numero, "2026/0001");
+  assert.equal(shownNumber(nota), "NC 2026/0001");
+  assert.notEqual(shownNumber(nota), shownNumber(issued));
   assert.notEqual(documentKey(nota), documentKey(issued));
+});
+
+await test("una fattura differita non ruba il numero a una fattura", async () => {
+  // Il difetto vero: il contatore era per **tipo**, e una differita e una immediata dello stesso
+  // anno uscivano tutte e due come «2026/0001». Una differita è una fattura, e la sequenza è la
+  // stessa — `kinds.js` lo dichiara, `counterKey` lo applica.
+  const db = await openDatabase();
+  const prima = await issue(db, await save(db, newDoc()), CONTEXT);
+  const differita = await issue(db, await save(db, newDoc({
+    tipo: "TD24", ddt: [{ numero: "DDT 1", data: "2026-09-01" }],
+  })), CONTEXT);
+  assert.equal(prima.numero, "2026/0001");
+  assert.equal(differita.numero, "2026/0002");
+  assert.notEqual(shownNumber(prima), shownNumber(differita));
+});
+
+await test("un archivio numerato dalla versione di prima continua da dove era", async () => {
+  // Il contatore per tipo esiste già sulla macchina di chi usa l'app da prima. Ripartire da uno
+  // vorrebbe dire riusare numeri che sono su documenti già in mano al cliente, che è l'unico
+  // errore di numerazione senza ritorno.
+  const db = await openDatabase();
+  await put(db, "counters", { key: "doc||TD01|2026", value: 12 });
+  await put(db, "counters", { key: "doc||TD24|2026", value: 3 });
+  const seguente = await issue(db, await save(db, newDoc()), CONTEXT);
+  assert.equal(seguente.numero, "2026/0013", "il più alto dei due, più uno");
+
+  // E la nota di credito continua dal contatore che le note avevano, con la serie nuova davanti.
+  await put(db, "counters", { key: "doc||TD04|2026", value: 4 });
+  const nota = await issue(db, await save(db, creditNote(seguente)), CONTEXT);
+  assert.equal(shownNumber(nota), "NC 2026/0005");
+});
+
+await test("riaperta l'ultima fattura, il numero torna disponibile anche con i contatori vecchi", async () => {
+  const db = await openDatabase();
+  await put(db, "counters", { key: "doc||TD01|2026", value: 12 });
+  const tredici = await issue(db, await save(db, newDoc()), CONTEXT);
+  assert.equal(tredici.numero, "2026/0013");
+  await reopen(db, tredici);
+  const ancora = await issue(db, await save(db, newDoc()), CONTEXT);
+  assert.equal(ancora.numero, "2026/0013", "il numero riaperto si riusa, e non se ne salta uno");
 });
 
 // -----------------------------------------------------------------------------------------------------------------

@@ -23,10 +23,11 @@
 import { LOGO as BRAND_LOGO } from "./brand.js";
 import { t } from "./i18n.js";
 import { money, amount, rate as shownRate, date as shownDate } from "./format.js";
-import { from, ZERO, cmp, add, sub } from "./decimal.js";
-import { rate as splitRate } from "./totals.js";
+import { from, ZERO, cmp, add } from "./decimal.js";
 import { kind, numero as shownNumber } from "./kinds.js";
 import { profileFor, riferimentoNormativo } from "./fatturapa.js";
+import { addressLines, deliveryLine } from "./address.js";
+import { quote as instalments } from "./schedule.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
@@ -50,25 +51,6 @@ function _pair(parent, label, value) {
   const line = _node("div", "ps-pair");
   line.append(_node("span", "ps-label", label), _node("span", "ps-value", value));
   parent.append(line);
-}
-
-/** The lines of an address block: name, street, town, identifiers. */
-function _address(record, { fiscalLabel }) {
-  if (!record) return [];
-  const sede = record.sede || {};
-  const via = [sede.indirizzo, sede.numeroCivico].filter(Boolean).join(" ");
-  const citta = [sede.cap, sede.comune, sede.provincia && `(${sede.provincia})`].filter(Boolean).join(" ");
-  // The country by name, and only when it is not Italy: an Italian invoice does not say «Italia»,
-  // and a San Marino one says «San Marino», not «SM» twice over.
-  const codice = String(record.paese || "IT").toUpperCase();
-  const nome = t(`paese${codice}`);
-  const paese = codice !== "IT" ? (nome === `paese${codice}` ? codice : nome) : "";
-  const righe = [via, [citta, paese].filter(Boolean).join(" · ")];
-  if (record.partitaIva) righe.push(`${fiscalLabel} ${record.partitaIva}`);
-  if (record.codiceFiscale && record.codiceFiscale !== record.partitaIva) {
-    righe.push(`${t("f_codiceFiscale")} ${record.codiceFiscale}`);
-  }
-  return righe.filter(Boolean);
 }
 
 /** A quantity or unit price as text, trailing zeros trimmed. */
@@ -118,7 +100,6 @@ export function render(doc, { company, party, computed, draft = false }) {
   sheet.textContent = "";
   const profile = kind(doc);
   const fileProfile = profileFor(company || {});
-  const fiscalLabel = (record) => (record && record.paese === "SM" ? t("printCoe") : t("printPiva"));
 
   // ---- head: issuer left, document right
   const head = _node("header", "ps-head");
@@ -134,7 +115,7 @@ export function render(doc, { company, party, computed, draft = false }) {
     issuer.append(img);
   }
   issuer.append(_node("div", "ps-issuer-name", (company || {}).denominazione || ""));
-  for (const line of _address(company, { fiscalLabel: fiscalLabel(company) })) {
+  for (const line of addressLines(company)) {
     issuer.append(_node("div", "ps-issuer-line", line));
   }
   const recapiti = [(company || {}).email, (company || {}).telefono, (company || {}).sito]
@@ -156,9 +137,8 @@ export function render(doc, { company, party, computed, draft = false }) {
   to.append(_node("div", "ps-section-label", t("printTo")));
   if (party) {
     to.append(_node("div", "ps-to-name", party.denominazione || ""));
-    for (const line of _address(party, { fiscalLabel: fiscalLabel(party) })) to.append(_node("div", "ps-to-line", line));
-    const recapito = [party.codiceDestinatario && `${t("f_codiceDestinatario")} ${party.codiceDestinatario}`,
-      party.pec && `${t("f_pec")} ${party.pec}`].filter(Boolean).join(" · ");
+    for (const line of addressLines(party)) to.append(_node("div", "ps-to-line", line));
+    const recapito = deliveryLine(party);
     if (recapito) to.append(_node("div", "ps-to-line ps-muted", recapito));
   } else {
     to.append(_node("div", "ps-to-name ps-muted", "—"));
@@ -295,19 +275,16 @@ export function render(doc, { company, party, computed, draft = false }) {
     if (pag.iban) pay.append(_node("div", "ps-pay-line", `IBAN ${pag.iban}`));
     const rate = (pag.rate || []).filter((quota) => quota.scadenza || quota.importo !== undefined);
     if (rate.length) {
-      // The same split the XML gets: an instalment with no amount is a share of what the others
-      // leave, not the whole total. Two undated instalments used to print as the full amount twice.
-      const dichiarati = rate.filter((q) => q.importo !== undefined && q.importo !== "");
-      const mancanti = rate.length - dichiarati.length;
-      const resto = sub(computed.totale, dichiarati.reduce((sum, q) => add(sum, from(q.importo)), ZERO));
-      const quote = mancanti > 0 ? splitRate(resto, mancanti) : [];
-      let next = 0;
+      // The same split the schedule and the screen get, from `schedule.js`: an instalment with no
+      // amount is a share of what the others leave, not the whole total. Two undated instalments
+      // used to print as the full amount twice.
+      const quote = instalments(rate, computed.totale);
       const dtable = _node("table", "ps-due");
       const dh = _node("tr");
       dh.append(_node("th", "", t("f_scadenza")), _node("th", "ps-num", t("printAmount")));
       dtable.append(dh);
-      for (const quota of rate) {
-        const importo = quota.importo !== undefined && quota.importo !== "" ? from(quota.importo) : quote[next++];
+      for (const [index, quota] of rate.entries()) {
+        const importo = quote[index];
         const row = _node("tr");
         row.append(
           _node("td", "", quota.scadenza ? shownDate(quota.scadenza) : "—"),

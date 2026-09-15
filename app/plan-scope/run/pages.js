@@ -35,14 +35,69 @@ const pagesView = { filter: null, sort: "title", up: true };
  * The properties under the title: one line per key, both halves editable, written back to the
  * head of the file on change. An emptied key drops its line; the order is the file's.
  */
+/**
+ * Le caselle che un incontro si aspetta, anche quando sono ancora vuote.
+ *
+ * In questa testa una proprietà senza valore **non esiste**: la riga viene portata ma non letta, e
+ * nell'editore non compare. È una regola giusta per una pagina qualsiasi — nessuno vuole dieci
+ * righe vuote in cima a un documento — ma su un incontro voleva dire che l'ora, con chi e dove non
+ * si vedevano finché non le si indovinava a mano. Qui si offrono: restano vuote finché non le
+ * scrivi, e una vuota continua a non esistere nel file.
+ */
+function _meetingRows() {
+  const kind = String(head.props[t("propKind")] || head.props.tipo || head.props.type || "")
+    .trim().toLowerCase();
+  if (kind !== t("meetingKind").toLowerCase() && kind !== "incontro" && kind !== "meeting") return [];
+  const known = new Set(Object.keys(head.props).map((one) => one.toLowerCase()));
+  const pairs = [[t("propDate"), ["data", "date"]], [t("propTime"), ["ora", "orario", "time"]],
+    [t("propWith"), ["con", "with"]], [t("propWhere"), ["dove", "where"]]];
+  return pairs
+    .filter(([, names]) => !names.some((one) => known.has(one)))
+    .map(([name]) => name);
+}
+
+/**
+ * Il titolo di un incontro segue la sua data, finché è quello che gli ha dato l'app.
+ *
+ * Un incontro nasce chiamato «Incontro del <oggi>», perché quasi sempre lo si scrive appena
+ * finito. Ma se lo si usa per segnare un appuntamento, la prima cosa che si cambia è la data — e
+ * il titolo restava al giorno in cui l'avevi aperto: sul calendario finiva «Incontro del 15» in
+ * mezzo al giorno 17.
+ *
+ * Si muove **solo** se nessuno l'ha toccato, e il modo di saperlo è confrontarlo con quello che
+ * l'app avrebbe scritto per la data di prima. Un titolo battuto a mano resta dov'è.
+ */
+function _followDate(pageId, before, after) {
+  if (!before || !after || before === after) return;
+  const page = model.page(pageId);
+  if (!page) return;
+  const wasDefault = String(page.title || "") === tf("meetingTitle", { date: longDate(before) });
+  if (!wasDefault) return;
+  const title = tf("meetingTitle", { date: longDate(after) });
+  model.setTitle(pageId, title);
+  // E il campo in cima alla pagina, che tiene il titolo di suo: cambiare il record e lasciare lì
+  // la parola vecchia vorrebbe dire due titoli diversi sullo stesso schermo.
+  const field = el("pageTitleField");
+  if (field) field.value = title;
+}
+
 function _paintProps() {
   editProps(el("pageProps"), head.props, (props) => {
     const pageId = on.pageId();
     if (!pageId) return;
+    const dateKey = [t("propDate"), "data", "date"].find((one) => one in head.props || one in props);
+    const was = dateKey ? String(head.props[dateKey] || "") : "";
     head = { ...head, props };
     model.setMarkdown(pageId, md.withFrontmatter(head.props, on.body(), head.extra));
+    if (dateKey) _followDate(pageId, was, String(props[dateKey] || ""));
     _suggest(el("propKeys"), model.pagePropKeysOf(model.page(pageId).projectId));
   });
+  for (const name of _meetingRows()) addProp(el("pageProps"), (props) => {
+    const pageId = on.pageId();
+    if (!pageId) return;
+    head = { ...head, props };
+    model.setMarkdown(pageId, md.withFrontmatter(head.props, on.body(), head.extra));
+  }, {}, { key: name, focus: false });
 }
 
 /** Le chiavi già in uso, dentro una `datalist`: scrivere la seconda volta non è ricordarsi. */
@@ -60,8 +115,13 @@ function _suggest(list, keys) {
 // non offrire niente.
 const PROP_KINDS = [
   [["data", "date", "scadenza", "deadline", "inizio", "start", "fine", "end"], "date"],
+  [["ora", "orario", "time"], "time"],
   [["colore", "color", "colour"], "color"],
 ];
+
+/* Un link, o un indirizzo. Il primo si apre nel browser, il secondo nelle mappe: sono le due cose
+   che si scrivono dentro «dove» di un incontro, ed è la stessa domanda — «portami lì». */
+const WHERE_KEYS = ["dove", "where", "luogo", "posto", "place"];
 const YES_NO = [["sì", "no"], ["si", "no"], ["true", "false"], ["yes", "no"], ["vero", "falso"]];
 
 /**
@@ -78,6 +138,7 @@ const YES_NO = [["sì", "no"], ["si", "no"], ["true", "false"], ["yes", "no"], [
 function _propKind(key, value) {
   const clean = String(value || "").trim();
   if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) return "date";
+  if (/^\d{1,2}:\d{2}$/.test(clean)) return "time";
   if (/^#([0-9a-fA-F]{6})?$/.test(clean)) return "color";   // il cancelletto da solo basta
   if (YES_NO.some((pair) => pair.includes(clean.toLowerCase()))) return "bool";
   if (clean) return null;                 // un valore che non è di nessun tipo resta quello che è
@@ -125,9 +186,35 @@ function _propPicker(kind, valueField) {
     picker.value = kind === "color" ? _colorOf(valueField.value) : valueField.value.trim();
   };
   picker.sync();
-  picker.setAttribute("aria-label", t(kind === "color" ? "propPickColor" : "propPickDate"));
+  picker.setAttribute("aria-label",
+    t(kind === "color" ? "propPickColor" : kind === "time" ? "propPickTime" : "propPickDate"));
   picker.addEventListener("input", () => { if (picker.value) write(picker.value); });
   return picker;
+}
+
+/** Una chiave che vuol dire «il posto»: è lì che si scrive un link o un indirizzo. */
+function _isWhere(key) {
+  return WHERE_KEYS.includes(String(key || "").trim().toLowerCase());
+}
+
+/**
+ * Dove porta un «dove»: l'indirizzo così com'è se è già un link, altrimenti le mappe.
+ *
+ * Una riga che non è né l'uno né l'altro — «da Marco», «in ufficio» — non porta da nessuna parte,
+ * e torna `null` perché il bottone sparisca invece di aprire una ricerca inutile.
+ */
+function _placeLink(value) {
+  const clean = String(value || "").trim();
+  if (!clean) return null;
+  if (/^https?:\/\//i.test(clean)) return clean;
+  // Un dominio scritto senza «https://», che è come si incolla un invito di mezza Europa.
+  if (/^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(clean)) return `https://${clean}`;
+  // Un indirizzo si riconosce perché ha un numero civico o una virgola: «Via Roma 12», «Rimini,
+  // Fiera». Due parole senza né l'uno né l'altra sono più spesso una persona che un posto.
+  if (/\d/.test(clean) || clean.includes(",")) {
+    return `https://www.openstreetmap.org/search?query=${encodeURIComponent(clean)}`;
+  }
+  return null;
 }
 
 /** Il colore che la pastiglia deve mostrare: quello scritto, o il verde dell'app se c'è solo `#`. */
@@ -231,7 +318,23 @@ function _propRow(box, key, value, save, { marked = null, onMark = null } = {}) 
     else if (picker && picker.type === "color") picker.value = _colorOf(clean);
   });
 
+  // «Dove» si apre: un link della web-call nel browser, un indirizzo nelle mappe. Restava testo, e
+  // un indirizzo Meet che si deve selezionare e copiare è un indirizzo che si sbaglia di fretta,
+  // due minuti prima della riunione. Il campo resta scrivibile — il bottone sta accanto, non al
+  // posto suo — perché una riga di testo deve poter dire anche «da Marco», che non si apre.
+  const open = button("ghost small icon prop-open", "↗", () => {
+    const target = _placeLink(valueField.value);
+    if (target) window.open(target, "_blank", "noopener");
+  }, { label: t("propOpenWhere") });
+  const showOpen = () => {
+    open.hidden = !_isWhere(keyField.value) || !_placeLink(valueField.value);
+  };
+  showOpen();
+  keyField.addEventListener("input", showOpen);
+  valueField.addEventListener("input", showOpen);
+
   const changed = () => _readProps(box, save);
+  row.append(open);
   if (star) row.append(star);
   row.append(button("ghost small icon", "✕", () => { row.remove(); changed(); }, { label: t("propRemove") }));
   keyField.addEventListener("change", () => { dress(); changed(); });
@@ -357,9 +460,13 @@ export function editProps(box, props, save, marking = {}) {
 }
 
 /** Una riga vuota in fondo, e il fuoco sulla chiave: il «+» di chi tiene le proprietà. */
-export function addProp(box, save, marking = {}) {
-  box.append(_propRow(box, "", "", save, marking));
-  box.lastElementChild.querySelector(".prop-key").focus();
+export function addProp(box, save, marking = {}, { key = "", focus = true } = {}) {
+  box.append(_propRow(box, key, "", save, marking));
+  // Il fuoco solo quando la riga nasce da un clic. Le caselle che una pagina si offre da sola —
+  // l'ora e il dove di un incontro — arrivano quattro in fila all'apertura, e quattro `focus()`
+  // uno dietro l'altro finirebbero per portare il cursore dentro l'ultima invece che nel testo.
+  if (!focus) return;
+  box.lastElementChild.querySelector(key ? ".prop-value" : ".prop-key").focus();
 }
 
 export function paintTable(projectId) {

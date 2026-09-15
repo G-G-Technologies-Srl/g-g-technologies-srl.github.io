@@ -26,7 +26,7 @@ import * as fic from "./fic.js";
 import * as sheet from "./sheet.js";
 import * as xls from "./xls.js";
 import { read as readFattura } from "./reading.js";
-import { documentKey } from "./db.js";
+import { documentKey, counterKey } from "./db.js";
 import { draft } from "./model.js";
 import { KINDS } from "./kinds.js";
 import { totals } from "./totals.js";
@@ -216,18 +216,6 @@ function _foglio(name, sheets, contesto) {
 // -----------------------------------------------------------------------------------------------------------------
 //  p u b l i c
 // -----------------------------------------------------------------------------------------------------------------
-
-/**
- * The counter key of a document's series: the same string `issue()` and `reopen()` use.
- *
- * Copied from `model.js` rather than imported because it is not exported there, and exporting a
- * one-line template for the sake of one caller would make it look like an API. If the shape ever
- * changes there, `test/importing.mjs` catches it: it issues a document after an import and reads the
- * number it got.
- */
-function _serieKey(doc) {
-  return `doc|${doc.serie || ""}|${doc.tipo || "TD01"}|${String(doc.data || "").slice(0, 4)}`;
-}
 
 /** The digits a document's number ends with, as a number — `2026/0012`, `0012`, `PR-12` all give 12. */
 function _ordinale(numero) {
@@ -666,7 +654,7 @@ export async function apply(db, piano) {
       scritti.documenti += 1;
       const n = _ordinale(doc.numero);
       if (n !== null) {
-        const key = _serieKey(doc);
+        const key = counterKey(doc);
         massimi.set(key, Math.max(massimi.get(key) || 0, n));
       }
     }
@@ -769,7 +757,7 @@ export async function undoLast(db) {
   // `lastImport` would keep finding a batch of one customer, and the undo button would offer to
   // remove something it then refuses to remove.
   const daTenere = clienti.filter((c) => mio(c) && usati.has(c.id));
-  const serie = new Set(daTogliere.docs.map(_serieKey));
+  const serie = new Set(daTogliere.docs.map(counterKey));
 
   await tx(db, ["parties", "items", "docs", "payments", "counters", "costs", "outlays"], async (scope) => {
     for (const [store, records] of Object.entries(daTogliere)) {
@@ -784,7 +772,7 @@ export async function undoLast(db) {
       await scope.put("parties", resto);
     }
     for (const key of serie) {
-      const rimasti = altri.filter((d) => _serieKey(d) === key && d.stato !== "bozza");
+      const rimasti = altri.filter((d) => counterKey(d) === key && d.stato !== "bozza");
       const value = rimasti.reduce((max, d) => Math.max(max, _ordinale(d.numero) || 0), 0);
       await scope.put("counters", { key, value });
     }

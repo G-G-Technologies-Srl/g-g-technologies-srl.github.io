@@ -288,4 +288,37 @@ test("spento, il file è quello di prima riga per riga", () => {
   assert.ok(!senza.includes("VALARM"));
 });
 
+// -----------------------------------------------------------------------------------------------------------------
+//  u n   a p p u n t a m e n t o
+// -----------------------------------------------------------------------------------------------------------------
+
+test("con un'ora l'evento dura un'ora e non un giorno", () => {
+  const righe = ics.event({ uid: "m1", title: "Incontro", date: "2026-09-24", time: "15:00",
+                            place: "https://meet.google.com/abc" });
+  assert.ok(righe.includes("DTSTART:20260924T150000"), righe.join("\n"));
+  assert.ok(righe.includes("DTEND:20260924T160000"));
+  assert.ok(righe.includes("LOCATION:https://meet.google.com/abc"));
+  // Fluttuante: niente `Z` e niente fuso. Le tre sono le tre dov'è chi lo apre, che è la sola
+  // promessa che un'app senza server può mantenere.
+  assert.ok(!righe.some((one) => /^DTSTART.*Z$/.test(one)), "l'ora è stata scritta con un fuso");
+});
+
+test("senza un'ora resta l'evento di giornata di sempre", () => {
+  const righe = ics.event({ uid: "t1", title: "Consegna", date: "2026-09-24" });
+  assert.ok(righe.includes("DTSTART;VALUE=DATE:20260924"));
+  assert.ok(righe.includes("DTEND;VALUE=DATE:20260925"));
+});
+
+test("un incontro a tarda sera non sconfina nel giorno dopo", () => {
+  const righe = ics.event({ uid: "m2", title: "Tardi", date: "2026-09-24", time: "23:30" });
+  assert.ok(righe.includes("DTEND:20260924T235900"), righe.join("\n"));
+});
+
+test("il link di Google porta l'ora e il posto", () => {
+  const link = ics.googleLink({ title: "Incontro", date: "2026-09-24", time: "15:00",
+                                place: "Via Roma 12" });
+  assert.ok(link.includes("dates=20260924T150000%2F20260924T160000"), link);
+  assert.ok(link.includes("location=Via+Roma+12"), link);
+});
+
 console.log(`exchange: ${passed} prove passate`);

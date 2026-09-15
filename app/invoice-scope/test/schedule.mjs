@@ -17,7 +17,7 @@ import assert from "node:assert/strict";
 
 import { from, sum, toString } from "../run/decimal.js";
 import {
-  schedule, summary, recordPayment, removePayment, paymentsOf, received, owedOn, csv,
+  schedule, summary, recordPayment, removePayment, paymentsOf, received, owedOn, csv, quote,
 } from "../run/schedule.js";
 import { openDatabase } from "../run/db.js";
 import { put, reset } from "./fake-store.mjs";
@@ -491,6 +491,29 @@ await test("gli incassi si distribuiscono sulle rate, dalla più vecchia", async
   assert.equal(rows.length, 1);
   assert.equal(rows[0].scadenza, "2026-09-30");
   assert.equal(money(rows[0].importo), "520.00");
+});
+
+await test("la divisione si chiede, e risponde uguale a chiunque la chieda", async () => {
+  // `quote` è esportata perché la usano in tre: lo scadenzario, il foglio stampato e il campo della
+  // maschera. Finché la facevano ognuno per conto suo, la carta stampava 1.952,00 e lo schermo ne
+  // suggeriva 3.904,00 per la stessa rata.
+  const totale = from("3904.00");
+  const due = quote([{ scadenza: "2026-10-10" }, { scadenza: "2026-11-09" }], totale);
+  assert.deepEqual(due.map(money), ["1952.00", "1952.00"]);
+  assert.equal(money(sum(due)), "3904.00");
+
+  // Una rata scritta e una in bianco: la seconda vale quello che resta, non il totale.
+  const misto = quote([{ importo: "1000.00" }, { scadenza: "2026-11-09" }], totale);
+  assert.deepEqual(misto.map(money), ["1000.00", "2904.00"]);
+});
+
+await test("un importo vuoto pesa come un importo che non c'è", async () => {
+  // Il campo svuotato nella maschera lascia `undefined`, un registro importato può lasciare `""`:
+  // trattato come un numero, il secondo diventava zero e la rata spariva dallo scadenzario.
+  const totale = from("1000.00");
+  assert.deepEqual(quote([{ importo: "" }, { importo: undefined }], totale).map(money),
+    ["500.00", "500.00"]);
+  assert.deepEqual(quote([{ importo: null }], totale).map(money), ["1000.00"]);
 });
 
 console.log(`schedule: ${passed} prove passate`);

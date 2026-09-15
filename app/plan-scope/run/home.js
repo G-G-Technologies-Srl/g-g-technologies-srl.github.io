@@ -51,6 +51,28 @@ function _dueLabel(iso, today) {
   return shortDate(iso);
 }
 
+/**
+ * La cosa più vicina che questo progetto chiede: un'attività o un incontro, quello che viene prima.
+ *
+ * A parità di giorno vince l'incontro: un appuntamento ha un'ora e un posto dove essere, una
+ * scadenza si sposta di mezza giornata senza che nessuno se ne accorga.
+ */
+function _nextThing(projectId) {
+  const out = [];
+  const task = model.nextDue(projectId);
+  if (task) out.push({ date: task.end, title: task.title || t("taskUntitled"),
+    who: model.assigneeName(task), rank: 1 });
+  const meeting = model.meetingsOf(projectId).find((one) => one.date >= model.todayISO())
+    || model.meetingsOf(projectId).at(-1);
+  if (meeting) {
+    out.push({ date: meeting.date, rank: 0,
+      title: [meeting.time, meeting.page.title || t("pageUntitled")].filter(Boolean).join(" "),
+      who: meeting.with });
+  }
+  out.sort((a, b) => a.date.localeCompare(b.date) || a.rank - b.rank);
+  return out[0] || null;
+}
+
 /** In che fascia cade una data: passata, entro una settimana, o lontana. */
 function _urgency(iso, today) {
   const days = model.daysBetween(today, iso);
@@ -123,12 +145,13 @@ function _projectCard(project, today) {
     tf("projectProgress", { done: num(done, 0), total: num(total, 0) })));
   card.append(row);
 
-  // Il prossimo impegno: cosa fare di questo progetto, senza aprirlo.
-  const next = model.nextDue(project.id);
+  // Il prossimo impegno: cosa fare di questo progetto, senza aprirlo. Un incontro conta quanto
+  // un'attività — se giovedì c'è una riunione e venerdì scade una consegna, quello che viene
+  // prima è la riunione, e una riga che dicesse la consegna direbbe la seconda cosa.
+  const next = _nextThing(project.id);
   if (next) {
-    const line = node("span", `project-card-next ${_urgency(next.end, today)}`);
-    const who = model.assigneeName(next);
-    line.append([next.title || t("taskUntitled"), shortDate(next.end), who].filter(Boolean).join(" · "));
+    const line = node("span", `project-card-next ${_urgency(next.date, today)}`);
+    line.append([next.title, shortDate(next.date), next.who].filter(Boolean).join(" · "));
     card.append(line);
   }
 

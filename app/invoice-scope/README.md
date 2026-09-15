@@ -60,6 +60,7 @@ Si provano sotto Node, e sono il posto giusto per una regola.
 | `xmlread.js` · `reading.js` | l'XML **scritto da altri**, e i documenti che ne escono | prefissi ignorati, totali ricalcolati |
 | `sheet.js` · `xls.js` · `fic.js` · `parse.js` | i formati in ingresso: `.xlsx`, il `.xls` del 1997, le tre esportazioni di Fatture in Cloud | nessuno di loro scrive nel deposito |
 | `format.js` | numeri e date come una persona li legge e li scrive | l'unico posto che formatta, in tutta l'app |
+| `address.js` | l'intestatario in righe: indirizzo, COE o partita IVA, recapito elettronico | le stesse righe per la carta e per la schermata, o divergono |
 | `problems.js` | le chiavi di `validate.js` come frasi | un passo dal dialogo, e niente altro |
 
 ### Il deposito
@@ -154,6 +155,7 @@ node $I app/invoice-scope/test/projects.mjs  node $I app/invoice-scope/test/proj
 node $I app/invoice-scope/test/home.mjs      node $I app/invoice-scope/test/reset.mjs
 node $I app/invoice-scope/test/costs.mjs     node $I app/invoice-scope/test/purchases.mjs
 node $I app/invoice-scope/test/recurring.mjs node $I app/invoice-scope/test/problems.mjs
+node $I app/invoice-scope/test/address.mjs
 node $I app/invoice-scope/test/timeline.mjs
 ```
 
@@ -181,6 +183,7 @@ Tre pezzi di impalcatura, e vale la pena sapere che ci sono:
 | un controllo nuovo | `validate.js` (chiave) → `problems.js` (frase) → `i18n.js` (due lingue) | `test/validate.mjs` |
 | un formato in ingresso | un modulo nuovo accanto a `sheet.js`/`xls.js`, che restituisce righe di stringhe | provalo **con file veri**, non con file inventati |
 | una schermata nuova | una rotta in `app.js` + un file suo | i conti li fa un modulo senza DOM, provato a parte |
+| un dato del cliente che si vede sul documento | `address.js` | lo prendono la carta (`print.js`) e la schermata (`doc.js`): una riga sola, due posti |
 | una parola | `i18n.js`, **entrambe le lingue nella stessa modifica** | `check_apps.py` confronta le chiavi |
 | un file nuovo in `run/` | il file + l'elenco `ASSETS` in `sw.js` | e gira la versione |
 

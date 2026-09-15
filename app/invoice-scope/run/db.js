@@ -18,6 +18,7 @@
 import { open } from "gg/store.js";
 
 import { openMemory } from "./memory.js";
+import { KINDS } from "./kinds.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -169,4 +170,44 @@ export function documentKey(doc) {
   if (!doc.numero || doc.stato === "bozza") return undefined;
   const anno = String(doc.data || "").slice(0, 4);
   return `${doc.serie || ""}|${doc.tipo || "TD01"}|${anno}|${doc.numero}`;
+}
+
+/**
+ * The key of the counter a document's number comes out of: series, sequence, year.
+ *
+ * **The sequence, not the type.** With the type in here every kind got a counter of its own, so a
+ * deferred invoice and an immediate one were both «2026/0001» — and a delivery note is not the
+ * thing that keeps them apart, the sequence is. `kinds.js` says which sequence each kind belongs
+ * to; a deferred invoice belongs to the invoices.
+ *
+ * Written here, next to `documentKey`, because it was written in three places — twice in
+ * `model.js` and once in `importing.js` — and a counter whose name is spelled out by three files
+ * is a counter that will be spelled differently by one of them.
+ */
+export function counterKey(doc) {
+  const tipo = doc.tipo || "TD01";
+  const kind = KINDS[tipo] || {};
+  const anno = String(doc.data || "").slice(0, 4);
+  return `doc|${doc.serie || ""}|${kind.sequenza || tipo}|${anno}`;
+}
+
+/**
+ * The counters a sequence used to live under, before it was a sequence.
+ *
+ * A deposit written by an earlier version has one counter per kind — `doc||TD01|2026` — and the
+ * new key finds nothing there. Starting from one would hand out numbers that are already on
+ * documents in the customer's hands, which is the one mistake in a numbering that cannot be taken
+ * back. So the sequence reads these too and keeps the highest, for ever: they cost two reads at
+ * issuing time and they are the only thing standing between an upgrade and a duplicate number.
+ */
+export function legacyCounterKeys(doc) {
+  const anno = String(doc.data || "").slice(0, 4);
+  const sequenza = (KINDS[doc.tipo || "TD01"] || {}).sequenza;
+  const keys = new Set();
+  for (const [tipo, kind] of Object.entries(KINDS)) {
+    if (kind.sequenza !== sequenza) continue;
+    keys.add(`doc|${kind.serie || ""}|${tipo}|${anno}`);
+    keys.add(`doc||${tipo}|${anno}`);
+  }
+  return [...keys];
 }

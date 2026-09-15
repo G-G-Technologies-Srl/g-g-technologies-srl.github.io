@@ -19,7 +19,7 @@
 
 import { get, put, list, remove, tx } from "gg/store.js";
 
-import { documentKey } from "./db.js";
+import { documentKey, counterKey, legacyCounterKeys } from "./db.js";
 import { totals } from "./totals.js";
 import { validate } from "./validate.js";
 import { STATES, KINDS, kind, numero as shownNumber, convertibile } from "./kinds.js";
@@ -99,10 +99,27 @@ function _now() {
  * and write used to be two separate transactions, so two tabs could read 5 and both write 6, and a
  * failure between them left the counter moved with no document to show for it.
  */
-async function _next(scope, key) {
-  const record = (await scope.get("counters", key)) || { key, value: 0 };
-  const value = record.value + 1;
+async function _next(scope, key, legacy = []) {
+  const value = (await _sequenceAt(scope, key, legacy)) + 1;
   await scope.put("counters", { key, value });
+  return value;
+}
+
+/**
+ * Where a sequence stands: its own counter, or the highest of the ones it replaced.
+ *
+ * The legacy keys are read every time rather than adopted once, because "adopted once" is a state
+ * and this is a question. A deposit written before the sequences existed carries a counter per
+ * kind; the day it is opened again the numbering has to continue from where that kind left off,
+ * and not start over on a number the customer already has on paper.
+ */
+async function _sequenceAt(scope, key, legacy = []) {
+  let value = ((await scope.get("counters", key)) || { value: 0 }).value;
+  for (const old of legacy) {
+    if (old === key) continue;
+    const record = await scope.get("counters", old);
+    if (record && record.value > value) value = record.value;
+  }
   return value;
 }
 
@@ -189,7 +206,8 @@ export async function issue(db, doc, context) {
   }
 
   const anno = String(doc.data).slice(0, 4);
-  const key = `doc|${doc.serie || ""}|${doc.tipo}|${anno}`;
+  const key = counterKey(doc);
+  const legacy = legacyCounterKeys(doc);
 
   // The totals are worked out **before** the transaction opens: everything inside it must be a
   // read or a write on its own stores, because IndexedDB commits as soon as control returns to the
@@ -203,7 +221,7 @@ export async function issue(db, doc, context) {
   const scrivi = _numerazione(context.company).scrivi;
 
   return tx(db, ["counters", "docs"], async (scope) => {
-    const progressivo = await _next(scope, key);
+    const progressivo = await _next(scope, key, legacy);
     const issued = {
       ...doc,
       stato: "emesso",
@@ -308,8 +326,8 @@ export async function reopen(db, doc) {
   if (doc.stato !== "emesso") throw new Error("solo un documento emesso può tornare bozza");
   if (doc.esportato) throw new Error("l'XML è già uscito: si storna, non si riapre");
 
-  const anno = String(doc.data).slice(0, 4);
-  const key = `doc|${doc.serie || ""}|${doc.tipo}|${anno}`;
+  const key = counterKey(doc);
+  const legacy = legacyCounterKeys(doc);
   const mine = Number(String(doc.numero).split("/").pop());
   const now = _now();
 
@@ -318,11 +336,11 @@ export async function reopen(db, doc) {
   // document still issued — and from the next issue onwards every number collided with an existing
   // one, so the app stopped being able to emit anything at all.
   return tx(db, ["counters", "docs"], async (scope) => {
-    const counter = (await scope.get("counters", key)) || { key, value: 0 };
-    if (mine !== counter.value) {
+    const value = await _sequenceAt(scope, key, legacy);
+    if (mine !== value) {
       throw new Error("non è l'ultimo numero della serie: riaprirlo lascerebbe un buco");
     }
-    await scope.put("counters", { key, value: counter.value - 1 });
+    await scope.put("counters", { key, value: value - 1 });
     const record = { ...doc, stato: "bozza", numero: null, totali: null, chiave: undefined, updated: now };
     await scope.put("docs", record);
     return record;
@@ -344,7 +362,10 @@ export function creditNote(doc) {
   }
   return draft({
     tipo: "TD04",
-    serie: doc.serie || "",
+    // La serie è quella delle note di credito, non quella del documento stornato: copiandola, la
+    // nota usciva numerata come una fattura — «2026/0001» due volte nello stesso anno, e niente
+    // sulla carta a dire quale dei due qualcuno stesse citando.
+    serie: KINDS.TD04.serie,
     partyId: doc.partyId,
     righe: (doc.righe || []).map((line) => ({ ...line })),
     fattureCollegate: [{ numero: doc.numero, data: doc.data }],

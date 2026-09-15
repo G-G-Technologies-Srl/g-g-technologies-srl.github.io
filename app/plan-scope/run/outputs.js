@@ -164,6 +164,19 @@ export function exportIcs(projectId, { alarm = null } = {}) {
     events.unshift({ uid: project.uid || project.id,
       title: `${project.name || t("projectUntitled")} — ${dated.key}`, date: dated.value });
   }
+  // Gli incontri escono insieme alle scadenze, e con la loro ora: un file di calendario che porta
+  // le consegne e lascia a casa le riunioni è un file che va riempito a mano dall'altra metà.
+  for (const meeting of model.meetingsOf(projectId)) {
+    events.push({
+      uid: meeting.page.uid || meeting.page.id,
+      title: meeting.page.title || t("pageUntitled"),
+      date: meeting.date,
+      time: meeting.time || null,
+      place: meeting.where,
+      description: [project.name || "", meeting.with].filter(Boolean).join("\n"),
+    });
+  }
+  events.sort((a, b) => String(a.date).localeCompare(String(b.date)));
   if (!events.length) return snack(t("icsNone"));
   const text = ics.calendar(events, { name: project.name || t("projectUntitled"), alarm, sign: SIGN });
   return pack.save(ics.fileName(project.name), text, "text/calendar;charset=utf-8");

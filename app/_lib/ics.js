@@ -71,6 +71,24 @@ function _dayAfter(iso) {
   return next.toISOString().slice(0, 10);
 }
 
+/** Un'ora come la scrive un `input[type=time]`. */
+function _isTime(value) {
+  return typeof value === "string" && /^\d{1,2}:\d{2}$/.test(value.trim());
+}
+
+/** Giorno e ora insieme, senza fuso: `20260920T150000`. */
+function _moment(iso, time) {
+  const [hh, mm] = String(time).trim().split(":");
+  return `${_day(iso)}T${String(hh).padStart(2, "0")}${mm}00`;
+}
+
+/** L'ora dopo quanti minuti, dentro lo stesso giorno: un incontro che sconfina a domani non c'è. */
+function _later(time, minutes) {
+  const [hh, mm] = String(time).trim().split(":").map(Number);
+  const total = Math.min(23 * 60 + 59, hh * 60 + mm + Math.max(0, Number(minutes) || 0));
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
 /** Now, as the calendar writes an instant: `20260902T101500Z`. */
 function _stamp(now) {
   return now.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
@@ -107,19 +125,33 @@ function _fold(line) {
 // -----------------------------------------------------------------------------------------------------------------
 
 /**
- * One event: `{ uid, title, date, end, description }`. `end` is the last day, inclusive, and
- * defaults to `date`; a task with a start and an end spans the days between.
+ * One event: `{ uid, title, date, end, description, time, minutes, place }`.
+ *
+ * Senza `time` è un evento di giornata: `end` è l'ultimo giorno, incluso, e una cosa con un inizio
+ * e una fine occupa i giorni in mezzo. **Con `time`** — `"15:00"` — diventa un appuntamento che
+ * dura `minutes` (un'ora, se non lo si dice), ed è quello che serve a un incontro: nel calendario
+ * di chi lo riceve sta alle tre, non come una fascia sopra tutta la giornata, e la sveglia del
+ * telefono suona dieci minuti prima invece che la sera del giorno prima.
+ *
+ * **L'ora è fluttuante**, cioè scritta senza fuso e senza `Z`. Per un'app che gira sul computer di
+ * chi la usa è la cosa giusta: le tre sono le tre dov'è quella persona. Un fuso scritto nel file
+ * sarebbe una promessa che l'app non può mantenere — non sa in quale fuso si terrà quell'incontro —
+ * e la si pagherebbe in riunioni che slittano di un'ora due volte l'anno.
  */
-export function event({ uid, title, date, end = null, description = "" },
-  { now = new Date(), alarm = null, sign = SIGN } = {}) {
+export function event({ uid, title, date, end = null, description = "",
+  time = null, minutes = 60, place = "" },
+{ now = new Date(), alarm = null, sign = SIGN } = {}) {
   const last = end && end >= date ? end : date;
+  const when = _isTime(time)
+    ? [`DTSTART:${_moment(date, time)}`, `DTEND:${_moment(date, _later(time, minutes))}`]
+    : [`DTSTART;VALUE=DATE:${_day(date)}`, `DTEND;VALUE=DATE:${_day(_dayAfter(last))}`];
   return [
     "BEGIN:VEVENT",
     `UID:${_escape(uid)}@${sign.domain}`,
     `DTSTAMP:${_stamp(now)}`,
-    `DTSTART;VALUE=DATE:${_day(date)}`,
-    `DTEND;VALUE=DATE:${_day(_dayAfter(last))}`,
+    ...when,
     `SUMMARY:${_escape(title)}`,
+    ...(place ? [`LOCATION:${_escape(place)}`] : []),
     ...(description ? [`DESCRIPTION:${_escape(description)}`] : []),
     // La sveglia sta **dentro** l'evento e prima della sua fine, che è dove la specifica la vuole.
     ...(alarm && alarm.on ? remind.alarm(alarm, title) : []),
@@ -146,12 +178,18 @@ export function calendar(events, { now = new Date(), name = "", alarm = null, si
  * The link that opens Google Calendar with the event filled in. Dates in Google's all-day form,
  * end exclusive, the same as the file.
  */
-export function googleLink({ title, date, end = null, description = "" }) {
+export function googleLink({ title, date, end = null, description = "",
+  time = null, minutes = 60, place = "" }) {
   const last = end && end >= date ? end : date;
+  // Con un'ora, Google vuole gli istanti nella stessa forma fluttuante del file.
+  const dates = _isTime(time)
+    ? `${_moment(date, time)}/${_moment(date, _later(time, minutes))}`
+    : `${_day(date)}/${_day(_dayAfter(last))}`;
   const query = new URLSearchParams({
     action: "TEMPLATE",
     text: String(title || ""),
-    dates: `${_day(date)}/${_day(_dayAfter(last))}`,
+    dates,
+    ...(place ? { location: String(place) } : {}),
     ...(description ? { details: String(description) } : {}),
   });
   return `https://calendar.google.com/calendar/render?${query.toString()}`;

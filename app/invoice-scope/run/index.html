@@ -454,6 +454,12 @@
            già dentro un progetto; dopo, al suo posto, il collegamento per andarci. -->
       <button type="button" class="button ghost" id="docProject" data-t="docMakeProject" hidden></button>
       <a class="link-button" id="docProjectLink" href="#/progetti" hidden></a>
+      <!-- **Lo storno in testa, per la stessa ragione della stampa e dell'XML.** Stava in fondo alla
+           pagina, sotto gli incassi, in mezzo ai comandi di una bozza: su una fattura emessa era
+           l'unico comando rimasto laggiù, e chi apriva il documento leggeva la testata e concludeva
+           che le note di credito non ci fossero. Una fattura emessa non si modifica — stornarla è
+           l'unica cosa che le si può ancora fare, quindi sta dove si guarda. -->
+      <button type="button" class="button ghost" id="docCredit" data-t="docCreditNote" hidden></button>
       <span id="docStato" class="doc-stato"></span>
     </div>
 
@@ -470,6 +476,11 @@
              menù: un menù sceglie un valore, un pulsante fa una cosa. -->
         <button type="button" class="link-button" id="docPartyNew" data-t="partiesNew"></button>
       </label>
+      <!-- Il cliente per esteso, come finisce sulla carta: indirizzo, COE o partita IVA, e il
+           recapito elettronico. Il menù qui sopra dice solo il nome, e il nome non identifica
+           nessuno — l'identificativo fiscale è quello che il file porta al SdI e la prima cosa che
+           chi riceve controlla. Lo riempie `_drawParty` in `doc.js`; vuoto, sparisce. -->
+      <div class="party-detail" id="docPartyDetail" hidden></div>
       <label id="docValiditaField" class="required" hidden><span data-t="f_validoFino"></span>
         <input type="date" id="docValidoFino" required>
       </label>
@@ -676,7 +687,6 @@
       <button type="button" class="button ghost" id="docSave" data-t="save"></button>
       <button type="button" class="button ghost" id="docDelete" data-t="del"></button>
       <button type="button" class="button" id="docConvert" hidden></button>
-      <button type="button" class="button ghost" id="docCredit" data-t="docCreditNote" hidden></button>
       <button type="button" class="button ghost" id="docReopen" data-t="docReopen" hidden></button>
       <span class="ok" id="docSaved" data-t="docSaveFirst" hidden></span>
     </div>

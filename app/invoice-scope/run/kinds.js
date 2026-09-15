@@ -50,11 +50,19 @@ const DOPO_EMISSIONE = ["inviato", "accettato", "scartato", "annullato"];
  * | `fiscale` | se il documento produce un XML e finisce nel CSV del commercialista |
  * | `deve` | se il suo totale entra nello scadenzario |
  * | `storna` | se il suo totale è un credito contro un altro documento |
- * | `serie` | la sigla davanti al numero, e la sequenza a cui il numero appartiene |
+ * | `serie` | la sigla davanti al numero |
+ * | `sequenza` | il contatore a cui il numero appartiene |
  * | `stati` | gli stati raggiungibili dopo l'emissione |
  * | `sezioni` | le parti della maschera che valgono per questo tipo |
  * | `converteIn` | il tipo in cui questo documento si trasforma, quando ha senso |
  * | `raggruppabile` | se più documenti dello stesso cliente diventano una fattura sola |
+ * **`serie` e `sequenza` sono due cose, e per due versioni sono state una sola.** La serie è quello
+ * che si legge davanti al numero; la sequenza è il contatore da cui il numero esce. Tenute insieme,
+ * il contatore finiva per essere uno per *tipo*: una fattura differita e una fattura immediata
+ * uscivano tutte e due come «2026/0001», e così la nota di credito — tre documenti della stessa
+ * azienda, dello stesso anno, con lo stesso numero e niente che li distinguesse. Una differita è
+ * una fattura e sta nella sequenza delle fatture; una nota di credito ha la sua, e la dichiara con
+ * la sigla «NC».
  */
 export const KINDS = {
   // The order of the keys is the order of the menu, and it is the order of the work: you quote,
@@ -65,6 +73,7 @@ export const KINDS = {
     deve: false,
     storna: false,
     serie: "PR",
+    sequenza: "preventivo",
     label: "typePreventivo",
     raggruppabile: false,
     stati: ["inviato", "accettato", "rifiutato", "annullato"],
@@ -76,6 +85,7 @@ export const KINDS = {
     deve: false,
     storna: false,
     serie: "DDT",
+    sequenza: "ddt",
     label: "typeDdt",
     // **Più documenti di trasporto fanno una fattura sola**, ed è il motivo per cui la fattura
     // differita esiste: si consegna a rate e si fattura a fine mese. Solo il DDT si raggruppa,
@@ -93,6 +103,7 @@ export const KINDS = {
     deve: true,
     storna: false,
     serie: "",
+    sequenza: "fattura",
     label: "typeTD01",
     raggruppabile: false,
     stati: DOPO_EMISSIONE,
@@ -104,6 +115,9 @@ export const KINDS = {
     deve: true,
     storna: false,
     serie: "",
+    // La differita è una fattura: stesso contatore, o due fatture dello stesso anno portano lo
+    // stesso numero.
+    sequenza: "fattura",
     label: "typeTD24",
     raggruppabile: false,
     stati: DOPO_EMISSIONE,
@@ -120,7 +134,10 @@ export const KINDS = {
     // schedule as an amount somebody expects to receive.
     deve: false,
     storna: true,
-    serie: "",
+    // La sigla sta davanti al numero — «NC 2026/0001» — perché una nota di credito numerata come
+    // una fattura si cita al telefono allo stesso modo, e al telefono non c'è il tipo scritto.
+    serie: "NC",
+    sequenza: "nota",
     label: "typeTD04",
     raggruppabile: false,
     stati: DOPO_EMISSIONE,

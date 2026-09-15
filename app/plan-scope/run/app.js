@@ -232,12 +232,14 @@ function _paintCrumbs() {
  */
 function _newMeeting(target, withName = "") {
   const today = model.todayISO();
+  // Solo quello che ha un valore: una proprietà vuota, in questo formato, non esiste — la riga
+  // finisce fra quelle «portate e non lette» e nell'editore non compare. Le caselle da riempire di
+  // un incontro le offre `_paintProps`, che sa di stare guardando un incontro.
   const head = [
     "---",
     `${t("propKind")}: ${t("meetingKind")}`,
     `${t("propDate")}: ${today}`,
-    `${t("propWith")}: ${withName}`,
-    `${t("propWhere")}: `,
+    ...(withName ? [`${t("propWith")}: ${withName}`] : []),
     "---",
     "",
     "",
@@ -2536,6 +2538,8 @@ function _connect() {
   plan.connect({
     // Le impostazioni dei promemoria, per la sveglia dentro il calendario di una singola attività.
     alarm: () => _remindSettings(),
+    // Un incontro sul calendario porta alla sua pagina, che è dove l'incontro vive.
+    openPage: (id) => _openPage(id),
     // The board writes the address bar and nothing else: what it changed is already in the model.
     // Unless the card was opened from somewhere else — the dashboard's deadlines — in which case
     // that screen is the one that has to catch up.
