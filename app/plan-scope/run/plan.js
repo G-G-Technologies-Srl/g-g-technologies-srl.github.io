@@ -126,6 +126,14 @@ function _fillCard() {
     return option;
   }));
 
+  // Le etichette già in uso nel progetto, suggerite come i nomi: scriverle la seconda volta non è
+  // ricordarsele, ed è così che «stampa» e «Stampa» finiscono a dividere in due lo stesso filtro.
+  fill(el("cardTagList"), model.tagsOf(projectId).map((tag) => {
+    const option = document.createElement("option");
+    option.value = tag;
+    return option;
+  }));
+
   const priority = el("cardPriority");
   fill(priority, [["", "priorityNone"], ["low", "priorityLow"], ["high", "priorityHigh"]]
     .map(([value, key]) => {

@@ -1260,7 +1260,25 @@ input.when-field.late { color: var(--late); }
 
 .check-line input { width: auto; }
 
-.card-foot { margin-top: 18px; }
+/* La spiegazione di una casella sta sotto la casella e rientrata quanto la sua etichetta: allineata
+   al bordo sinistro sembrerebbe una frase sulla maschera intera invece che su quella riga. Il
+   rientro è la larghezza della casella più il suo distacco. */
+.check-note { margin: 2px 0 0 26px; }
+
+/* Il piede resta in vista mentre si scorre.
+   La maschera è lunga — titolo, note, due date, etichette, chi, priorità, traguardo, due liste — e
+   lo era già prima che etichette e responsabile uscissero da «Mostra altro». Con il piede in fondo
+   al foglio, «Chiudi» stava sotto la piega: la via d'uscita di una finestra non si cerca
+   scorrendo. I 20px di stacco sotto sono quelli del `padding` del `dialog`, che uno sfondo
+   appiccicato al bordo scoprirebbe. */
+.card-foot {
+  position: sticky;
+  bottom: -20px;
+  margin-top: 18px;
+  padding: 12px 0 20px;
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+}
 
 .wide { width: 100%; margin-top: 10px; }
 

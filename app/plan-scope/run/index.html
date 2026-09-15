@@ -795,10 +795,27 @@
     </div>
   </div>
 
+  <!-- Le etichette e chi ci lavora stanno qui, in chiaro e non dietro «Mostra altro»: sono le due
+       cose che la bacheca già mostra sulla carta, e nasconderle nella maschera che le riempie
+       voleva dire far cercare il modo di scrivere una cosa che si vede da fuori. -->
+  <label for="cardTags" id="cardTagsLabel"></label>
+  <input type="text" id="cardTags" maxlength="200" autocomplete="off" list="cardTagList">
+  <datalist id="cardTagList"></datalist>
+
+  <label for="cardAssignee" id="cardAssigneeLabel"></label>
+  <input type="text" id="cardAssignee" maxlength="80" autocomplete="off" list="assigneeList">
+  <datalist id="assigneeList"></datalist>
+
+  <label for="cardPriority" id="cardPriorityLabel"></label>
+  <select id="cardPriority"></select>
+
+  <!-- «È un traguardo» da solo non dice cosa succede a spuntarlo, e una casella che non dice cosa
+       fa non la spunta nessuno. La riga sotto lo dice: le tre cose che cambiano, e nessun'altra. -->
   <label class="check-line">
     <input type="checkbox" id="cardMilestone">
     <span id="cardMilestoneLabel"></span>
   </label>
+  <p class="note check-note" id="cardMilestoneHint"></p>
 
   <!-- A sub-task's card says whose it is, and takes you back there. -->
   <p class="note card-parent" id="cardParent" hidden>
@@ -806,14 +823,22 @@
     <button type="button" id="cardParentOpen" class="ghost small" data-t="cardParentOpen"></button>
   </p>
 
-  <!-- The sub-tasks: real tasks with dates and owners, listed inside the parent and drawn under
-       its card on the board. The checklist below is for the small things; a checklist item that
-       grows has «diventa attività». -->
+  <!-- Le due liste, vicine e con scritta la differenza. Prima una era qui e l'altra dietro «Mostra
+       altro», e due cose che si somigliano tanto, separate così, si sceglievano a caso. -->
   <span class="field-label" id="cardSubtasksLabel" data-t="cardSubtasks"></span>
+  <p class="note" id="cardListsHint" data-t="cardListsHint"></p>
   <ul class="list" id="cardSubtasks"></ul>
   <form class="row" id="cardSubtaskForm">
-    <input type="text" id="cardSubtaskField" maxlength="160" autocomplete="off" data-t-label="subtaskPlaceholder">
+    <input type="text" id="cardSubtaskField" maxlength="160" autocomplete="off"
+           data-t-label="subtaskPlaceholder" data-t-placeholder="subtaskPlaceholder">
     <button type="submit" id="cardSubtaskAdd" data-t="subtaskAdd"></button>
+  </form>
+
+  <span class="field-label" id="cardChecklistLabel"></span>
+  <ul class="list" id="cardChecklist"></ul>
+  <form class="row" id="cardChecklistForm">
+    <input type="text" id="cardChecklistField" maxlength="160" autocomplete="off">
+    <button type="submit" id="cardChecklistAdd"></button>
   </form>
 
   <!-- Into a calendar, as a copy: a file every calendar opens, and a link that opens Google
@@ -826,26 +851,12 @@
 
   <button type="button" id="cardMore" class="ghost small"></button>
 
+  <!-- Quello che resta dietro il pulsante sono le due cose che su dieci attività ne riguardano una:
+       la ripetizione e il legame con un'altra. Sei campi nascosti erano un cassetto; due sono una
+       riserva. -->
   <div id="cardExtra" hidden>
-    <label for="cardAssignee" id="cardAssigneeLabel"></label>
-    <input type="text" id="cardAssignee" maxlength="80" autocomplete="off" list="assigneeList">
-    <datalist id="assigneeList"></datalist>
-
-    <label for="cardPriority" id="cardPriorityLabel"></label>
-    <select id="cardPriority"></select>
-
     <label for="cardRepeat" id="cardRepeatLabel"></label>
     <select id="cardRepeat"></select>
-
-    <label for="cardTags" id="cardTagsLabel"></label>
-    <input type="text" id="cardTags" maxlength="200" autocomplete="off">
-
-    <span class="field-label" id="cardChecklistLabel"></span>
-    <ul class="list" id="cardChecklist"></ul>
-    <form class="row" id="cardChecklistForm">
-      <input type="text" id="cardChecklistField" maxlength="160" autocomplete="off">
-      <button type="submit" id="cardChecklistAdd"></button>
-    </form>
 
     <label for="cardBlocked" id="cardBlockedLabel"></label>
     <select id="cardBlocked"></select>

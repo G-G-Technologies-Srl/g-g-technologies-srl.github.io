@@ -375,6 +375,14 @@ const IT = {
   fieldChecklist: "Checklist",
   fieldBlocked: "Aspetta che finisca",
   fieldMilestone: "È un traguardo",
+  // Le tre cose che cambiano davvero, e nessun'altra: sulla linea del tempo diventa un rombo su un
+  // giorno solo invece di una barra da trascinare, sulla bacheca e sul calendario porta un
+  // cartellino, e spuntarlo fa partire i coriandoli. Verificate nel codice prima di scriverle.
+  fieldMilestoneHint: "Una data che conta. Sulla linea del tempo diventa un rombo su un giorno "
+    + "solo invece di una barra, sulla bacheca e sul calendario porta un cartellino «Traguardo», "
+    + "e quando la spunti l'app fa festa.",
+  cardListsHint: "Una sottoattività è una carta vera, con la sua data e il suo responsabile, e "
+    + "compare sulla bacheca. Una voce di checklist resta qui dentro.",
   checklistAdd: "Aggiungi una voce",
   checklistPlaceholder: "Cosa manca?",
   showMore: "Mostra altro",
@@ -1294,6 +1302,11 @@ const EN = {
   fieldChecklist: "Checklist",
   fieldBlocked: "Waits for",
   fieldMilestone: "It is a milestone",
+  fieldMilestoneHint: "A date that counts. On the timeline it becomes a diamond on a single day "
+    + "instead of a bar, on the board and the calendar it carries a “Milestone” badge, and when "
+    + "you tick it the app celebrates.",
+  cardListsHint: "A sub-task is a real card, with its own date and owner, and it shows on the "
+    + "board. A checklist item stays in here.",
   checklistAdd: "Add an item",
   checklistPlaceholder: "What is left?",
   showMore: "Show more",

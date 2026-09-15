@@ -1718,8 +1718,13 @@ function _applyLanguage() {
   // but they are gathered here beside the fields they name, where a missing one is visible.
   for (const [id, key] of [["cardTitleLabel", "fieldTitle"], ["cardNotesLabel", "fieldNotes"],
     ["cardStartLabel", "fieldStart"], ["cardEndLabel", "fieldEnd"],
-    ["cardMilestoneLabel", "fieldMilestone"], ["cardAssigneeLabel", "fieldAssignee"],
+    ["cardMilestoneLabel", "fieldMilestone"], ["cardMilestoneHint", "fieldMilestoneHint"],
+    ["cardAssigneeLabel", "fieldAssignee"],
     ["cardPriorityLabel", "fieldPriority"], ["cardTagsLabel", "fieldTags"],
+    // «Si ripete» aveva la sua etichetta in pagina e nessuno che ci scrivesse dentro: il campo
+    // stava sotto una riga vuota. Era invisibile perché stava dietro «Mostra altro», dove una
+    // riga vuota sembra spazio.
+    ["cardRepeatLabel", "fieldRepeat"],
     ["cardChecklistLabel", "fieldChecklist"], ["cardBlockedLabel", "fieldBlocked"]]) {
     el(id).textContent = t(key);
   }
