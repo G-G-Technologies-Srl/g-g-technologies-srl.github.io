@@ -21,7 +21,7 @@
 
 import { from, sub, toString } from "./decimal.js";
 import { totals, rate, MONEY } from "./totals.js";
-import { kind } from "./kinds.js";
+import { kind, numero as shownNumber } from "./kinds.js";
 import * as xml from "./xml.js";
 import { fiscalCode } from "./parse.js";
 
@@ -258,7 +258,12 @@ function _datiGenerali(doc, computed) {
       ["TipoDocumento", doc.tipo || "TD01"],
       ["Divisa", doc.divisa || "EUR"],
       ["Data", doc.data],
-      ["Numero", doc.numero],
+      // **Il numero per esteso, sigla compresa.** Nel file andava il solo progressivo, e finché le
+      // fatture erano l'unico documento che esce era la stessa cosa. Con la serie «NC» non lo è
+      // più: la nota di credito e la fattura che storna uscivano tutte e due come «2026/0001»,
+      // dallo stesso cedente e nello stesso anno. Il campo ammette venti caratteri alfanumerici,
+      // e quello che ci va è il numero che sta anche sulla carta.
+      ["Numero", shownNumber(doc)],
       ritenuta,
       bollo,
       ["ImportoTotaleDocumento", _amount(computed.totale)],

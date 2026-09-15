@@ -477,4 +477,23 @@ test("una fattura differita porta i DDT da cui nasce", () => {
   assert.ok(text.indexOf("<DatiDDT>") < text.indexOf("<DatiBeniServizi>"));
 });
 
+test("la nota di credito porta nel file il numero che sta sulla carta", () => {
+  // La sigla fa parte del numero. Senza, la nota di credito e la fattura che storna escono tutte e
+  // due come «2026/000123» — stesso cedente, stesso anno, stesso numero — e chi le riceve non ha
+  // modo di dire quale delle due sta guardando se non aprendo il tipo.
+  const nota = {
+    ...DOC, tipo: "TD04", serie: "NC",
+    fattureCollegate: [{ numero: "2026/000123", data: "2026-09-03" }],
+  };
+  const testo = build(nota, { company: COMPANY, party: PARTY }).text;
+  const generali = xml.find(xml.parse(testo).children,
+    "FatturaElettronicaBody", "DatiGenerali", "DatiGeneraliDocumento");
+  const valore = (campo) => (generali.find(([name]) => name === campo) || [])[1];
+  assert.equal(valore("TipoDocumento"), "TD04");
+  assert.equal(valore("Numero"), "NC 2026/000123");
+  assert.notEqual(valore("Numero"), DOC.numero, "e non è il numero della fattura");
+  // Il documento stornato resta nominato con il suo, di numero.
+  assert.ok(testo.includes("<DatiFattureCollegate>"), "il riferimento alla fattura c'è");
+});
+
 console.log(`fatturapa: ${passed} prove passate`);

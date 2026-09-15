@@ -97,6 +97,25 @@ const IT = {
     + "copia che esiste.",
   homeBackupGo: "Esporta adesso",
 
+  // La sicurezza dell'archivio, detta dove si guarda ogni giorno. Le decide `safety.js`, e i tre
+  // stati «collegata ma non scrive» si dicono sempre: è lì che una persona si crede coperta.
+  safetyNoFolder: "Le tue fatture stanno solo in questo browser. Collega una cartella del computer: "
+    + "l'app ci tiene una copia aggiornata da sola, e se un giorno il browser si svuota la ritrovi lì.",
+  safetyNoFolderGo: "Collega una cartella",
+  safetyHeld: "La cartella «{folder}» è collegata ma non riceve copie: teneva già un archivio, e "
+    + "aspetta che tu dica quale versione vale.",
+  safetyPrompt: "La cartella «{folder}» aspetta il permesso del browser: finché non glielo dai, "
+    + "nessuna copia ci arriva.",
+  safetyError: "L'ultima copia nella cartella «{folder}» non è riuscita ({error}). Da allora il "
+    + "tuo archivio sta solo qui.",
+  safetyNever: "La cartella «{folder}» è collegata, e non ha ancora ricevuto nessuna copia.",
+  safetyGo: "Apri le impostazioni",
+  safetyManualNever: "Questo browser non sa tenere una copia da solo, e tu non hai mai esportato "
+    + "un archivio: quello che c'è qui dentro esiste in una copia sola.",
+  safetyManualOld: "Questo browser non sa tenere una copia da solo, e dall'ultimo archivio che hai "
+    + "esportato — {giorni} giorni fa — hai lavorato ancora. Esportane uno adesso: ci vuole un momento.",
+  safetyManualGo: "Esporta un archivio",
+
   // ---- scadenzario
   navDue: "Scadenzario",
   // I promemoria dello scadenzario. Le stesse parole di Plan Scope dove la cosa è la stessa: le due
@@ -553,6 +572,10 @@ const IT = {
     + "Scegli se riportare quello che c'è o scriverci quello che hai qui.",
   backupFoundAsk: "Questa cartella tiene già {n} copie, la più recente del {when}. "
     + "Riporto qui la più recente? Quello che c'è adesso nell'archivio viene sostituito.",
+  // La più recente è spesso l'archivio corrente, che non è di un giorno: «la più recente del Copia
+  // corrente» è la frase che usciva, e si è vista solo collegando una cartella vera.
+  backupFoundAskLatest: "Questa cartella tiene già {n} copie. Riporto qui la più recente? "
+    + "Quello che c'è adesso nell'archivio viene sostituito.",
   backupFoundRestore: "Riporta la copia",
   backupFoundMineAsk: "Allora scrivo nella cartella l'archivio che hai qui adesso. La copia "
     + "corrente e quella di oggi vengono sostituite; le copie degli altri giorni restano.",
@@ -1181,6 +1204,24 @@ const EN = {
     + "that is the only copy there is.",
   homeBackupGo: "Export now",
 
+  safetyNoFolder: "Your invoices live in this browser alone. Link a folder on your computer: the "
+    + "app keeps an up-to-date copy there by itself, and if this browser is ever emptied you still "
+    + "have it.",
+  safetyNoFolderGo: "Link a folder",
+  safetyHeld: "Folder «{folder}» is linked but receives no copies: it already held an archive, and "
+    + "it is waiting for you to say which version counts.",
+  safetyPrompt: "Folder «{folder}» is waiting for the browser's permission: until you give it, no "
+    + "copy reaches it.",
+  safetyError: "The last copy in folder «{folder}» did not make it ({error}). Since then your "
+    + "archive has been here alone.",
+  safetyNever: "Folder «{folder}» is linked, and has not received a copy yet.",
+  safetyGo: "Open settings",
+  safetyManualNever: "This browser cannot keep a copy by itself, and you have never exported an "
+    + "archive: what is in here exists in one copy only.",
+  safetyManualOld: "This browser cannot keep a copy by itself, and you have worked on since the "
+    + "last archive you exported — {giorni} days ago. Export one now: it takes a moment.",
+  safetyManualGo: "Export an archive",
+
   navDue: "Payments",
   remindTitle: "Reminders",
   remindLead: "When a deadline comes close the app reminds you in three ways — and which one works "
@@ -1612,6 +1653,8 @@ const EN = {
     + "Choose whether to bring back what is there or write what you have here.",
   backupFoundAsk: "This folder already holds {n} copies, the most recent from {when}. "
     + "Shall I bring the most recent one back? What is in the archive now is replaced.",
+  backupFoundAskLatest: "This folder already holds {n} copies. Shall I bring the most recent one "
+    + "back? What is in the archive now is replaced.",
   backupFoundRestore: "Bring the copy back",
   backupFoundMineAsk: "Then I write the archive you have here into the folder. The current copy "
     + "and today's are replaced; the copies from other days stay.",

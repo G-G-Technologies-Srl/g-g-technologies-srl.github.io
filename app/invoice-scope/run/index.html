@@ -124,9 +124,17 @@
       <a class="button ghost" href="#/scadenzario" data-t="remindSee"></a>
     </div>
 
+    <!-- **Dove sta la tua unica copia.** Il pannello diceva una cosa sola — «non hai mai esportato
+         un archivio» — e si spegneva per sempre al primo export, anche se la cartella non c'era e
+         anche se l'archivio era di un anno prima. Adesso il testo lo decide `safety.js`, che guarda
+         lo stato vero della cartella: collegata e scrivente si tace, e i tre stati in cui sembra
+         collegata e non scrive — trattenuta, permesso scaduto, ultima scrittura fallita — si dicono
+         sempre, perché sono quelli in cui una persona si crede coperta. Il pulsante fa la cosa che
+         serve lì: aprire le impostazioni, o esportare subito. -->
     <div class="panel warn" id="backupNote" hidden>
-      <p data-t="homeBackupNever"></p>
-      <a class="button ghost" href="#/impostazioni" data-t="homeBackupGo"></a>
+      <p id="backupNoteText"></p>
+      <a class="button ghost" href="#/impostazioni" id="backupNoteGo"></a>
+      <button type="button" class="button ghost" id="backupNoteExport" hidden></button>
     </div>
 
     <!-- I quattro numeri: quanto ho fatturato, quanto mi devono, quanto è in ritardo, quanto ho

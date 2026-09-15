@@ -46,6 +46,7 @@ import { money, date as shownDate } from "./format.js";
 import { wire as wireImport, refresh as refreshImport } from "./importing.js";
 import { LOGO as BRAND_LOGO } from "./brand.js";
 import * as backup from "./backup.js";
+import { advice } from "./safety.js";
 import * as alarms from "./alarms.js";
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -331,15 +332,7 @@ async function _refresh() {
   el("homeEmpty").hidden = docs.length > 0;
   el("docsEmpty").hidden = docs.length > 0;
   el("docsTable").hidden = docs.length === 0;
-  // L'invito a esportare non vale nel dimostrativo: lì non c'è niente da perdere, e con la sua
-  // cornice accesa sarebbe la prima cosa che si legge — e la prima cosa dello screenshot della
-  // scheda — al posto dei numeri che l'app esiste per mostrare.
-  // From the third document, not the first: a person with one invoice is still finding out what
-  // the app is, and a framed warning about the only copy is a heavy first thing to read.
-  el("backupNote").hidden = isDemo()
-    || docs.length < 3
-    || backupLinked
-    || Boolean(localStorage.getItem(BACKUP_KEY));
+  await _drawSafety(docs);
 
   // La Situazione la disegna `home.js`: i conti stanno lì, provati in Node, e qui resta solo il
   // giro che li chiama.
@@ -821,6 +814,41 @@ async function _saveCompany(event) {
 }
 
 /**
+ * Dove sta l'unica copia, detto nella Situazione.
+ *
+ * La regola la decide `safety.js`, che non conosce il DOM e si prova sotto Node; qui resta scegliere
+ * il pulsante. L'invito non vale nel dimostrativo: lì non c'è niente da perdere, e con la sua
+ * cornice accesa sarebbe la prima cosa che si legge — e la prima cosa dello screenshot della scheda
+ * — al posto dei numeri che l'app esiste per mostrare.
+ */
+async function _drawSafety(docs) {
+  const pannello = el("backupNote");
+  if (isDemo()) {
+    pannello.hidden = true;
+    return;
+  }
+  // L'ultimo movimento dei documenti: è quello che l'ultimo archivio esportato deve coprire. Senza,
+  // «ho esportato una volta» varrebbe per sempre, che è esattamente il difetto da cui viene questo.
+  const movimenti = docs.map((doc) => doc.updated).filter(Boolean).sort();
+  const detto = advice({
+    stato: await backup.status(),
+    ultimoArchivio: localStorage.getItem(BACKUP_KEY),
+    ultimoMovimento: movimenti.length ? movimenti[movimenti.length - 1] : null,
+    documenti: docs.length,
+  });
+  pannello.hidden = !detto;
+  if (!detto) return;
+
+  el("backupNoteText").textContent = tf(detto.key, detto.values);
+  const vai = el("backupNoteGo");
+  const esporta = el("backupNoteExport");
+  vai.hidden = detto.action !== "settings";
+  esporta.hidden = detto.action !== "export";
+  vai.textContent = detto.key === "safetyNoFolder" ? t("safetyNoFolderGo") : t("safetyGo");
+  esporta.textContent = t("safetyManualGo");
+}
+
+/**
  * The backup folder's line on the settings screen, and which of its buttons apply.
  *
  * Four states, all said in words: the browser cannot hand out a folder (Safari, Firefox, every
@@ -894,9 +922,13 @@ async function _drawCopies(stato) {
  */
 async function _chooseForFolder(found) {
   const newest = found && found.length ? found[0] : null;
-  const quando = newest && newest.day ? shownDate(newest.day) : t("backupCopyLatest");
-  if (await ask(tf("backupFoundAsk", { n: num(found.length, 0), when: quando }),
-                { okLabel: t("backupFoundRestore") })) {
+  // La copia più recente è quasi sempre l'archivio corrente, che non porta un giorno: la domanda
+  // con la data dentro diceva «la più recente del Copia corrente», e una domanda sgrammaticata in
+  // un momento come questo fa esitare proprio chi deve rispondere.
+  const domanda = newest && newest.day
+    ? tf("backupFoundAsk", { n: num(found.length, 0), when: shownDate(newest.day) })
+    : tf("backupFoundAskLatest", { n: num(found.length, 0) });
+  if (await ask(domanda, { okLabel: t("backupFoundRestore") })) {
     const esito = await backup.restore(newest ? newest.name : undefined);
     if (!esito || !esito.ok) {
       const detto = ["backupNoFolder", "backupNoPermission", "backupCopyGone"].includes(esito && esito.reason);
@@ -1120,6 +1152,9 @@ async function main() {
     await backup.unlink();
     await _drawBackup();
   });
+  // L'archivio si esporta anche dal pannello della Situazione: dove la cartella non esiste è
+  // l'unica copia che si può fare, e farla partire da lì toglie il viaggio fino alle impostazioni.
+  el("backupNoteExport").addEventListener("click", _export);
   el("importAll").addEventListener("click", () => el("importFile").click());
   el("importFile").addEventListener("change", _import);
   for (const [id, group] of [["resetDocs", "docs"], ["resetCosts", "costs"], ["resetParties", "parties"], ["resetProjects", "projects"], ["resetAll", "all"]]) {
