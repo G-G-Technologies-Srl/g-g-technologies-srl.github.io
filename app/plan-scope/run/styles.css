@@ -610,10 +610,13 @@ select:hover, select:focus { border-color: var(--border-strong); }
 /* Sopra le schede, la riga del filtro non è la testata di una tabella: niente riga di chiusura. */
 #projectFilters { padding: 0 0 12px; border-bottom: 0; }
 
+.project-card-title { display: flex; align-items: center; gap: 8px; max-width: 100%; min-width: 0; }
+
 .project-card-name {
   font-family: var(--font-display);
   font-size: 17px;
   line-height: 1.25;
+  min-width: 0;
 }
 
 .project-card-when, .project-card-next { font-size: 12px; color: var(--faint); }

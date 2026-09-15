@@ -112,10 +112,14 @@ function _projectCard(project, today) {
   box.append(card);
 
   // Il pallino del colore che il progetto si è dato negli attributi, prima del nome: lo stesso
-  // segno che hanno le pagine, per la stessa ragione — ritrovare senza rileggere.
+  // segno che hanno le pagine, per la stessa ragione — ritrovare senza rileggere. Sulla stessa
+  // riga del nome, dentro una riga sua: la scheda è una colonna, e un pallino appeso direttamente
+  // a lei finiva da solo sopra il nome, come un titolo di una lettera.
   const seen = glanceOf(project.props);
-  if (seen.color) card.append(colorDot(seen.color));
-  card.append(node("span", "project-card-name", project.name || t("projectUntitled")));
+  const title = node("span", "project-card-title");
+  if (seen.color) title.append(colorDot(seen.color));
+  title.append(node("span", "project-card-name", project.name || t("projectUntitled")));
+  card.append(title);
   if (project.demo) card.append(node("span", "badge example", t("demoBadge")));
 
   // Il nome della data davanti al giorno: senza, «fra 12 giorni» lascia indovinare cosa succede
