@@ -244,4 +244,115 @@ await prova("detta la scelta, la cartella riprende a ricevere copie", async () =
   assert.equal(scritto.data.docs.length, 2);
 });
 
+// -----------------------------------------------------------------------------------------------------------------
+//  l e   i m m a g i n i   d e l l e   p a g i n e
+// -----------------------------------------------------------------------------------------------------------------
+
+/** Un'immagine come la tiene il deposito: il blob, e i campi che il pacchetto e la cartella usano. */
+function immagine(id, testo = "una foto") {
+  const bytes = new TextEncoder().encode(`${testo}-${id}`);
+  return {
+    id, projectId: "prog-1", name: `${id}.png`, type: "image/png", size: bytes.length,
+    blob: new Blob([bytes], { type: "image/png" }),
+  };
+}
+
+await prova("le immagini delle pagine finiscono nella cartella, accanto al testo", async () => {
+  // **Stavano fuori dall'archivio**, e chi si affidava alla copia automatica aveva il testo dei
+  // progetti e non le fotografie. In JSON diventerebbero base64: accanto, una volta ciascuna.
+  const db = await openDatabase();
+  await archivio(db);
+  await put(db, "projects", { id: "prog-1", name: "Capannone", updated: "2026-09-10T08:00:00.000Z" });
+  await put(db, "assets", immagine("a1"));
+  await put(db, "assets", immagine("a2"));
+
+  const dir = fakeFolder();
+  await collega(db, dir);
+
+  const scritto = JSON.parse(dir.files.get("invoice-scope.json"));
+  assert.equal(scritto.assets.length, 2, "l'archivio le nomina");
+  assert.ok(scritto.assets.every((a) => a.path.startsWith("assets/")), JSON.stringify(scritto.assets));
+  // I byte non sono dentro il testo: stanno nella cartella `assets/`.
+  assert.ok(!dir.files.get("invoice-scope.json").includes("base64"));
+  const sotto = dir.subs.get("assets");
+  assert.ok(sotto, "la cartella delle immagini c'è");
+  assert.equal([...sotto.files.keys()].length, 2);
+});
+
+await prova("perso il browser, tornano anche le immagini", async () => {
+  const primo = await openDatabase();
+  await archivio(primo);
+  await put(primo, "projects", { id: "prog-1", name: "Capannone", updated: "2026-09-10T08:00:00.000Z" });
+  await put(primo, "assets", immagine("a1"));
+  const dir = fakeFolder();
+  await collega(primo, dir);
+
+  resetStore();
+  const nuovo = await openDatabase();
+  await collega(nuovo, dir);
+  const messo = await backup.restore();
+  assert.equal(messo.ok, true, messo.reason || "");
+  assert.equal(messo.immagini, 1, "e lo dice");
+
+  const tornate = await list(nuovo, "assets");
+  assert.equal(tornate.length, 1);
+  assert.equal(tornate[0].id, "a1");
+  assert.equal(tornate[0].projectId, "prog-1", "e sa a quale progetto apparteneva");
+  assert.equal(await tornate[0].blob.text(), "una foto-a1", "con i byte giusti dentro");
+});
+
+await prova("un'immagine che il deposito ha già non si riscrive né si rilegge", async () => {
+  // L'id è il contenuto: rimetterla sarebbe lavoro per produrre quello che c'è.
+  const db = await openDatabase();
+  await archivio(db);
+  await put(db, "assets", immagine("a1"));
+  const dir = fakeFolder();
+  await collega(db, dir);
+  const messo = await backup.restore();
+  assert.equal(messo.ok, true);
+  assert.equal(messo.immagini, 0, "c'era già");
+  assert.equal((await list(db, "assets")).length, 1);
+});
+
+await prova("un archivio scritto prima delle immagini si ripristina lo stesso", async () => {
+  const db = await openDatabase();
+  await archivio(db);
+  const dir = fakeFolder();
+  await collega(db, dir);
+  // Una copia di quando `assets` non c'era: il ripristino non deve inciampare sul nodo mancante.
+  const vecchia = JSON.parse(dir.files.get("invoice-scope.json"));
+  delete vecchia.assets;
+  dir.files.set("invoice-scope.json", JSON.stringify(vecchia));
+
+  const messo = await backup.restore();
+  assert.equal(messo.ok, true, messo.reason || "");
+  assert.equal(messo.immagini, 0);
+});
+
+await prova("una foto incollata fa riscrivere la copia, anche se il testo non si muove", async () => {
+  // **Il difetto silenzioso.** L'impronta decide se riscrivere; presa sul solo testo, un'immagine
+  // aggiunta a una pagina non la muove — i record sono gli stessi — e la fotografia non arriverebbe
+  // mai nella cartella. Non lo direbbe nessun errore: si scopre il giorno in cui serve il file.
+  const db = await openDatabase();
+  await archivio(db);
+  await put(db, "projects", { id: "prog-1", name: "Capannone", updated: "2026-09-10T08:00:00.000Z" });
+  await put(db, "assets", immagine("a1"));
+  const dir = fakeFolder();
+  await collega(db, dir);
+  assert.equal([...dir.subs.get("assets").files.keys()].length, 1);
+
+  // Una seconda foto, e nient'altro: nessun record cambia.
+  const prima = dir.files.get("invoice-scope.json");
+  await put(db, "assets", immagine("a2"));
+
+  // Il risveglio dell'app programma una scrittura immediata: è il percorso vero, non una forzatura.
+  await backup.setup(db);
+  await new Promise((ok) => { setTimeout(ok, 50); });
+
+  assert.deepEqual([...dir.subs.get("assets").files.keys()].sort(), ["a1.png", "a2.png"]);
+  const dopo = dir.files.get("invoice-scope.json");
+  assert.notEqual(dopo, prima, "e il testo che le nomina è stato riscritto");
+  assert.equal(JSON.parse(dopo).assets.length, 2);
+});
+
 console.log(`restore: ${passed} prove passate`);

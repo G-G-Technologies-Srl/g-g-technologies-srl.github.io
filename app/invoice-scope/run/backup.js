@@ -21,14 +21,17 @@
 // leaves out: a handle serialised to JSON is `{}`, and restoring `{}` into another machine's
 // `meta` would leave it holding a folder that does not exist.
 
-import { get, put, count as countIn } from "gg/store.js";
+import { get, put, list, count as countIn } from "gg/store.js";
 import { collect, restore as putBack } from "gg/io.js";
 import { hash, linkFolder, backupWriter, copies as listCopies } from "gg/folder.js";
+import { reference } from "gg/plan-pack.js";
 import { NAME, VERSION, EXPORTED } from "./db.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
 // -----------------------------------------------------------------------------------------------------------------
+
+const ASSETS_DIR = "assets";
 
 let db = null;
 let writer = null;
@@ -40,10 +43,117 @@ const load = async (key) => {
 };
 const save = (key, value) => put(db, "meta", { key, value });
 
-/** The archive as text, and the fingerprint of its records — `exported` is left out on purpose. */
+/** Come si chiama nella cartella ogni immagine, e quel che serve per rimetterla dov'era. */
+function _manifest(assets) {
+  return assets.map((asset) => ({
+    id: asset.id,
+    projectId: asset.projectId || null,
+    name: asset.name,
+    type: asset.type,
+    size: asset.size,
+    path: reference(asset),
+  }));
+}
+
+/** Nomi e dimensioni già in `assets/`: quello che la cartella ha, per non riscriverlo. */
+async function _onDisk() {
+  const sizes = new Map();
+  if (!folder || !folder.handle) return sizes;
+  let dir = null;
+  try {
+    dir = await folder.handle.getDirectoryHandle(ASSETS_DIR);
+  } catch (ignored) {
+    return sizes;                       // lì non è stato scritto ancora niente
+  }
+  for await (const [name, entry] of dir.entries()) {
+    if (entry.kind !== "file") continue;
+    sizes.set(name, (await entry.getFile()).size);
+  }
+  return sizes;
+}
+
+/**
+ * L'archivio come testo, le immagini che alla cartella mancano, e l'impronta.
+ *
+ * **Le figure delle pagine di un progetto stavano fuori dall'archivio**, e viaggiavano solo nel
+ * pacchetto zip di quel progetto: chi si affidava alla copia automatica aveva il testo e non le
+ * fotografie del cantiere. In JSON diventerebbero base64 — un archivio di qualche decina di
+ * kilobyte arriverebbe a megabyte, e trenta copie datate a un gigabyte — quindi il testo va in
+ * `invoice-scope.json` e le immagini accanto, in `assets/`, una volta ciascuna: le trenta copie ne
+ * condividono un insieme solo. È la soluzione che Plan Scope ha già, e la libreria la sa fare.
+ *
+ * L'impronta copre i record **e** l'elenco delle immagini: una foto incollata in una pagina non
+ * muove una parola, e con l'impronta sul solo testo non verrebbe scritta — la perdita silenziosa,
+ * quella di cui ci si accorge il giorno del bisogno.
+ *
+ * Un'immagine già nella cartella, della dimensione giusta, non si rilegge nemmeno: il nome porta il
+ * contenuto, quindi riscriverla sarebbe lavoro per produrre un file identico a quello che c'è.
+ */
 async function _snapshot() {
   const payload = await collect(db, { app: NAME, schema: VERSION, stores: EXPORTED });
-  return { text: JSON.stringify(payload, null, 2), fingerprint: hash(JSON.stringify(payload.data)) };
+  const assets = await list(db, "assets");
+  const manifest = _manifest(assets);
+  payload.assets = manifest;
+
+  const sizes = await _onDisk();
+  const files = [];
+  for (const asset of assets) {
+    if (!asset.blob) continue;
+    const path = reference(asset);
+    if (sizes.get(path.slice(`${ASSETS_DIR}/`.length)) === asset.size) continue;
+    files.push({ path, bytes: new Uint8Array(await asset.blob.arrayBuffer()) });
+  }
+  return {
+    text: JSON.stringify(payload, null, 2),
+    fingerprint: hash(`${JSON.stringify(payload.data)}|${JSON.stringify(manifest)}`),
+    files,
+  };
+}
+
+/** Quali immagini nomina una copia dell'archivio. Quello che non si legge non ne nomina nessuna. */
+function _referenced(text) {
+  try {
+    return (JSON.parse(text).assets || []).map((asset) => asset.path).filter(Boolean);
+  } catch (ignored) {
+    return [];
+  }
+}
+
+/**
+ * Le immagini che un archivio ripristinato nomina, di nuovo nel deposito.
+ *
+ * Solo quelle che il deposito non ha già: un'immagine il cui id è qui è la stessa immagine, perché
+ * l'id è il contenuto. Quelle che la cartella non ha più — spazzate, o mai arrivate — si saltano:
+ * le pagine tornano senza, che è meglio di un ripristino che si ferma a metà.
+ */
+async function _restoreAssets(manifest) {
+  if (!folder || !folder.handle) return 0;
+  let dir = null;
+  try {
+    dir = await folder.handle.getDirectoryHandle(ASSETS_DIR);
+  } catch (ignored) {
+    return 0;                           // un archivio scritto quando non ce n'erano
+  }
+  let back = 0;
+  for (const asset of manifest) {
+    if (await get(db, "assets", asset.id)) continue;
+    let file = null;
+    try {
+      file = await (await dir.getFileHandle(asset.path.slice(`${ASSETS_DIR}/`.length))).getFile();
+    } catch (ignored) {
+      continue;
+    }
+    await put(db, "assets", {
+      id: asset.id,
+      projectId: asset.projectId || null,
+      name: asset.name,
+      type: asset.type,
+      size: asset.size,
+      blob: new Blob([await file.arrayBuffer()], { type: asset.type }),
+    });
+    back += 1;
+  }
+  return back;
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -59,6 +169,8 @@ export async function setup(database, { status = () => {} } = {}) {
     folder,
     snapshot: _snapshot,
     prefix: NAME,
+    referenced: _referenced,
+    folders: [ASSETS_DIR],
     load,
     save,
     onStatus: status,
@@ -133,5 +245,13 @@ export async function restore(name = `${NAME}.json`) {
   } catch (ignored) {
     return { ok: false, reason: "backupCopyGone" };
   }
-  return putBack(db, text, { app: NAME, stores: EXPORTED });
+  const esito = await putBack(db, text, { app: NAME, stores: EXPORTED });
+  if (!esito.ok) return esito;
+  // Le immagini dopo i record, e solo quelle che mancano. Se qui va storto qualcosa i record sono
+  // tornati comunque, che è la parte che conta.
+  let immagini = 0;
+  try {
+    immagini = await _restoreAssets(JSON.parse(text).assets || []);
+  } catch (ignored) { /* i record sono a posto */ }
+  return { ...esito, immagini };
 }

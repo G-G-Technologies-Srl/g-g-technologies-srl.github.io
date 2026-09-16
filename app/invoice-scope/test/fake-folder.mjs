@@ -37,16 +37,37 @@ export function fakeFolder(existing = {}, { permission = "granted" } = {}) {
         kind: "file",
         async getFile() {
           const body = files.get(name);
+          // **Un file è byte, e questa finzione se n'era scordata.** Rispondeva `text()` e basta, e
+          // il ripristino delle immagini — che chiede `arrayBuffer()` — falliva dentro un catch:
+          // la prova diceva «zero immagini» e sembrava un difetto dell'app.
+          const bytes = typeof body === "string" ? new TextEncoder().encode(body) : body;
           return {
-            size: body.length,
+            size: bytes.length,
             lastModified: Date.UTC(2026, 8, 15),
             async text() { return typeof body === "string" ? body : new TextDecoder().decode(body); },
+            async arrayBuffer() { return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength); },
           };
         },
         async createWritable() {
           let buffer = null;
           return {
-            async write(body) { buffer = typeof body === "string" ? `${buffer === null ? "" : buffer}${body}` : body; },
+            // Testo e byte non si sommano: un `Uint8Array` concatenato a una stringa diventa
+            // «4,5,6» e il file esce scritto in cifre.
+            async write(body) {
+              if (typeof body === "string") {
+                buffer = `${typeof buffer === "string" ? buffer : ""}${body}`;
+                return;
+              }
+              const arrivo = body instanceof Uint8Array ? body : new Uint8Array(body);
+              if (buffer instanceof Uint8Array) {
+                const insieme = new Uint8Array(buffer.length + arrivo.length);
+                insieme.set(buffer);
+                insieme.set(arrivo, buffer.length);
+                buffer = insieme;
+                return;
+              }
+              buffer = arrivo;
+            },
             async close() { files.set(name, buffer === null ? "" : buffer); },
           };
         },

@@ -46,6 +46,8 @@ export const GRUPPI = [
   ["recurring", "archiveRecurring"],
   ["company", "archiveCompany"],
   ["counters", "archiveCounters"],
+  // Accanto al testo, non dentro: l'archivio le nomina e la cartella le tiene.
+  ["assets", "archiveAssets"],
 ];
 
 /** Quelli che si mostrano sempre, se dentro o adesso c'è qualcosa: il resto parla solo se differisce. */
@@ -80,6 +82,13 @@ export function inventory(text, { app = "invoice-scope" } = {}) {
     if (!Array.isArray(records)) continue;
     counts[store] = records.length;
     total += records.length;
+  }
+  // Le immagini delle pagine non sono un deposito dell'archivio: stanno accanto al testo, in
+  // `assets/`, e l'archivio ne porta l'elenco. Contarle qui è la sola risposta alla domanda «nella
+  // cartella ci sono anche le fotografie?», che è esattamente quello che si viene a chiedere.
+  if (Array.isArray(payload.assets)) {
+    counts.assets = payload.assets.length;
+    total += payload.assets.length;
   }
   return { ok: true, exported: payload.exported || null, schema: payload.schema || null, counts, total };
 }

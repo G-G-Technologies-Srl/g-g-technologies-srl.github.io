@@ -24,7 +24,7 @@ import { put } from "gg/store.js";
 import * as plan from "gg/plan-model.js";
 
 import { t } from "./i18n.js";
-import { draft, save, issue, setState } from "./model.js";
+import { draft, save, issue, setState, creditNote } from "./model.js";
 import { recordPayment } from "./schedule.js";
 import { saveActivity } from "./crm.js";
 import { saveCost, recordOutlay } from "./costs.js";
@@ -252,6 +252,19 @@ export async function seed(db) {
     righe: [_riga(t("demoItemTelaio"), "4", "250.00", { aliquota: "0", natura: "N3.3" })],
     pagamento: { condizioni: "TP02", modalita: "MP05", iban, rate: [{ scadenza: _giorno(18) }] },
   }, contesto(CLIENTI[2]));
+
+  // **Una nota di credito, perché altrimenti nessuno sa che ci sono.** Un telaio reso sulla fattura
+  // appena vista: il documento stornato resta dov'è — una fattura emessa non si tocca — e quello
+  // che il cliente deve scende da sé, perché lo scadenzario tratta lo storno come un incasso.
+  // Porta la sigla «NC» davanti al numero, che è quello che la distingue da una fattura quando
+  // qualcuno la cita al telefono.
+  const nota = creditNote(parziale);
+  await _emetti(db, {
+    ...nota,
+    data: _giorno(-2),
+    causale: t("demoCreditReason"),
+    righe: [_riga(t("demoItemTelaio"), "1", "250.00")],
+  }, contesto(CLIENTI[1]));
 
   // Un preventivo accettato, pronto da trasformare in fattura: è il comando che il visitatore trova
   // sulla riga dell'elenco, ed è la cosa che la scheda promette per prima.

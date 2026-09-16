@@ -70,12 +70,32 @@ prova("un archivio vecchio, con meno depositi, non racconta mancanze che non ci 
   assert.ok(!esito.righe.some((r) => r.store === "recurring"));
 });
 
-prova("i depositi che l'archivio non porta non compaiono nell'elenco", () => {
-  // `assets` e `meta` stanno fuori dall'export per scelta: nominarli con uno zero accanto direbbe
-  // che manca qualcosa.
-  const nomi = GRUPPI.map(([store]) => store);
-  assert.ok(!nomi.includes("assets"));
-  assert.ok(!nomi.includes("meta"));
+prova("lo stato di questo browser non compare nell'elenco", () => {
+  // `meta` sta fuori dall'export per scelta — è l'handle della cartella, non un dato — e nominarlo
+  // con uno zero accanto direbbe che manca qualcosa.
+  assert.ok(!GRUPPI.map(([store]) => store).includes("meta"));
+});
+
+prova("le immagini delle pagine si contano, anche se stanno accanto al testo", () => {
+  // Non sono un deposito dell'archivio: l'archivio ne porta l'elenco e la cartella tiene i file in
+  // `assets/`. «Nella cartella ci sono anche le fotografie?» è la domanda, e questa è la risposta.
+  const letto = inventory(JSON.stringify({
+    format: 1, app: "invoice-scope", schema: 6, exported: "2026-09-16T09:00:00.000Z",
+    data: { docs: righe(3) },
+    assets: [{ id: "a1", path: "assets/a1.png" }, { id: "a2", path: "assets/a2.jpg" }],
+  }));
+  assert.equal(letto.counts.assets, 2);
+  assert.equal(letto.total, 5, "entrano nel conto come tutto il resto");
+  const esito = compare(letto.counts, { docs: 3, assets: 2 });
+  assert.equal(esito.same, true);
+  // E se la cartella ne ha meno di quante ne tiene il deposito, è una differenza come le altre.
+  assert.equal(compare(letto.counts, { docs: 3, assets: 5 }).same, false);
+});
+
+prova("un archivio scritto prima delle immagini non ne dichiara nessuna", () => {
+  const letto = inventory(copia({ docs: righe(2) }));
+  assert.equal(letto.counts.assets, undefined);
+  assert.equal(compare(letto.counts, { docs: 2 }).same, true);
 });
 
 prova("i documenti aprono l'elenco, il resto segue nell'ordine in cui si pensa", () => {

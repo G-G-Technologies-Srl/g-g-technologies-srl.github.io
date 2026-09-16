@@ -582,6 +582,7 @@ const IT = {
   archiveRecurring: "costi ricorrenti",
   archiveCompany: "schede azienda",
   archiveCounters: "contatori",
+  archiveAssets: "immagini",
   backupCopiesTitle: "Le copie nella cartella",
   backupCopiesNote: "La copia corrente è quella di adesso; le altre sono una al giorno, e "
     + "arrivano fino a trenta giorni indietro. Servono per il giorno in cui quello che c'è adesso "
@@ -961,6 +962,7 @@ const IT = {
   demoQuoteCausaleOpen: "Due telai di ricambio",
   demoTransportReason: "Vendita",
   demoTransportLook: "Pallet",
+  demoCreditReason: "Storno per un telaio reso",
   demoPaymentNote: "Acconto, saldo a fine mese",
   demoActCall: "Chiamata di Chiara: la seconda linea parte a ottobre, quindi il collaudo slitta.\n"
     + "Da risentire la settimana del 20.",
@@ -1693,6 +1695,7 @@ const EN = {
   archiveRecurring: "recurring costs",
   archiveCompany: "company records",
   archiveCounters: "counters",
+  archiveAssets: "images",
   backupCopiesTitle: "The copies in the folder",
   backupCopiesNote: "The current copy is how things are now; the others are one a day, going back "
     + "thirty days. They are there for the day what you have now is wrong: bringing a copy back "
@@ -2073,6 +2076,7 @@ const EN = {
   demoQuoteCausaleOpen: "Two spare frames",
   demoTransportReason: "Sale",
   demoTransportLook: "Pallet",
+  demoCreditReason: "Credit for one frame returned",
   demoPaymentNote: "Part payment, balance at month end",
   demoActCall: "Chiara rang: the second line starts in October, so testing moves back.\n"
     + "Call again in the week of the 20th.",
