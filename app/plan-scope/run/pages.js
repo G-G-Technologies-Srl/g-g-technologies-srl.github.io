@@ -20,7 +20,7 @@ import { el, node, button, fill, shortDate, longDate, tagHue } from "./ui.js";
 //  s t a t e
 // -----------------------------------------------------------------------------------------------------------------
 
-let on = { pageId: () => null, body: () => "", openPage() {}, openPerson() {}, told() {} };
+let on = { pageId: () => null, body: () => "", openPage() {}, openPerson() {}, told() {}, openTask() {} };
 let head = { props: {}, extra: [] };    // the frontmatter of the page on screen; the editor holds the body
 
 // The table's state: one filter at a time — a tag, or a key and a value — and the sort column.
@@ -119,8 +119,30 @@ function _paintKind() {
   fill(box, pieces);
 }
 
+/**
+ * Di chi è questa pagina, quando è il documento di un'attività.
+ *
+ * Il filo si percorre nei due versi o non è un filo: dalla scheda si arriva qui, e da qui si torna
+ * alla scheda — che è dove stanno la scadenza, chi se ne occupa e la colonna in cui si trova.
+ */
+function _paintTask() {
+  const box = el("pageTask");
+  if (!box) return;
+  const pageId = on.pageId();
+  const task = pageId ? model.taskOfPage(pageId) : null;
+  box.hidden = !task;
+  if (!task) return;
+  fill(box, [
+    node("span", "", t("pageTaskOf")),
+    node("span", "", "·"),
+    button("who", task.title || t("taskUntitled"), () => on.openTask(task.id),
+      { label: t("pageTaskOpen") }),
+  ]);
+}
+
 function _paintProps() {
   _paintKind();
+  _paintTask();
   editProps(el("pageProps"), head.props, (props) => {
     const pageId = on.pageId();
     if (!pageId) return;

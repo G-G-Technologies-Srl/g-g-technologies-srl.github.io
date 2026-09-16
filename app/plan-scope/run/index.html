@@ -502,6 +502,9 @@
                fra 2 giorni» finché il momento è davanti, «Incontro del 10 settembre · con Marco»
                dopo. Cambia da solo quando l'orologio la supera. Senza questa riga un appuntamento
                e il suo verbale erano la stessa pagina con la stessa faccia. -->
+          <!-- Di chi è questa pagina, quando è il documento di un'attività: il nome dell'attività,
+               e il clic riapre la sua scheda. Il filo si percorre nei due versi o non è un filo. -->
+          <p class="kicker page-kind page-task" id="pageTask" hidden></p>
           <p class="kicker page-kind" id="pageKind" hidden></p>
           <div class="page-head">
             <input type="text" id="pageTags" class="tags-field" maxlength="200" autocomplete="off" data-t-label="pageTagsLabel">
@@ -796,6 +799,18 @@
 
   <label for="cardNotes" id="cardNotesLabel"></label>
   <textarea id="cardNotes" rows="3"></textarea>
+
+  <!-- Il documento dell'attività, subito sotto le note perché è quello che le note non sono: un
+       campo di testo basta per «chiamare il fornitore», non per una procedura con gli allegati, le
+       immagini e le sottopagine che servono a chi la esegue. Quella è una pagina del progetto, e
+       qui c'è il filo che la lega a questa attività. -->
+  <span class="field-label" id="cardDocLabel" data-t="cardDoc"></span>
+  <div class="row card-doc">
+    <button type="button" id="cardDocOpen" class="accent" hidden></button>
+    <button type="button" id="cardDocMake" class="accent" data-t="cardDocMake"></button>
+    <button type="button" id="cardDocOff" class="ghost small" data-t="cardDocOff" hidden></button>
+  </div>
+  <p class="note" id="cardDocHint" data-t="cardDocHint"></p>
 
   <div class="card-dates">
     <div>

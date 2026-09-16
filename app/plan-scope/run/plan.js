@@ -230,6 +230,15 @@ function _fillCard() {
     return row;
   }));
 
+  // Il documento: il titolo se c'è, e allora si apre e si stacca; l'invito a farne uno se non c'è.
+  // La spiegazione sta sotto finché non c'è, e sparisce quando il documento parla da sé.
+  const doc = model.pageOfTask(task);
+  el("cardDocOpen").hidden = !doc;
+  el("cardDocOpen").textContent = doc ? (doc.title || t("pageUntitled")) : "";
+  el("cardDocOff").hidden = !doc;
+  el("cardDocMake").hidden = Boolean(doc);
+  el("cardDocHint").hidden = Boolean(doc);
+
   // Whose this is, when it is a sub-task; and its own sub-tasks, when it is a parent. Never both:
   // one level, by the model's rule, so a sub-task's card has no list of its own.
   const parent = model.parentOf(task);
@@ -261,6 +270,38 @@ function _fillCard() {
 
   el("cardExtra").hidden = !extraOpen;
   el("cardMore").textContent = extraOpen ? t("showLess") : t("showMore");
+}
+
+/**
+ * Il documento di un'attività: una pagina nuova, o una che c'è già.
+ *
+ * La domanda si fa solo quando c'è qualcosa da scegliere — se nel progetto non c'è nessuna pagina
+ * libera, l'unica risposta possibile è «una nuova» e chiederla sarebbe un passaggio per niente.
+ * Le pagine già agganciate a un'altra attività restano fuori dall'elenco: agganciarle qui le
+ * toglierebbe di là, e una scelta che disfa qualcos'altro va fatta di là, non di qua.
+ */
+async function _addDoc() {
+  _saveCard();
+  const task = model.task(cardId);
+  if (!task) return;
+  const libere = model.pagesOf(projectId).filter((one) => !model.taskOfPage(one.id));
+  let pageId = null;
+  if (libere.length) {
+    const answer = await ask(t("cardDocWhich"), {
+      options: [{ value: "", label: t("cardDocNew") },
+        ...libere.map((one) => ({ value: one.id, label: one.title || t("pageUntitled") }))],
+      ok: t("cardDocOk"),
+    });
+    if (answer === null) return;
+    pageId = answer || null;
+  }
+  // Il titolo dell'attività, che è il titolo giusto: chi apre il documento cerca quello.
+  if (!pageId) pageId = model.createPage(projectId, { title: task.title || t("pageUntitled") }).id;
+  model.setTaskPage(cardId, pageId);
+  el("taskCard").close();
+  on.change();
+  paint();
+  on.openPage(pageId);
 }
 
 function _saveCard() {
@@ -345,6 +386,21 @@ function _taskCard(task, today) {
   if (task.priority === "high") meta.append(node("span", "badge prio-high", t("priorityHigh")));
   else if (task.priority === "low") meta.append(node("span", "badge prio-low", t("priorityLow")));
   if (task.repeat) meta.append(node("span", "who", `↻ ${t(`repeatShort_${task.repeat}`)}`));
+  // Il documento si vede da fuori, e ci si arriva da fuori: la carta dice che questa attività ha
+  // una procedura dietro, e il clic la apre senza passare dalla scheda. Un'attività con un
+  // documento invisibile finché non la si apre è un documento che nessuno legge.
+  const doc = model.pageOfTask(task);
+  if (doc) {
+    // Il titolo del documento solo quando dice qualcosa in più: un documento nato da qui si chiama
+    // come l'attività, e ripetere le stesse parole due centimetri più sotto occupa una carta larga
+    // 268px per non aggiungere niente. Quando il nome è suo, invece, è proprio quello che serve
+    // sapere da fuori.
+    const detto = (doc.title || "").trim() === (task.title || "").trim();
+    meta.append(button("badge doc", `▤ ${detto ? t("cardDocShort") : (doc.title || t("pageUntitled"))}`, (event) => {
+      event.stopPropagation();
+      on.openPage(doc.id);
+    }, { label: t("cardDocOpenOne") }));
+  }
   const who = model.assigneeName(task);
   if (who) meta.append(node("span", "who", who));
   for (const tag of task.tags || []) meta.append(node("span", `tag ${tagHue(tag)}`, tag));
@@ -1031,6 +1087,27 @@ export function connect(handlers) {
 
   // Every field writes on the way out of the dialog rather than on every keystroke: a card is a
   // form, and a form that saves per character fills the undo stack with half-typed names.
+  // Il documento, dalla scheda: aprirlo, aggiungerlo, staccarlo.
+  el("cardDocOpen").addEventListener("click", () => {
+    _saveCard();
+    const doc = model.pageOfTask(model.task(cardId));
+    if (!doc) return;
+    el("taskCard").close();
+    on.openPage(doc.id);
+  });
+  el("cardDocOff").addEventListener("click", () => {
+    _saveCard();
+    const doc = model.pageOfTask(model.task(cardId));
+    const step = model.setTaskPage(cardId, null);
+    _fillCard();
+    on.change();
+    paint();
+    // La pagina resta dov'è: staccare non è buttare. La striscia offre di rimettere il filo, che è
+    // l'unica cosa che questo gesto ha tolto.
+    if (step && doc) on.batched(step, tf("cardDocGone", { name: doc.title || t("pageUntitled") }));
+  });
+  el("cardDocMake").addEventListener("click", () => _addDoc());
+
   el("taskCard").addEventListener("close", () => {
     const id = cardId;
     if (cardId) _saveCard();

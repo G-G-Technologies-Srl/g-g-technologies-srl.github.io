@@ -2266,6 +2266,14 @@ function _wire() {
     pageId: () => pageId,
     body: () => (source ? md.frontmatter(el("pageBody").value).body : editor.markdown()),
     openPage: (id) => _openPage(id),
+    // Dal documento alla sua attività: la stessa scheda che apre la bacheca, perché è lì che
+    // stanno la scadenza, chi se ne occupa e la colonna.
+    openTask: (id) => {
+      const task = model.task(id);
+      if (!task) return;
+      plan.setProject(task.projectId);
+      plan.openCard(id);
+    },
     // Un nome nella testa della pagina porta alla sua scheda; se la scheda non c'è, alla rubrica.
     openPerson: (name) => {
       const person = model.contactByName(name);

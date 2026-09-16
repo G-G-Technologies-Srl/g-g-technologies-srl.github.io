@@ -1551,4 +1551,81 @@ test("una pagina che nomina una persona con «@» parla di lei, come una con «c
   assert.deepEqual(model.pagesAbout(anna.uid).map((x) => x.page.title).sort(), ["Appunti", "Verbale"]);
 });
 
+// -----------------------------------------------------------------------------------------------------------------
+//  i l   d o c u m e n t o   d i   u n ' a t t i v i t à
+// -----------------------------------------------------------------------------------------------------------------
+
+test("un'attività porta al suo documento, e il documento riporta all'attività", () => {
+  const one = model.createProject({ name: "Sito" });
+  const task = model.createTask(one.id, { title: "Montare lo stand" });
+  const page = model.createPage(one.id, { title: "Come si monta" });
+  model.setTaskPage(task.id, page.id);
+  assert.equal(model.pageOfTask(model.task(task.id)).id, page.id);
+  assert.equal(model.taskOfPage(page.id).id, task.id);
+});
+
+test("il filo si stacca, e senza filo le due parti non si conoscono", () => {
+  const one = model.createProject({ name: "Sito" });
+  const task = model.createTask(one.id, { title: "Montare lo stand" });
+  const page = model.createPage(one.id, { title: "Come si monta" });
+  model.setTaskPage(task.id, page.id);
+  const step = model.setTaskPage(task.id, null);
+  assert.equal(model.pageOfTask(model.task(task.id)), null);
+  assert.equal(model.taskOfPage(page.id), null);
+  model.undoStep(step);
+  assert.equal(model.pageOfTask(model.task(task.id)).id, page.id, "e l'undo lo riattacca");
+});
+
+test("un documento sta con una sola attività: la seconda se lo prende, la prima lo perde", () => {
+  const one = model.createProject({ name: "Sito" });
+  const prima = model.createTask(one.id, { title: "Prima" });
+  const poi = model.createTask(one.id, { title: "Poi" });
+  const page = model.createPage(one.id, { title: "La procedura" });
+  model.setTaskPage(prima.id, page.id);
+  const step = model.setTaskPage(poi.id, page.id);
+  assert.equal(model.pageOfTask(model.task(prima.id)), null, "la prima l'ha perso");
+  assert.equal(model.taskOfPage(page.id).id, poi.id);
+  // Un gesto solo, quindi un passo solo: l'undo rimette la pagina dov'era.
+  model.undoStep(step);
+  assert.equal(model.taskOfPage(page.id).id, prima.id);
+});
+
+test("il documento cestinato non si vede più dall'attività, e torna con lui", () => {
+  const one = model.createProject({ name: "Sito" });
+  const task = model.createTask(one.id, { title: "Montare lo stand" });
+  const page = model.createPage(one.id, { title: "Come si monta" });
+  model.setTaskPage(task.id, page.id);
+  model.trashPage(page.id);
+  assert.equal(model.pageOfTask(model.task(task.id)), null);
+  assert.equal(model.taskOfPage(page.id), null);
+  model.restorePage(page.id);
+  assert.equal(model.pageOfTask(model.task(task.id)).id, page.id);
+});
+
+test("una pagina di un altro progetto non diventa il documento di questa attività", () => {
+  const one = model.createProject({ name: "Sito" });
+  const altro = model.createProject({ name: "Fiera" });
+  const task = model.createTask(one.id, { title: "Montare lo stand" });
+  const page = model.createPage(altro.id, { title: "Di un'altra scatola" });
+  assert.equal(model.setTaskPage(task.id, page.id), null);
+  assert.equal(model.pageOfTask(model.task(task.id)), null);
+});
+
+test("il filo sopravvive all'export e all'importazione, che rifà tutti gli id", () => {
+  const one = model.createProject({ name: "Sito" });
+  const task = model.createTask(one.id, { title: "Montare lo stand" });
+  const page = model.createPage(one.id, { title: "Come si monta" });
+  model.setTaskPage(task.id, page.id);
+  const file = {
+    project: model.project(one.id),
+    pages: model.pagesOf(one.id),
+    tasks: model.tasksOf(one.id),
+  };
+  const { projectId } = model.adopt(JSON.parse(JSON.stringify(file)), { name: "Sito (copia)" });
+  const copiata = model.tasksOf(projectId)[0];
+  assert.notEqual(copiata.id, task.id, "gli id sono nuovi");
+  assert.equal(model.pageOfTask(copiata).title, "Come si monta");
+  assert.equal(model.taskOfPage(model.pagesOf(projectId)[0].id).id, copiata.id);
+});
+
 console.log(`model: ${passed} prove passate`);

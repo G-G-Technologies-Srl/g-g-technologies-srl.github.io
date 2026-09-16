@@ -1231,6 +1231,28 @@ input.when-field.late { color: var(--late); }
    regola di base pesa poco, o non è una base. */
 .task-meta .who { color: var(--faint); border: 1px solid var(--border); }
 
+/* Il documento sulla carta: una pastiglia vuota con il bordo, che non ruba l'occhio a una tinta o
+   a una scadenza ma si vede che è un bottone — perché lo è, e apre la pagina. Il titolo si taglia:
+   la carta è larga 268px e un titolo lungo la spaccherebbe in tre righe. */
+.task-meta .badge.doc {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  padding: 1px 8px;
+  color: var(--muted);
+  border-color: var(--border-strong);
+  background: none;
+  cursor: pointer;
+}
+
+.task-meta .badge.doc:hover { color: var(--text); border-color: var(--accent); }
+
+/* Il documento nella scheda: il titolo è il bottone che lo apre, e prende la riga. */
+.card-doc { margin-top: 4px; }
+.card-doc .accent { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 .task-card .later { font-size: 11.5px; justify-self: start; color: var(--late); padding: 2px 6px; }
 
 .column-list.drop-here { outline: 2px dashed var(--accent); outline-offset: 4px; border-radius: 8px; }

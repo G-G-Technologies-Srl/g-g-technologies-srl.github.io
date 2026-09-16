@@ -626,6 +626,59 @@ export function trashPage(id) {
   return _step("page", _restoreTo("page", before));
 }
 
+/**
+ * Il documento di un'attività, e l'attività di un documento.
+ *
+ * Le note di un'attività stanno in un campo di testo: bastano per «chiamare il fornitore», non per
+ * una procedura con le immagini, gli allegati e le sottopagine che servono a chi la esegue. Quella
+ * è una pagina, e l'app le pagine ce le ha già: qui c'è solo il filo che le lega.
+ *
+ * **Il filo è uno solo, e sta sull'attività.** Un documento per attività, un'attività per
+ * documento: due fili — uno per parte — sarebbero due verità da tenere d'accordo, e la seconda
+ * volta che si scollega qualcosa non lo sono più. Il verso opposto si legge cercando, che su
+ * qualche decina di attività costa niente e non può mai essere in disaccordo con sé stesso.
+ *
+ * Per `uid` e non per `id`, come `assigneeUid`: l'`id` cambia da un browser all'altro e un
+ * progetto esportato e reimportato si porterebbe dietro un filo che non lega più niente.
+ */
+export function pageOfTask(task) {
+  const wanted = task && task.pageUid ? String(task.pageUid) : "";
+  if (!wanted) return null;
+  return pagesOf(task.projectId).find((one) => (one.uid || one.id) === wanted) || null;
+}
+
+/** L'attività di cui questa pagina è il documento, o niente. */
+export function taskOfPage(pageId) {
+  const pageRecord = pages.get(pageId);
+  if (!pageRecord || pageRecord.trashedAt) return null;
+  const wanted = pageRecord.uid || pageRecord.id;
+  return tasksOf(pageRecord.projectId).find((one) => one.pageUid === wanted) || null;
+}
+
+/**
+ * Attacca un documento a un'attività, o lo stacca con `null`.
+ *
+ * Se quella pagina era il documento di un'altra attività, quella lo perde: un documento solo per
+ * attività vale anche al contrario, altrimenti due carte sulla bacheca mostrerebbero la stessa
+ * pagina e chi la apre non saprebbe da quale delle due è arrivato. Un passo di undo per tutto,
+ * perché è un gesto solo.
+ */
+export function setTaskPage(taskId, pageId) {
+  const task = tasks.get(taskId);
+  if (!task) return null;
+  if (!pageId) return task.pageUid ? updateTask(taskId, { pageUid: null }) : null;
+  const pageRecord = pages.get(pageId);
+  // Una pagina di un altro progetto non è il documento di questa attività: il progetto è la
+  // scatola, e un filo che la attraversa si spezza al primo export.
+  if (!pageRecord || pageRecord.trashedAt || pageRecord.projectId !== task.projectId) return null;
+  const wanted = pageRecord.uid || pageRecord.id;
+  const taken = taskOfPage(pageId);
+  return batch(() => {
+    if (taken && taken.id !== taskId) updateTask(taken.id, { pageUid: null });
+    updateTask(taskId, { pageUid: wanted });
+  });
+}
+
 export function restorePage(id) {
   const page = pages.get(id);
   if (!page) return null;
@@ -670,6 +723,9 @@ export function createTask(projectId, { title = "", status = null, end = null,
     // viaggia: così un'attività arrivata a qualcun altro mostra sempre chi la fa, e non c'è un
     // secondo posto dove lo stesso nome possa restare indietro.
     assigneeUid: null,
+    // Il documento dell'attività, per `uid` e non per `id`: l'identità che sopravvive all'export,
+    // così il legame regge anche quando il progetto passa a un altro computer. Vedi `pageOfTask`.
+    pageUid: null,
     tags: [],
     checklist: [],
     blockedBy: [],
