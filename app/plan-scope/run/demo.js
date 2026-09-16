@@ -203,7 +203,12 @@ export function build({ t, model, columns }) {
     model.createPage(project.id, {
       title: t(one.title),
       markdown: withFrontmatter(
-        { tipo: t("meetingKind"), data: model.addDays(today, one.when), con: t(one.who) },
+        // Le chiavi nella lingua di chi legge, come i valori: la pagina è un file che una persona
+        // apre anche fuori di qui, e in inglese `tipo` accanto a `time` è metà frase in una lingua
+        // e metà nell'altra. Le stesse chiavi che offre l'editore quando riconosce un incontro.
+        { [t("propKind")]: t("meetingKind"),
+          [t("propDate")]: model.addDays(today, one.when),
+          [t("propWith")]: t(one.who) },
         // Una riga sola fra il corpo e l'ultima casella: due righe chiuderebbero l'elenco che il
         // corpo apre, e la casella finirebbe da sola in fondo alla pagina.
         `${t(one.body)}\n- [ ] ${t(one.todo)}\n`),
@@ -219,21 +224,36 @@ export function build({ t, model, columns }) {
   // pagine che in un elenco si cercano a colpo d'occhio, e non tutte, che sarebbe un arcobaleno e
   // non un segno. Un attributo messo dove non serve toglie valore a quello messo dove serve.
   const HEADS = [
-    { page: "ev_page_brief", props: { colore: "#3f6fb9" }, extra: { state: true } },
-    { page: "ev_page_schedule", props: { colore: "#3fb984" }, tags: ["demoTag2"] },
+    { page: "ev_page_brief", colour: "#3f6fb9", extra: { state: true } },
+    { page: "ev_page_schedule", colour: "#3fb984", tags: ["demoTag2"] },
     { page: "ev_page_suppliers", tags: ["demoTag"] },
-    { page: "ev_page_day", props: { colore: "#c94f2e", data: when }, tags: ["demoTag2"] },
+    { page: "ev_page_day", colour: "#c94f2e", date: when, tags: ["demoTag2"] },
   ];
   for (const one of HEADS) {
     const page = model.pagesOf(project.id).find((item) => item.title === t(one.page));
     if (!page) continue;
-    const props = { ...(one.props || {}) };
+    // Anche qui le chiavi le dà il dizionario, e non la lingua in cui è scritto questo file.
+    const props = {};
+    if (one.colour) props[t("propColour")] = one.colour;
+    if (one.date) props[t("propDate")] = one.date;
     // La chiave e il valore di «stato» stanno in i18n come tutto il resto: in inglese la pagina
     // dice `status: in progress`, che è la stessa cosa detta nella lingua di chi legge.
     if (one.extra && one.extra.state) props[t("demoPropState")] = t("demoPropStateValue");
     if (Object.keys(props).length) model.setMarkdown(page.id, withFrontmatter(props, page.markdown));
     if (one.tags) model.updatePage(page.id, { tags: one.tags.map((key) => t(key)) });
   }
+
+  // -----------------------------------------------------------------------------------------------------------------
+  //  i l   d o c u m e n t o   d i   u n ' a t t i v i t à
+  // -----------------------------------------------------------------------------------------------------------------
+
+  // «Scrivere la scaletta» e la pagina «Scaletta»: il legame è vero, ed è il caso per cui la
+  // funzione esiste — l'attività dice che c'è da farlo, la pagina è la cosa fatta. Senza un
+  // esempio nel dimostrativo, di un documento agganciato a un'attività non si accorge nessuno:
+  // la pastiglia sulla carta si vede solo dove c'è, e dove non c'è non si va a cercarla.
+  const writing = byKey("ev_schedule");
+  const written = model.pagesOf(project.id).find((one) => one.title === t("ev_page_schedule"));
+  if (writing && written) model.setTaskPage(writing.id, written.id);
 
   // -----------------------------------------------------------------------------------------------------------------
   //  u n a   c o l o n n a   i n   p i ù

@@ -46,9 +46,28 @@ model.connect({ save() {}, drop() {} });
 // Every key the templates ask for, gathered as they ask for it. A dictionary read separately would
 // only prove the two languages agree with each other, not that they answer the code.
 const asked = new Set();
+
+// Il dizionario, letto dalla sorgente: le chiavi per la prova in fondo, e i valori delle `prop*`
+// per il finto `t` qui sotto.
+const dictionary = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "run", "i18n.js"), "utf8");
+
+/**
+ * Le parole che nominano una proprietà nella testa di un file **non** sono testo da sostituire.
+ *
+ * `con:`, `data:`, `tipo:` le rilegge il modello — `meetingsOf` e `pagesAbout` le conoscono nelle
+ * due lingue dell'app — e una parola finta al posto loro produrrebbe una testa che nessuno sa più
+ * leggere: il dimostrativo sembrerebbe a posto e i suoi incontri non esisterebbero per nessuna
+ * schermata. Per quelle il finto dizionario risponde con la parola vera; per tutto il resto con la
+ * chiave fra virgolette, che è quello che rende visibile una parola dimenticata.
+ */
+const REAL = new Map();
+for (const one of dictionary.matchAll(/^ {2}(prop[A-Za-z]\w*):\s*"([^"]*)"/gm)) {
+  if (!REAL.has(one[1])) REAL.set(one[1], one[2]);          // la prima è l'italiana, e ne basta una
+}
+
 const t = (key) => {
   asked.add(key);
-  return `«${key}»`;
+  return REAL.has(key) ? REAL.get(key) : `«${key}»`;
 };
 
 const project = (over = {}) => model.createProject({
@@ -241,8 +260,7 @@ test("ogni template si costruisce, e il nome e il sommario vengono chiesti", () 
 // -----------------------------------------------------------------------------------------------------------------
 
 test("ogni chiave chiesta dai template esiste in italiano e in inglese", () => {
-  const here = dirname(fileURLToPath(import.meta.url));
-  const source = readFileSync(join(here, "..", "run", "i18n.js"), "utf8");
+  const source = dictionary;
 
   // The same regular expression `check_apps.py` uses, and the same reason: reading the keys without
   // running the file. The dictionaries are written one key per line for exactly this.
