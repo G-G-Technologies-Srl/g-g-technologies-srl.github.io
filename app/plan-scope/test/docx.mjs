@@ -195,4 +195,71 @@ test("le entità e gli a capo dentro un paragrafo arrivano interi", () => {
   assert.equal(read(docx({ body })).markdown.trim(), "Pinco & Pallino\nseconda riga");
 });
 
+// -----------------------------------------------------------------------------------------------------------------
+//  q u e l l o   c h e   s p a r i v a
+// -----------------------------------------------------------------------------------------------------------------
+
+// Otto modi di perdere del testo senza dirlo, trovati rileggendo il lavoro finito e provandolo
+// contro l'XML invece che contro le proprie intenzioni. Ognuno ha la sua prova, perché sono tutti
+// difetti silenziosi: il documento arriva, sembra intero, e manca la riga che contava.
+
+test("il testo di una casella non si perde: era la riga che conta", () => {
+  // «ATTENZIONE: staccare la corrente» a margine di una procedura sta in una casella di testo, e
+  // il suo testo non è figlio del paragrafo — sta sotto la forma che la disegna. Spariva.
+  const body = `<w:p><w:r><w:pict><v:shape><v:textbox><w:txbxContent>
+    <w:p>${run("ATTENZIONE: staccare la corrente.")}</w:p></w:txbxContent></v:textbox></v:shape></w:pict></w:r></w:p>`;
+  assert.equal(read(docx({ body })).markdown.trim(), "> ATTENZIONE: staccare la corrente.");
+});
+
+test("una tabella dentro una cella porta dentro le sue parole", () => {
+  const cell = (text) => `<w:tc>${para(run(text))}</w:tc>`;
+  const body = `<w:tbl><w:tr><w:tc>${para(run("Fuori"))}
+    <w:tbl><w:tr>${cell("Dentro A")}${cell("Dentro B")}</w:tr></w:tbl></w:tc>${cell("Altra")}</w:tr></w:tbl>`;
+  assert.match(read(docx({ body })).markdown, /\| Fuori Dentro A Dentro B \| Altra \|/);
+});
+
+test("l'immagine incartata in «scelta e ripiego», che è come Word incarta le forme", () => {
+  const rels = `<Relationships><Relationship Id="rId4" Target="media/image1.png"/></Relationships>`;
+  const body = `<w:p><w:r><mc:AlternateContent><mc:Choice Requires="wps"><w:drawing>
+    <wp:docPr descr="Schema"/><a:blip r:embed="rId4"/></w:drawing></mc:Choice></mc:AlternateContent></w:r></w:p>`;
+  const out = read(docx({ body, rels, media: { "word/media/image1.png": new Uint8Array([1]) } }));
+  assert.equal(out.markdown.trim(), "![Schema](assets/a1.png)");
+  assert.equal(out.assets.length, 1);
+});
+
+test("un a capo dentro una voce di elenco resta dentro la voce", () => {
+  // Questo Markdown non ha righe di continuazione: la seconda riga usciva dall'elenco e diventava
+  // un paragrafo dopo di esso, cioè le parole giuste nel posto sbagliato.
+  const body = para(`${run("prima riga")}<w:r><w:br/></w:r>${run("seconda riga")}`,
+    '<w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr>');
+  assert.equal(read(docx({ body })).markdown.trim(), "- prima riga seconda riga");
+});
+
+test("una parentesi o uno spazio dentro un indirizzo non tagliano il link", () => {
+  const rels = `<Relationships><Relationship Id="rId9" Target="https://x.sm/a(b)c"
+    TargetMode="External"/></Relationships>`;
+  const body = para(`<w:hyperlink r:id="rId9">${run("il manuale")}</w:hyperlink>`);
+  assert.equal(read(docx({ body, rels })).markdown.trim(), "[il manuale](https://x.sm/a%28b%29c)");
+});
+
+test("i controlli contenuto dei modelli si aprono, dentro e fuori da un paragrafo", () => {
+  const dentro = `<w:sdt><w:sdtPr/><w:sdtContent>${para(run("dentro il controllo"))}</w:sdtContent></w:sdt>`;
+  assert.equal(read(docx({ body: para(run("prima")) + dentro + para(run("dopo")) })).markdown.trim(),
+    "prima\n\ndentro il controllo\n\ndopo");
+  const inRiga = para(`${run("Nome: ")}<w:sdt><w:sdtContent>${run("Giulia")}</w:sdtContent></w:sdt>`);
+  assert.equal(read(docx({ body: inRiga })).markdown.trim(), "Nome: Giulia");
+});
+
+test("il link scritto come campo, che è l'altro modo di Word", () => {
+  const body = para(`<w:fldSimple w:instr=" HYPERLINK &quot;https://x.sm/a b&quot; ">${run("il sito")}</w:fldSimple>`);
+  assert.equal(read(docx({ body })).markdown.trim(), "[il sito](https://x.sm/a%20b)");
+});
+
+test("una revisione accettata è testo; una cancellata è cancellata", () => {
+  const tenuto = para(`${run("tenuto ")}<w:ins><w:r><w:t>aggiunto</w:t></w:r></w:ins>`);
+  assert.equal(read(docx({ body: tenuto })).markdown.trim(), "tenuto aggiunto");
+  const via = para(`${run("resta")}<w:del><w:r><w:delText> via</w:delText></w:r></w:del>`);
+  assert.equal(read(docx({ body: via })).markdown.trim(), "resta");
+});
+
 console.log(`docx: ${passed} prove passate`);

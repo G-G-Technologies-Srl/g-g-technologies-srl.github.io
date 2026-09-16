@@ -162,6 +162,18 @@ function _wrap(text, { b, i, s }) {
  * unirli il Markdown esce `**que****st****o**`, che è sbagliato anche da leggere. Si uniscono qui,
  * prima di mettere gli asterischi, che è l'unico punto in cui l'informazione serve intera.
  */
+// I contenitori che non dicono niente di loro: quello che c'è dentro è testo di questo paragrafo,
+// e senza attraversarli spariva. `w:sdt` è il controllo contenuto dei modelli aziendali, `w:ins`
+// una revisione accettata, `w:smartTag` un residuo delle vecchie versioni, `w:moveTo` un pezzo
+// spostato. **`w:del` non c'è**, ed è voluto: il testo cancellato è cancellato.
+const SEE_THROUGH = new Set(["w:ins", "w:moveTo", "w:smartTag", "w:sdt", "w:sdtContent", "w:bdo", "w:dir"]);
+
+/** L'indirizzo dentro un campo `HYPERLINK "…"`, che è l'altro modo in cui Word scrive un link. */
+function _fieldLink(node) {
+  const found = /HYPERLINK\s+"([^"]+)"/i.exec(String(node.attrs["w:instr"] || ""));
+  return found ? found[1] : null;
+}
+
 function _fragments(parent, ctx, inherited = null) {
   const out = [];
   const push = (text, marks, link) => {
@@ -179,7 +191,16 @@ function _fragments(parent, ctx, inherited = null) {
     if (node.name === "w:hyperlink") {
       const rel = ctx.rels.get(node.attrs["r:id"]) || null;
       const href = rel && rel.external ? rel.target : "";
-      for (const piece of _fragments(node, ctx, href)) out.push(piece);
+      for (const piece of _fragments(node, ctx, href)) push(piece.text, piece, piece.link || href);
+      continue;
+    }
+    if (node.name === "w:fldSimple") {
+      const href = _fieldLink(node);
+      for (const piece of _fragments(node, ctx, href || inherited)) push(piece.text, piece, piece.link);
+      continue;
+    }
+    if (SEE_THROUGH.has(node.name)) {
+      for (const piece of _fragments(node, ctx, inherited)) push(piece.text, piece, piece.link);
       continue;
     }
     if (node.name !== "w:r") continue;
@@ -189,7 +210,11 @@ function _fragments(parent, ctx, inherited = null) {
       if (inside.name === "w:t") push(_plain(inside), marks, inherited);
       else if (inside.name === "w:tab") push(" ", marks, inherited);
       else if (inside.name === "w:br" || inside.name === "w:cr") push("\n", marks, inherited);
-      else if (inside.name === "w:drawing" || inside.name === "w:pict") {
+      // Un disegno, una forma vecchia, o la coppia «scelta e ripiego» con cui Word incarta le
+      // forme: dentro c'è la stessa immagine, e `_image` prende la prima che trova. Senza
+      // `mc:AlternateContent` in questo elenco, uno schema incollato in un manuale spariva.
+      else if (inside.name === "w:drawing" || inside.name === "w:pict"
+        || inside.name === "mc:AlternateContent") {
         const picture = _image(inside, ctx);
         if (picture) push(picture, { b: false, i: false, s: false }, null);
       }
@@ -237,7 +262,14 @@ function _inline(parent, ctx) {
     const core = piece.text.slice(before.length, piece.text.length - after.length);
     if (!core) return piece.text;
     const marked = _wrap(core, piece);
-    return `${before}${piece.link ? `[${marked}](${piece.link})` : marked}${after}`;
+    // Una parentesi o uno spazio dentro l'indirizzo chiudono il link una lettera troppo presto —
+    // `https://x.sm/a(b)c` diventava un link a `https://x.sm/a(b` e la coda restava testo.
+    // A mano e non con `encodeURIComponent`, che le parentesi le lascia dove sono: sono fra i
+    // caratteri che quella funzione considera già buoni per un indirizzo, e qui il problema non è
+    // l'indirizzo — è che questo Markdown chiude il link alla prima parentesi chiusa.
+    const href = piece.link ? piece.link.replace(/[()\s]/g,
+      (one) => ({ "(": "%28", ")": "%29" }[one] || "%20")) : "";
+    return `${before}${href ? `[${marked}](${href})` : marked}${after}`;
   }).join("");
 }
 
@@ -285,37 +317,76 @@ function _listMark(props, ctx) {
   return { mark: kind === "bullet" ? "-" : "1.", indent: "  ".repeat(Math.min(6, level)) };
 }
 
+/**
+ * Quello che sta dentro le caselle di testo del paragrafo, come citazioni.
+ *
+ * Una casella di testo in Word è quasi sempre la frase che conta — «ATTENZIONE: staccare la
+ * corrente» a margine di una procedura — e il suo testo non è figlio del paragrafo: sta sotto la
+ * forma che la disegna, dove nessuno lo cercava. Spariva, e sparivano proprio le righe che uno va
+ * a cercare. Diventa una citazione perché è l'unica cosa che si sa per certo di una casella: che
+ * era staccata dal resto.
+ */
+function _boxes(node, ctx) {
+  const found = _all(node, "w:txbxContent");
+  ctx.counts.quotes += found.length;     // il riepilogo conta quello che è entrato, caselle comprese
+  return found.map((box) => _kids(box, "w:p")
+    .map((one) => _inline(one, ctx).trim()).filter(Boolean)
+    .map((line) => line.split("\n").map((piece) => `> ${piece}`).join("\n"))
+    .join("\n")).filter(Boolean);
+}
+
 function _paragraph(node, ctx) {
   const props = _kids(node, "w:pPr")[0] || { kids: [], attrs: {} };
   const text = _inline(node, ctx).replace(/[ \t]+$/g, "");
   const list = _listMark(props, ctx);
   const level = _headingLevel(props, ctx);
+  const boxes = _boxes(node, ctx);
+  const withBoxes = (block) => [block, ...boxes].filter(Boolean).join("\n\n");
 
   if (!text.trim()) {
     // Un paragrafo vuoto in Word è spazio bianco, e in Markdown lo spazio fra i blocchi c'è già.
     // Una riga di un elenco però resta, se no l'elenco si spezza in due.
-    return list ? `${list.indent}${list.mark} ` : "";
+    return withBoxes(list ? `${list.indent}${list.mark} ` : "");
   }
-  if (level) { ctx.counts.headings += 1; return `${"#".repeat(level)} ${text}`; }
-  if (list) { ctx.counts.list += 1; return `${list.indent}${list.mark} ${text}`; }
+  // In un titolo e in una voce di elenco l'a capo si trasforma in uno spazio: questo Markdown non
+  // ha righe di continuazione, e la seconda riga usciva dall'elenco per diventare un paragrafo
+  // dopo di esso — le parole giuste nel posto sbagliato, che è peggio che perderle.
+  const flat = text.replace(/\s*\n\s*/g, " ");
+  if (level) { ctx.counts.headings += 1; return withBoxes(`${"#".repeat(level)} ${flat}`); }
+  if (list) { ctx.counts.list += 1; return withBoxes(`${list.indent}${list.mark} ${flat}`); }
   const styleId = _val(_kids(props, "w:pStyle")[0]);
   if (QUOTES.test(styleId) || _chain(ctx, styleId).some((one) => QUOTES.test(one.name))) {
     ctx.counts.quotes += 1;
-    return text.split("\n").map((line) => `> ${line}`).join("\n");
+    return withBoxes(text.split("\n").map((line) => `> ${line}`).join("\n"));
   }
   // Un'immagine da sola è un blocco, e schermarla la trasformerebbe nella scritta `\![…](…)`:
   // la protezione qui sotto serve a quello che **in Word era testo**, non a quello che scrivo io.
-  if (/^!\[[^\]]*\]\([^)\s]+\)$/.test(text.trim())) return text.trim();
+  if (/^!\[[^\]]*\]\([^)\s]+\)$/.test(text.trim())) return withBoxes(text.trim());
   ctx.counts.paragraphs += 1;
   // Una riga che in Word è testo e qui aprirebbe un blocco — «- 5 % di sconto», «# 3 della lista»
   // — si protegge con la stessa regola che l'app usa per quello che si scrive a mano.
-  return text.split("\n").map(shield).join("\n");
+  return withBoxes(text.split("\n").map(shield).join("\n"));
 }
 
-/** Il testo di una cella: i suoi paragrafi su una riga sola, perché una cella non tiene blocchi. */
+/**
+ * Il testo di una cella: tutto su una riga, perché una cella non tiene blocchi.
+ *
+ * Anche quello di una tabella dentro la cella. Sono tabelle usate per impaginare, e il Markdown
+ * non le annida — ma le parole che ci stanno dentro sono parole del documento, e perderle in
+ * silenzio è la cosa che un importatore non deve fare mai.
+ */
 function _cell(node, ctx) {
-  return _kids(node, "w:p").map((one) => _inline(one, ctx).trim()).filter(Boolean)
-    .join(" ").replace(/\|/g, "\\|").replace(/\n+/g, " ");
+  const pieces = [];
+  for (const one of node.kids || []) {
+    if (!one || typeof one === "string") continue;
+    if (one.name === "w:p") pieces.push(_inline(one, ctx).trim());
+    else if (one.name === "w:tbl") {
+      for (const row of _kids(one, "w:tr")) {
+        pieces.push(_kids(row, "w:tc").map((cell) => _cell(cell, ctx)).filter(Boolean).join(" "));
+      }
+    }
+  }
+  return pieces.filter(Boolean).join(" ").replace(/\|/g, "\\|").replace(/\n+/g, " ");
 }
 
 function _table(node, ctx) {
@@ -459,8 +530,18 @@ export function fromDocx(entries, { newId, decode }) {
   if (!body) return null;
 
   const blocks = [];
-  for (const node of body.kids || []) {
-    if (!node || typeof node === "string") continue;
+  // Un controllo contenuto può avvolgere interi paragrafi, ed è così che sono fatti i modelli
+  // aziendali: senza aprirlo, di un documento nato da un modello restava la cornice.
+  const flat = [];
+  const spread = (node) => {
+    for (const one of node.kids || []) {
+      if (!one || typeof one === "string") continue;
+      if (one.name === "w:sdt" || one.name === "w:sdtContent") spread(one);
+      else flat.push(one);
+    }
+  };
+  spread(body);
+  for (const node of flat) {
     if (node.name === "w:p") {
       const line = _paragraph(node, ctx);
       // Le righe di un elenco vanno attaccate: una riga vuota in mezzo spezza l'elenco in due.
