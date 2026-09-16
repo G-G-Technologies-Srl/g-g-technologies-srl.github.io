@@ -822,9 +822,45 @@ select:hover, select:focus { border-color: var(--border-strong); }
 .row-item .title { flex: 0 1 auto; min-width: 0; overflow-wrap: anywhere; }
 
 .row-item .when { font-size: 12px; color: var(--faint); white-space: nowrap; }
+
+/* **L'ambra del ritardo, altrimenti persa.** `.late` pesa una classe e questa riga ne pesa due, e
+   quindi vinceva: nel pannello delle scadenze in home — quello per cui l'app si apre la mattina —
+   un'attività arretrata portava la sua classe `late` e si stampava grigia, uguale a una che scade
+   fra una settimana. Nessuna prova cadeva: il CSS non si rompe, ubbidisce. `.subtask .when.late`
+   esisteva già perché lì qualcuno se n'era accorto e aveva rattoppato quel punto solo; adesso la
+   regola la sorveglia `check_apps.py`. */
+.row-item .when.late { color: var(--late); }
 .row-item .from { font-size: 12px; color: var(--faint); white-space: nowrap; overflow: hidden;
   text-overflow: ellipsis; max-width: 30%; }
 .card.today { margin-bottom: 20px; }
+
+/* Le scadenze in sezioni: il titolo porta il quando, e le righe sotto non lo ripetono.
+   Lo spazio fra una sezione e l'altra lo mette la griglia — i margini dei figli qui dentro sono
+   già stati azzerati una volta, e rimetterli riaprirebbe la stessa classe di difetti. */
+.due-groups { display: grid; gap: 18px; }
+
+.due-when {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin: 0 0 4px;
+}
+
+/* «In ritardo» è l'unica sezione che porta un colore: è l'unica che chiede di fare qualcosa
+   adesso. «Oggi» esce dal grigio senza gridare, che è il peso che ha. */
+.due-when.is-late { color: var(--late); }
+.due-when.is-today { color: var(--text); }
+
+.due-count { font-variant-numeric: tabular-nums; color: var(--faint); }
+
+/* La prima riga di una sezione non porta il filetto di quella sopra: fra le due c'è già il titolo,
+   e due segni per lo stesso stacco ne fanno uno di troppo. */
+.due-group .list .row-item:last-child { border-bottom: 0; }
 
 /* The date sits on the row, quiet until it holds something: a field with a border on every task
    would make the list read as a form. It is still a real control — 24px tall, focusable, and with

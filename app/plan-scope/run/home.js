@@ -284,7 +284,7 @@ function _pageRow(page, depth = 0) {
  * Nella stessa lista delle scadenze, però: la domanda «cosa mi aspetta» è una sola, e due elenchi
  * accanto costringerebbero a leggerne due per rispondersi.
  */
-function _meetingRow(meeting, today, { project = null } = {}) {
+function _meetingRow(meeting, today, { project = null, day = "label" } = {}) {
   const row = node("li", "row-item opens is-meeting");
   row.append(node("span", "meet-mark", meeting.time || "·"));
   row.append(button("link title", meeting.page.title || t("pageUntitled"),
@@ -297,9 +297,11 @@ function _meetingRow(meeting, today, { project = null } = {}) {
   // Mai «in ritardo»: `_dueLabel` quella parola la dice, ed è giusta per una scadenza. Un
   // appuntamento passato non è arretrato, è successo — o non ci sei andato, e in nessuno dei due
   // casi c'è qualcosa da recuperare. Passato porta il suo giorno e basta.
-  row.append(meeting.date < today
-    ? node("span", "when gone", shortDate(meeting.date))
-    : node("span", "when", _dueLabel(meeting.date, today)));
+  if (day !== "none") {
+    row.append(meeting.date < today || day === "date"
+      ? node("span", "when gone", shortDate(meeting.date))
+      : node("span", "when", _dueLabel(meeting.date, today)));
+  }
   row.addEventListener("click", (event) => {
     if (event.target.closest("button")) return;
     on.openPage(meeting.page.id);
@@ -307,7 +309,7 @@ function _meetingRow(meeting, today, { project = null } = {}) {
   return row;
 }
 
-function _taskRow(task, today, { project = null } = {}) {
+function _taskRow(task, today, { project = null, day = "label" } = {}) {
   const row = node("li", "row-item opens");
   const done = model.isDone(task);
 
@@ -336,9 +338,13 @@ function _taskRow(task, today, { project = null } = {}) {
   if (parent) row.append(node("span", "meta from", parent.title));
   row.append(node("span", "spacer"));
 
-  if (task.end) {
+  // Il giorno, detto come distanza — «oggi», «domani» — oppure come data, oppure taciuto. Sotto un
+  // titolo che dice già «Oggi», una riga che ripete «oggi» è una colonna di parole uguali; sotto
+  // «In ritardo» la data serve eccome, perché dice **di quanto**.
+  if (task.end && day !== "none") {
     const late = !done && task.end < today;
-    row.append(node("span", late ? "when late" : "when", _dueLabel(task.end, today)));
+    row.append(node("span", late ? "when late" : "when",
+      day === "date" ? shortDate(task.end) : _dueLabel(task.end, today)));
   }
 
   // The row opens the task. What can be done to it — the date, the owner, the bin — is on its
@@ -477,6 +483,45 @@ function _paintProjectWhen(id) {
   el("projectWhen").textContent = said ? `${dated.key} · ${longDate(dated.value)} · ${said}` : "";
 }
 
+/**
+ * Le scadenze in sezioni, invece che in un elenco piatto.
+ *
+ * Il pannello si chiamava «Oggi» ed elencava sette giorni: un titolo che non diceva la verità, e
+ * sotto di lui una colonna di date da leggere una per una per capire quali scottavano. Le sezioni
+ * portano quella lettura nel titolo — in ritardo, oggi, domani, prossimi giorni — e le righe
+ * smettono di ripetere quello che il titolo ha già detto: sotto «Oggi» nessuna data, sotto «In
+ * ritardo» la data vera, che dice di quanto.
+ *
+ * Una sezione vuota non c'è. «Domani — niente» occuperebbe il posto di un'informazione per dire
+ * che non ce n'è una, e quando le sezioni sono quattro succede quasi sempre.
+ */
+function _paintDue(due, today) {
+  const tomorrow = model.addDays(today, 1);
+  const groups = [
+    { key: "dueLateTitle", mark: "is-late", day: "date",
+      items: due.filter((one) => one.when < today) },
+    { key: "dueTodayTitle", mark: "is-today", day: "none",
+      items: due.filter((one) => one.when === today) },
+    { key: "dueTomorrowTitle", mark: "", day: "none",
+      items: due.filter((one) => one.when === tomorrow) },
+    { key: "dueLaterTitle", mark: "", day: "date",
+      items: due.filter((one) => one.when > tomorrow) },
+  ];
+
+  fill(el("todayList"), groups.filter((group) => group.items.length).map((group) => {
+    const box = node("div", "due-group");
+    const head = node("h3", `due-when ${group.mark}`.trim(), t(group.key));
+    head.append(node("span", "due-count", num(group.items.length, 0)));
+    box.append(head);
+    const list = node("ul", "list");
+    fill(list, group.items.map((one) => (one.meeting
+      ? _meetingRow(one.meeting, today, { project: one.project, day: group.day })
+      : _taskRow(one.task, today, { project: one.project, day: group.day }))));
+    box.append(list);
+    return box;
+  }));
+}
+
 export function paintHome(room) {
   const today = model.todayISO();
   const all = model.liveProjects();
@@ -506,9 +551,7 @@ export function paintHome(room) {
     // A parità di giorno l'appuntamento viene prima: ha un'ora, quindi un posto nella giornata.
     .sort((a, b) => a.when.localeCompare(b.when) || (a.meeting ? -1 : 1) - (b.meeting ? -1 : 1));
   el("todayPanel").hidden = projects.length === 0;
-  fill(el("todayList"), due.map((one) => (one.meeting
-    ? _meetingRow(one.meeting, today, { project: one.project })
-    : _taskRow(one.task, today, { project: one.project }))));
+  _paintDue(due, today);
   el("todayEmpty").hidden = due.length > 0;
 
   const trash = model.trashedProjects().length;
