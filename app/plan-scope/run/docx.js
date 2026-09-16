@@ -326,6 +326,43 @@ function _listMark(props, ctx) {
  * a cercare. Diventa una citazione perché è l'unica cosa che si sa per certo di una casella: che
  * era staccata dal resto.
  */
+/**
+ * Le note a piè di pagina richiamate dal paragrafo, come citazioni subito dopo.
+ *
+ * Il testo di una nota sta in un file a parte, e nel paragrafo resta solo il richiamo: senza
+ * andarlo a prendere spariva la nota **e** il segno che ce n'era una — chi leggeva non poteva
+ * nemmeno sospettarlo. Questo Markdown le note in fondo non le ha, e metterle in mezzo al periodo
+ * cambierebbe la frase: vanno sotto, staccate, dove si leggono per quello che sono.
+ */
+function _notes(node, ctx) {
+  const out = [];
+  for (const [tag, where] of [["w:footnoteReference", ctx.footnotes], ["w:endnoteReference", ctx.endnotes]]) {
+    for (const mark of _all(node, tag)) {
+      const text = where.get(String(mark.attrs["w:id"] ?? ""));
+      if (text) out.push(text.split("\n").map((line) => `> ${line}`).join("\n"));
+    }
+  }
+  ctx.counts.quotes += out.length;
+  return out;
+}
+
+/** Il testo delle note, per numero: `footnotes.xml` ed `endnotes.xml` hanno la stessa forma. */
+function _noteTexts(text, ctx) {
+  const out = new Map();
+  if (!text) return out;
+  const root = _xml(text);
+  for (const name of ["w:footnote", "w:endnote"]) {
+    for (const one of _all(root, name)) {
+      const id = String(one.attrs["w:id"] ?? "");
+      // Le note numero 0 e -1 sono i separatori che Word si tiene per sé, e non sono note.
+      if (!id || Number(id) < 1) continue;
+      const said = _kids(one, "w:p").map((para_) => _inline(para_, ctx).trim()).filter(Boolean).join("\n");
+      if (said) out.set(id, said);
+    }
+  }
+  return out;
+}
+
 function _boxes(node, ctx) {
   const found = _all(node, "w:txbxContent");
   ctx.counts.quotes += found.length;     // il riepilogo conta quello che è entrato, caselle comprese
@@ -340,8 +377,8 @@ function _paragraph(node, ctx) {
   const text = _inline(node, ctx).replace(/[ \t]+$/g, "");
   const list = _listMark(props, ctx);
   const level = _headingLevel(props, ctx);
-  const boxes = _boxes(node, ctx);
-  const withBoxes = (block) => [block, ...boxes].filter(Boolean).join("\n\n");
+  const aside = [..._boxes(node, ctx), ..._notes(node, ctx)];
+  const withBoxes = (block) => [block, ...aside].filter(Boolean).join("\n\n");
 
   if (!text.trim()) {
     // Un paragrafo vuoto in Word è spazio bianco, e in Markdown lo spazio fra i blocchi c'è già.
@@ -523,8 +560,16 @@ export function fromDocx(entries, { newId, decode }) {
     numbering: _numbering(files.has("word/numbering.xml")
       ? decode(files.get("word/numbering.xml")) : ""),
     styles: _styles(files.has("word/styles.xml") ? decode(files.get("word/styles.xml")) : ""),
+    footnotes: new Map(),
+    endnotes: new Map(),
     counts: { headings: 0, paragraphs: 0, list: 0, tables: 0, quotes: 0 },
   };
+
+  // Le note prima del corpo: il corpo le richiama per numero, e il numero deve già voler dire
+  // qualcosa quando ci arriva.
+  for (const [name, where] of [["word/footnotes.xml", "footnotes"], ["word/endnotes.xml", "endnotes"]]) {
+    if (files.has(name)) ctx[where] = _noteTexts(decode(files.get(name)), ctx);
+  }
 
   const body = _find(_xml(decode(files.get("word/document.xml"))), "w:body");
   if (!body) return null;

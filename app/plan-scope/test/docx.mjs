@@ -262,4 +262,20 @@ test("una revisione accettata è testo; una cancellata è cancellata", () => {
   assert.equal(read(docx({ body: via })).markdown.trim(), "resta");
 });
 
+test("la nota a piè di pagina arriva: il suo testo sta in un altro file", () => {
+  // Senza andarlo a prendere spariva la nota **e** il segno che ce n'era una: chi legge non poteva
+  // nemmeno sospettarlo. Le note numero 0 e -1 sono i separatori di Word, e non sono note.
+  const notes = `<w:footnotes>
+    <w:footnote w:id="-1"><w:p>${run("separatore")}</w:p></w:footnote>
+    <w:footnote w:id="2"><w:p>${run("Norma UNI 1234, art. 5.")}</w:p></w:footnote>
+  </w:footnotes>`;
+  const body = para(`${run("Vale il limite di legge")}<w:r><w:footnoteReference w:id="2"/></w:r>${run(" per tutti.")}`);
+  const entries = docx({ body });
+  entries.push({ name: "word/footnotes.xml", bytes: encoder.encode(notes) });
+  assert.equal(read(entries).markdown.trim(),
+    "Vale il limite di legge per tutti.\n\n> Norma UNI 1234, art. 5.");
+  // Senza il file delle note non si inventa niente, e il paragrafo resta quello che è.
+  assert.equal(read(docx({ body })).markdown.trim(), "Vale il limite di legge per tutti.");
+});
+
 console.log(`docx: ${passed} prove passate`);
