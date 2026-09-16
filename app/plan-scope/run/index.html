@@ -443,6 +443,9 @@
       <span class="meta" id="saveState"></span>
       <button type="button" id="addImage" data-t="addImage"></button>
       <button type="button" id="addFile" class="ghost small" data-t="addFile"></button>
+      <!-- Un documento scritto altrove, dentro la pagina: chi arriva con il lavoro già fatto ce
+           l'ha in Word, e ribatterlo non è un'opzione. -->
+      <button type="button" id="pageImport" class="ghost small" data-t="importFile"></button>
       <!-- Everything else about a page goes behind one button. «Vedi il sorgente» and «Esporta
            come Markdown» are for the few; leaving them in the bar put two pieces of jargon in
            front of everybody, every time. Progressive disclosure, as the plan calls it. -->
@@ -521,6 +524,7 @@
     </div>
     <input type="file" id="imageFile" accept="image/*" hidden>
     <input type="file" id="attachFile" hidden>
+    <input type="file" id="importDocFile" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
   </section>
 
   <!-- ------------------------------------------------------------------ the bin -->

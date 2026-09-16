@@ -65,19 +65,23 @@ function _opensBlock(line) {
 /**
  * A paragraph line that *looks* like a block, written so that it stays a paragraph.
  *
+ * Pubblica perché serve anche a chi il Markdown lo **scrive** da un'altra parte: l'importatore di
+ * un `.docx` porta dentro righe scritte da qualcun altro, e «- 5 % di sconto» in Word è un
+ * paragrafo che qui diventerebbe un elenco. Una regola sola, in un posto solo.
+ *
  * Somebody who types `## nota` into a plain paragraph — without the shortcut, which needs the
  * marker on its own — has written text. Without this it was text until the page was closed and a
  * heading when it was opened again, because the file is the truth and the file said heading. One
  * backslash in front keeps it a paragraph; a line that already begins with a backslash before a
  * marker gets a second one, so that the two cases stay apart.
  */
-function _shield(line) {
+export function shield(line) {
   if (_opensBlock(line)) return `\\${line}`;
   if (line.startsWith("\\") && _opensBlock(line.slice(1))) return `\\${line}`;
   return line;
 }
 
-/** The inverse of `_shield`, applied to a line being read into a paragraph. */
+/** The inverse of `shield`, applied to a line being read into a paragraph. */
 function _unshield(line) {
   if (line.startsWith("\\") && _opensBlock(line.slice(1))) return line.slice(1);
   if (line.startsWith("\\\\") && _opensBlock(line.slice(2))) return line.slice(1);
@@ -376,7 +380,7 @@ export function serialize(blocks) {
         out.push(`${"#".repeat(block.level)} ${block.text}`);
         break;
       case "paragraph":
-        out.push(String(block.text).split("\n").map(_shield).join("\n"));
+        out.push(String(block.text).split("\n").map(shield).join("\n"));
         break;
       case "list":
         out.push(_listLines(block).join("\n"));

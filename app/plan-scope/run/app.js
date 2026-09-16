@@ -33,6 +33,8 @@ import * as md from "gg/plan-markdown.js";
 import * as versions from "./versions.js";
 import * as pages from "./pages.js";
 import * as importing from "./importing.js";
+import * as zip from "gg/zip.js";
+import * as docx from "./docx.js";
 import * as sync from "./sync.js";
 import * as folders from "./folders.js";
 import * as backup from "./backup.js";
@@ -42,7 +44,7 @@ import { setup as setupInstall, isInstalled, system } from "gg/install.js";
 import * as update from "gg/update.js";
 import * as remind from "gg/remind.js";
 import { t, tf, num, otherLang, setLang, resolveLang, missingKeys } from "./i18n.js";
-import { el, node, button, fill, applyText, snack, hideSnack, shortDate, longDate, bytes, ask, tagHue } from "./ui.js";
+import { el, node, button, fill, applyText, snack, hideSnack, shortDate, longDate, bytes, ask, tagHue, count } from "./ui.js";
 
 // Ten megabytes. Not a technical limit — IndexedDB would take far more — but the point at which one
 // image starts to be the reason a whole project cannot be exported, and the person who pasted it
@@ -1828,6 +1830,89 @@ async function _addFile(file) {
   return snack(tf("fileAdded", { name: asset.name }));
 }
 
+/**
+ * Un documento scritto altrove, dentro la pagina.
+ *
+ * Il testo com'era — titoli, elenchi, tabelle, immagini — e **il file com'è**, allegato in fondo:
+ * la traduzione tiene quello che una pagina sa tenere, e quello che non entra resta comunque a un
+ * clic di distanza invece di andare perso. Chi apre la pagina fra sei mesi trova tutti e due.
+ *
+ * In coda a quello che c'è già, e mai al posto suo: una pagina con dentro il lavoro di qualcuno è
+ * l'ultimo posto dove sovrascrivere senza chiedere. La striscia offre di rimettere la pagina
+ * com'era, che è l'unica cosa che questo gesto ha cambiato.
+ */
+async function _importDoc(file) {
+  if (!file) return;
+  const named = file.name || "documento";
+  if (file.size > FILE_CAP) {
+    return snack(tf("fileTooBig", { size: `${num(FILE_CAP / 1024 / 1024, 0)} MB` }));
+  }
+  const page = model.page(pageId);
+  if (!page) return;
+
+  let read = null;
+  try {
+    const entries = await zip.readAny(new Uint8Array(await file.arrayBuffer()));
+    read = docx.fromDocx(entries, {
+      newId: model.newId,
+      decode: (bytes) => new TextDecoder().decode(bytes),
+    });
+  } catch (ignored) {
+    // Un file che non è un archivio, o un archivio rotto: la stessa risposta, perché per chi
+    // guarda è la stessa cosa — quel file non si legge.
+    read = null;
+  }
+  if (!read) return snack(tf("importDocFailed", { name: named }));
+  if (!read.markdown.trim()) return snack(tf("importDocEmpty", { name: named }));
+
+  // Le immagini del documento diventano allegati del progetto, come quelle che si trascinano qui.
+  for (const asset of read.assets) {
+    await db.putAsset({
+      id: asset.id,
+      projectId: page.projectId,
+      name: asset.name,
+      type: asset.type,
+      size: asset.size,
+      blob: new Blob([asset.bytes], { type: asset.type }),
+    });
+  }
+  // L'originale, per intero: la conversione tiene il testo, e il `.docx` tiene tutto il resto.
+  const origin = {
+    id: model.newId(),
+    projectId: page.projectId,
+    name: named,
+    type: file.type || "application/octet-stream",
+    size: file.size,
+    blob: file,
+  };
+  await db.putAsset(origin);
+
+  const before = page.markdown;
+  const { props, extra, body } = md.frontmatter(before);
+  const link = `[${named.replace(/[[\]]/g, " ")}](${pack.reference(origin)})`;
+  const added = `${read.markdown.trim()}\n\n${tf("importDocFrom", { file: link })}\n`;
+  const kept = body.trim();
+  model.setMarkdown(pageId, md.withFrontmatter(props, kept ? `${kept}\n\n${added}` : added, extra));
+  _reloadPage();
+
+  // Quanto è passato, e solo quello che c'è: «0 immagini» è una riga che occupa il posto di
+  // un'informazione per dire che non ce n'è una.
+  const counts = read.counts;
+  const what = [count(counts.paragraphs + counts.headings + counts.list + counts.quotes,
+    "blockOne", "blockMany")];
+  if (counts.images) what.push(count(counts.images, "imageOne", "imageMany"));
+  if (counts.tables) what.push(count(counts.tables, "tableOne", "tableMany"));
+  snack(tf("importDocDone", { name: named, what: what.join(", ") }), {
+    action: t("undo"),
+    onAction: () => {
+      model.setMarkdown(pageId, before);
+      _reloadPage();
+      snack(t("undone"));
+    },
+  });
+  return undefined;
+}
+
 /** The bytes of an attachment, handed back to the person as a download. */
 async function _openAttachment(src, name) {
   const id = pack.idOf(src);
@@ -2244,6 +2329,12 @@ function _wire() {
     const [file] = event.target.files;
     event.target.value = "";
     await _addImage(file);
+  });
+  el("pageImport").addEventListener("click", () => el("importDocFile").click());
+  el("importDocFile").addEventListener("change", async (event) => {
+    const [file] = event.target.files;
+    event.target.value = "";
+    await _importDoc(file);
   });
   el("addFile").addEventListener("click", () => el("attachFile").click());
   el("attachFile").addEventListener("change", async (event) => {
