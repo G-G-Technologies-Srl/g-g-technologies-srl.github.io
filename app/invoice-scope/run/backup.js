@@ -21,7 +21,7 @@
 // leaves out: a handle serialised to JSON is `{}`, and restoring `{}` into another machine's
 // `meta` would leave it holding a folder that does not exist.
 
-import { get, put } from "gg/store.js";
+import { get, put, count as countIn } from "gg/store.js";
 import { collect, restore as putBack } from "gg/io.js";
 import { hash, linkFolder, backupWriter, copies as listCopies } from "gg/folder.js";
 import { NAME, VERSION, EXPORTED } from "./db.js";
@@ -84,6 +84,36 @@ export function status() { return writer ? writer.status() : Promise.resolve({ k
 export async function copies() {
   if (!folder || !folder.handle || (await folder.permission()) !== "granted") return [];
   return listCopies(folder.handle, { prefix: NAME });
+}
+
+/**
+ * Il testo di una copia, senza scrivere niente.
+ *
+ * `restore()` legge e scrive in un gesto solo, ed è giusto per quello che fa: ma guardare cosa
+ * contiene una copia non deve passare dalla porta che sostituisce l'archivio. Le due strade
+ * condividono la lettura e niente altro.
+ */
+export async function read(name = `${NAME}.json`) {
+  if (!folder || !folder.handle) return { ok: false, reason: "backupNoFolder" };
+  if ((await folder.permission()) !== "granted") return { ok: false, reason: "backupNoPermission" };
+  try {
+    const text = await (await (await folder.handle.getFileHandle(name)).getFile()).text();
+    return { ok: true, text };
+  } catch (ignored) {
+    return { ok: false, reason: "backupCopyGone" };
+  }
+}
+
+/**
+ * Quanti record tiene adesso il deposito, deposito per deposito.
+ *
+ * Contati, non letti: serve il numero per il confronto con una copia, e i record non escono da qui.
+ */
+export async function counts() {
+  if (!db) return {};
+  const out = {};
+  for (const store of EXPORTED) out[store] = await countIn(db, store);
+  return out;
 }
 
 /**

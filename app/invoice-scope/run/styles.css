@@ -1254,6 +1254,11 @@ dialog li::before {
 }
 .copy-row > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .copy-row .note { margin: 0; }
+/* Cosa tiene una copia, sotto il suo peso: una riga sola, e non va a capo per un nome lungo. */
+.copy-row .copy-inside { color: var(--faint); }
+/* Una copia che non combacia con l'archivio non è un errore: è una differenza, e si legge. */
+.copy-row .copy-inside.copy-diff { color: var(--muted); }
+.copy-actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 
 .danger-row {
   display: flex;

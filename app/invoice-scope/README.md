@@ -61,6 +61,7 @@ Si provano sotto Node, e sono il posto giusto per una regola.
 | `sheet.js` · `xls.js` · `fic.js` · `parse.js` | i formati in ingresso: `.xlsx`, il `.xls` del 1997, le tre esportazioni di Fatture in Cloud | nessuno di loro scrive nel deposito |
 | `format.js` | numeri e date come una persona li legge e li scrive | l'unico posto che formatta, in tutta l'app |
 | `safety.js` | se l'unica copia è al sicuro, e cosa dirne nella Situazione | conosce lo stato della cartella, non il DOM |
+| `archive.js` | cosa tiene una copia della cartella, e in che cosa differisce da adesso | conta i record, non li legge |
 | `address.js` | l'intestatario in righe: indirizzo, COE o partita IVA, recapito elettronico | le stesse righe per la carta e per la schermata, o divergono |
 | `problems.js` | le chiavi di `validate.js` come frasi | un passo dal dialogo, e niente altro |
 
@@ -171,7 +172,7 @@ node $I app/invoice-scope/test/home.mjs      node $I app/invoice-scope/test/rese
 node $I app/invoice-scope/test/costs.mjs     node $I app/invoice-scope/test/purchases.mjs
 node $I app/invoice-scope/test/recurring.mjs node $I app/invoice-scope/test/problems.mjs
 node $I app/invoice-scope/test/address.mjs   node $I app/invoice-scope/test/restore.mjs
-node $I app/invoice-scope/test/safety.mjs
+node $I app/invoice-scope/test/safety.mjs    node $I app/invoice-scope/test/archive.mjs
 node $I app/invoice-scope/test/timeline.mjs
 ```
 

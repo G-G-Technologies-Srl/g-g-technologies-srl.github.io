@@ -47,6 +47,7 @@ import { wire as wireImport, refresh as refreshImport } from "./importing.js";
 import { LOGO as BRAND_LOGO } from "./brand.js";
 import * as backup from "./backup.js";
 import { advice } from "./safety.js";
+import { inventory, compare } from "./archive.js";
 import * as alarms from "./alarms.js";
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -266,7 +267,14 @@ async function _route() {
   if (screen === "screenProjects") await project.renderList(db, { afterChange: _refresh });
   if (screen === "screenParties") await parties.render(db, _refresh);
   if (screen === "screenDue") await due.render(db, _refresh);
-  if (screen === "screenSettings") await refreshImport();
+  // **La sezione della cartella si ridisegna entrando, non solo quando la si tocca.** Disegnata una
+  // volta all'avvio, tornando qui mostrava il confronto di allora: una copia che nel frattempo era
+  // cambiata sul disco continuava a dirsi in linea, che è la bugia che questa sezione esiste per non
+  // dire. Costa una lettura della cartella, e solo a chi apre le impostazioni.
+  if (screen === "screenSettings") {
+    await refreshImport();
+    await _drawBackup();
+  }
   await _refresh();
 }
 
@@ -889,6 +897,9 @@ async function _drawCopies(stato) {
   el("backupCopies").hidden = list.length === 0;
   const body = el("backupCopyList");
   body.textContent = "";
+  // I conteggi di adesso, una volta per tutte le righe: sono la metà di ogni confronto.
+  const adesso = list.length ? await backup.counts() : {};
+
   for (const copia of list) {
     const riga = document.createElement("div");
     riga.className = "copy-row";
@@ -899,17 +910,70 @@ async function _drawCopies(stato) {
     const peso = document.createElement("p");
     peso.className = "note";
     peso.textContent = `${num(Math.round(copia.size / 1024), 0)} kB`;
-    testo.append(nome, peso);
+    const dentro = document.createElement("p");
+    dentro.className = "note copy-inside";
+    testo.append(nome, peso, dentro);
+
+    const comandi = document.createElement("div");
+    comandi.className = "copy-actions";
+    // **La copia corrente si guarda dentro da sé.** È quella che risponde alla domanda per cui si
+    // apre questa schermata — «la cartella ha quello che ho adesso?» — e farla aprire a mano
+    // vorrebbe dire che chi non preme resta senza risposta. Le datate costano una lettura a testa
+    // e una risposta che quasi nessuno cerca: si aprono premendo.
+    if (copia.day) {
+      const guarda = document.createElement("button");
+      guarda.type = "button";
+      guarda.className = "link-button";
+      guarda.textContent = t("archiveLook");
+      guarda.addEventListener("click", async () => {
+        guarda.hidden = true;
+        await _drawInside(dentro, copia.name, adesso);
+      });
+      comandi.append(guarda);
+    } else {
+      await _drawInside(dentro, copia.name, adesso);
+    }
 
     const pulsante = document.createElement("button");
     pulsante.type = "button";
     pulsante.className = "button ghost";
     pulsante.textContent = t("backupRestore");
     pulsante.addEventListener("click", () => _restoreCopy(copia.name));
+    comandi.append(pulsante);
 
-    riga.append(testo, pulsante);
+    riga.append(testo, comandi);
     body.append(riga);
   }
+}
+
+/**
+ * Cosa tiene una copia, e se è quello che c'è adesso.
+ *
+ * I conti li fa `archive.js`, senza DOM e provato a parte; qui si compone la riga. Una copia che
+ * non si legge lo dice con le stesse parole dell'importazione — è lo stesso file e lo stesso
+ * difetto — invece di restare vuota, che è il modo in cui un guasto passa per una schermata lenta.
+ */
+async function _drawInside(nodo, name, adesso) {
+  nodo.textContent = t("archiveReading");
+  const letto = await backup.read(name);
+  if (!letto.ok) {
+    nodo.textContent = t(letto.reason) || t("archiveUnreadable");
+    return;
+  }
+  const dentro = inventory(letto.text);
+  if (!dentro.ok) {
+    nodo.textContent = `${t("archiveUnreadable")} ${t(dentro.reason) || ""}`.trim();
+    return;
+  }
+  const esito = compare(dentro.counts, adesso);
+  const pezzi = esito.righe.map((voce) => (voce.diverso
+    ? `${num(voce.dentro, 0)} ${t(voce.label)} (${t("archiveNow")} ${num(voce.adesso, 0)})`
+    : `${num(voce.dentro, 0)} ${t(voce.label)}`));
+  const quando = dentro.exported
+    ? ` · ${tf("archiveWritten", { when: shownDate(dentro.exported.slice(0, 10)) })}`
+    : "";
+  nodo.textContent = `${pezzi.join(" · ")} — ${t(esito.same ? "archiveSame" : "archiveDiff")}${quando}`;
+  nodo.classList.toggle("copy-diff", !esito.same);
 }
 
 /**
