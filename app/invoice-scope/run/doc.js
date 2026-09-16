@@ -24,7 +24,7 @@ import { toString, from } from "./decimal.js";
 import { totals } from "./totals.js";
 import { money, amount, rate as shownRate } from "./format.js";
 import { addressLines, deliveryLine } from "./address.js";
-import { quote as instalments } from "./schedule.js";
+import { quote as instalments, ledger } from "./schedule.js";
 import { parseAmount, parseOptional } from "./parse.js";
 import { NATURE as ALL_NATURE, validate } from "./validate.js";
 import { describe } from "./problems.js";
@@ -904,6 +904,26 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
   const diventa = fatturaChiLoPorta ? null : convertibile(current);
   el("docConvert").hidden = !diventa;
   if (diventa) el("docConvert").textContent = t(`convertTo${diventa}`);
+
+  // Come sta l'incasso: saldata, quanto resta, o il ritardo. Il conto è quello dello scadenzario —
+  // `ledger` in `schedule.js` — e non un secondo calcolo fatto qui: due schermate che rispondono
+  // alla stessa domanda con due numeri diversi sono il difetto che quel file esiste per non avere.
+  // Lo stato del documento non si muove: gli incassi non lo toccano, e non devono.
+  const settle = el("docSettle");
+  const conto = canEdit ? null : (await ledger(db)).get(current.id);
+  settle.hidden = !conto;
+  settle.className = "doc-settle";
+  if (conto) {
+    if (conto.saldata) {
+      settle.textContent = t("settleDone");
+      settle.classList.add("settle-done");
+    } else if (conto.scaduta) {
+      settle.textContent = tf("settleOverdue", { importo: money(conto.residuo) });
+      settle.classList.add("settle-late");
+    } else {
+      settle.textContent = tf("settleLeft", { importo: money(conto.residuo) });
+    }
+  }
 
   // The state lives on the document, so the control that changes it is here. The schedule has the
   // same control in its rows, out of the same function — see `states.js`.

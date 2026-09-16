@@ -18,9 +18,10 @@ import assert from "node:assert/strict";
 import { from, sum, toString } from "../run/decimal.js";
 import {
   schedule, summary, recordPayment, removePayment, paymentsOf, received, owedOn, csv, quote,
+  settlementOf, ledger,
 } from "../run/schedule.js";
 import { openDatabase } from "../run/db.js";
-import { put, reset } from "./fake-store.mjs";
+import { put, get, reset } from "./fake-store.mjs";
 
 let passed = 0;
 
@@ -514,6 +515,100 @@ await test("un importo vuoto pesa come un importo che non c'è", async () => {
   assert.deepEqual(quote([{ importo: "" }, { importo: undefined }], totale).map(money),
     ["500.00", "500.00"]);
   assert.deepEqual(quote([{ importo: null }], totale).map(money), ["1000.00"]);
+});
+
+// -----------------------------------------------------------------------------------------------------------------
+//  s a l d a t a ,   o   q u a n t o   r e s t a
+// -----------------------------------------------------------------------------------------------------------------
+
+await test("una fattura incassata per intero risulta saldata, e non cambia stato", async () => {
+  const db = await openDatabase();
+  const doc = issued({ pagamento: { rate: [{ scadenza: "2026-10-03" }] } });
+  await put(db, "docs", doc);
+  await recordPayment(db, doc, { importo: "1220.00", data: "2026-09-20" });
+
+  const conti = await ledger(db, { today: OGGI });
+  const conto = conti.get(doc.id);
+  assert.equal(conto.saldata, true);
+  assert.equal(money(conto.residuo), "0.00");
+  // Lo stato è affar suo, e resta dov'era: gli incassi non lo toccano.
+  assert.equal((await get(db, "docs", doc.id)).stato, "emesso");
+});
+
+await test("incassata a metà: resta quello che resta, e la data della prima rata aperta", async () => {
+  const db = await openDatabase();
+  const doc = issued({
+    pagamento: { rate: [{ scadenza: "2026-08-31" }, { scadenza: "2026-09-30" }] },
+  });
+  await put(db, "docs", doc);
+  await recordPayment(db, doc, { importo: "610.00", data: "2026-08-31" });
+
+  const conto = (await ledger(db, { today: OGGI })).get(doc.id);
+  assert.equal(conto.saldata, false);
+  assert.equal(money(conto.residuo), "610.00");
+  assert.equal(conto.prossima, "2026-09-30", "la più vecchia ancora aperta");
+  assert.equal(conto.scaduta, false, "e il 30 settembre non è ancora passato");
+});
+
+await test("con più rate aperte, la data mostrata è la prima — non l'ultima", async () => {
+  // «Quando devo risollecitare» è la domanda, e la risposta è la scadenza più vicina. Con l'ultima
+  // il documento direbbe una data lontana mentre il cliente è già in ritardo su quella di prima,
+  // e nessuna prova con due rate sole se ne accorgerebbe: qui ne restano due aperte.
+  const db = await openDatabase();
+  const doc = issued({
+    pagamento: { rate: [
+      { scadenza: "2026-08-31", importo: "220.00" },
+      { scadenza: "2026-09-30", importo: "500.00" },
+      { scadenza: "2026-10-31", importo: "500.00" },
+    ] },
+  });
+  await put(db, "docs", doc);
+  await recordPayment(db, doc, { importo: "220.00", data: "2026-08-31" });
+
+  const conto = (await ledger(db, { today: OGGI })).get(doc.id);
+  assert.equal(conto.prossima, "2026-09-30");
+  assert.equal(money(conto.residuo), "1000.00");
+  assert.equal(conto.scaduta, false);
+});
+
+await test("una rata passata senza incasso è in ritardo, e lo dice il documento", async () => {
+  const db = await openDatabase();
+  const doc = issued({ pagamento: { rate: [{ scadenza: "2026-08-01" }] } });
+  await put(db, "docs", doc);
+  const conto = (await ledger(db, { today: OGGI })).get(doc.id);
+  assert.equal(conto.scaduta, true);
+  assert.equal(money(conto.residuo), "1220.00");
+});
+
+await test("una nota di credito salda quanto un incasso", async () => {
+  // Il conto dell'elenco passa dalle stesse funzioni dello scadenzario: due schermate che
+  // rispondono alla stessa domanda con due conti diversi sono il difetto da non avere.
+  const db = await openDatabase();
+  const doc = issued({ pagamento: { rate: [{ scadenza: "2026-10-03" }] } });
+  await put(db, "docs", doc);
+  await put(db, "docs", {
+    id: "nc", tipo: "TD04", serie: "NC", numero: "2026/0001", stato: "emesso", data: "2026-09-02",
+    totali: { imponibile: "1000.00", imposta: "220.00", totale: "122000000000" },
+    fattureCollegate: [{ numero: doc.numero, data: doc.data }],
+  });
+  const conto = (await ledger(db, { today: OGGI })).get(doc.id);
+  assert.equal(conto.saldata, true, "stornata per intero, non resta niente da incassare");
+});
+
+await test("nel conto entrano solo i documenti che chiedono soldi", async () => {
+  const db = await openDatabase();
+  await put(db, "docs", issued());
+  await put(db, "docs", { id: "prev", tipo: "preventivo", serie: "PR", numero: "2026/0001", stato: "accettato", data: "2026-09-01", totali: { totale: "100000000000" } });
+  await put(db, "docs", { id: "bozza", tipo: "TD01", stato: "bozza", data: "2026-09-01" });
+  const conti = await ledger(db, { today: OGGI });
+  assert.equal(conti.size, 1, "il preventivo accettato e la bozza non devono niente a nessuno");
+});
+
+await test("una fattura a zero non si dichiara saldata", async () => {
+  // Non ha mai chiesto niente: dirlo sarebbe rispondere a una domanda che nessuno ha fatto.
+  const conto = settlementOf({ data: "2026-09-01", totali: { totale: "0" } }, 0n, OGGI);
+  assert.equal(conto.saldata, false);
+  assert.equal(money(conto.residuo), "0.00");
 });
 
 console.log(`schedule: ${passed} prove passate`);

@@ -40,7 +40,7 @@ import * as progetti from "./projects.js";
 import * as project from "./project.js";
 import * as doc from "./doc.js";
 import * as due from "./due.js";
-import { summary, csv } from "./schedule.js";
+import { summary, csv, ledger } from "./schedule.js";
 import { fiscalCode, parseOptional } from "./parse.js";
 import { money, date as shownDate } from "./format.js";
 import { wire as wireImport, refresh as refreshImport } from "./importing.js";
@@ -403,7 +403,7 @@ async function _converti(record, docs) {
 const FILTRI_DA = 8;
 
 /** The filters as the person set them, kept while the app is open: a search is not a route. */
-const filtro = { testo: "", anno: "", stato: "" };
+const filtro = { testo: "", anno: "", stato: "", incasso: "" };
 
 /** The year menu and the state menu, from what is actually in the list. */
 function _drawFilterMenus(docs) {
@@ -438,13 +438,45 @@ function _drawFilterMenus(docs) {
   stati.value = [...stati.options].some((o) => o.value === primaStato) ? primaStato : "";
 }
 
+/** Un nodo con una classe e del testo. `textContent`: quello che ci va dentro è dato di qualcuno. */
+function _node(tag, classe, text) {
+  const node = window.document.createElement(tag);
+  if (classe) node.className = classe;
+  if (text !== undefined && text !== null) node.textContent = text;
+  return node;
+}
+
+/**
+ * Come sta l'incasso di un documento, in una riga: saldata, quanto resta, o il ritardo.
+ *
+ * `null` quando il documento non chiede soldi — un preventivo, un DDT, una nota di credito — perché
+ * lì la domanda non si pone e una riga vuota sembrerebbe un dato mancante.
+ */
+function _settleLine(conto) {
+  if (!conto) return null;
+  if (conto.saldata) return _node("div", "settle settle-done", t("settleDone"));
+  const quanto = money(conto.residuo);
+  if (conto.scaduta) return _node("div", "settle settle-late", tf("settleOverdue", { importo: quanto }));
+  return _node("div", "settle", tf("settleLeft", { importo: quanto }));
+}
+
 /** The rows the filters let through. Text is matched on number, customer and subject, accents aside. */
-function _filtra(docs, byId) {
+function _filtra(docs, byId, conti) {
   const norm = (text) => String(text || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   const cerca = norm(filtro.testo).trim();
   return docs.filter((record) => {
     if (filtro.anno && String(record.data || "").slice(0, 4) !== filtro.anno) return false;
     if (filtro.stato && record.stato !== filtro.stato) return false;
+    // **«Da incassare» non è uno stato, ed è un filtro a parte.** Lo stato dice dov'è il file
+    // rispetto al Sistema di Interscambio; questo dice dove sono i soldi. Un menù solo con dentro
+    // le due cose costringerebbe a scegliere fra due domande che si fanno insieme.
+    if (filtro.incasso) {
+      const conto = conti.get(record.id);
+      if (!conto) return false;                       // non chiede soldi: non è di questo filtro
+      if (filtro.incasso === "aperte" && conto.saldata) return false;
+      if (filtro.incasso === "ritardo" && !conto.scaduta) return false;
+      if (filtro.incasso === "saldate" && !conto.saldata) return false;
+    }
     if (!cerca) return true;
     const pagliaio = norm([shownNumber(record), byId.get(record.partyId), record.causale].join(" "));
     return pagliaio.includes(cerca);
@@ -458,10 +490,13 @@ async function _drawDocuments(docs) {
   const people = db ? await parties.parties(db) : [];
   const byId = new Map(people.map((person) => [person.id, person.denominazione]));
   const fatturati = invoicedBy(docs);
+  // Una lettura sola per tutte le righe, e dalle stesse funzioni dello scadenzario: l'elenco e lo
+  // scadenzario devono dire lo stesso numero sulla stessa fattura.
+  const conti = db ? await ledger(db) : new Map();
 
   el("docsFilters").hidden = docs.length < FILTRI_DA;
   _drawFilterMenus(docs);
-  const visibili = docs.length < FILTRI_DA ? docs : _filtra(docs, byId);
+  const visibili = docs.length < FILTRI_DA ? docs : _filtra(docs, byId, conti);
   el("docsNoMatch").hidden = !(docs.length && !visibili.length);
   el("docsTable").hidden = docs.length === 0 || visibili.length === 0;
 
@@ -496,13 +531,23 @@ async function _drawDocuments(docs) {
       [record.data ? shownDate(record.data) : "—", "nowrap"],
       [byId.get(record.partyId) || "—", "nowrap"],
       [totale, "right"],
-      [statoLabel(record.stato), "nowrap"],
     ]) {
       const td = document.createElement("td");
       td.textContent = value;
       if (classe) td.className = classe;
       tr.append(td);
     }
+
+    // Lo stato, e sotto come sta l'incasso: due fatti diversi, vicini perché si leggono insieme.
+    // Il saldo non è uno stato e non si scrive da nessuna parte — è la somma degli incassi, chiesta
+    // a `schedule.js` — ma senza, l'elenco non distingue una fattura pagata da una scaduta da tre
+    // mesi, e la distinzione è la prima cosa che si cerca qui dentro.
+    const cella = document.createElement("td");
+    cella.className = "nowrap";
+    cella.append(_node("div", null, statoLabel(record.stato)));
+    const soldi = _settleLine(conti.get(record.id));
+    if (soldi) cella.append(soldi);
+    tr.append(cella);
 
     // La conversione senza aprire il documento. Il comando c'è solo sulle righe che diventano
     // qualcosa: una colonna di pulsanti su ogni riga trasformerebbe l'elenco in una pulsantiera.
@@ -1180,7 +1225,7 @@ async function main() {
     filtro.testo = event.target.value;
     await _drawDocuments(await documents(db));
   });
-  for (const [id, chiave] of [["docsYear", "anno"], ["docsStateFilter", "stato"]]) {
+  for (const [id, chiave] of [["docsYear", "anno"], ["docsStateFilter", "stato"], ["docsMoneyFilter", "incasso"]]) {
     el(id).addEventListener("change", async (event) => {
       filtro[chiave] = event.target.value;
       await _drawDocuments(await documents(db));

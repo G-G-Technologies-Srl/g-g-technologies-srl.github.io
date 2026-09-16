@@ -22,10 +22,18 @@
      the light theme: the surface disappeared and a hovered row gave no answer at all. */
   --fill: rgba(255, 255, 255, 0.03);
   --danger: #b4413c;
+  /* **Il rosso che porta del testo è un altro rosso.** `--danger` nasce per bordi e riempimenti —
+     oggetti grafici, che a WCAG bastano a 3:1 — e come testo sul pannello scuro sta a 2,88: sotto
+     la soglia proprio dove dice le cose che contano, cioè perché una fattura non si può emettere e
+     che un incasso è in ritardo. Misurato nei due temi separatamente, come vuole la regola: 6,45
+     sul pannello scuro, 5,58 su quello chiaro. */
+  --danger-text: #f2857f;
 }
 
 :root[data-theme="light"] {
   --fill: rgba(13, 18, 32, 0.04);
+  /* Nel chiaro il rosso di sempre passa già: resta quello, e quello che si vede non cambia. */
+  --danger-text: #b4413c;
 }
 
 /* La striscia del dimostrativo, sopra tutto. Sobria di proposito: quello che deve dire lo dice il
@@ -619,7 +627,7 @@ dialog.sheet .spacer { flex: 1 1 auto; }
   list-style: none;
   margin: 16px 0 0;
   padding: 0;
-  color: var(--danger);
+  color: var(--danger-text);
   font-size: 0.9rem;
 }
 
@@ -699,7 +707,7 @@ dialog li::before {
    **After `.button.ghost` on purpose.** The two have the same specificity, so the one written last
    wins — and written first, this rule lost silently and Elimina came out the colour of every other
    button. */
-.button.ghost.danger-text { color: var(--danger); border-color: transparent; }
+.button.ghost.danger-text { color: var(--danger-text); border-color: transparent; }
 .button.ghost.danger-text:hover:not(:disabled) { border-color: var(--danger); }
 
 /* The two notices on Home actually look like notices. `.warn` was in the markup and had no rule. */
@@ -865,7 +873,7 @@ dialog li::before {
 .figure .sub { display: block; color: var(--faint); font-size: 0.78rem; margin-top: 6px; min-height: 1em; }
 /* Un numero che è una brutta notizia — il margine sotto zero, un acquisto scaduto — nella tinta
    delle cose da sistemare, non in quella dell'evidenza. */
-.figure .value.bad { color: var(--danger); }
+.figure .value.bad { color: var(--danger-text); }
 
 /* Le barre dei mesi: quest'anno nel colore dell'accento, l'anno scorso dietro nel colore del
    bordo. Le lettere dei mesi nel colore delle etichette. Tutto da variabili, così il tema chiaro
@@ -1241,7 +1249,7 @@ dialog li::before {
   border-radius: var(--radius-lg);
   padding: 18px 20px 6px;
 }
-.danger-zone h2 { margin-top: 0; color: var(--danger); }
+.danger-zone h2 { margin-top: 0; color: var(--danger-text); }
 /* Le copie nella cartella: la stessa forma delle righe della zona di cancellazione — un'etichetta a
    sinistra, un'azione a destra — perché è la stessa forma, non perché sia la stessa cosa. */
 .copy-row {
@@ -1259,6 +1267,19 @@ dialog li::before {
 /* Una copia che non combacia con l'archivio non è un errore: è una differenza, e si legge. */
 .copy-row .copy-inside.copy-diff { color: var(--muted); }
 .copy-actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+
+/* ----- come sta l'incasso: accanto allo stato, mai al posto suo ----- */
+
+/* Più piccola della riga che sta sopra, perché è l'altra metà di una cella e non una cella nuova.
+   Il colore lo porta solo il ritardo: se lo prendessero tutte e tre, una fattura saldata e una
+   scaduta peserebbero uguale sull'occhio, che è il contrario di quello che serve qui. */
+.settle { font-size: 0.82rem; color: var(--faint); margin-top: 2px; }
+.settle-done { color: var(--accent-text); }
+.settle-late { color: var(--danger-text); }
+
+.doc-settle { font-size: 0.9rem; color: var(--faint); }
+.doc-settle.settle-done { color: var(--accent-text); }
+.doc-settle.settle-late { color: var(--danger-text); }
 
 .danger-row {
   display: flex;

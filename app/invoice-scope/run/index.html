@@ -268,6 +268,17 @@
       <label class="wide"><span data-t="docsSearch"></span><input type="search" id="docsSearch" autocomplete="off"></label>
       <label class="narrow"><span data-t="docsYear"></span><select id="docsYear"></select></label>
       <label class="narrow"><span data-t="docsState"></span><select id="docsStateFilter"></select></label>
+      <!-- L'incasso è un filtro a sé, e non una voce in più fra gli stati: lo stato dice dov'è il
+           file rispetto al Sistema di Interscambio, questo dice dove sono i soldi. Le voci sono
+           fisse, perché sono una domanda e non l'elenco di quello che c'è. -->
+      <label class="narrow"><span data-t="docsMoney"></span>
+        <select id="docsMoneyFilter">
+          <option value="" data-t="docsMoneyAll"></option>
+          <option value="aperte" data-t="docsMoneyOpen"></option>
+          <option value="ritardo" data-t="docsMoneyLate"></option>
+          <option value="saldate" data-t="docsMoneyDone"></option>
+        </select>
+      </label>
     </div>
     <p class="empty" id="docsNoMatch" data-t="docsNoMatch" hidden></p>
     <div class="table-scroll">
@@ -469,6 +480,10 @@
            l'unica cosa che le si può ancora fare, quindi sta dove si guarda. -->
       <button type="button" class="button ghost" id="docCredit" data-t="docCreditNote" hidden></button>
       <span id="docStato" class="doc-stato"></span>
+      <!-- Come sta l'incasso, accanto allo stato e non dentro: sono due assi, e il saldo è la somma
+           degli incassi — derivata, mai scritta sul documento. Registrato un incasso, la risposta è
+           qui, invece che in fondo alla pagina o nell'altra schermata. -->
+      <span id="docSettle" class="doc-settle" hidden></span>
     </div>
 
     <div class="form">

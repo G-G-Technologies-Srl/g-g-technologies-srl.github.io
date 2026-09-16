@@ -54,7 +54,7 @@ Si provano sotto Node, e sono il posto giusto per una regola.
 | `model.js` | le regole di un documento, e quelle irreversibili: emissione, numerazione, stati | non disegna, non valida il tracciato |
 | `kinds.js` | cosa cambia fra i cinque tipi: preventivo, DDT, fattura (TD01), fattura differita (TD24), nota di credito (TD04) — e la **sequenza** da cui esce il numero di ciascuno | è una tabella: cinque tipi, una riga per tipo |
 | `validate.js` | se un documento può uscire | **non ha parole**: restituisce chiavi, mai frasi |
-| `schedule.js` | cosa è dovuto e quando — derivato, mai salvato | non incassa: legge |
+| `schedule.js` | cosa è dovuto e quando — derivato, mai salvato; e se un documento è saldato (`ledger`, `settlementOf`) | non incassa: legge |
 | `recurring.js` | le ricorrenze e gli acquisti attesi | un atteso è calcolato, non scritto in nessuno store |
 | `fatturapa.js` · `xml.js` | il documento come file FatturaPA | `xml.js` emette coppie ordinate, non oggetti |
 | `xmlread.js` · `reading.js` | l'XML **scritto da altri**, e i documenti che ne escono | prefissi ignorati, totali ricalcolati |
@@ -108,7 +108,7 @@ Plan Scope — `plan-model.js`, `plan-editor.js`, `plan-pack.js`.
 
 ---
 
-## Le sette cose che non si rompono
+## Le nove cose che non si rompono
 
 1. **Nessun importo passa da un float.** `0.1 + 0.2` su una fattura non è una curiosità, è un numero
    sbagliato depositato all'Agenzia. Tutto passa da `decimal.js`, che sta a otto decimali perché il
@@ -127,19 +127,25 @@ Plan Scope — `plan-model.js`, `plan-editor.js`, `plan-pack.js`.
    ripartire da uno vuol dire riusare numeri già in mano a qualcuno.
 4. **`validate.js` resta senza parole.** Il giorno in cui importa un dizionario importa anche una
    lingua corrente, che è roba da schermata. Chiavi fuori, frasi in `problems.js`.
-5. **Le differenze fra tipi stanno in `kinds.js`.** Allargare una lista alla volta in `schedule.js` o
+5. **Saldato non è uno stato.** Gli stati dicono dov'è il documento rispetto al Sistema di
+   Interscambio — emesso, inviato, accettato, scartato — e i soldi sono un altro asse: una fattura
+   accettata e mai pagata è la normalità, una pagata e poi scartata succede. Quanto resta è la somma
+   degli incassi, chiesta a `schedule.js` e mai scritta sul documento: scritta, un incasso cancellato
+   per sbaglio lascerebbe «saldata» per sempre — che è il difetto che il registro importato da un
+   altro programma portava con sé.
+6. **Le differenze fra tipi stanno in `kinds.js`.** Allargare una lista alla volta in `schedule.js` o
    in `validate.js` produce un preventivo accettato che compare nello scadenzario: è già successo.
-6. **Niente `confirm()` e niente `alert()`.** Li rifiuta `check_apps.py`, e su iOS in finestra
+7. **Niente `confirm()` e niente `alert()`.** Li rifiuta `check_apps.py`, e su iOS in finestra
    installata alcuni non compaiono affatto — su un'app di fatturazione vuol dire una conferma che
    nessuno vede prima che un numero sia assegnato per sempre. Si usa `ask.js`.
-7. **Quello che sta solo qui va detto.** Senza server la copia è una, e questa è l'app in cui
+8. **Quello che sta solo qui va detto.** Senza server la copia è una, e questa è l'app in cui
    perderla costa di più. Tre stati sembrano «cartella collegata» e non scrivono niente —
    trattenuta, permesso scaduto, ultima scrittura fallita — e si dicono sempre, anche con un
    documento solo (`safety.js`). Dove la cartella non esiste (Firefox, Safari, telefono) il
    promemoria dell'archivio a mano **torna**: vale finché il lavoro fatto dopo non è al sicuro, non
    una volta sola. E il ripristino passa da `gg/io.js`, che valida il file intero prima di scrivere
    un record: mezzo ripristino è l'unico esito senza ritorno.
-8. **Nessuna richiesta di rete a app aperta**, con l'unica eccezione dichiarata nella scheda:
+9. **Nessuna richiesta di rete a app aperta**, con l'unica eccezione dichiarata nella scheda:
    `gg/update.js` fa rileggere `sw.js`. Una seconda chiamata va scritta nella scheda **prima** che
    nel codice.
 
@@ -201,6 +207,7 @@ Tre pezzi di impalcatura, e vale la pena sapere che ci sono:
 | un formato in ingresso | un modulo nuovo accanto a `sheet.js`/`xls.js`, che restituisce righe di stringhe | provalo **con file veri**, non con file inventati |
 | una schermata nuova | una rotta in `app.js` + un file suo | i conti li fa un modulo senza DOM, provato a parte |
 | un dato del cliente che si vede sul documento | `address.js` | lo prendono la carta (`print.js`) e la schermata (`doc.js`): una riga sola, due posti |
+| mostrare quanto resta da incassare | `ledger` in `schedule.js`, mai un conto nuovo nella schermata | elenco, documento e scadenzario devono dire lo stesso numero |
 | una serie o una numerazione | `kinds.js` (`serie`, `sequenza`) | e il numero per esteso esce anche nell'XML: `fatturapa.js` scrive `shownNumber`, non `doc.numero` |
 | una parola | `i18n.js`, **entrambe le lingue nella stessa modifica** | `check_apps.py` confronta le chiavi |
 | un file nuovo in `run/` | il file + l'elenco `ASSETS` in `sw.js` | e gira la versione |

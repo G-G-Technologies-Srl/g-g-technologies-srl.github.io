@@ -128,20 +128,14 @@ function mulInt(value, n) {
 }
 
 /**
- * Every amount owed, one row per instalment, oldest first.
+ * Quello che è entrato contro ogni documento: incassi e note di credito insieme, per id.
  *
- * `today` is a parameter and not `new Date()` inside: a function that reads the clock cannot be
- * tested, and "is this overdue" is exactly the kind of thing that has to be.
+ * **A credit note is a credit against the invoice it reverses, not a row of its own.** Its amounts
+ * are positive in the file — the type is what says it reverses — so giving it a negative row would
+ * show a due date for money nobody owes. It behaves exactly like money received, and is applied the
+ * same way.
  */
-export async function schedule(db, { today = new Date().toISOString().slice(0, 10) } = {}) {
-  // Everything issued and not cancelled: the ones that owe and the ones that credit. Which is which
-  // is the profile's business, asked twice below.
-  const all = (await list(db, "docs")).filter((doc) => OWING.has(doc.stato));
-
-  // **A credit note is a credit against the invoice it reverses, not a row of its own.** Its
-  // amounts are positive in the file — the type is what says it reverses — so giving it a negative
-  // row here would show a due date for money nobody owes, and the final filter would drop it
-  // anyway. It behaves exactly like money received, and it is applied the same way.
+function _credits(all, paid) {
   const credits = new Map();
   for (const doc of all.filter((d) => kind(d).storna)) {
     const totale = doc.totali ? BigInt(doc.totali.totale) : ZERO;
@@ -154,8 +148,6 @@ export async function schedule(db, { today = new Date().toISOString().slice(0, 1
     // a key of its own rather than dropped — it just has nothing to attach to.
     if (!(doc.fattureCollegate || []).length) credits.set(`nc:${doc.id}`, totale);
   }
-
-  const paid = await list(db, "payments");
   for (const payment of paid) {
     let importo = ZERO;
     try {
@@ -167,32 +159,25 @@ export async function schedule(db, { today = new Date().toISOString().slice(0, 1
     }
     credits.set(payment.docId, add(credits.get(payment.docId) || ZERO, importo));
   }
+  return credits;
+}
+
+/**
+ * Every amount owed, one row per instalment, oldest first.
+ *
+ * `today` is a parameter and not `new Date()` inside: a function that reads the clock cannot be
+ * tested, and "is this overdue" is exactly the kind of thing that has to be.
+ */
+export async function schedule(db, { today = new Date().toISOString().slice(0, 10) } = {}) {
+  // Everything issued and not cancelled: the ones that owe and the ones that credit. Which is which
+  // is the profile's business, asked twice below.
+  const all = (await list(db, "docs")).filter((doc) => OWING.has(doc.stato));
+
+  const credits = _credits(all, await list(db, "payments"));
 
   const rows = [];
   for (const doc of all.filter(_conta)) {
-    const totale = doc.totali ? BigInt(doc.totali.totale) : ZERO;
-    const rate = (doc.pagamento || {}).rate || [];
-
-    // No instalments means payable on receipt: one row, on the document's own date.
-    const parts = rate.length
-      ? quote(rate, totale).map((importo, i) => ({
-        scadenza: rate[i].scadenza || doc.data,
-        importo,
-      }))
-      : [{ scadenza: doc.data, importo: totale }];
-
-    // What has come in — payments and credit notes together — closes the oldest instalment first,
-    // which is how a partial amount is normally meant and the only reading that needs no asking.
-    let left = credits.get(doc.id) || ZERO;
-    const ordered = [...parts].sort((a, b) => String(a.scadenza).localeCompare(String(b.scadenza)));
-    for (const part of ordered) {
-      if (left <= ZERO) break;
-      const take = cmp(left, part.importo) >= 0 ? part.importo : left;
-      part.importo = sub(part.importo, take);
-      left = sub(left, take);
-    }
-
-    for (const part of parts) {
+    for (const part of settlementOf(doc, credits.get(doc.id) || ZERO, today).parts) {
       rows.push({
         docId: doc.id,
         tipo: doc.tipo,
@@ -208,6 +193,72 @@ export async function schedule(db, { today = new Date().toISOString().slice(0, 1
   return rows
     .filter((row) => cmp(row.importo, ZERO) > 0)
     .sort((a, b) => String(a.scadenza).localeCompare(String(b.scadenza)));
+}
+
+/**
+ * Quanto resta da incassare su un documento, e se è in ritardo.
+ *
+ * **Derivato, come tutto il resto di questo file.** Che una fattura sia saldata non è uno stato del
+ * documento e non si scrive da nessuna parte: lo stato dice dov'è il file rispetto al Sistema di
+ * Interscambio — emesso, inviato, accettato, scartato — e i soldi sono un altro asse. Una fattura
+ * accettata e mai pagata è la normalità; una pagata e poi scartata succede. Tenuti in un campo solo
+ * se ne perderebbe uno, e quello perso sarebbe il fiscale, cioè l'unico che questa app deve poter
+ * ricostruire. E un «saldata» scritto sul documento sarebbe un secondo posto che dice quello che
+ * gli incassi dicono già: cancellato un incasso per sbaglio, resterebbe saldata per sempre. È il
+ * difetto che il registro importato da un altro programma portava con sé.
+ *
+ * `arrivato` è quello che è entrato — incassi e note di credito insieme — e chiude la rata più
+ * vecchia per prima, che è come si intende un versamento parziale.
+ */
+export function settlementOf(doc, arrivato = ZERO, today = new Date().toISOString().slice(0, 10)) {
+  const totale = doc.totali ? BigInt(doc.totali.totale) : ZERO;
+  const rate = (doc.pagamento || {}).rate || [];
+
+  // No instalments means payable on receipt: one row, on the document's own date.
+  const parts = rate.length
+    ? quote(rate, totale).map((importo, i) => ({ scadenza: rate[i].scadenza || doc.data, importo }))
+    : [{ scadenza: doc.data, importo: totale }];
+
+  let left = arrivato;
+  const ordered = [...parts].sort((a, b) => String(a.scadenza).localeCompare(String(b.scadenza)));
+  for (const part of ordered) {
+    if (left <= ZERO) break;
+    const take = cmp(left, part.importo) >= 0 ? part.importo : left;
+    part.importo = sub(part.importo, take);
+    left = sub(left, take);
+  }
+
+  const aperte = parts.filter((part) => cmp(part.importo, ZERO) > 0);
+  const scadenze = aperte.map((part) => part.scadenza).filter(Boolean).sort();
+  return {
+    parts,
+    totale,
+    incassato: arrivato,
+    residuo: sum(aperte.map((part) => part.importo)),
+    // Una fattura a zero non è «saldata»: non ha mai chiesto niente a nessuno, e dirlo sarebbe una
+    // risposta a una domanda che non è stata fatta.
+    saldata: cmp(totale, ZERO) > 0 && !aperte.length,
+    scaduta: scadenze.some((quando) => quando < today),
+    prossima: scadenze.length ? scadenze[0] : null,
+  };
+}
+
+/**
+ * Il conto di ogni documento che deve qualcosa, per id.
+ *
+ * Una lettura sola per una schermata intera: l'elenco dei documenti ne ha uno per riga, e chiederlo
+ * documento per documento vorrebbe dire rileggere gli incassi una volta per riga. Passa dalle stesse
+ * funzioni dello scadenzario — note di credito comprese — perché due schermate che rispondono alla
+ * stessa domanda con due conti diversi sono il difetto che questo file esiste per non avere.
+ */
+export async function ledger(db, { today = new Date().toISOString().slice(0, 10) } = {}) {
+  const all = (await list(db, "docs")).filter((doc) => OWING.has(doc.stato));
+  const credits = _credits(all, await list(db, "payments"));
+  const out = new Map();
+  for (const doc of all.filter(_conta)) {
+    out.set(doc.id, settlementOf(doc, credits.get(doc.id) || ZERO, today));
+  }
+  return out;
 }
 
 /** What is overdue, and what is owed in total. The two figures Home shows. */
