@@ -82,6 +82,45 @@ function _urgency(iso, today) {
   return "far";
 }
 
+/**
+ * La pastiglia di un progetto, accanto a una sua scadenza.
+ *
+ * Il nome del progetto era testo grigio come il resto della riga, e in un elenco che attraversa
+ * tutti i progetti è proprio il pezzo che si cerca per primo — «di chi è questa scadenza». La
+ * tinta è quella che il progetto si è dato negli attributi, la stessa del pallino sulla sua
+ * scheda; senza tinta, il verde dell'app, che è il colore di quello che è nostro.
+ */
+function _projectPill(project) {
+  const pill = node("span", "badge project-pill", project.name || t("projectUntitled"));
+  const { color } = glanceOf(project.props);
+  if (color) {
+    pill.style.setProperty("--tint", color);
+    pill.style.setProperty("--tint-ink", _ink(color));
+  }
+  return pill;
+}
+
+/**
+ * L'inchiostro che si legge su una tinta scelta da qualcun altro.
+ *
+ * Il bianco fisso è la strada facile e sbaglia sui colori chiari: giallo e ciano se lo mangiano.
+ * Il conto è quello vero del contrasto — luminanza relativa secondo WCAG — e la soglia è il punto
+ * in cui bianco e scuro pareggiano, non un numero a occhio.
+ */
+function _ink(color) {
+  const found = /^#([0-9a-f]{6})$/i.exec(String(color || "").trim());
+  if (!found) return "#fff";
+  const packed = parseInt(found[1], 16);
+  const channel = (one) => {
+    const value = one / 255;
+    return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  };
+  const light = 0.2126 * channel((packed >> 16) & 255)
+    + 0.7152 * channel((packed >> 8) & 255)
+    + 0.0722 * channel(packed & 255);
+  return light > 0.197 ? "#0d1220" : "#fff";
+}
+
 /** Le iniziali di un nome: una per «Giulia», due per «Marco Rossi». */
 function _initials(name) {
   const words = String(name || "").trim().split(/\s+/).filter(Boolean);
@@ -289,7 +328,7 @@ function _meetingRow(meeting, today, { project = null, day = "label" } = {}) {
   row.append(node("span", "meet-mark", meeting.time || "·"));
   row.append(button("link title", meeting.page.title || t("pageUntitled"),
     () => on.openPage(meeting.page.id)));
-  if (project) row.append(node("span", "meta from", project.name || t("projectUntitled")));
+  if (project) row.append(_projectPill(project));
   if (meeting.with) row.append(node("span", "meta from", meeting.with));
   row.append(node("span", "spacer"));
   // Niente `late`: un appuntamento passato è passato, e dirgli «in ritardo» sarebbe rimproverare
@@ -331,7 +370,7 @@ function _taskRow(task, today, { project = null, day = "label" } = {}) {
     () => on.openTask(task.id)));
   // On the cross-project list the row says which project it belongs to; on a project's own
   // dashboard that would be the title repeated on every line.
-  if (project) row.append(node("span", "meta from", project.name || t("projectUntitled")));
+  if (project) row.append(_projectPill(project));
   // A sub-task in a list of deadlines says whose part it is: «Testi» alone is a word, «Testi ·
   // Materiali» is a place.
   const parent = model.parentOf(task);

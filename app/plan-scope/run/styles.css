@@ -789,6 +789,29 @@ select:hover, select:focus { border-color: var(--border-strong); }
   border: 1px solid var(--tint, var(--border));
 }
 
+/* La pastiglia del progetto accanto a una scadenza: la tinta che il progetto si è dato negli
+   attributi — la stessa del pallino sulla sua scheda — e in mancanza l'indaco.
+
+   **Non il verde dell'app**, che su queste righe è già occupato: è il colore del titolo che si
+   clicca, e una pastiglia verde accanto a un titolo verde direbbe che sono la stessa cosa.
+   L'indaco viene dalla scala delle tinte delle etichette (`--h3`), che l'app tiene apposta per i
+   fondi pieni con il testo bianco sopra, e non porta nessun altro significato: il verde vuol dire
+   «nostro», l'ambra «in ritardo», e l'indaco era libero.
+
+   Con una tinta scelta, `--tint-ink` arriva dalla riga e non da qui: il bianco fisso sparirebbe
+   su un giallo. Due classi come `.badge.tag`, così non dipende da chi è scritta prima. */
+.badge.project-pill {
+  background: var(--tint, var(--h3));
+  color: var(--tint-ink, #fff);
+  border-color: transparent;
+  font-size: 11px;
+  padding: 0 8px;
+  max-width: 14em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Accesa: un anello intorno, perché il fondo è già occupato dalla tinta. Si vede che è quella a
    filtrare senza cambiarle colore, che sarebbe come rinominarla mentre la si guarda. */
 .badge.tag.on { outline: 2px solid var(--accent); outline-offset: 2px; }
