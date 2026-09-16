@@ -1308,9 +1308,18 @@ export function meetingAhead(meeting, now = new Date()) {
   return meeting.date > todayISO(now);
 }
 
-/** Gli incontri ancora davanti, cioè gli appuntamenti; il resto sono verbali. */
-export function meetingsAhead(projectId, now = new Date()) {
-  return meetingsOf(projectId).filter((one) => meetingAhead(one, now));
+/**
+ * Gli incontri ancora davanti, cioè gli appuntamenti; il resto sono verbali.
+ *
+ * `days` è l'orizzonte, e serve dove la lista ne dichiara uno. Il pannello delle scadenze si ferma
+ * a una settimana perché così fa `dueSoon`, e senza questo limite un appuntamento di dicembre
+ * finiva sotto «Prossimi giorni» accanto a un'attività di giovedì: la stessa parola per due
+ * distanze diverse. Chi vuole tutto — «il prossimo impegno», i promemoria — non lo passa.
+ */
+export function meetingsAhead(projectId, now = new Date(), { days = null } = {}) {
+  const limit = days === null ? null : addDays(todayISO(now), days);
+  return meetingsOf(projectId)
+    .filter((one) => meetingAhead(one, now) && (!limit || one.date <= limit));
 }
 
 /**

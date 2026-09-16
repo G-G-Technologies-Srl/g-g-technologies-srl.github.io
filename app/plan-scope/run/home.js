@@ -545,7 +545,7 @@ export function paintHome(room) {
       // vederli bisognava entrare in un progetto e aprire il suo calendario.
       // Solo gli appuntamenti, cioè gli incontri ancora davanti. Un verbale della settimana
       // scorsa non è «cosa mi aspetta», e prima stava qui lo stesso.
-      ...model.meetingsAhead(project.id)
+      ...model.meetingsAhead(project.id, new Date(), { days: model.SOON_DAYS })
         .map((meeting) => ({ when: meeting.date, meeting, project })),
     ])
     // A parità di giorno l'appuntamento viene prima: ha un'ora, quindi un posto nella giornata.
@@ -594,7 +594,8 @@ export function paintProject(id) {
 
   const due = [
     ...model.dueSoon(id, { from: today }).map((task) => ({ when: task.end, task })),
-    ...model.meetingsAhead(id).map((meeting) => ({ when: meeting.date, meeting })),
+    ...model.meetingsAhead(id, new Date(), { days: model.SOON_DAYS })
+      .map((meeting) => ({ when: meeting.date, meeting })),
   ].sort((a, b) => a.when.localeCompare(b.when) || (a.meeting ? -1 : 1) - (b.meeting ? -1 : 1));
   fill(el("dueList"), due.map((one) => (one.meeting
     ? _meetingRow(one.meeting, today)

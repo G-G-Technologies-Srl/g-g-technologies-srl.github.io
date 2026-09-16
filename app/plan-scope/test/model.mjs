@@ -1456,6 +1456,19 @@ test("meetingsAhead lascia i verbali fuori e tiene gli appuntamenti", () => {
   assert.equal(model.meetingsOf(one.id).length, 4, "i verbali non spariscono, restano solo fuori dalle liste");
 });
 
+test("l'orizzonte di «cosa mi aspetta»: una settimana se lo si chiede, tutto se non lo si chiede", () => {
+  const one = model.createProject({ name: "Sito" });
+  incontro(one.id, ["tipo: incontro", "data: 2026-09-26", "ora: 10:00", "con: Vicino"]);
+  incontro(one.id, ["tipo: incontro", "data: 2026-12-15", "ora: 10:00", "con: Lontano"]);
+  // Senza limite: tutti e due, che è quello che serve al «prossimo impegno» e ai promemoria.
+  assert.deepEqual(model.meetingsAhead(one.id, ADESSO).map((x) => x.with), ["Vicino", "Lontano"]);
+  // Con l'orizzonte del pannello delle scadenze: solo quello dentro la settimana. Dicembre sotto
+  // «Prossimi giorni» accanto a un'attività di giovedì è la stessa parola per due distanze.
+  assert.deepEqual(model.meetingsAhead(one.id, ADESSO, { days: model.SOON_DAYS }).map((x) => x.with),
+    ["Vicino"]);
+  assert.deepEqual(model.meetingsAhead(one.id, ADESSO, { days: 0 }).map((x) => x.with), []);
+});
+
 test("il momento si costruisce dalle parti: il fuso non lo sposta", () => {
   const at = model.meetingMoment(m("2026-09-24", "15:00"));
   assert.equal(at.getHours(), 15);
