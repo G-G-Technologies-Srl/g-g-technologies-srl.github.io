@@ -714,8 +714,15 @@ async function _showSpace() {
     }
     // Only what is used: the quota a browser reports is the free space of the disk — hundreds of
     // gigabytes beside a fraction of a megabyte — and the comparison said nothing to anybody.
-    const mb = (estimate.usage || 0) / 1024 / 1024;
-    node.textContent = `${mb.toFixed(1).replace(".", lang() === "it" ? "," : ".")} MB`;
+    //
+    // **Sotto il megabyte si scrive in kilobyte.** Un archivio vero di quattordici fatture pesa
+    // cinquanta kilobyte, e «0,0 MB» si legge come un difetto: sembra che l'app non abbia trovato
+    // niente, proprio a chi apre quella riga per sapere se i suoi dati ci sono.
+    const usati = estimate.usage || 0;
+    const virgola = (numero) => numero.toFixed(1).replace(".", lang() === "it" ? "," : ".");
+    node.textContent = usati < 1024 * 1024
+      ? `${Math.max(1, Math.round(usati / 1024))} KB`
+      : `${virgola(usati / 1024 / 1024)} MB`;
   } catch (ignored) {
     node.textContent = "—";
   }

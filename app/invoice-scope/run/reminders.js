@@ -178,9 +178,11 @@ export function connect(db) {
       await navigator.clipboard.writeText(el("dunText").value);
       el("dunDone").textContent = t("solleciteCopied");
     } catch (ignored) {
-      // Senza il permesso degli appunti resta il modo di sempre: il testo è già selezionabile, e
-      // qui si seleziona da sé perché la prossima cosa che farà chi legge è premere Ctrl+C.
+      // Senza il permesso degli appunti resta il modo di sempre: il testo si seleziona da sé, e la
+      // riga accanto lo dice. Un pulsante che non fa niente e non spiega niente è peggio di un
+      // pulsante che non c'è.
       el("dunText").select();
+      el("dunDone").textContent = t("solleciteCopyManual");
     }
   });
 }
