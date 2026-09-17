@@ -121,6 +121,14 @@ function _giorno(n) {
   return data.toISOString().slice(0, 10);
 }
 
+/** Una data ISO spostata di `giorni`: serve a far pagare i clienti del dimostrativo in giorni
+ *  diversi dalla scadenza, che è l'unico modo perché «come pagano i clienti» dica qualcosa. */
+function _piu(iso, giorni) {
+  const data = new Date(`${iso}T12:00:00Z`);
+  data.setUTCDate(data.getUTCDate() + giorni);
+  return data.toISOString().slice(0, 10);
+}
+
 /** Il quindici di `n` mesi fa: le fatture del passato, per il grafico dei mesi. */
 function _mese(n) {
   const data = new Date();
@@ -183,6 +191,9 @@ export async function seed(db) {
   // segue l'ordine di emissione e una fattura di marzo con un numero più alto di una di settembre
   // sarebbe una cosa che nel dimostrativo salta all'occhio.
   const ORE = [30, 24, 0, 42, 36, 18, 48, 0, 28, 40, 22];
+  // Chi paga in anticipo e chi in ritardo, in giorni rispetto alla scadenza.
+  const RITARDI_UNO = [-4, -2, -6, 0, -3, -5];
+  const RITARDI_DUE = [12, 18, 5, 24, 9, 15];
   for (let indietro = 22; indietro >= 2; indietro -= 1) {
     const ore = ORE[(indietro - 2) % ORE.length];
     if (!ore) continue;
@@ -195,9 +206,14 @@ export async function seed(db) {
       righe: [_riga(t("demoItemProgettazione"), String(quante), "80.00")],
       pagamento: { condizioni: "TP02", modalita: "MP05", iban, rate: [{ scadenza: _mese(indietro - 1) }] },
     }, contesto(cliente));
+    // **Ogni cliente paga con il suo passo**, e non il giorno esatto della scadenza: il primo
+    // qualche giorno prima, il secondo in ritardo. Pagati tutti alla scadenza, il riquadro «come
+    // pagano i clienti» direbbe «in giornata» per tutti — vero nel dimostrativo, e inutile a
+    // chiunque lo apra per capire a che cosa serve.
+    const passo = cliente === CLIENTI[0] ? RITARDI_UNO : RITARDI_DUE;
     await recordPayment(db, passata, {
       importo: toString(BigInt(passata.totali.totale), 2),
-      data: _mese(indietro - 1),
+      data: _piu(_mese(indietro - 1), passo[indietro % passo.length]),
       conto: AZIENDA.conti[0],
     });
   }

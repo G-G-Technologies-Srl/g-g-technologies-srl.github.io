@@ -906,12 +906,15 @@ dialog li::before {
 /* Le barre orizzontali dei clienti: nome, barra, cifra. La parte scaduta sopra la barra, più
    scura, così «chi deve di più» e «chi è in ritardo» si vedono nello stesso disegno. */
 .hbars { display: flex; flex-direction: column; gap: 10px; padding: 4px 0 2px; }
-.hbar { display: grid; grid-template-columns: minmax(90px, 32%) 1fr auto; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-size: 0.92rem; }
+.hbar { display: grid; grid-template-columns: minmax(90px, 38%) 1fr auto; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-size: 0.92rem; }
 .hbar:hover .name { color: var(--accent-text); }
 .hbar .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hbar .track { height: 10px; border-radius: 5px; background: var(--border); overflow: hidden; }
 .hbar .fill { display: block; height: 100%; background: var(--accent); border-radius: 5px; position: relative; }
 .hbar .late { position: absolute; inset: 0 auto 0 0; background: var(--danger); border-radius: 5px; }
+/* Il resto di una ripartizione — «senza categoria» — non è un allarme: è quello che manca. In
+   tinta spenta, perché il rosso qui direbbe che c'è qualcosa di rotto. */
+.hbar .rest { position: absolute; inset: 0 auto 0 0; background: var(--faint); border-radius: 5px; }
 .hbar .amount { white-space: nowrap; font-variant-numeric: tabular-nums; }
 
 

@@ -14,8 +14,9 @@ import * as progetti from "../run/projects.js";
 import * as plan from "gg/plan-model.js";
 import {
   figures, byMonth, byYear, topParties, projectRows, openQuotes, drafts, taxFigures,
-  aging, cashByMonth, payers,
+  aging, cashByMonth, payers, mix,
 } from "../run/home.js";
+import { categorie } from "../run/categories.js";
 import { recurringRecord, expected } from "../run/recurring.js";
 import { costRecord } from "../run/costs.js";
 import { reset } from "./fake-store.mjs";
@@ -363,6 +364,32 @@ await prova("la puntualità si misura sulle fatture chiuse, e non sugli incassi 
   assert.ok(!classifica.some((r) => r.partyId === "p3" || r.partyId === "p4"));
   // E una fattura sola non fa una media.
   assert.deepEqual(payers([docs[0]], [incassi[0]]), []);
+});
+
+await prova("il fatturato si divide per categoria, e il resto sta in fondo", async () => {
+  const docs = [
+    fattura("2026-03-01", "1000", { id: "a", categoria: "Sviluppo" }),
+    fattura("2026-04-01", "3000", { id: "b", categoria: "Sviluppo" }),
+    fattura("2026-05-01", "2000", { id: "c", categoria: "Assistenza" }),
+    fattura("2026-06-01", "4000", { id: "d" }),
+    fattura("2025-06-01", "9000", { id: "e", categoria: "Sviluppo" }),   // anno scorso: fuori
+  ];
+  const fette = mix(docs, { today: OGGI });
+  assert.deepEqual(fette.map((f) => f.categoria), ["Sviluppo", "Assistenza", ""],
+    "per importo, e senza categoria sempre in fondo — è un resto, non una voce");
+  assert.equal(soldi(fette[0].importo), "4000.00");
+  assert.equal(fette[0].quante, 2);
+  assert.equal(fette[0].quota, 40);
+  assert.equal(fette[2].quota, 40, "anche il resto porta la sua quota, o la somma non torna");
+  assert.deepEqual(mix([], { today: OGGI }), []);
+});
+
+await prova("le categorie già usate si propongono una volta sola, nella grafia di chi le ha scritte", async () => {
+  const docs = [
+    { categoria: "Sviluppo" }, { categoria: " sviluppo " }, { categoria: "Assistenza" },
+    { categoria: "" }, {}, { categoria: "  " },
+  ];
+  assert.deepEqual(categorie(docs), ["Assistenza", "Sviluppo"]);
 });
 
 console.log(`home: ${passed} prove passate`);

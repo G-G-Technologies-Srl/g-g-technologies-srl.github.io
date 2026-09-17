@@ -18,7 +18,7 @@ import { openDatabase, documentKey, fileNameKey } from "../run/db.js";
 import { numero as shownNumber } from "../run/kinds.js";
 import {
   draft, editable, save, issue, reopen, setState, setType, creditNote, convert, convertMany,
-  discard, documents, invoicedBy, markExported, nextProgressivo, NUMERAZIONI,
+  discard, documents, invoicedBy, markExported, nextProgressivo, setCategory, NUMERAZIONI,
 } from "../run/model.js";
 import { put, get, list, reset, failOnWrite } from "./fake-store.mjs";
 
@@ -305,6 +305,26 @@ await test("l'ultimo emesso torna bozza, e il contatore scende con lui", async (
   // Il contatore è tornato a zero, quindi il prossimo riprende lo stesso numero e non ne salta uno.
   const di_nuovo = await issue(db, await save(db, newDoc()), CONTEXT);
   assert.equal(di_nuovo.numero, "2026/0001");
+});
+
+await test("la categoria si scrive anche su un documento emesso, e non tocca altro", async () => {
+  // È il caso per cui esiste: il fatturato da dividere è quello già fatto. `save` rifiuta tutto
+  // quello che non è una bozza — giustamente — quindi questa strada è l'unica, e tocca un campo solo.
+  const db = await openDatabase();
+  const issued = await issue(db, await save(db, newDoc()), CONTEXT);
+  await assert.rejects(() => save(db, { ...issued, causale: "cambiata" }), /non si modifica/);
+
+  const etichettato = await setCategory(db, issued, "  Sviluppo  ");
+  assert.equal(etichettato.categoria, "Sviluppo", "senza gli spazi di chi l'ha battuta");
+  assert.equal(etichettato.numero, issued.numero);
+  assert.equal(etichettato.stato, issued.stato);
+  assert.ok(etichettato.chiave, "e resta dentro l'indice unico");
+  assert.equal((await get(db, "docs", issued.id)).categoria, "Sviluppo");
+
+  // Svuotata, la chiave sparisce: «senza categoria» è l'assenza del campo, in un posto solo.
+  const pulito = await setCategory(db, etichettato, "   ");
+  assert.equal("categoria" in pulito, false);
+  assert.equal("categoria" in (await get(db, "docs", issued.id)), false);
 });
 
 await test("segnare l'export non fa uscire il documento dall'indice unico", async () => {

@@ -28,9 +28,10 @@ import { quote as instalments, ledger } from "./schedule.js";
 import { parseAmount, parseOptional } from "./parse.js";
 import { NATURE as ALL_NATURE, validate } from "./validate.js";
 import { describe } from "./problems.js";
+import { fillDatalist } from "./categories.js";
 import {
   draft, editable, save, issue, reopen, creditNote, convert, discard, markExported, nextProgressivo,
-  setType, documents, invoicedBy,
+  setType, setCategory, documents, invoicedBy,
 } from "./model.js";
 import { build, fileName, MAX_BYTE } from "./fatturapa.js";
 import { isCustomer, parties, items, party as getParty, openNewParty } from "./parties.js";
@@ -641,6 +642,7 @@ function _readHeader() {
   current.data = el("docDate").value;
   current.partyId = el("docPartySelect").value || null;
   current.causale = el("docCausale").value.trim() || null;
+  current.categoria = el("docCategoria").value.trim() || undefined;
 
   current.bollo = has(current, "bollo") ? el("docBollo").checked : false;
 
@@ -889,6 +891,7 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
   el("docType").value = current.tipo || "TD01";
   el("docDate").value = current.data || "";
   el("docCausale").value = current.causale || "";
+  el("docCategoria").value = current.categoria || "";
   el("docBollo").checked = Boolean(current.bollo);
   el("docDiscount").value = current.scontoDocumento?.percentuale || "";
   el("docValidoFino").value = current.validoFino || "";
@@ -1026,7 +1029,11 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
   // **Un documento già fatturato non si fattura di nuovo**, e non è un divieto scritto su di lui:
   // si guarda se qualche fattura lo nomina. Buttata via la bozza della fattura, il documento torna
   // disponibile da sé, perché non lo nomina più nessuno.
-  const fatturaChiLoPorta = invoicedBy(await documents(db)).get(current.id);
+  const tutti = await documents(db);
+  // Le categorie già usate, nel menù del campo: due grafie della stessa categoria sono due fette
+  // nel grafico, e l'unico momento in cui si può evitare è mentre si scrive.
+  fillDatalist(el("docCategorie"), tutti);
+  const fatturaChiLoPorta = invoicedBy(tutti).get(current.id);
   const diventa = fatturaChiLoPorta ? null : convertibile(current);
   el("docConvert").hidden = !diventa;
   if (diventa) el("docConvert").textContent = t(`convertTo${diventa}`);
@@ -1279,6 +1286,20 @@ export function connect(db) {
     _drawSections();
     _drawSummary();
     _touch();
+  });
+
+  // **La categoria si scrive anche su un documento emesso.** Non è un campo del tracciato — non
+  // esce nel file e non si stampa — e il fatturato da dividere è quello già fatto: un'etichetta
+  // che si potesse mettere solo sulle bozze non servirebbe a niente. `setCategory` è l'unico
+  // punto che tocca un documento chiuso, e tocca quel campo solo.
+  el("docCategoria").addEventListener("change", async () => {
+    if (editable(current)) {
+      _readHeader();
+      _touch();
+      return;
+    }
+    current = await setCategory(database, current, el("docCategoria").value);
+    if (onSaved) onSaved();
   });
 
   for (const id of ["docDate", "docPartySelect", "docCausale", "docBollo",

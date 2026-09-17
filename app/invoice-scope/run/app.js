@@ -31,6 +31,7 @@ import { stato as termState } from "./terms.js";
 import { NATURE } from "./validate.js";
 import { toString } from "./decimal.js";
 import * as parties from "./parties.js";
+import * as categorie from "./categories.js";
 import * as customer from "./customer.js";
 import * as purchases from "./purchases.js";
 import { allCosts, allOutlays } from "./costs.js";
@@ -1450,6 +1451,13 @@ async function main() {
   });
 
   parties.connect(db, _refresh);
+  categorie.connect(db, _refresh);
+  // Il foglio delle categorie si apre dalla Situazione, dove sta il grafico che riempie: i nomi
+  // dei clienti glieli passa chi ha già l'anagrafica in mano, invece di rileggerla.
+  el("homeMixAssign").addEventListener("click", async () => {
+    const anagrafiche = new Map((await parties.parties(db)).map((p) => [p.id, p.denominazione]));
+    await categorie.open(db, anagrafiche);
+  });
   customer.connect(db, { afterChange: _refresh });
   purchases.connect(db, { afterChange: _refresh });
   project.connect(db, { afterChange: _refresh });

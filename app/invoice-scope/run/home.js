@@ -402,6 +402,39 @@ export function payers(docs, payments, { limit = ROWS, minimo = 2 } = {}) {
     .slice(0, limit);
 }
 
+/**
+ * Il fatturato dell'anno diviso per categoria, dalla fetta più grande.
+ *
+ * **La categoria è un'etichetta dell'azienda, non un dato del tracciato.** Il file non la porta e
+ * la stampa non la mostra: serve a rispondere a «da dove viene il mio fatturato», che è una
+ * domanda che nessun campo fiscale sa soddisfare — il tipo merce ha cinque valori decisi da una
+ * norma, e per chi fa servizi è sempre lo stesso.
+ *
+ * I documenti senza categoria stanno in fondo, in una fetta loro: nasconderli farebbe sembrare
+ * completa una ripartizione che copre metà del fatturato.
+ */
+export function mix(docs, { today = new Date().toISOString().slice(0, 10) } = {}) {
+  const anno = today.slice(0, 4);
+  const per = new Map();
+  for (const doc of _invoiced(docs)) {
+    if (!String(doc.data).startsWith(anno)) continue;
+    const chiave = String(doc.categoria || "").trim();
+    const voce = per.get(chiave) || { categoria: chiave, importo: 0n, quante: 0 };
+    voce.importo += signedTotal(doc) || 0n;
+    voce.quante += 1;
+    per.set(chiave, voce);
+  }
+  const totale = [...per.values()].reduce((somma, voce) => somma + voce.importo, 0n);
+  return [...per.values()]
+    .filter((voce) => voce.importo !== 0n)
+    // Le categorie per importo, e «senza categoria» sempre in fondo: è un resto, non una voce.
+    .sort((a, b) => (!a.categoria ? 1 : !b.categoria ? -1 : a.importo < b.importo ? 1 : -1))
+    .map((voce) => ({
+      ...voce,
+      quota: totale > 0n ? Number((voce.importo * 1000n) / totale) / 10 : 0,
+    }));
+}
+
 /** I clienti con più da incassare, dal più esposto: `{ partyId, importo, scadute }`. */
 export function topParties(owedRows, { limit = ROWS } = {}) {
   const per = new Map();
@@ -584,36 +617,46 @@ export function drawParties(container, rows, byParty, { href = (row) => `#/clien
  * prima fascia — quello che deve ancora arrivare — porta la tinta normale, le altre quella dello
  * scaduto, perché è la distinzione che si legge da lontano.
  */
-export function drawBuckets(container, rows) {
+export function drawShares(container, rows, { etichetta, href, marcata = () => false, titolo = null, marca = "late" }) {
   container.textContent = "";
   const visibili = rows.filter((row) => row.importo > 0n);
   const massimo = visibili.reduce((max, row) => (row.importo > max ? row.importo : max), 0n);
   for (const row of visibili) {
     const riga = document.createElement("a");
     riga.className = "hbar";
-    riga.href = "#/scadenzario";
+    riga.href = href(row);
     const nome = document.createElement("span");
     nome.className = "name";
-    nome.textContent = t(`homeAging_${row.key}`);
+    nome.textContent = etichetta(row);
     const track = document.createElement("span");
     track.className = "track";
     const fill = document.createElement("span");
     fill.className = "fill";
     fill.style.width = `${Number((row.importo * 1000n) / massimo) / 10}%`;
-    if (row.key !== "corrente") {
-      const late = document.createElement("span");
-      late.className = "late";
-      late.style.width = "100%";
-      fill.append(late);
+    if (marcata(row)) {
+      const segno = document.createElement("span");
+      segno.className = marca;
+      segno.style.width = "100%";
+      fill.append(segno);
     }
     track.append(fill);
     const cifra = document.createElement("span");
     cifra.className = "amount";
     cifra.textContent = money(row.importo);
-    riga.title = tf(row.quante === 1 ? "homeAgingOne" : "homeAgingMany", { quante: row.quante });
+    if (titolo) riga.title = titolo(row);
     riga.append(nome, track, cifra);
     container.append(riga);
   }
+}
+
+/** Le fasce dell'insoluto: la parte scaduta in tinta più scura, come nelle barre dei clienti. */
+export function drawBuckets(container, rows) {
+  drawShares(container, rows, {
+    etichetta: (row) => t(`homeAging_${row.key}`),
+    href: () => "#/scadenzario",
+    marcata: (row) => row.key !== "corrente",
+    titolo: (row) => tf(row.quante === 1 ? "homeAgingOne" : "homeAgingMany", { quante: row.quante }),
+  });
 }
 
 /**
@@ -776,6 +819,24 @@ export function render({ docs, owed, byParty, payments = [], costs = [], outlays
     });
     el("homeCashNote").hidden = !payments.some((one) => one.importato);
   }
+
+  // Da dove viene il fatturato. Il riquadro compare con la prima fattura dell'anno anche se
+  // nessuno ha ancora una categoria: senza, il comando per assegnarle non avrebbe un posto dove
+  // stare, e la funzione resterebbe invisibile per sempre.
+  const fette = mix(docs, { today });
+  const conCategoria = fette.filter((f) => f.categoria);
+  el("wMix").hidden = fette.length === 0;
+  el("homeMixEmpty").hidden = conCategoria.length > 0;
+  drawShares(el("chartMix"), conCategoria.length ? fette : [], {
+    etichetta: (row) => row.categoria || t("homeMixNone"),
+    href: () => "#/documenti",
+    marcata: (row) => !row.categoria,
+    marca: "rest",
+    titolo: (row) => tf("homeMixShare", {
+      quota: String(row.quota).replace(".", ","),
+      quante: row.quante,
+    }),
+  });
 
   // Come pagano i clienti. Serve più di un cliente, o è una classifica di uno.
   const puntuali = payers(docs, payments);

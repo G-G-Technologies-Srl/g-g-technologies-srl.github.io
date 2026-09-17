@@ -290,6 +290,30 @@ export async function nextProgressivo(db, { da = 0, nome = null } = {}) {
   });
 }
 
+/**
+ * Scrivi la categoria su un documento, anche emesso.
+ *
+ * **Non è un campo del documento fiscale, ed è la ragione per cui non passa da `save`.** `save`
+ * rifiuta tutto quello che non è una bozza, e ha ragione: un documento emesso è uscito e qualcun
+ * altro ne ha una copia. La categoria però non esce: non entra nel file, non compare sulla stampa,
+ * non tocca numeri né totali. È un'etichetta che l'azienda mette ai propri documenti per sapere da
+ * dove viene il fatturato, e deve poterla mettere anche su una fattura di tre anni fa — che è
+ * esattamente il caso in cui serve.
+ *
+ * Vuota, la chiave sparisce dal record invece di restare come stringa vuota: «senza categoria» è
+ * l'assenza del campo, in un posto solo.
+ */
+export async function setCategory(db, doc, categoria) {
+  const stored = (await get(db, "docs", doc.id)) || doc;
+  const pulita = String(categoria || "").trim();
+  const record = { ...stored, updated: _now() };
+  if (pulita) record.categoria = pulita;
+  else delete record.categoria;
+  record.chiave = documentKey(record);
+  await put(db, "docs", record);
+  return record;
+}
+
 /** Record that the XML has left. After this the document cannot go back to being a draft. */
 export async function markExported(db, doc, progressivo, nomeFile = "") {
   const record = { ...doc, esportato: true, progressivo, updated: _now() };

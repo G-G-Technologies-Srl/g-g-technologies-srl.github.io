@@ -205,6 +205,18 @@
         <div class="hbars" id="chartAging"></div>
       </div>
 
+      <!-- Da dove viene il fatturato: la categoria è un'etichetta dell'azienda sul documento, non
+           un campo del tracciato. Il riquadro compare con la prima fattura dell'anno, anche prima
+           che una categoria esista: il comando per assegnarle sta qui. -->
+      <div class="widget" id="wMix" hidden>
+        <div class="section-head">
+          <h2 data-t="homeMix"></h2>
+          <button type="button" class="link-button" id="homeMixAssign" data-t="homeMixAssign"></button>
+        </div>
+        <p class="note" id="homeMixEmpty" data-t="homeMixEmpty" hidden></p>
+        <div class="hbars" id="chartMix"></div>
+      </div>
+
       <!-- Fatturato e incassato affiancati, mese per mese: la distanza fra le due barre è il
            credito che si accumula. -->
       <div class="widget wide" id="wCash" hidden>
@@ -568,6 +580,13 @@
         <input type="date" id="docValidoFino" required>
       </label>
       <label class="wide"><span data-t="f_causale"></span><input id="docCausale"></label>
+      <!-- L'etichetta con cui l'azienda divide il proprio fatturato. Non entra nel file e non si
+           stampa, quindi si scrive anche su un documento già emesso: è il caso in cui serve. Il
+           menù propone quelle già usate, perché due grafie della stessa categoria sono due fette. -->
+      <label><span data-t="f_categoria"></span>
+        <input id="docCategoria" list="docCategorie" autocomplete="off" maxlength="40">
+        <datalist id="docCategorie"></datalist>
+      </label>
     </div>
     <p class="note" id="docPartyNone" data-t="docPartyNone" hidden></p>
     <p class="note" id="docLinkedNote" hidden></p>
@@ -1466,6 +1485,35 @@
       <button type="button" class="button ghost danger-text" id="itemDelete" data-t="del" hidden></button>
       <span class="spacer"></span>
       <button type="button" class="button" id="itemSave" data-t="save"></button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Le categorie sui documenti che ci sono già: si sceglie l'etichetta in cima e si spuntano le
+     righe. Un foglio e non una colonna nell'elenco perché è un lavoro che si fa una volta, su
+     tutto lo storico, e poi non si ripete: la categoria nuova si scrive sul documento. -->
+<dialog id="catDialog" class="sheet">
+  <form method="dialog" id="catForm">
+    <h2 data-t="catTitle"></h2>
+    <p class="note" data-t="catNote"></p>
+    <div class="form">
+      <label class="wide"><span data-t="f_categoria"></span>
+        <input id="catValue" list="catList" autocomplete="off" maxlength="40">
+        <datalist id="catList"></datalist>
+      </label>
+    </div>
+    <div class="actions">
+      <button type="button" class="button ghost small" id="catPickNone" data-t="catPickNone"></button>
+      <button type="button" class="button ghost small" id="catPickAll" data-t="catPickAll"></button>
+      <span class="meta" id="catCount"></span>
+    </div>
+    <div class="table-scroll">
+      <table class="rows compact" id="catTable"><tbody id="catBody"></tbody></table>
+    </div>
+    <div class="actions sheet-actions">
+      <button type="button" class="button ghost" id="catCancel" data-t="cancel"></button>
+      <span class="spacer"></span>
+      <button type="button" class="button" id="catSave" data-t="catApply"></button>
     </div>
   </form>
 </dialog>
