@@ -32,6 +32,7 @@ import { NATURE } from "./validate.js";
 import { toString } from "./decimal.js";
 import * as parties from "./parties.js";
 import * as categorie from "./categories.js";
+import * as solleciti from "./reminders.js";
 import * as customer from "./customer.js";
 import * as purchases from "./purchases.js";
 import { allCosts, allOutlays } from "./costs.js";
@@ -48,7 +49,7 @@ import { money, date as shownDate } from "./format.js";
 import { wire as wireImport, refresh as refreshImport } from "./importing.js";
 import { LOGO as BRAND_LOGO } from "./brand.js";
 import * as backup from "./backup.js";
-import { advice } from "./safety.js";
+import { advice, SOGLIA_DOCUMENTI } from "./safety.js";
 import { inventory, compare } from "./archive.js";
 import * as alarms from "./alarms.js";
 
@@ -360,10 +361,16 @@ async function _refresh() {
   // entrato mese per mese, e la media dei giorni con cui ogni cliente salda.
   const payments = db ? await list(db, "payments") : [];
   home.render({ docs, owed, byParty, payments, costs, outlays, recurring, company });
+  // Il sollecito si offre dove c'è qualcosa da sollecitare, e in due posti: accanto all'insoluto
+  // nella Situazione e nello scadenzario, che sono i due schermi da cui viene la domanda.
+  const daSollecitare = solleciti.quanti(owed.rows) > 0;
+  el("homeDun").hidden = !daSollecitare;
+  el("dueDun").hidden = !daSollecitare;
 
   el("tracciato").textContent = `FatturaPA ${TRACCIATO.versione} · ${TRACCIATO.dal}`;
   await _drawDocuments(docs);
   await _showSpace();
+  await _drawPersistenza(docs.length);
 }
 
 /**
@@ -412,10 +419,13 @@ async function _converti(record, docs) {
 // that fits on one screen, and a search box over six rows is a box that finds nothing to hide.
 const FILTRI_DA = 8;
 
-/** The filters as the person set them, kept while the app is open: a search is not a route. */
-const filtro = { testo: "", anno: "", stato: "", incasso: "" };
+/** Il valore con cui il menù chiede i documenti che una categoria non ce l'hanno. */
+const SENZA_CATEGORIA = "__senza";
 
-/** The year menu and the state menu, from what is actually in the list. */
+/** The filters as the person set them, kept while the app is open: a search is not a route. */
+const filtro = { testo: "", anno: "", stato: "", incasso: "", categoria: "" };
+
+/** I menù dell'anno, dello stato e della categoria, da quello che c'è davvero nell'elenco. */
 function _drawFilterMenus(docs) {
   const anni = el("docsYear");
   const prima = anni.value;
@@ -446,6 +456,26 @@ function _drawFilterMenus(docs) {
     stati.append(option);
   }
   stati.value = [...stati.options].some((o) => o.value === primaStato) ? primaStato : "";
+
+  // Le categorie che i documenti portano davvero, più «senza categoria» quando ce n'è almeno uno
+  // che non ce l'ha: è il filtro con cui si finisce il lavoro cominciato dal foglio di assegnazione.
+  const usate = categorie.categorie(docs);
+  const mancanti = docs.some((d) => !String(d.categoria || "").trim());
+  el("docsCategoryField").hidden = usate.length === 0;
+  const menu = el("docsCategoryFilter");
+  const primaCategoria = menu.value;
+  menu.textContent = "";
+  for (const [valore, testo] of [
+    ["", t("docsAllCategories")],
+    ...usate.map((una) => [una, una]),
+    ...(mancanti && usate.length ? [[SENZA_CATEGORIA, t("docsNoCategory")]] : []),
+  ]) {
+    const option = document.createElement("option");
+    option.value = valore;
+    option.textContent = testo;
+    menu.append(option);
+  }
+  menu.value = [...menu.options].some((o) => o.value === primaCategoria) ? primaCategoria : "";
 }
 
 /** Un nodo con una classe e del testo. `textContent`: quello che ci va dentro è dato di qualcuno. */
@@ -470,7 +500,7 @@ function _settleLine(conto) {
   return _node("div", "settle", tf("settleLeft", { importo: quanto }));
 }
 
-/** The rows the filters let through. Text is matched on number, customer and subject, accents aside. */
+/** The rows the filters let through. Text matches number, customer, subject and category. */
 function _filtra(docs, byId, conti) {
   const norm = (text) => String(text || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   const cerca = norm(filtro.testo).trim();
@@ -487,8 +517,12 @@ function _filtra(docs, byId, conti) {
       if (filtro.incasso === "ritardo" && !conto.scaduta) return false;
       if (filtro.incasso === "saldate" && !conto.saldata) return false;
     }
+    if (filtro.categoria) {
+      const sua = String(record.categoria || "").trim();
+      if (filtro.categoria === SENZA_CATEGORIA ? sua : sua !== filtro.categoria) return false;
+    }
     if (!cerca) return true;
-    const pagliaio = norm([shownNumber(record), byId.get(record.partyId), record.causale].join(" "));
+    const pagliaio = norm([shownNumber(record), byId.get(record.partyId), record.causale, record.categoria].join(" "));
     return pagliaio.includes(cerca);
   });
 }
@@ -627,6 +661,45 @@ function _shownTotal(record) {
 }
 
 /** How much room the app is using, shown always and not only when it runs short. */
+/**
+ * Se il browser ha promesso di conservare l'archivio, e la richiesta quando non l'ha fatto.
+ *
+ * **Chiederlo una volta sola non basta, ed è il difetto che questa funzione corregge.** La
+ * richiesta partiva al salvataggio dell'anagrafica dell'azienda — il primo momento utile — e se il
+ * browser diceva di no non la sentiva più nessuno: su un'installazione vera, con quattordici
+ * fatture dentro, `navigator.storage.persisted()` rispondeva ancora `false` mesi dopo. Chrome
+ * concede questa promessa guardando quanto una persona usa il sito, quindi la risposta cambia nel
+ * tempo e la domanda va rifatta.
+ *
+ * Una volta per avvio, e senza finestre: il browser decide da sé, e un «no» non è una cosa su cui
+ * far fermare qualcuno. Quello che si dice, si dice nelle impostazioni, accanto allo spazio usato.
+ */
+let chiestaPersistenza = false;
+
+async function _drawPersistenza(documenti) {
+  const node = el("persistNote");
+  if (!node) return;
+  if (!navigator.storage || !navigator.storage.persisted) {
+    node.textContent = t("settingsPersistUnknown");
+    return;
+  }
+  let concessa = false;
+  try {
+    concessa = await navigator.storage.persisted();
+    // Si richiede solo a chi l'app la sta usando davvero, e **una volta per avvio**: su Firefox
+    // questa richiesta apre una finestra di permesso, e rifarla a ogni ridisegno sarebbe la stessa
+    // domanda cento volte al giorno. Chrome invece decide da sé, in silenzio.
+    if (!concessa && !chiestaPersistenza && !isDemo() && documenti >= SOGLIA_DOCUMENTI) {
+      chiestaPersistenza = true;
+      concessa = await persist();
+    }
+  } catch (ignored) {
+    node.textContent = t("settingsPersistUnknown");
+    return;
+  }
+  node.textContent = t(concessa ? "settingsPersistYes" : "settingsPersistNo");
+}
+
 async function _showSpace() {
   const node = el("space");
   try {
@@ -1296,7 +1369,8 @@ async function main() {
     filtro.testo = event.target.value;
     await _drawDocuments(await documents(db));
   });
-  for (const [id, chiave] of [["docsYear", "anno"], ["docsStateFilter", "stato"], ["docsMoneyFilter", "incasso"]]) {
+  for (const [id, chiave] of [["docsYear", "anno"], ["docsStateFilter", "stato"],
+    ["docsMoneyFilter", "incasso"], ["docsCategoryFilter", "categoria"]]) {
     el(id).addEventListener("change", async (event) => {
       filtro[chiave] = event.target.value;
       await _drawDocuments(await documents(db));
@@ -1452,6 +1526,10 @@ async function main() {
 
   parties.connect(db, _refresh);
   categorie.connect(db, _refresh);
+  solleciti.connect(db);
+  for (const id of ["homeDun", "dueDun"]) {
+    el(id).addEventListener("click", () => solleciti.open(db));
+  }
   // Il foglio delle categorie si apre dalla Situazione, dove sta il grafico che riempie: i nomi
   // dei clienti glieli passa chi ha già l'anagrafica in mano, invece di rileggerla.
   el("homeMixAssign").addEventListener("click", async () => {

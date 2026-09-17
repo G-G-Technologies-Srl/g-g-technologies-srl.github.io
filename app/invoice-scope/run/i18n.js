@@ -85,6 +85,25 @@ const IT = {
   homeMonthsEmpty: "Le barre compaiono con la prima fattura emessa.",
   homeTopParties: "Chi deve di più",
   homeAging: "Insoluto per età",
+  solleciteOpen: "Prepara un sollecito",
+  solleciteTitle: "Sollecito di pagamento",
+  solleciteNote: "Il testo è pronto da copiare in una email. Puoi modificarlo prima di copiarlo: "
+    + "l'applicazione non invia nulla.",
+  solleciteWho: "Cliente",
+  solleciteCopy: "Copia il testo",
+  solleciteCopied: "Testo copiato.",
+  solleciteSubjectLabel: "Oggetto",
+  solleciteText: "Testo del messaggio",
+  solleciteSubject: "Fatture non ancora saldate — {azienda}",
+  solleciteHello: "Gentile {cliente},",
+  solleciteLead: "dalle nostre scritture risultano non ancora saldate le fatture qui elencate.",
+  solleciteRow: "· Fattura {numero}, scadenza {scadenza}: {importo} ({giorni} giorni)",
+  solleciteTotal: "Totale a scadere: {totale}",
+  solleciteIban: "Coordinate per il pagamento: {iban}",
+  solleciteClosing: "Qualora il pagamento sia già stato disposto, la presente comunicazione è da "
+    + "considerarsi priva di effetto. Restiamo a disposizione per ogni verifica.",
+  solleciteRegards: "Cordiali saluti,",
+  solleciteNobody: "Nessuna fattura risulta scaduta.",
   homeMix: "Da dove viene il fatturato",
   homeMixAssign: "Assegna le categorie",
   homeMixEmpty: "Nessun documento porta ancora una categoria. Assegnale per vedere come si divide "
@@ -624,6 +643,11 @@ const IT = {
   settingsImportBad: "Questo file non è un archivio di Invoice Scope.",
   settingsCsv: "Esporta un CSV per il commercialista",
   settingsSpace: "Spazio usato",
+  settingsPersistYes: "Questo browser ha promesso di non svuotare da sé l'archivio dell'applicazione.",
+  settingsPersistNo: "Questo browser non ha ancora promesso di conservare l'archivio: in caso di "
+    + "pulizia dello spazio può rimuoverlo. L'applicazione lo richiede da sé mentre la usi; nel "
+    + "frattempo, la copia che conta è quella nella cartella collegata o l'archivio esportato.",
+  settingsPersistUnknown: "Questo browser non dice se conserva l'archivio in modo permanente.",
 
   backupTitle: "Copia automatica in una cartella",
   backupNote: "Scegli una cartella e l'app ci scrive da sola l'archivio a ogni modifica — lo "
@@ -1299,6 +1323,9 @@ const IT = {
   docsMoneyLate: "In ritardo",
   docsMoneyDone: "Saldate",
   docsAllStates: "Tutti gli stati",
+  docsCategory: "Categoria",
+  docsAllCategories: "Tutte le categorie",
+  docsNoCategory: "Senza categoria",
   docsNoMatch: "Nessun documento corrisponde ai filtri.",
   docsInvoiced: "fatturato",
 
@@ -1390,6 +1417,25 @@ const EN = {
   homeMonthsEmpty: "The bars appear with the first issued invoice.",
   homeTopParties: "Who owes the most",
   homeAging: "Unpaid by age",
+  solleciteOpen: "Prepare a reminder",
+  solleciteTitle: "Payment reminder",
+  solleciteNote: "The text is ready to copy into an email. You can edit it before copying: the "
+    + "application sends nothing.",
+  solleciteWho: "Customer",
+  solleciteCopy: "Copy the text",
+  solleciteCopied: "Text copied.",
+  solleciteSubjectLabel: "Subject",
+  solleciteText: "Message text",
+  solleciteSubject: "Invoices not yet settled — {azienda}",
+  solleciteHello: "Dear {cliente},",
+  solleciteLead: "our records show the invoices listed below as not yet settled.",
+  solleciteRow: "· Invoice {numero}, due {scadenza}: {importo} ({giorni} days)",
+  solleciteTotal: "Total outstanding: {totale}",
+  solleciteIban: "Payment details: {iban}",
+  solleciteClosing: "Should payment already have been arranged, please disregard this message. We "
+    + "remain available for any check.",
+  solleciteRegards: "Kind regards,",
+  solleciteNobody: "No invoice is overdue.",
   homeMix: "Where the revenue comes from",
   homeMixAssign: "Assign categories",
   homeMixEmpty: "No document carries a category yet. Assign them to see how the year's revenue "
@@ -1915,6 +1961,11 @@ const EN = {
   settingsImportBad: "This file is not an Invoice Scope archive.",
   settingsCsv: "Export a CSV for the accountant",
   settingsSpace: "Space used",
+  settingsPersistYes: "This browser has promised not to clear the application's archive by itself.",
+  settingsPersistNo: "This browser has not promised to keep the archive yet: it may remove it when "
+    + "clearing space. The application keeps asking as you use it; in the meantime, the copy that "
+    + "counts is the one in the connected folder or the exported archive.",
+  settingsPersistUnknown: "This browser does not say whether it keeps the archive permanently.",
 
   backupTitle: "Automatic copy in a folder",
   backupNote: "Choose a folder and the app writes the archive there by itself at every change — "
@@ -2561,6 +2612,9 @@ const EN = {
   docsMoneyLate: "Overdue",
   docsMoneyDone: "Settled",
   docsAllStates: "All states",
+  docsCategory: "Category",
+  docsAllCategories: "All categories",
+  docsNoCategory: "No category",
   docsNoMatch: "No document matches the filters.",
   docsInvoiced: "invoiced",
 

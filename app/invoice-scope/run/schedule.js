@@ -44,7 +44,9 @@ function _conta(doc) {
  * `verso` came last, and stays last: the file had been going out with ten columns for a while,
  * and whoever mapped it on the other side keeps their mapping. `emessa` on our documents,
  * `ricevuta` on purchases; `cliente` then holds the supplier, because renaming the column would
- * break the same mapping. `categoria` is filled for purchases only.
+ * break the same mapping. `categoria` porta l'etichetta interna dei due versi: la categoria della
+ * spesa su un acquisto, quella del documento su una fattura emessa — è la stessa domanda, «di che
+ * cosa si tratta», e il commercialista che divide i ricavi per attività la cerca lì.
  */
 const COLUMNS = [
   "tipo", "numero", "data", "cliente", "partitaIva",
@@ -377,7 +379,7 @@ export async function csv(db, { from: start = null, to = null } = {}) {
       doc.stato,
       scadenze || doc.data,
       "emessa",
-      "",
+      doc.categoria || "",
     ] });
   }
   for (const record of costs) {

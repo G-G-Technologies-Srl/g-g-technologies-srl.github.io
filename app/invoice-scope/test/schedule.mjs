@@ -58,6 +58,7 @@ function issued(fields = {}) {
       totale: totale.toString(),
     },
     ...(fields.stato ? { stato: fields.stato } : {}),
+    ...(fields.categoria ? { categoria: fields.categoria } : {}),
   };
 }
 
@@ -315,7 +316,7 @@ await test("gli acquisti stanno nello stesso file, con il verso, in ordine di da
   const db = await openDatabase();
   await put(db, "parties", { id: "p1", denominazione: "Cliente S.p.A.", partitaIva: "09876543217" });
   await put(db, "parties", { id: "s1", denominazione: "Fornitore S.r.l.", partitaIva: "01111111111", ruolo: "fornitore" });
-  await put(db, "docs", issued({ id: "a", data: "2026-08-10" }));
+  await put(db, "docs", issued({ id: "a", data: "2026-08-10", categoria: "Sviluppo" }));
   await put(db, "costs", { id: "c1", tipo: "fattura", partyId: "s1", data: "2026-08-05", numero: "F-9", categoria: "software",
     imponibile: "100", imposta: "22.00", totale: "122.00", aliquota: "22", impostaTipo: "iva", scadenza: "2026-09-05" });
   await put(db, "costs", { id: "c2", tipo: "spesa", partyId: "s1", data: "2026-08-20", numero: "", categoria: "viaggi",
@@ -333,6 +334,10 @@ await test("gli acquisti stanno nello stesso file, con il verso, in ordine di da
   assert.deepEqual(righe[2].slice(0, 1), ["spesa"]);
   assert.deepEqual(righe[2].slice(8, 12), ["pagato", "2026-08-20", "ricevuta", "viaggi"]);
   assert.equal(righe[1][10], "emessa");
+  // La categoria vale nei due versi: la spesa dice «viaggi», la fattura emessa dice la sua. Prima
+  // la colonna restava vuota sui documenti emessi, e chi divide i ricavi per attività non
+  // trovava niente da dividere.
+  assert.equal(righe[1][11], "Sviluppo");
   // Il periodo vale anche per loro.
   const agosto = (await csv(db, { from: "2026-08-06", to: "2026-08-15" })).trim().split("\r\n").slice(1);
   assert.equal(agosto.length, 1);

@@ -200,7 +200,7 @@
       <div class="widget" id="wAging" hidden>
         <div class="section-head">
           <h2 data-t="homeAging"></h2>
-          <a href="#/scadenzario" data-t="homeSeeAll"></a>
+          <button type="button" class="link-button" id="homeDun" data-t="solleciteOpen" hidden></button>
         </div>
         <div class="hbars" id="chartAging"></div>
       </div>
@@ -320,6 +320,9 @@
       <label class="wide"><span data-t="docsSearch"></span><input type="search" id="docsSearch" autocomplete="off"></label>
       <label class="narrow"><span data-t="docsYear"></span><select id="docsYear"></select></label>
       <label class="narrow"><span data-t="docsState"></span><select id="docsStateFilter"></select></label>
+      <!-- La categoria compare solo dove esiste: in un'anagrafica che non la usa sarebbe un menù
+           con dentro una voce sola. -->
+      <label class="narrow" id="docsCategoryField" hidden><span data-t="docsCategory"></span><select id="docsCategoryFilter"></select></label>
       <!-- L'incasso è un filtro a sé, e non una voce in più fra gli stati: lo stato dice dov'è il
            file rispetto al Sistema di Interscambio, questo dice dove sono i soldi. Le voci sono
            fisse, perché sono una domanda e non l'elenco di quello che c'è. -->
@@ -353,6 +356,7 @@
     <div class="actions">
       <button type="button" class="button ghost" id="dueFilter" data-t="dueAll" aria-pressed="false"></button>
       <button type="button" class="button ghost" id="dueIcs" data-t="dueIcs"></button>
+      <button type="button" class="button ghost" id="dueDun" data-t="solleciteOpen" hidden></button>
       <span class="ok" id="dueTotal"></span>
     </div>
 
@@ -1193,6 +1197,10 @@
       <input type="file" id="importFile" accept="application/json,.json" hidden>
     </div>
     <p class="note"><span data-t="settingsSpace"></span>: <span id="space">—</span></p>
+    <!-- Se il browser ha promesso di non svuotare da sé questo archivio. È una promessa che si
+         chiede, non si impone, e senza la quale una pulizia dello spazio può portare via tutto:
+         detta qui perché è la stessa domanda del backup, vista dall'altra parte. -->
+    <p class="note" id="persistNote"></p>
 
     <!-- I promemoria. Tre strati, e il blocco li dice tutti e tre invece di promettere «notifiche»
          e lasciare che ognuno scopra da sé dove non arrivano. -->
@@ -1485,6 +1493,27 @@
       <button type="button" class="button ghost danger-text" id="itemDelete" data-t="del" hidden></button>
       <span class="spacer"></span>
       <button type="button" class="button" id="itemSave" data-t="save"></button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Il sollecito: si sceglie il cliente, si legge il testo, si copia. L'applicazione non manda
+     niente — non ha un server e non conosce la posta di chi la usa — e il testo resta modificabile
+     perché l'ultima parola su che cosa scrivere a un cliente è di chi lo conosce. -->
+<dialog id="dunDialog" class="sheet">
+  <form method="dialog" id="dunForm">
+    <h2 data-t="solleciteTitle"></h2>
+    <p class="note" data-t="solleciteNote"></p>
+    <div class="form">
+      <label class="wide"><span data-t="solleciteWho"></span><select id="dunParty"></select></label>
+      <label class="wide"><span data-t="solleciteSubjectLabel"></span><input id="dunSubject" readonly></label>
+      <label class="wide"><span data-t="solleciteText"></span><textarea id="dunText" rows="14"></textarea></label>
+    </div>
+    <div class="actions sheet-actions">
+      <button type="button" class="button ghost" id="dunCancel" data-t="close"></button>
+      <span class="meta" id="dunDone"></span>
+      <span class="spacer"></span>
+      <button type="button" class="button" id="dunCopy" data-t="solleciteCopy"></button>
     </div>
   </form>
 </dialog>
