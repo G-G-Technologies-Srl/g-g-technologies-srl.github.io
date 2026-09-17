@@ -551,7 +551,11 @@
          controllo li imposta, non è una seconda verità da tenere allineata. -->
     <div class="ambito" id="docAmbitoBox" hidden>
       <label><span data-t="docAmbito"></span><select id="docAmbito"></select></label>
+      <!-- Il tipo cessione compare solo dove può produrre qualcosa: il rimborso monofase esiste per
+           i tipi merce 1 e 2, e su una fattura di servizi questo codice non serve a niente. -->
+      <label id="docTipoCessioneBox" hidden><span data-t="docTipoCessione"></span><select id="docTipoCessione"></select></label>
       <p class="note" id="docAmbitoNote"></p>
+      <p class="note" id="docTcNote" data-t="tcNota" hidden></p>
     </div>
     <p class="empty" id="docEmptyLines" data-t="docEmptyLines"></p>
     <div class="table-scroll">

@@ -145,6 +145,11 @@ const CASI = [
     ...CTX_SM,
     profile: { ...SM_EXPORT, codiciTm: ["1", "2", "3"] },
   }],
+  // Il tipo cessione dove un rimborso non può esistere, e un codice fuori elenco dove può.
+  [{ ...DOC, righe: [{ ...RIGA, aliquota: "0", natura: "N4", tm: "3" }], tipoCessione: "10",
+    ddt: [{ numero: "D1", data: "2026-08-01" }] }, CTX_INTERNA],
+  [{ ...DOC, righe: [{ ...RIGA, aliquota: "0", natura: "N4", tm: "1" }], tipoCessione: "99",
+    ddt: [{ numero: "D1", data: "2026-08-01" }] }, CTX_INTERNA],
   // I casi delle direzioni: l'interna con l'IVA esposta, il conto lavoro con imposta, un tipo che
   // il canale non accetta, una nota datata prima della fattura, un riepilogo che si annulla.
   [{ ...DOC, righe: [{ ...RIGA, tm: "4" }], ddt: [{ numero: "D1", data: "2026-08-01" }] }, CTX_INTERNA],

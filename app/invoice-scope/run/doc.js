@@ -36,7 +36,7 @@ import { build } from "./fatturapa.js";
 import { isCustomer, parties, items, party as getParty, openNewParty } from "./parties.js";
 import { TIPI, KINDS, kind, has, numero as shownNumber, convertibile } from "./kinds.js";
 import {
-  profileFor, ambitoDi, ambitoDoc, applicaAmbito, AMBITI_MERCE,
+  profileFor, ambitoDi, ambitoDoc, applicaAmbito, rimborsabile, AMBITI_MERCE, TIPI_CESSIONE,
 } from "./fatturapa.js";
 import { stato as termState } from "./terms.js";
 import { control as statoControl } from "./states.js";
@@ -208,6 +208,34 @@ function _drawAmbito() {
     ? t("ambitoNoteMista")
     : (scelto ? t(`ambitoNote${scelto[0].toUpperCase()}${scelto.slice(1)}`) : "");
   nota.hidden = !nota.textContent;
+
+  _drawCessione();
+}
+
+/**
+ * Il tipo cessione, dove un rimborso monofase può esistere.
+ *
+ * **Due tipi merce su cinque**, dice il manuale dell'Ufficio Tributario: 1 materie prime e 2 conto
+ * lavoro con materie prime. Su una fattura di servizi il codice non produce niente, quindi il campo
+ * non c'è — offrirlo vorrebbe dire suggerire un adempimento che non esiste.
+ */
+function _drawCessione() {
+  const box = el("docTipoCessioneBox");
+  const profile = profileFor(company, party);
+  box.hidden = !profile.cessioni || !rimborsabile(current);
+  el("docTcNote").hidden = box.hidden;
+  if (box.hidden) return;
+
+  const menu = el("docTipoCessione");
+  menu.textContent = "";
+  for (const code of ["", ...TIPI_CESSIONE]) {
+    const option = document.createElement("option");
+    option.value = code;
+    option.textContent = code ? `${code} — ${t(`tc${code}`)}` : t("tcNessuno");
+    menu.append(option);
+  }
+  menu.value = current.tipoCessione || "";
+  menu.disabled = !editable(current);
 }
 
 function _applyDefaults(line) {
@@ -390,7 +418,11 @@ function _drawLines() {
       // I valori sono quelli del **solo ambito scelto**: dentro i beni le righe possono differire,
       // fra un ambito e l'altro no, e un menù che offrisse tutti e cinque i codici inviterebbe a
       // fare l'unica cosa che il documento non può contenere.
-      ["tm", { width: "small", cell: "col-tm", options: ["", ..._codiciAmmessi()] }],
+      // Cambiare il codice di una riga può far comparire o sparire il tipo cessione — il rimborso
+      // monofase esiste per i tipi merce 1 e 2 — quindi la scelta in testa si ridisegna. Solo
+      // quella: rifare la tabella intera toglierebbe il fuoco dal campo appena toccato.
+      ["tm", { width: "small", cell: "col-tm", options: ["", ..._codiciAmmessi()],
+        onEdit: () => _drawAmbito() }],
     ];
     for (const [field, options] of cells) {
       const also = options.onEdit;
@@ -1132,6 +1164,11 @@ export function connect(db) {
   // insieme, e lo fa perché la norma le tiene insieme: una fattura porta un ambito solo. Le righe
   // che hanno già un codice di quell'ambito restano come sono — dentro i beni le differenze sono
   // volute — e le altre prendono quello con cui l'ambito parte.
+  el("docTipoCessione").addEventListener("change", (event) => {
+    current.tipoCessione = event.target.value || null;
+    _touch();
+  });
+
   el("docAmbito").addEventListener("change", (event) => {
     if (!event.target.value) return;
     applicaAmbito(current.righe || [], event.target.value);

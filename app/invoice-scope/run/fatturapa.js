@@ -93,6 +93,29 @@ export const AMBITI_MERCE = {
 export const TIPI_MERCE = ["1", "2", "3", "4", "7"];
 export const GRUPPI_MERCE = Object.values(AMBITI_MERCE).map((a) => a.codici);
 
+/**
+ * I tipi cessione ammessi al rimborso monofase, dal manuale dell'Ufficio Tributario.
+ *
+ * **Riguardano due tipi merce su cinque.** Il glossario del manuale è esplicito: «per i rimborsi
+ * FE-RSM sono rilevanti solo TM:1 (Materie Prime) e TM:2 (Conto Lavoro con Materie Prime)», e fra i
+ * problemi frequenti spiega che senza `TC:nn` **oppure** senza un tipo merce 1 o 2 il rimborso non
+ * viene creato. Quindi su una fattura di servizi, o di beni di consumo, questo codice non serve: è
+ * la ragione per cui la maschera lo mostra solo dove può produrre qualcosa.
+ *
+ * **Il rimborso non si costruisce qui.** Lo crea HUB-SM da sé, raggruppando le fatture emesse per
+ * data, anno di competenza, tipo cessione e tipo merce. All'app tocca scrivere il codice, e basta.
+ *
+ * I codici possono essere aggiornati dall'Ufficio Tributario: questa è la lista di giugno 2026, e
+ * sta in un posto solo perché il giorno che cambia si riscrive qui.
+ */
+export const TIPI_CESSIONE = [
+  "1", "2", "5", "7", "8", "9", "10", "11", "12", "13",
+  "14", "15", "16", "19", "21", "22", "23", "24",
+];
+
+/** I tipi merce per cui un rimborso monofase può esistere. */
+export const MERCE_RIMBORSABILE = new Set(["1", "2"]);
+
 /** I tipi merce per cui il DDT è obbligatorio: tutto tranne il 3. */
 export const MERCE_CON_DDT = new Set(
   Object.values(AMBITI_MERCE).filter((a) => a.ddt).flatMap((a) => a.codici),
@@ -141,6 +164,7 @@ export const IT_SDI = {
   // e un campo che non si valorizza non deve comparire affatto.
   campiVietati: [],
   riferimenti: {},
+  cessioni: false,
   // I regimi fiscali che il canale ammette. In Italia il forfettario esiste; a San Marino il
   // Documento A dice «deve essere valorizzato con RF01» e basta.
   regimi: ["RF01", "RF19"],
@@ -223,6 +247,9 @@ export const SM_INTERNA = {
   rimappa: { TD24: "TD01" },
   nature: ["N4"],
   aliquotaFissa: "0.00",
+  // Il Tipo Cessione vive nei rimborsi monofase delle operazioni interne. In esportazione i rimborsi
+  // si inseriscono a mano su TribWeb e nel file non c'è un codice da scrivere.
+  cessioni: true,
   // Il Documento A li dichiara «non previsti ai fini della fatturazione elettronica nelle
   // transazioni interne al territorio della Repubblica». Su `EsigibilitaIVA` i due documenti si
   // contraddicono — l'esempio del Documento B la riporta — e ometterla è la scelta prudente:
@@ -420,6 +447,11 @@ function _datiGenerali(doc, computed, profile) {
       ritenuta,
       bollo,
       ["ImportoTotaleDocumento", _amount(computed.totale)],
+      // **Due `Causale`, e non una stringa cucita insieme.** Lo schema ne ammette un numero
+      // qualsiasi (`maxOccurs="unbounded"`), quindi il codice del tipo cessione sta per conto suo e
+      // la descrizione resta leggibile: infilarli nello stesso elemento vorrebbe dire che chi
+      // scrive due parole di troppo rompe il codice che l'Ufficio Tributario cerca lì dentro.
+      doc.tipoCessione ? ["Causale", `TC:${doc.tipoCessione}`] : null,
       ["Causale", doc.causale],
     ]],
     ...(doc.fattureCollegate || []).map((ref) => ["DatiFattureCollegate", [
@@ -621,6 +653,15 @@ export function tipoDocumento(doc, profile = IT_SDI) {
  * L'ambito di un tipo merce: `servizi`, `beni`, `lavorazione`, o niente se il codice non è dei
  * cinque.
  */
+/**
+ * Se su questo documento un rimborso monofase può nascere.
+ *
+ * Basta una riga con tipo merce 1 o 2: è la condizione che il manuale mette accanto al `TC:nn`.
+ */
+export function rimborsabile(doc) {
+  return ((doc && doc.righe) || []).some((line) => MERCE_RIMBORSABILE.has(String(line.tm || "")));
+}
+
 export function ambitoDi(codice) {
   const cercato = String(codice || "");
   const trovato = Object.entries(AMBITI_MERCE).find(([, a]) => a.codici.includes(cercato));

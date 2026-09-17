@@ -15,6 +15,7 @@
 import assert from "node:assert/strict";
 
 import { validate, esportabile, NATURE, TIPI_FISCALI } from "../run/validate.js";
+import { build } from "../run/fatturapa.js";
 import { describe } from "../run/problems.js";
 
 let passed = 0;
@@ -601,6 +602,44 @@ test("un riepilogo che si annulla da solo non esce verso San Marino", () => {
   };
   assert.ok(validate(annullato, { company: SM, party: SM_CLIENTE }).map((p) => p.campo)
     .includes("riepiloghi[1].imponibile"));
+});
+
+test("il tipo cessione vale solo dove un rimborso monofase può esistere", () => {
+  // Il manuale dell'Ufficio Tributario lo lega ai tipi merce 1 e 2: «per i rimborsi FE-RSM sono
+  // rilevanti solo TM:1 e TM:2». Su una fattura di servizi il codice non produce niente.
+  const servizi = {
+    ...INTERNA,
+    ddt: [],
+    righe: [{ ...INTERNA.righe[0], tm: "3" }],
+    tipoCessione: "10",
+  };
+  assert.ok(validate(servizi, { company: SM, party: SM_CLIENTE }).map((p) => p.campo)
+    .includes("tipoCessione"));
+
+  // Con materie prime invece è al suo posto.
+  const materie = { ...INTERNA, righe: [{ ...INTERNA.righe[0], tm: "1" }], tipoCessione: "10" };
+  assert.deepEqual(validate(materie, { company: SM, party: SM_CLIENTE }), []);
+
+  // Un codice fuori elenco viene detto per nome.
+  const inventato = { ...materie, tipoCessione: "99" };
+  const frasi = describe(validate(inventato, { company: SM, party: SM_CLIENTE }));
+  assert.ok(frasi.some((f) => f.includes("99")), frasi.join(" | "));
+
+  // E in esportazione il codice non si scrive: lì i rimborsi si inseriscono a mano su TribWeb.
+  const verso = { ...materie, righe: [{ ...materie.righe[0], natura: "N3.1" }] };
+  assert.ok(validate(verso, { company: SM, party: PARTY }).map((p) => p.campo)
+    .includes("tipoCessione"));
+});
+
+test("il codice del tipo cessione esce come una causale sua", () => {
+  const materie = { ...INTERNA, righe: [{ ...INTERNA.righe[0], tm: "1" }], tipoCessione: "10",
+    causale: "Fornitura di luglio" };
+  const { text } = build(materie, { company: SM, party: SM_CLIENTE });
+  // Due elementi e non una stringa cucita: lo schema ne ammette quanti se ne vuole, e la
+  // descrizione resta leggibile accanto al codice invece di romperlo.
+  assert.match(text, /<Causale>TC:10<\/Causale>/);
+  assert.match(text, /<Causale>Fornitura di luglio<\/Causale>/);
+  assert.ok(text.indexOf("TC:10") < text.indexOf("Fornitura di luglio"), "il codice viene prima");
 });
 
 console.log(`validate: ${passed} prove passate`);

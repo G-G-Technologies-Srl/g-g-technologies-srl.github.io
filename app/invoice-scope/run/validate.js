@@ -27,7 +27,7 @@ import { from, add, cmp, sub, abs, toString } from "./decimal.js";
 import { totals, chiaveConTm, MONEY } from "./totals.js";
 import {
   destinatario, riferimentoNormativo, profileFor, tipoDocumento, vietato, PAESI_CON_CAP,
-  GRUPPI_MERCE, MERCE_CON_DDT,
+  GRUPPI_MERCE, MERCE_CON_DDT, TIPI_CESSIONE, rimborsabile,
 } from "./fatturapa.js";
 import { kind, TIPI, TIPI_FISCALI } from "./kinds.js";
 
@@ -432,6 +432,18 @@ export function validate(doc, {
 
   _righe(problems, doc, profile);
   _merce(problems, doc, profile);
+
+  // **Il tipo cessione, dove un rimborso può esistere.** Il manuale dell'Ufficio Tributario lo lega
+  // ai tipi merce 1 e 2: altrove il codice non produce niente, e lasciarlo scritto su una fattura
+  // di servizi farebbe credere che una richiesta sia partita.
+  if (fiscale && doc.tipoCessione) {
+    if (!profile.cessioni || !rimborsabile(doc)) {
+      problems.push(_problem("tipoCessione", "vCessioneFuoriLuogo", "vCessioneFuoriLuogoFix"));
+    } else if (!TIPI_CESSIONE.includes(String(doc.tipoCessione))) {
+      problems.push(_problem("tipoCessione", "vOutsideSubset", "vCessioneFix",
+        { valore: doc.tipoCessione, elenco: TIPI_CESSIONE.join(", ") }));
+    }
+  }
 
   // A credit note that does not say what it reverses is a document nobody can reconcile — and the
   // schema wants the link too. Vale per tutte e due le note di variazione: quella di debito chiede
