@@ -671,6 +671,9 @@
     .chip-2 .dot { background: var(--accent-2); }
     .chip-3 { bottom: 16%; right: 2%; animation-delay: 3s; }
     .chip-3 .dot { background: var(--accent-3); }
+    /* Fourth chip, under the core: the training catalogue, on every page that is not part of it. */
+    .chip-4 { bottom: 0; left: 50%; transform: translateX(-50%); animation-delay: 4.5s; }
+    .chip-4 .dot { background: var(--accent-1); }
     @keyframes float {
       0%, 100% { margin-top: 0; }
       50% { margin-top: -10px; }
