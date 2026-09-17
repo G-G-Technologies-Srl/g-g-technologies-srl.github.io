@@ -389,6 +389,17 @@ const IT = {
   itemsEmpty: "Qui compaiono le voci che usi spesso.",
   partiesLastContact: "Ultimo contatto",
 
+  // ---- due schede per lo stesso soggetto
+  dupPanelOne: "Un soggetto compare su due schede: i suoi documenti si dividono fra le due, e "
+    + "nessun totale li somma.",
+  dupPanelMany: "Ci sono {n} soggetti che compaiono su più di una scheda: i loro documenti si "
+    + "dividono fra le schede, e nessun totale li somma.",
+  dupRow: "{nome} · {codice} · {schede} schede, {righe} fra documenti, acquisti e note",
+  dupMerge: "Unisci",
+  dupAsk: "Unisco le schede di «{nome}»? Ne resta una sola, con tutte le {righe} righe collegate. "
+    + "Non si torna indietro.",
+  dupDone: "Fatto: una scheda sola, con {righe} righe collegate.",
+
   // ---- la scheda di un cliente
   // Acquisti: fatture ricevute e spese. Il rovescio dei documenti, con le stesse parole dove
   // sono le stesse cose — «scadenza», «stato», «da pagare» al posto di «da incassare».
@@ -789,6 +800,8 @@ const IT = {
     + "Interscambio. Prodotta con Invoice Scope.",
   printFooterSm: "Copia di cortesia. L'originale fiscale è il file XML trasmesso all'Ufficio Tributario "
     + "della Repubblica di San Marino. Prodotta con Invoice Scope.",
+  printFooterOriginale: "Originale. Per questa destinazione non esiste un file da trasmettere: "
+    + "il documento fiscale è questo foglio. Prodotto con Invoice Scope.",
   printFooterBozza: "Bozza: non è un documento emesso e non ha un numero. Serve a rileggere prima di emettere.",
   printFooterPreventivo: "Preventivo. I prezzi valgono fino alla data indicata. Non è un documento "
     + "fiscale. Prodotto con Invoice Scope.",
@@ -1607,6 +1620,17 @@ const EN = {
   itemsEmpty: "The lines you use often show up here.",
   partiesLastContact: "Last contact",
 
+  // ---- two records for the same party
+  dupPanelOne: "One party is on two records: its documents split between them, and no total adds "
+    + "them up.",
+  dupPanelMany: "{n} parties are on more than one record: their documents split between the "
+    + "records, and no total adds them up.",
+  dupRow: "{nome} · {codice} · {schede} records, {righe} between documents, purchases and notes",
+  dupMerge: "Merge",
+  dupAsk: "Merge the records of “{nome}”? One record is left, with all {righe} linked "
+    + "rows on it. There is no going back.",
+  dupDone: "Done: one record, with {righe} linked rows.",
+
   // ---- a customer's own screen
   // Purchases: received invoices and expenses. The reverse of documents, with the same words where
   // they are the same things.
@@ -1997,6 +2021,8 @@ const EN = {
     + "system. Produced with Invoice Scope.",
   printFooterSm: "Courtesy copy. The fiscal original is the XML file sent to the Ufficio Tributario of the "
     + "Republic of San Marino. Produced with Invoice Scope.",
+  printFooterOriginale: "Original. For this destination there is no file to transmit: this sheet "
+    + "is the fiscal document. Produced with Invoice Scope.",
   printFooterBozza: "Draft: not an issued document, and it has no number. For reading over before issuing.",
   printFooterPreventivo: "Quote. The prices hold until the date shown. This is not a fiscal "
     + "document. Produced with Invoice Scope.",

@@ -1110,8 +1110,13 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
   // The footer of the printed sheet is set here rather than written in the markup: it changes
   // with the language, and a line frozen in the HTML would print in Italian for an English reader.
   // The foot names where the original went: the SdI for an Italian issuer, the Ufficio
-  // Tributario for a San Marino one.
-  const fiscalFoot = profileFor(company, party).paese === "SM" ? "printFooterSm" : "printFooter";
+  // Tributario for a San Marino one. On a direction with no file at all — San Marino towards a
+  // country other than Italy — there is no original elsewhere: the sheet itself is the document,
+  // and calling it a courtesy copy would be a lie printed on every page.
+  const tracciato = profileFor(company, party);
+  const fiscalFoot = !tracciato.file
+    ? "printFooterOriginale"
+    : (tracciato.paese === "SM" ? "printFooterSm" : "printFooter");
   el("screenDoc").dataset.printFooter = canEdit
     ? t("printFooterBozza")
     : t(PRINT_FOOTER[current.tipo] || fiscalFoot);

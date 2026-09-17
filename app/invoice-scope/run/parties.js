@@ -23,7 +23,7 @@
 
 import { get, put, list, remove } from "gg/store.js";
 
-import { t } from "./i18n.js";
+import { t, tf } from "./i18n.js";
 import { fiscalCode, parseAmount } from "./parse.js";
 import { money, rate, date as shownDate } from "./format.js";
 import { activities, contactsOf, contactRecord, lastContactByParty, removeParty } from "./crm.js";
@@ -31,6 +31,7 @@ import { ask, tell } from "./ask.js";
 import { from, toString } from "./decimal.js";
 import { PAESI_CON_CAP } from "./fatturapa.js";
 import { NATURE } from "./validate.js";
+import { conteggi, gruppi, principale, unisci } from "./duplicates.js";
 import { TIPI_MERCE } from "./fatturapa.js";
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -478,6 +479,58 @@ export function itemRecord(fields) {
 }
 
 /** Draw both lists. Called on every visit: cheap, and never out of date. */
+/**
+ * L'avviso delle schede doppie, in cima all'anagrafica.
+ *
+ * Una riga per soggetto, non una per scheda: quello che serve sapere è «questo cliente è due
+ * volte», e il bottone accanto lo riporta a uno. Il conteggio delle righe collegate sta nella
+ * frase perché è la cosa che rende la proposta accettabile: dice quante ne muove.
+ */
+async function _drawDuplicati(db, people) {
+  const pannello = el("dupNote");
+  const elenco = el("dupNoteList");
+  elenco.textContent = "";
+  const trovati = gruppi(people);
+  pannello.hidden = trovati.length === 0;
+  if (pannello.hidden) return;
+
+  el("dupNoteText").textContent = trovati.length === 1
+    ? t("dupPanelOne")
+    : tf("dupPanelMany", { n: trovati.length });
+
+  const pesi = await conteggi(db);
+  for (const gruppo of trovati) {
+    const tenuto = principale(gruppo.records, pesi);
+    const righe = gruppo.records.reduce((somma, one) => somma + (pesi.get(one.id) || 0), 0);
+    const riga = document.createElement("div");
+    riga.className = "dup-row";
+    const testo = document.createElement("span");
+    testo.textContent = tf("dupRow", {
+      nome: tenuto.denominazione || "—",
+      codice: gruppo.chiave.replace("|", " "),
+      schede: gruppo.records.length,
+      righe,
+    });
+    const bottone = document.createElement("button");
+    bottone.type = "button";
+    bottone.className = "button ghost small";
+    bottone.textContent = t("dupMerge");
+    bottone.addEventListener("click", async () => {
+      if (!(await ask(tf("dupAsk", { nome: tenuto.denominazione, righe }), { okLabel: t("dupMerge") }))) return;
+      // Più di due schede dello stesso soggetto si uniscono una dopo l'altra, nella stessa
+      // risposta: chiedere tre volte per lo stesso cliente sarebbe la stessa domanda tre volte.
+      for (const scartato of gruppo.records) {
+        if (scartato.id !== tenuto.id) await unisci(db, tenuto.id, scartato.id);
+      }
+      await tell(tf("dupDone", { righe }));
+      await render(db, onChange);
+      if (onChange) onChange();
+    });
+    riga.append(testo, bottone);
+    elenco.append(riga);
+  }
+}
+
 export async function render(db, afterChange = null) {
   database = db;
   onChange = afterChange;
@@ -487,6 +540,7 @@ export async function render(db, afterChange = null) {
   conti = ((company || {}).conti || []).filter((conto) => conto.iban);
 
   const people = await parties(db);
+  await _drawDuplicati(db, people);
   el("partiesEmpty").hidden = people.length > 0;
   el("partiesTable").hidden = people.length === 0;
   const body = el("partiesBody");

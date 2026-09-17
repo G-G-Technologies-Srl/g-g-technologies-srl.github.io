@@ -756,6 +756,14 @@
   <section id="screenParties" class="screen" hidden>
     <h1 class="titled"><span class="ico" aria-hidden="true"><svg><use href="#ico-parties"/></svg></span><span data-t="partiesTitle"></span></h1>
 
+    <!-- Lo stesso soggetto fiscale su due schede. Sta in cima e non dentro la tabella perché non
+         è una riga sbagliata: sono due righe giuste che insieme sono un errore, e si vede solo
+         guardandole tutte. -->
+    <div class="panel warn" id="dupNote" hidden>
+      <p id="dupNoteText"></p>
+      <div id="dupNoteList"></div>
+    </div>
+
     <div class="section-head">
       <h2 data-t="partiesClients"></h2>
       <button type="button" class="button ghost" id="partyNew" data-t="partiesNew"></button>

@@ -715,6 +715,12 @@ dialog li::before {
 .panel.warn { border-color: var(--border-strong, var(--border)); }
 .panel.warn::before { background: var(--gradient); }
 
+/* ----- una riga dell'avviso delle schede doppie: il soggetto, e il bottone che le unisce ----- */
+
+.dup-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0 0 10px; }
+.dup-row:last-child { margin-bottom: 0; }
+.dup-row span { flex: 1 1 240px; }
+
 .install-hint { margin: 0; max-width: 30ch; }
 
 /* ----- on a phone you consult; to issue you want a keyboard ----- */

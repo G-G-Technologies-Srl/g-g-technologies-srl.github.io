@@ -197,6 +197,24 @@ export function create({ name, partyId = "" } = {}) {
   return plan.project(record.id);
 }
 
+/**
+ * Il cliente di ogni progetto che nominava `daId` diventa `aId`. Restituisce quanti ne ha mossi.
+ *
+ * La usa l'unione di due schede dell'anagrafica: il cliente sparisce da `parties` e i progetti
+ * che lo nominavano resterebbero appesi a un id che non esiste più — quattro numeri su zero
+ * documenti, senza niente che spieghi perché.
+ */
+export function spostaCliente(daId, aId) {
+  if (!daId || !aId || daId === aId) return 0;
+  let mossi = 0;
+  for (const record of plan.liveProjects()) {
+    if (record.partyId !== daId) continue;
+    plan.updateProject(record.id, { partyId: aId });
+    mossi += 1;
+  }
+  return mossi;
+}
+
 /** Collega un documento al progetto, una volta sola: un elenco con due volte la stessa fattura
  * conterebbe due volte anche nel fatturato. */
 export function linkDoc(projectId, docId) {
