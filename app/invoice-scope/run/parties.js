@@ -29,7 +29,7 @@ import { money, rate, date as shownDate } from "./format.js";
 import { activities, contactsOf, contactRecord, lastContactByParty, removeParty } from "./crm.js";
 import { ask, tell } from "./ask.js";
 import { from, toString } from "./decimal.js";
-import { PAESI_CON_CAP } from "./fatturapa.js";
+import { PAESI_CON_CAP, profileFor, vietato } from "./fatturapa.js";
 import { NATURE } from "./validate.js";
 import { conteggi, gruppi, principale, unisci } from "./duplicates.js";
 import { TIPI_MERCE } from "./fatturapa.js";
@@ -55,15 +55,27 @@ const SEDE_FIELDS = ["indirizzo", "numeroCivico", "cap", "comune", "provincia"];
 export const RUOLI = ["cliente", "fornitore", "entrambi"];
 const ITEM_FIELDS = ["descrizione", "unitaMisura", "prezzoUnitario", "aliquota", "natura", "tm"];
 
-/** What a customer needs before an invoice to them can leave. Shown as a note, never as a block. */
+/**
+ * What a customer needs before an invoice to them can leave. Shown as a note, never as a block.
+ *
+ * **Ogni regola riceve anche il profilo del tracciato**, cioè la direzione: il paese del solo
+ * soggetto non basta più a dire quali campi finiranno nel file. Il CAP dipende davvero dal paese —
+ * Italia e San Marino scrivono il proprio, un indirizzo estero esce con `00000` — ma la provincia
+ * dipende dalla coppia: fra due sammarinesi il Documento A la dichiara non prevista, e il file la
+ * omette. Chiederla lo stesso significava far compilare un campo che nessuno avrebbe letto, e non
+ * c'era modo di accorgersene: l'avviso e il file non si incontrano mai sullo schermo.
+ */
 const NEEDED = [
   { has: (p) => p.partitaIva || p.codiceFiscale, label: "f_partitaIva" },
   { has: (p) => p.sede.indirizzo, label: "f_indirizzo" },
-  // CAP e provincia servono all'Italia e a San Marino. Su un indirizzo estero il tracciato scrive
-  // `00000` e nessuna provincia, quindi chiederli sarebbe chiedere qualcosa che non verrà usato.
   { has: (p) => p.sede.cap || !PAESI_CON_CAP.has(p.paese), label: "f_cap" },
   { has: (p) => p.sede.comune, label: "f_comune" },
-  { has: (p) => p.sede.provincia || !PAESI_CON_CAP.has(p.paese), label: "f_provincia" },
+  {
+    has: (p, profile) => p.sede.provincia
+      || !PAESI_CON_CAP.has(p.paese)
+      || vietato(profile, "provincia"),
+    label: "f_provincia",
+  },
 ];
 
 let database = null;
@@ -315,7 +327,11 @@ async function _saveParty() {
 
   // What is still missing is said *after* saving, not instead of it: the record is already safe,
   // and the note is a reminder rather than a gate.
-  const mancanti = NEEDED.filter((rule) => !rule.has(record)).map((rule) => t(rule.label));
+  //
+  // L'azienda si rilegge qui e non si prende da `render`: questa maschera si apre anche dal
+  // documento e dall'acquisto, dove l'elenco dei clienti non è mai stato disegnato.
+  const azienda = await get(database, "company", "company");
+  const mancanti = campiMancanti(record, azienda).map((chiave) => t(chiave));
   _close(el("partyDialog"));
   editing = null;
   await render(database, onChange);
@@ -421,6 +437,19 @@ export async function saveParty(db, fields) {
  * own, so the import cannot call it; what it must not do is keep a second copy of the field list,
  * which would be a third place to forget `paese`.
  */
+/**
+ * Che cosa mancherà a questo soggetto il giorno in cui gli si fattura, come chiavi di testo.
+ *
+ * Fuori da `_saveParty` perché è una regola e non un disegno: qui si prova senza browser, e la
+ * domanda che pone — quali campi finiscono davvero nel file — è la stessa che si fa `validate.js`
+ * al momento di emettere. Le due parti devono dire la stessa cosa, o l'anagrafica chiede quello
+ * che il documento non vuole.
+ */
+export function campiMancanti(record, company = null) {
+  const profile = profileFor(company, record);
+  return NEEDED.filter((rule) => !rule.has(record, profile)).map((rule) => rule.label);
+}
+
 export function partyRecord(fields) {
   const record = { id: fields.id || _id(), sede: {}, paese: fields.paese || "IT" };
   for (const key of PARTY_FIELDS) record[key] = (fields[key] || "").trim();

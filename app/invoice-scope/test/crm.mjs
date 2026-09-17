@@ -18,7 +18,7 @@
 import assert from "node:assert/strict";
 
 import { openDatabase, EXPORTED, NAME, VERSION } from "../run/db.js";
-import { partyRecord, saveParty } from "../run/parties.js";
+import { campiMancanti, partyRecord, saveParty } from "../run/parties.js";
 import {
   ACTIVITY_KINDS, ACTIVITY_MAX, activitiesOf, activities, contactRecord, contactsOf,
   lastContactByParty, removeActivity, removeParty, saveActivity, withContact, withoutContact,
@@ -240,6 +240,50 @@ await prova("un archivio di prima del diario si reimporta ancora", async (db) =>
   assert.equal(esito.ok, true, "quello che il file non contiene non è un motivo per rifiutarlo");
   assert.equal((await get(db, "parties", "p1")).denominazione, "Rossi Impianti S.r.l.");
   assert.deepEqual(await list(db, "activities"), []);
+});
+
+// -----------------------------------------------------------------------------------------------------------------
+//  q u e l l o   c h e   m a n c h e r à   a l   m o m e n t o   d i   f a t t u r a r e
+// -----------------------------------------------------------------------------------------------------------------
+
+await prova("la provincia si chiede dove il file la porta, e non dove il canale la vieta", async () => {
+  const sammarinese = partyRecord({
+    denominazione: "Titano Servizi S.A.", paese: "SM", partitaIva: "31241",
+    indirizzo: "Via della Libertà", numeroCivico: "12", cap: "47893", comune: "Borgo Maggiore",
+  });
+
+  // Fra due sammarinesi il file omette la provincia: chiederla sarebbe far compilare un campo che
+  // nessuno leggerà. È il difetto che questa prova esiste per fermare, e non dava nessun errore.
+  assert.deepEqual(campiMancanti(sammarinese, { paese: "SM" }), []);
+
+  // Lo stesso soggetto, fatturato da un'azienda italiana, passa dallo SdI: lì la provincia nel
+  // file ci va — il tracciato tratta San Marino come l'Italia sull'indirizzo — e si chiede. È la
+  // dimostrazione che la domanda è sulla direzione e non sul soggetto: stessa scheda, due
+  // risposte, e tutte e due uguali a quella che darà `validate.js` al momento di emettere.
+  assert.deepEqual(campiMancanti(sammarinese, { paese: "IT" }), ["f_provincia"]);
+
+  // Ma da San Marino verso l'Italia la sigla nel file ci va, e senza si dice.
+  const italiano = partyRecord({
+    denominazione: "Rossi Impianti S.r.l.", paese: "IT", partitaIva: "01335577993",
+    indirizzo: "Via Emilia", numeroCivico: "1", cap: "40068", comune: "San Lazzaro",
+  });
+  assert.deepEqual(campiMancanti(italiano, { paese: "SM" }), ["f_provincia"]);
+  assert.deepEqual(campiMancanti(italiano, { paese: "IT" }), ["f_provincia"]);
+});
+
+await prova("quello che manca sempre resta quello di prima", async () => {
+  // Il CAP invece dipende dal paese e non dalla direzione: San Marino il suo lo scrive davvero.
+  const senzaNiente = partyRecord({ denominazione: "Da chiedere", paese: "SM" });
+  assert.deepEqual(campiMancanti(senzaNiente, { paese: "SM" }),
+    ["f_partitaIva", "f_indirizzo", "f_cap", "f_comune"]);
+  // Un indirizzo estero esce con 00000 e nessuna provincia: né l'uno né l'altra si chiedono.
+  const tedesco = partyRecord({
+    denominazione: "Beispiel GmbH", paese: "DE", partitaIva: "DE123456789",
+    indirizzo: "Musterstrasse", numeroCivico: "7", comune: "Berlin",
+  });
+  assert.deepEqual(campiMancanti(tedesco, { paese: "SM" }), []);
+  // E senza azienda in anagrafica — la prima apertura dell'app — la domanda non esplode.
+  assert.deepEqual(campiMancanti(tedesco), []);
 });
 
 console.log(`crm: ${passed} prove passate`);
