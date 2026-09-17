@@ -216,9 +216,21 @@ const IT = {
   // ---- tipi di documento
   typePreventivo: "Preventivo",
   typeDdt: "Documento di trasporto",
+  docNoFile: "Verso questo paese la fattura elettronica non è prevista: si stampa.",
+  termPanelLate: "Ci sono {scaduti} documenti fuori termine di trasmissione, e {vicini} in scadenza.",
+  termPanelSoon: "Ci sono {vicini} documenti vicini al termine di trasmissione.",
+  termPanelGo: "Vedi i documenti",
+  termDue: "Da trasmettere entro il {data}.",
+  termSoon: "Da trasmettere entro il {data}: mancano {giorni} giorni.",
+  termLateBlocking: "Fuori termine dal {data}: presentata adesso, la fattura non è vidimabile.",
+  termLateFine: "Fuori termine dal {data} da {giorni} giorni: la trasmissione tardiva è sanzionata.",
+  termDone: "Trasmessa. Il termine era il {data}.",
   typeTD01: "Fattura",
+  typeTD02: "Fattura di acconto",
   typeTD04: "Nota di credito",
+  typeTD05: "Nota di debito",
   typeTD24: "Fattura differita",
+  typeTD29: "Autofattura",
   // Le stesse, corte, per la colonna «Tipo» dell'elenco: «Documento di trasporto» per esteso
   // spingeva il totale fuori dallo schermo, e DDT lo dice già il numero.
   shortPreventivo: "Preventivo",
@@ -943,11 +955,32 @@ const IT = {
   vTotalMismatch: "non corrisponde alla somma dei riepiloghi",
   vTotalMismatchFix: "Atteso {atteso}.",
   vTmFix: "Il codice dell'Ufficio Tributario è corto: di solito una cifra.",
-  vTmMisto: "le righe con la stessa aliquota e la stessa natura portano codici TM diversi",
-  vTmMistoFix: "Il riepilogo ne può indicare uno solo. Usa lo stesso codice, o separa le righe in "
-    + "due documenti.",
   vRifNormFix: "Accorcia il riferimento normativo: con il codice TM davanti supera la misura "
     + "ammessa.",
+  vNaturaCanale: "non è fra le nature che questo canale ammette",
+  vNaturaCanaleFix: "Su questa direzione si scrive {elenco}. La natura è {valore}.",
+  vAliquotaFissa: "in una fattura interna sammarinese l'aliquota è sempre zero",
+  vAliquotaFissaFix: "Il regime è monofase: l'IVA non si espone in fattura. Qui c'è {valore}.",
+  vMerceSenzaImposta: "il conto lavoro non porta imposta in fattura",
+  vMerceSenzaImpostaFix: "Con tipo merce {valore} l'aliquota è zero: indica anche la natura.",
+  vTmRequired: "manca il codice TM su una riga che porta un importo",
+  vTmRequiredFix: "Indica il tipo merce: 1 materie prime, 2 conto lavoro con materie prime, "
+    + "3 conto lavoro senza, 4 beni di consumo, 7 beni strumentali.",
+  vTmGruppo: "la fattura mescola tipi merce di gruppi diversi",
+  vTmGruppoFix: "Un documento porta solo beni (1, 4, 7), oppure solo il 2, oppure solo il 3. "
+    + "Qui ci sono {elenco}: servono documenti separati.",
+  vDdtRequired: "manca il documento di trasporto",
+  vDdtRequiredFix: "Per questi tipi merce il DDT è obbligatorio, e da lì si contano i termini di "
+    + "trasmissione. Indica numero e data.",
+  vNoChannel: "verso questo paese non esiste la fattura elettronica",
+  vNoChannelFix: "Da San Marino il formato elettronico vale con l'Italia e all'interno della "
+    + "Repubblica. Qui la fattura si stampa.",
+  vTypeChannel: "questo tipo di documento il canale non lo accetta",
+  vTypeChannelFix: "Su questa direzione passano {elenco}. Il documento è {valore}.",
+  vNotaPrimaDellaFattura: "la nota porta una data precedente alla fattura che rettifica",
+  vNotaPrimaDellaFatturaFix: "La fattura collegata è del {data}: sposta la data della nota.",
+  vImponibileZero: "un riepilogo con imponibile zero viene scartato",
+  vImponibileZeroFix: "Togli le righe che si annullano fra loro, o mettile in un documento a parte.",
 
   // ---- il dimostrativo
   demoNote: "Dimostrativo: i dati sono inventati e restano in memoria. Chiudendo la scheda "
@@ -1351,9 +1384,21 @@ const EN = {
 
   typePreventivo: "Quote",
   typeDdt: "Delivery note",
+  docNoFile: "Towards this country there is no electronic invoice: this one is printed.",
+  termPanelLate: "{scaduti} documents are past their transmission deadline, and {vicini} are close to it.",
+  termPanelSoon: "{vicini} documents are close to their transmission deadline.",
+  termPanelGo: "See the documents",
+  termDue: "To be transmitted by {data}.",
+  termSoon: "To be transmitted by {data}: {giorni} days left.",
+  termLateBlocking: "Past the deadline of {data}: filed now, the invoice cannot be stamped.",
+  termLateFine: "Past the deadline of {data} by {giorni} days: late transmission carries a penalty.",
+  termDone: "Transmitted. The deadline was {data}.",
   typeTD01: "Invoice",
+  typeTD02: "Advance invoice",
   typeTD04: "Credit note",
+  typeTD05: "Debit note",
   typeTD24: "Deferred invoice",
+  typeTD29: "Self-billed invoice",
   shortPreventivo: "Quote",
   shortDdt: "DDT",
   shortTD01: "Invoice",
@@ -2059,10 +2104,31 @@ const EN = {
   vTotalMismatch: "does not match the sum of the summaries",
   vTotalMismatchFix: "{atteso} was expected.",
   vTmFix: "The San Marino tax office code is short: usually a single digit.",
-  vTmMisto: "lines with the same rate and the same nature carry different TM codes",
-  vTmMistoFix: "A summary can name only one. Use the same code, or split the lines into two "
-    + "documents.",
   vRifNormFix: "Shorten the legal reference: with the TM code in front it goes over the limit.",
+  vNaturaCanale: "is not one of the natures this channel accepts",
+  vNaturaCanaleFix: "This direction takes {elenco}. The nature is {valore}.",
+  vAliquotaFissa: "an internal San Marino invoice always carries a zero rate",
+  vAliquotaFissaFix: "The regime is single-stage: VAT is not shown on the invoice. This says {valore}.",
+  vMerceSenzaImposta: "subcontracting carries no tax on the invoice",
+  vMerceSenzaImpostaFix: "With goods type {valore} the rate is zero: give the nature as well.",
+  vTmRequired: "a line carrying an amount has no TM code",
+  vTmRequiredFix: "Give the goods type: 1 raw materials, 2 subcontracting with materials, "
+    + "3 subcontracting without, 4 consumer goods, 7 capital goods.",
+  vTmGruppo: "the invoice mixes goods types from different groups",
+  vTmGruppoFix: "One document carries only goods (1, 4, 7), or only 2, or only 3. "
+    + "This one has {elenco}: they need separate documents.",
+  vDdtRequired: "the delivery note is missing",
+  vDdtRequiredFix: "For these goods types a delivery note is required, and the transmission "
+    + "deadline is counted from it. Give its number and date.",
+  vNoChannel: "there is no electronic invoice towards this country",
+  vNoChannelFix: "From San Marino the electronic format applies with Italy and inside the "
+    + "Republic. Here the invoice is printed.",
+  vTypeChannel: "this channel does not accept this kind of document",
+  vTypeChannelFix: "This direction takes {elenco}. The document is {valore}.",
+  vNotaPrimaDellaFattura: "the note is dated before the invoice it corrects",
+  vNotaPrimaDellaFatturaFix: "The linked invoice is dated {data}: move the note's date.",
+  vImponibileZero: "a summary with a zero taxable amount is rejected",
+  vImponibileZeroFix: "Remove the lines that cancel each other out, or put them in their own document.",
 
   demoNote: "Demo: the data is invented and lives in memory. Close the tab and it is gone, and "
     + "your own invoices never see it.",

@@ -191,6 +191,58 @@ const CASES = [
       pagamento: { condizioni: "TP02", modalita: "MP01", rate: [{ scadenza: "2026-10-27" }] },
     },
   },
+  {
+    // **Un cliente in un altro paese dell'Unione.** Codice destinatario a sette X, CAP azzerato e
+    // provincia assente — il tracciato conosce solo i CAP italiani — e natura N3.2, la cessione
+    // intracomunitaria.
+    name: "11-cliente-ue",
+    party: {
+      denominazione: "Beispiel GmbH",
+      partitaIva: "DE123456789",
+      paese: "DE",
+      sede: { indirizzo: "Musterstrasse", numeroCivico: "7", cap: "10115", comune: "Berlin" },
+    },
+    doc: {
+      ...BASE, numero: "2026/000011", progressivo: 11,
+      righe: [{ descrizione: "Fornitura apparati", quantita: "1", prezzoUnitario: "2400.00", aliquota: "0", natura: "N3.2" }],
+    },
+  },
+  {
+    // **Due sammarinesi: la fattura interna.** È il caso nuovo, e quello in cui il profilo
+    // dell'esportazione sbaglierebbe tre elementi in una volta — trasmittente, codice destinatario
+    // e natura. Qui il trasmittente è il COE di chi emette, il destinatario è sette zeri, l'IVA non
+    // si espone (aliquota 0.00, natura N4, imposta 0.00) e il riferimento normativo porta il tipo
+    // merce davanti. Il DDT c'è perché con beni di consumo è obbligatorio.
+    name: "12-interna-sammarinese",
+    company: {
+      denominazione: "Titano Meccanica S.A.",
+      partitaIva: "24680",
+      paese: "SM",
+      regimeFiscale: "RF01",
+      sede: {
+        indirizzo: "Strada dei Censiti", numeroCivico: "21", cap: "47891",
+        comune: "Serravalle", provincia: "SM",
+      },
+    },
+    party: {
+      denominazione: "Bottega del Titano S.r.l.",
+      partitaIva: "13579",
+      paese: "SM",
+      sede: { indirizzo: "Via Cinque Vie", numeroCivico: "4", cap: "47890", comune: "San Marino" },
+    },
+    doc: {
+      ...BASE,
+      numero: "2026/000012",
+      progressivo: 12,
+      causale: "TC:4",
+      ddt: [{ numero: "DDT 2026/000041", data: "2026-08-20" }],
+      righe: [{
+        descrizione: "Ricambi meccanici", quantita: "12.00", unitaMisura: "pz",
+        prezzoUnitario: "85.00", aliquota: "0", natura: "N4", tm: "4",
+      }],
+      pagamento: { condizioni: "TP02", modalita: "MP05", rate: [{ scadenza: "2026-10-27" }] },
+    },
+  },
 ];
 
 // -----------------------------------------------------------------------------------------------------------------

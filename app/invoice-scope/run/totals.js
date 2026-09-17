@@ -90,8 +90,9 @@ export const RIFERIMENTI = {
  * vertical bar — they are a rate, a code from a closed list, and a single letter — so no escaping
  * is needed and none is pretended.
  */
-function _riepilogoKey(line) {
-  return `${line.aliquota}|${line.natura || ""}|${line.esigibilita || ""}`;
+function _riepilogoKey(line, conTm) {
+  const base = `${line.aliquota}|${line.natura || ""}|${line.esigibilita || ""}`;
+  return conTm ? `${base}|${line.tm || ""}` : base;
 }
 
 /**
@@ -140,7 +141,7 @@ function _discount(base, sconto) {
  *
  * `doc` is `{ righe, scontoDocumento, bollo, ritenuta }`, and only `righe` is required.
  */
-export function totals(doc) {
+export function totals(doc, { tm: conTm = false } = {}) {
   const righe = (doc.righe || []).map((line, index) => ({
     ...line,
     numero: index + 1,
@@ -172,27 +173,24 @@ export function totals(doc) {
 
   const grouped = new Map();
   for (const line of righe) {
-    const key = _riepilogoKey(line);
+    const key = _riepilogoKey(line, conTm);
     const found = grouped.get(key);
     if (found) {
       found.imponibile = add(found.imponibile, line.prezzoTotale);
-      // **Il codice TM sta sulla riga, ma il riepilogo ne porta uno solo**, perché finisce dentro
-      // `RiferimentoNormativo` e di quello ce n'è uno per riepilogo. E il riepilogo non si può
-      // spezzare per separarli: il tracciato lo indicizza su aliquota e natura, e due blocchi con
-      // la stessa coppia vengono scartati. Quindi righe dello stesso gruppo con codici diversi
-      // lasciano il riepilogo senza codice, e `validate.js` lo dice invece di sceglierne uno.
-      if ((line.tm || null) !== found.tm) {
-        found.tm = null;
-        found.tmMisto = true;
-      }
+      // **Il codice TM sta sulla riga, e il riepilogo ne porta uno solo**, perché finisce dentro
+      // `RiferimentoNormativo` e di quello ce n'è uno per riepilogo.
+      //
+      // Sui canali che il codice lo usano, `conTm` lo mette nella chiave e questo ramo raccoglie
+      // solo righe che quel codice ce l'hanno uguale. Dove il codice non si scrive — lo SdI
+      // italiano — il riepilogo non lo porta comunque, quindi non c'è niente da conciliare.
+      if (!conTm) found.tm = null;
     } else {
       grouped.set(key, {
         aliquota: line.aliquota,
         natura: line.natura || null,
         esigibilita: line.esigibilita || null,
         imponibile: line.prezzoTotale,
-        tm: line.tm || null,
-        tmMisto: false,
+        tm: conTm ? (line.tm || null) : null,
       });
     }
   }
@@ -261,6 +259,17 @@ export function bolloDovuto(senzaImposta) {
  * Same reasoning as the spread discount: three equal parts of 100,00 € are 33,33 € and a cent has
  * to live somewhere. It lives at the end, where the customer expects the balance.
  */
+/**
+ * Se il riepilogo di questo canale è indicizzato anche sul codice TM.
+ *
+ * Una funzione e non un campo letto a mano, perché la domanda la fanno in tre — l'emettitore, i
+ * controlli e la maschera — e la risposta deve essere la stessa in tutti e tre: due riepiloghi
+ * diversi fra quello che si vede e quello che si scrive sarebbero un difetto invisibile.
+ */
+export function chiaveConTm(profile) {
+  return Boolean(profile && profile.datiGestionali);
+}
+
 export function rate(totale, count) {
   if (!Number.isInteger(count) || count < 1) throw new RangeError(`rate non valide: ${count}`);
   const each = mulDiv(totale, from(1), from(count), MONEY);

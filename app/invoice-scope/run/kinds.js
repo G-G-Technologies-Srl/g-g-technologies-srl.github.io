@@ -126,6 +126,20 @@ export const KINDS = {
     sezioni: ["sconto", "ritenuta", "bollo", "pagamento", "ddtCollegati"],
     converteIn: null,
   },
+  TD02: {
+    fiscale: true,
+    deve: true,
+    storna: false,
+    serie: "",
+    // Un acconto è una fattura, e sta nella sequenza delle fatture: il saldo che arriva dopo porterà
+    // il numero successivo, e i due si leggono in fila come sono stati emessi.
+    sequenza: "fattura",
+    label: "typeTD02",
+    raggruppabile: false,
+    stati: DOPO_EMISSIONE,
+    sezioni: ["sconto", "ritenuta", "bollo", "pagamento"],
+    converteIn: null,
+  },
   TD04: {
     fiscale: true,
     // **A credit note owes nothing and is owed nothing.** Its total is a credit against the invoice
@@ -142,6 +156,42 @@ export const KINDS = {
     raggruppabile: false,
     stati: DOPO_EMISSIONE,
     sezioni: ["sconto", "ritenuta", "bollo", "collegate"],
+    converteIn: null,
+  },
+  TD05: {
+    fiscale: true,
+    // **Una nota di debito chiede altri soldi**, quindi entra nello scadenzario come una fattura.
+    // È il gemello opposto della nota di credito, e le due differiscono esattamente qui.
+    deve: true,
+    storna: false,
+    serie: "ND",
+    // Contatore suo, come la nota di credito: «NC 2026/0001» e «ND 2026/0001» sono due numeri
+    // diversi perché la sigla fa parte del numero, e tenerle in fila nello stesso contatore
+    // renderebbe illeggibile la successione di entrambe.
+    sequenza: "notaDebito",
+    label: "typeTD05",
+    raggruppabile: false,
+    stati: DOPO_EMISSIONE,
+    sezioni: ["sconto", "ritenuta", "bollo", "pagamento", "collegate"],
+    converteIn: null,
+  },
+  TD29: {
+    fiscale: true,
+    // **L'autofattura la scrive il cliente, e riguarda un acquisto.** Non è un credito verso
+    // nessuno: è la comunicazione che il fornitore non ha fatturato. Fuori dallo scadenzario.
+    deve: false,
+    storna: false,
+    serie: "AF",
+    sequenza: "autofattura",
+    label: "typeTD29",
+    raggruppabile: false,
+    // **I ruoli sono invertiti**, ed è l'unica riga di questa tabella che cambia chi sta dove nel
+    // file: il cedente/prestatore è il fornitore che non ha emesso, il cessionario è chi scrive.
+    // `fatturapa.js` legge questo campo e scambia i due blocchi, invece di avere una condizione
+    // sul tipo nascosta in mezzo all'emettitore.
+    autofattura: true,
+    stati: DOPO_EMISSIONE,
+    sezioni: ["collegate"],
     converteIn: null,
   },
 };

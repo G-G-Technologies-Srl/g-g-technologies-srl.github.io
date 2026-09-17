@@ -410,4 +410,191 @@ test("il codice destinatario non si chiede a un preventivo", () => {
   assert.deepEqual(validate(PREVENTIVO, { company: COMPANY, party: estero }), []);
 });
 
+// -----------------------------------------------------------------------------------------------------------------
+//  l e   s e i   d i r e z i o n i
+// -----------------------------------------------------------------------------------------------------------------
+
+// Un'azienda sammarinese e due clienti: uno in Repubblica, uno in Germania.
+const SM = {
+  denominazione: "Titano Meccanica S.A.",
+  partitaIva: "24680",
+  paese: "SM",
+  regimeFiscale: "RF01",
+  sede: { indirizzo: "Strada dei Censiti", cap: "47891", comune: "Serravalle", provincia: "SM" },
+};
+const SM_CLIENTE = {
+  denominazione: "Bottega del Titano S.r.l.",
+  partitaIva: "13579",
+  paese: "SM",
+  sede: { indirizzo: "Via Cinque Vie", cap: "47890", comune: "San Marino", provincia: "SM" },
+};
+const UE_CLIENTE = {
+  denominazione: "Beispiel GmbH",
+  partitaIva: "DE123456789",
+  paese: "DE",
+  sede: { indirizzo: "Musterstrasse", cap: "10115", comune: "Berlin" },
+};
+
+/** Una fattura interna ben fatta: aliquota zero, natura N4, tipo merce, e il DDT che ne consegue. */
+const INTERNA = {
+  ...DOC,
+  righe: [{ descrizione: "Ricambi", quantita: "2", prezzoUnitario: "100.00", aliquota: "0", natura: "N4", tm: "4" }],
+  ddt: [{ numero: "DDT 2026/0001", data: "2026-08-20" }],
+};
+
+test("una fattura interna sammarinese fatta bene non ha problemi", () => {
+  assert.deepEqual(validate(INTERNA, { company: SM, party: SM_CLIENTE }), []);
+});
+
+test("nell'interna l'aliquota è sempre zero e la natura è N4", () => {
+  const conIva = {
+    ...INTERNA,
+    righe: [{ descrizione: "Ricambi", quantita: "2", prezzoUnitario: "100.00", aliquota: "22", tm: "4" }],
+  };
+  const problemi = validate(conIva, { company: SM, party: SM_CLIENTE }).map((p) => p.campo);
+  assert.ok(problemi.includes("righe[1].aliquota"), "ha accettato il 22%");
+  // La stessa riga verso l'Italia è invece legittima: l'esportazione può portare IVA prepagata.
+  const verso = validate({ ...conIva, ddt: INTERNA.ddt }, { company: SM, party: PARTY })
+    .map((p) => p.campo);
+  assert.ok(!verso.includes("righe[1].aliquota"), "ha rifiutato l'IVA in esportazione");
+});
+
+test("la natura che il canale non ammette viene detta per nome", () => {
+  const sbagliata = {
+    ...INTERNA,
+    righe: [{ ...INTERNA.righe[0], natura: "N3.1" }],
+  };
+  const frasi = describe(validate(sbagliata, { company: SM, party: SM_CLIENTE }));
+  assert.ok(frasi.some((f) => f.includes("N4")), frasi.join(" | "));
+});
+
+test("il tipo merce è obbligatorio dove c'è un importo, e non dove non c'è", () => {
+  const senza = { ...INTERNA, righe: [{ ...INTERNA.righe[0], tm: undefined }] };
+  assert.ok(validate(senza, { company: SM, party: SM_CLIENTE }).map((p) => p.campo)
+    .includes("righe[1].tm"));
+  // Una riga a importo zero — un titolo di sezione — non ha una merce da classificare.
+  const titolo = {
+    ...INTERNA,
+    righe: [INTERNA.righe[0], { descrizione: "Sezione", quantita: "1", prezzoUnitario: "0", aliquota: "0", natura: "N4" }],
+  };
+  assert.ok(!validate(titolo, { company: SM, party: SM_CLIENTE }).map((p) => p.campo)
+    .includes("righe[2].tm"));
+  // E in Italia non si chiede affatto.
+  assert.deepEqual(validate(DOC, context), []);
+});
+
+test("una fattura non mescola gruppi di tipo merce", () => {
+  const mista = {
+    ...INTERNA,
+    righe: [
+      { descrizione: "Ricambi", quantita: "1", prezzoUnitario: "100.00", aliquota: "0", natura: "N4", tm: "4" },
+      { descrizione: "Lavorazione", quantita: "1", prezzoUnitario: "100.00", aliquota: "0", natura: "N4", tm: "3" },
+    ],
+  };
+  assert.ok(validate(mista, { company: SM, party: SM_CLIENTE }).map((p) => p.campo)
+    .includes("righe.tm"), "ha lasciato passare beni e servizi insieme");
+  // Beni con beni invece sta in piedi: 1, 4 e 7 sono lo stesso gruppo.
+  const beni = {
+    ...INTERNA,
+    righe: [
+      { descrizione: "Materie prime", quantita: "1", prezzoUnitario: "100.00", aliquota: "0", natura: "N4", tm: "1" },
+      { descrizione: "Attrezzatura", quantita: "1", prezzoUnitario: "100.00", aliquota: "0", natura: "N4", tm: "7" },
+    ],
+  };
+  assert.deepEqual(validate(beni, { company: SM, party: SM_CLIENTE }), []);
+});
+
+test("il DDT è obbligatorio per i tipi merce che lo prevedono", () => {
+  const senzaDdt = { ...INTERNA, ddt: [] };
+  assert.ok(validate(senzaDdt, { company: SM, party: SM_CLIENTE }).map((p) => p.campo)
+    .includes("ddt"), "ha lasciato passare beni senza documento di trasporto");
+  // Il tipo merce 3 — servizi senza materie prime — ne fa a meno.
+  const servizi = {
+    ...INTERNA,
+    ddt: [],
+    righe: [{ descrizione: "Consulenza", quantita: "1", prezzoUnitario: "500.00", aliquota: "0", natura: "N4", tm: "3" }],
+  };
+  assert.deepEqual(validate(servizi, { company: SM, party: SM_CLIENTE }), []);
+  // E una nota di credito non ha merce che viaggia: rettifica una fattura che il DDT ce l'aveva.
+  const nota = {
+    ...INTERNA,
+    tipo: "TD04",
+    ddt: [],
+    fattureCollegate: [{ numero: "2026/000100", data: "2026-08-01" }],
+  };
+  assert.deepEqual(validate(nota, { company: SM, party: SM_CLIENTE }), []);
+});
+
+test("verso un paese diverso dall'Italia, da San Marino non c'è un file", () => {
+  const problemi = validate({ ...INTERNA, righe: [{ ...INTERNA.righe[0], natura: "N3.1" }] },
+    { company: SM, party: UE_CLIENTE });
+  assert.ok(problemi.map((p) => p.campo).includes("cliente.paese"), JSON.stringify(problemi));
+  assert.equal(esportabile(INTERNA, { company: SM, party: UE_CLIENTE }), false);
+  // Dall'Italia verso lo stesso cliente, invece, il file c'è ed è quello di sempre.
+  assert.deepEqual(validate({ ...DOC, righe: [{ descrizione: "X", quantita: "1", prezzoUnitario: "10", aliquota: "0", natura: "N3.2" }] },
+    { company: COMPANY, party: UE_CLIENTE }), []);
+});
+
+test("un tipo che il canale non accetta viene fermato prima di uscire", () => {
+  // `TD29` è l'autofattura dell'interna: verso l'Italia quel codice non passa.
+  const auto = {
+    ...INTERNA,
+    tipo: "TD29",
+    serie: "AF",
+    righe: [{ descrizione: "Fornitura non fatturata", quantita: "1", prezzoUnitario: "500.00", aliquota: "0", natura: "N3.1", tm: "3" }],
+    ddt: [],
+    fattureCollegate: [],
+  };
+  assert.ok(validate(auto, { company: SM, party: PARTY }).map((p) => p.campo).includes("tipo"));
+  // All'interno invece è proprio il documento che l'articolo 7 impone al cliente.
+  const dentro = { ...auto, righe: [{ ...auto.righe[0], natura: "N4" }] };
+  assert.deepEqual(validate(dentro, { company: SM, party: SM_CLIENTE }), []);
+});
+
+test("una differita da San Marino esce come TD01, e il controllo guarda quel codice", () => {
+  const differita = { ...INTERNA, tipo: "TD24" };
+  // `TD24` non è fra i codici ammessi da nessuno dei due canali sammarinesi, ma il documento esce
+  // come `TD01`: il controllo legge quello che finisce nel file.
+  assert.deepEqual(validate(differita, { company: SM, party: SM_CLIENTE }), []);
+  assert.deepEqual(validate({ ...differita, righe: [{ ...INTERNA.righe[0], natura: "N3.1" }] },
+    { company: SM, party: PARTY }), []);
+});
+
+test("una nota non può essere datata prima della fattura che rettifica", () => {
+  const nota = {
+    ...INTERNA,
+    tipo: "TD04",
+    data: "2026-07-01",
+    ddt: [],
+    fattureCollegate: [{ numero: "2026/000100", data: "2026-08-01" }],
+  };
+  assert.ok(validate(nota, { company: SM, party: SM_CLIENTE }).map((p) => p.campo)
+    .includes("fattureCollegate[1].data"));
+});
+
+test("una nota di debito chiede anch'essa che cosa rettifica", () => {
+  const nd = { ...DOC, tipo: "TD05", serie: "ND" };
+  assert.ok(validate(nd, context).map((p) => p.campo).includes("fattureCollegate"));
+});
+
+test("il regime fiscale sammarinese è uno solo", () => {
+  const forfettario = { ...SM, regimeFiscale: "RF19" };
+  assert.ok(validate(INTERNA, { company: forfettario, party: SM_CLIENTE })
+    .map((p) => p.campo).includes("azienda.regimeFiscale"));
+  // In Italia il forfettario esiste, e passa.
+  assert.deepEqual(validate(DOC, { company: { ...COMPANY, regimeFiscale: "RF19" }, party: PARTY }), []);
+});
+
+test("un riepilogo che si annulla da solo non esce verso San Marino", () => {
+  const annullato = {
+    ...INTERNA,
+    righe: [
+      { descrizione: "Ricambi", quantita: "1", prezzoUnitario: "100.00", aliquota: "0", natura: "N4", tm: "4" },
+      { descrizione: "Sconto", quantita: "1", prezzoUnitario: "-100.00", aliquota: "0", natura: "N4", tm: "4" },
+    ],
+  };
+  assert.ok(validate(annullato, { company: SM, party: SM_CLIENTE }).map((p) => p.campo)
+    .includes("riepiloghi[1].imponibile"));
+});
+
 console.log(`validate: ${passed} prove passate`);

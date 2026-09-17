@@ -16,7 +16,8 @@ import assert from "node:assert/strict";
 
 import * as xml from "../run/xml.js";
 import {
-  build, progressivo, destinatario, fileName, profileFor, IT_SDI, TRACCIATO,
+  build, progressivo, destinatario, fileName, profileFor, identificativo, tipoDocumento,
+  IT_SDI, SM_EXPORT, SM_INTERNA, SM_ESTERO, TRACCIATO,
 } from "../run/fatturapa.js";
 
 let passed = 0;
@@ -369,12 +370,141 @@ const SERVIZIO = {
   }],
 };
 
-test("il profilo si sceglie da chi emette, senza chiederlo due volte", () => {
-  assert.equal(profileFor(SM).id, "sm-ut");
+// Un cliente per ciascuna delle destinazioni che contano.
+const CLIENTE_IT = PARTY;
+const CLIENTE_SM = {
+  denominazione: "Bottega del Titano S.r.l.",
+  partitaIva: "13579",
+  paese: "SM",
+  sede: { indirizzo: "Via Cinque Vie", cap: "47890", comune: "San Marino", provincia: "SM" },
+};
+const CLIENTE_UE = {
+  denominazione: "Beispiel GmbH",
+  partitaIva: "DE123456789",
+  paese: "DE",
+  sede: { indirizzo: "Musterstrasse", cap: "10115", comune: "Berlin" },
+};
+
+test("il profilo si sceglie dalla coppia, non dal solo emittente", () => {
+  // **Le sei direzioni.** Le tre italiane sono lo stesso file con tre destinatari; le due
+  // sammarinesi sono due tracciati diversi che partono dalla stessa azienda, ed è la ragione per
+  // cui una tabella per paese di partenza non bastava.
+  assert.equal(profileFor(COMPANY, CLIENTE_IT).id, "it-sdi");
+  assert.equal(profileFor(COMPANY, CLIENTE_SM).id, "it-sdi");
+  assert.equal(profileFor(COMPANY, CLIENTE_UE).id, "it-sdi");
+  assert.equal(profileFor(SM, CLIENTE_IT).id, "sm-export");
+  assert.equal(profileFor(SM, CLIENTE_SM).id, "sm-interna");
+  assert.equal(profileFor(SM, CLIENTE_UE).id, "sm-estero");
+  // Un cliente senza paese è italiano, come ovunque nel tracciato: la direzione legge la stessa
+  // regola che scrive `IdPaese`, o profilo e file parlerebbero di due clienti diversi.
+  assert.equal(profileFor(SM, {}).id, "sm-export");
+  assert.equal(profileFor(SM).id, "sm-export");
   assert.equal(profileFor(COMPANY).id, "it-sdi");
   // Un'anagrafica senza paese, o vuota, ricade sull'Italia invece di non avere profilo.
   assert.equal(profileFor({}).id, "it-sdi");
   assert.equal(profileFor(null).id, "it-sdi");
+  // Un paese scritto in minuscolo è lo stesso paese.
+  assert.equal(profileFor({ paese: "sm" }, { paese: "it" }).id, "sm-export");
+});
+
+test("da San Marino verso San Marino il trasmittente torna a essere chi trasmette", () => {
+  // Il difetto che il profilo sulla coppia risolve: con il profilo dell'esportazione questo
+  // documento usciva a nome dell'Ufficio Tributario, e HUB-SM lo scarta.
+  const interna = {
+    ...DOC,
+    righe: [{ descrizione: "Ricambi", quantita: "2", prezzoUnitario: "100.00", aliquota: "0", natura: "N4", tm: "4" }],
+  };
+  const { text } = build(interna, { company: SM, party: CLIENTE_SM });
+  const trasmissione = text.split("</DatiTrasmissione>")[0];
+  assert.match(trasmissione, /<IdCodice>24680<\/IdCodice>/);
+  assert.ok(!trasmissione.includes("96428100588"), "ha usato l'HUB come trasmittente");
+});
+
+test("nell'interna il codice destinatario è sette zeri, anche se il cliente ne ha uno suo", () => {
+  // Il codice che il cliente usa per ricevere le fatture italiane non c'entra: qui il file resta
+  // dentro HUB-SM e non viene recapitato da nessuna parte.
+  const conCodice = { ...CLIENTE_SM, codiceDestinatario: "ZZZZZZZ" };
+  assert.equal(destinatario(conCodice, SM_INTERNA), "0000000");
+  assert.equal(destinatario(conCodice, IT_SDI), "ZZZZZZZ");
+  // Da un'azienda italiana, invece, un cliente sammarinese si raggiunge attraverso l'Ufficio
+  // Tributario, ed è quello il codice.
+  assert.equal(destinatario(CLIENTE_SM, IT_SDI), "2R4GTO8");
+  assert.equal(destinatario(CLIENTE_UE, IT_SDI), "XXXXXXX");
+});
+
+test("l'interna non valorizza i campi che il Documento A dichiara non previsti", () => {
+  const conTutto = {
+    ...SM,
+    codiceFiscale: "SM24680",
+    rea: { ufficio: "RN", numero: "123456" },
+  };
+  const interna = {
+    ...DOC,
+    righe: [{ descrizione: "Ricambi", quantita: "1", prezzoUnitario: "100.00", aliquota: "0", natura: "N4", tm: "4", esigibilita: "I" }],
+  };
+  const { text } = build(interna, { company: conTutto, party: CLIENTE_SM });
+  assert.ok(!text.includes("<CodiceFiscale>"), "ha scritto il codice fiscale");
+  assert.ok(!text.includes("<IscrizioneREA>"), "ha scritto l'iscrizione REA");
+  assert.ok(!text.includes("<Provincia>"), "ha scritto la provincia");
+  assert.ok(!text.includes("<EsigibilitaIVA>"), "ha scritto l'esigibilità");
+  // Ma il CAP sammarinese resta, perché quello è un CAP vero.
+  assert.match(text, /<CAP>47891<\/CAP>/);
+  // E sull'esportazione gli stessi campi si scrivono: è il canale a decidere, non il paese.
+  const export_ = build({ ...interna, righe: [{ ...interna.righe[0], natura: "N3.1" }] },
+    { company: conTutto, party: CLIENTE_IT }).text;
+  assert.match(export_, /<Provincia>SM<\/Provincia>/);
+});
+
+test("il riferimento normativo dell'interna porta il TM e il testo dell'esenzione", () => {
+  const interna = {
+    ...DOC,
+    righe: [{ descrizione: "Ricambi", quantita: "1", prezzoUnitario: "100.00", aliquota: "0", natura: "N4", tm: "4" }],
+  };
+  const { text } = build(interna, { company: SM, party: CLIENTE_SM });
+  assert.match(text, /<Natura>N4<\/Natura>/);
+  assert.match(text, /<RiferimentoNormativo>TM:4,ESENTE<\/RiferimentoNormativo>/);
+});
+
+test("da San Marino verso l'estero non esce nessun file", () => {
+  // Non è una restrizione nostra: né il DD 163/2021 né il DD 133/2026 comprendono questa
+  // direzione, quindi un file lì non è un adempimento, è un documento che nessuno accetta.
+  assert.equal(SM_ESTERO.file, false);
+  assert.throws(
+    () => build(DOC, { company: SM, party: CLIENTE_UE }),
+    /non si emette un file elettronico/,
+  );
+  // Le altre cinque direzioni un file ce l'hanno.
+  for (const profile of [IT_SDI, SM_EXPORT, SM_INTERNA]) assert.equal(profile.file, true);
+});
+
+test("una differita da San Marino esce come TD01, e in Italia resta TD24", () => {
+  // `TD24` non è fra i codici che l'HUB ammette, né in esportazione né all'interno. La differita
+  // resta un concetto dell'app — si converte un DDT, si raggruppano più consegne — ma sul filo è
+  // una `TD01` con i suoi `DatiDDT`.
+  const differita = { ...DOC, tipo: "TD24", ddt: [{ numero: "DDT 1", data: "2026-08-20" }] };
+  assert.equal(tipoDocumento(differita, IT_SDI), "TD24");
+  assert.equal(tipoDocumento(differita, SM_EXPORT), "TD01");
+  assert.equal(tipoDocumento(differita, SM_INTERNA), "TD01");
+  const sm = build({ ...differita, righe: [{ descrizione: "Merce", quantita: "1", prezzoUnitario: "10.00", aliquota: "0", natura: "N3.1", tm: "1" }] },
+    { company: SM, party: CLIENTE_IT }).text;
+  assert.match(sm, /<TipoDocumento>TD01<\/TipoDocumento>/);
+  // E il DDT resta dov'era: è quello che dimostra la data di consegna, da cui si contano i termini.
+  assert.match(sm, /<NumeroDDT>DDT 1<\/NumeroDDT>/);
+});
+
+test("il codice sammarinese va a cinque cifre, nel file e nel nome del file", () => {
+  // «Valore numerico a 5 cifre con eventuali 0 in testa», con le stesse parole nei due documenti.
+  // Il nome non conforme viene rifiutato prima di qualunque controllo sul contenuto.
+  assert.equal(identificativo("1234", "SM"), "01234");
+  assert.equal(identificativo("SM1234", "SM"), "01234");
+  assert.equal(identificativo("24680", "SM"), "24680");
+  // In Italia non si tocca niente: una partita IVA ha già la sua lunghezza.
+  assert.equal(identificativo("01234567897", "IT"), "01234567897");
+  const corto = { ...SM, partitaIva: "1234" };
+  assert.equal(fileName(corto, 7, SM_INTERNA), "SM01234_7.xml");
+  const { text } = build({ ...DOC, righe: [{ descrizione: "X", quantita: "1", prezzoUnitario: "1.00", aliquota: "0", natura: "N4", tm: "4" }] },
+    { company: corto, party: CLIENTE_SM });
+  assert.match(text.split("</CedentePrestatore>")[0], /<IdCodice>01234<\/IdCodice>/);
 });
 
 test("l'IdTrasmittente sammarinese è fisso, e non è il COE dell'azienda", () => {
@@ -402,22 +532,30 @@ test("un'azienda italiana non scrive né il TM né il testo sammarinese", () => 
   assert.match(text, /<RiferimentoNormativo>Operazione non imponibile - esportazione/);
 });
 
-test("il codice TM torna nel riepilogo solo se le righe sono d'accordo", () => {
+test("due tipi merce diversi fanno due riepiloghi, non un riepilogo senza codice", () => {
+  // **Sui canali sammarinesi il codice fa parte della chiave del riepilogo**: «per ogni distinta
+  // combinazione di AliquotaIVA e TipoMerce deve essere presente una corrispondente riga di
+  // DatiRiepilogo». L'app faceva l'opposto — cancellava il codice e chiedeva di separare i
+  // documenti — perché applicava a questo canale la regola dello SdI italiano, dove due blocchi con
+  // la stessa aliquota e la stessa natura vengono scartati. Qui sono proprio quello che si scrive.
   const misto = {
     ...DOC,
     righe: [
-      { descrizione: "A", quantita: "1", prezzoUnitario: "100", aliquota: "0", natura: "N3.1", tm: "3" },
-      { descrizione: "B", quantita: "1", prezzoUnitario: "100", aliquota: "0", natura: "N3.1", tm: "4" },
+      { descrizione: "Materie prime", quantita: "1", prezzoUnitario: "100", aliquota: "0", natura: "N3.1", tm: "1" },
+      { descrizione: "Attrezzatura", quantita: "1", prezzoUnitario: "100", aliquota: "0", natura: "N3.1", tm: "7" },
     ],
   };
-  const { text } = build(misto, { company: SM, party: PARTY });
-  // Un riepilogo porta un riferimento solo, e non si può spezzare: il tracciato lo indicizza su
-  // aliquota e natura, e due blocchi con la stessa coppia vengono scartati. Quindi niente prefisso,
-  // e `validate.js` lo segnala invece di sceglierne uno di nascosto.
-  assert.ok(!text.includes("<RiferimentoNormativo>TM:"));
-  // Le righe però tengono ciascuna il proprio: quella parte del file è per riga.
-  assert.match(text, /<RiferimentoTesto>3<\/RiferimentoTesto>/);
-  assert.match(text, /<RiferimentoTesto>4<\/RiferimentoTesto>/);
+  const built = build(misto, { company: SM, party: PARTY });
+  assert.equal(built.totals.riepiloghi.length, 2);
+  assert.match(built.text, /<RiferimentoNormativo>TM:1,Non imp\. art\.8 DPR 633\/72<\/RiferimentoNormativo>/);
+  assert.match(built.text, /<RiferimentoNormativo>TM:7,Non imp\. art\.8 DPR 633\/72<\/RiferimentoNormativo>/);
+  // Le righe tengono ciascuna il proprio, come prima.
+  assert.match(built.text, /<RiferimentoTesto>1<\/RiferimentoTesto>/);
+  assert.match(built.text, /<RiferimentoTesto>7<\/RiferimentoTesto>/);
+  // Dall'Italia lo stesso documento resta un riepilogo solo: lì il codice non si scrive affatto.
+  const italiano = build(misto, { company: COMPANY, party: PARTY });
+  assert.equal(italiano.totals.riepiloghi.length, 1);
+  assert.ok(!italiano.text.includes("TM:"));
 });
 
 test("un indirizzo sammarinese tiene il suo CAP e la sua provincia", () => {
@@ -494,6 +632,30 @@ test("la nota di credito porta nel file il numero che sta sulla carta", () => {
   assert.notEqual(valore("Numero"), DOC.numero, "e non è il numero della fattura");
   // Il documento stornato resta nominato con il suo, di numero.
   assert.ok(testo.includes("<DatiFattureCollegate>"), "il riferimento alla fattura c'è");
+});
+
+test("nell'autofattura i due blocchi si scambiano, e il file lo dice", () => {
+  // La scrive il cliente quando il fornitore non ha fatturato entro i termini: il cedente è quel
+  // fornitore, il cessionario è chi scrive, e `SoggettoEmittente` dichiara lo scambio.
+  const auto = {
+    ...DOC,
+    tipo: "TD29",
+    serie: "AF",
+    righe: [{ descrizione: "Fornitura non fatturata", quantita: "1", prezzoUnitario: "500.00", aliquota: "0", natura: "N4", tm: "4" }],
+  };
+  const { text } = build(auto, { company: SM, party: CLIENTE_SM });
+  const cedente = text.split("</CedentePrestatore>")[0];
+  const cessionario = text.split("<CessionarioCommittente>")[1].split("</CessionarioCommittente>")[0];
+  // Il fornitore che non ha emesso sta come cedente…
+  assert.match(cedente, /<IdCodice>13579<\/IdCodice>/);
+  // …e chi scrive sta come cessionario.
+  assert.match(cessionario, /<IdCodice>24680<\/IdCodice>/);
+  assert.match(text, /<SoggettoEmittente>CC<\/SoggettoEmittente>/);
+  // Ma a trasmettere è sempre chi scrive.
+  assert.match(text.split("</DatiTrasmissione>")[0], /<IdCodice>24680<\/IdCodice>/);
+  // E una fattura normale non porta quell'elemento.
+  const normale = build({ ...auto, tipo: "TD01", serie: "" }, { company: SM, party: CLIENTE_SM }).text;
+  assert.ok(!normale.includes("SoggettoEmittente"));
 });
 
 console.log(`fatturapa: ${passed} prove passate`);

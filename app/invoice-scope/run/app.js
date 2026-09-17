@@ -27,6 +27,7 @@ import { documents, convertMany, save, invoicedBy, signedTotal, editable, NUMERA
 import { TIPI, KINDS, kind, numero as shownNumber, convertibile } from "./kinds.js";
 import { label as statoLabel } from "./states.js";
 import { TRACCIATO, profileFor } from "./fatturapa.js";
+import { stato as termState } from "./terms.js";
 import { NATURE } from "./validate.js";
 import { toString } from "./decimal.js";
 import * as parties from "./parties.js";
@@ -345,7 +346,11 @@ async function _refresh() {
   // La Situazione la disegna `home.js`: i conti stanno lì, provati in Node, e qui resta solo il
   // giro che li chiama.
   const owed = db ? await summary(db) : { rows: [], overdue: [], total: 0n };
-  const byParty = new Map(db ? (await parties.parties(db)).map((p) => [p.id, p.denominazione]) : []);
+  // L'anagrafica intera e non i soli nomi: il termine di trasmissione dipende dal paese del cliente,
+  // perché è la coppia dei due paesi a dire su quale canale esce il documento.
+  const anagrafiche = new Map(db ? (await parties.parties(db)).map((p) => [p.id, p]) : []);
+  const byParty = new Map([...anagrafiche].map(([id, p]) => [id, p.denominazione]));
+  _drawTerms(company, docs, anagrafiche);
   const costs = db ? await allCosts(db) : [];
   const outlays = db ? await allOutlays(db) : [];
   const recurring = db ? await allRecurring(db) : [];
@@ -874,6 +879,32 @@ async function _saveCompany(event) {
  * cornice accesa sarebbe la prima cosa che si legge — e la prima cosa dello screenshot della scheda
  * — al posto dei numeri che l'app esiste per mostrare.
  */
+/**
+ * I documenti fuori termine, o lì vicino.
+ *
+ * **Il termine dipende dalla coppia dei paesi**, non dall'azienda: la stessa fattura ha tre mesi se
+ * va in Italia e due se resta in Repubblica, e la conseguenza del ritardo è diversa — là non è più
+ * vidimabile, qui costa cento euro. Quindi il profilo si chiede documento per documento.
+ *
+ * Un documento già trasmesso esce dal conto da sé: `terms.js` risponde «fatto» e non «scaduto».
+ */
+function _drawTerms(company, docs, anagrafiche) {
+  const pannello = el("termNote");
+  const oggi = new Date().toISOString().slice(0, 10);
+  const stati = docs
+    .filter((doc) => doc.stato && doc.stato !== "bozza" && doc.stato !== "annullato")
+    .map((doc) => termState(doc, profileFor(company, anagrafiche.get(doc.partyId)), { oggi }))
+    .filter(Boolean);
+  const scaduti = stati.filter((s) => s.key === "scaduto").length;
+  const vicini = stati.filter((s) => s.key === "vicino").length;
+  pannello.hidden = !scaduti && !vicini;
+  if (pannello.hidden) return;
+  el("termNoteText").textContent = scaduti
+    ? tf("termPanelLate", { scaduti, vicini })
+    : tf("termPanelSoon", { vicini });
+  el("termNoteGo").textContent = t("termPanelGo");
+}
+
 async function _drawSafety(docs) {
   const pannello = el("backupNote");
   if (isDemo()) {

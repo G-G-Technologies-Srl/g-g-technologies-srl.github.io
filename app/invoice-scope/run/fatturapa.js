@@ -20,7 +20,7 @@
 // No DOM in here: `node app/invoice-scope/test/fatturapa.mjs` runs it directly.
 
 import { from, sub, toString } from "./decimal.js";
-import { totals, rate, MONEY } from "./totals.js";
+import { totals, rate, chiaveConTm, MONEY } from "./totals.js";
 import { kind, numero as shownNumber } from "./kinds.js";
 import * as xml from "./xml.js";
 import { fiscalCode } from "./parse.js";
@@ -54,12 +54,6 @@ const NS = "http://ivaservizi.agenziaentrate.gov.it/docs/xsd/fatture/v1.2";
 const PROGRESSIVO_MAX = 100000;
 
 /**
- * The profile for the Italian SdI.
- *
- * `codiceDestinatarioEstero` and the San Marino code are here rather than in the walk because they
- * are facts about a destination, not about the shape of a document.
- */
-/**
  * I paesi che nel tracciato scrivono un CAP vero e una sigla di provincia.
  *
  * **San Marino sta con l'Italia, non con l'estero**, e questa riga viene da una fattura registrata
@@ -74,26 +68,74 @@ const PROGRESSIVO_MAX = 100000;
  */
 export const PAESI_CON_CAP = new Set(["IT", "SM"]);
 
+/**
+ * I cinque tipi merce del regime monofase, e le combinazioni che una fattura può contenere.
+ *
+ * Le combinazioni non sono un'opinione: una fattura porta **solo** beni (1, 4, 7), **solo** conto
+ * lavoro con materie prime (2), **solo** conto lavoro senza (3). Mescolarli è uno scarto, e il
+ * gruppo è anche quello che decide se il DDT è obbligatorio.
+ */
+export const TIPI_MERCE = ["1", "2", "3", "4", "7"];
+export const GRUPPI_MERCE = [["1", "4", "7"], ["2"], ["3"]];
+
+/** I tipi merce per cui il DDT è obbligatorio: tutto tranne il 3. */
+export const MERCE_CON_DDT = new Set(["1", "2", "4", "7"]);
+
+/**
+ * The profile for the Italian SdI.
+ *
+ * `codiceDestinatarioEstero` and the San Marino code are here rather than in the walk because they
+ * are facts about a destination, not about the shape of a document.
+ */
 export const IT_SDI = {
   id: "it-sdi",
   paese: "IT",
+  // **Il canale, non il paese di chi emette.** Da qui in avanti è quello che cambia le regole: lo
+  // SdI italiano e l'HUB dell'Ufficio Tributario vogliono due file diversi dalla stessa azienda.
+  canale: "sdi",
+  // Se questa direzione produce un file. È l'unico campo che può essere falso, e vale per una
+  // direzione sola — vedi `SM_ESTERO`.
+  file: true,
   schema: TRACCIATO.schema,
   versione: TRACCIATO.versione,
   codiceDestinatarioAssente: "0000000",
   codiceDestinatarioEstero: "XXXXXXX",
   codiceDestinatarioSanMarino: "2R4GTO8",
+  // Un canale che recapita a un destinatario preciso non ha un codice fisso: lo sceglie il cliente.
+  destinatarioFisso: null,
   // Chi trasmette è chi emette: un'azienda italiana manda le proprie fatture allo SdI a nome
   // proprio, o attraverso un intermediario che riscrive questo blocco per conto suo.
   trasmittente: null,
+  // I `TipoDocumento` che questo canale accetta. Erano una costante di `validate.js`, uguale per
+  // tutti; sono invece la prima cosa che cambia fra un canale e l'altro.
+  tipi: ["TD01", "TD02", "TD04", "TD05", "TD24", "TD29"],
+  // Un tipo dell'app che sul filo diventa un altro codice. Vuoto qui: in Italia la fattura
+  // differita è `TD24` e si scrive così.
+  rimappa: {},
+  // `null` vuol dire «tutte quelle dello schema». Un elenco vuol dire quelle e basta.
+  nature: null,
+  aliquotaFissa: null,
   // Nessun blocco `AltriDatiGestionali` e nessuna riscrittura del riferimento normativo: allo SdI
   // basta la natura, e il testo della norma resta quello di `RIFERIMENTI` in totals.js.
   datiGestionali: null,
   codiciTm: [],
+  tmObbligatorio: false,
+  // Gli elementi che questo canale non vuole vedere valorizzati. Lo schema li ammette, il canale no,
+  // e un campo che non si valorizza non deve comparire affatto.
+  campiVietati: [],
   riferimenti: {},
+  // I regimi fiscali che il canale ammette. In Italia il forfettario esiste; a San Marino il
+  // Documento A dice «deve essere valorizzato con RF01» e basta.
+  regimi: ["RF01", "RF19"],
+  // Se un riepilogo con imponibile zero è un file scartato. Lo dice l'Allegato B dell'esportazione.
+  imponibileNonZero: false,
+  merceSenzaImposta: [],
+  // I termini di trasmissione, in mesi, e da quale data si contano. `null` dove non li calcoliamo.
+  termini: null,
 };
 
 /**
- * Il profilo di un emittente sammarinese.
+ * Il profilo di un emittente sammarinese che fattura in Italia — l'esportazione.
  *
  * **`IdTrasmittente` è fisso, e non è il COE dell'azienda.** Le fatture passano dall'HUB
  * dell'Ufficio Tributario, che è il trasmittente per tutti: con un codice diverso il documento non
@@ -104,30 +146,112 @@ export const IT_SDI = {
  *
  * Preso da una fattura registrata davvero, non da una ricostruzione.
  */
-export const SM_UT = {
+export const SM_EXPORT = {
   ...IT_SDI,
-  id: "sm-ut",
+  id: "sm-export",
   paese: "SM",
+  canale: "hub-sm",
   trasmittente: { paese: "SM", codice: "96428100588" },
+  // L'Allegato B del Regolamento 14/2021 ne ammette tre, e `TD24` non è fra questi: una differita
+  // che parte da San Marino è una `TD01` con i suoi `DatiDDT`, ed è la `rimappa` qui sotto a dirlo.
+  tipi: ["TD01", "TD04", "TD05"],
+  rimappa: { TD24: "TD01" },
+  // In esportazione la natura è formalmente opzionale — una fattura può portare IVA prepagata — ma
+  // se c'è può essere solo questa.
+  nature: ["N3.1"],
   // **Il codice che accompagna i servizi.** Sta sulla riga come `AltriDatiGestionali` e torna in
   // testa al riferimento normativo: senza, il portale sammarinese rifiuta il documento. Il nome del
   // dato è qui e non nel codice perché è la cosa che può cambiare — il giorno che l'Ufficio
   // Tributario ne volesse un altro, o due, si riscrive questa riga e non l'emettitore.
   datiGestionali: "TM",
-  // **I valori ammessi, quando li sapremo.** Vuoto vuol dire «il campo è libero»: oggi l'elenco
-  // dell'Ufficio Tributario non ce l'abbiamo, e inventarlo sarebbe peggio che non averlo — un menù
-  // con dentro codici sbagliati è più convincente di un campo vuoto, e altrettanto falso.
-  //
-  // Riempirlo fa scattare due cose insieme, senza toccare altro: la maschera propone i valori, e
-  // `validate.js` rifiuta quelli fuori elenco. Finché è vuoto nessuna delle due si vede.
-  codiciTm: [],
+  // **I valori ammessi.** Sono nell'Allegato B e nel Documento B, gli stessi cinque per i due
+  // canali. Riempirlo fa scattare due cose insieme: la maschera propone i valori e `validate.js`
+  // rifiuta quelli fuori elenco.
+  codiciTm: TIPI_MERCE,
+  tmObbligatorio: true,
   // Il testo che l'Ufficio Tributario ha già accettato. Più corto di quello italiano, e non è una
   // semplificazione nostra: è la forma che passa la validazione.
   riferimenti: { "N3.1": "Non imp. art.8 DPR 633/72" },
+  regimi: ["RF01"],
+  imponibileNonZero: true,
+  // I tipi merce che non possono portare imposta: conto lavoro, con e senza materie prime. Lo dice
+  // l'Allegato B dell'esportazione — «se TipoMerce = 2 o 3 allora deve essere AliquotaIVA = 0» — e
+  // nell'interna è vero per tutti, perché lì l'aliquota è fissa a zero comunque.
+  merceSenzaImposta: ["2", "3"],
+  // Beni: tre mesi dalla data del DDT, e oltre il termine la fattura **non è vidimabile**. Servizi:
+  // due mesi dalla data della fattura.
+  termini: { beni: 3, servizi: 2, bloccante: true },
 };
 
-/** I profili, per paese di chi emette. */
-const PROFILI = { IT: IT_SDI, SM: SM_UT };
+/**
+ * Il profilo di un emittente sammarinese che fattura a un altro sammarinese — l'interna.
+ *
+ * **Non è l'esportazione con un destinatario diverso**, ed è l'errore che il codice faceva: un solo
+ * profilo per paese di chi emette mandava questo documento con il trasmittente dell'Ufficio
+ * Tributario e il codice destinatario dello SdI. Qui il file non va da nessuna parte — resta dentro
+ * HUB-SM — quindi il trasmittente torna a essere chi trasmette e il destinatario è sette zeri.
+ *
+ * **L'IVA non si espone.** Il regime è monofase: aliquota `0.00`, natura `N4`, imposta `0.00`, e
+ * l'imposta vera si gestisce fuori dalla fattura, con i rimborsi monofase.
+ */
+export const SM_INTERNA = {
+  ...SM_EXPORT,
+  id: "sm-interna",
+  // Chi trasmette è chi emette, come in Italia: l'HUB non è più il trasmittente di tutti.
+  trasmittente: null,
+  // Il file resta dentro HUB-SM, quindi non c'è un canale telematico da indicare.
+  destinatarioFisso: "0000000",
+  // Il Documento B ne ammette cinque, e ci sono l'acconto e l'autofattura del cessionario.
+  tipi: ["TD01", "TD02", "TD04", "TD05", "TD29"],
+  rimappa: { TD24: "TD01" },
+  nature: ["N4"],
+  aliquotaFissa: "0.00",
+  // Il Documento A li dichiara «non previsti ai fini della fatturazione elettronica nelle
+  // transazioni interne al territorio della Repubblica». Su `EsigibilitaIVA` i due documenti si
+  // contraddicono — l'esempio del Documento B la riporta — e ometterla è la scelta prudente:
+  // l'elemento è facoltativo nello schema.
+  campiVietati: ["codiceFiscale", "provincia", "rea", "esigibilita", "pec"],
+  // Il testo dell'esenzione, con il codice TM davanti come vuole il Documento B.
+  riferimenti: { N4: "ESENTE" },
+  // Due mesi in tutti e due i casi. Fuori termine la fattura viene comunque accettata, e costa cento
+  // euro: è una sanzione, non uno sbarramento.
+  termini: { beni: 2, servizi: 2, bloccante: false },
+};
+
+/**
+ * San Marino verso un paese diverso dall'Italia: **non esiste un file da produrre**.
+ *
+ * Il perimetro della fattura elettronica sammarinese è definito da due norme, e nessuna comprende
+ * questa direzione: il DD 163/2021 riguarda le operazioni con l'Italia, il DD 133/2026 quelle
+ * interne alla Repubblica. La fattura resta cartacea o PDF.
+ *
+ * È un profilo e non un `null` perché tutto il resto dell'app chiede al profilo — la maschera per
+ * sapere se mostrare la colonna TM, il pulsante per sapere se può esistere. Un profilo che dichiara
+ * `file: false` risponde a tutte quelle domande; un `null` le farebbe esplodere una alla volta.
+ */
+export const SM_ESTERO = {
+  ...SM_EXPORT,
+  id: "sm-estero",
+  canale: null,
+  file: false,
+  trasmittente: null,
+  tipi: [],
+  tmObbligatorio: false,
+  termini: null,
+};
+
+/**
+ * I profili, per direzione: chi emette → chi riceve.
+ *
+ * **Le direzioni sono sei e i paesi di partenza due**, quindi una tabella per paese di partenza non
+ * può distinguerle: `SM → SM` e `SM → IT` sono due tracciati diversi che partono dalla stessa
+ * azienda. Le tre direzioni italiane invece sono lo stesso file con tre destinatari diversi, e
+ * `destinatario()` basta a separarle.
+ */
+const PROFILI = {
+  IT: { IT: IT_SDI, SM: IT_SDI, estero: IT_SDI },
+  SM: { IT: SM_EXPORT, SM: SM_INTERNA, estero: SM_ESTERO },
+};
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
@@ -166,14 +290,16 @@ function _rate(value) {
  * an Italian postcode is the only kind it knows. Sending a real foreign postcode there is the
  * mistake this function exists to prevent.
  */
-function _sede(sede, paese) {
+function _sede(sede, paese, profile) {
   const proprio = PAESI_CON_CAP.has(paese || "IT");
   return [
     ["Indirizzo", sede.indirizzo],
     ["NumeroCivico", sede.numeroCivico],
     ["CAP", proprio ? sede.cap : "00000"],
     ["Comune", sede.comune],
-    ["Provincia", proprio ? sede.provincia : null],
+    // La sigla di provincia è giusta su una fattura sammarinese diretta in Italia, e non va scritta
+    // su una interna: lo stesso campo, due canali, due risposte. Per questo la domanda è al profilo.
+    ["Provincia", proprio && !vietato(profile, "provincia") ? sede.provincia : null],
     ["Nazione", paese || "IT"],
   ];
 }
@@ -187,22 +313,25 @@ function _anagrafica(party) {
   ];
 }
 
-function _cedente(company) {
+function _cedente(company, profile) {
+  const paese = company.paese || "IT";
   return [
     ["DatiAnagrafici", [
       ["IdFiscaleIVA", [
-        ["IdPaese", company.paese || "IT"],
+        ["IdPaese", paese],
         // Belt and braces: the screens strip the country on the way in, and this strips it again on
         // the way out, so a record written before that rule existed — or by an import that predates
         // it — still leaves as `29141` and not `SM29141`.
-        ["IdCodice", fiscalCode(company.partitaIva, company.paese || "IT")],
+        ["IdCodice", identificativo(company.partitaIva, paese)],
       ]],
-      ["CodiceFiscale", fiscalCode(company.codiceFiscale, company.paese || "IT")],
+      ["CodiceFiscale", vietato(profile, "codiceFiscale")
+        ? null
+        : fiscalCode(company.codiceFiscale, paese)],
       ["Anagrafica", _anagrafica(company)],
       ["RegimeFiscale", company.regimeFiscale || "RF01"],
     ]],
-    ["Sede", _sede(company.sede || {}, company.paese)],
-    company.rea ? ["IscrizioneREA", [
+    ["Sede", _sede(company.sede || {}, paese, profile)],
+    company.rea && !vietato(profile, "rea") ? ["IscrizioneREA", [
       ["Ufficio", company.rea.ufficio],
       ["NumeroREA", company.rea.numero],
       ["StatoLiquidazione", company.rea.statoLiquidazione || "LN"],
@@ -210,17 +339,20 @@ function _cedente(company) {
   ];
 }
 
-function _cessionario(party) {
+function _cessionario(party, profile) {
+  const paese = party.paese || "IT";
   return [
     ["DatiAnagrafici", [
       party.partitaIva ? ["IdFiscaleIVA", [
-        ["IdPaese", party.paese || "IT"],
-        ["IdCodice", fiscalCode(party.partitaIva, party.paese || "IT")],
+        ["IdPaese", paese],
+        ["IdCodice", identificativo(party.partitaIva, paese)],
       ]] : null,
-      ["CodiceFiscale", fiscalCode(party.codiceFiscale, party.paese || "IT")],
+      ["CodiceFiscale", vietato(profile, "codiceFiscale")
+        ? null
+        : fiscalCode(party.codiceFiscale, paese)],
       ["Anagrafica", _anagrafica(party)],
     ]],
-    ["Sede", _sede(party.sede || {}, party.paese)],
+    ["Sede", _sede(party.sede || {}, paese, profile)],
   ];
 }
 
@@ -230,16 +362,16 @@ function _trasmissione(doc, company, party, profile) {
   return [
     ["IdTrasmittente", [
       ["IdPaese", chi ? chi.paese : (company.paese || profile.paese)],
-      ["IdCodice", chi ? chi.codice : fiscalCode(company.partitaIva, company.paese || profile.paese)],
+      ["IdCodice", chi ? chi.codice : identificativo(company.partitaIva, company.paese || profile.paese)],
     ]],
     ["ProgressivoInvio", progressivo(doc.progressivo ?? 1)],
     ["FormatoTrasmissione", profile.schema],
     ["CodiceDestinatario", destinatario(party, profile)],
-    party.pec ? ["PECDestinatario", party.pec] : null,
+    party.pec && !vietato(profile, "pec") ? ["PECDestinatario", party.pec] : null,
   ];
 }
 
-function _datiGenerali(doc, computed) {
+function _datiGenerali(doc, computed, profile) {
   const ritenuta = doc.ritenuta
     ? ["DatiRitenuta", [
       ["TipoRitenuta", doc.ritenuta.tipo || "RT01"],
@@ -255,7 +387,11 @@ function _datiGenerali(doc, computed) {
 
   return [
     ["DatiGeneraliDocumento", [
-      ["TipoDocumento", doc.tipo || "TD01"],
+      // **Il tipo che il canale accetta, non quello che l'app usa.** Una fattura differita da San
+      // Marino è una `TD01` con i suoi `DatiDDT`: `TD24` non è fra i codici che l'HUB ammette, né
+      // in esportazione né all'interno, e un documento così esce scartato. La corrispondenza sta
+      // nel profilo perché è un fatto sul canale.
+      ["TipoDocumento", tipoDocumento(doc, profile)],
       ["Divisa", doc.divisa || "EUR"],
       ["Data", doc.data],
       // **Il numero per esteso, sigla compresa.** Nel file andava il solo progressivo, e finché le
@@ -310,7 +446,7 @@ function _beniServizi(doc, computed, profile) {
     ["Natura", r.natura],
     ["ImponibileImporto", _amount(r.imponibile)],
     ["Imposta", _amount(r.imposta)],
-    ["EsigibilitaIVA", r.esigibilita],
+    ["EsigibilitaIVA", vietato(profile, "esigibilita") ? null : r.esigibilita],
     ["RiferimentoNormativo", riferimentoNormativo(r, profile)],
   ]]);
 
@@ -407,17 +543,68 @@ export function riferimentoNormativo(r, profile = IT_SDI) {
 }
 
 /**
- * Il profilo da usare, dedotto da chi emette.
+ * Il profilo da usare, dedotto dalla **coppia**: chi emette e chi riceve.
  *
- * Il paese dell'azienda è già in anagrafica e decide tutto il resto — il canale, il trasmittente,
- * le regole del CAP — quindi chiederlo una seconda volta sarebbe chiedere due volte la stessa cosa
- * e lasciare aperta la possibilità che le due risposte non coincidano.
+ * **Per due versioni ha guardato solo chi emette**, e sembrava giusto: il paese dell'azienda è già
+ * in anagrafica e decide il canale, il trasmittente, le regole del CAP. Ma le direzioni sono sei e
+ * i paesi di partenza due, quindi una tabella per paese di partenza non può distinguerle — e
+ * `SM → SM` usciva con il profilo dell'esportazione: trasmittente l'Ufficio Tributario, codice
+ * destinatario quello dello SdI, natura `N3.1` dove ci vuole `N4`. Tre elementi su cui HUB-SM
+ * scarta, in un documento che sull'altro canale sarebbe stato perfetto.
+ *
+ * Niente viene chiesto due volte: i due paesi stanno già in anagrafica, uno per parte.
  */
-export function profileFor(company) {
-  return PROFILI[(company || {}).paese] || IT_SDI;
+export function profileFor(company, party) {
+  const da = String((company || {}).paese || "IT").toUpperCase();
+  const tavola = PROFILI[da] || PROFILI.IT;
+  // **Un cliente senza paese è italiano**, come in ogni altro punto di questo file: `IdPaese` si
+  // scrive `party.paese || "IT"` e la direzione deve leggere la stessa cosa, o il file e il profilo
+  // parlerebbero di due clienti diversi. Chi fattura dentro San Marino ha comunque il paese in
+  // anagrafica, perché senza non si scrive `IdCodice`.
+  const a = String((party || {}).paese || "IT").toUpperCase();
+  return tavola[a] || tavola.estero;
+}
+
+/**
+ * Se un elemento è fra quelli che il canale non vuole valorizzati.
+ *
+ * Lo schema li ammette tutti; il canale interno sammarinese ne dichiara alcuni «non previsti», e la
+ * regola generale del tracciato è che un campo che non si valorizza **non deve comparire**, nemmeno
+ * vuoto.
+ */
+export function vietato(profile, campo) {
+  return (profile && profile.campiVietati || []).includes(campo);
+}
+
+/**
+ * L'identificativo fiscale come lo vuole il tracciato, con il codice sammarinese a cinque cifre.
+ *
+ * «Codice OESM: valore numerico a **5 cifre con eventuali 0 in testa**» — lo dicono con le stesse
+ * parole il Documento B dell'interna e l'Allegato B dell'esportazione. Il codice finisce anche nel
+ * *nome del file*, e un nome non conforme viene rifiutato prima di qualunque controllo sul
+ * contenuto: un COE di quattro cifre usciva come `SM1234_7.xml`.
+ */
+export function identificativo(value, paese) {
+  const codice = fiscalCode(value, paese);
+  return String(paese || "").toUpperCase() === "SM" ? codice.padStart(5, "0") : codice;
+}
+
+/**
+ * Il `TipoDocumento` da scrivere: quello dell'app, tradotto in quello che il canale accetta.
+ *
+ * La traduzione è una riga di tabella nel profilo, non una condizione qui: il giorno che l'Ufficio
+ * Tributario ammettesse anche `TD24`, si cancella la riga.
+ */
+export function tipoDocumento(doc, profile = IT_SDI) {
+  const tipo = (doc || {}).tipo || "TD01";
+  return (profile.rimappa || {})[tipo] || tipo;
 }
 
 export function destinatario(party, profile = IT_SDI) {
+  // **Un canale che non recapita non ha un destinatario da scegliere.** Nell'interna sammarinese il
+  // file resta dentro HUB-SM: sette zeri, e il codice che il cliente ha in anagrafica — che è quello
+  // che usa per ricevere le fatture italiane — non c'entra nulla e non deve prevalere.
+  if (profile.destinatarioFisso) return profile.destinatarioFisso;
   if (party.codiceDestinatario) return party.codiceDestinatario;
   const paese = party.paese || "IT";
   if (paese === "SM") return profile.codiceDestinatarioSanMarino;
@@ -433,7 +620,7 @@ export function destinatario(party, profile = IT_SDI) {
  */
 export function fileName(company, value, profile = IT_SDI) {
   const paese = company.paese || profile.paese;
-  return `${paese}${fiscalCode(company.partitaIva, paese)}_${progressivo(value)}.xml`;
+  return `${paese}${identificativo(company.partitaIva, paese)}_${progressivo(value)}.xml`;
 }
 
 /**
@@ -443,7 +630,7 @@ export function fileName(company, value, profile = IT_SDI) {
  * shows the amounts, and recomputing them somewhere else is how two numbers on the same screen
  * start to disagree.
  */
-export function build(doc, { company, party, profile = profileFor(company) } = {}) {
+export function build(doc, { company, party, profile = profileFor(company, party) } = {}) {
   // **Refused loudly, and here.** A quote has no `TipoDocumento` the SdI would accept, so a file
   // built from one would carry the word `preventivo` where a code belongs and be rejected on
   // receipt — after the app had marked the quote as exported and moved its transmission counter,
@@ -451,15 +638,32 @@ export function build(doc, { company, party, profile = profileFor(company) } = {
   if (!kind(doc).fiscale) {
     throw new Error(`un documento «${doc.tipo}» non diventa un file FatturaPA`);
   }
-  const computed = totals(doc);
+  // **Una direzione che non ha un file.** Da San Marino verso un paese diverso dall'Italia la
+  // fattura elettronica non esiste come adempimento: nessuna delle due norme la prevede. Le
+  // schermate tolgono il pulsante; questo è quello che ne fa una regola.
+  if (!profile.file) {
+    throw new Error(`da ${profile.paese} verso l'estero non si emette un file elettronico`);
+  }
+  const computed = totals(doc, { tm: chiaveConTm(profile) });
+  // **Nell'autofattura i due blocchi si scambiano.** Il documento lo scrive il cliente, e riguarda
+  // un fornitore che non ha fatturato: il cedente/prestatore è quel fornitore, il cessionario è chi
+  // sta scrivendo. Chi trasmette resta chi scrive, ed è per questo che `_trasmissione` continua a
+  // ricevere `company`. La domanda la fa `kinds.js`, che è dove stanno i fatti sui tipi.
+  const autofattura = kind(doc).autofattura;
+  const cedente = autofattura ? party : company;
+  const cessionario = autofattura ? company : party;
   const children = [
     ["FatturaElettronicaHeader", [
       ["DatiTrasmissione", _trasmissione(doc, company, party, profile)],
-      ["CedentePrestatore", _cedente(company)],
-      ["CessionarioCommittente", _cessionario(party)],
+      ["CedentePrestatore", _cedente(cedente, profile)],
+      ["CessionarioCommittente", _cessionario(cessionario, profile)],
+      // «CC» sta per cessionario/committente: dice a chi riceve il file che il documento non è
+      // stato emesso da chi ci figura come cedente. Senza, l'autofattura è indistinguibile da una
+      // fattura che il fornitore non ha mai scritto.
+      autofattura ? ["SoggettoEmittente", "CC"] : null,
     ]],
     ["FatturaElettronicaBody", [
-      ["DatiGenerali", _datiGenerali(doc, computed)],
+      ["DatiGenerali", _datiGenerali(doc, computed, profile)],
       ["DatiBeniServizi", _beniServizi(doc, computed, profile)],
       _pagamento(doc, computed),
     ]],

@@ -24,9 +24,10 @@
 // No DOM in here, and no words either: `node app/invoice-scope/test/validate.mjs` runs it directly.
 
 import { from, add, cmp, sub, abs, toString } from "./decimal.js";
-import { totals, MONEY } from "./totals.js";
+import { totals, chiaveConTm, MONEY } from "./totals.js";
 import {
-  destinatario, riferimentoNormativo, profileFor, PAESI_CON_CAP,
+  destinatario, riferimentoNormativo, profileFor, tipoDocumento, vietato, PAESI_CON_CAP,
+  GRUPPI_MERCE, MERCE_CON_DDT,
 } from "./fatturapa.js";
 import { kind, TIPI, TIPI_FISCALI } from "./kinds.js";
 
@@ -49,6 +50,9 @@ export const NATURE = [
   "N1", "N2.1", "N2.2", "N3.1", "N3.2", "N3.3", "N3.4", "N3.5", "N3.6", "N4", "N5",
   "N6.1", "N6.2", "N6.3", "N6.4", "N6.5", "N6.6", "N6.7", "N6.8", "N6.9", "N7",
 ];
+// L'elenco più largo, quello italiano. Il controllo però legge `profile.regimi`: a San Marino il
+// Documento A ne ammette uno solo, e una costante di modulo non può sapere su quale canale sta
+// uscendo il documento.
 export const REGIMI = ["RF01", "RF19"];
 export const CONDIZIONI = ["TP01", "TP02"];
 export const MODALITA = ["MP01", "MP05", "MP08", "MP12", "MP19"];
@@ -134,7 +138,7 @@ function _text(problems, value, campo, max, cosaFare) {
  * stop the app being usable at the one moment it is most useful. The name is required either way:
  * a document addressed to nobody is not a document.
  */
-function _party(problems, party, prefix, { richiedeIdentificativo, richiedeSede = true }) {
+function _party(problems, party, prefix, { richiedeIdentificativo, richiedeSede = true, vietataProvincia = false }) {
   if (!party) {
     problems.push(_problem(prefix, "vPartyMissing", "vPartyMissingFix"));
     return;
@@ -167,7 +171,11 @@ function _party(problems, party, prefix, { richiedeIdentificativo, richiedeSede 
     if (!CAP.test(String(sede.cap || ""))) {
       problems.push(_problem(`${prefix}.sede.cap`, "vCapFive", "vCapFix"));
     }
-    if (!PROVINCIA.test(String(sede.provincia || "").toUpperCase())) {
+    // **E su un canale che la provincia non la vuole, non si chiede.** Nelle transazioni interne
+    // alla Repubblica il Documento A la dichiara «non prevista», quindi il file non la porta: se il
+    // controllo la pretendesse comunque, chiederebbe di riempire un campo che poi viene omesso —
+    // e a nessuno verrebbe in mente che quelle due cose sono la stessa cosa.
+    if (!vietataProvincia && !PROVINCIA.test(String(sede.provincia || "").toUpperCase())) {
       // The example follows the country: «RN, per esempio» told a San Marino company to write an
       // Italian province, on the one field where its answer is always the same two letters.
       problems.push(_problem(`${prefix}.sede.provincia`, "vProvinceTwo",
@@ -234,7 +242,75 @@ function _righe(problems, doc, profile) {
       problems.push(_problem(`${campo}.natura`, "vOutsideSubset", "vNaturaOutsideFix",
         { valore: line.natura, elenco: NATURE.join(", ") }));
     }
+    // **Le nature che il canale ammette, che sono meno di quelle dello schema.** In esportazione,
+    // se c'è, può essere solo `N3.1`; nell'interna sammarinese è sempre `N4`, perché il regime è
+    // monofase e l'IVA non si espone. Sono due elenchi di uno, e stanno nel profilo.
+    const nature = profile.nature;
+    if (nature && line.natura && !nature.includes(line.natura)) {
+      problems.push(_problem(`${campo}.natura`, "vNaturaCanale", "vNaturaCanaleFix",
+        { valore: line.natura, elenco: nature.join(", ") }));
+    }
+    // **L'aliquota fissa dell'interna.** Zero, sempre: l'imposta monofase non passa dalla fattura.
+    // È la prima cosa che sbaglia chi arriva dall'Italia e scrive 22.
+    if (profile.aliquotaFissa !== null && profile.aliquotaFissa !== undefined
+      && aliquota !== undefined && aliquota !== null && aliquota !== ""
+      && cmp(from(String(aliquota)), from(profile.aliquotaFissa)) !== 0) {
+      problems.push(_problem(`${campo}.aliquota`, "vAliquotaFissa", "vAliquotaFissaFix",
+        { valore: String(aliquota) }));
+    }
+    // **Conto lavoro non porta imposta.** «Se TipoMerce = 2 o 3 allora deve essere AliquotaIVA = 0»:
+    // sono prestazioni, e l'imposta la assolve chi le riceve.
+    if (line.tm && (profile.merceSenzaImposta || []).includes(String(line.tm)) && !zero) {
+      problems.push(_problem(`${campo}.aliquota`, "vMerceSenzaImposta", "vMerceSenzaImpostaFix",
+        { valore: String(line.tm) }));
+    }
+    // **Il Tipo Merce è obbligatorio**, e non su tutte le righe: su quelle che portano un importo.
+    // Una riga a zero — una descrizione, un titolo di sezione — non ha una merce da classificare.
+    if (profile.tmObbligatorio && !line.tm && !_rigaVuota(line)) {
+      problems.push(_problem(`${campo}.tm`, "vTmRequired", "vTmRequiredFix"));
+    }
   });
+}
+
+/** Una riga che non porta importo: niente da classificare, e niente da riepilogare. */
+function _rigaVuota(line) {
+  try {
+    const zero = from("0");
+    return cmp(from(String(line.quantita ?? "1")), zero) === 0
+      || cmp(from(String(line.prezzoUnitario ?? "0")), zero) === 0;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Le regole sul Tipo Merce che guardano la fattura intera, non la singola riga.
+ *
+ * **Una fattura porta un gruppo solo**: beni (1, 4, 7), oppure conto lavoro con materie prime (2),
+ * oppure conto lavoro senza (3). Non è una convenzione interna: è il modo in cui l'imposta monofase
+ * si liquida, e mescolare i gruppi è uno scarto.
+ *
+ * E il documento di trasporto è obbligatorio per tutti i tipi merce tranne il 3 — solo però sui
+ * documenti che accompagnano una cessione. Una nota di variazione rettifica una fattura che il DDT
+ * ce l'aveva già.
+ */
+function _merce(problems, doc, profile) {
+  if (!profile.tmObbligatorio) return;
+  const codici = (doc.righe || []).map((line) => String(line.tm || "")).filter(Boolean);
+  if (codici.length === 0) return;
+
+  const gruppo = GRUPPI_MERCE.find((g) => g.includes(codici[0]));
+  const fuori = gruppo ? codici.filter((codice) => !gruppo.includes(codice)) : [];
+  if (fuori.length) {
+    problems.push(_problem("righe.tm", "vTmGruppo", "vTmGruppoFix",
+      { elenco: [...new Set(codici)].sort().join(", ") }));
+  }
+
+  const accompagna = ["TD01", "TD24", "TD02"].includes(doc.tipo || "TD01");
+  const serve = codici.some((codice) => MERCE_CON_DDT.has(codice));
+  if (accompagna && serve && !(doc.ddt || []).length) {
+    problems.push(_problem("ddt", "vDdtRequired", "vDdtRequiredFix"));
+  }
 }
 
 /**
@@ -249,20 +325,17 @@ function _righe(problems, doc, profile) {
 function _totali(problems, doc, profile) {
   let computed;
   try {
-    computed = totals(doc);
+    computed = totals(doc, { tm: chiaveConTm(profile) });
   } catch {
     return null;
   }
   for (const [i, r] of computed.riepiloghi.entries()) {
-    // **Due righe dello stesso riepilogo con codici TM diversi non si possono scrivere.** Il
-    // riepilogo porta un `RiferimentoNormativo` solo, e spezzarlo in due non è una via d'uscita: il
-    // tracciato indicizza i riepiloghi su aliquota e natura, e due blocchi con la stessa coppia
-    // vengono scartati. Quindi si dice a chi compila, invece di sceglierne uno di nascosto.
-    if (r.tmMisto) {
-      problems.push(_problem(`riepiloghi[${i + 1}].tm`, "vTmMisto", "vTmMistoFix"));
+    // **Un riepilogo a zero è un file scartato**, dove il canale lo dice: l'Allegato B
+    // dell'esportazione chiede `ImponibileImporto != 0`. Capita davvero, con una riga di sconto che
+    // annulla esattamente la riga sopra.
+    if (profile.imponibileNonZero && cmp(r.imponibile, from("0")) === 0) {
+      problems.push(_problem(`riepiloghi[${i + 1}].imponibile`, "vImponibileZero", "vImponibileZeroFix"));
     }
-    // Misurata come la scrive il file, codice TM davanti compreso: la stessa funzione, così le due
-    // stringhe non possono divergere.
     const nota = riferimentoNormativo(r, profile);
     if (nota && nota.length > MAX.riferimentoNormativo) {
       problems.push(_problem(`riepiloghi[${i + 1}].riferimentoNormativo`, "vTooLong", "vRifNormFix",
@@ -295,7 +368,7 @@ function _totali(problems, doc, profile) {
 // Il profilo si deduce da chi emette, come in `build`: le due strade devono guardare lo stesso
 // tracciato, o il controllo direbbe di sì a un file che il portale rifiuta.
 export function validate(doc, {
-  company, party, profile = profileFor(company), richiedeNumero = true,
+  company, party, profile = profileFor(company, party), richiedeNumero = true,
 } = {}) {
   const problems = [];
 
@@ -305,9 +378,23 @@ export function validate(doc, {
   // the app refuse to number a quote for a customer whose CAP nobody has asked for yet.
   const fiscale = kind(doc).fiscale;
 
-  if (!TIPI.includes(doc.tipo || "TD01")) {
+  const tipoNoto = TIPI.includes(doc.tipo || "TD01");
+  if (!tipoNoto) {
     problems.push(_problem("tipo", "vTypeUnknown", "vTypeUnknownFix",
       { valore: doc.tipo, elenco: TIPI_FISCALI.join(", ") }));
+  }
+  // **La direzione senza file.** Da San Marino verso un paese diverso dall'Italia la fattura
+  // elettronica non esiste come adempimento: non la prevede né il decreto sull'interscambio con
+  // l'Italia né quello sulle operazioni interne. Si dice qui, una volta, invece di lasciare che il
+  // documento sembri esportabile fino al momento in cui l'emettitore si rifiuta.
+  if (fiscale && !profile.file) {
+    problems.push(_problem("cliente.paese", "vNoChannel", "vNoChannelFix"));
+  } else if (fiscale && tipoNoto && profile.tipi.length
+    && !profile.tipi.includes(tipoDocumento(doc, profile))) {
+    // **Il tipo che il canale accetta, dopo la traduzione.** Una differita da San Marino esce come
+    // `TD01`, quindi il controllo guarda il codice che finisce nel file e non quello dell'app.
+    problems.push(_problem("tipo", "vTypeChannel", "vTypeChannelFix",
+      { valore: tipoDocumento(doc, profile), elenco: profile.tipi.join(", ") }));
   }
   if (!DATE.test(String(doc.data || ""))) {
     problems.push(_problem("data", "vDateShape", "vDateFix", { esempio: "2026-09-03" }));
@@ -327,12 +414,16 @@ export function validate(doc, {
       { max: MAX.causale, lunghezza: String(doc.causale).length }));
   }
 
-  _party(problems, company, "azienda", { richiedeIdentificativo: fiscale, richiedeSede: fiscale });
-  _party(problems, party, "cliente", { richiedeIdentificativo: fiscale, richiedeSede: fiscale });
+  const vietataProvincia = fiscale && vietato(profile, "provincia");
+  _party(problems, company, "azienda",
+    { richiedeIdentificativo: fiscale, richiedeSede: fiscale, vietataProvincia });
+  _party(problems, party, "cliente",
+    { richiedeIdentificativo: fiscale, richiedeSede: fiscale, vietataProvincia });
 
-  if (fiscale && company && !REGIMI.includes(company.regimeFiscale || "RF01")) {
+  const regimi = profile.regimi || REGIMI;
+  if (fiscale && company && !regimi.includes(company.regimeFiscale || "RF01")) {
     problems.push(_problem("azienda.regimeFiscale", "vOutsideSubset", "vRegimeFix",
-      { valore: company.regimeFiscale, elenco: REGIMI.join(" e ") }));
+      { valore: company.regimeFiscale, elenco: regimi.join(" e ") }));
   }
 
   if (fiscale && party) {
@@ -343,11 +434,25 @@ export function validate(doc, {
   }
 
   _righe(problems, doc, profile);
+  _merce(problems, doc, profile);
 
   // A credit note that does not say what it reverses is a document nobody can reconcile — and the
-  // schema wants the link too.
-  if (doc.tipo === "TD04" && !(doc.fattureCollegate || []).length) {
+  // schema wants the link too. Vale per tutte e due le note di variazione: quella di debito chiede
+  // altri soldi su una fattura già emessa, e senza il riferimento nessuno sa su quale.
+  const nota = doc.tipo === "TD04" || doc.tipo === "TD05";
+  const collegate = doc.fattureCollegate || [];
+  if (nota && !collegate.length) {
     problems.push(_problem("fattureCollegate", "vCreditNoteLink", "vCreditNoteLinkFix"));
+  }
+  // **La data di una nota non può precedere la fattura che rettifica.** Lo dicono con le stesse
+  // parole i due documenti sammarinesi, e il file viene scartato: una rettifica che arriva prima
+  // dell'operazione non è una rettifica.
+  for (const [i, ref] of collegate.entries()) {
+    if (nota && ref.data && DATE.test(String(ref.data)) && DATE.test(String(doc.data || ""))
+      && String(doc.data) < String(ref.data)) {
+      problems.push(_problem(`fattureCollegate[${i + 1}].data`, "vNotaPrimaDellaFattura",
+        "vNotaPrimaDellaFatturaFix", { data: ref.data }));
+    }
   }
 
   // A quote with no expiry date is a price you have promised for ever. It is the field a customer

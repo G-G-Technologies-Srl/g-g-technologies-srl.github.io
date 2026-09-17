@@ -48,7 +48,12 @@ const PARTY = {
   sede: { indirizzo: "Via Emilia", numeroCivico: "140", cap: "40068", comune: "Bologna", provincia: "BO" },
   codiceDestinatario: "M5UXCR1",
 };
-const RIGA = { descrizione: "Progettazione", quantita: "10", prezzoUnitario: "100.00", aliquota: "22", unita: "ora" };
+// Una riga di servizi verso l'Italia: tipo merce 3, e con quel codice l'imposta in fattura non ci
+// va — «se TipoMerce = 2 o 3 allora deve essere AliquotaIVA = 0».
+const RIGA = {
+  descrizione: "Progettazione", quantita: "10", prezzoUnitario: "100.00",
+  aliquota: "0", natura: "N3.1", tm: "3", unita: "ora",
+};
 
 /** Un archivio vero: azienda, cliente, due fatture emesse e un incasso. */
 async function archivio(db) {

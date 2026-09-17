@@ -22,7 +22,7 @@ import { t, tf } from "./i18n.js";
 import { ask, tell } from "./ask.js";
 import { toString, from } from "./decimal.js";
 import { totals } from "./totals.js";
-import { money, amount, rate as shownRate } from "./format.js";
+import { money, amount, rate as shownRate, date } from "./format.js";
 import { addressLines, deliveryLine } from "./address.js";
 import { quote as instalments, ledger } from "./schedule.js";
 import { parseAmount, parseOptional } from "./parse.js";
@@ -36,6 +36,7 @@ import { build } from "./fatturapa.js";
 import { isCustomer, parties, items, party as getParty, openNewParty } from "./parties.js";
 import { TIPI, KINDS, kind, has, numero as shownNumber, convertibile } from "./kinds.js";
 import { profileFor } from "./fatturapa.js";
+import { stato as termState } from "./terms.js";
 import { control as statoControl } from "./states.js";
 import { openSheet, render as renderPayments } from "./payments.js";
 import { render as renderSheet } from "./print.js";
@@ -162,7 +163,7 @@ function _applyDefaults(line) {
   // ragione — N3.2 intracomunitaria, N3.3 San Marino — e non quella di chi emette.
   if (!line.natura && party && party.naturaPredefinita) line.natura = party.naturaPredefinita;
   if (!line.natura && company.naturaPredefinita) line.natura = company.naturaPredefinita;
-  if (!line.tm && company.tmPredefinito && profileFor(company).datiGestionali) {
+  if (!line.tm && company.tmPredefinito && profileFor(company, party).datiGestionali) {
     line.tm = company.tmPredefinito;
   }
   return line;
@@ -273,7 +274,7 @@ function _drawLines() {
   // line means nothing with no lines, and the TM note on a closed document explains a column
   // nobody can fill in any more.
   el("docAddLineHint").hidden = !canEdit || righe.length === 0;
-  el("tmNote").hidden = !profileFor(company).datiGestionali || !canEdit || righe.length === 0;
+  el("tmNote").hidden = !profileFor(company, party).datiGestionali || !canEdit || righe.length === 0;
 
   const body = el("docLinesBody");
   body.textContent = "";
@@ -728,7 +729,7 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
 
   // La colonna del codice dell'Ufficio Tributario compare solo se il profilo di chi emette la
   // prevede: per un'azienda italiana sarebbe una colonna in più che non va da nessuna parte.
-  const profiloFile = profileFor(company);
+  const profiloFile = profileFor(company, party);
   const gestionale = profiloFile.datiGestionali;
   el("docLinesTable").classList.toggle("no-tm", !gestionale);
 
@@ -893,7 +894,13 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
   // **The XML button follows the kind, not just the state.** A quote can be issued, printed and
   // accepted, and it still has no file to become: `fatturapa.js` refuses it, and offering a button
   // whose only outcome is an error message is offering a mistake.
-  el("docXml").hidden = canEdit || !profile.fiscale;
+  // **Il file segue la direzione, non solo il tipo.** Da San Marino verso un paese diverso
+  // dall'Italia non c'è un file da produrre: al posto del pulsante compare il motivo, invece di un
+  // pulsante che porta a un errore.
+  const canale = profileFor(company, party);
+  const senzaFile = profile.fiscale && !canale.file;
+  el("docXml").hidden = canEdit || !profile.fiscale || senzaFile;
+  el("docNoFile").hidden = canEdit || !senzaFile;
   el("docCredit").hidden = canEdit || !profile.fiscale || current.tipo === "TD04";
   el("docReopen").hidden = canEdit || current.stato !== "emesso" || current.esportato;
 
@@ -922,6 +929,31 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
       settle.classList.add("settle-late");
     } else {
       settle.textContent = tf("settleLeft", { importo: money(conto.residuo) });
+    }
+  }
+
+  // Entro quando va trasmesso. La conseguenza del ritardo non è la stessa nei due canali — in
+  // esportazione la fattura non è più vidimabile, all'interno costa cento euro — e dirla è metà
+  // dell'informazione: una data senza la sua conseguenza non fa muovere nessuno.
+  const term = el("docTerm");
+  const scadenza = canEdit
+    ? null
+    : termState(current, profileFor(company, party),
+      { oggi: new Date().toISOString().slice(0, 10) });
+  term.hidden = !scadenza;
+  term.className = "doc-term";
+  if (scadenza) {
+    const quando = { data: date(scadenza.data), giorni: Math.abs(scadenza.giorni ?? 0) };
+    if (scadenza.key === "fatto") {
+      term.textContent = tf("termDone", quando);
+    } else if (scadenza.key === "scaduto") {
+      term.textContent = tf(scadenza.bloccante ? "termLateBlocking" : "termLateFine", quando);
+      term.classList.add("term-late");
+    } else if (scadenza.key === "vicino") {
+      term.textContent = tf("termSoon", quando);
+      term.classList.add("term-soon");
+    } else {
+      term.textContent = tf("termDue", quando);
     }
   }
 
@@ -972,7 +1004,7 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
   // with the language, and a line frozen in the HTML would print in Italian for an English reader.
   // The foot names where the original went: the SdI for an Italian issuer, the Ufficio
   // Tributario for a San Marino one.
-  const fiscalFoot = profileFor(company).paese === "SM" ? "printFooterSm" : "printFooter";
+  const fiscalFoot = profileFor(company, party).paese === "SM" ? "printFooterSm" : "printFooter";
   el("screenDoc").dataset.printFooter = canEdit
     ? t("printFooterBozza")
     : t(PRINT_FOOTER[current.tipo] || fiscalFoot);
@@ -1175,7 +1207,7 @@ export function connect(db) {
     // Con il numero, il passo dopo: una fattura non è finita finché il file non è partito, e chi
     // emette la prima non sa che il pulsante sta in fondo alla pagina.
     const seguito = kind(current).fiscale
-      ? ` ${t(profileFor(company).paese === "SM" ? "docIssuedNextSm" : "docIssuedNext")}`
+      ? ` ${t(profileFor(company, party).paese === "SM" ? "docIssuedNextSm" : "docIssuedNext")}`
       : "";
     await tell(`${t("docIssued")} ${shownNumber(current)}.${seguito}`);
     if (onSaved) onSaved();
@@ -1232,7 +1264,7 @@ export function connect(db) {
     // Where the file goes next depends on who issued it: an Italian company uploads it to the
     // Agenzia's portal, a San Marino one to the Ufficio Tributario's. The wrong name here sends
     // somebody to a site that will not take their file.
-    await tell(t(profileFor(company).paese === "SM" ? "docXmlDoneSm" : "docXmlDone"));
+    await tell(t(profileFor(company, party).paese === "SM" ? "docXmlDoneSm" : "docXmlDone"));
     await open(database, current.id, { afterSave: onSaved });
   });
 

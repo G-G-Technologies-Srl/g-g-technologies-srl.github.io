@@ -131,6 +131,13 @@
          collegata e non scrive — trattenuta, permesso scaduto, ultima scrittura fallita — si dicono
          sempre, perché sono quelli in cui una persona si crede coperta. Il pulsante fa la cosa che
          serve lì: aprire le impostazioni, o esportare subito. -->
+    <!-- I documenti che stanno per uscire dal termine di trasmissione, o che ne sono già usciti.
+         È un pannello a parte da quello delle copie perché risponde a un'altra domanda: quello dice
+         se i dati sono al sicuro, questo se l'Ufficio Tributario li ha avuti in tempo. -->
+    <div class="panel warn" id="termNote" hidden>
+      <p id="termNoteText"></p>
+      <a class="button ghost" href="#/documenti" id="termNoteGo"></a>
+    </div>
     <div class="panel warn" id="backupNote" hidden>
       <p id="backupNoteText"></p>
       <a class="button ghost" href="#/impostazioni" id="backupNoteGo"></a>
@@ -468,6 +475,11 @@
            fattura emessa, e stava dove nessuno la cercava. Su una bozza non c'è: il file nasce
            con il numero, e il messaggio dell'emissione dice dove trovarlo. -->
       <button type="button" class="button" id="docXml" data-t="docXml" hidden></button>
+      <!-- Dove il file non esiste, al posto del pulsante c'è il motivo. Da San Marino verso un paese
+           diverso dall'Italia la fattura elettronica non è prevista da nessuna delle due norme:
+           offrire il pulsante lo stesso farebbe sembrare un adempimento un documento che nessuno
+           accetta. -->
+      <span class="note" id="docNoFile" data-t="docNoFile" hidden></span>
       <!-- Da un preventivo nasce il progetto, con una fase per riga: è il punto in cui il piano e il
            denaro si incontrano senza ridigitare niente. Il pulsante c'è finché quel documento non è
            già dentro un progetto; dopo, al suo posto, il collegamento per andarci. -->
@@ -484,6 +496,10 @@
            degli incassi — derivata, mai scritta sul documento. Registrato un incasso, la risposta è
            qui, invece che in fondo alla pagina o nell'altra schermata. -->
       <span id="docSettle" class="doc-settle" hidden></span>
+      <!-- Entro quando il documento va trasmesso all'Ufficio Tributario. È un'altra cosa dalla
+           scadenza di incasso — una fattura pagata in anticipo può benissimo essere fuori termine —
+           e sta accanto a quella perché sono le due domande che si fanno su una fattura emessa. -->
+      <span id="docTerm" class="doc-term" hidden></span>
     </div>
 
     <div class="form">

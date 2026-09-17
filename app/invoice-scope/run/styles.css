@@ -1280,6 +1280,9 @@ dialog li::before {
 .doc-settle { font-size: 0.9rem; color: var(--faint); }
 .doc-settle.settle-done { color: var(--accent-text); }
 .doc-settle.settle-late { color: var(--danger-text); }
+.doc-term { font-size: 0.9rem; color: var(--faint); }
+.doc-term.term-soon { color: var(--accent-text); }
+.doc-term.term-late { color: var(--danger-text); }
 
 .danger-row {
   display: flex;

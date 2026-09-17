@@ -25,7 +25,7 @@ globalThis.document = { documentElement: { setAttribute() {} } };
 const { setLang, t } = await import("../run/i18n.js");
 const { describe, field } = await import("../run/problems.js");
 const { validate } = await import("../run/validate.js");
-const { SM_UT } = await import("../run/fatturapa.js");
+const { SM_EXPORT } = await import("../run/fatturapa.js");
 
 let passed = 0;
 
@@ -65,15 +65,24 @@ const ctx = { company: COMPANY, party: PARTY };
 
 // Un'azienda sammarinese: è l'unico caso in cui il codice TM entra nel file, quindi l'unico in cui
 // i controlli che lo riguardano possono scattare.
-const CTX_SM = {
-  company: {
-    denominazione: "Titano Meccanica S.A.",
-    partitaIva: "29141",
+const AZIENDA_SM = {
+  denominazione: "Titano Meccanica S.A.",
+  partitaIva: "29141",
+  paese: "SM",
+  regimeFiscale: "RF01",
+  sede: { indirizzo: "Strada dei Censiti", cap: "47891", comune: "Serravalle", provincia: "SM" },
+};
+const CTX_SM = { company: AZIENDA_SM, party: PARTY };
+
+// La stessa azienda, verso un cliente sammarinese: è la direzione interna, con regole tutte sue.
+const CTX_INTERNA = {
+  company: AZIENDA_SM,
+  party: {
+    denominazione: "Bottega del Titano S.r.l.",
+    partitaIva: "13579",
     paese: "SM",
-    regimeFiscale: "RF01",
-    sede: { indirizzo: "Strada dei Censiti", cap: "47891", comune: "Serravalle", provincia: "SM" },
+    sede: { indirizzo: "Via Cinque Vie", cap: "47890", comune: "San Marino" },
   },
-  party: PARTY,
 };
 
 /**
@@ -134,7 +143,35 @@ const CASI = [
   // comincerà a esistere quando arriverà l'elenco vero.
   [{ ...DOC, righe: [{ ...RIGA, aliquota: "0", natura: "N3.1", tm: "9" }] }, {
     ...CTX_SM,
-    profile: { ...SM_UT, codiciTm: ["1", "2", "3"] },
+    profile: { ...SM_EXPORT, codiciTm: ["1", "2", "3"] },
+  }],
+  // I casi delle direzioni: l'interna con l'IVA esposta, il conto lavoro con imposta, un tipo che
+  // il canale non accetta, una nota datata prima della fattura, un riepilogo che si annulla.
+  [{ ...DOC, righe: [{ ...RIGA, tm: "4" }], ddt: [{ numero: "D1", data: "2026-08-01" }] }, CTX_INTERNA],
+  [{ ...DOC, righe: [{ ...RIGA, tm: "3" }] }, CTX_SM],
+  [{ ...DOC, tipo: "TD29", righe: [{ ...RIGA, aliquota: "0", natura: "N3.1", tm: "3" }] }, CTX_SM],
+  [{
+    ...DOC,
+    tipo: "TD04",
+    data: "2026-07-01",
+    fattureCollegate: [{ numero: "2026/0002", data: "2026-08-01" }],
+  }, ctx],
+  [{
+    ...DOC,
+    righe: [
+      { ...RIGA, aliquota: "0", natura: "N3.1", tm: "3", prezzoUnitario: "80.00" },
+      { ...RIGA, aliquota: "0", natura: "N3.1", tm: "3", prezzoUnitario: "-80.00" },
+    ],
+  }, CTX_SM],
+  // Da San Marino verso un paese diverso dall'Italia non esiste un file da produrre.
+  [DOC, {
+    company: AZIENDA_SM,
+    party: {
+      denominazione: "Beispiel GmbH",
+      partitaIva: "DE123456789",
+      paese: "DE",
+      sede: { indirizzo: "Musterstrasse", cap: "10115", comune: "Berlin" },
+    },
   }],
 ];
 

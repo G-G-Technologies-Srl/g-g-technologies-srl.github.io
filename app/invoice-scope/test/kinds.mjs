@@ -34,8 +34,8 @@ function test(name, fn) {
 // -----------------------------------------------------------------------------------------------------------------
 
 test("i cinque tipi sono quelli attesi, nell'ordine del lavoro", () => {
-  assert.deepEqual(TIPI, ["preventivo", "ddt", "TD01", "TD24", "TD04"]);
-  assert.deepEqual(TIPI_FISCALI, ["TD01", "TD24", "TD04"]);
+  assert.deepEqual(TIPI, ["preventivo", "ddt", "TD01", "TD24", "TD02", "TD04", "TD05", "TD29"]);
+  assert.deepEqual(TIPI_FISCALI, ["TD01", "TD24", "TD02", "TD04", "TD05", "TD29"]);
 });
 
 test("ogni stato dichiarato da un tipo esiste in STATES", () => {
@@ -69,7 +69,7 @@ test("solo i documenti fiscali entrano nello scadenzario", () => {
     if (!KINDS[tipo].fiscale) assert.equal(KINDS[tipo].deve, false, `${tipo} deve dei soldi`);
   }
   // Ed è la fattura, differita o no, l'unica cosa che qualcuno aspetta di incassare.
-  assert.deepEqual(TIPI.filter((tipo) => KINDS[tipo].deve), ["TD01", "TD24"]);
+  assert.deepEqual(TIPI.filter((tipo) => KINDS[tipo].deve), ["TD01", "TD24", "TD02", "TD05"]);
 });
 
 test("le fatture non portano una sigla, tutto il resto sì", () => {
