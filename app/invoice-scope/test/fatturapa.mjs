@@ -18,7 +18,7 @@ import * as xml from "../run/xml.js";
 import {
   build, progressivo, destinatario, fileName, profileFor, identificativo, tipoDocumento,
   ambitoDi, ambitoDoc, applicaAmbito, AMBITI_MERCE, GRUPPI_MERCE, MERCE_CON_DDT,
-  IT_SDI, SM_EXPORT, SM_INTERNA, SM_ESTERO, TRACCIATO,
+  IT_SDI, SM_EXPORT, SM_INTERNA, SM_ESTERO, TRACCIATO, MAX_BYTE,
 } from "../run/fatturapa.js";
 
 let passed = 0;
@@ -160,6 +160,17 @@ test("un campo assente non diventa un elemento vuoto", () => {
   assert.ok(!built.text.includes("<Causale></Causale>"));
   assert.ok(!built.text.includes("<Natura></Natura>"));
   assert.ok(!built.text.includes("<CodiceFiscale></CodiceFiscale>"));
+});
+
+test("il peso del file viene misurato insieme al file", () => {
+  // Chi scrive il file è anche chi deve dire che non si può scaricare: il tetto è cinque megabyte,
+  // e oltre quello viene scartato all'ingresso — con il nome del file già speso.
+  assert.equal(MAX_BYTE, 5 * 1024 * 1024);
+  assert.equal(built.byte, new TextEncoder().encode(built.text).length);
+  assert.ok(built.byte < MAX_BYTE, "una fattura di due righe non si avvicina al tetto");
+  // Un accento pesa due byte: contare i caratteri direbbe che un file al limite ci sta ancora.
+  const conAccenti = build({ ...DOC, causale: "àèìòù".repeat(20) }, { company: COMPANY, party: PARTY });
+  assert.ok(conAccenti.byte > conAccenti.text.length, "sono byte, non caratteri");
 });
 
 test("un blocco i cui figli sono tutti assenti non compare", () => {

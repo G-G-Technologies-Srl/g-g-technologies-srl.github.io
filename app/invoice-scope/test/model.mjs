@@ -14,7 +14,7 @@
 
 import assert from "node:assert/strict";
 
-import { openDatabase, documentKey } from "../run/db.js";
+import { openDatabase, documentKey, fileNameKey } from "../run/db.js";
 import { numero as shownNumber } from "../run/kinds.js";
 import {
   draft, editable, save, issue, reopen, setState, setType, creditNote, convert, convertMany,
@@ -489,6 +489,33 @@ await test("il progressivo si sposta in avanti, mai indietro", async () => {
   assert.equal(await nextProgressivo(db, { da: 100 }), 100);
   // Una al ribasso non fa niente: un numero già uscito è uscito, e il contatore resta l'autorità.
   assert.equal(await nextProgressivo(db, { da: 5 }), 101);
+});
+
+await test("un nome di file già speso non si ripresenta", async () => {
+  // Il caso vero: si reimporta un archivio di tre mesi fa, o si riscrive a mano «prossimo
+  // progressivo» con un numero più basso. Il contatore torna indietro, il registro dei nomi no —
+  // e chi riceve rifiuta un nome già arrivato, anche se quel primo file era stato scartato.
+  const db = await openDatabase();
+  const nome = (value) => `SM29077_${value}.xml`;
+  for (const value of [1, 2, 3]) {
+    // eslint-disable-next-line no-await-in-loop
+    await put(db, "counters", { key: fileNameKey(nome(value)), value: 1 });
+  }
+  assert.equal(await nextProgressivo(db, { nome }), 4, "scavalca i tre nomi già usati");
+  // Senza la funzione che costruisce il nome, il contatore si comporta come prima: è quello che
+  // tiene in piedi ogni chiamata che non ha un'azienda sotto mano.
+  assert.equal(await nextProgressivo(db), 5);
+});
+
+await test("il nome del file resta scritto quando il file esce", async () => {
+  const db = await openDatabase();
+  const issued = await issue(db, await save(db, newDoc()), CONTEXT);
+  const uscito = await markExported(db, issued, 7, "SM29077_7.xml");
+  assert.equal(uscito.nomeFile, "SM29077_7.xml");
+  const speso = await get(db, "counters", fileNameKey("SM29077_7.xml"));
+  assert.equal(speso.docId, uscito.id, "il registro dice anche di quale documento era il file");
+  // E da lì quel nome è fuori: il prossimo file ne prende un altro, anche se il contatore è fermo.
+  assert.equal(await nextProgressivo(db, { da: 7, nome: (v) => `SM29077_${v}.xml` }), 8);
 });
 
 await test("un campo vuoto o sciocco vale come non scritto", async () => {

@@ -572,7 +572,16 @@ async function _drawDocuments(docs) {
     // Su una fattura emessa, «XML» sulla riga: porta al documento, dove il comando sta in testa,
     // perché il download ha le sue regole — progressivo di invio, avviso al secondo scarico — e
     // stanno in un posto solo. Chi non trovava il file lo cercava prima di tutto qui.
-    if (kind(record).fiscale && !editable(record) && record.numero) {
+    // Un documento importato e già trasmesso lo dice, invece di offrire «XML» come tutti gli
+    // altri: il file è uscito da un altro programma, e in un elenco fatto per lo più di righe
+    // così ogni riga sembrava una fattura ancora da mandare. Il pulsante resta dentro il
+    // documento, per il caso raro in cui davvero serva rifarne il file.
+    if (record.importato && record.esportato) {
+      const segno = document.createElement("span");
+      segno.className = "meta nowrap";
+      segno.textContent = t("docsStorico");
+      azioni.append(segno);
+    } else if (kind(record).fiscale && !editable(record) && record.numero) {
       const xml = document.createElement("button");
       xml.type = "button";
       xml.className = "ghost small row-action";

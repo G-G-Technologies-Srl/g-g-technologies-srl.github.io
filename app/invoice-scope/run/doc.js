@@ -32,7 +32,7 @@ import {
   draft, editable, save, issue, reopen, creditNote, convert, discard, markExported, nextProgressivo,
   setType, documents, invoicedBy,
 } from "./model.js";
-import { build } from "./fatturapa.js";
+import { build, fileName, MAX_BYTE } from "./fatturapa.js";
 import { isCustomer, parties, items, party as getParty, openNewParty } from "./parties.js";
 import { TIPI, KINDS, kind, has, numero as shownNumber, convertibile } from "./kinds.js";
 import {
@@ -1004,10 +1004,22 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
   // **Il file segue la direzione, non solo il tipo.** Da San Marino verso un paese diverso
   // dall'Italia non c'è un file da produrre: al posto del pulsante compare il motivo, invece di un
   // pulsante che porta a un errore.
+  // **Un documento importato e già trasmesso è storia, e lo dice.** Sono le righe che arrivano da
+  // un altro programma — un registro, un elenco di fatture — e che quel programma aveva già
+  // mandato: il file è uscito da lì, e quello che a queste righe manca non è un difetto da
+  // correggere. Senza questa riga sembravano fatture incomplete, e sono le sole che non vanno
+  // completate.
+  //
+  // Il pulsante del file resta, tranne che su una **ricostruzione**: lì la riga è una sola e porta
+  // l'imponibile per far tornare i conti, quindi un file fatto da qui sarebbe un secondo documento
+  // diverso da quello trasmesso. Dove il dettaglio c'è davvero il pulsante serve ancora — una
+  // fattura scartata si ritrasmette, e l'avviso del secondo scarico è già lì a chiederlo.
   const canale = profileFor(company, party);
   const senzaFile = profile.fiscale && !canale.file;
-  el("docXml").hidden = canEdit || !profile.fiscale || senzaFile;
-  el("docNoFile").hidden = canEdit || !senzaFile;
+  const storico = Boolean(current.importato && current.esportato);
+  el("docXml").hidden = canEdit || !profile.fiscale || senzaFile || Boolean(current.ricostruito);
+  el("docNoFile").hidden = canEdit || !senzaFile || storico;
+  el("docStorico").hidden = canEdit || !storico;
   el("docCredit").hidden = canEdit || !profile.fiscale || current.tipo === "TD04";
   el("docReopen").hidden = canEdit || current.stato !== "emesso" || current.esportato;
 
@@ -1390,19 +1402,32 @@ export function connect(db) {
 
     const company = await _context();
     const party = current.partyId ? await getParty(database, current.partyId) : null;
-    const progressivo = await nextProgressivo(database, { da: company.progressivoInvio });
+    const profilo = profileFor(company, party);
+    // Il contatore scavalca i nomi già spesi, e per farlo deve sapere che nome verrebbe fuori: è
+    // lo stesso `fileName` che poi lo scrive, così la domanda e la risposta non possono divergere.
+    const progressivo = await nextProgressivo(database, {
+      da: company.progressivoInvio,
+      nome: (value) => fileName(company, value, profilo),
+    });
 
-    const { name, text } = build({ ...current, progressivo }, { company, party });
+    const { name, text, byte } = build({ ...current, progressivo }, { company, party });
+    // **Un file troppo pesante si ferma qui, prima di uscire.** Caricato sul portale verrebbe
+    // scartato all'ingresso, e uno scarto è un documento che risulta non emesso — con il nome del
+    // file già speso, perché il nome si consuma quando parte.
+    if (byte > MAX_BYTE) {
+      await tell(tf("docXmlTooBig", { mb: (byte / (1024 * 1024)).toFixed(1) }));
+      return;
+    }
     _download(name, text, "application/xml;charset=utf-8");
 
     // Written down before the message: from here the document cannot go back to being a draft,
     // and that has to be true even if the tab is closed while the dialog is open.
-    current = await markExported(database, current, progressivo);
+    current = await markExported(database, current, progressivo, name);
     if (onSaved) onSaved();
     // Where the file goes next depends on who issued it: an Italian company uploads it to the
     // Agenzia's portal, a San Marino one to the Ufficio Tributario's. The wrong name here sends
     // somebody to a site that will not take their file.
-    await tell(t(profileFor(company, party).paese === "SM" ? "docXmlDoneSm" : "docXmlDone"));
+    await tell(t(profilo.paese === "SM" ? "docXmlDoneSm" : "docXmlDone"));
     await open(database, current.id, { afterSave: onSaved });
   });
 

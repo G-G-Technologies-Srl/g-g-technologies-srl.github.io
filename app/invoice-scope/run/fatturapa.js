@@ -54,6 +54,20 @@ const NS = "http://ivaservizi.agenziaentrate.gov.it/docs/xsd/fatture/v1.2";
 const PROGRESSIVO_MAX = 100000;
 
 /**
+ * Quanto può pesare un file, in byte.
+ *
+ * Cinque megabyte per il file non firmato: è il tetto che il Sistema di Interscambio dichiara nelle
+ * specifiche tecniche, ed è lo stesso che HUB-SM ripete nel Documento A. Un file più pesante non
+ * viene letto — viene scartato all'ingresso, con un codice che parla di dimensione e non di
+ * contenuto, e il documento risulta non emesso.
+ *
+ * **In pratica non ci si arriva con le righe.** Una fattura di mille righe sta sotto il megabyte:
+ * questo tetto si tocca con un documento costruito da un'importazione andata storta, ed è lì che
+ * serve saperlo prima di scaricare il file e non dopo averlo caricato sul portale.
+ */
+export const MAX_BYTE = 5 * 1024 * 1024;
+
+/**
  * I paesi che nel tracciato scrivono un CAP vero e una sigla di provincia.
  *
  * **San Marino sta con l'Italia, non con l'estero**, e questa riga viene da una fattura registrata
@@ -792,5 +806,13 @@ export function build(doc, { company, party, profile = profileFor(company, party
     versione: profile.schema,
   }, children);
 
-  return { name: fileName(company, doc.progressivo ?? 1, profile), text, totals: computed };
+  // Il peso si misura qui, sull'unica copia del testo che esiste, e viaggia con il resto: chi
+  // scrive il file è anche chi deve dire che non si può scaricare, e rimisurarlo altrove vorrebbe
+  // dire codificare due volte un documento che può essere grosso.
+  return {
+    name: fileName(company, doc.progressivo ?? 1, profile),
+    text,
+    totals: computed,
+    byte: new TextEncoder().encode(text).length,
+  };
 }

@@ -217,6 +217,9 @@ const IT = {
   typePreventivo: "Preventivo",
   typeDdt: "Documento di trasporto",
   docNoFile: "Verso questo paese la fattura elettronica non è prevista: si stampa.",
+  docStorico: "Importato e già trasmesso: sta qui come storia. Il file è uscito da un altro "
+    + "programma, e quello che a questo documento manca non va completato.",
+  docsStorico: "storico",
   termPanelBoth: "Ci sono {scaduti} documenti fuori termine di trasmissione, e {vicini} in scadenza.",
   termPanelLate: "Ci sono {scaduti} documenti fuori termine di trasmissione.",
   termPanelSoon: "Ci sono {vicini} documenti vicini al termine di trasmissione.",
@@ -810,6 +813,8 @@ const IT = {
   docPrint: "Stampa o PDF",
   docXmlDone: "File scaricato. Ora caricalo su «Fatture e Corrispettivi» o passalo al tuo "
     + "intermediario: l'app non lo trasmette.",
+  docXmlTooBig: "Il file peserebbe {mb} MB, e il massimo è 5. Caricato così verrebbe scartato "
+    + "all'ingresso, quindi non lo scarico: il documento ha troppe righe, e va diviso.",
   docXmlAgain: "Di questo documento hai già scaricato un file. Ne scarico un altro, con un "
     + "progressivo nuovo?",
 
@@ -1455,6 +1460,9 @@ const EN = {
   typePreventivo: "Quote",
   typeDdt: "Delivery note",
   docNoFile: "Towards this country there is no electronic invoice: this one is printed.",
+  docStorico: "Imported and already transmitted: it is here as history. The file left from "
+    + "another program, and what is missing on this document does not need filling in.",
+  docsStorico: "history",
   termPanelBoth: "{scaduti} documents are past their transmission deadline, and {vicini} are close to it.",
   termPanelLate: "{scaduti} documents are past their transmission deadline.",
   termPanelSoon: "{vicini} documents are close to their transmission deadline.",
@@ -2031,6 +2039,9 @@ const EN = {
   docPrint: "Print or PDF",
   docXmlDone: "File downloaded. Now upload it to the revenue's portal or pass it to your "
     + "intermediary: the app does not transmit it.",
+  docXmlTooBig: "The file would weigh {mb} MB, and the maximum is 5. Uploaded as it is it would "
+    + "be rejected on arrival, so I am not downloading it: the document has too many lines, and "
+    + "needs splitting.",
   docXmlAgain: "You have already downloaded a file for this document. Shall I make another one, "
     + "with a new progressive?",
 

@@ -159,6 +159,23 @@ export async function openDatabase() {
 }
 
 /**
+ * La chiave sotto cui resta scritto che un nome di file è stato usato.
+ *
+ * **Un nome non si riusa, mai.** Chi riceve — l'Ufficio Tributario come il Sistema di Interscambio
+ * — rifiuta un file il cui nome è già arrivato, e lo rifiuta anche se il primo era stato scartato:
+ * il nome è speso nel momento in cui il file parte, non nel momento in cui viene accettato. E lo
+ * spazio dei nomi è **uno solo per i due canali**, perché il nome è fatto del paese, del codice di
+ * chi trasmette e del progressivo — nessuno dei tre dice a quale dei due il file era diretto.
+ *
+ * Sta in `counters` e non in `meta` per una ragione precisa: `meta` è lo stato di questo browser e
+ * non entra negli archivi. Il registro dei nomi deve viaggiare con i documenti, o cambiare
+ * computer basterebbe a riusarli tutti.
+ */
+export function fileNameKey(name) {
+  return `file|${String(name || "").toLowerCase()}`;
+}
+
+/**
  * The key that makes a document's number unique: series, type, year, number.
  *
  * A single string rather than a compound key so it can carry the "no key at all" case: a draft has

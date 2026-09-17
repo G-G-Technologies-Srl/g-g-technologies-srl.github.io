@@ -19,7 +19,7 @@
 
 import { get, put, list, remove, tx } from "gg/store.js";
 
-import { documentKey, counterKey, legacyCounterKeys } from "./db.js";
+import { documentKey, counterKey, fileNameKey, legacyCounterKeys } from "./db.js";
 import { totals } from "./totals.js";
 import { validate } from "./validate.js";
 import { STATES, KINDS, kind, numero as shownNumber, convertibile } from "./kinds.js";
@@ -46,6 +46,15 @@ export { STATES };
  * state inferred from nothing it would be false.
  */
 const EDITABLE = new Set(["bozza"]);
+
+/**
+ * Quanti nomi di file occupati si è disposti a scavalcare prima di rinunciare.
+ *
+ * Non è un limite del tracciato, è una cintura: `nome` arriva da chi chiama, e una funzione che
+ * per un difetto restituisse sempre lo stesso nome farebbe girare quel ciclo per sempre, dentro
+ * una transazione, senza dire niente.
+ */
+const TENTATIVI_NOME = 10000;
 
 /**
  * Le forme che può prendere il numero di un documento.
@@ -257,24 +266,48 @@ export async function issue(db, doc, context) {
  * già uscito è uscito. Quindi una correzione al rialzo si può fare in qualunque momento, una al
  * ribasso non fa niente — e non è un rifiuto silenzioso, è che il contatore resta l'autorità.
  */
-export async function nextProgressivo(db, { da = 0 } = {}) {
+export async function nextProgressivo(db, { da = 0, nome = null } = {}) {
   const partenza = Math.max(0, Math.floor(Number(da) || 0) - 1);
   return tx(db, ["counters"], async (scope) => {
     const record = (await scope.get("counters", "trasmissione")) || { key: "trasmissione", value: 0 };
-    const value = Math.max(record.value, partenza) + 1;
+    let value = Math.max(record.value, partenza);
+    // **E poi c'è il registro dei nomi**, che è la rete sotto il contatore. Il contatore da solo
+    // basta finché resta lui l'autorità; non basta più il giorno in cui qualcuno reimporta un
+    // archivio di tre mesi fa, o riscrive a mano «prossimo progressivo di invio» con un numero più
+    // basso. Il nome però resta scritto, e un nome speso non si ripresenta: si va avanti finché
+    // non se ne trova uno mai uscito.
+    for (let tentativi = 0; ; tentativi += 1) {
+      value += 1;
+      if (!nome) break;
+      // eslint-disable-next-line no-await-in-loop
+      if (!(await scope.get("counters", fileNameKey(nome(value))))) break;
+      if (tentativi >= TENTATIVI_NOME) {
+        throw new Error("non trovo un nome di file libero: il registro dei nomi è pieno");
+      }
+    }
     await scope.put("counters", { key: "trasmissione", value });
     return value;
   });
 }
 
 /** Record that the XML has left. After this the document cannot go back to being a draft. */
-export async function markExported(db, doc, progressivo) {
+export async function markExported(db, doc, progressivo, nomeFile = "") {
   const record = { ...doc, esportato: true, progressivo, updated: _now() };
+  if (nomeFile) record.nomeFile = nomeFile;
   // Recomputed rather than carried over: this was the one write that trusted the caller, and a
   // document rebuilt in memory without `chiave` would have slipped out of the unique index without
   // a word.
   record.chiave = documentKey(record);
-  await put(db, "docs", record);
+  // **Il documento e il nome speso si scrivono insieme.** Sono i due lati dello stesso fatto — un
+  // file è uscito — e scritti in due tempi un errore in mezzo lascerebbe un nome libero su un
+  // documento già esportato: il prossimo file lo riprenderebbe, e chi lo riceve lo rifiuterebbe.
+  await tx(db, ["docs", "counters"], async (scope) => {
+    await scope.put("docs", record);
+    if (nomeFile) {
+      await scope.put("counters", { key: fileNameKey(nomeFile), value: 1, nome: nomeFile,
+                                    docId: record.id, quando: record.updated });
+    }
+  });
   return record;
 }
 
