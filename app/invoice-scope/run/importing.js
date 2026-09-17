@@ -23,7 +23,7 @@
 
 import { tx } from "gg/store.js";
 import * as fic from "./fic.js";
-import { profileFor } from "./fatturapa.js";
+import { completaRighe } from "./fatturapa.js";
 import * as sheet from "./sheet.js";
 import * as xls from "./xls.js";
 import { read as readFattura } from "./reading.js";
@@ -146,32 +146,6 @@ function _fromRegister(entry) {
   // **A reconstruction says so on the record.** It is what lets the XML of the same invoice, when
   // it arrives, replace this one instead of being turned away as «already here».
   doc.ricostruito = true;
-  return doc;
-}
-
-/**
- * Quello che un documento importato non porta, e che il canale decide da sé.
- *
- * **Non è indovinare, ed è la differenza che conta.** Un registro non dice quale natura avesse una
- * riga a zero, e i candidati erano lontanissimi fra loro — `N3.1` è un'esportazione non imponibile,
- * `N2.2` è fuori campo — quindi l'importazione lasciava il campo vuoto e lo diceva. Adesso però la
- * direzione è nota: sui due canali sammarinesi la natura ammessa **è una sola**, e scriverla è
- * riportare l'unica risposta che il canale accetta, non sceglierne una fra tante. Dove le nature
- * ammesse sono molte — l'Italia — resta vuoto come prima.
- *
- * Il tipo merce invece non lo decide il canale: lo decide che cosa vende l'azienda. Si prende il
- * predefinito che sta in anagrafica, che è la risposta che l'azienda ha già dato per questo scopo;
- * senza quello, il campo resta vuoto e i controlli lo chiedono al momento di emettere.
- */
-function _completaRighe(doc, company, party) {
-  const profile = profileFor(company, party);
-  const natura = (profile.nature || []).length === 1 ? profile.nature[0] : null;
-  const tm = profile.tmObbligatorio ? (company || {}).tmPredefinito : null;
-  for (const line of doc.righe || []) {
-    const zero = String(line.aliquota ?? "") === "0" || Number(line.aliquota) === 0;
-    if (zero && !line.natura && natura) line.natura = natura;
-    if (!line.tm && tm) line.tm = String(tm);
-  }
   return doc;
 }
 
@@ -461,7 +435,7 @@ export async function plan(sorgenti, contesto = {}) {
           const doc = _fromRegister(entry);
           const chi = cliente(entry.cliente, fonte.name);
           doc.partyId = chi.id;
-          _completaRighe(doc, contesto.company, chi.record);
+          completaRighe(doc, contesto.company, chi.record);
           doc._fonte = fonte.name;
           const chiave = documentKey(doc);
           const nuovo = !(chiave && chiavi.has(chiave));
@@ -543,7 +517,7 @@ export async function plan(sorgenti, contesto = {}) {
             righe: entry.righe.map((r) => ({ ...r })),
           });
           nuovo.partyId = chi.id;
-          _completaRighe(nuovo, contesto.company, chi.record);
+          completaRighe(nuovo, contesto.company, chi.record);
           nuovo._fonte = fonte.name;
           nuovo.righeImportate = true;
           conta(true, nome);
@@ -576,7 +550,7 @@ export async function plan(sorgenti, contesto = {}) {
         for (const { doc, cliente: incoming, avvisi, dichiarato } of fonte.letto.documenti) {
           const chi = cliente(incoming, fonte.name);
           doc.partyId = chi.id;
-          _completaRighe(doc, contesto.company, chi.record);
+          completaRighe(doc, contesto.company, chi.record);
           doc._fonte = fonte.name;
           const chiave = documentKey(doc);
           const prima = chiave ? chiavi.get(chiave) : null;

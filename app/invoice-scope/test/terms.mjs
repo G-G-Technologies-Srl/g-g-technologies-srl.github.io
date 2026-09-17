@@ -6,7 +6,9 @@
 
 import assert from "node:assert/strict";
 
-import { termine, stato, fineMese, primoGiornoNonFestivo, annoPiuUno, giorniFra } from "../run/terms.js";
+import {
+  termine, stato, fineMese, primoGiornoNonFestivo, annoPiuUno, giorniFra, autofattura,
+} from "../run/terms.js";
 import { IT_SDI, SM_EXPORT, SM_INTERNA } from "../run/fatturapa.js";
 
 let passed = 0;
@@ -170,6 +172,55 @@ test("i giorni fra due date, anche a cavallo di mese e di anno", () => {
   assert.equal(giorniFra("2026-12-28", "2027-01-04"), 7);
   assert.equal(giorniFra("2026-11-03", "2026-11-02"), -1);
   assert.equal(giorniFra("boh", "2026-11-02"), null);
+});
+
+test("l'autofattura dell'articolo 7: due mesi di attesa, e poi trenta giorni", () => {
+  // «Trascorsi due mesi dai predetti termini, ha trenta giorni»: il termine del fornitore per una
+  // spesa di gennaio è la fine di marzo, l'attesa finisce il 31 maggio, il tempo il 30 giugno.
+  const finestra = autofattura({ data: "2026-01-10" }, SM_INTERNA, { oggi: "2026-06-05" });
+  assert.equal(finestra.termineFornitore, "2026-03-31");
+  assert.equal(finestra.dal, "2026-05-31");
+  assert.equal(finestra.al, "2026-06-30");
+  assert.equal(finestra.key, "aperto");
+
+  // I tre confini, uno per uno: il giorno prima, il primo, e il giorno dopo l'ultimo.
+  const quando = (oggi) => autofattura({ data: "2026-01-10" }, SM_INTERNA, { oggi }).key;
+  assert.equal(quando("2026-05-30"), "presto");
+  assert.equal(quando("2026-05-31"), "aperto");
+  assert.equal(quando("2026-06-30"), "aperto");
+  assert.equal(quando("2026-07-01"), "scaduto");
+
+  // Un'autofattura già fatta chiude la domanda, e la data resta da leggere.
+  const fatta = autofattura({ data: "2026-01-10" }, SM_INTERNA, { oggi: "2026-07-01", fatta: true });
+  assert.equal(fatta.key, "fatto");
+  assert.equal(fatta.al, "2026-06-30");
+
+  // Dove il canale non ha termini — l'Italia — questo dovere non esiste e non si risponde.
+  assert.equal(autofattura({ data: "2026-01-10" }, IT_SDI, { oggi: "2026-07-01" }), null);
+  assert.equal(autofattura({ data: "" }, SM_INTERNA, { oggi: "2026-07-01" }), null);
+});
+
+test("il mese in più non scavalca il mese: il 31 agosto più un mese è il 30 settembre", () => {
+  // Il termine del fornitore cade a fine mese, quindi l'attesa parte quasi sempre da un 30 o un
+  // 31: sommare i mesi alla cieca darebbe un giorno di tempo che la norma non concede.
+  const finestra = autofattura({ data: "2026-06-15" }, SM_INTERNA, { oggi: "2026-06-16" });
+  assert.equal(finestra.termineFornitore, "2026-08-31");
+  assert.equal(finestra.dal, "2026-10-31");
+  assert.equal(finestra.al, "2026-11-30");
+  // Il caso in cui il giorno non esiste: dal 31 dicembre, due mesi dopo sarebbe il 31 febbraio.
+  // Si ferma al 28, che è l'ultimo giorno che quel mese ha — e non scavalca al 3 marzo, che
+  // regalerebbe tre giorni di tempo in più di quelli che la norma concede.
+  const daDicembre = autofattura({ data: "2025-10-15" }, SM_INTERNA, { oggi: "2026-01-02" });
+  assert.equal(daDicembre.termineFornitore, "2025-12-31");
+  assert.equal(daDicembre.dal, "2026-02-28");
+  assert.equal(daDicembre.al, "2026-03-30");
+
+  // E il fine settimana sposta avanti il termine del fornitore, non indietro: il 31 gennaio 2026 è
+  // un sabato, quindi si legge lunedì 2 febbraio, e da lì partono i due mesi di attesa.
+  const daGennaio = autofattura({ data: "2025-11-15" }, SM_INTERNA, { oggi: "2026-01-02" });
+  assert.equal(daGennaio.termineFornitore, "2026-02-02");
+  assert.equal(daGennaio.dal, "2026-04-02");
+  assert.equal(daGennaio.al, "2026-05-02");
 });
 
 console.log(`terms: ${passed} prove passate`);

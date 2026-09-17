@@ -750,6 +750,36 @@ export function destinatario(party, profile = IT_SDI) {
  * `.xml`, and `.xml.p7m` only for a signed file — which this app does not produce, which is why
  * the extension is not a parameter.
  */
+/**
+ * Quello che una riga non porta, e che il canale decide da sé.
+ *
+ * **Non è indovinare, ed è la differenza che conta.** Un registro importato non dice quale natura
+ * avesse una riga a zero, e i candidati sono lontanissimi fra loro — `N3.1` è un'esportazione non
+ * imponibile, `N2.2` è fuori campo — quindi il campo resta vuoto e l'app lo dice. Ma dove la
+ * direzione è nota la domanda cambia: sui due canali sammarinesi la natura ammessa **è una sola**,
+ * e scriverla è riportare l'unica risposta che il canale accetta, non sceglierne una fra tante.
+ * Dove le nature ammesse sono molte — l'Italia — resta vuoto come prima.
+ *
+ * Il tipo merce invece non lo decide il canale: lo decide che cosa vende l'azienda. Si prende il
+ * predefinito che sta in anagrafica, che è la risposta che l'azienda ha già dato per questo scopo;
+ * senza quello, il campo resta vuoto e i controlli lo chiedono al momento di emettere.
+ *
+ * **Sta qui e non nell'importazione** da quando i chiamanti sono due: le righe che arrivano da un
+ * file e quelle dell'autofattura costruita da un acquisto hanno lo stesso buco da riempire, e due
+ * copie della stessa regola divergono il giorno in cui un canale cambia.
+ */
+export function completaRighe(doc, company, party) {
+  const profile = profileFor(company, party);
+  const natura = (profile.nature || []).length === 1 ? profile.nature[0] : null;
+  const tm = profile.tmObbligatorio ? (company || {}).tmPredefinito : null;
+  for (const line of doc.righe || []) {
+    const zero = String(line.aliquota ?? "") === "0" || Number(line.aliquota) === 0;
+    if (zero && !line.natura && natura) line.natura = natura;
+    if (!line.tm && tm) line.tm = String(tm);
+  }
+  return doc;
+}
+
 export function fileName(company, value, profile = IT_SDI) {
   const paese = company.paese || profile.paese;
   return `${paese}${identificativo(company.partitaIva, paese)}_${progressivo(value)}.xml`;

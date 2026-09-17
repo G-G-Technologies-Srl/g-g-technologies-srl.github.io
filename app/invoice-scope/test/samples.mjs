@@ -243,6 +243,45 @@ const CASES = [
       pagamento: { condizioni: "TP02", modalita: "MP05", rate: [{ scadenza: "2026-10-27" }] },
     },
   },
+  {
+    // **L'autofattura dell'articolo 7**, quella che scrive il cliente quando la fattura non
+    // arriva. È l'unico documento in cui i due blocchi si scambiano: il cedente/prestatore è il
+    // fornitore che non ha emesso, il cessionario è chi sta scrivendo, e `SoggettoEmittente CC`
+    // dice a chi riceve che il documento non l'ha fatto chi ci figura come cedente. Nessun
+    // pagamento: non c'è niente da incassare, il denaro è già uscito.
+    name: "13-autofattura-interna",
+    company: {
+      denominazione: "Titano Meccanica S.A.",
+      partitaIva: "24680",
+      paese: "SM",
+      regimeFiscale: "RF01",
+      sede: {
+        indirizzo: "Strada dei Censiti", numeroCivico: "21", cap: "47891",
+        comune: "Serravalle", provincia: "SM",
+      },
+    },
+    party: {
+      denominazione: "Bottega del Titano S.r.l.",
+      partitaIva: "13579",
+      paese: "SM",
+      regimeFiscale: "RF01",
+      sede: { indirizzo: "Via Cinque Vie", numeroCivico: "4", cap: "47890", comune: "San Marino" },
+    },
+    doc: {
+      ...BASE,
+      tipo: "TD29",
+      serie: "AF",
+      numero: "2026/000013",
+      progressivo: 13,
+      causale: "Autofattura ex art. 7 DD 133/2026 per fattura non pervenuta",
+      ddt: [],
+      righe: [{
+        descrizione: "Manutenzione impianto", quantita: "1", prezzoUnitario: "1000.00",
+        aliquota: "0", natura: "N4", tm: "3",
+      }],
+      pagamento: null,
+    },
+  },
 ];
 
 // -----------------------------------------------------------------------------------------------------------------

@@ -1113,7 +1113,11 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
       ? `${t("docFromQuote")} ${current.daPreventivo.numero}`
       : ((current.ddt || []).length
         ? `${t("docFromDdt")} ${current.ddt.map((ref) => ref.numero).join(", ")}`
-        : ""));
+        // Un'autofattura nasce da una spesa rimasta senza fattura, e da lì si torna al denaro
+        // uscito: senza questa riga il documento non direbbe di quale operazione parla.
+        : (current.daAcquisto
+          ? `${t("autofatturaFrom")} ${date(current.daAcquisto.data)}`
+          : "")));
   el("docOriginNote").hidden = !origine;
   el("docOriginNote").textContent = origine;
 

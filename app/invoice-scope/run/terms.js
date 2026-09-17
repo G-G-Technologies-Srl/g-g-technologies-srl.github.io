@@ -44,6 +44,18 @@ const CON_TERMINE = new Set(["TD01", "TD24", "TD02"]);
 /** Le due note di variazione, che di termine ne hanno un altro. */
 const NOTE = new Set(["TD04", "TD05"]);
 
+/**
+ * L'autofattura dell'articolo 7, in due numeri.
+ *
+ * «Trascorsi due mesi dai predetti termini, ha trenta giorni per predisporre e trasmettere a
+ * HUB-SM un documento elettronico che sostituisca la fattura non pervenuta» — DD 133/2026, art. 7.
+ * Due mesi di attesa dal termine del fornitore, e poi trenta giorni di tempo: sono due periodi
+ * diversi e si contano in modo diverso, mesi i primi e giorni i secondi, quindi stanno come due
+ * numeri e non come uno.
+ */
+const AUTOFATTURA_ATTESA_MESI = 2;
+const AUTOFATTURA_GIORNI = 30;
+
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
 // -----------------------------------------------------------------------------------------------------------------
@@ -59,6 +71,23 @@ function _parts(iso) {
 /** Il giorno come stringa ISO, da una data UTC. */
 function _iso(date) {
   return date.toISOString().slice(0, 10);
+}
+
+/** La stessa data, `mesi` mesi dopo. Il giorno si ferma all'ultimo del mese di arrivo. */
+function _piuMesi(iso, mesi) {
+  const parts = _parts(iso);
+  if (!parts) return null;
+  // Il 31 marzo più un mese non è il 1º maggio: il giorno si ferma al 30 aprile. Senza questa
+  // riga la data scavalcherebbe il mese, e darebbe un giorno di tempo che la norma non concede.
+  const ultimo = new Date(Date.UTC(parts.y, parts.m + mesi, 0)).getUTCDate();
+  return _iso(new Date(Date.UTC(parts.y, parts.m - 1 + mesi, Math.min(parts.d, ultimo))));
+}
+
+/** La stessa data, `giorni` giorni dopo. */
+function _piuGiorni(iso, giorni) {
+  const parts = _parts(iso);
+  if (!parts) return null;
+  return _iso(new Date(Date.UTC(parts.y, parts.m - 1, parts.d + giorni)));
 }
 
 /**
@@ -192,6 +221,45 @@ export function stato(doc, profile, { oggi } = {}) {
   if (giorni < 0) return { ...calcolato, key: "scaduto", giorni };
   if (giorni <= GIORNI_AVVISO) return { ...calcolato, key: "vicino", giorni };
   return { ...calcolato, key: "ok", giorni };
+}
+
+/**
+ * Entro quando va fatta l'autofattura di un acquisto rimasto senza fattura, e come sta oggi.
+ *
+ * **È un dovere del cliente, non del fornitore**, e nasce dall'articolo 7 del DD 133/2026: chi non
+ * riceve la fattura nei termini deve emetterne una lui — il `TD29` — e trasmetterla a HUB-SM.
+ * Il conto è a due tempi: si aspettano due mesi oltre il termine che aveva il fornitore, e da lì
+ * si hanno trenta giorni.
+ *
+ * **Il termine del fornitore lo dà il profilo**, cioè `termini.servizi` del canale interno: due
+ * mesi dalla data dell'operazione, all'ultimo giorno del mese, spostati al primo giorno non
+ * festivo. Si usa il termine dei servizi anche per i beni perché sul canale interno i due numeri
+ * coincidono; su un canale dove non coincidessero, contare dalla merce vorrebbe dire conoscere una
+ * data di trasporto che un acquisto non porta.
+ *
+ * Restituisce `null` dove la domanda non si pone: nessuna data, o un canale senza termini — cioè
+ * ovunque tranne San Marino, dove questo dovere non esiste.
+ *
+ * Quattro stati: `presto` (il fornitore è ancora in tempo, o i due mesi non sono passati),
+ * `aperto` (i trenta giorni sono cominciati), `scaduto` (sono finiti), `fatto` (l'autofattura c'è).
+ */
+export function autofattura(acquisto, profile, { oggi, fatta = false } = {}) {
+  if (!acquisto || !profile || !profile.termini) return null;
+  const base = String(acquisto.data || "");
+  if (!_parts(base)) return null;
+
+  const termineFornitore = primoGiornoNonFestivo(fineMese(base, profile.termini.servizi));
+  const dal = _piuMesi(termineFornitore, AUTOFATTURA_ATTESA_MESI);
+  const al = _piuGiorni(dal, AUTOFATTURA_GIORNI);
+  const calcolato = { base, termineFornitore, dal, al };
+
+  if (fatta) return { ...calcolato, key: "fatto", giorni: null };
+  const aInizio = giorniFra(oggi, dal);
+  const aFine = giorniFra(oggi, al);
+  if (aInizio === null || aFine === null) return null;
+  if (aInizio > 0) return { ...calcolato, key: "presto", giorni: aInizio };
+  if (aFine >= 0) return { ...calcolato, key: "aperto", giorni: aFine };
+  return { ...calcolato, key: "scaduto", giorni: aFine };
 }
 
 /** Quanti giorni ci sono fra due date ISO, o `null` se una delle due non è una data. */

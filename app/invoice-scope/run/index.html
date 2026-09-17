@@ -352,6 +352,13 @@
       <span class="meta" id="purchasesOwed"></span>
     </div>
     <p class="note" data-t="purchasesNote"></p>
+    <!-- Le spese per cui la fattura del fornitore non è mai arrivata, e per cui l'articolo 7 del
+         DD 133/2026 mette in capo al cliente l'autofattura. In cima perché è un adempimento con un
+         termine, non una voce dell'elenco. -->
+    <div class="panel warn" id="autofattureNote" hidden>
+      <p id="autofattureText"></p>
+      <div id="autofattureList"></div>
+    </div>
     <p class="empty" id="purchasesEmpty" data-t="purchasesEmpty"></p>
     <div class="form docs-filters" id="purchasesFilters" hidden>
       <label class="wide"><span data-t="docsSearch"></span><input type="search" id="purchasesSearch" autocomplete="off"></label>

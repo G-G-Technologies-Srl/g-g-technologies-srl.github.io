@@ -10,7 +10,7 @@ import assert from "node:assert/strict";
 import { toString } from "../run/decimal.js";
 import {
   costRecord, problems, taxKind, defaultRate, taxOn, paidOf, owedOn, state, payable, periodTotals,
-  taxBalance, MONOFASE, costOf, signedTotal,
+  taxBalance, MONOFASE, costOf, signedTotal, daAutofatturare, autofatturaDa,
 } from "../run/costs.js";
 
 let passed = 0;
@@ -129,6 +129,81 @@ prova("una nota di credito ricevuta: importi positivi nel record, il meno lo met
   const kindOf = () => ({ fiscale: true, storna: false });
   const bilancio = taxBalance([], [fattura, nota], "2026-09", { company: IT, kindOf });
   assert.equal(soldi(bilancio.credito), "176.00");
+});
+
+// -----------------------------------------------------------------------------------------------------------------
+//  l ' a u t o f a t t u r a   d e l l ' a r t i c o l o   7
+// -----------------------------------------------------------------------------------------------------------------
+
+const AZIENDA_SM = { paese: "SM", partitaIva: "29077", tmPredefinito: "3" };
+const FORNITORE_SM = { id: "f1", paese: "SM", denominazione: "Titano Servizi S.A." };
+const FORNITORE_IT = { id: "f2", paese: "IT", denominazione: "Rossi Impianti S.r.l." };
+const ANAGRAFICHE = new Map([["f1", FORNITORE_SM], ["f2", FORNITORE_IT]]);
+
+/** Una spesa: il tipo che il registro usa per il denaro uscito senza una fattura del fornitore. */
+const spesa = (fields) => costRecord({ tipo: "spesa", partyId: "f1", imponibile: "1000", aliquota: "0", ...fields },
+  { company: AZIENDA_SM });
+
+prova("la spesa senza fattura entra nell'elenco quando i trenta giorni sono cominciati", () => {
+  // Spesa del 10 gennaio 2026. Il fornitore aveva tempo fino alla fine del mese che viene due mesi
+  // dopo — il 31 marzo — poi due mesi di attesa, il 31 maggio, e da lì trenta giorni: il 30 giugno.
+  const record = spesa({ id: "s1", data: "2026-01-10" });
+  const prima = daAutofatturare([record], { company: AZIENDA_SM, anagrafiche: ANAGRAFICHE, oggi: "2026-04-01" });
+  assert.deepEqual(prima, [], "finché i due mesi di attesa non sono passati non si propone niente");
+
+  const dentro = daAutofatturare([record], { company: AZIENDA_SM, anagrafiche: ANAGRAFICHE, oggi: "2026-06-05" });
+  assert.equal(dentro.length, 1);
+  assert.equal(dentro[0].termine.key, "aperto");
+  assert.equal(dentro[0].termine.termineFornitore, "2026-03-31");
+  assert.equal(dentro[0].termine.dal, "2026-05-31");
+  assert.equal(dentro[0].termine.al, "2026-06-30");
+  assert.equal(dentro[0].termine.giorni, 25, "quanti giorni restano, non quanti ne sono passati");
+
+  // Il giorno dopo il termine la proposta resta, e cambia parola: l'adempimento non scade con la
+  // scadenza — si fa comunque, in ritardo, e la sanzione è la stessa di chi non ha fatturato.
+  const tardi = daAutofatturare([record], { company: AZIENDA_SM, anagrafiche: ANAGRAFICHE, oggi: "2026-07-01" });
+  assert.equal(tardi[0].termine.key, "scaduto");
+});
+
+prova("un fornitore italiano non entra: l'obbligo è del canale interno sammarinese", () => {
+  const record = spesa({ id: "s2", partyId: "f2", data: "2026-01-10" });
+  assert.deepEqual(
+    daAutofatturare([record], { company: AZIENDA_SM, anagrafiche: ANAGRAFICHE, oggi: "2026-09-09" }), [],
+  );
+  // E nemmeno un'azienda italiana, qualunque sia il fornitore: la norma è di San Marino.
+  assert.deepEqual(
+    daAutofatturare([spesa({ id: "s3", data: "2026-01-10" })],
+      { company: IT, anagrafiche: ANAGRAFICHE, oggi: "2026-09-09" }), [],
+  );
+});
+
+prova("una fattura ricevuta non si autofattura, e nemmeno una spesa già decisa", () => {
+  const fatturaRicevuta = costRecord({ tipo: "fattura", partyId: "f1", numero: "12", data: "2026-01-10",
+    imponibile: "1000", aliquota: "0" }, { company: AZIENDA_SM });
+  const fatta = spesa({ id: "s4", data: "2026-01-10", autofatturaId: "doc-1" });
+  const nonDovuta = spesa({ id: "s5", data: "2026-01-10", autofatturaNonServe: true });
+  assert.deepEqual(
+    daAutofatturare([fatturaRicevuta, fatta, nonDovuta],
+      { company: AZIENDA_SM, anagrafiche: ANAGRAFICHE, oggi: "2026-09-09" }), [],
+  );
+  // E le due decisioni restano scritte anche riaprendo il foglio della spesa.
+  assert.equal(costRecord(fatta, { company: AZIENDA_SM }).autofatturaId, "doc-1");
+  assert.equal(costRecord(nonDovuta, { company: AZIENDA_SM }).autofatturaNonServe, true);
+});
+
+prova("l'autofattura porta l'imponibile della spesa, e l'aliquota del canale", () => {
+  const record = spesa({ id: "s6", data: "2026-01-10", imponibile: "1000", aliquota: "17" });
+  const doc = autofatturaDa(record, { company: AZIENDA_SM, party: FORNITORE_SM, oggi: "2026-05-10" });
+  assert.equal(doc.tipo, "TD29");
+  assert.equal(doc.partyId, "f1");
+  assert.equal(doc.righe.length, 1, "una riga: il dettaglio di quella fattura non ce l'ha nessuno");
+  assert.equal(doc.righe[0].prezzoUnitario, "1000");
+  // L'imposta monofase della spesa non entra nel documento: sull'interna l'IVA non si espone.
+  assert.equal(doc.righe[0].aliquota, "0.00");
+  assert.equal(doc.righe[0].natura, "N4");
+  assert.equal(doc.righe[0].tm, "3", "il tipo merce predefinito dell'azienda");
+  assert.equal(doc.daAcquisto.costId, "s6");
+  assert.ok(doc.causale.includes("Titano Servizi S.A."));
 });
 
 console.log(`costs: ${passed} prove passate`);

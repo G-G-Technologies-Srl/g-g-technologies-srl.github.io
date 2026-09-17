@@ -74,7 +74,8 @@ const IT = {
   homeToPayExpected: "{quante} attesi entro 30 giorni, {totale}",
   homeTaxIva: "IVA del periodo",
   homeTaxMonofase: "Imposte del periodo",
-  homeTaxNote: "La somma di quello che c'è qui dentro, per controllare i conti del commercialista: non è la liquidazione.",
+  homeTaxNote: "Il riepilogo delle imposte calcolate sui documenti registrati nell'applicazione. "
+    + "Ha finalità di controllo e non sostituisce la liquidazione periodica.",
   homeTaxQuarter: "{n}° trimestre",
   homeTaxSales: "sulle vendite",
   homeTaxPurchases: "sugli acquisti, a credito",
@@ -110,8 +111,8 @@ const IT = {
     + "tuo archivio sta solo qui.",
   safetyNever: "La cartella «{folder}» è collegata, e non ha ancora ricevuto nessuna copia.",
   safetyGo: "Apri le impostazioni",
-  safetyManualNever: "Questo browser non sa tenere una copia da solo, e tu non hai mai esportato "
-    + "un archivio: quello che c'è qui dentro esiste in una copia sola.",
+  safetyManualNever: "Questo browser non è in grado di conservare una copia autonomamente, e non "
+    + "è mai stato esportato un archivio: i dati dell'applicazione esistono in una copia sola.",
   safetyManualOld: "Questo browser non sa tenere una copia da solo, e dall'ultimo archivio che hai "
     + "esportato — {giorni} giorni fa — hai lavorato ancora. Esportane uno adesso: ci vuole un momento.",
   safetyManualGo: "Esporta un archivio",
@@ -409,7 +410,8 @@ const IT = {
   navPurchases: "Acquisti",
   purchasesTitle: "Acquisti",
   purchasesNew: "Nuovo acquisto",
-  purchasesNote: "Le fatture che ricevi e le spese senza fattura, con la scadenza e quello che hai pagato. Serve a sapere cosa devi, e al commercialista.",
+  purchasesNote: "Le fatture ricevute e le spese senza fattura, con la scadenza e quanto è già "
+    + "stato pagato: il quadro di quanto è dovuto, e la base della documentazione contabile.",
   purchasesEmpty: "Nessun acquisto registrato.",
   purchasesNoMatch: "Nessun acquisto corrisponde ai filtri.",
   purchasesSupplier: "Fornitore",
@@ -467,6 +469,25 @@ const IT = {
   costCat_assicurazioni: "assicurazioni",
   costCat_materiali: "materiali",
   costCat_altro: "altro",
+  // ---- l'autofattura dell'articolo 7: la fattura che il fornitore non ha emesso
+  autofatturaPanelOne: "Per una spesa la fattura del fornitore non è mai arrivata: entro il termine "
+    + "indicato l'operazione va documentata con un'autofattura elettronica (articolo 7 del Decreto "
+    + "Delegato 133/2026).",
+  autofatturaPanelMany: "Per {n} spese la fattura del fornitore non è mai arrivata: entro i termini "
+    + "indicati le operazioni vanno documentate con un'autofattura elettronica (articolo 7 del "
+    + "Decreto Delegato 133/2026).",
+  autofatturaRowOpen: "{fornitore} · {importo} · spesa del {data} · entro il {scadenza}",
+  autofatturaRowLate: "{fornitore} · {importo} · spesa del {data} · termine scaduto il {scadenza}",
+  autofatturaMake: "Prepara l'autofattura",
+  autofatturaSkip: "Non è dovuta",
+  autofatturaSkipAsk: "Confermi che per questa spesa l'autofattura non è dovuta? La spesa non "
+    + "comparirà più in questo elenco. È il caso, per esempio, di un fornitore non soggetto "
+    + "all'obbligo di fatturazione elettronica.",
+  autofatturaDone: "Autofattura preparata come bozza: verificala e poi emettila.",
+  autofatturaCausale: "Autofattura ex art. 7 DD 133/2026 per fattura non pervenuta da {fornitore}, "
+    + "operazione del {data}",
+  autofatturaLine: "Operazione del {data} documentata in assenza della fattura di {fornitore}",
+  autofatturaFrom: "Da una spesa del",
   expectedTitle: "In arrivo",
   expectedNote: "Gli acquisti che le ricorrenze fanno aspettare da qui a fine anno. Quando la fattura arriva, «Conferma»: il foglio è già compilato, correggi quello che è diverso.",
   expectedTotal: "fino a fine anno: {totale}",
@@ -1322,7 +1343,8 @@ const EN = {
   homeToPayExpected: "{quante} expected within 30 days, {totale}",
   homeTaxIva: "VAT for the period",
   homeTaxMonofase: "Taxes for the period",
-  homeTaxNote: "The sum of what is in here, to check the accountant's figures: it is not the VAT return.",
+  homeTaxNote: "A summary of the taxes calculated on the documents recorded in the application. "
+    + "It is provided for checking purposes and does not replace the periodic tax return.",
   homeTaxQuarter: "quarter {n}",
   homeTaxSales: "on sales",
   homeTaxPurchases: "on purchases, as credit",
@@ -1357,8 +1379,8 @@ const EN = {
     + "archive has been here alone.",
   safetyNever: "Folder «{folder}» is linked, and has not received a copy yet.",
   safetyGo: "Open settings",
-  safetyManualNever: "This browser cannot keep a copy by itself, and you have never exported an "
-    + "archive: what is in here exists in one copy only.",
+  safetyManualNever: "This browser cannot keep a copy by itself, and no archive has ever been "
+    + "exported: the application's data exists in a single copy.",
   safetyManualOld: "This browser cannot keep a copy by itself, and you have worked on since the "
     + "last archive you exported — {giorni} days ago. Export one now: it takes a moment.",
   safetyManualGo: "Export an archive",
@@ -1645,7 +1667,8 @@ const EN = {
   navPurchases: "Purchases",
   purchasesTitle: "Purchases",
   purchasesNew: "New purchase",
-  purchasesNote: "The invoices you receive and the expenses without one, with their due date and what you have paid. It tells you what you owe, and tells your accountant.",
+  purchasesNote: "Invoices received and expenses without an invoice, with their due date and what "
+    + "has already been paid: the picture of what is owed, and the basis of the accounting records.",
   purchasesEmpty: "No purchase recorded.",
   purchasesNoMatch: "No purchase matches the filters.",
   purchasesSupplier: "Supplier",
@@ -1703,6 +1726,25 @@ const EN = {
   costCat_assicurazioni: "insurance",
   costCat_materiali: "materials",
   costCat_altro: "other",
+  // ---- the article 7 self-billed invoice: the invoice the supplier never issued
+  autofatturaPanelOne: "For one expense the supplier's invoice never arrived: by the date shown, "
+    + "the transaction must be documented with an electronic self-billed invoice (article 7 of "
+    + "Decreto Delegato 133/2026).",
+  autofatturaPanelMany: "For {n} expenses the supplier's invoice never arrived: by the dates "
+    + "shown, the transactions must be documented with an electronic self-billed invoice "
+    + "(article 7 of Decreto Delegato 133/2026).",
+  autofatturaRowOpen: "{fornitore} · {importo} · expense of {data} · by {scadenza}",
+  autofatturaRowLate: "{fornitore} · {importo} · expense of {data} · deadline passed on {scadenza}",
+  autofatturaMake: "Prepare the self-billed invoice",
+  autofatturaSkip: "Not required",
+  autofatturaSkipAsk: "Do you confirm that no self-billed invoice is required for this expense? "
+    + "The expense will no longer appear in this list. This is the case, for example, of a "
+    + "supplier not subject to electronic invoicing.",
+  autofatturaDone: "The self-billed invoice is ready as a draft: check it, then issue it.",
+  autofatturaCausale: "Self-billed invoice under art. 7 DD 133/2026 for an invoice not received "
+    + "from {fornitore}, transaction of {data}",
+  autofatturaLine: "Transaction of {data} documented in the absence of {fornitore}'s invoice",
+  autofatturaFrom: "From an expense of",
   expectedTitle: "Coming up",
   expectedNote: "The purchases the recurring costs lead you to expect between now and the end of the year. When the invoice arrives, «Confirm»: the sheet is already filled in, correct what differs.",
   expectedTotal: "to the end of the year: {totale}",

@@ -23,7 +23,11 @@ import { list, get, put, remove, tx } from "gg/store.js";
 
 import { from, add, sub, cmp, sum, ZERO, toString, percent } from "./decimal.js";
 import { parseAmount, parseOptional } from "./parse.js";
-import { profileFor } from "./fatturapa.js";
+import { profileFor, completaRighe } from "./fatturapa.js";
+import { autofattura as terminiAutofattura } from "./terms.js";
+import { draft } from "./model.js";
+import { tf } from "./i18n.js";
+import { date as shownDate } from "./format.js";
 
 /** Due decimali: l'imposta si arrotonda al centesimo, come nel riepilogo IVA. */
 const MONEY = 2;
@@ -150,6 +154,11 @@ export function costRecord(fields, { company = null } = {}) {
     updated: _now(),
   };
   if (fields.importato) record.importato = fields.importato;
+  // **Quello che l'azienda ha già deciso su questa spesa non si perde riaprendo il foglio.** Come
+  // `importato`: questa funzione costruisce il record da una lista di campi e scarta il resto, e
+  // senza queste due righe correggere un importo farebbe ricomparire un'autofattura già fatta.
+  if (fields.autofatturaId) record.autofatturaId = fields.autofatturaId;
+  if (fields.autofatturaNonServe) record.autofatturaNonServe = true;
   // Un acquisto nato da una ricorrenza la ricorda, con il periodo che copre: è così che l'atteso
   // di quel periodo sparisce, e non compare due volte.
   if (fields.ricorrenzaId) {
@@ -227,6 +236,89 @@ export function payable(costs, outlays, { today = new Date().toISOString().slice
     })
     .filter((row) => cmp(row.importo, ZERO) > 0)
     .sort((a, b) => String(a.scadenza).localeCompare(String(b.scadenza)));
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  p u b l i c   —   l ' a u t o f a t t u r a   d e l l ' a r t i c o l o   7
+// -----------------------------------------------------------------------------------------------------------------
+
+/**
+ * Gli acquisti per cui la fattura non è mai arrivata, e per cui l'autofattura è ora dovuta.
+ *
+ * **La norma.** L'articolo 7 del DD 133/2026 mette in capo al cliente un obbligo che di solito si
+ * pensa del fornitore: chi non riceve la fattura nei termini deve emetterne una lui — il `TD29` —
+ * e trasmetterla a HUB-SM entro trenta giorni, passati due mesi dal termine che aveva il
+ * fornitore. Chi non lo fa incorre nella stessa sanzione di chi non ha fatturato.
+ *
+ * **Che cosa l'applicazione considera un acquisto senza fattura.** Una spesa: è il tipo che il
+ * registro degli acquisti usa per il denaro uscito senza un documento del fornitore, e infatti è
+ * l'unico che non ha un numero. Una fattura ricevuta, per definizione, è arrivata.
+ *
+ * **Il perimetro è stretto, e per scelta.** Solo fra due soggetti sammarinesi: l'obbligo nasce da
+ * una norma della Repubblica e riguarda il canale interno, e un fornitore italiano fattura con le
+ * regole sue. Fuori da lì la funzione non propone niente, invece di proporre un adempimento che
+ * non esiste.
+ *
+ * Restano fuori anche le spese che l'azienda ha già valutato: quelle da cui un'autofattura è già
+ * nata (`autofatturaId`) e quelle marcate come non dovute (`autofatturaNonServe`) — perché una
+ * ricevuta di un soggetto non obbligato alla fattura elettronica è una spesa legittima senza
+ * fattura, e l'applicazione non può saperlo da sola.
+ */
+export function daAutofatturare(costs, { company, anagrafiche, oggi } = {}) {
+  if (!company || String(company.paese || "IT").toUpperCase() !== "SM") return [];
+  const chi = anagrafiche instanceof Map ? anagrafiche : new Map();
+  return (costs || [])
+    .filter((record) => record.tipo === "spesa" && !record.autofatturaId && !record.autofatturaNonServe)
+    .map((record) => {
+      const party = chi.get(record.partyId) || null;
+      if (!party || String(party.paese || "IT").toUpperCase() !== "SM") return null;
+      const termine = terminiAutofattura(record, profileFor(company, party), { oggi });
+      return termine ? { record, party, termine } : null;
+    })
+    .filter((row) => row && (row.termine.key === "aperto" || row.termine.key === "scaduto"))
+    // Prima quella che scade prima: è l'ordine in cui vanno fatte, e in cima sta quella in ritardo.
+    .sort((a, b) => String(a.termine.al).localeCompare(String(b.termine.al)));
+}
+
+/**
+ * L'autofattura di un acquisto, come bozza, senza salvarla.
+ *
+ * **Una riga sola, con l'imponibile della spesa.** L'autofattura sostituisce la fattura che non è
+ * arrivata, e di quella fattura l'azienda conosce quello che ha pagato: importo, fornitore e data
+ * dell'operazione. Il dettaglio delle righe non ce l'ha nessuno, e inventarlo sarebbe scrivere in
+ * un documento fiscale una cosa che non è successa — quindi una riga, con la descrizione della
+ * spesa, e la causale che dice di quale operazione si tratta.
+ *
+ * **L'aliquota la decide il canale, non la spesa.** Sull'interna sammarinese l'IVA non si espone —
+ * `aliquotaFissa` a zero e natura `N4` — mentre sulla spesa può esserci l'imposta monofase, che è
+ * una cosa diversa e si gestisce fuori dalla fattura. Copiarla qui sarebbe un file scartato.
+ */
+export function autofatturaDa(record, { company, party, oggi = new Date().toISOString().slice(0, 10) } = {}) {
+  const profile = profileFor(company, party);
+  const descrizione = record.descrizione || record.categoria
+    || tf("autofatturaLine", { fornitore: (party || {}).denominazione || "", data: shownDate(record.data) });
+  const doc = draft({
+    tipo: "TD29",
+    data: oggi,
+    partyId: record.partyId,
+    causale: tf("autofatturaCausale", {
+      fornitore: (party || {}).denominazione || "",
+      data: shownDate(record.data),
+    }),
+    righe: [{
+      descrizione,
+      quantita: "1",
+      prezzoUnitario: record.imponibile,
+      aliquota: profile.aliquotaFissa ?? record.aliquota,
+    }],
+  });
+  // La stessa regola dell'importazione: natura dove il canale ne ammette una sola, tipo merce dal
+  // predefinito dell'azienda. Scritta in un posto solo, in `fatturapa.js`.
+  completaRighe(doc, company, party);
+  // Da quale spesa viene: è quello che toglie la spesa dall'elenco delle autofatture da fare, e che
+  // permette di risalire dal documento al denaro uscito.
+  doc.daAcquisto = { costId: record.id, data: record.data, importo: record.totale };
+  return doc;
 }
 
 // -----------------------------------------------------------------------------------------------------------------

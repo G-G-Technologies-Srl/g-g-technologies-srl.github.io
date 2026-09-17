@@ -20,17 +20,18 @@
 import { get } from "gg/store.js";
 
 import { t, tf } from "./i18n.js";
-import { ask } from "./ask.js";
+import { ask, tell } from "./ask.js";
 import { money, rate as shownRate, date as shownDate } from "./format.js";
 import { from, cmp, toString, ZERO } from "./decimal.js";
 import { parseAmount } from "./parse.js";
 import { parties, openNewParty, isSupplier } from "./parties.js";
+import { save as saveDoc } from "./model.js";
 import { openMoney } from "./payments.js";
 import * as attesi from "./expected.js";
 import {
   TIPI, MONOFASE, IVA, CATEGORIE, taxKind, defaultRate, taxOn, costRecord, problems,
   paidOf, owedOn, state, allCosts, allOutlays, saveCost, removeCost, outlaysOf, recordOutlay,
-  removeOutlay, cost as getCost, signedTotal,
+  removeOutlay, cost as getCost, signedTotal, daAutofatturare, autofatturaDa,
 } from "./costs.js";
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -378,6 +379,68 @@ function _drawLines(record) {
 // -----------------------------------------------------------------------------------------------------------------
 
 /** L'elenco: `#/acquisti`. */
+/**
+ * L'avviso delle autofatture dovute, in cima agli acquisti.
+ *
+ * Una riga per spesa, con il fornitore, l'importo e il termine: sono le tre cose che servono per
+ * decidere. La quarta — se l'autofattura sia davvero dovuta — la sa soltanto l'azienda, ed è il
+ * motivo per cui accanto al comando che la prepara c'è quello che dichiara che non lo è.
+ */
+async function _drawAutofatture(costs, anagrafiche) {
+  const pannello = el("autofattureNote");
+  const elenco = el("autofattureList");
+  elenco.textContent = "";
+  const dovute = daAutofatturare(costs, { company, anagrafiche, oggi: _today() });
+  pannello.hidden = dovute.length === 0;
+  if (pannello.hidden) return;
+
+  el("autofattureText").textContent = dovute.length === 1
+    ? t("autofatturaPanelOne")
+    : tf("autofatturaPanelMany", { n: dovute.length });
+
+  for (const { record, party, termine } of dovute) {
+    const riga = document.createElement("div");
+    riga.className = "dup-row";
+    const testo = document.createElement("span");
+    const chiave = termine.key === "scaduto" ? "autofatturaRowLate" : "autofatturaRowOpen";
+    testo.textContent = tf(chiave, {
+      fornitore: party.denominazione || "—",
+      importo: money(from(record.totale || "0")),
+      data: shownDate(record.data),
+      scadenza: shownDate(termine.al),
+    });
+    if (termine.key === "scaduto") testo.classList.add("overdue");
+
+    const prepara = document.createElement("button");
+    prepara.type = "button";
+    prepara.className = "button ghost small";
+    prepara.textContent = t("autofatturaMake");
+    prepara.addEventListener("click", async () => {
+      const bozza = await saveDoc(database, autofatturaDa(record, { company, party, oggi: _today() }));
+      // Il legame si scrive sulla spesa: è quello che la toglie da questo elenco, ed è anche
+      // quello che fa ricomparire la proposta se la bozza venisse cancellata.
+      await saveCost(database, { ...record, autofatturaId: bozza.id }, { company });
+      if (onChange) onChange();
+      await tell(t("autofatturaDone"));
+      location.hash = `#/documento/${bozza.id}`;
+    });
+
+    const non = document.createElement("button");
+    non.type = "button";
+    non.className = "button ghost small";
+    non.textContent = t("autofatturaSkip");
+    non.addEventListener("click", async () => {
+      if (!(await ask(t("autofatturaSkipAsk"), { okLabel: t("autofatturaSkip") }))) return;
+      await saveCost(database, { ...record, autofatturaNonServe: true }, { company });
+      await renderList(database, { afterChange: onChange });
+      if (onChange) onChange();
+    });
+
+    riga.append(testo, prepara, non);
+    elenco.append(riga);
+  }
+}
+
 export async function renderList(db, { afterChange = null } = {}) {
   database = db;
   onChange = afterChange;
@@ -385,7 +448,9 @@ export async function renderList(db, { afterChange = null } = {}) {
 
   const costs = await allCosts(db);
   const outlays = await allOutlays(db);
-  const persone = new Map((await parties(db)).map((p) => [p.id, p.denominazione]));
+  const anagrafiche = new Map((await parties(db)).map((p) => [p.id, p]));
+  const persone = new Map([...anagrafiche].map(([id, p]) => [id, p.denominazione]));
+  await _drawAutofatture(costs, anagrafiche);
   const per = new Map();
   for (const one of outlays) {
     if (!per.has(one.costId)) per.set(one.costId, []);
