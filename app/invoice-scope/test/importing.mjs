@@ -262,6 +262,54 @@ await prova("la riga ricostruita del registro tiene in piedi il totale", async (
   assert.ok(!piano.fonti[0].avvisi.some((a) => a.chiave === "impRegisterNoNature"));
 });
 
+await prova("per un'azienda sammarinese il canale completa la riga che il registro non descrive", async () => {
+  // **Il difetto veniva da una prova sull'app vera**: undici documenti importati da un registro non
+  // passavano più i controlli, perché il tipo merce adesso è obbligatorio e nel registro non c'è.
+  // La natura non la sceglie l'app: sui canali sammarinesi ne è ammessa una sola, e quella si
+  // scrive. Il tipo merce lo dice l'anagrafica, che lo ha proprio per questo.
+  const azienda = {
+    denominazione: "Titano Meccanica S.A.", paese: "SM", partitaIva: "24680", regimeFiscale: "RF01",
+    tmPredefinito: "3",
+    sede: { indirizzo: "Strada dei Censiti", cap: "47891", comune: "Serravalle", provincia: "SM" },
+  };
+  const piano = await plan([file("r", await xlsx(HEAD_REGISTRO, [registro()]))], { company: azienda });
+  const riga = piano.documenti[0].righe[0];
+  // Il cliente del registro è italiano, quindi il canale è l'esportazione: l'unica natura ammessa
+  // è N3.1.
+  assert.equal(riga.natura, "N3.1");
+  assert.equal(riga.tm, "3");
+
+  // Senza il predefinito in anagrafica non si inventa un tipo merce: resta vuoto, e i controlli lo
+  // chiederanno quando quel documento dovrà uscire.
+  const senza = await plan([file("r", await xlsx(HEAD_REGISTRO, [registro()]))],
+    { company: { ...azienda, tmPredefinito: "" } });
+  assert.equal(senza.documenti[0].righe[0].tm, undefined);
+  assert.equal(senza.documenti[0].righe[0].natura, "N3.1", "la natura la decide il canale, non l'anagrafica");
+
+  // Un'azienda italiana non prende niente: il tipo merce lì non si scrive, e le nature ammesse sono
+  // tutte quelle dello schema — nessuna è «l'unica».
+  const italiana = await plan([file("r", await xlsx(HEAD_REGISTRO, [registro()]))],
+    { company: { denominazione: "Esempio S.r.l.", paese: "IT", partitaIva: "01234567897", tmPredefinito: "3" } });
+  assert.equal(italiana.documenti[0].righe[0].tm, undefined, "il tipo merce non riguarda il canale italiano");
+  assert.equal(italiana.documenti[0].righe[0].natura, undefined);
+});
+
+await prova("quello che il file dice già non viene riscritto", async () => {
+  // L'XML porta natura e tipo merce suoi: il completamento riempie i vuoti, non corregge il
+  // documento di qualcun altro. Con una natura diversa da quella del canale, il controllo la
+  // segnalerà al momento di uscire — che è il posto dove si dicono le cose sbagliate.
+  // Senza partita IVA in anagrafica l'XML resta una fattura emessa, come nelle altre prove qui: la
+  // cosa che si sta guardando è il completamento, non il verso del documento.
+  const azienda = { denominazione: "Noi", paese: "SM", regimeFiscale: "RF01", tmPredefinito: "4" };
+  // Una natura che il canale sammarinese non ammetterebbe, così si vede se viene riscritta: con
+  // N3.1 nel file la sostituzione sarebbe invisibile, perché è proprio quella che il canale vuole.
+  const diverso = FATTURA.replace("<Natura>N3.1</Natura>", "<Natura>N2.2</Natura>");
+  const piano = await plan([xml("f.xml", diverso)], { company: azienda });
+  const riga = piano.documenti[0].righe[0];
+  assert.equal(riga.natura, "N2.2", "la natura del file resta, anche quando è quella sbagliata");
+  assert.equal(riga.tm, "3", "e anche il suo tipo merce, non il predefinito");
+});
+
 await prova("senza oggetto, la riga ricostruita dice quale documento è e perché è così", async () => {
   const piano = await plan([file("r", await xlsx(HEAD_REGISTRO, [registro({ 16: "", 17: "" })]))]);
   const riga = piano.documenti[0].righe[0].descrizione;
