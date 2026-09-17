@@ -194,6 +194,39 @@
         <table class="rows compact" id="homeDueTable"><tbody id="homeDueBody"></tbody></table>
       </div>
 
+      <!-- L'insoluto diviso per età: quanto deve ancora arrivare, e quanto è fermo da quanto.
+           I quattro numeri in cima dicono quanto mi devono; questo dice quanto di quello sta
+           diventando un credito difficile. -->
+      <div class="widget" id="wAging" hidden>
+        <div class="section-head">
+          <h2 data-t="homeAging"></h2>
+          <a href="#/scadenzario" data-t="homeSeeAll"></a>
+        </div>
+        <div class="hbars" id="chartAging"></div>
+      </div>
+
+      <!-- Fatturato e incassato affiancati, mese per mese: la distanza fra le due barre è il
+           credito che si accumula. -->
+      <div class="widget wide" id="wCash" hidden>
+        <div class="section-head">
+          <h2 data-t="homeCash"></h2>
+          <span class="legend"><i class="before"></i><span data-t="homeCashInvoiced"></span> <i class="now"></i><span data-t="homeCashCollected"></span></span>
+        </div>
+        <div class="bars-box" id="chartCash" role="img"></div>
+        <p class="note" id="homeCashNote" data-t="homeCashImported" hidden></p>
+      </div>
+
+      <!-- Quanto ci mettono a pagare, in media, rispetto alla scadenza. Solo sugli incassi
+           registrati qui: quelli importati da un registro portano la data di scadenza, e
+           darebbero a tutti una puntualità che nessuno ha dimostrato. -->
+      <div class="widget" id="wPayers" hidden>
+        <div class="section-head">
+          <h2 data-t="homePayers"></h2>
+        </div>
+        <p class="note" data-t="homePayersNote"></p>
+        <table class="rows compact" id="homePayersTable"><tbody id="homePayersBody"></tbody></table>
+      </div>
+
       <div class="widget" id="wParties" hidden>
         <div class="section-head">
           <h2 data-t="homeTopParties"></h2>

@@ -27,6 +27,7 @@ import { money, date as shownDate } from "./format.js";
 import * as progetti from "./projects.js";
 import { costOf, payable, taxBalance, signedTotal as costTotal } from "./costs.js";
 import { expected } from "./recurring.js";
+import { from } from "./decimal.js";
 
 /** Quante righe mostra ogni riquadro. Cinque è quello che si legge senza scorrere. */
 export const ROWS = 5;
@@ -272,6 +273,135 @@ export function byYear(docs, costs, attesi, { today = new Date().toISOString().s
   });
 }
 
+/**
+ * Le fasce dell'insoluto: quanto è scaduto, e da quanto.
+ *
+ * **Le fasce sono quelle che usa chiunque sollecita**, e non sono un'invenzione di questa app:
+ * entro trenta giorni è un ritardo che si risolve con una telefonata, oltre novanta è un credito
+ * che va trattato come tale. Averle divise cambia la domanda da «quanto mi devono» — che i quattro
+ * numeri in cima dicono già — a «quanto di quello che mi devono sta diventando un problema».
+ *
+ * La prima fascia non è un ritardo: è quello che deve ancora arrivare, e sta nel grafico perché
+ * senza si leggerebbe una montagna di scaduto senza sapere quanto pesa sul totale.
+ */
+export const FASCE = [
+  { key: "corrente", da: null, a: 0 },
+  { key: "g30", da: 1, a: 30 },
+  { key: "g60", da: 31, a: 60 },
+  { key: "g90", da: 61, a: 90 },
+  { key: "oltre", da: 91, a: null },
+];
+
+export function aging(owedRows, { today = new Date().toISOString().slice(0, 10) } = {}) {
+  const per = new Map(FASCE.map((fascia) => [fascia.key, { key: fascia.key, importo: 0n, quante: 0 }]));
+  for (const row of owedRows || []) {
+    // Una rata senza scadenza è dovuta a vista: scade il giorno stesso, come nello scadenzario.
+    const giorni = _days(today, row.scadenza || today);
+    const fascia = FASCE.find((f) => (f.da === null || giorni >= f.da) && (f.a === null || giorni <= f.a));
+    const voce = per.get((fascia || FASCE[0]).key);
+    voce.importo += row.importo;
+    voce.quante += 1;
+  }
+  return [...per.values()];
+}
+
+/**
+ * Fatturato e incassato mese per mese, negli ultimi dodici mesi.
+ *
+ * **Sono due curve che non coincidono mai, ed è il punto.** Il fatturato dice quanto lavoro è
+ * uscito, l'incassato quanto denaro è entrato: la distanza fra le due è il credito che si sta
+ * accumulando, e un mese buono di fatture con l'incassato piatto è la cosa che si vede qui e da
+ * nessun'altra parte.
+ *
+ * L'incasso conta nel mese in cui è arrivato, non in quello della fattura: è denaro, e il denaro
+ * ha la data del giorno in cui si è mosso.
+ */
+export function cashByMonth(docs, payments, { today = new Date().toISOString().slice(0, 10) } = {}) {
+  const fatturato = new Map();
+  for (const doc of _invoiced(docs)) {
+    const chiave = String(doc.data).slice(0, 7);
+    fatturato.set(chiave, (fatturato.get(chiave) || 0n) + (signedTotal(doc) || 0n));
+  }
+  const incassato = new Map();
+  for (const payment of payments || []) {
+    const chiave = String(payment.data || "").slice(0, 7);
+    if (chiave.length !== 7) continue;
+    let importo = 0n;
+    try { importo = from(String(payment.importo || "0")); } catch (ignored) { importo = 0n; }
+    incassato.set(chiave, (incassato.get(chiave) || 0n) + importo);
+  }
+  const out = [];
+  let anno = Number(today.slice(0, 4));
+  let mese = Number(today.slice(5, 7));
+  for (let i = 0; i < 12; i += 1) {
+    const chiave = `${anno}-${String(mese).padStart(2, "0")}`;
+    out.unshift({
+      mese, anno, valore: 0n, prima: 0n,
+      fatturato: fatturato.get(chiave) || 0n,
+      incassato: incassato.get(chiave) || 0n,
+    });
+    mese -= 1;
+    if (mese === 0) {
+      mese = 12;
+      anno -= 1;
+    }
+  }
+  return out;
+}
+
+/**
+ * Come pagano i clienti: la media dei giorni fra la scadenza e l'incasso.
+ *
+ * Negativa vuol dire in anticipo, positiva in ritardo. Si contano solo le fatture **saldate**: una
+ * fattura ancora aperta non ha una risposta, e contarla come «zero giorni» direbbe che quel cliente
+ * paga puntuale mentre sta semplicemente non pagando.
+ *
+ * **Gli incassi importati da un altro programma restano fuori**, ed è la riga che tiene onesta
+ * tutta la classifica: un registro non dice quando il denaro è arrivato, quindi l'importazione
+ * scrive come data quella di scadenza. Contarli darebbe a ogni cliente una puntualità perfetta —
+ * una classifica falsa costruita su dati veri.
+ *
+ * Servono almeno due fatture saldate per comparire: una media su una fattura sola non è una media.
+ */
+export function payers(docs, payments, { limit = ROWS, minimo = 2 } = {}) {
+  const suoi = new Map();
+  for (const payment of payments || []) {
+    if (payment.importato) continue;
+    if (!suoi.has(payment.docId)) suoi.set(payment.docId, []);
+    suoi.get(payment.docId).push(payment);
+  }
+
+  const per = new Map();
+  for (const doc of _invoiced(docs)) {
+    if (kind(doc).storna || !kind(doc).deve) continue;
+    const incassi = suoi.get(doc.id) || [];
+    if (!incassi.length) continue;
+    let arrivato = 0n;
+    for (const payment of incassi) {
+      try { arrivato += from(String(payment.importo || "0")); } catch (ignored) { /* una riga storta vale zero */ }
+    }
+    let totale = 0n;
+    try { totale = BigInt(doc.totali.totale || 0); } catch (ignored) { totale = 0n; }
+    if (totale <= 0n || arrivato < totale) continue;
+
+    // L'ultimo incasso chiude la fattura, e l'ultima rata è la data entro cui doveva chiudersi.
+    const ultimo = incassi.map((one) => String(one.data)).sort().pop();
+    const rate = ((doc.pagamento || {}).rate || []).map((r) => String(r.scadenza || "")).filter(Boolean).sort();
+    const scadenza = rate.length ? rate[rate.length - 1] : String(doc.data);
+    const voce = per.get(doc.partyId) || { partyId: doc.partyId, giorni: 0, quante: 0, importo: 0n, somma: 0 };
+    voce.somma += _days(ultimo, scadenza);
+    voce.quante += 1;
+    voce.importo += totale;
+    per.set(doc.partyId, voce);
+  }
+
+  return [...per.values()]
+    .filter((voce) => voce.quante >= minimo)
+    .map((voce) => ({ ...voce, giorni: Math.round(voce.somma / voce.quante) }))
+    .sort((a, b) => a.giorni - b.giorni || (a.importo < b.importo ? 1 : -1))
+    .slice(0, limit);
+}
+
 /** I clienti con più da incassare, dal più esposto: `{ partyId, importo, scadute }`. */
 export function topParties(owedRows, { limit = ROWS } = {}) {
   const per = new Map();
@@ -353,7 +483,7 @@ export function drafts(docs, { limit = ROWS } = {}) {
 // -----------------------------------------------------------------------------------------------------------------
 
 /** Le barre dei mesi: quest'anno pieno, l'anno scorso dietro, in tinta più chiara. */
-export function drawMonths(container, mesi, { back = "prima", front = "valore", backClass = "before", frontClass = "now", title = "homeMonths", empty = "homeMonthsEmpty", stack = null } = {}) {
+export function drawMonths(container, mesi, { back = "prima", front = "valore", backClass = "before", frontClass = "now", title = "homeMonths", empty = "homeMonthsEmpty", stack = null, tooltip = null } = {}) {
   container.textContent = "";
   // Con una terza serie impilata sulla seconda — i costi attesi sopra quelli veri — il massimo
   // è la somma delle due, o la pila sfonderebbe il riquadro.
@@ -393,7 +523,10 @@ export function drawMonths(container, mesi, { back = "prima", front = "valore", 
       x, y: H - bottom - ora, width: larghezza, height: ora, class: frontClass, rx: 2,
     });
     const titolo = _svg("title");
-    titolo.textContent = back === "prima"
+    // La frase del passaggio del mouse la decide chi chiama, quando le due serie non sono un
+    // confronto fra anni né una differenza: fatturato e incassato si leggono affiancati, e
+    // «incassato − fatturato» sarebbe una sottrazione che non significa niente.
+    titolo.textContent = tooltip ? tooltip(m) : back === "prima"
       ? `${lettere[m.mese - 1]} ${m.anno}: ${money(m.valore)} · ${m.anno - 1}: ${money(m.prima)}`
       : `${lettere[m.mese - 1]} ${m.anno}: ${money(m[front])} − ${money(dietroDi(m))} = ${money(m[front] - dietroDi(m))}`
         + (stack && m[stack] > 0n ? ` (${t("homeExpectedShort")} ${money(m[stack])})` : "");
@@ -445,10 +578,49 @@ export function drawParties(container, rows, byParty, { href = (row) => `#/clien
 }
 
 /**
+ * Barre orizzontali per le fasce dell'insoluto: l'etichetta, la barra, la cifra.
+ *
+ * Le fasce vuote non si disegnano: una riga a zero occupa lo spazio di una che dice qualcosa. La
+ * prima fascia — quello che deve ancora arrivare — porta la tinta normale, le altre quella dello
+ * scaduto, perché è la distinzione che si legge da lontano.
+ */
+export function drawBuckets(container, rows) {
+  container.textContent = "";
+  const visibili = rows.filter((row) => row.importo > 0n);
+  const massimo = visibili.reduce((max, row) => (row.importo > max ? row.importo : max), 0n);
+  for (const row of visibili) {
+    const riga = document.createElement("a");
+    riga.className = "hbar";
+    riga.href = "#/scadenzario";
+    const nome = document.createElement("span");
+    nome.className = "name";
+    nome.textContent = t(`homeAging_${row.key}`);
+    const track = document.createElement("span");
+    track.className = "track";
+    const fill = document.createElement("span");
+    fill.className = "fill";
+    fill.style.width = `${Number((row.importo * 1000n) / massimo) / 10}%`;
+    if (row.key !== "corrente") {
+      const late = document.createElement("span");
+      late.className = "late";
+      late.style.width = "100%";
+      fill.append(late);
+    }
+    track.append(fill);
+    const cifra = document.createElement("span");
+    cifra.className = "amount";
+    cifra.textContent = money(row.importo);
+    riga.title = tf(row.quante === 1 ? "homeAgingOne" : "homeAgingMany", { quante: row.quante });
+    riga.append(nome, track, cifra);
+    container.append(riga);
+  }
+}
+
+/**
  * Disegna tutto. `docs` sono i documenti dal più recente, `owed` è `summary(db)`, `byParty` i
  * nomi dei clienti per id.
  */
-export function render({ docs, owed, byParty, costs = [], outlays = [], recurring = [], company = null, today = new Date().toISOString().slice(0, 10) }) {
+export function render({ docs, owed, byParty, payments = [], costs = [], outlays = [], recurring = [], company = null, today = new Date().toISOString().slice(0, 10) }) {
   const attesi = expected(recurring, costs, { today, company });
   const n = figures(docs, owed, { today, costs, outlays, attesi });
 
@@ -579,6 +751,47 @@ export function render({ docs, owed, byParty, costs = [], outlays = [], recurrin
   const esposti = topParties(owed.rows);
   el("wParties").hidden = esposti.length < 2;
   if (esposti.length >= 2) drawParties(el("chartParties"), esposti, byParty);
+
+  // L'insoluto per età. Con una rata sola non c'è una ripartizione da guardare: il numero in cima
+  // e la riga nelle scadenze dicono già tutto.
+  const fasce = aging(owed.rows, { today });
+  const conImporto = fasce.filter((f) => f.importo > 0n);
+  el("wAging").hidden = owed.rows.length < 2 || conImporto.length < 2;
+  if (!el("wAging").hidden) drawBuckets(el("chartAging"), fasce);
+
+  // Fatturato e incassato, mese per mese. Compare con il primo incasso registrato: senza, sarebbe
+  // il grafico del fatturato disegnato due volte, una delle quali piatta.
+  const cassa = cashByMonth(docs, payments, { today });
+  const haIncassi = payments.some((one) => cassa.some((m) => String(one.data || "").slice(0, 7) === `${m.anno}-${String(m.mese).padStart(2, "0")}`));
+  el("wCash").hidden = !haIncassi;
+  if (haIncassi) {
+    const lettere = t("monthLetters").split(" ");
+    drawMonths(el("chartCash"), cassa, {
+      back: "fatturato", front: "incassato", backClass: "before", frontClass: "now",
+      title: "homeCash", empty: "homeMonthsEmpty",
+      tooltip: (m) => tf("homeCashTip", {
+        mese: lettere[m.mese - 1], anno: m.anno,
+        fatturato: money(m.fatturato), incassato: money(m.incassato),
+      }),
+    });
+    el("homeCashNote").hidden = !payments.some((one) => one.importato);
+  }
+
+  // Come pagano i clienti. Serve più di un cliente, o è una classifica di uno.
+  const puntuali = payers(docs, payments);
+  el("wPayers").hidden = puntuali.length < 2;
+  const payersBody = el("homePayersBody");
+  payersBody.textContent = "";
+  for (const row of puntuali) {
+    const giorni = row.giorni === 0
+      ? t("homePayersOnTime")
+      : tf("homePayersDays", { giorni: row.giorni > 0 ? `+${row.giorni}` : String(row.giorni) });
+    payersBody.append(_row([
+      [byParty.get(row.partyId) || "—"],
+      [tf("homePayersCount", { quante: row.quante }), "meta nowrap"],
+      [giorni, row.giorni > 0 ? "right nowrap overdue" : "right nowrap"],
+    ], `#/cliente/${row.partyId}`));
+  }
 
   // I progetti in corso.
   const lavori = projectRows({ today });

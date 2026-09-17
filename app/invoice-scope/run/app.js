@@ -17,7 +17,7 @@ import * as update from "gg/update.js";
 import * as remind from "gg/remind.js";
 import { apply as applyTheme, initial as initialTheme, toggle as toggleTheme } from "gg/theme.js";
 import { download, restore } from "gg/io.js";
-import { get, put, persist } from "gg/store.js";
+import { get, put, list, persist } from "gg/store.js";
 
 import { t, tf, num, lang, otherLang, setLang, resolveLang } from "./i18n.js";
 import { ask, tell } from "./ask.js";
@@ -355,7 +355,10 @@ async function _refresh() {
   const costs = db ? await allCosts(db) : [];
   const outlays = db ? await allOutlays(db) : [];
   const recurring = db ? await allRecurring(db) : [];
-  home.render({ docs, owed, byParty, costs, outlays, recurring, company });
+  // Gli incassi: la Situazione ne fa due cose che le scadenze non fanno — il grafico di quanto è
+  // entrato mese per mese, e la media dei giorni con cui ogni cliente salda.
+  const payments = db ? await list(db, "payments") : [];
+  home.render({ docs, owed, byParty, payments, costs, outlays, recurring, company });
 
   el("tracciato").textContent = `FatturaPA ${TRACCIATO.versione} · ${TRACCIATO.dal}`;
   await _drawDocuments(docs);

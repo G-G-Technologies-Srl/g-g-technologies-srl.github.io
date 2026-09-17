@@ -12,7 +12,10 @@ import { openDatabase } from "../run/db.js";
 import { toString, from } from "../run/decimal.js";
 import * as progetti from "../run/projects.js";
 import * as plan from "gg/plan-model.js";
-import { figures, byMonth, byYear, topParties, projectRows, openQuotes, drafts, taxFigures } from "../run/home.js";
+import {
+  figures, byMonth, byYear, topParties, projectRows, openQuotes, drafts, taxFigures,
+  aging, cashByMonth, payers,
+} from "../run/home.js";
 import { recurringRecord, expected } from "../run/recurring.js";
 import { costRecord } from "../run/costs.js";
 import { reset } from "./fake-store.mjs";
@@ -283,6 +286,83 @@ await prova("le bozze, dalla più recente", async () => {
     { id: "b2", stato: "bozza", data: "2026-09-01" },
   ];
   assert.deepEqual(drafts(docs).map((d) => d.id), ["b2", "b1"]);
+});
+
+// -----------------------------------------------------------------------------------------------------------------
+//  l ' i n s o l u t o ,   l a   c a s s a ,   i   p a g a t o r i
+// -----------------------------------------------------------------------------------------------------------------
+
+await prova("l'insoluto si divide per età, e quello che deve ancora arrivare non è un ritardo", async () => {
+  const rate = [
+    { partyId: "p1", scadenza: "2026-10-31", importo: from("100"), scaduta: false },  // non scaduta
+    { partyId: "p1", scadenza: "2026-09-08", importo: from("50"), scaduta: false },   // oggi: zero giorni
+    { partyId: "p2", scadenza: "2026-08-25", importo: from("200"), scaduta: true },   // 14 giorni
+    { partyId: "p2", scadenza: "2026-07-20", importo: from("300"), scaduta: true },   // 50 giorni
+    { partyId: "p3", scadenza: "2026-06-15", importo: from("400"), scaduta: true },   // 85 giorni
+    { partyId: "p3", scadenza: "2025-12-31", importo: from("500"), scaduta: true },   // oltre un anno
+  ];
+  const fasce = Object.fromEntries(aging(rate, { today: OGGI }).map((f) => [f.key, f]));
+  assert.equal(soldi(fasce.corrente.importo), "150.00", "il giorno stesso non è ancora un ritardo");
+  assert.equal(fasce.corrente.quante, 2);
+  assert.equal(soldi(fasce.g30.importo), "200.00");
+  assert.equal(soldi(fasce.g60.importo), "300.00");
+  assert.equal(soldi(fasce.g90.importo), "400.00");
+  assert.equal(soldi(fasce.oltre.importo), "500.00");
+  // Una rata senza scadenza è dovuta a vista, come nello scadenzario: non finisce fra gli scaduti.
+  const vista = aging([{ partyId: "p1", scadenza: null, importo: from("10") }], { today: OGGI });
+  assert.equal(soldi(vista.find((f) => f.key === "corrente").importo), "10.00");
+});
+
+await prova("il fatturato e l'incassato stanno su due serie, e l'incasso conta nel suo mese", async () => {
+  const docs = [fattura("2026-08-10", "1000"), fattura("2026-09-01", "500")];
+  const incassi = [
+    { docId: "f-2026-08-10-1000", data: "2026-09-05", importo: "1000" },
+    { docId: "f-2026-09-01-500", data: "2026-09-07", importo: "200" },
+    { docId: "x", data: "", importo: "999" },                       // una riga storta non conta
+  ];
+  const mesi = cashByMonth(docs, incassi, { today: OGGI });
+  assert.equal(mesi.length, 12);
+  const agosto = mesi.find((m) => m.mese === 8 && m.anno === 2026);
+  const settembre = mesi.find((m) => m.mese === 9 && m.anno === 2026);
+  assert.equal(soldi(agosto.fatturato), "1000.00");
+  assert.equal(soldi(agosto.incassato), "0.00", "la fattura di agosto è stata incassata a settembre");
+  assert.equal(soldi(settembre.fatturato), "500.00");
+  assert.equal(soldi(settembre.incassato), "1200.00");
+});
+
+await prova("la puntualità si misura sulle fatture chiuse, e non sugli incassi importati", async () => {
+  const doc = (id, partyId, scadenza) => ({
+    id, tipo: "TD01", stato: "emesso", data: "2026-01-10", numero: id, partyId,
+    totali: { totale: from("100").toString(), imponibile: "100", imposta: "0" },
+    pagamento: { rate: [{ scadenza, importo: "100" }] },
+  });
+  const docs = [
+    doc("a1", "p1", "2026-02-10"), doc("a2", "p1", "2026-03-10"),
+    doc("b1", "p2", "2026-02-10"), doc("b2", "p2", "2026-03-10"),
+    doc("c1", "p3", "2026-02-10"), doc("c2", "p3", "2026-03-10"),
+    doc("d1", "p4", "2026-02-10"), doc("d2", "p4", "2026-03-10"),
+  ];
+  const incassi = [
+    { docId: "a1", data: "2026-02-05", importo: "100" },             // cinque giorni in anticipo
+    { docId: "a2", data: "2026-03-09", importo: "100" },             // uno in anticipo
+    { docId: "b1", data: "2026-03-12", importo: "100" },             // trenta in ritardo
+    { docId: "b2", data: "2026-03-30", importo: "100" },             // venti in ritardo
+    { docId: "c1", data: "2026-02-10", importo: "100", importato: { lotto: "x" } },
+    { docId: "c2", data: "2026-03-10", importo: "100", importato: { lotto: "x" } },
+    { docId: "d1", data: "2026-02-08", importo: "40" },              // pagate a metà, tutte e due
+    { docId: "d2", data: "2026-03-08", importo: "40" },
+  ];
+  const classifica = payers(docs, incassi);
+  assert.deepEqual(classifica.map((r) => r.partyId), ["p1", "p2"], "prima chi paga prima");
+  assert.equal(classifica[0].giorni, -3, "la media dei due anticipi");
+  assert.equal(classifica[1].giorni, 25);
+  assert.equal(classifica[0].quante, 2);
+  // p3 aveva due fatture saldate, ma con incassi importati: la loro data è la scadenza, e
+  // contarli direbbe che quel cliente paga in giornata mentre nessuno lo ha mai verificato.
+  // p4 ha pagato a metà: una fattura aperta non è una risposta.
+  assert.ok(!classifica.some((r) => r.partyId === "p3" || r.partyId === "p4"));
+  // E una fattura sola non fa una media.
+  assert.deepEqual(payers([docs[0]], [incassi[0]]), []);
 });
 
 console.log(`home: ${passed} prove passate`);
