@@ -164,6 +164,132 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://ggtechnologies.sm/formazione/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/formazione/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/training/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/formazione/"/>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/en/training/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/formazione/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/training/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/formazione/"/>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/formazione/uso-professionale-ai/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/formazione/uso-professionale-ai/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/training/professional-ai-use/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/formazione/uso-professionale-ai/"/>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/en/training/professional-ai-use/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/formazione/uso-professionale-ai/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/training/professional-ai-use/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/formazione/uso-professionale-ai/"/>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/formazione/modelli-ai-locali/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/formazione/modelli-ai-locali/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/training/ai-models-local/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/formazione/modelli-ai-locali/"/>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/en/training/ai-models-local/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/formazione/modelli-ai-locali/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/training/ai-models-local/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/formazione/modelli-ai-locali/"/>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/formazione/sviluppo-software-claude-code/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/formazione/sviluppo-software-claude-code/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/training/software-development-claude-code/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/formazione/sviluppo-software-claude-code/"/>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/en/training/software-development-claude-code/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/formazione/sviluppo-software-claude-code/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/training/software-development-claude-code/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/formazione/sviluppo-software-claude-code/"/>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/formazione/produzione-qualita/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/formazione/produzione-qualita/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/training/production-quality/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/formazione/produzione-qualita/"/>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/en/training/production-quality/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/formazione/produzione-qualita/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/training/production-quality/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/formazione/produzione-qualita/"/>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/formazione/clienti-amministrazione/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/formazione/clienti-amministrazione/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/training/customers-administration/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/formazione/clienti-amministrazione/"/>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/en/training/customers-administration/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/formazione/clienti-amministrazione/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/training/customers-administration/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/formazione/clienti-amministrazione/"/>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/formazione/contratti-accordi/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/formazione/contratti-accordi/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/training/contracts-agreements/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/formazione/contratti-accordi/"/>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/en/training/contracts-agreements/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/formazione/contratti-accordi/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/training/contracts-agreements/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/formazione/contratti-accordi/"/>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://ggtechnologies.sm/insights/</loc>
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/"/>

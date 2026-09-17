@@ -388,7 +388,7 @@
       align-items: center;
       gap: 28px;
     }
-    .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.05rem; letter-spacing: -0.01em; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.05rem; letter-spacing: -0.01em; white-space: nowrap; }
     .brand-mark {
       display: grid; place-items: center;
     }
@@ -448,8 +448,9 @@
       .brand-mark svg circle.click { display: none; }
     }
 
-    .nav-links { display: flex; align-items: center; gap: 26px; margin-left: auto; }
+    .nav-links { display: flex; align-items: center; gap: 22px; margin-left: auto; }
     .nav-links a {
+      white-space: nowrap;
       font-size: 0.92rem;
       font-weight: 500;
       color: var(--muted);
@@ -536,6 +537,14 @@
     .menu-toggle.open span::before { transform: translateY(6px) rotate(45deg); }
     .menu-toggle.open span::after { transform: translateY(-6px) rotate(-45deg); }
 
+    /* Seven menu entries: between tablet and wide desktop the call-to-action button gives way,
+       since "Contatti" in the menu leads to the same place. */
+    @media (max-width: 1240px) and (min-width: 901px) {
+      .nav { gap: 18px; }
+      .nav-links { gap: 16px; }
+      .nav-cta { display: none; }
+    }
+
     @media (max-width: 900px) {
       .nav { gap: 12px; }
       .brand { font-size: 0.95rem; white-space: nowrap; }
@@ -555,6 +564,25 @@
       .nav-links a { padding: 10px 0; font-size: 1.05rem; width: 100%; }
       .menu-toggle { display: block; margin-left: auto; }
       .nav-cta { display: none; }
+    }
+    /* Phones: brand, theme toggle, language switch and menu button must fit in the width.
+       Measured at 360, 375, 390 and 414 px; below 340 the theme toggle gives way and the theme
+       follows the system setting. */
+    @media (max-width: 480px) {
+      .nav { padding: 0 16px; gap: 8px; }
+      .brand { gap: 8px; }
+      .brand-mark svg { width: 26px; height: 26px; }
+      .nav-actions { gap: 6px; }
+      .theme-toggle { width: 34px; height: 34px; }
+      .lang-switch a, .lang-switch .current { min-width: 30px; padding: 5px 8px; }
+      .menu-toggle { width: 36px; }
+    }
+    @media (max-width: 380px) {
+      .brand-name { font-size: 0.86rem; }
+      .brand-payoff { font-size: 0.5rem; letter-spacing: 0.12em; }
+    }
+    @media (max-width: 340px) {
+      .theme-toggle { display: none; }
     }
 
     /* ===============================================================================================================
@@ -1036,6 +1064,7 @@
 
       <div class="nav-links" id="navLinks">
         <a href="#services"><span class="en">Services</span></a>
+        <a class="en" href="/en/training/">Training</a>
         <a href="#podz">Podz.AI</a>
         <a class="en" href="/en/insights/">Insights</a>
         <a class="en" href="/en/app/">Apps</a>
@@ -1311,6 +1340,28 @@
     </section>
 
     <!-- ===============================================================================================================
+         Training: a short band pointing to the catalogue. Formal register, like the training pages.
+         ================================================================================================================ -->
+    <section id="training">
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">
+            
+            <span class="en">Training</span>
+          </div>
+          
+          <h2 class="en">Practical AI courses, <span class="grad-text">for companies and professionals</span>.</h2>
+          
+          <p class="section-intro en">Six courses with a set programme, four hours in two sessions, online or on site: from professional use of assistants to local models, from software development to contracts.</p>
+          <div class="hero-ctas" style="margin-top: 28px;">
+            
+            <a class="btn btn-primary en" href="/en/training/">See the courses</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===============================================================================================================
          Podz.AI spotlight
          ================================================================================================================ -->
     <section id="podz">
@@ -1491,10 +1542,10 @@
               who work with confidential data.
             </p>
             <p class="en">
-              The wearable work went into a
-              <a href="/en/services/medical-wearables/">peer-reviewed study</a> published in
-              “Sensors” in 2024, written with the Italian National Research Council and four universities:
-              nine hundred emergency workers followed for twelve months.
+              The wearable work went into two
+              <a href="/en/services/medical-wearables/">peer-reviewed studies</a> in “Sensors”.
+              The 2024 one, written with the Italian National Research Council and four universities,
+              followed nine hundred emergency workers for twelve months.
             </p>
             
             <p class="en">
@@ -1540,14 +1591,14 @@
                 <p class="en">Designed and developed entirely in Europe</p>
               </div>
             </div>
-            <!-- The two facts an outsider can check without asking us: a DOI and a public register. -->
+            <!-- The facts an outsider can check without asking us: DOIs, a public register, certificates. -->
             <div class="fact">
               <span class="f-dot"></span>
               <div>
                 
                 <h4 class="en">Published research</h4>
                 
-                <p class="en">Peer-reviewed study in “Sensors”, 2024</p>
+                <p class="en">Two studies in “Sensors”, 2023 and 2024</p>
               </div>
             </div>
             <div class="fact">
@@ -1557,6 +1608,17 @@
                 <h4 class="en">Accredited Innovation Manager</h4>
                 
                 <p class="en">Gian Angelo Geminiani, on the Italian ministry register since 2020</p>
+              </div>
+            </div>
+            <!-- Same credentials as the About page card: EITCA/AI and the NVIDIA instructor course,
+                 each with a public verification link there. -->
+            <div class="fact">
+              <span class="f-dot"></span>
+              <div>
+                
+                <h4 class="en">Certified AI training</h4>
+                
+                <p class="en">European EITCA/AI programme, 2025 · NVIDIA DLI, 2019</p>
               </div>
             </div>
           </div>
@@ -1693,6 +1755,7 @@
             <li><a class="en" href="/en/services/robotics-automation/">Robotics &amp; Automation</a></li>
             <li><a class="en" href="/en/services/artificial-intelligence/">Artificial Intelligence</a></li>
             <li><a class="en" href="/en/services/on-premise-ai/">On-premise AI</a></li>
+            <li><a class="en" href="/en/training/">Training</a></li>
             </ul>
         </div>
 

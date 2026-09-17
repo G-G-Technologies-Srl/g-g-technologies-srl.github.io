@@ -285,7 +285,7 @@
       align-items: center;
       gap: 28px;
     }
-    .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.05rem; letter-spacing: -0.01em; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.05rem; letter-spacing: -0.01em; white-space: nowrap; }
     .brand-mark {
       display: grid; place-items: center;
     }
@@ -345,8 +345,9 @@
       .brand-mark svg circle.click { display: none; }
     }
 
-    .nav-links { display: flex; align-items: center; gap: 26px; margin-left: auto; }
+    .nav-links { display: flex; align-items: center; gap: 22px; margin-left: auto; }
     .nav-links a {
+      white-space: nowrap;
       font-size: 0.92rem;
       font-weight: 500;
       color: var(--muted);
@@ -433,6 +434,14 @@
     .menu-toggle.open span::before { transform: translateY(6px) rotate(45deg); }
     .menu-toggle.open span::after { transform: translateY(-6px) rotate(-45deg); }
 
+    /* Seven menu entries: between tablet and wide desktop the call-to-action button gives way,
+       since "Contatti" in the menu leads to the same place. */
+    @media (max-width: 1240px) and (min-width: 901px) {
+      .nav { gap: 18px; }
+      .nav-links { gap: 16px; }
+      .nav-cta { display: none; }
+    }
+
     @media (max-width: 900px) {
       .nav { gap: 12px; }
       .brand { font-size: 0.95rem; white-space: nowrap; }
@@ -452,6 +461,25 @@
       .nav-links a { padding: 10px 0; font-size: 1.05rem; width: 100%; }
       .menu-toggle { display: block; margin-left: auto; }
       .nav-cta { display: none; }
+    }
+    /* Phones: brand, theme toggle, language switch and menu button must fit in the width.
+       Measured at 360, 375, 390 and 414 px; below 340 the theme toggle gives way and the theme
+       follows the system setting. */
+    @media (max-width: 480px) {
+      .nav { padding: 0 16px; gap: 8px; }
+      .brand { gap: 8px; }
+      .brand-mark svg { width: 26px; height: 26px; }
+      .nav-actions { gap: 6px; }
+      .theme-toggle { width: 34px; height: 34px; }
+      .lang-switch a, .lang-switch .current { min-width: 30px; padding: 5px 8px; }
+      .menu-toggle { width: 36px; }
+    }
+    @media (max-width: 380px) {
+      .brand-name { font-size: 0.86rem; }
+      .brand-payoff { font-size: 0.5rem; letter-spacing: 0.12em; }
+    }
+    @media (max-width: 340px) {
+      .theme-toggle { display: none; }
     }
 
     /* ===============================================================================================================
@@ -1138,6 +1166,76 @@ section.tinted {
 .case-note { color: var(--faint); font-size: 0.78rem; margin: 16px 0 0; }
 
 @media (max-width: 640px) { .research { padding: 26px 22px; } }
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Price table — the training fees. Framed like .research (the highlighted box of this site), with the
+   table rules of .prose. On phones each row becomes a small card: label above value, no sideways scroll.
+   --------------------------------------------------------------------------------------------------------------- */
+.price-box {
+  position: relative;
+  overflow: hidden;
+  margin-top: 40px;
+  background: linear-gradient(170deg, var(--panel-2), var(--panel) 60%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px 30px 26px;
+}
+.price-box::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--gradient);
+}
+.price-table { width: 100%; border-collapse: collapse; font-size: 0.94rem; }
+.price-table th, .price-table td {
+  text-align: left;
+  padding: 16px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.price-table th {
+  color: var(--faint);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-bottom-color: var(--border-strong);
+}
+.price-table td { color: var(--muted); }
+.price-table td:first-child { color: var(--text); font-weight: 600; }
+.price-table td.price { color: var(--text); white-space: nowrap; }
+.price-table tr:last-child td { border-bottom: 0; }
+.price-notes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 20px;
+}
+.price-notes div {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 16px 18px;
+}
+.price-notes h4 { font-size: 0.95rem; margin: 0 0 6px; }
+.price-notes p { color: var(--muted); font-size: 0.88rem; margin: 0; }
+@media (max-width: 900px) { .price-notes { grid-template-columns: 1fr; } }
+@media (max-width: 700px) {
+  .price-box { padding: 8px 20px 12px; }
+  .price-table thead { display: none; }
+  .price-table, .price-table tbody, .price-table tr, .price-table td { display: block; width: 100%; }
+  .price-table tr { padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .price-table tr:last-child { border-bottom: 0; }
+  .price-table td { border: 0; padding: 3px 0; }
+  .price-table td.price { white-space: normal; }
+  .price-table td:not(:first-child)::before {
+    content: attr(data-label) " · ";
+    color: var(--faint);
+    font-size: 0.8rem;
+  }
+  .price-table td:empty { display: none; }
+}
 
 /* ---------------------------------------------------------------------------------------------------------------
    Insights — long-form prose. One measure, one rhythm, nothing decorative: these pages are read
