@@ -52,7 +52,7 @@
     "url": "https://ggtechnologies.sm/en/app/invoice-scope/",
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "Any (web browser)",
-    "softwareVersion": "0.52.0",
+    "softwareVersion": "0.53.0",
     "datePublished": "2026-09-03",
     "dateModified": "2026-09-17",
     "license": "https://www.apache.org/licenses/LICENSE-2.0",
@@ -201,15 +201,19 @@
               <li>Keeps your bank accounts, and puts the default one on new documents: the IBAN is written once instead of on every invoice. A customer can have their own VAT rate and account: you write them on their record, and their documents start out already filled in.</li>
               <li>Keeps the payment schedule: each document's instalments, the overdue ones and what is still owed, and the payments you record with date, amount and account.</li>
               <li>Imports customers, price list and documents from Fatture in Cloud, from the export sheets as you download them — the .xls included — with the line detail if you export that too, and whole invoices from the XML files in the backup. Before anything is written it shows what it read — how many arrive, which are already here, what it left out — and writes only once you confirm.</li>
-              <li>Works for an Italian company and for a San Marino one: issuing from San Marino has a profile of its own, carrying what the tax office needs for the document to pass validation.</li>
+              <li>Knows the six directions an invoice can take — from Italy to Italy, to San Marino and abroad; from San Marino to Italy, to another San Marino operator and abroad — and for each writes the file that channel accepts. It is not a choice you make: your country and the customer's decide it, and both are already on file.</li>
+              <li>Handles invoices between San Marino operators, compulsory from 1 January 2027: single-stage tax, seven-zero recipient code, goods type on every line, self-billed invoice, debit note and advance invoice.</li>
+              <li>Asks for the goods type once per document — «this invoice contains: services, goods, subcontracting with materials» — and says right there what follows: whether a delivery note is needed, and which date the deadline runs from. The lines take it from there, and the codes come with words.</li>
+              <li>Works out the deadline for transmitting the document, which is not the payment due date: it shows it on the document and in the overview, with what being late costs, which is not the same on the two San Marino channels.</li>
+              <li>Towards a country where no electronic invoice exists it produces no file and says why: that document is printed, and faking an obligation would be worse than not having one.</li>
               <li>Works out the VAT on the summary per rate, which is how the Italian exchange system recomputes it.</li>
               <li>Keeps the arithmetic exact, with eight decimals on quantities and unit prices: energy, machining by weight and services by the minute all use them.</li>
               <li>Proposes the 2.00 € stamp duty when the untaxed amount goes over 77.47 €, and leaves the decision to charge it to you.</li>
               <li>Works out withholding tax on the taxable amount, without touching the VAT.</li>
               <li>Writes the XML file in the FatturaPA format, named as the rules require.</li>
               <li>Checks the document before letting you export it, and says which field, which rule and what to do.</li>
-              <li>Keeps the numbering running by year, and refuses two documents with the same number.</li>
-              <li>Exports and re-imports everything as a JSON file you can open and read without this app. Choose a folder and it writes the file there by itself at every change, with one copy a day: inside Dropbox or iCloud, the backup travels on its own.</li>
+              <li>Keeps the numbering by year and by series: invoices have theirs, credit notes theirs, quotes theirs. Two documents cannot come out with the same number, and counters from a numbering started elsewhere pick up where they were.</li>
+              <li>Exports and re-imports everything as a JSON file you can open and read without this app. Choose a folder and it writes the file there by itself at every change, with one copy a day: inside Dropbox or iCloud, the backup travels on its own. And when there is no folder it says so: with no server that is the only copy there is, and a warning that comes back is worth more than an explanation read once.</li>
               <li>Records purchases too: the invoices you receive — from their XML file, or by hand — and expenses without an invoice, with the supplier, the category, the tax and the due date, and the payments you make; a received credit note subtracts by itself. The schedule takes both directions, with the balance at the top; the overview shows the year's margin, revenue and costs month by month, who you owe most, and the quarter's and year's VAT — on sales, on purchases, to pay — to check the accountant's figures. For a San Marino company the single-stage import tax on purchases is recorded as a cost, at its own rate.</li>
               <li>Knows the costs that come back: write the hosting fee, the rent or the insurance once, with its frequency, and the app expects them month by month to the end of the year. The overview shows the year's costs as they will end up, the schedule shows what will go out; when the invoice arrives you confirm it and the expected row disappears. An invoice from the same supplier in the same month attaches by itself when imported.</li>
               <li>Exports a CSV of the period for whoever keeps the books: issued documents and purchases in the same file, with a column saying which way each one goes.</li>
@@ -254,7 +258,14 @@
             <span class="f-dot" aria-hidden="true"></span>
             <div>
               <h4>Pictures</h4>
-              <p>The images and attachments in a page stay in the browser like everything else, and travel in the project package. The JSON archive carries the text: it is the copy rewritten at every change, and an image inside a text file would make it a hundred times heavier.</p>
+              <p>The images and attachments in a page stay in the browser like everything else, and travel in the project package. In the linked folder they come out as real files, beside the archive: inside the JSON they would make it a hundred times heavier, and that file is rewritten at every change.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Copies</h4>
+              <p>With a folder linked, the app writes the archive there at every change and keeps one copy a day, images included. The overview always says how the copy stands — when it was made, what it holds, whether it is missing — and you can open a copy and see how many documents, customers and images it carries, against what is here now. Where the browser cannot write to a folder, the manual export remains, and the app reminds you to make it.</p>
             </div>
           </div>
           <div class="fact">
@@ -282,7 +293,14 @@
             <span class="f-dot" aria-hidden="true"></span>
             <div>
               <h4>Format</h4>
-              <p>FatturaPA, specification 1.9.1, in force from 15 May 2026.</p>
+              <p>FatturaPA, specification 1.9.1, in force from 15 May 2026. For San Marino, the VFPR12 1.2.3 schema published by the tax office, which is the same one.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Directions</h4>
+              <p>Six, and they change the file: Italy to Italy, San Marino or abroad; San Marino to Italy, San Marino or abroad. The last has no electronic invoice, and the app says so instead of making one.</p>
             </div>
           </div>
           <div class="fact">
@@ -296,7 +314,7 @@
             <span class="f-dot" aria-hidden="true"></span>
             <div>
               <h4>Sending</h4>
-              <p>Yours to do, from the tax agency's own portal or through your intermediary.</p>
+              <p>Yours to do, from the tax agency's own portal, from TribWeb when you issue from San Marino, or through your intermediary.</p>
             </div>
           </div>
           <div class="fact">
@@ -328,7 +346,7 @@
             </div>
           </div>
         </div>
-        <p class="app-meta"><span><b>Version</b> 0.52.0</span><span><b>Updated</b> 17 September 2026</span><span><b>Licence</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope" rel="noopener">Source code</a></p>
+        <p class="app-meta"><span><b>Version</b> 0.53.0</span><span><b>Updated</b> 17 September 2026</span><span><b>Licence</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope" rel="noopener">Source code</a></p>
       </div>
     </section>
 
@@ -355,7 +373,11 @@
           </details>
           <details class="faq-item reveal">
             <summary>Does it cover invoices with San Marino?</summary>
-            <p>Yes, in both directions, and issuing from San Marino has a profile of its own: the hub as transmitter, the COE in place of the VAT number, a real postcode and province, and the TM code on the line and in front of the exemption note. It is taken from an invoice already registered, not from a reconstruction. From Italy to San Marino the nature is N3.3 with the tax office's recipient code. Invoicing between San Marino operators arrives once the technical rules are published.</p>
+            <p>Yes, in all three directions that involve it. From Italy to San Marino the recipient code is the tax office's and the nature is N3.3. From San Marino to Italy the hub is the transmitter, the COE takes the place of the VAT number, the postcode and province are the real ones — San Marino is not «abroad» for an address — and the goods type sits on the line and in front of the exemption note. From San Marino to another San Marino operator the internal invoice applies, compulsory from 1 January 2027: VAT is not shown, the recipient code is seven zeros and the transmitter is the company itself. Three different files, and the app picks by looking at the two countries.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>I sell services: do the goods type and the cession type concern me?</summary>
+            <p>The goods type does, and it is 3: the law its name refers to, no. 131 of 1991, is the one on invoicing services in general. The cession type does not: the single-stage refund exists for goods types 1 and 2, so on a services invoice that code would produce nothing, and the app does not ask for it. One thing worth knowing that is not about the app: an invoice for services alone towards Italy stops at the San Marino tax office and is not forwarded to the Italian exchange system, because the agreement between the two States covers goods. The copy for the Italian customer is yours to send.</p>
           </details>
           <details class="faq-item reveal">
             <summary>What is the difference between projects here and Plan Scope?</summary>
@@ -367,7 +389,7 @@
           </details>
           <details class="faq-item reveal">
             <summary>What happens when I change computer?</summary>
-            <p>You export the archive and import it on the other side — or, better, link a Dropbox or iCloud folder in the settings: the app writes the archive there by itself, and on the other computer you import it from there. With no server that is the only copy there is, so it is worth doing before you change machine or clear the site's data.</p>
+            <p>You link the same folder — the Dropbox or iCloud one the app writes to — and the app finds the archive there and brings it back in, images included. It is the same road as a restore: the folder is not just where files end up, it is where you come back from. Without a folder, the manual export and import remain, and without even that there is nothing: no server holds a copy of your data, which is why the app keeps saying so until a folder is there.</p>
           </details>
           <details class="faq-item reveal">
             <summary>How does the app update, once installed?</summary>

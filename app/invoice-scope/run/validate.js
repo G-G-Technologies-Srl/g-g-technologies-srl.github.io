@@ -264,6 +264,11 @@ function _righe(problems, doc, profile) {
       problems.push(_problem(`${campo}.aliquota`, "vMerceSenzaImposta", "vMerceSenzaImpostaFix",
         { valore: String(line.tm) }));
     }
+    // `NONRIMB` esiste per escludere una riga dal rimborso monofase: dove i rimborsi non ci sono —
+    // l'Italia, l'esportazione — è un marcatore che nessuno legge, e scriverlo non fa niente.
+    if (line.nonRimborsabile && !profile.cessioni) {
+      problems.push(_problem(`${campo}.nonRimborsabile`, "vNonRimbFuoriLuogo", "vNonRimbFuoriLuogoFix"));
+    }
     // **Il Tipo Merce è obbligatorio**, e non su tutte le righe: su quelle che portano un importo.
     // Una riga a zero — una descrizione, un titolo di sezione — non ha una merce da classificare.
     if (profile.tmObbligatorio && !line.tm && !_rigaVuota(line)) {
@@ -450,14 +455,22 @@ export function validate(doc, {
   // altri soldi su una fattura già emessa, e senza il riferimento nessuno sa su quale.
   const nota = doc.tipo === "TD04" || doc.tipo === "TD05";
   const collegate = doc.fattureCollegate || [];
-  if (nota && !collegate.length) {
+  // **L'eccezione, e la sola.** Una nota per variazioni contrattuali non si riferisce a una fattura
+  // ma a un contratto preesistente: la causale lo dichiara, e `DatiFattureCollegate` va *omesso*.
+  // Quindi qui non si chiede il riferimento — e sui documenti che non sono note quella spunta non
+  // ha senso, perché è una forma di nota di variazione, non un attributo di una fattura.
+  if (doc.variazioniContrattuali && !nota) {
+    problems.push(_problem("variazioniContrattuali", "vVariazioniSoloNote", "vVariazioniSoloNoteFix"));
+  }
+  if (nota && !doc.variazioniContrattuali && !collegate.length) {
     problems.push(_problem("fattureCollegate", "vCreditNoteLink", "vCreditNoteLinkFix"));
   }
   // **La data di una nota non può precedere la fattura che rettifica.** Lo dicono con le stesse
   // parole i due documenti sammarinesi, e il file viene scartato: una rettifica che arriva prima
   // dell'operazione non è una rettifica.
   for (const [i, ref] of collegate.entries()) {
-    if (nota && ref.data && DATE.test(String(ref.data)) && DATE.test(String(doc.data || ""))
+    if (nota && !doc.variazioniContrattuali
+      && ref.data && DATE.test(String(ref.data)) && DATE.test(String(doc.data || ""))
       && String(doc.data) < String(ref.data)) {
       problems.push(_problem(`fattureCollegate[${i + 1}].data`, "vNotaPrimaDellaFattura",
         "vNotaPrimaDellaFatturaFix", { data: ref.data }));

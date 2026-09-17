@@ -642,4 +642,51 @@ test("il codice del tipo cessione esce come una causale sua", () => {
   assert.ok(text.indexOf("TC:10") < text.indexOf("Fornitura di luglio"), "il codice viene prima");
 });
 
+test("una nota per variazioni contrattuali non nomina nessuna fattura, e lo dichiara", () => {
+  // I due documenti sammarinesi chiedono la causale e **l'omissione** di DatiFattureCollegate: è
+  // l'unica nota che non rettifica un documento, perché dipende da un contratto già in essere.
+  // Con il riferimento addosso, che è il caso vero: la nota nasce da una fattura — `creditNote()`
+  // lo scrive — e poi qualcuno spunta «variazione contrattuale». Il dato resta, il file no.
+  const nota = {
+    ...INTERNA,
+    tipo: "TD04",
+    ddt: [],
+    fattureCollegate: [{ numero: "2026/000100", data: "2026-08-01" }],
+    variazioniContrattuali: true,
+  };
+  assert.deepEqual(validate(nota, { company: SM, party: SM_CLIENTE }), []);
+  const { text } = build(nota, { company: SM, party: SM_CLIENTE });
+  assert.match(text, /<Causale>VariazioniContrattuali<\/Causale>/);
+  assert.ok(!text.includes("DatiFattureCollegate"), "il riferimento non deve finire nel file");
+
+  // Il riferimento però resta scritto sul documento: togliendo la spunta torna, e allora il file
+  // lo porta di nuovo.
+  const conRiferimento = { ...nota, variazioniContrattuali: undefined };
+  assert.deepEqual(validate(conRiferimento, { company: SM, party: SM_CLIENTE }), []);
+  assert.ok(build(conRiferimento, { company: SM, party: SM_CLIENTE }).text.includes("DatiFattureCollegate"));
+
+  // Su una fattura la spunta non significa niente.
+  assert.ok(validate({ ...INTERNA, variazioniContrattuali: true }, { company: SM, party: SM_CLIENTE })
+    .map((p) => p.campo).includes("variazioniContrattuali"));
+});
+
+test("una riga fuori dal rimborso monofase si marca, e solo dove i rimborsi esistono", () => {
+  const dentro = {
+    ...INTERNA,
+    righe: [{ ...INTERNA.righe[0], tm: "1", nonRimborsabile: true }],
+  };
+  assert.deepEqual(validate(dentro, { company: SM, party: SM_CLIENTE }), []);
+  const { text } = build(dentro, { company: SM, party: SM_CLIENTE });
+  // Un blocco a sé, senza valore accanto: è la presenza a dire tutto.
+  assert.match(text, /<AltriDatiGestionali>\s*<TipoDato>NONRIMB<\/TipoDato>\s*<\/AltriDatiGestionali>/);
+  // E il tipo merce resta nel suo blocco, davanti.
+  assert.ok(text.indexOf("<TipoDato>TM</TipoDato>") < text.indexOf("<TipoDato>NONRIMB</TipoDato>"));
+
+  // In esportazione i rimborsi si inseriscono a mano: lì il marcatore non lo legge nessuno.
+  const verso = { ...dentro, righe: [{ ...dentro.righe[0], natura: "N3.1" }] };
+  assert.ok(validate(verso, { company: SM, party: PARTY }).map((p) => p.campo)
+    .includes("righe[1].nonRimborsabile"));
+  assert.ok(!build(verso, { company: SM, party: PARTY }).text.includes("NONRIMB"));
+});
+
 console.log(`validate: ${passed} prove passate`);

@@ -210,6 +210,7 @@ function _drawAmbito() {
   nota.hidden = !nota.textContent;
 
   _drawCessione();
+  _drawVariazioni();
 }
 
 /**
@@ -219,6 +220,23 @@ function _drawAmbito() {
  * lavoro con materie prime. Su una fattura di servizi il codice non produce niente, quindi il campo
  * non c'è — offrirlo vorrebbe dire suggerire un adempimento che non esiste.
  */
+/**
+ * La nota che non rettifica una fattura.
+ *
+ * Compare sulle due note di variazione, e solo dove la sigla ha un lettore: è una regola dei
+ * documenti sammarinesi, non del tracciato italiano.
+ */
+function _drawVariazioni() {
+  const box = el("docVariazioniBox");
+  const profile = profileFor(company, party);
+  const nota = current.tipo === "TD04" || current.tipo === "TD05";
+  box.hidden = !nota || !profile.datiGestionali;
+  if (box.hidden) return;
+  const spunta = el("docVariazioni");
+  spunta.checked = Boolean(current.variazioniContrattuali);
+  spunta.disabled = !editable(current);
+}
+
 function _drawCessione() {
   const box = el("docTipoCessioneBox");
   const profile = profileFor(company, party);
@@ -263,7 +281,10 @@ function _cell(line, field, {
 } = {}) {
   const td = document.createElement("td");
   let input;
-  if (options) {
+  if (mode === "check") {
+    input = document.createElement("input");
+    input.type = "checkbox";
+  } else if (options) {
     input = document.createElement("select");
     for (const value of options) {
       const option = document.createElement("option");
@@ -276,13 +297,15 @@ function _cell(line, field, {
     input.inputMode = mode;
     if (list) input.setAttribute("list", list);
   }
-  input.value = line[field] ?? "";
+  if (mode === "check") input.checked = Boolean(line[field]);
+  else input.value = line[field] ?? "";
   input.className = width;
   input.disabled = !editable(current);
-  input.addEventListener("input", () => {
+  input.addEventListener(mode === "check" ? "change" : "input", () => {
     // A number is read as a person writes it — `1.250,50` as much as `1250.5` — and stored in the
     // one form the arithmetic accepts. The field keeps what was typed; only the line changes.
-    line[field] = mode === "decimal" ? (parseAmount(input.value) ?? "") : input.value;
+    if (mode === "check") line[field] = input.checked || undefined;
+    else line[field] = mode === "decimal" ? (parseAmount(input.value) ?? "") : input.value;
     if (onEdit) onEdit();
     _drawSummary();
     _touch();
@@ -356,6 +379,8 @@ function _drawLines() {
   // è una colonna in meno per la descrizione.
   const conTm = Boolean(profileFor(company, party).datiGestionali);
   el("docLinesTable").classList.toggle("no-tm", !conTm || ambitoDoc(current) !== "beni");
+  el("docLinesTable").classList.toggle("no-rimb",
+    !profileFor(company, party).cessioni || !rimborsabile(current));
   _drawAmbito();
   _toggleNatura();
   // The two notes under the table only when they say something: a hint about `Invio` on the last
@@ -423,6 +448,9 @@ function _drawLines() {
       // quella: rifare la tabella intera toglierebbe il fuoco dal campo appena toccato.
       ["tm", { width: "small", cell: "col-tm", options: ["", ..._codiciAmmessi()],
         onEdit: () => _drawAmbito() }],
+      // La riga che dal rimborso monofase resta fuori. Compare con il tipo cessione, e per la stessa
+      // ragione: dove un rimborso non c'è, questo segno non lo legge nessuno.
+      ["nonRimborsabile", { mode: "check", cell: "col-nonrimb" }],
     ];
     for (const [field, options] of cells) {
       const also = options.onEdit;
@@ -1164,6 +1192,15 @@ export function connect(db) {
   // insieme, e lo fa perché la norma le tiene insieme: una fattura porta un ambito solo. Le righe
   // che hanno già un codice di quell'ambito restano come sono — dentro i beni le differenze sono
   // volute — e le altre prendono quello con cui l'ambito parte.
+  // **La spunta cambia due cose insieme**, ed è giusto così: la causale che il file porta e il
+  // riferimento alla fattura che sparisce sono due facce dello stesso fatto. Il riferimento resta
+  // però scritto sul documento — togliendo la spunta torna, invece di essere andato perso.
+  el("docVariazioni").addEventListener("change", (event) => {
+    current.variazioniContrattuali = event.target.checked || undefined;
+    _drawAmbito();
+    _touch();
+  });
+
   el("docTipoCessione").addEventListener("change", (event) => {
     current.tipoCessione = event.target.value || null;
     _touch();

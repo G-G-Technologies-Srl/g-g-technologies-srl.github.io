@@ -6,7 +6,7 @@
 
 import assert from "node:assert/strict";
 
-import { termine, stato, fineMese, primoGiornoNonFestivo, giorniFra } from "../run/terms.js";
+import { termine, stato, fineMese, primoGiornoNonFestivo, annoPiuUno, giorniFra } from "../run/terms.js";
 import { IT_SDI, SM_EXPORT, SM_INTERNA } from "../run/fatturapa.js";
 
 let passed = 0;
@@ -105,10 +105,35 @@ test("con più documenti di trasporto conta il primo, che scade prima", () => {
   assert.equal(calcolato.data, "2026-09-30");
 });
 
+test("una nota di variazione ha il suo termine: un anno e un giorno dalla fattura", () => {
+  // Scritto così nell'Allegato B: «minimo {DatiFattureCollegate/Data} + 1 anno + 1 giorno». Il
+  // giorno in più è nel testo, non è un arrotondamento nostro.
+  assert.equal(annoPiuUno("2026-08-01"), "2027-08-02");
+  assert.equal(annoPiuUno("2024-02-29"), "2025-03-01", "anche a cavallo di un 29 febbraio");
+  const nota = {
+    ...BENI, tipo: "TD04", ddt: [],
+    fattureCollegate: [{ numero: "2026/0009", data: "2026-08-01" }, { numero: "2026/0002", data: "2026-03-10" }],
+  };
+  // La più vecchia, che è quella che scade prima.
+  const calcolato = termine(nota, SM_EXPORT);
+  assert.equal(calcolato.base, "2026-03-10");
+  assert.equal(calcolato.data, "2027-03-11");
+  assert.equal(calcolato.ambito, "nota");
+
+  // All'interno della Repubblica un termine per le note non è scritto da nessuna parte.
+  assert.equal(termine(nota, SM_INTERNA), null);
+
+  // E una nota per variazioni contrattuali non rettifica nessuna fattura: il suo termine dipende
+  // dall'anno di competenza pattuito, che il documento non dice.
+  assert.equal(termine({ ...nota, variazioniContrattuali: true }, SM_EXPORT), null);
+  // Né si inventa un termine per una nota che non nomina ancora niente.
+  assert.equal(termine({ ...nota, fattureCollegate: [] }, SM_EXPORT), null);
+});
+
 test("dove un termine non c'è, non se ne inventa uno", () => {
   // L'Italia: il canale non ne dichiara.
   assert.equal(termine(BENI, IT_SDI), null);
-  // Una nota di variazione rettifica una fattura che il suo termine l'ha già avuto.
+  // All'interno, una nota di variazione non ha un termine scritto.
   assert.equal(termine({ ...BENI, tipo: "TD04" }, SM_INTERNA), null);
   // Un preventivo non si trasmette a nessuno.
   assert.equal(termine({ ...BENI, tipo: "preventivo" }, SM_INTERNA), null);

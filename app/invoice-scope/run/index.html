@@ -527,6 +527,13 @@
     </div>
     <p class="note" id="docPartyNone" data-t="docPartyNone" hidden></p>
     <p class="note" id="docLinkedNote" hidden></p>
+    <!-- Una nota che non rettifica una fattura ma dipende da un contratto già in essere: premi,
+         adjustment fee. I due documenti sammarinesi chiedono la causale «VariazioniContrattuali» e
+         l'omissione del riferimento alla fattura, e sono due facce dello stesso fatto. -->
+    <div class="ambito" id="docVariazioniBox" hidden>
+      <label class="check"><input type="checkbox" id="docVariazioni"><span data-t="docVariazioni"></span></label>
+      <p class="note" data-t="docVariazioniNota"></p>
+    </div>
     <!-- Da dove viene un documento arrivato per importazione: chi lo apre fra un anno deve saperlo, e
          la riga ricostruita dal registro non spiega da sola perché è una sola. -->
     <p class="note" id="docImportedNote" hidden></p>
@@ -566,6 +573,9 @@
           <th data-t="f_descrizione"></th><th class="right" data-t="hQuantita"></th><th data-t="hUnita"></th>
           <th class="right" data-t="hPrezzo"></th><th class="right" data-t="hIva"></th><th class="col-natura" data-t="f_natura"></th>
           <th class="col-tm" data-t="hTm"></th>
+          <!-- «NR»: la riga resta fuori dal rimborso monofase. Colonna stretta e titolo corto,
+               perché la parola intera farebbe la testata alta il doppio delle righe. -->
+          <th class="col-nonrimb" data-t="hNonRimb"></th>
           <th class="right" data-t="docTotale"></th><th></th>
         </tr></thead>
         <tbody id="docLinesBody"></tbody>

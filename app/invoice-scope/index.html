@@ -52,7 +52,7 @@
     "url": "https://ggtechnologies.sm/app/invoice-scope/",
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "Any (web browser)",
-    "softwareVersion": "0.52.0",
+    "softwareVersion": "0.53.0",
     "datePublished": "2026-09-03",
     "dateModified": "2026-09-17",
     "license": "https://www.apache.org/licenses/LICENSE-2.0",
@@ -201,15 +201,19 @@
               <li>Tiene i conti correnti bancari dell'azienda, e mette il predefinito nei documenti nuovi: l'IBAN si scrive una volta invece che su ogni fattura. Un cliente può avere la sua aliquota e il suo conto: si scrivono nella sua scheda, e i suoi documenti nascono già compilati.</li>
               <li>Tiene lo scadenzario: le rate di ogni documento, quelle scadute e quanto resta da incassare, e gli incassi che registri con data, importo e conto.</li>
               <li>Importa da Fatture in Cloud clienti, listino e documenti, dai fogli dell'esportazione così come li scarichi — anche il .xls — con il dettaglio delle righe se esporti anche quello, e le fatture intere dagli XML del backup. Prima di scrivere ti mostra cosa ha letto — quanti entrano, quali sono già lì, cosa ha lasciato fuori — e scrive solo se confermi.</li>
-              <li>Vale per un'azienda italiana e per una sammarinese: chi emette da San Marino ha un profilo suo, con quello che l'Ufficio Tributario richiede perché il documento passi la validazione.</li>
+              <li>Conosce le sei direzioni che una fattura può prendere — dall'Italia verso l'Italia, verso San Marino e verso l'estero; da San Marino verso l'Italia, verso un altro sammarinese e verso l'estero — e per ciascuna scrive il file che quel canale accetta. Non è una scelta che devi fare tu: la decidono il tuo paese e quello del cliente, che sono già in anagrafica.</li>
+              <li>Fa le fatture interne fra operatori sammarinesi, obbligatorie dal 1° gennaio 2027: imposta monofase, codice destinatario a sette zeri, tipo merce su ogni riga, autofattura del cessionario, nota di debito e acconto.</li>
+              <li>Il tipo merce lo chiede una volta per documento — «questa fattura contiene: servizi, beni, lavorazione con materiale» — e dice lì che cosa comporta: se serve il documento di trasporto, e da quale data si conta il termine. Le righe lo prendono da lì, e i codici hanno le parole accanto.</li>
+              <li>Calcola il termine entro cui il documento va trasmesso, che non è la scadenza dell'incasso: lo mostra sul documento e nella Situazione, con la conseguenza del ritardo, che nei due canali sammarinesi non è la stessa.</li>
+              <li>Verso un paese dove la fattura elettronica non è prevista non produce un file e spiega perché: quel documento si stampa, e fingere un adempimento sarebbe peggio che non averlo.</li>
               <li>Calcola l'IVA sul riepilogo per aliquota, che è il modo in cui la ricalcola il Sistema di Interscambio.</li>
               <li>Tiene i conti in aritmetica esatta, con otto decimali su quantità e prezzi unitari: l'energia, le lavorazioni a peso e i servizi al minuto li usano.</li>
               <li>Propone il bollo da 2,00 € quando l'importo senza IVA supera i 77,47 €, e ti lascia decidere se addebitarlo.</li>
               <li>Calcola la ritenuta d'acconto sull'imponibile, senza toccare l'IVA.</li>
               <li>Scrive il file XML nel formato FatturaPA, con il nome che le regole richiedono.</li>
               <li>Controlla il documento prima di lasciartelo esportare, e dice quale campo, quale regola e cosa fare.</li>
-              <li>Tiene la numerazione progressiva per anno, e non lascia due documenti con lo stesso numero.</li>
-              <li>Esporta e reimporta tutto in un file JSON, che si apre e si legge senza questa app. Se scegli una cartella, lo scrive lì da sola a ogni modifica, con una copia al giorno: dentro Dropbox o iCloud, il backup viaggia da sé.</li>
+              <li>Tiene la numerazione per anno e per serie: le fatture hanno la loro, le note di credito la loro, i preventivi la loro. Due documenti non possono uscire con lo stesso numero, e i contatori di una numerazione cominciata altrove si riprendono da dove erano.</li>
+              <li>Esporta e reimporta tutto in un file JSON, che si apre e si legge senza questa app. Se scegli una cartella, lo scrive lì da sola a ogni modifica, con una copia al giorno: dentro Dropbox o iCloud, il backup viaggia da sé. E se una cartella non c'è, te lo dice: senza server quella è l'unica copia che esiste, e un avviso che torna vale più di una spiegazione letta una volta.</li>
               <li>Registra anche gli acquisti: le fatture che ricevi — dal loro file XML, o a mano — e le spese senza fattura, con il fornitore, la categoria, l'imposta e la scadenza, e i pagamenti che fai; una nota di credito ricevuta toglie da sola. Lo scadenzario prende i due versi, con il saldo in cima; la Situazione mostra il margine dell'anno, ricavi e costi mese per mese, a chi devi di più, e l'IVA del trimestre e dell'anno — sulle vendite, sugli acquisti, da versare — per controllare i conti del commercialista. Per un'azienda sammarinese l'imposta monofase sugli acquisti si registra come costo, con la sua aliquota.</li>
               <li>Conosce i costi che tornano: scrivi una volta il canone, l'affitto o l'assicurazione, con la cadenza, e l'app li aspetta mese per mese fino a fine anno. La Situazione mostra i costi dell'anno come finiranno, lo scadenzario quello che uscirà; quando la fattura arriva la confermi e la riga attesa sparisce. Una fattura dello stesso fornitore nello stesso mese si aggancia da sola all'importazione.</li>
               <li>Esporta un CSV del periodo per chi tiene la contabilità: documenti emessi e acquisti nello stesso file, con una colonna che dice il verso.</li>
@@ -254,7 +258,14 @@
             <span class="f-dot" aria-hidden="true"></span>
             <div>
               <h4>Figure</h4>
-              <p>Le immagini e gli allegati di una pagina stanno nel browser come tutto il resto, e viaggiano nel pacchetto del progetto. L'archivio JSON porta il testo: è la copia che si riscrive a ogni modifica, e un'immagine dentro un file di testo la farebbe pesare cento volte tanto.</p>
+              <p>Le immagini e gli allegati di una pagina stanno nel browser come tutto il resto, e viaggiano nel pacchetto del progetto. Nella cartella collegata escono come file veri, accanto all'archivio: dentro il JSON peserebbero cento volte tanto, e quel file si riscrive a ogni modifica.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Copie</h4>
+              <p>Con una cartella collegata l'app ci scrive l'archivio a ogni modifica e ne tiene una copia al giorno, immagini comprese. La Situazione dice sempre come sta la copia — quando è stata fatta, che cosa contiene, se manca — e si può aprire la copia e vedere quanti documenti, clienti e immagini porta, confrontati con quello che c'è adesso. Dove il browser non sa scrivere su una cartella resta l'esportazione a mano, e l'app ricorda di farla.</p>
             </div>
           </div>
           <div class="fact">
@@ -282,7 +293,14 @@
             <span class="f-dot" aria-hidden="true"></span>
             <div>
               <h4>Tracciato</h4>
-              <p>FatturaPA, specifiche 1.9.1, in vigore dal 15 maggio 2026.</p>
+              <p>FatturaPA, specifiche 1.9.1, in vigore dal 15 maggio 2026. Per San Marino, lo schema VFPR12 1.2.3 pubblicato dall'Ufficio Tributario, che è lo stesso.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Direzioni</h4>
+              <p>Sei, e cambiano il file: Italia verso Italia, San Marino o estero; San Marino verso Italia, San Marino o estero. L'ultima non ha una fattura elettronica, e l'app lo dice invece di produrne una.</p>
             </div>
           </div>
           <div class="fact">
@@ -296,7 +314,7 @@
             <span class="f-dot" aria-hidden="true"></span>
             <div>
               <h4>Trasmissione</h4>
-              <p>La fai tu, dal portale «Fatture e Corrispettivi» o con il tuo intermediario.</p>
+              <p>La fai tu, dal portale «Fatture e Corrispettivi», da TribWeb se emetti da San Marino, o con il tuo intermediario.</p>
             </div>
           </div>
           <div class="fact">
@@ -328,7 +346,7 @@
             </div>
           </div>
         </div>
-        <p class="app-meta"><span><b>Versione</b> 0.52.0</span><span><b>Aggiornata il</b> 17 settembre 2026</span><span><b>Licenza</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope" rel="noopener">Codice sorgente</a></p>
+        <p class="app-meta"><span><b>Versione</b> 0.53.0</span><span><b>Aggiornata il</b> 17 settembre 2026</span><span><b>Licenza</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope" rel="noopener">Codice sorgente</a></p>
       </div>
     </section>
 
@@ -355,7 +373,11 @@
           </details>
           <details class="faq-item reveal">
             <summary>Vale anche per le fatture con San Marino?</summary>
-            <p>Sì, nei due versi, e chi emette da San Marino ha un profilo suo: trasmittente dell'HUB, COE al posto della partita IVA, CAP e provincia veri, e il codice TM sulla riga e in testa alla nota di esenzione. È ricavato da una fattura già registrata, non da una ricostruzione. Dall'Italia verso San Marino la natura è N3.3 con il codice destinatario dell'Ufficio Tributario. La fatturazione interna fra operatori sammarinesi arriverà quando saranno pubblicate le regole tecniche.</p>
+            <p>Sì, in tutte e tre le direzioni che lo riguardano. Dall'Italia verso San Marino il codice destinatario è quello dell'Ufficio Tributario e la natura N3.3. Da San Marino verso l'Italia il trasmittente è l'HUB, il COE prende il posto della partita IVA, il CAP e la provincia sono quelli veri — San Marino non è «estero» per l'indirizzo — e il tipo merce sta sulla riga e in testa alla nota di esenzione. Da San Marino verso un altro sammarinese vale la fattura interna, obbligatoria dal 1° gennaio 2027: l'IVA non si espone, il codice destinatario è sette zeri e chi trasmette è l'azienda stessa. Sono tre file diversi, e l'app sceglie da sé guardando i due paesi.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>Faccio servizi: il tipo merce e il tipo cessione mi riguardano?</summary>
+            <p>Il tipo merce sì, ed è il 3: la legge che il suo nome richiama, la 131 del 1991, è quella sulla fatturazione delle prestazioni di servizi in generale. Il tipo cessione no: il rimborso monofase esiste per i tipi merce 1 e 2, quindi su una fattura di servizi quel codice non produrrebbe niente, e infatti l'app non te lo chiede. C'è una cosa che conviene sapere e che non riguarda l'app: una fattura di soli servizi verso l'Italia si ferma all'Ufficio Tributario e non viene inoltrata al Sistema di Interscambio, perché l'accordo fra i due Stati riguarda i beni. Al cliente italiano la copia la mandi tu.</p>
           </details>
           <details class="faq-item reveal">
             <summary>Che differenza c'è fra i progetti qui e Plan Scope?</summary>
@@ -367,7 +389,7 @@
           </details>
           <details class="faq-item reveal">
             <summary>Che succede se cambio computer?</summary>
-            <p>Esporti l'archivio e lo reimporti dall'altra parte — o, meglio, colleghi una cartella di Dropbox o iCloud nelle impostazioni: l'app ci scrive l'archivio da sola, e sull'altro computer lo importi da lì. Senza server quella è l'unica copia che esiste, quindi conviene farlo prima di cambiare macchina o di cancellare i dati del sito.</p>
+            <p>Colleghi la stessa cartella — quella di Dropbox o iCloud dove l'app scrive — e l'app ci trova l'archivio e lo riporta dentro, immagini comprese. È la stessa strada di un ripristino: la cartella non è solo un posto dove finiscono i file, è da dove si torna. Senza cartella restano l'esportazione e la reimportazione a mano, e senza nemmeno quella non c'è niente: non esiste un server con una copia dei tuoi dati, ed è il motivo per cui l'app insiste finché una cartella non c'è.</p>
           </details>
           <details class="faq-item reveal">
             <summary>Come si aggiorna l'app, una volta installata?</summary>

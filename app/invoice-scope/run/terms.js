@@ -38,8 +38,11 @@ import { MERCE_CON_DDT } from "./fatturapa.js";
 /** Quanti giorni prima della scadenza l'app comincia a dirlo. */
 export const GIORNI_AVVISO = 15;
 
-/** I tipi che accompagnano una cessione, e che quindi hanno un termine. */
+/** I tipi che accompagnano una cessione, e che quindi hanno il termine della cessione. */
 const CON_TERMINE = new Set(["TD01", "TD24", "TD02"]);
+
+/** Le due note di variazione, che di termine ne hanno un altro. */
+const NOTE = new Set(["TD04", "TD05"]);
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
@@ -100,6 +103,26 @@ export function fineMese(iso, mesi) {
 }
 
 /**
+ * Un anno e un giorno dopo una data.
+ *
+ * Il termine di vidimazione di una nota di variazione, scritto così nell'Allegato B: «minimo
+ * {DatiFattureCollegate/Data} + 1 anno + 1 giorno». Il giorno in più c'è nel testo e non è un
+ * arrotondamento nostro.
+ */
+export function annoPiuUno(iso) {
+  const parts = _parts(iso);
+  if (!parts) return null;
+  // **Il 29 febbraio, che l'anno dopo non c'è.** Sommare i giorni alla cieca porterebbe al 2 marzo,
+  // cioè a un giorno di tempo in più di quello che la formula concede. Si ferma all'ultimo giorno
+  // del mese — il 28 — e poi somma il giorno: si sbaglia dalla parte di chi presenta in tempo, come
+  // per i giorni festivi.
+  const anno = parts.y + 1;
+  const ultimo = new Date(Date.UTC(anno, parts.m, 0)).getUTCDate();
+  const giorno = Math.min(parts.d, ultimo);
+  return _iso(new Date(Date.UTC(anno, parts.m - 1, giorno + 1)));
+}
+
+/**
  * Il primo giorno non festivo a partire da questo, fine settimana esclusi.
  *
  * Avanti e non indietro: il termine cade a fine mese, e un sabato non lo anticipa al venerdì.
@@ -126,6 +149,19 @@ export function termine(doc, profile) {
   if (!doc || !profile || !profile.termini) return null;
   if (!kind(doc).fiscale) return null;
   const tipo = doc.tipo || "TD01";
+
+  // **Le note hanno un termine loro**, e si conta dalla fattura, non dalla merce: «un anno e un
+  // giorno» dalla più vecchia fra quelle che rettificano. Una nota per variazioni contrattuali non
+  // ne rettifica nessuna — il suo termine dipende dall'anno di competenza pattuito, che il documento
+  // non dice, e inventarlo sarebbe peggio che tacere.
+  if (NOTE.has(tipo)) {
+    if (!profile.termini.note || doc.variazioniContrattuali) return null;
+    const date = (doc.fattureCollegate || []).map((ref) => ref.data).filter((d) => _parts(d));
+    if (!date.length) return null;
+    const base = date.slice().sort()[0];
+    return { data: annoPiuUno(base), base, ambito: "nota", mesi: 12, bloccante: true };
+  }
+
   if (!CON_TERMINE.has(tipo)) return null;
 
   const ambito = _ambito(doc);

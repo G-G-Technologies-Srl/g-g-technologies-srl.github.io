@@ -145,6 +145,10 @@ const CASI = [
     ...CTX_SM,
     profile: { ...SM_EXPORT, codiciTm: ["1", "2", "3"] },
   }],
+  // La spunta della variazione contrattuale su una fattura, e il marcatore «non rimborsabile» su un
+  // canale dove i rimborsi non esistono.
+  [{ ...DOC, variazioniContrattuali: true }, ctx],
+  [{ ...DOC, righe: [{ ...RIGA, nonRimborsabile: true }] }, ctx],
   // Il tipo cessione dove un rimborso non può esistere, e un codice fuori elenco dove può.
   [{ ...DOC, righe: [{ ...RIGA, aliquota: "0", natura: "N4", tm: "3" }], tipoCessione: "10",
     ddt: [{ numero: "D1", data: "2026-08-01" }] }, CTX_INTERNA],

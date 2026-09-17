@@ -221,7 +221,10 @@ export const SM_EXPORT = {
   merceSenzaImposta: ["2", "3"],
   // Beni: tre mesi dalla data del DDT, e oltre il termine la fattura **non è vidimabile**. Servizi:
   // due mesi dalla data della fattura.
-  termini: { beni: 3, servizi: 2, bloccante: true },
+  // E per le note di variazione un termine tutto loro: un anno e un giorno dalla fattura più vecchia
+  // fra quelle che rettificano. All'interno della Repubblica un termine per le note non è scritto da
+  // nessuna parte, e non se ne inventa uno.
+  termini: { beni: 3, servizi: 2, bloccante: true, note: true },
 };
 
 /**
@@ -452,9 +455,14 @@ function _datiGenerali(doc, computed, profile) {
       // la descrizione resta leggibile: infilarli nello stesso elemento vorrebbe dire che chi
       // scrive due parole di troppo rompe il codice che l'Ufficio Tributario cerca lì dentro.
       doc.tipoCessione ? ["Causale", `TC:${doc.tipoCessione}`] : null,
+      // **La sigla che dice perché questa nota non nomina nessuna fattura.** Una nota per variazioni
+      // contrattuali — premi, adjustment fee — non rettifica un documento ma dipende da un contratto
+      // che c'era prima: i due documenti sammarinesi chiedono questa causale e l'omissione di
+      // `DatiFattureCollegate`, che è la riga qui sotto.
+      doc.variazioniContrattuali ? ["Causale", "VariazioniContrattuali"] : null,
       ["Causale", doc.causale],
     ]],
-    ...(doc.fattureCollegate || []).map((ref) => ["DatiFattureCollegate", [
+    ...(doc.variazioniContrattuali ? [] : (doc.fattureCollegate || [])).map((ref) => ["DatiFattureCollegate", [
       ["IdDocumento", ref.numero],
       ["Data", ref.data],
     ]]),
@@ -488,6 +496,12 @@ function _beniServizi(doc, computed, profile) {
       ["TipoDato", profile.datiGestionali],
       ["RiferimentoTesto", String(line.tm)],
     ]]] : []),
+    // **Una riga che dal rimborso monofase resta fuori.** Un blocco a sé, come lo scrive il
+    // Documento B: `NONRIMB` non ha un valore accanto, è la sua presenza a dire tutto. Solo dove i
+    // rimborsi esistono — altrove sarebbe un marcatore che nessuno legge.
+    ...(profile.cessioni && line.nonRimborsabile
+      ? [["AltriDatiGestionali", [["TipoDato", "NONRIMB"]]]]
+      : []),
   ]]);
 
   const riepiloghi = computed.riepiloghi.map((r) => ["DatiRiepilogo", [

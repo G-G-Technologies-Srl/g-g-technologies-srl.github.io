@@ -433,6 +433,7 @@ select:disabled { cursor: default; opacity: 1; color: var(--text); background-im
    per classe invece che tolta dal markup: l'intestazione sta nell'HTML e le celle le disegna il
    JavaScript, e una colonna che sparisce da una sola delle due parti sposta tutte le altre. */
 .rows.no-tm .col-tm { display: none; }
+.rows.no-rimb .col-nonrimb { display: none; }
 /* Stessa cosa per la natura: compare quando una riga va a zero, e prima no. */
 .rows.no-natura .col-natura, .rows.no-natura .cell-natura { display: none; }
 
@@ -947,6 +948,7 @@ dialog li::before {
   #docLinesTable td:last-child { grid-column: 3; justify-self: end; align-self: end; }
   #docLinesTable td input, #docLinesTable td select { width: 100%; max-width: none; }
   #docLinesTable.no-tm td.col-tm { display: none; }
+  #docLinesTable.no-rimb td.col-nonrimb { display: none; }
   #docLinesTable.no-natura td.cell-natura { display: none; }
 }
 
@@ -1304,3 +1306,8 @@ dialog li::before {
 @media (max-width: 640px) {
   .danger-row { flex-direction: column; align-items: flex-start; }
 }
+
+/* La spunta «non rimborsabile» sta al centro della sua cella: è un segno, non un valore da
+   leggere in fila con gli altri. */
+.rows td.col-nonrimb { text-align: center; }
+.ambito label.check { display: flex; align-items: center; gap: 0.5rem; }
