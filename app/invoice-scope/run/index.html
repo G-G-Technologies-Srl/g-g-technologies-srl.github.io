@@ -1544,6 +1544,7 @@
     <p class="note" data-t="solleciteNote"></p>
     <div class="form">
       <label class="wide"><span data-t="solleciteWho"></span><select id="dunParty"></select></label>
+      <label class="wide"><span data-t="solleciteTo"></span><input id="dunTo" type="email" autocomplete="off"></label>
       <label class="wide"><span data-t="solleciteSubjectLabel"></span><input id="dunSubject" readonly></label>
       <label class="wide"><span data-t="solleciteText"></span><textarea id="dunText" rows="14"></textarea></label>
     </div>
@@ -1551,7 +1552,8 @@
       <button type="button" class="button ghost" id="dunCancel" data-t="close"></button>
       <span class="meta" id="dunDone"></span>
       <span class="spacer"></span>
-      <button type="button" class="button" id="dunCopy" data-t="solleciteCopy"></button>
+      <button type="button" class="button ghost" id="dunCopy" data-t="solleciteCopy"></button>
+      <button type="button" class="button" id="dunMail" data-t="solleciteMail"></button>
     </div>
   </form>
 </dialog>

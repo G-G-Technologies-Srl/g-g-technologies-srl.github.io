@@ -101,6 +101,30 @@ export function testo(gruppo, { company = {}, party = {} } = {}) {
   ].join("\n");
 }
 
+/**
+ * A chi si manda: la prima email fra le persone di riferimento del cliente.
+ *
+ * **Non la PEC**, e non è una svista. La posta certificata è il canale degli atti — una diffida,
+ * una comunicazione che deve fare data certa — e un sollecito è una cosa che si scrive all'ufficio
+ * pagamenti, non un atto. Mandarlo via PEC alza il tono di due gradi senza volerlo, e la prima
+ * risposta arriva dall'amministrazione invece che da chi paga.
+ *
+ * Vuoto quando non c'è: il messaggio si apre lo stesso, con il destinatario da scrivere a mano, e
+ * il foglio dice che in anagrafica quell'indirizzo manca.
+ */
+export function destinatario(party = {}) {
+  const persona = (party.contatti || []).find((one) => String(one.email || "").includes("@"));
+  return persona ? String(persona.email).trim() : "";
+}
+
+/** L'indirizzo `mailto:` con oggetto e testo già dentro. */
+export function mailto(gruppo, { company = {}, party = {} } = {}) {
+  const a = encodeURIComponent(destinatario(party));
+  const oggettoQui = encodeURIComponent(oggetto(company));
+  const corpo = encodeURIComponent(testo(gruppo, { company, party }));
+  return `mailto:${a}?subject=${oggettoQui}&body=${corpo}`;
+}
+
 /** L'oggetto della email, che è la riga che decide se il resto viene letto. */
 export function oggetto(company = {}) {
   return tf("solleciteSubject", { azienda: company.denominazione || "" });
@@ -123,8 +147,12 @@ function el(id) {
 function _mostra() {
   const gruppo = gruppi.find((uno) => uno.partyId === el("dunParty").value) || gruppi[0];
   if (!gruppo) return;
+  const cliente = anagrafiche.get(gruppo.partyId) || {};
+  const a = destinatario(cliente);
+  el("dunTo").value = a;
+  el("dunTo").placeholder = a ? "" : t("solleciteNoAddress");
   el("dunSubject").value = oggetto(azienda || {});
-  el("dunText").value = testo(gruppo, { company: azienda || {}, party: anagrafiche.get(gruppo.partyId) || {} });
+  el("dunText").value = testo(gruppo, { company: azienda || {}, party: cliente });
   el("dunDone").textContent = "";
 }
 
@@ -173,6 +201,21 @@ export function connect(db) {
   database = db;
   el("dunCancel").addEventListener("click", () => el("dunDialog").close());
   el("dunParty").addEventListener("change", _mostra);
+  // La posta si apre con il programma di chi usa l'app: l'indirizzo `mailto:` porta oggetto e
+  // testo già dentro, e il destinatario quando l'anagrafica ce l'ha. Da lì in poi decide una
+  // persona — che è il punto in cui un sollecito si sbaglia, e l'unico posto in cui va deciso.
+  el("dunMail").addEventListener("click", () => {
+    const gruppo = gruppi.find((uno) => uno.partyId === el("dunParty").value) || gruppi[0];
+    if (!gruppo) return;
+    const cliente = anagrafiche.get(gruppo.partyId) || {};
+    // Il testo che si apre è quello che si vede, corretto a mano compreso: `mailto` si costruisce
+    // dal campo e non dal modello, o le modifiche di chi scrive resterebbero nel foglio.
+    const corpo = encodeURIComponent(el("dunText").value);
+    const soggetto = encodeURIComponent(el("dunSubject").value);
+    const a = encodeURIComponent(el("dunTo").value.trim());
+    window.location.href = `mailto:${a}?subject=${soggetto}&body=${corpo}`;
+  });
+
   el("dunCopy").addEventListener("click", async () => {
     try {
       await navigator.clipboard.writeText(el("dunText").value);

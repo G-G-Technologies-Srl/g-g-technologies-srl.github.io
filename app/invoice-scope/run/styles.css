@@ -918,6 +918,23 @@ dialog li::before {
 .hbar .amount { white-space: nowrap; font-variant-numeric: tabular-nums; }
 
 
+/* ----- le barre orizzontali, sul telefono: l'etichetta su una riga sua -----
+
+   Tre colonne dentro trecentosettantacinque pixel lasciano all'etichetta centoquaranta pixel, e
+   «Scaduto da 1–30 giorni» ci arriva tagliato a metà — proprio nel riquadro che esiste per dire da
+   quanto una cosa è ferma. Sul telefono la riga diventa due: le parole per intero sopra, la barra
+   e la cifra sotto. */
+@media (max-width: 640px) {
+  .hbar {
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "name name" "track amount";
+    row-gap: 6px;
+  }
+  .hbar .name { grid-area: name; white-space: normal; }
+  .hbar .track { grid-area: track; }
+  .hbar .amount { grid-area: amount; }
+}
+
 /* ----- le righe del documento, sul telefono: una scheda per riga ----- */
 
 /* Otto colonne di campi in una striscia che scorre di lato erano usabili a fatica — la descrizione

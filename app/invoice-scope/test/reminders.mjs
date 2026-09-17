@@ -17,7 +17,7 @@
 import assert from "node:assert/strict";
 
 import { from } from "../run/decimal.js";
-import { perCliente, testo, oggetto } from "../run/reminders.js";
+import { perCliente, testo, oggetto, destinatario, mailto } from "../run/reminders.js";
 
 let passed = 0;
 function prova(nome, fn) {
@@ -82,6 +82,30 @@ prova("il testo nomina le fatture, il totale, il conto — e lascia aperta la po
   // fondo a un sollecito è la ragione per cui il pagamento arriva ancora più tardi.
   const senza = testo(gruppi[0], { company: { denominazione: "Tizio" }, party: { denominazione: "Caio" } });
   assert.ok(!senza.includes("Coordinate"));
+});
+
+prova("il destinatario è la prima email delle persone di riferimento, non la PEC", () => {
+  const conPersone = {
+    denominazione: "Bitmakers Srl",
+    pec: "bitmakers@pec.sm",
+    contatti: [
+      { nome: "Amministrazione", email: "" },
+      { nome: "Chiara", email: " chiara@bitmakers.sm " },
+      { nome: "Ivan", email: "ivan@bitmakers.sm" },
+    ],
+  };
+  // La PEC è il canale degli atti: un sollecito mandato lì alza il tono di due gradi senza volerlo.
+  assert.equal(destinatario(conPersone), "chiara@bitmakers.sm");
+  assert.equal(destinatario({ denominazione: "Senza nessuno", pec: "x@pec.sm" }), "");
+  assert.equal(destinatario(), "");
+
+  // L'indirizzo `mailto` porta oggetto e testo, e si apre anche senza destinatario: chi scrive lo
+  // completa nel programma di posta.
+  const gruppi = perCliente([rata("p1", "2026/0001", "2026-04-07", "1500")], { today: OGGI });
+  const link = mailto(gruppi[0], { company: AZIENDA, party: conPersone });
+  assert.ok(link.startsWith("mailto:chiara%40bitmakers.sm?subject="));
+  assert.ok(decodeURIComponent(link).includes("2026/0001"));
+  assert.ok(mailto(gruppi[0], { company: AZIENDA, party: {} }).startsWith("mailto:?subject="));
 });
 
 console.log(`reminders: ${passed} prove passate`);
