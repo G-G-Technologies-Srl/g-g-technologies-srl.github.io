@@ -899,9 +899,11 @@ function _drawTerms(company, docs, anagrafiche) {
   const vicini = stati.filter((s) => s.key === "vicino").length;
   pannello.hidden = !scaduti && !vicini;
   if (pannello.hidden) return;
-  el("termNoteText").textContent = scaduti
-    ? tf("termPanelLate", { scaduti, vicini })
-    : tf("termPanelSoon", { vicini });
+  // Tre frasi e non due: «ci sono 3 documenti fuori termine, e 0 in scadenza» è una frase che
+  // nessuno scriverebbe, e si legge sulla schermata che apre l'app.
+  el("termNoteText").textContent = scaduti && vicini
+    ? tf("termPanelBoth", { scaduti, vicini })
+    : (scaduti ? tf("termPanelLate", { scaduti }) : tf("termPanelSoon", { vicini }));
   el("termNoteGo").textContent = t("termPanelGo");
 }
 

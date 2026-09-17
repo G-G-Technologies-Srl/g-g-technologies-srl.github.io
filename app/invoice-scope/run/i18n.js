@@ -217,7 +217,8 @@ const IT = {
   typePreventivo: "Preventivo",
   typeDdt: "Documento di trasporto",
   docNoFile: "Verso questo paese la fattura elettronica non è prevista: si stampa.",
-  termPanelLate: "Ci sono {scaduti} documenti fuori termine di trasmissione, e {vicini} in scadenza.",
+  termPanelBoth: "Ci sono {scaduti} documenti fuori termine di trasmissione, e {vicini} in scadenza.",
+  termPanelLate: "Ci sono {scaduti} documenti fuori termine di trasmissione.",
   termPanelSoon: "Ci sono {vicini} documenti vicini al termine di trasmissione.",
   termPanelGo: "Vedi i documenti",
   termDue: "Da trasmettere entro il {data}.",
@@ -972,9 +973,6 @@ const IT = {
   vDdtRequired: "manca il documento di trasporto",
   vDdtRequiredFix: "Per questi tipi merce il DDT è obbligatorio, e da lì si contano i termini di "
     + "trasmissione. Indica numero e data.",
-  vNoChannel: "verso questo paese non esiste la fattura elettronica",
-  vNoChannelFix: "Da San Marino il formato elettronico vale con l'Italia e all'interno della "
-    + "Repubblica. Qui la fattura si stampa.",
   vTypeChannel: "questo tipo di documento il canale non lo accetta",
   vTypeChannelFix: "Su questa direzione passano {elenco}. Il documento è {valore}.",
   vNotaPrimaDellaFattura: "la nota porta una data precedente alla fattura che rettifica",
@@ -1385,7 +1383,8 @@ const EN = {
   typePreventivo: "Quote",
   typeDdt: "Delivery note",
   docNoFile: "Towards this country there is no electronic invoice: this one is printed.",
-  termPanelLate: "{scaduti} documents are past their transmission deadline, and {vicini} are close to it.",
+  termPanelBoth: "{scaduti} documents are past their transmission deadline, and {vicini} are close to it.",
+  termPanelLate: "{scaduti} documents are past their transmission deadline.",
   termPanelSoon: "{vicini} documents are close to their transmission deadline.",
   termPanelGo: "See the documents",
   termDue: "To be transmitted by {data}.",
@@ -2120,9 +2119,6 @@ const EN = {
   vDdtRequired: "the delivery note is missing",
   vDdtRequiredFix: "For these goods types a delivery note is required, and the transmission "
     + "deadline is counted from it. Give its number and date.",
-  vNoChannel: "there is no electronic invoice towards this country",
-  vNoChannelFix: "From San Marino the electronic format applies with Italy and inside the "
-    + "Republic. Here the invoice is printed.",
   vTypeChannel: "this channel does not accept this kind of document",
   vTypeChannelFix: "This direction takes {elenco}. The document is {valore}.",
   vNotaPrimaDellaFattura: "the note is dated before the invoice it corrects",

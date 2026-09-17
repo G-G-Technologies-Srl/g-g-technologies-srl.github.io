@@ -163,16 +163,6 @@ const CASI = [
       { ...RIGA, aliquota: "0", natura: "N3.1", tm: "3", prezzoUnitario: "-80.00" },
     ],
   }, CTX_SM],
-  // Da San Marino verso un paese diverso dall'Italia non esiste un file da produrre.
-  [DOC, {
-    company: AZIENDA_SM,
-    party: {
-      denominazione: "Beispiel GmbH",
-      partitaIva: "DE123456789",
-      paese: "DE",
-      sede: { indirizzo: "Musterstrasse", cap: "10115", comune: "Berlin" },
-    },
-  }],
 ];
 
 const TUTTI = CASI.flatMap(([doc, context]) => validate(doc, context));

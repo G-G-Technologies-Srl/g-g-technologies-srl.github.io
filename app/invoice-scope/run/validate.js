@@ -383,16 +383,13 @@ export function validate(doc, {
     problems.push(_problem("tipo", "vTypeUnknown", "vTypeUnknownFix",
       { valore: doc.tipo, elenco: TIPI_FISCALI.join(", ") }));
   }
-  // **La direzione senza file.** Da San Marino verso un paese diverso dall'Italia la fattura
-  // elettronica non esiste come adempimento: non la prevede né il decreto sull'interscambio con
-  // l'Italia né quello sulle operazioni interne. Si dice qui, una volta, invece di lasciare che il
-  // documento sembri esportabile fino al momento in cui l'emettitore si rifiuta.
-  if (fiscale && !profile.file) {
-    problems.push(_problem("cliente.paese", "vNoChannel", "vNoChannelFix"));
-  } else if (fiscale && tipoNoto && profile.tipi.length
+  // **Il tipo che il canale accetta, dopo la traduzione.** Una differita da San Marino esce come
+  // `TD01`, quindi il controllo guarda il codice che finisce nel file e non quello dell'app.
+  //
+  // `tipi` vuoto vuol dire «questo canale non ammette niente», che è il caso della direzione senza
+  // file: lì la domanda non si pone affatto, e la risposta la dà `esportabile`.
+  if (fiscale && tipoNoto && profile.tipi.length
     && !profile.tipi.includes(tipoDocumento(doc, profile))) {
-    // **Il tipo che il canale accetta, dopo la traduzione.** Una differita da San Marino esce come
-    // `TD01`, quindi il controllo guarda il codice che finisce nel file e non quello dell'app.
     problems.push(_problem("tipo", "vTypeChannel", "vTypeChannelFix",
       { valore: tipoDocumento(doc, profile), elenco: profile.tipi.join(", ") }));
   }
@@ -531,7 +528,13 @@ export function validate(doc, {
  * That is a different answer from "it has problems", and it is given here rather than by an empty
  * list of problems that would read as a yes.
  */
-export function esportabile(doc, context) {
+export function esportabile(doc, context = {}) {
   if (!kind(doc).fiscale) return false;
+  // **Una direzione senza file è un «no» come quello del preventivo, non un difetto del documento.**
+  // È la lezione di una prova su dati veri: una fattura da San Marino per un cliente tedesco è
+  // legittima — si stampa — e il controllo la trattava come incompleta, quindi l'app si rifiutava
+  // perfino di numerarla. Il blocco va dove esce il file, non dove nasce il numero.
+  const profile = context.profile || profileFor(context.company, context.party);
+  if (!profile.file) return false;
   return validate(doc, context).length === 0;
 }

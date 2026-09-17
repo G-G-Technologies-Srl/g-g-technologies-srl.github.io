@@ -525,11 +525,17 @@ test("il DDT è obbligatorio per i tipi merce che lo prevedono", () => {
   assert.deepEqual(validate(nota, { company: SM, party: SM_CLIENTE }), []);
 });
 
-test("verso un paese diverso dall'Italia, da San Marino non c'è un file", () => {
-  const problemi = validate({ ...INTERNA, righe: [{ ...INTERNA.righe[0], natura: "N3.1" }] },
-    { company: SM, party: UE_CLIENTE });
-  assert.ok(problemi.map((p) => p.campo).includes("cliente.paese"), JSON.stringify(problemi));
-  assert.equal(esportabile(INTERNA, { company: SM, party: UE_CLIENTE }), false);
+test("verso un paese diverso dall'Italia la fattura si emette, ma non diventa un file", () => {
+  // **Trovato provando sui dati veri.** Il controllo diceva «verso questo paese non esiste la
+  // fattura elettronica» come se fosse un difetto del documento, e `issue()` si rifiutava di
+  // numerarlo: l'app non riusciva più a fatturare a un cliente tedesco. Ma quella fattura è
+  // legittima — si stampa — e il «no» riguarda il file, non il documento. Sta dove sta quello del
+  // preventivo: in `esportabile`.
+  const doc = { ...INTERNA, ddt: [], righe: [{ ...INTERNA.righe[0], natura: "N3.1", tm: "3" }] };
+  assert.deepEqual(validate(doc, { company: SM, party: UE_CLIENTE }), []);
+  assert.equal(esportabile(doc, { company: SM, party: UE_CLIENTE }), false);
+  // Lo stesso documento verso l'Italia il file ce l'ha.
+  assert.equal(esportabile(doc, { company: SM, party: PARTY }), true);
   // Dall'Italia verso lo stesso cliente, invece, il file c'è ed è quello di sempre.
   assert.deepEqual(validate({ ...DOC, righe: [{ descrizione: "X", quantita: "1", prezzoUnitario: "10", aliquota: "0", natura: "N3.2" }] },
     { company: COMPANY, party: UE_CLIENTE }), []);
