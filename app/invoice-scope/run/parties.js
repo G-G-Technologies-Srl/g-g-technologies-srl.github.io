@@ -31,6 +31,7 @@ import { ask, tell } from "./ask.js";
 import { from, toString } from "./decimal.js";
 import { PAESI_CON_CAP } from "./fatturapa.js";
 import { NATURE } from "./validate.js";
+import { TIPI_MERCE } from "./fatturapa.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -205,6 +206,24 @@ function _openParty(record) {
  * Sotto i due conti il menù non compare: con uno solo non c'è niente da scegliere, e la voce
  * «quello dell'azienda» lo dice già.
  */
+/**
+ * Un menù dei cinque tipi merce, con le parole.
+ *
+ * Tutti e cinque e non quelli di un ambito: un articolo del listino può essere un servizio oggi e
+ * un bene domani, e qui non c'è un documento di cui rispettare l'ambito.
+ */
+function _menuTm(campo, scelto) {
+  if (!campo) return;
+  campo.textContent = "";
+  for (const code of ["", ...TIPI_MERCE]) {
+    const option = document.createElement("option");
+    option.value = code;
+    option.textContent = code ? `${code} — ${t(`tm${code}`)}` : "—";
+    campo.append(option);
+  }
+  campo.value = scelto || "";
+}
+
 function _fillDefaults(form, data) {
   form.elements.aliquotaPredefinita.placeholder = aliquotaNuova;
   form.elements.aliquotaPredefinita.value = data.aliquotaPredefinita ?? "";
@@ -331,6 +350,7 @@ function _openItem(record) {
 
   const data = record || {};
   for (const name of ITEM_FIELDS) form.elements[name].value = data[name] || "";
+  _menuTm(form.elements.tm, data.tm || "");
   // A new item starts from the company's usual rate, and at zero from its usual nature and TM
   // code: the same defaults a new line gets, so that the list and the document agree.
   if (!record) {

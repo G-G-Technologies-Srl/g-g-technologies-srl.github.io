@@ -69,17 +69,34 @@ const PROGRESSIVO_MAX = 100000;
 export const PAESI_CON_CAP = new Set(["IT", "SM"]);
 
 /**
- * I cinque tipi merce del regime monofase, e le combinazioni che una fattura può contenere.
+ * I cinque tipi merce del regime monofase, raccolti nei tre ambiti che la norma ammette.
  *
- * Le combinazioni non sono un'opinione: una fattura porta **solo** beni (1, 4, 7), **solo** conto
- * lavoro con materie prime (2), **solo** conto lavoro senza (3). Mescolarli è uno scarto, e il
- * gruppo è anche quello che decide se il DDT è obbligatorio.
+ * **Le combinazioni non sono un'opinione**: una fattura porta **solo** beni (1, 4, 7), **solo**
+ * conto lavoro con materie prime (2), **solo** conto lavoro senza materie prime e prestazioni di
+ * servizi (3). Mescolarli è uno scarto.
+ *
+ * **Sono tre ambiti e non cinque codici, ed è il motivo per cui questa tabella ha questa forma.**
+ * La domanda che una persona sa rispondere è «che cosa contiene questa fattura», non «che codice ha
+ * questa riga»: la prima si fa una volta per documento e ha tre risposte, la seconda si fa su ogni
+ * riga e ne ha cinque, di cui quattro sbagliate a priori. Le schermate chiedono la prima e scrivono
+ * la seconda; il file continua a volere il codice sulla riga, e lì resta.
+ *
+ * `ddt` dice se in quell'ambito il documento di trasporto è obbligatorio, e `predefinito` è il
+ * codice con cui si parte quando l'ambito viene scelto e le righe non ne hanno ancora uno.
  */
+export const AMBITI_MERCE = {
+  servizi: { codici: ["3"], predefinito: "3", ddt: false },
+  beni: { codici: ["1", "4", "7"], predefinito: "4", ddt: true },
+  lavorazione: { codici: ["2"], predefinito: "2", ddt: true },
+};
+
 export const TIPI_MERCE = ["1", "2", "3", "4", "7"];
-export const GRUPPI_MERCE = [["1", "4", "7"], ["2"], ["3"]];
+export const GRUPPI_MERCE = Object.values(AMBITI_MERCE).map((a) => a.codici);
 
 /** I tipi merce per cui il DDT è obbligatorio: tutto tranne il 3. */
-export const MERCE_CON_DDT = new Set(["1", "2", "4", "7"]);
+export const MERCE_CON_DDT = new Set(
+  Object.values(AMBITI_MERCE).filter((a) => a.ddt).flatMap((a) => a.codici),
+);
 
 /**
  * The profile for the Italian SdI.
@@ -598,6 +615,52 @@ export function identificativo(value, paese) {
 export function tipoDocumento(doc, profile = IT_SDI) {
   const tipo = (doc || {}).tipo || "TD01";
   return (profile.rimappa || {})[tipo] || tipo;
+}
+
+/**
+ * L'ambito di un tipo merce: `servizi`, `beni`, `lavorazione`, o niente se il codice non è dei
+ * cinque.
+ */
+export function ambitoDi(codice) {
+  const cercato = String(codice || "");
+  const trovato = Object.entries(AMBITI_MERCE).find(([, a]) => a.codici.includes(cercato));
+  return trovato ? trovato[0] : null;
+}
+
+/**
+ * L'ambito di un documento, dedotto dalle sue righe.
+ *
+ * `null` quando le righe non portano ancora un codice — un documento appena aperto — e quando ne
+ * portano di ambiti diversi, che è la cosa che non si può scrivere: lì non c'è un ambito da
+ * mostrare, c'è un problema, e lo dice `validate.js` con parole sue.
+ */
+export function ambitoDoc(doc) {
+  const ambiti = new Set((doc && doc.righe || [])
+    .map((line) => ambitoDi(line.tm))
+    .filter(Boolean));
+  return ambiti.size === 1 ? [...ambiti][0] : null;
+}
+
+/**
+ * Le righe prendono l'ambito scelto, e restituisce quante ne sono cambiate.
+ *
+ * **Una riga che porta già un codice di quell'ambito lo tiene.** Dentro i beni le differenze fra
+ * materie prime, beni di consumo e beni strumentali sono volute, e appiattirle sul codice
+ * predefinito vorrebbe dire che riscegliere lo stesso ambito cancella il lavoro fatto. Tutte le
+ * altre — vuote, o di un ambito diverso — prendono il codice con cui l'ambito parte.
+ *
+ * Sta qui e non nella schermata perché è una regola sui documenti, non sul disegno di una tabella.
+ */
+export function applicaAmbito(righe, chiave) {
+  const ambito = AMBITI_MERCE[chiave];
+  if (!ambito) return 0;
+  let cambiate = 0;
+  for (const line of righe || []) {
+    if (ambito.codici.includes(String(line.tm || ""))) continue;
+    line.tm = ambito.predefinito;
+    cambiate += 1;
+  }
+  return cambiate;
 }
 
 export function destinatario(party, profile = IT_SDI) {

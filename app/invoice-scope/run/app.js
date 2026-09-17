@@ -26,7 +26,7 @@ import { seed } from "./demo.js";
 import { documents, convertMany, save, invoicedBy, signedTotal, editable, NUMERAZIONI } from "./model.js";
 import { TIPI, KINDS, kind, numero as shownNumber, convertibile } from "./kinds.js";
 import { label as statoLabel } from "./states.js";
-import { TRACCIATO, profileFor } from "./fatturapa.js";
+import { TRACCIATO, profileFor, TIPI_MERCE } from "./fatturapa.js";
 import { stato as termState } from "./terms.js";
 import { NATURE } from "./validate.js";
 import { toString } from "./decimal.js";
@@ -188,6 +188,7 @@ function _translate() {
   }
   _drawNewMenu();
   for (const select of [el("companyForm").elements.naturaPredefinita, el("itemNatura")]) _fillNature(select);
+  _fillMerce(el("companyForm").elements.tmPredefinito);
   el("docsSearch").placeholder = t("docsSearchHint");
   // Due campi che un nome solo non spiega: «causale» a chi fa la prima fattura non dice niente,
   // e un IBAN vuoto non dice da dove arriverebbe.
@@ -724,6 +725,7 @@ async function _loadCompany() {
   // Le nature, con la descrizione accanto: la stessa lista del documento, riempita qui e nella
   // scheda del listino con la stessa funzione.
   for (const select of [form.elements.naturaPredefinita, el("itemNatura")]) _fillNature(select);
+  _fillMerce(form.elements.tmPredefinito);
 
   for (const name of COMPANY_FIELDS) form.elements[name].value = company[name] || "";
   form.elements.paese.value = company.paese || "IT";
@@ -810,6 +812,29 @@ function _fillNature(select) {
     const option = document.createElement("option");
     option.value = code;
     option.textContent = `${code} — ${t(`natura${code}`)}`;
+    select.append(option);
+  }
+  select.value = before;
+}
+
+/**
+ * Un menù dei cinque tipi merce, con le parole accanto al codice.
+ *
+ * Come quello delle nature qui sopra, e per la stessa ragione: «3» è un numero che non dice niente,
+ * e questo è il campo con cui l'azienda risponde una volta per tutte alla domanda «che cosa vendo».
+ */
+function _fillMerce(select) {
+  if (!select) return;
+  const before = select.value;
+  select.textContent = "";
+  const none = document.createElement("option");
+  none.value = "";
+  none.textContent = "—";
+  select.append(none);
+  for (const code of TIPI_MERCE) {
+    const option = document.createElement("option");
+    option.value = code;
+    option.textContent = `${code} — ${t(`tm${code}`)}`;
     select.append(option);
   }
   select.value = before;

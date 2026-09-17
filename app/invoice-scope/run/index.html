@@ -544,6 +544,15 @@
         <button type="button" class="button ghost" id="docAddLine" data-t="docAddLine"></button>
       </span>
     </div>
+    <!-- **La domanda si fa una volta per documento, non su ogni riga.** La norma ammette un ambito
+         solo per fattura — o beni, o lavorazione con materiale, o servizi — quindi chiederlo riga
+         per riga vuol dire fare cinque volte una domanda che ne ha tre, e scoprire alla fine di
+         averla mescolata. Da qui scendono i codici sulle righe, che è dove il file li vuole: questo
+         controllo li imposta, non è una seconda verità da tenere allineata. -->
+    <div class="ambito" id="docAmbitoBox" hidden>
+      <label><span data-t="docAmbito"></span><select id="docAmbito"></select></label>
+      <p class="note" id="docAmbitoNote"></p>
+    </div>
     <p class="empty" id="docEmptyLines" data-t="docEmptyLines"></p>
     <div class="table-scroll">
     <table class="rows" id="docLinesTable" hidden>
@@ -560,8 +569,6 @@
     </div>
     <!-- Vuota finché l'Ufficio Tributario non pubblica i valori: un campo con una datalist vuota
          si comporta come un campo libero, che è quello che serve adesso. -->
-    <datalist id="tmValori"></datalist>
-    <p class="note" id="tmNote" data-t="tmNote" hidden></p>
     <p class="note" id="docAddLineHint" data-t="docAddLineHint"></p>
 
     <!-- Un contenitore, perché il documento di trasporto non ha un riepilogo IVA: accompagna la
@@ -1043,7 +1050,7 @@
       <p class="note wide" data-t="companyDefaultsNote"></p>
       <label class="narrow"><span data-t="f_aliquotaPredefinita"></span><input name="aliquotaPredefinita" inputmode="decimal" placeholder="22"></label>
       <label class="narrow"><span data-t="f_naturaPredefinita"></span><select name="naturaPredefinita" id="companyNatura"></select></label>
-      <label class="narrow tm-only"><span data-t="f_tmPredefinito"></span><input name="tmPredefinito" list="tmValori" maxlength="10"></label>
+      <label class="narrow tm-only"><span data-t="f_tmPredefinito"></span><select name="tmPredefinito"></select></label>
 
       <h2 class="form-group" data-t="companyNumbering"></h2>
       <!-- Serve a chi arriva da un altro programma con una numerazione già iniziata. Il contatore
@@ -1386,7 +1393,7 @@
       <!-- Natura e codice TM sulla voce: per chi fattura senza IVA erano due campi da ribattere a
            ogni riga di ogni documento, con la stessa risposta ogni volta. -->
       <label><span data-t="f_natura"></span><select name="natura" id="itemNatura"></select></label>
-      <label class="narrow tm-only"><span data-t="f_tm"></span><input name="tm" list="tmValori" maxlength="10"></label>
+      <label class="narrow tm-only"><span data-t="f_tm"></span><select name="tm"></select></label>
     </div>
     <div class="actions sheet-actions">
       <button type="button" class="button ghost" id="itemCancel" data-t="cancel"></button>

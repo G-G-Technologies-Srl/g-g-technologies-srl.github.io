@@ -35,7 +35,9 @@ import {
 import { build } from "./fatturapa.js";
 import { isCustomer, parties, items, party as getParty, openNewParty } from "./parties.js";
 import { TIPI, KINDS, kind, has, numero as shownNumber, convertibile } from "./kinds.js";
-import { profileFor } from "./fatturapa.js";
+import {
+  profileFor, ambitoDi, ambitoDoc, applicaAmbito, AMBITI_MERCE,
+} from "./fatturapa.js";
 import { stato as termState } from "./terms.js";
 import { control as statoControl } from "./states.js";
 import { openSheet, render as renderPayments } from "./payments.js";
@@ -122,6 +124,7 @@ function _money(value) {
 function _optionLabel(field, value) {
   if (!value) return "—";
   if (field === "natura") return `${value} — ${t(`natura${value}`)}`;
+  if (field === "tm") return `${value} — ${t(`tm${value}`)}`;
   if (field === "aliquota") return shownRate(value);
   return value;
 }
@@ -155,6 +158,56 @@ async function _partyChanged() {
 function _usualRate() {
   const sua = party && party.aliquotaPredefinita;
   return (sua !== undefined && sua !== null && sua !== "") ? String(sua) : (company.aliquotaPredefinita || "22");
+}
+
+/**
+ * I tipi merce che le righe di questo documento possono portare.
+ *
+ * Quelli dell'ambito scelto. Senza ambito — un documento appena aperto — tutti, perché è la prima
+ * riga a deciderlo.
+ */
+function _codiciAmmessi() {
+  const scelto = ambitoDoc(current);
+  return scelto ? AMBITI_MERCE[scelto].codici : Object.values(AMBITI_MERCE).flatMap((a) => a.codici);
+}
+
+/**
+ * La scelta in testa al documento: che cosa contiene questa fattura.
+ *
+ * **Il controllo scrive sulle righe e non tiene un valore suo.** Il file vuole il codice riga per
+ * riga, quindi lì deve stare: un `doc.ambito` accanto sarebbe una seconda verità, e prima o poi le
+ * due direbbero cose diverse. Quello che si vede qui è l'ambito *letto* dalle righe.
+ */
+function _drawAmbito() {
+  const box = el("docAmbitoBox");
+  const gestionale = Boolean(profileFor(company, party).datiGestionali);
+  box.hidden = !gestionale || !kind(current).fiscale;
+  if (box.hidden) return;
+
+  const righe = current.righe || [];
+  const scelto = ambitoDoc(current);
+  const conCodice = righe.some((line) => ambitoDi(line.tm));
+  // Righe che portano ambiti diversi: la scelta non ha un valore da mostrare, e la nota lo dice.
+  const mista = conCodice && !scelto;
+
+  const menu = el("docAmbito");
+  menu.textContent = "";
+  for (const chiave of ["", ...Object.keys(AMBITI_MERCE)]) {
+    const option = document.createElement("option");
+    option.value = chiave;
+    option.textContent = chiave
+      ? t(`ambito${chiave[0].toUpperCase()}${chiave.slice(1)}`)
+      : t("ambitoNessuno");
+    menu.append(option);
+  }
+  menu.value = scelto || "";
+  menu.disabled = !editable(current);
+
+  const nota = el("docAmbitoNote");
+  nota.textContent = mista
+    ? t("ambitoNoteMista")
+    : (scelto ? t(`ambitoNote${scelto[0].toUpperCase()}${scelto.slice(1)}`) : "");
+  nota.hidden = !nota.textContent;
 }
 
 function _applyDefaults(line) {
@@ -269,12 +322,18 @@ function _drawLines() {
   const canEdit = editable(current);
   el("docEmptyLines").hidden = righe.length > 0;
   el("docLinesTable").hidden = righe.length === 0;
+  // **La colonna c'è solo dove serve.** Per un'azienda italiana il codice non si scrive affatto; e
+  // fra i tre ambiti solo i beni ammettono righe con codici diversi — negli altri due il codice è
+  // uno, l'ha già detto la scelta in testa, e una colonna che ripete la stessa parola su ogni riga
+  // è una colonna in meno per la descrizione.
+  const conTm = Boolean(profileFor(company, party).datiGestionali);
+  el("docLinesTable").classList.toggle("no-tm", !conTm || ambitoDoc(current) !== "beni");
+  _drawAmbito();
   _toggleNatura();
   // The two notes under the table only when they say something: a hint about `Invio` on the last
   // line means nothing with no lines, and the TM note on a closed document explains a column
   // nobody can fill in any more.
   el("docAddLineHint").hidden = !canEdit || righe.length === 0;
-  el("tmNote").hidden = !profileFor(company, party).datiGestionali || !canEdit || righe.length === 0;
 
   const body = el("docLinesBody");
   body.textContent = "";
@@ -324,9 +383,14 @@ function _drawLines() {
       } }],
       ["natura", { width: "small", options: NATURE }],
       // Il codice dell'Ufficio Tributario. La colonna esiste sempre nel markup e la nasconde il
-      // CSS quando chi emette non è sammarinese: disegnarla a volte sì e a volte no vorrebbe dire
-      // tenere allineate a mano le intestazioni, che stanno nell'HTML, e le celle, che stanno qui.
-      ["tm", { width: "tiny", cell: "col-tm", list: "tmValori" }],
+      // CSS quando chi emette non è sammarinese o quando l'ambito ne ammette uno solo: disegnarla a
+      // volte sì e a volte no vorrebbe dire tenere allineate a mano le intestazioni, che stanno
+      // nell'HTML, e le celle, che stanno qui.
+      //
+      // I valori sono quelli del **solo ambito scelto**: dentro i beni le righe possono differire,
+      // fra un ambito e l'altro no, e un menù che offrisse tutti e cinque i codici inviterebbe a
+      // fare l'unica cosa che il documento non può contenere.
+      ["tm", { width: "small", cell: "col-tm", options: ["", ..._codiciAmmessi()] }],
     ];
     for (const [field, options] of cells) {
       const also = options.onEdit;
@@ -727,23 +791,6 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
     current.validoFino = new Date(Date.UTC(y, m - 1, d + GIORNI_VALIDITA)).toISOString().slice(0, 10);
   }
 
-  // La colonna del codice dell'Ufficio Tributario compare solo se il profilo di chi emette la
-  // prevede: per un'azienda italiana sarebbe una colonna in più che non va da nessuna parte.
-  const profiloFile = profileFor(company, party);
-  const gestionale = profiloFile.datiGestionali;
-  el("docLinesTable").classList.toggle("no-tm", !gestionale);
-
-  // I valori ammessi, se il profilo ne dichiara: oggi l'elenco è vuoto e il campo resta libero.
-  // Una `datalist` vuota non si vede e non impedisce niente, che è esattamente il comportamento
-  // che serve finché l'Ufficio Tributario non pubblica i codici.
-  const valori = el("tmValori");
-  valori.textContent = "";
-  for (const codice of profiloFile.codiciTm || []) {
-    const option = document.createElement("option");
-    option.value = codice;
-    valori.append(option);
-  }
-
   await _drawParties(db);
 
   const listino = await items(db);
@@ -1081,6 +1128,18 @@ export function connect(db) {
   // Scegliere un conto scrive l'IBAN nel campo, e il campo resta modificabile: il menù è una
   // scorciatoia, non un vincolo. Un incasso su un conto che non è dell'azienda — quello di uno
   // studio, o un conto dedicato a un cliente — si scrive a mano e nessuno lo impedisce.
+  // **Scegliere l'ambito riscrive le righe.** È l'unico comando dell'app che tocca tutte le righe
+  // insieme, e lo fa perché la norma le tiene insieme: una fattura porta un ambito solo. Le righe
+  // che hanno già un codice di quell'ambito restano come sono — dentro i beni le differenze sono
+  // volute — e le altre prendono quello con cui l'ambito parte.
+  el("docAmbito").addEventListener("change", (event) => {
+    if (!event.target.value) return;
+    applicaAmbito(current.righe || [], event.target.value);
+    _drawLines();
+    _drawSummary();
+    _touch();
+  });
+
   el("payConto").addEventListener("change", (event) => {
     if (!event.target.value) return;
     el("payIban").value = event.target.value;

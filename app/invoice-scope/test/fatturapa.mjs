@@ -17,6 +17,7 @@ import assert from "node:assert/strict";
 import * as xml from "../run/xml.js";
 import {
   build, progressivo, destinatario, fileName, profileFor, identificativo, tipoDocumento,
+  ambitoDi, ambitoDoc, applicaAmbito, AMBITI_MERCE, GRUPPI_MERCE, MERCE_CON_DDT,
   IT_SDI, SM_EXPORT, SM_INTERNA, SM_ESTERO, TRACCIATO,
 } from "../run/fatturapa.js";
 
@@ -656,6 +657,60 @@ test("nell'autofattura i due blocchi si scambiano, e il file lo dice", () => {
   // E una fattura normale non porta quell'elemento.
   const normale = build({ ...auto, tipo: "TD01", serie: "" }, { company: SM, party: CLIENTE_SM }).text;
   assert.ok(!normale.includes("SoggettoEmittente"));
+});
+
+test("i cinque codici stanno in tre ambiti, e il DDT segue l'ambito", () => {
+  assert.equal(ambitoDi("3"), "servizi");
+  assert.equal(ambitoDi("1"), "beni");
+  assert.equal(ambitoDi("4"), "beni");
+  assert.equal(ambitoDi("7"), "beni");
+  assert.equal(ambitoDi("2"), "lavorazione");
+  assert.equal(ambitoDi("9"), null);
+  assert.equal(ambitoDi(""), null);
+  // I servizi sono l'unico ambito che viaggia senza documento di trasporto, e la tabella lo dice
+  // una volta sola: `MERCE_CON_DDT` si ricava da lì invece di ripetere gli stessi quattro codici.
+  assert.equal(AMBITI_MERCE.servizi.ddt, false);
+  assert.deepEqual([...MERCE_CON_DDT].sort(), ["1", "2", "4", "7"]);
+  // E i gruppi che `validate.js` usa per la regola delle combinazioni sono gli stessi tre.
+  assert.deepEqual(GRUPPI_MERCE.map((g) => g.join("")).sort(), ["147", "2", "3"]);
+});
+
+test("l'ambito di un documento esce dalle sue righe, e sparisce se non sono d'accordo", () => {
+  const con = (...codici) => ({ righe: codici.map((tm) => ({ tm })) });
+  assert.equal(ambitoDoc(con("3", "3")), "servizi");
+  // Dentro i beni le righe possono davvero differire: resta un ambito solo.
+  assert.equal(ambitoDoc(con("1", "4", "7")), "beni");
+  // Ambiti diversi non fanno un ambito: lì non c'è niente da mostrare, c'è un problema, e lo dice
+  // `validate.js`.
+  assert.equal(ambitoDoc(con("3", "4")), null);
+  // Un documento appena aperto non ha ancora un ambito.
+  assert.equal(ambitoDoc(con()), null);
+  assert.equal(ambitoDoc({ righe: [{}] }), null);
+  assert.equal(ambitoDoc(null), null);
+});
+
+test("scegliere l'ambito allinea le righe, e non cancella le differenze volute", () => {
+  // Righe di ambiti diversi — quello che una fattura non può contenere — e righe vuote: prendono
+  // tutte il codice con cui l'ambito parte.
+  const righe = [{ tm: "3" }, { tm: "" }, {}];
+  assert.equal(applicaAmbito(righe, "beni"), 3);
+  assert.deepEqual(righe.map((r) => r.tm), ["4", "4", "4"]);
+
+  // Ma dentro i beni le differenze sono volute: materie prime, beni di consumo e beni strumentali
+  // stanno insieme, e riscegliere lo stesso ambito non deve appiattirle sul predefinito — sarebbe
+  // un comando che cancella il lavoro fatto ogni volta che lo si tocca.
+  const beni = [{ tm: "1" }, { tm: "7" }, { tm: "3" }];
+  assert.equal(applicaAmbito(beni, "beni"), 1, "solo la riga fuori ambito cambia");
+  assert.deepEqual(beni.map((r) => r.tm), ["1", "7", "4"]);
+
+  // Un ambito che non esiste non tocca niente, invece di svuotare le righe.
+  const intatte = [{ tm: "3" }];
+  assert.equal(applicaAmbito(intatte, "boh"), 0);
+  assert.deepEqual(intatte.map((r) => r.tm), ["3"]);
+  assert.equal(applicaAmbito(null, "beni"), 0);
+
+  // E l'ambito che si legge dopo è quello che si è scelto.
+  assert.equal(ambitoDoc({ righe: beni }), "beni");
 });
 
 console.log(`fatturapa: ${passed} prove passate`);

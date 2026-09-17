@@ -690,8 +690,28 @@ const IT = {
   docAddLineHint: "Sull'ultima riga, Invio ne aggiunge un'altra.",
   docRemoveLine: "Togli la riga",
   docEmptyLines: "Il documento non ha ancora righe.",
-  tmNote: "Il codice TM accompagna i servizi e lo chiede l'Ufficio Tributario sammarinese: finisce "
-    + "sulla riga e in testa alla nota di esenzione. Senza, il portale non accetta il documento.",
+  // I cinque tipi merce, con le parole al posto dei numeri: «3» non si legge, «Servizi» sì.
+  tm1: "Materie prime",
+  tm2: "Conto lavoro con materie prime",
+  tm3: "Servizi",
+  tm4: "Beni di consumo",
+  tm7: "Beni strumentali",
+  // I tre ambiti: la domanda che si fa una volta per documento.
+  docAmbito: "Questa fattura contiene",
+  ambitoServizi: "Servizi",
+  ambitoBeni: "Beni",
+  ambitoLavorazione: "Lavorazione con materiale",
+  ambitoNessuno: "— da scegliere",
+  // Che cosa comporta la scelta: è quello che la rende comprensibile, e non sta in nessuna legenda.
+  ambitoNoteServizi: "Il documento di trasporto non serve, e il termine di trasmissione si conta "
+    + "dalla data della fattura.",
+  ambitoNoteBeni: "Serve almeno un documento di trasporto, e da lì si conta il termine di "
+    + "trasmissione. Le righe possono portare codici diversi fra materie prime, beni di consumo e "
+    + "beni strumentali.",
+  ambitoNoteLavorazione: "Serve almeno un documento di trasporto, e da lì si conta il termine di "
+    + "trasmissione.",
+  ambitoNoteMista: "Le righe portano tipi merce di ambiti diversi: una fattura ne ammette uno solo. "
+    + "Scegli qui che cosa contiene, e le righe si allineano.",
   docSummary: "Riepilogo IVA",
   docImponibile: "Imponibile",
   docImposta: "Imposta",
@@ -1842,8 +1862,25 @@ const EN = {
   docAddLineHint: "On the last line, Enter adds another one.",
   docRemoveLine: "Remove the line",
   docEmptyLines: "The document has no lines yet.",
-  tmNote: "The TM code goes with services and the San Marino tax office asks for it: it lands on "
-    + "the line and in front of the exemption note. Without it the portal refuses the document.",
+  tm1: "Raw materials",
+  tm2: "Subcontracting with materials",
+  tm3: "Services",
+  tm4: "Consumer goods",
+  tm7: "Capital goods",
+  docAmbito: "This invoice contains",
+  ambitoServizi: "Services",
+  ambitoBeni: "Goods",
+  ambitoLavorazione: "Subcontracting with materials",
+  ambitoNessuno: "— to choose",
+  ambitoNoteServizi: "No delivery note is needed, and the transmission deadline is counted from "
+    + "the invoice date.",
+  ambitoNoteBeni: "At least one delivery note is required, and the transmission deadline is "
+    + "counted from it. Lines may carry different codes across raw materials, consumer goods and "
+    + "capital goods.",
+  ambitoNoteLavorazione: "At least one delivery note is required, and the transmission deadline "
+    + "is counted from it.",
+  ambitoNoteMista: "The lines carry goods types from different groups: an invoice admits only "
+    + "one. Choose what this one contains, and the lines follow.",
   docSummary: "VAT summary",
   docImponibile: "Taxable",
   docImposta: "VAT",

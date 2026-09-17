@@ -1281,6 +1281,12 @@ dialog li::before {
 .doc-settle.settle-done { color: var(--accent-text); }
 .doc-settle.settle-late { color: var(--danger-text); }
 .doc-term { font-size: 0.9rem; color: var(--faint); }
+/* La scelta dell'ambito sta sopra la tabella, e la sua conseguenza subito sotto: la frase spiega
+   che cosa cambia — il documento di trasporto, la data da cui si conta il termine — ed è quella
+   che rende la scelta comprensibile senza una legenda da consultare altrove. */
+.ambito { margin: 0.75rem 0 0.5rem; }
+.ambito label { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.ambito .note { margin: 0.35rem 0 0; }
 .doc-term.term-soon { color: var(--accent-text); }
 .doc-term.term-late { color: var(--danger-text); }
 
