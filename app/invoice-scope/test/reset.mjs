@@ -38,9 +38,11 @@ await prova("ogni store dell'archivio sta in «tutto», tranne meta", async () =
 
 await prova("i gruppi svuotano i loro store e lasciano gli altri", async (db) => {
   await unoOvunque(db);
-  assert.equal((await counts(db, "docs")).total, 3, "documenti, incassi, contatori");
+  assert.equal((await counts(db, "docs")).total, 4, "documenti, incassi, contatori, ricorrenti");
   await wipe(db, "docs");
-  for (const store of ["docs", "payments", "counters"]) assert.equal(await count(db, store), 0, store);
+  for (const store of ["docs", "payments", "counters", "recurringDocs"]) {
+    assert.equal(await count(db, store), 0, store);
+  }
   for (const store of ["parties", "items", "activities", "projects", "company", "meta"]) {
     assert.equal(await count(db, store), 1, `${store} resta`);
   }

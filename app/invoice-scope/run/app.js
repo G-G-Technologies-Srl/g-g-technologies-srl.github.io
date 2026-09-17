@@ -33,6 +33,7 @@ import { toString } from "./decimal.js";
 import * as parties from "./parties.js";
 import * as categorie from "./categories.js";
 import * as solleciti from "./reminders.js";
+import * as piani from "./plans.js";
 import * as customer from "./customer.js";
 import * as purchases from "./purchases.js";
 import { allCosts, allOutlays } from "./costs.js";
@@ -369,6 +370,9 @@ async function _refresh() {
 
   el("tracciato").textContent = `FatturaPA ${TRACCIATO.versione} · ${TRACCIATO.dal}`;
   await _drawDocuments(docs);
+  // Le fatture ricorrenti stanno in fondo ai Documenti, come gli attesi stanno in fondo agli
+  // Acquisti: la stessa schermata che mostra quello che è stato fatto mostra quello che tocca fare.
+  await piani.render(db, { company, afterChange: _refresh });
   await _showSpace();
   await _drawPersistenza(docs.length);
 }
@@ -1527,6 +1531,7 @@ async function main() {
   parties.connect(db, _refresh);
   categorie.connect(db, _refresh);
   solleciti.connect(db);
+  piani.connect(db, _refresh);
   for (const id of ["homeDun", "dueDun"]) {
     el(id).addEventListener("click", () => solleciti.open(db));
   }

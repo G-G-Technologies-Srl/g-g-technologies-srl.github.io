@@ -29,6 +29,11 @@ export const NAME = "invoice-scope";
 /**
  * The schema's version, and the one number that must move when a store is added.
  *
+ * 6 → 7: `recurringDocs`, le fatture che si ripetono — il canone, il monte ore fisso — da cui
+ * nascono le bozze da emettere. Store a parte da `recurring` e non un campo dentro: una fattura
+ * ricorrente porta cose che un costo non ha (la natura, il tipo merce, i termini di pagamento del
+ * documento), e un solo store con due forme sarebbe due store che si fingono uno.
+ *
  * 5 → 6: `recurring`, i costi ricorrenti da cui nascono gli acquisti attesi.
  *
  * 4 → 5: `costs` e `outlays`, gli acquisti e i pagamenti in uscita. I clienti prendono `ruolo`
@@ -43,7 +48,7 @@ export const NAME = "invoice-scope";
  * opens once a quarter that is not the previous one. Nothing is migrated: a customer without a diary
  * simply has none, which is the state every existing one starts from.
  */
-export const VERSION = 6;
+export const VERSION = 7;
 
 /**
  * The stores, as `gg/store.js` describes them.
@@ -86,6 +91,11 @@ export const STORES = {
   // il previsionale: righe calcolate, non scritte, finché una fattura vera non le conferma.
   // Schema 5 → 6: solo questo store.
   recurring: { keyPath: "id", indexes: { party: "partyId" } },
+  // Le fatture che si ripetono: il canone mensile, il monte ore fisso, l'abbonamento. Da qui
+  // nascono le **bozze** da emettere, non i documenti emessi: il numero si assegna quando una
+  // persona decide di emettere, e un'app che numerasse da sola scriverebbe numeri su fatture che
+  // nessuno ha ancora guardato. Schema 6 → 7: solo questo store.
+  recurringDocs: { keyPath: "id", indexes: { party: "partyId" } },
   counters: { keyPath: "key" },
   meta: { keyPath: "key" },
 };

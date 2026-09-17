@@ -29,6 +29,7 @@ import { recordPayment } from "./schedule.js";
 import { saveActivity } from "./crm.js";
 import { saveCost, recordOutlay } from "./costs.js";
 import { saveRecurring } from "./recurring.js";
+import { savePlan } from "./recurring-docs.js";
 import * as progetti from "./projects.js";
 import { toString } from "./decimal.js";
 
@@ -383,6 +384,22 @@ export async function seed(db) {
     tipo: "spesa", partyId: "demo-f2", data: _giorno(-2),
     categoria: t("demoCatMateriali"), descrizione: t("demoCostBolts"),
     imponibile: "140.00", aliquota: "22", scadenza: _giorno(3),
+  });
+
+  // Una fattura ricorrente: l'assistenza mensile a un cliente. Le occorrenze dei mesi passati non
+  // hanno un documento, quindi la sezione «Fatture da emettere» ha qualcosa da mostrare — che è
+  // il punto: senza, quella parte dell'app resterebbe invisibile a chi apre il dimostrativo.
+  await savePlan(db, {
+    id: "demo-p1",
+    partyId: "demo-1",
+    descrizione: t("demoPlanAssistenza"),
+    quantita: "1",
+    prezzoUnitario: "450.00",
+    aliquota: "22",
+    cadenza: "mensile",
+    giorno: 1,
+    giorniScadenza: 30,
+    da: _mese(2).slice(0, 7),
   });
 
   // E una bozza lasciata a metà, perché è lo stato in cui un documento passa la maggior parte del

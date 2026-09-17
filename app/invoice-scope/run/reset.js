@@ -21,12 +21,15 @@ import { count, clear } from "gg/store.js";
 
 /** I gruppi, con gli store che ognuno svuota. L'ordine è quello della schermata. */
 export const GROUPS = {
-  docs: ["docs", "payments", "counters"],
+  // Le fatture ricorrenti stanno con i documenti, come i costi ricorrenti stanno con gli acquisti:
+  // svuotare i documenti e lasciare le ricorrenze vorrebbe dire ritrovarsi, il giorno dopo, un
+  // elenco di fatture «da emettere» per mesi che erano appena stati cancellati.
+  docs: ["docs", "payments", "counters", "recurringDocs"],
   costs: ["costs", "outlays", "recurring"],
   parties: ["parties", "items", "activities"],
   projects: ["projects", "pages", "tasks", "assets"],
-  all: ["docs", "payments", "counters", "costs", "outlays", "recurring", "parties", "items", "activities",
-    "projects", "pages", "tasks", "assets", "company"],
+  all: ["docs", "payments", "counters", "recurringDocs", "costs", "outlays", "recurring", "parties",
+    "items", "activities", "projects", "pages", "tasks", "assets", "company"],
 };
 
 /** Gli store che finiscono nel riepilogo della domanda: gli altri sono di corredo. */
