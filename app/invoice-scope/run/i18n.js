@@ -152,8 +152,8 @@ const IT = {
   homeQuoteUntil: "fino al {data}",
   homeDrafts: "Bozze lasciate a metà",
   monthLetters: "G F M A M G L A S O N D",
-  homeBackupNever: "Non hai mai esportato un archivio. Con l'app senza server, quella è l'unica "
-    + "copia che esiste.",
+  homeBackupNever: "Non hai mai esportato un archivio. L'applicazione funziona senza server, quindi quella è "
+    + "l'unica copia che esiste.",
   homeBackupGo: "Esporta adesso",
 
   // La sicurezza dell'archivio, detta dove si guarda ogni giorno. Le decide `safety.js`, e i tre
@@ -171,8 +171,8 @@ const IT = {
   safetyGo: "Apri le impostazioni",
   safetyManualNever: "Questo browser non è in grado di conservare una copia autonomamente, e non "
     + "è mai stato esportato un archivio: i dati dell'applicazione esistono in una copia sola.",
-  safetyManualOld: "Questo browser non sa tenere una copia da solo, e dall'ultimo archivio che hai "
-    + "esportato — {giorni} giorni fa — hai lavorato ancora. Esportane uno adesso: ci vuole un momento.",
+  safetyManualOld: "Questo browser non è in grado di conservare una copia autonomamente, e dall'ultimo archivio "
+    + "esportato — {giorni} giorni fa — hai lavorato ancora. Conviene esportarne uno adesso.",
   safetyManualGo: "Esporta un archivio",
 
   // ---- scadenzario
@@ -187,7 +187,7 @@ const IT = {
   remindHour: "alle ore",
   remindSave: "Salva",
   remindAsk: "Permetti le notifiche",
-  remindSays: "Una scadenza del {date} te la ricordo {when}.",
+  remindSays: "Una scadenza del {date} viene annunciata {when}.",
   remindSaysDay: "il {date} alle {hour}",
   remindSaysSame: "lo stesso giorno alle {hour}",
   remindOff: "Spenti. Le scadenze restano nello Scadenzario e nel calendario che esporti.",
@@ -200,8 +200,9 @@ const IT = {
   remindStateDenied: "Notifiche negate a questo sito. Si riattivano dalle impostazioni del "
     + "browser, non da qui. Restano il calendario che esporti e il riepilogo all'apertura.",
   remindStateWaiting: "Notifiche permesse. Il risveglio automatico non è ancora concesso: il "
-    + "browser lo dà alle app installate che si usano un po', e l'app riprova a ogni apertura. "
-    + "Intanto restano il calendario che esporti e il riepilogo all'apertura.",
+    + "browser lo riserva alle applicazioni installate e usate con una certa regolarità, e "
+    + "l'applicazione lo richiede a ogni apertura. Intanto restano il calendario che esporti e il "
+    + "riepilogo all'apertura.",
   remindStateSleeps: "Notifiche permesse. Questo browser però non sveglia l'app da solo: le vedrai "
     + "aprendola, e nel calendario che esporti.",
   remindSavedNote: "Salvato.",
@@ -321,7 +322,7 @@ const IT = {
   projectImportPages: "{quante} pagine",
   projectImportTasks: "{quante} fasi",
   projectImportImages: "{quante} immagini, che restano fuori: qui non c'è ancora dove tenerle",
-  projectImportBad: "Questo file non è un progetto. Il pacchetto è quello che escono da qui e da "
+  projectImportBad: "Questo file non è un progetto. Il pacchetto è quello che producono questa applicazione e "
     + "Plan Scope, con estensione .zip o .json.",
   projectImportOther: "Questo file è di un altro programma.",
   projectsUntitled: "Senza nome",
@@ -381,8 +382,8 @@ const IT = {
   projPageImage: "Immagine",
   projPageFile: "Allegato",
   projAssetNoPage: "Apri prima una pagina: l'immagine va dentro una pagina, non nel progetto.",
-  projAssetTooBig: "Questo file pesa più di {mb} MB. L'app tiene tutto nel browser, quindi il "
-    + "limite c'è per non riempirtelo: riduci l'immagine, o tienila fuori e mettine il nome.",
+  projAssetTooBig: "Questo file supera i {mb} MB. L'applicazione conserva tutto nel browser, e il limite serve a "
+    + "non saturarne lo spazio: riduci l'immagine, oppure tienila fuori e indicane il nome.",
   projAssetMissing: "Questo allegato non c'è più nel deposito.",
   projPageAsk: "Come si chiama la pagina?",
   projPageUntitled: "Senza titolo",
@@ -643,8 +644,9 @@ const IT = {
     + "volta sola.",
   companySaved: "Dati dell'azienda salvati.",
   progressivoNote: "Il numero che porterà il prossimo file, nel nome e dentro il documento. Serve "
-    + "se arrivi da un altro programma: si scrive una volta e poi conta l'app. Si può spostare in "
-    + "avanti quando vuoi, indietro no — un progressivo già uscito viene rifiutato come duplicato.",
+    + "quando arrivi da un altro programma: si scrive una volta, e da lì in avanti lo gestisce "
+    + "l'applicazione. Si può spostare in avanti in qualsiasi momento, indietro no — un progressivo "
+    + "già uscito viene rifiutato come duplicato.",
   contiTitle: "Conti correnti",
   contiNote: "Il conto predefinito entra da sé nei documenti nuovi. L'IBAN resta modificabile sul "
     + "singolo documento, per gli incassi che vanno altrove.",
@@ -684,8 +686,8 @@ const IT = {
   backupUnlink: "Scollega la cartella",
   backupUnlinkAsk: "L'app smette di scrivere nella cartella. I file che ci sono restano dove "
     + "sono. Vado avanti?",
-  backupUnavailable: "Questo browser non sa aprire una cartella: funziona con Chrome o Edge sul "
-    + "computer. Qui resta «Esporta tutto».",
+  backupUnavailable: "Questo browser non consente di aprire una cartella: la funzione è disponibile su Chrome o "
+    + "Edge da computer. Qui resta «Esporta tutto».",
   backupNone: "Nessuna cartella collegata.",
   backupPrompt: "La cartella «{folder}» aspetta il tuo permesso: il browser lo chiede di nuovo a "
     + "ogni apertura.",
@@ -720,8 +722,8 @@ const IT = {
   backupCopyLatest: "Copia corrente",
   backupCopySize: "{size}",
   backupChoose: "Scegli cosa fare",
-  backupHeld: "La cartella «{folder}» teneva già delle copie: non ci ho scritto niente. "
-    + "Scegli se riportare quello che c'è o scriverci quello che hai qui.",
+  backupHeld: "La cartella «{folder}» teneva già delle copie, quindi non è stata scritta. Scegli se "
+    + "riportare quello che c'è o scriverci quello che hai qui.",
   backupFoundAsk: "Questa cartella tiene già {n} copie, la più recente del {when}. "
     + "Riporto qui la più recente? Quello che c'è adesso nell'archivio viene sostituito.",
   // La più recente è spesso l'archivio corrente, che non è di un giorno: «la più recente del Copia
@@ -742,8 +744,8 @@ const IT = {
   backupNoFolder: "Nessuna cartella collegata.",
   backupNoPermission: "La cartella aspetta il tuo permesso: riprendila e riprova.",
   backupCopyGone: "Questa copia non è più nella cartella.",
-  backupError: "Non riesco a scrivere nella cartella «{folder}» ({error}). Controlla che esista "
-    + "ancora, o scegline un'altra.",
+  backupError: "Non è stato possibile scrivere nella cartella «{folder}» ({error}). Controlla che esista "
+    + "ancora, oppure scegline un'altra.",
   settingsFormat: "Formato del file",
   settingsFormatNote: "L'app scrive il formato FatturaPA nella versione qui sopra. Quando "
     + "l'Agenzia pubblica una versione nuova, l'app va aggiornata.",
@@ -916,8 +918,8 @@ const IT = {
   docPrint: "Stampa o PDF",
   docXmlDone: "File scaricato. Ora caricalo su «Fatture e Corrispettivi» o passalo al tuo "
     + "intermediario: l'app non lo trasmette.",
-  docXmlTooBig: "Il file peserebbe {mb} MB, e il massimo è 5. Caricato così verrebbe scartato "
-    + "all'ingresso, quindi non lo scarico: il documento ha troppe righe, e va diviso.",
+  docXmlTooBig: "Il file peserebbe {mb} MB, e il massimo è 5. Caricato così verrebbe scartato all'ingresso, "
+    + "quindi il download si ferma qui: il documento ha troppe righe e va diviso.",
   docXmlAgain: "Di questo documento hai già scaricato un file. Ne scarico un altro, con un "
     + "progressivo nuovo?",
 
@@ -951,7 +953,7 @@ const IT = {
   ritNote: "Si calcola sull'imponibile e scende dal totale da pagare. Non tocca l'IVA.",
   discTitle: "Sconto sul documento",
   discPercent: "Sconto in percentuale",
-  discNote: "Si applica prima dell'IVA, spartito fra i riepiloghi in proporzione.",
+  discNote: "Si applica prima dell'IVA, ed è ripartito fra i riepiloghi in proporzione.",
 
   // ---- il listino
   itemName: "Descrizione",
@@ -1211,7 +1213,7 @@ const IT = {
     + "finché non confermi.",
   impPick: "Scegli i file…",
   impReading: "Sto leggendo…",
-  impEmpty: "Fra i file scelti non c'è un'esportazione che sappia leggere.",
+  impEmpty: "Fra i file scelti non c'è un'esportazione che l'applicazione sappia leggere.",
   impFile: "File",
   impWhat: "Contenuto",
   impNew: "Nuovi",
@@ -1219,7 +1221,7 @@ const IT = {
   impGo: "Importa",
   impDone: "Importati: {clienti} clienti, {listino} voci di listino, {documenti} documenti, "
     + "{incassi} incassi, {acquisti} acquisti.",
-  impNothing: "Non c'è niente di nuovo da importare: tutto quello che ho letto è già qui.",
+  impNothing: "Non c'è niente di nuovo da importare: quello che i file contengono è già qui.",
   impFailed: "L'importazione non è riuscita, e non è stato scritto niente.",
 
   impKindClienti: "Anagrafica clienti",
@@ -1266,8 +1268,8 @@ const IT = {
   ficCountry: "riga {riga}: «{valore}» non è un paese che sappia nominare, entra come Italia",
   ficNoDate: "riga {riga}: «{valore}» non è una data",
   ficKind: "riga {riga}: «{valore}» non è un tipo di documento che gestisco",
-  ficNatura: "riga {riga}: «{valore}» è un codice IVA a zero che non so tradurre in una natura; la "
-    + "riga entra senza, e va completata prima di uscire come XML",
+  ficNatura: "riga {riga}: «{valore}» è un codice IVA a zero che l'applicazione non riconduce a una "
+    + "natura; la riga entra senza, e va completata prima di uscire come XML",
 
   readKind: "tipo {valore}: non lo gestisco, entra come fattura",
   readNoLines: "nessuna riga di dettaglio",
@@ -1313,7 +1315,7 @@ const IT = {
     + "viene ridotto se è grande. Email, telefono e sito stanno sotto l'indirizzo.",
   companyLogoPick: "Scegli il logo…",
   companyLogoRemove: "Togli il logo",
-  companyLogoBad: "Non riesco a leggere questa immagine. Prova un PNG, un JPG o un SVG.",
+  companyLogoBad: "Questa immagine non si apre. Prova un PNG, un JPG o un SVG.",
   companyLogoBig: "L'immagine è troppo grande anche dopo la riduzione. Prova con un file più piccolo.",
   f_email: "email",
   f_telefono: "telefono",
@@ -1370,8 +1372,8 @@ const IT = {
 
   // ---- messaggi
   errIntro: "Il documento non è ancora completo:",
-  loadFailed: "Non riesco ad aprire il deposito dei dati. Se sei in navigazione privata, il "
-    + "browser lo impedisce.",
+  loadFailed: "Non è possibile aprire l'archivio dei dati. Se stai navigando in incognito, il browser lo "
+    + "impedisce.",
 };
 
 const EN = {
@@ -1508,8 +1510,8 @@ const EN = {
   homeQuoteUntil: "until {data}",
   homeDrafts: "Drafts left half-way",
   monthLetters: "J F M A M J J A S O N D",
-  homeBackupNever: "You have never exported an archive. With the app running without a server, "
-    + "that is the only copy there is.",
+  homeBackupNever: "You have never exported an archive. The application runs without a server, so that is the "
+    + "only copy there is.",
   homeBackupGo: "Export now",
 
   safetyNoFolder: "Your invoices live in this browser alone. Link a folder on your computer: the "
@@ -1526,8 +1528,8 @@ const EN = {
   safetyGo: "Open settings",
   safetyManualNever: "This browser cannot keep a copy by itself, and no archive has ever been "
     + "exported: the application's data exists in a single copy.",
-  safetyManualOld: "This browser cannot keep a copy by itself, and you have worked on since the "
-    + "last archive you exported — {giorni} days ago. Export one now: it takes a moment.",
+  safetyManualOld: "This browser cannot keep a copy by itself, and you have worked on since the last archive you "
+    + "exported — {giorni} days ago. It is worth exporting one now.",
   safetyManualGo: "Export an archive",
 
   navDue: "Payments",
@@ -1552,8 +1554,9 @@ const EN = {
   remindStateDenied: "Notifications are blocked for this site. They are turned back on in the "
     + "browser's settings, not here. The calendar you export and the summary on opening remain.",
   remindStateWaiting: "Notifications allowed. The automatic wake-up has not been granted yet: the "
-    + "browser gives it to installed apps that get used, and the app asks again every time it "
-    + "opens. Meanwhile the calendar you export and the summary on opening remain.",
+    + "browser reserves it for installed applications that are used regularly, and the "
+    + "application asks again every time it opens. Meanwhile the calendar you export and the "
+    + "summary on opening remain.",
   remindStateSleeps: "Notifications allowed. This browser does not wake the app on its own, "
     + "though: you will see them when you open it, and in the calendar you export.",
   remindSavedNote: "Saved.",
@@ -1670,8 +1673,8 @@ const EN = {
   projectImportPages: "{quante} pages",
   projectImportTasks: "{quante} phases",
   projectImportImages: "{quante} images, which stay out: there is nowhere to keep them here yet",
-  projectImportBad: "This file is not a project. The package is the one this app and Plan Scope "
-    + "write, with a .zip or .json extension.",
+  projectImportBad: "This file is not a project. The package is the one this application and Plan Scope produce, "
+    + "with a .zip or .json extension.",
   projectImportOther: "This file belongs to another program.",
   projectsUntitled: "Untitled",
   projectsNote: "The plan of a job, beside what you quoted, invoiced and collected. A project can "
@@ -1725,9 +1728,9 @@ const EN = {
   projPageImage: "Image",
   projPageFile: "Attachment",
   projAssetNoPage: "Open a page first: an image goes inside a page, not in the project.",
-  projAssetTooBig: "This file is larger than {mb} MB. The app keeps everything in the browser, so "
-    + "the limit is there to keep it from filling up: shrink the image, or keep it outside and "
-    + "write its name.",
+  projAssetTooBig: "This file is larger than {mb} MB. The application keeps everything in the browser, and the "
+    + "limit is there to avoid filling that space: shrink the image, or keep it outside and write "
+    + "its name.",
   projAssetMissing: "This attachment is no longer in the store.",
   projPageAsk: "What is the page called?",
   projPageUntitled: "Untitled",
@@ -1985,9 +1988,9 @@ const EN = {
   companyNote: "These are the details that head every document. You fill them in once.",
   companySaved: "Company details saved.",
   progressivoNote: "The number the next file will carry, in its name and inside the document. It "
-    + "matters when you come from another program: you write it once and the app counts from there. "
-    + "It can move forward at any time, never back — a progressive already sent is refused as a "
-    + "duplicate.",
+    + "matters when you come from another program: you write it once, and from there the "
+    + "application keeps it. It can move forward at any time, never back — a progressive already "
+    + "sent is refused as a duplicate.",
   contiTitle: "Bank accounts",
   contiNote: "The default account goes into new documents on its own. The IBAN stays editable on "
     + "each document, for the payments that go elsewhere.",
@@ -2049,8 +2052,8 @@ const EN = {
   backupCopyLatest: "Current copy",
   backupCopySize: "{size}",
   backupChoose: "Choose what to do",
-  backupHeld: "The folder “{folder}” already held copies, so nothing was written to it. "
-    + "Choose whether to bring back what is there or write what you have here.",
+  backupHeld: "The folder “{folder}” already held copies, so nothing was written to it. Choose whether to "
+    + "bring back what is there or write what you have here.",
   backupFoundAsk: "This folder already holds {n} copies, the most recent from {when}. "
     + "Shall I bring the most recent one back? What is in the archive now is replaced.",
   backupFoundAskLatest: "This folder already holds {n} copies. Shall I bring the most recent one "
@@ -2073,15 +2076,15 @@ const EN = {
   backupUnlink: "Unlink the folder",
   backupUnlinkAsk: "The app stops writing into the folder. The files already there stay where "
     + "they are. Go on?",
-  backupUnavailable: "This browser cannot open a folder: it works with Chrome or Edge on a "
-    + "computer. Here, «Export everything» remains.",
+  backupUnavailable: "This browser cannot open a folder: the feature is available on Chrome or Edge on a computer. "
+    + "Here, “Export everything” remains.",
   backupNone: "No folder linked.",
   backupPrompt: "The folder «{folder}» is waiting for your permission: the browser asks for it "
     + "again at every opening.",
   backupLinked: "Folder «{folder}» · last copy {when}.",
   backupNever: "Folder «{folder}» · no copy yet.",
-  backupError: "Cannot write into the folder «{folder}» ({error}). Check that it still exists, "
-    + "or choose another one.",
+  backupError: "The folder “{folder}” could not be written to ({error}). Check that it still exists, or "
+    + "choose another one.",
   settingsFormat: "File format",
   settingsFormatNote: "The app writes the FatturaPA format in the version above. When the revenue "
     + "publishes a new one, the app has to be updated.",
@@ -2250,9 +2253,8 @@ const EN = {
   docPrint: "Print or PDF",
   docXmlDone: "File downloaded. Now upload it to the revenue's portal or pass it to your "
     + "intermediary: the app does not transmit it.",
-  docXmlTooBig: "The file would weigh {mb} MB, and the maximum is 5. Uploaded as it is it would "
-    + "be rejected on arrival, so I am not downloading it: the document has too many lines, and "
-    + "needs splitting.",
+  docXmlTooBig: "The file would weigh {mb} MB, and the maximum is 5. Uploaded as it is it would be rejected "
+    + "on arrival, so the download stops here: the document has too many lines and needs splitting.",
   docXmlAgain: "You have already downloaded a file for this document. Shall I make another one, "
     + "with a new progressive?",
 
@@ -2287,7 +2289,7 @@ const EN = {
     + "touch the VAT.",
   discTitle: "Discount on the document",
   discPercent: "Percentage discount",
-  discNote: "Applied before VAT, shared between the summaries in proportion.",
+  discNote: "Applied before VAT, and split between the summaries in proportion.",
 
   itemName: "Description",
   itemPrice: "Price",
@@ -2532,7 +2534,7 @@ const EN = {
     + "nothing goes in until you confirm.",
   impPick: "Choose files…",
   impReading: "Reading…",
-  impEmpty: "None of the files you picked is an export this can read.",
+  impEmpty: "None of the files you picked is an export the application can read.",
   impFile: "File",
   impWhat: "Contents",
   impNew: "New",
@@ -2540,7 +2542,7 @@ const EN = {
   impGo: "Import",
   impDone: "Imported: {clienti} customers, {listino} price-list lines, {documenti} documents, "
     + "{incassi} payments, {acquisti} purchases.",
-  impNothing: "There is nothing new to import: everything read is already here.",
+  impNothing: "There is nothing new to import: what the files contain is already here.",
   impFailed: "The import did not go through, and nothing was written.",
 
   impKindClienti: "Customer list",
@@ -2587,7 +2589,7 @@ const EN = {
   ficCountry: "row {riga}: «{valore}» is not a country this can name, entered as Italy",
   ficNoDate: "row {riga}: «{valore}» is not a date",
   ficKind: "row {riga}: «{valore}» is not a document type this handles",
-  ficNatura: "row {riga}: «{valore}» is a zero-rate VAT code this cannot turn into a nature; the "
+  ficNatura: "row {riga}: “{valore}” is a zero-rate VAT code the application cannot map to a nature; the "
     + "line comes in without one, and needs it before it goes out as XML",
 
   readKind: "type {valore}: not handled, entered as an invoice",
@@ -2681,8 +2683,7 @@ const EN = {
     + "transmit it.",
 
   errIntro: "The document is not complete yet:",
-  loadFailed: "The data store will not open. If you are browsing privately, the browser prevents "
-    + "it.",
+  loadFailed: "The data store cannot be opened. If you are browsing privately, the browser prevents it.",
 };
 
 configure({ it: IT, en: EN, key: "gg.invoice-scope.lang" });
