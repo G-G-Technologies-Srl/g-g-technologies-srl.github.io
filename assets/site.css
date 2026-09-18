@@ -1170,6 +1170,12 @@ section.tinted {
 
 @media (max-width: 640px) { .research { padding: 26px 22px; } }
 
+/* The services on the About page: six pillars in three columns fall into two even rows, where the
+   four columns of the homepage would leave two orphans on the second. */
+.pillars.pillars-3 { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 900px) { .pillars.pillars-3 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .pillars.pillars-3 { grid-template-columns: 1fr; } }
+
 /* ---------------------------------------------------------------------------------------------------------------
    Price table — the training fees. Framed like .research (the highlighted box of this site), with the
    table rules of .prose. On phones each row becomes a small card: label above value, no sideways scroll.
