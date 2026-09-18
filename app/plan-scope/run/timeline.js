@@ -30,7 +30,22 @@ import { el, node, button, fill, shortDate, locale } from "./ui.js";
 
 // One day, in pixels. Wide enough that a day number fits under the header and a one-day bar is
 // still a bar rather than a mark; narrow enough that a three-month event fits two screens.
-const DAY = 26;
+// Quanto è largo un giorno. **Non è una costante**: all'apertura si stringe quanto serve perché il
+// progetto ci stia tutto.
+//
+// Prima era fisso a ventisei pixel, e un progetto di tre mesi non ci stava: si apriva su una
+// colonna di nomi con le barre fuori dallo schermo a destra — il grafico che serve a vedere la
+// forma di un piano mostrava il piano solo a chi sapeva già che bisognava scorrere. Adesso la
+// veduta d'insieme è quella che si apre, e il dettaglio si chiede.
+let DAY = 26;
+const DAY_FULL = 26;                    // il passo comodo, quando il progetto è corto
+const DAY_TIGHT = 4;                    // sotto questo un giorno non è più un giorno, è una riga
+// La colonna dei nomi, la stessa larghezza che ha nel foglio di stile — dove su un telefono si
+// stringe, e il conto deve stringersi con lei o il disegno esce dallo schermo.
+const NAMES_WIDE = 190;
+const NAMES_NARROW = 120;
+const NARROW = 620;
+let chosen = null;                      // i pixel scelti a mano, finché si resta su questo progetto
 
 // The width of the column of names on the left. It is a number here as well as in the stylesheet
 // because the line marking today is drawn in the same coordinate space as the rows, and that space
@@ -117,11 +132,16 @@ function _head(range) {
     const iso = model.addDays(range.first, i);
     const date = model.fromISO(iso);
     const cell = node("div", "tl-day", num(date.getDate(), 0));
+    cell.style.width = `${DAY}px`;
     const weekday = date.getDay();
     if (weekday === 0 || weekday === 6) cell.classList.add("weekend");
     if (iso === today) cell.classList.add("is-today");
     days.append(cell);
   }
+
+  // Stretti, i numeri dei giorni non si leggono e si accavallano: sparisce la cifra e resta la
+  // cella, che è quella che porta il fondo del fine settimana e la riga di oggi.
+  if (DAY < 14) days.classList.add("tight");
 
   const scale = node("div", "tl-scale");
   scale.style.width = `${total * DAY}px`;
@@ -323,6 +343,23 @@ function _todayLine(range) {
 //  p u b l i c
 // -----------------------------------------------------------------------------------------------------------------
 
+/** Un passo di zoom: si sale e si scende per raddoppi, che è come si guarda una cosa da lontano. */
+export function zoom(towards) {
+  const now = chosen || DAY;
+  const wanted = towards > 0 ? now * 2 : now / 2;
+  // La scelta resta una scelta, anche quando arriva al passo pieno: sciogliendola lì, un secondo
+  // «+» riportava la veduta d'insieme invece di fermarsi al dettaglio — un comando che a fine
+  // corsa faceva il contrario di quello che dice. Si torna alla veduta d'insieme cambiando
+  // progetto, o scendendo con l'altro comando.
+  chosen = Math.max(DAY_TIGHT, Math.min(DAY_FULL, Math.round(wanted)));
+  on.repaint();
+}
+
+/** Un altro progetto è un'altra forma: la veduta d'insieme si rifà, e la scelta di prima cade. */
+export function fit() {
+  chosen = null;
+}
+
 export function connect(handlers) {
   on = { ...on, ...handlers };
 }
@@ -337,6 +374,26 @@ export function open(id) {
  * `tasks` arrives already filtered, from the same function the board and the calendar use: three
  * views, one idea of what is being looked at.
  */
+/**
+ * Quanti pixel vale un giorno, adesso.
+ *
+ * Senza una scelta a mano: quanti ne servono perché il progetto intero stia nella finestra, mai
+ * più di ventisei — un progetto di due settimane non si allarga a riempire lo schermo — e mai
+ * meno di quattro, sotto i quali una barra non è più una barra. La larghezza la si chiede
+ * all'elemento, che è l'unico che sa quanto è grande davvero.
+ */
+function _dayWidth(total) {
+  if (chosen) return chosen;
+  // La larghezza dell'elemento, quando ce l'ha. **Alla prima pittura non ce l'ha**: la schermata
+  // viene mostrata dopo, quindi `clientWidth` è zero e un numero fisso al suo posto sbaglia di
+  // quanto è larga la finestra — misurato, apriva a otto pixel per giorno una veduta che ne voleva
+  // dodici. La finestra è la stessa cosa a meno dei margini, e c'è sempre.
+  const body = el("timeline");
+  const wide = body && body.clientWidth ? body.clientWidth : (document.documentElement.clientWidth || 900);
+  const room = wide - (wide <= NARROW ? NAMES_NARROW : NAMES_WIDE) - 24;
+  return Math.max(DAY_TIGHT, Math.min(DAY_FULL, Math.floor(Math.max(room, 240) / Math.max(total, 1))));
+}
+
 export function paint(tasks) {
   const project = model.project(projectId);
   if (!project) return;
@@ -346,8 +403,14 @@ export function paint(tasks) {
 
   if (!tasks.length) {
     fill(body, [node("p", "note", t("tlEmpty"))]);
+    el("planZoom").hidden = true;
     return;
   }
+
+  DAY = _dayWidth(_days(range.first, range.last));
+  el("planZoom").hidden = false;
+  el("zoomOut").disabled = DAY <= DAY_TIGHT;
+  el("zoomIn").disabled = DAY >= DAY_FULL;
 
   const parts = [_head(range)];
   const grid = node("div", "tl-grid");

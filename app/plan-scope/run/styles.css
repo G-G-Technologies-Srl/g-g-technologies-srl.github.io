@@ -1292,6 +1292,11 @@ input.when-field.late { color: var(--late); }
 
 .cal-day.other-month { opacity: 0.45; }
 
+/* Sabato e domenica smorzati, come nella linea del tempo: un fondo appena più chiaro del vuoto,
+   perché chi conta i giorni che restano li salta e deve poterlo fare senza leggere le lettere in
+   cima. Il giorno di oggi vince lo stesso, che il suo bordo pesa di più di un fondo. */
+.cal-day.weekend { background: rgba(127, 140, 170, 0.055); }
+
 /* Today is marked by the accent edge and by the number turning bold: the colour alone would be the
    one thing this site never lets carry the information by itself. */
 .cal-day.is-today { border-color: var(--accent); }
@@ -1377,6 +1382,8 @@ input.when-field.late { color: var(--late); }
 
 .tl-days { display: flex; }
 
+/* La larghezza la scrive `timeline.js` su ogni cella: è la stessa dei giorni delle barre, e da
+   quando la veduta si adatta al progetto non è più un numero fisso. Questa resta come ripiego. */
 .tl-day {
   width: 26px;
   flex: none;
@@ -1388,9 +1395,18 @@ input.when-field.late { color: var(--late); }
 
 .tl-day.weekend { background: rgba(127, 140, 170, 0.07); }
 
+/* Da lontano la cifra del giorno non si legge e si accavalla con la vicina: sparisce la cifra e
+   resta la cella, che è quella che porta il fondo del fine settimana e il segno di oggi. */
+.tl-days.tight .tl-day { font-size: 0; padding: 6px 0; }
+.tl-days.tight .tl-day.is-today { background: var(--accent-soft); }
+
 .tl-day.is-today { color: var(--accent-text); font-weight: 600; }
 
 .tl-grid { position: relative; width: max-content; min-width: 100%; }
+
+/* I due comandi dello zoom, attaccati: sono una cosa sola con due versi. */
+.zoom { display: inline-flex; gap: 2px; }
+.zoom button { min-width: 26px; justify-content: center; }
 
 .tl-group {
   display: flex;
@@ -1613,6 +1629,44 @@ input.when-field.late { color: var(--late); }
 @media (max-width: 620px) {
   .column { flex-basis: 80vw; }
   .cal-grid { grid-auto-rows: minmax(64px, 1fr); }
+
+  /* **Su un telefono il titolo non ci sta, e mezzo titolo non è un titolo.** Sette colonne dentro
+     400px danno cinquanta pixel a giorno: «Scrivere la scaletta» diventava «Sc…», che occupa la
+     riga per non dire niente. Un pallino dice «qui c'è qualcosa» ed è la verità intera; il colore
+     resta quello che aveva — ambra se è in ritardo, accento se è un incontro — e il tocco apre la
+     stessa cosa di prima. Ventidue pixel di bersaglio, che è quanto vuole un dito. */
+  .cal-day { align-content: flex-start; flex-direction: row; flex-wrap: wrap; gap: 2px; }
+  .cal-number { flex: 1 0 100%; }
+  .cal-entry {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    background: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cal-entry span { display: none; }
+  .cal-entry::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.85;
+  }
+  /* Senza un colore suo un'attività è grigia come il testo intorno: il pallino prende il colore
+     del testo smorzato, e chi ne ha uno — ritardo, incontro, traguardo — se lo tiene. */
+  .cal-entry:not(.late):not(.is-meeting):not(.is-milestone) { color: var(--muted); }
+  .cal-entry.is-milestone { color: var(--accent-text); }
+  .cal-entry.is-done::before { opacity: 0.4; }
+  .cal-more { flex: 1 0 100%; }
+
+  /* Su un telefono la colonna dei nomi si mangiava metà schermo: centonovanta pixel su quattrocento
+     lasciavano al disegno meno di quanto serve a capirlo. Centoventi bastano a riconoscere
+     un'attività — il titolo intero è a un tocco di distanza, sulla sua scheda. */
+  .tl-title, .tl-corner { width: 120px; }
 }
 
 /* ---------------------------------------------------------------------------------------------

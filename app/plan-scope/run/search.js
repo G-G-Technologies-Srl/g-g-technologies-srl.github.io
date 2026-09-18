@@ -18,13 +18,21 @@ import { el, node, fill } from "./ui.js";
 //  s t a t e
 // -----------------------------------------------------------------------------------------------------------------
 
-let on = { openProject() {}, openPage() {}, openTask() {} };
+let on = { openProject() {}, openPage() {}, openTask() {}, openPerson() {} };
 let found = [];
 let cursor = 0;
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
 // -----------------------------------------------------------------------------------------------------------------
+
+/** Come si chiama una cosa senza nome, a seconda di che cosa è. */
+function _untitled(kind) {
+  if (kind === "kindPage") return "pageUntitled";
+  if (kind === "kindPerson") return "personNoName";
+  if (kind === "kindTask") return "taskUntitled";
+  return "projectUntitled";
+}
 
 function _row(hit, index) {
   const row = node("button", index === cursor ? "search-hit on" : "search-hit");
@@ -34,12 +42,13 @@ function _row(hit, index) {
   row.append(node("span", "kind", t(hit.kind)));
   const body = node("span", "search-body");
   body.append(node("span", hit.done ? "search-title struck" : "search-title",
-    hit.title || t(hit.kind === "kindPage" ? "pageUntitled" : "projectUntitled")));
+    hit.title || t(_untitled(hit.kind))));
   if (hit.snippet) body.append(node("span", "search-snippet", hit.snippet));
   row.append(body);
-  if (hit.kind !== "kindProject") {
-    row.append(node("span", "meta from", hit.project.name || t("projectUntitled")));
-  }
+  // A destra, da dove viene: il progetto per quello che sta in un progetto, l'azienda e il
+  // mestiere per una persona — che non sta in nessuno, e di cui è quello che si vuole sapere.
+  const from = hit.project ? (hit.project.name || t("projectUntitled")) : (hit.meta || "");
+  if (from) row.append(node("span", "meta from", from));
   row.addEventListener("click", () => _go(hit));
   return row;
 }
@@ -55,6 +64,7 @@ function _go(hit) {
   close();
   if (hit.kind === "kindProject") on.openProject(hit.id);
   else if (hit.kind === "kindPage") on.openPage(hit.id);
+  else if (hit.kind === "kindPerson") on.openPerson(hit.id);
   else on.openTask(hit.id);
 }
 

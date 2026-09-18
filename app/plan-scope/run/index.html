@@ -378,6 +378,12 @@
       <!-- La porta che mancava: chi lavora sulla bacheca prende un appuntamento da qui, senza
            passare dalla pagina del progetto o dalla scheda di una persona. -->
       <button type="button" id="planMeeting" class="ghost small" data-t="newMeeting"></button>
+      <!-- Quanto si vede della linea del tempo. All'apertura il progetto ci sta tutto — che è la
+           sola veduta che dice la forma di un piano — e da qui si scende nel dettaglio. -->
+      <span class="zoom" id="planZoom" hidden>
+        <button type="button" id="zoomOut" class="ghost small icon" data-t-label="zoomOut">−</button>
+        <button type="button" id="zoomIn" class="ghost small icon" data-t-label="zoomIn">+</button>
+      </span>
       <button type="button" id="filtersOpen" class="ghost small" data-t="filtersOpen"></button>
       <!-- What leaves the plan: a calendar file, a spreadsheet, a page for somebody without the
            app, paper. And what comes in: a pasted list. Behind one button, like the page's. -->
@@ -464,6 +470,9 @@
           <hr>
           <button type="button" id="starPage"></button>
           <button type="button" id="boxesToPlan" data-t="boxesToPlan"></button>
+          <!-- La riga che spiega come si scrive: si spegne e si riaccende da qui, perché dopo un
+               po' è rumore su ogni pagina e per qualcun altro è ancora la cosa che serve. -->
+          <button type="button" id="editorNoteToggle"></button>
           <button type="button" id="copyPage" data-t="copyForAssistant"></button>
           <button type="button" id="printPage" data-t="printPage"></button>
           <button type="button" id="exportHtml" data-t="exportHtml"></button>

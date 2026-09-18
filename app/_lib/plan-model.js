@@ -1687,6 +1687,27 @@ export function search(query) {
     }
   }
 
+  // Le persone. L'app ha una rubrica, i nomi nelle teste degli incontri e le menzioni con «@»:
+  // una persona è una cosa di prima classe, e cercarla era l'unica strada chiusa — si trovava il
+  // progetto, la pagina e l'attività, e non chi ci lavora. Il recapito conta quanto il nome,
+  // perché «chi era quello della tipografia?» si cerca dall'azienda, non dal cognome.
+  for (const person of liveContacts()) {
+    const nameAt = _plain(person.name).indexOf(needle);
+    const other = [person.company, person.role, person.email, person.phone]
+      .some((one) => _plain(one).includes(needle));
+    if (nameAt < 0 && !other) continue;
+    hits.push({
+      kind: "kindPerson",
+      id: person.id,
+      title: person.name,
+      project: null,
+      rank: nameAt >= 0 ? 1 : 3,
+      snippet: "",
+      // Quello che distingue due persone con lo stesso nome, e che spiega perché è saltata fuori.
+      meta: [person.company, person.role].filter(Boolean).join(" · "),
+    });
+  }
+
   hits.sort((a, b) => a.rank - b.rank);
   return hits.slice(0, SEARCH_LIMIT);
 }

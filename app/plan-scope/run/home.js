@@ -554,8 +554,8 @@ function _paintDue(due, today) {
     box.append(head);
     const list = node("ul", "list");
     fill(list, group.items.map((one) => (one.meeting
-      ? _meetingRow(one.meeting, today, { project: one.project, day: group.day })
-      : _taskRow(one.task, today, { project: one.project, day: group.day }))));
+      ? _meetingRow(one.meeting, today, { project: one.project || null, day: group.day })
+      : _taskRow(one.task, today, { project: one.project || null, day: group.day }))));
     box.append(list);
     return box;
   }));
@@ -590,7 +590,11 @@ export function paintHome(room) {
     // A parità di giorno l'appuntamento viene prima: ha un'ora, quindi un posto nella giornata.
     .sort((a, b) => a.when.localeCompare(b.when) || (a.meeting ? -1 : 1) - (b.meeting ? -1 : 1));
   el("todayPanel").hidden = projects.length === 0;
-  _paintDue(due, today);
+  // La pastiglia del progetto serve a distinguere, e con un progetto solo non c'è niente da
+  // distinguere: era lo stesso nome ripetuto su ogni riga, e su un telefono mandava ogni riga a
+  // capo per dire una cosa che il titolo della schermata aveva già detto.
+  const many = new Set(due.map((one) => one.project.id)).size > 1;
+  _paintDue(due.map((one) => (many ? one : { ...one, project: null })), today);
   el("todayEmpty").hidden = due.length > 0;
 
   const trash = model.trashedProjects().length;

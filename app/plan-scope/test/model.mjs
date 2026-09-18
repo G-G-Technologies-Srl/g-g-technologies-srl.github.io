@@ -1628,4 +1628,22 @@ test("il filo sopravvive all'export e all'importazione, che rifà tutti gli id",
   assert.equal(model.taskOfPage(model.pagesOf(projectId)[0].id).id, copiata.id);
 });
 
+test("la ricerca trova anche le persone, per nome e per recapito", () => {
+  const one = model.createProject({ name: "Sito" });
+  model.createTask(one.id, { title: "Chiamare la tipografia" });
+  model.createContact({ name: "Anna Rossi", company: "Tipografia Bianchi", role: "stampatrice" });
+  model.createContact({ name: "Marco Verdi", company: "Fiera SpA" });
+  const perNome = model.search("anna").filter((hit) => hit.kind === "kindPerson");
+  assert.deepEqual(perNome.map((hit) => hit.title), ["Anna Rossi"]);
+  assert.equal(perNome[0].meta, "Tipografia Bianchi · stampatrice", "e dice da dove viene");
+  // «Chi era quello della tipografia?» si cerca dall'azienda, non dal cognome — e l'attività che
+  // nomina la stessa parola resta lì accanto, perché sono due risposte a una domanda sola.
+  const perAzienda = model.search("tipograf");
+  assert.deepEqual(perAzienda.map((hit) => hit.kind).sort(), ["kindPerson", "kindTask"]);
+  // Una persona cestinata non si cerca più.
+  const via = model.contactByName("Marco Verdi");
+  model.trashContact(via.id);
+  assert.deepEqual(model.search("verdi"), []);
+});
+
 console.log(`model: ${passed} prove passate`);

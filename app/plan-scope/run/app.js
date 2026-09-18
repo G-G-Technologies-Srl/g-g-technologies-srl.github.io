@@ -83,6 +83,14 @@ const PERSON_FIELDS = [["personName", "name"], ["personCompany", "company"], ["p
   ["personEmail", "email"], ["personPhone", "phone"]];
 // Che il benvenuto sia già stato visto è un fatto di questo browser, non dei dati: sta anche qui.
 const WELCOMED_KEY = "gg.plan-scope.welcomed";
+// Quante pagine sono state aperte su questo browser, e la scelta esplicita di chi ha detto se la
+// riga di istruzioni la vuole o no. Stanno qui e non nel database perché sono fatti di questo
+// browser e non del lavoro: un progetto esportato non deve portarsi dietro quanto ne sai tu.
+const SEEN_KEY = "gg.plan-scope.pagesSeen";
+const NOTE_KEY = "gg.plan-scope.editorNote";
+// Dopo quante pagine la riga si toglie di mezzo da sola. Dodici: chi ne ha aperte dodici la barra
+// dei blocchi l'ha vista dodici volte, e continuare a spiegargliela è rumore su ogni pagina.
+const NOTE_AFTER = 12;
 
 // Object URLs handed to the images on screen. They are revoked when the page closes: each one holds
 // its blob in memory for as long as it exists, and a session spent moving between pages would
@@ -1131,6 +1139,8 @@ function _openPage(id) {
   // The properties at the head of the file are not blocks: they are read here, edited in the row
   // under the title, and written back in front of whatever the editor produces.
   editor.load(pages.load(page.markdown));
+  _countPage();
+  _paintNote();
   _applySourceView(false);
   _paintTree();
   // The page as it was found: the trail of versions starts from here, so that what today's
@@ -1193,6 +1203,34 @@ async function _alreadyWelcomed() {
     if (localStorage.getItem(WELCOMED_KEY)) return true;
   } catch (ignored) { /* as above */ }
   return db.available() ? Boolean(await db.meta("welcomed")) : true;
+}
+
+/**
+ * La riga che spiega come si scrive: c'è finché serve, e poi non c'è più.
+ *
+ * Era una fascia di istruzioni sopra ogni pagina, per sempre — utile le prime volte, e dalla
+ * tredicesima un nastro di testo che contende lo spazio al documento. Si conta quante pagine sono
+ * state aperte su questo browser e dopo dodici si toglie da sola; chi la vuole prima o dopo la
+ * accende e la spegne dal menù, e quella scelta vale più del conto.
+ */
+function _noteWanted() {
+  try {
+    const said = localStorage.getItem(NOTE_KEY);
+    if (said === "on") return true;
+    if (said === "off") return false;
+    return Number(localStorage.getItem(SEEN_KEY) || 0) < NOTE_AFTER;
+  } catch (ignored) { return true; }        // finestra privata: meglio spiegare che tacere
+}
+
+function _paintNote() {
+  el("editorNote").hidden = !_noteWanted();
+  el("editorNoteToggle").textContent = t(_noteWanted() ? "editorNoteOff" : "editorNoteOn");
+}
+
+function _countPage() {
+  try {
+    localStorage.setItem(SEEN_KEY, String(Number(localStorage.getItem(SEEN_KEY) || 0) + 1));
+  } catch (ignored) { /* come sopra: senza conto la riga resta, che è il caso buono */ }
 }
 
 /** The page on screen, reloaded from the model: head, body, properties, tree. */
@@ -2070,6 +2108,7 @@ function _wire() {
   search.connect({
     openProject: (id) => _openProject(id),
     openPage: (id) => _openPage(id),
+    openPerson: (id) => _openPerson(id),
     openTask: (id) => {
       const task = model.task(id);
       if (!task) return;
@@ -2241,6 +2280,14 @@ function _wire() {
     outputs.exportIcs(projectId, { alarm });
     if (alarm.on) snack(t("dueIcsAlarm"));
   });
+  el("editorNoteToggle").addEventListener("click", () => {
+    try {
+      localStorage.setItem(NOTE_KEY, _noteWanted() ? "off" : "on");
+    } catch (ignored) { /* niente da ricordare: resta com'è per questa volta */ }
+    _paintNote();
+    el("pageMoreMenu").hidden = true;
+  });
+
   el("copyPage").addEventListener("click", () => outputs.copyFor("page", { pageId }));
   el("planCopy").addEventListener("click", () => outputs.copyFor("plan", { projectId }));
   el("planPaste").addEventListener("click", () => _openPaste());

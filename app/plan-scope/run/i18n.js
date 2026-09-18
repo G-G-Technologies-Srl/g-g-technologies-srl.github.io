@@ -320,6 +320,8 @@ const IT = {
   addPage: "Aggiungi",
   pagesEmpty: "Nessuna pagina. Il brief è di solito la prima.",
   taskPlaceholder: "Cosa c'è da fare?",
+  taskPlaceholderShort: "Nuova attività",
+  calNewTask: "Cosa c'è da fare il {day}?",
   addTask: "Aggiungi",
   tasksEmpty: "Nessuna attività. Basta il titolo: la data si mette dopo.",
   taskDate: "Scadenza",
@@ -391,6 +393,8 @@ const IT = {
   htmlFooter: "Da Plan Scope, {date}. I dati restano sul computer di chi li ha scritti.",
   tlNoDate: "Senza data",
   tlEmpty: "Nessuna attività, per ora. Aggiungine una dalla bacheca e comparirà qui.",
+  zoomOut: "Vedi più giorni",
+  zoomIn: "Vedi più da vicino",
   filtersOpen: "Filtri",
   filtersClear: "Togli i filtri",
   filterTag: "Tag",
@@ -492,6 +496,8 @@ const IT = {
   starRemove: "Togli dai preferiti",
   pageTitlePlaceholder: "Titolo",
   bodyPlaceholder: "Scrivi qui.",
+  editorNoteOff: "Nascondi come si scrive",
+  editorNoteOn: "Mostra come si scrive",
   editorNote: "Scrivi. Su una riga vuota: / apre l'elenco dei blocchi, «# » fa un titolo, «- » un "
     + "elenco. La maniglia ⣿ accanto a un blocco lo sposta, o lo trasforma se la premi.",
   sourceView: "Vedi il sorgente",
@@ -568,6 +574,7 @@ const IT = {
   kindProject: "Progetto",
   kindPage: "Pagina",
   kindTask: "Attività",
+  kindPerson: "Persona",
   trashedOn: "Nel cestino dal {date}",
 
   // snackbar
@@ -1311,6 +1318,8 @@ const EN = {
   addPage: "Add",
   pagesEmpty: "No pages yet. The brief is usually the first one.",
   taskPlaceholder: "What needs doing?",
+  taskPlaceholderShort: "New task",
+  calNewTask: "What needs doing on {day}?",
   addTask: "Add",
   tasksEmpty: "No tasks yet. A title is enough: the date can come later.",
   taskDate: "Due date",
@@ -1380,6 +1389,8 @@ const EN = {
   htmlFooter: "From Plan Scope, {date}. The data stays on the computer of whoever wrote it.",
   tlNoDate: "No date",
   tlEmpty: "No tasks yet. Add one from the board and it will show up here.",
+  zoomOut: "See more days",
+  zoomIn: "See closer",
   filtersOpen: "Filters",
   filtersClear: "Clear the filters",
   filterTag: "Tag",
@@ -1478,6 +1489,8 @@ const EN = {
   starRemove: "Remove from favourites",
   pageTitlePlaceholder: "Title",
   bodyPlaceholder: "Write here.",
+  editorNoteOff: "Hide how to write",
+  editorNoteOn: "Show how to write",
   editorNote: "Just write. On an empty line: / opens the list of blocks, “# ” makes a heading, "
     + "“- ” a list. The ⣿ handle beside a block moves it, or turns it into something else if you "
     + "press it.",
@@ -1555,6 +1568,7 @@ const EN = {
   kindProject: "Project",
   kindPage: "Page",
   kindTask: "Task",
+  kindPerson: "Person",
   trashedOn: "In the bin since {date}",
 
   // snackbar

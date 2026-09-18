@@ -576,7 +576,9 @@ function _columnNode(column, tasks, today, meetings = []) {
   field.type = "text";
   field.maxLength = 160;
   field.autocomplete = "off";
-  field.placeholder = t("taskPlaceholder");
+  // Corto, perché la colonna è larga 268px: fra il «+» e il pulsante restano centotrenta pixel, e
+  // «Cosa c'è da fare?» ci finiva tagliato a metà parola.
+  field.placeholder = t("taskPlaceholderShort");
   form.append(field);
   // `node` and not `button()`: the helper sets `type="button"`, and a button of that type does not
   // submit its form. The visible «Aggiungi» did nothing at all — the task was created only by
@@ -884,6 +886,9 @@ function _paintCalendar() {
     cell.dataset.day = iso;
     if (date.getMonth() !== first.getMonth()) cell.classList.add("other-month");
     if (iso === today) cell.classList.add("is-today");
+    // Sabato e domenica smorzati, come li smorza già la linea del tempo: sono due viste che
+    // contano gli stessi giorni, e chi conta quanti giorni di lavoro restano li salta.
+    if (date.getDay() === 0 || date.getDay() === 6) cell.classList.add("weekend");
 
     cell.append(node("span", "cal-number", num(date.getDate(), 0)));
 
@@ -915,6 +920,19 @@ function _paintCalendar() {
       cell.append(entry);
     }
     if (here.length > 3) cell.append(node("span", "cal-more", tf("calMore", { n: here.length - 3 })));
+
+    // **Un giorno si può riempire.** Fino a qui un'attività si poteva trascinare su un giorno, ma
+    // non nascere lì: il gesto che tutti provano per primo su un calendario — clic sul giorno,
+    // scrivo cosa c'è da fare — non faceva niente. Il titolo si chiede prima di creare, così un
+    // ripensamento non lascia in giro un'attività senza nome.
+    cell.addEventListener("click", async (event) => {
+      if (event.target.closest(".cal-entry") || justDragged) return;
+      const title = await ask(tf("calNewTask", { day: shortDate(iso) }), { value: "" });
+      if (title === null || !title.trim()) return;
+      model.createTask(projectId, { title: title.trim(), end: iso });
+      on.change();
+      paint();
+    });
     cells.push(cell);
   }
   fill(el("calGrid"), cells);
@@ -971,6 +989,9 @@ export function connect(handlers) {
     open: (id) => openCard(id),
     repaint: () => paint(),
   });
+
+  el("zoomOut").addEventListener("click", () => timeline.zoom(-1));
+  el("zoomIn").addEventListener("click", () => timeline.zoom(1));
 
   el("calPrev").addEventListener("click", () => _shiftMonth(-1));
   el("calNext").addEventListener("click", () => _shiftMonth(1));
@@ -1130,6 +1151,9 @@ const VIEWS = ["kanban", "calendar", "timeline"];
 
 /** Just the project, for a card opened from outside the plan: the view and the filters stay. */
 export function setProject(id) {
+  // Un altro progetto è un'altra forma, e la veduta d'insieme va rifatta: lo zoom scelto sul
+  // progetto di prima non dice niente su questo.
+  if (id !== projectId) timeline.fit();
   projectId = id;
   timeline.open(id);
 }
@@ -1175,6 +1199,9 @@ export function paint() {
   el("board").hidden = view !== "kanban";
   el("calendar").hidden = view !== "calendar";
   el("timeline").hidden = view !== "timeline";
+  // I due comandi dello zoom sono della linea del tempo, e nelle altre due viste non vogliono dire
+  // niente: la barra è una sola, quindi la riempie chi è in scena.
+  if (view !== "timeline") el("planZoom").hidden = true;
 
   _paintFilters();
   _paintSelection();
