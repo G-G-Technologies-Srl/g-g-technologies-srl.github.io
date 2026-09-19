@@ -43,7 +43,7 @@
       document.documentElement.classList.add('js');
     })();
   </script>
-  <link rel="stylesheet" href="../../../assets/site.css?v=017.4996217a">
+  <link rel="stylesheet" href="../../../assets/site.css?v=018.b5a6dc7f">
   <script type="application/ld+json">
 [
   {
@@ -227,7 +227,7 @@
           <h2>What to do, in order</h2>
           <ol><li><strong>Take the manual you have and count the numbers.</strong> Do not read it: look for figures, versions, supplier names, part codes. How many are there, and how many are still true? That is an afternoon's work and it tells you more than a full review.</li><li><strong>Mark the ones that have changed at least once.</strong> Those are the candidates: a value that has changed already will change again.</li><li><strong>Move them out of the text</strong>, into a file a program can read without opening it — a spreadsheet, a CSV — with a date and an owner on every row. The text refers to them by code. It is the format, not the table, that makes step 5 possible.</li><li><strong>Decide where that table lives</strong>, and make it one place. If the same threshold also sits in the PLC or on a label, settle which of the three is the source and where the others come from.</li><li><strong>Put an automated check on that table.</strong> However small: a missing value, an old date. It has to stop something — an acceptance test, a shipment — or nobody will look at it.</li><li><strong>Move the decision upstream, into the design of the next machine.</strong> For every configurable quantity: three years from now, who owns this value?</li><li><strong>Write a date on everything.</strong> Every table, every screen, every sheet: when it was last updated. A page without a date can neither be used nor thrown away.</li></ol>
           <h2>Why we write about this</h2>
-          <p>We design and build machines and plants, and documentation always arrives at the end, when the budget has run out and so has the appetite. We stopped treating it as a box to tick once we noticed something: <strong>a wrong document comes back as a support call</strong>, and the call costs more than writing it properly would have.</p>
+          <p>We design and build machines and plants, and documentation always arrives at the end, when the budget has run out and attention has already moved elsewhere. We stopped treating it as a box to tick once we noticed something: <strong>a wrong document comes back as a support call</strong>, and the call costs more than writing it properly would have.</p>
           <p>DigiSense®, the framework we build our sensor, AI and robotics work on, keeps data acquisition, processing and machine control separate. The same separation applies to what gets written: the procedure on one side, the values that change on the other, and a check that blocks the handover rather than letting out a document that contradicts itself.</p>
           <p>If you have a manual nobody opens any more, that is where to start: how many numbers it holds, and how many are still true.</p>
           <p><em>The author wrote</em> <a href="https://angelogeminiani.github.io/claude-la-guida-completa/en/" rel="noopener">Claude: the complete guide</a><em>, a free technical manual about a product that changes every week. It is built on the separation described here: the data with an expiry date sits outside the text, each item with its own date, and the document will not build if a value does not add up. It is not a machine — the mechanism, though, is the same, and it is public.</em></p>
@@ -270,8 +270,8 @@
 
     <section class="cta-band">
       <div class="container reveal">
-        <h2>Have a manual nobody opens any more?</h2>
-        <p class="section-intro">Tell us what plant it covers and how long it has sat untouched. A person from the team answers, not a form.</p>
+        <h2>Do you have a manual nobody opens any more?</h2>
+        <p class="section-intro">Tell us which plant it covers and how long it has gone without an update. A person from the team answers, not a form.</p>
         <div class="hero-ctas">
           <a class="btn btn-primary" href="mailto:info@ggtechnologies.sm?subject=Information%20request">Talk to us</a>
         </div>

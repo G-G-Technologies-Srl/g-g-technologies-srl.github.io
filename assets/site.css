@@ -1097,6 +1097,21 @@ section.tinted {
 .photo img { width: 100%; height: auto; display: block; border-radius: var(--radius-lg); border: 1px solid var(--border); }
 .photo figcaption, .diagram figcaption { color: var(--faint); font-size: 0.82rem; margin-top: 12px; }
 
+/* A screenshot inside an article, written in the Markdown as ![caption](file). Same box as the
+   screenshot on an app's scheda — the minor panel recipe, 1px border and --radius — because it is
+   the same kind of picture. The image opens full size in a new tab: a 1600px screen shown at the
+   width of the prose is legible, but the detail is in the original. */
+.article-shot { margin: 34px 0; }
+.article-shot a { display: block; }
+.article-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.article-shot figcaption { color: var(--faint); font-size: 0.82rem; margin-top: 10px; }
+
 .diagram { margin: 40px 0 8px; }
 .diagram svg { width: 100%; height: auto; display: block; }
 
