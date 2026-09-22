@@ -145,6 +145,10 @@
     <div class="wrap">
       <div class="screen-head">
         <h1 data-t="homeTitle"></h1>
+        <span class="spacer"></span>
+        <!-- Il mese intero, da qui: il pannello sotto guarda sette giorni, e la domanda «e dopo?»
+             non aveva un posto dove andare. -->
+        <button type="button" id="openAgenda" data-t="agendaTitle"></button>
         <button type="button" id="newProject" class="primary" data-t="newProject"></button>
       </div>
       <!-- Uno stato, non un comando: in fondo a una fila di pulsanti sembrava uno di loro. -->
@@ -567,6 +571,33 @@
   <!-- La rubrica: le persone, che sono la prima cosa di quest'app a non appartenere a un progetto.
        Sta accanto a «Progetti» e non dentro, perché è lì che vivono: la stessa persona torna su
        lavori diversi, ed è esattamente quello che una rubrica è. -->
+  <!-- ------------------------------------------------------------------ the whole month -->
+
+  <!-- Il calendario di tutto: un mese, e dentro gli appuntamenti e le scadenze di ogni progetto.
+       Il calendario del progetto resta dov'è e risponde a un'altra domanda; questo risponde a
+       «cosa c'è giovedì», che prima si poteva chiedere solo a un progetto per volta. -->
+  <section class="screen" id="agendaScreen" hidden>
+    <div class="wrap">
+      <div class="screen-head">
+        <h1 data-t="agendaTitle"></h1>
+        <span class="spacer"></span>
+        <button type="button" id="agMeeting" class="primary" data-t="newMeeting"></button>
+      </div>
+      <p class="note" data-t="agendaHint"></p>
+      <div class="calendar">
+        <div class="cal-head">
+          <button type="button" id="agPrev" class="ghost small">‹</button>
+          <span id="agMonth"></span>
+          <button type="button" id="agNext" class="ghost small">›</button>
+          <button type="button" id="agToday" class="ghost small" data-t="calToday"></button>
+        </div>
+        <div class="cal-week" id="agWeekdays"></div>
+        <div class="cal-grid" id="agGrid"></div>
+      </div>
+      <p class="empty" id="agEmpty" data-t="agendaEmpty" hidden></p>
+    </div>
+  </section>
+
   <section class="screen" id="rubrica" hidden>
     <div class="wrap">
       <div class="screen-head">

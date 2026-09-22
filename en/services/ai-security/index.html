@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI security: the scope of an agent — G&amp;G Technologies</title>
+  <meta name="description" content="AI agents with a defined scope of action, access limited to what is needed and human approval. A review of the AI tools already in use.">
+  <meta name="author" content="G&amp;G Technologies Srl">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="theme-color" content="#0d1220">
+  <link rel="canonical" href="https://ggtechnologies.sm/en/services/ai-security/">
+  <link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/servizi/ai-sicurezza/">
+  <link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/services/ai-security/">
+  <link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/servizi/ai-sicurezza/">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="G&amp;G Technologies">
+  <meta property="og:title" content="AI security: the scope of an agent — G&amp;G Technologies">
+  <meta property="og:description" content="AI agents with a defined scope of action, access limited to what is needed and human approval. A review of the AI tools already in use.">
+  <meta property="og:url" content="https://ggtechnologies.sm/en/services/ai-security/">
+  <meta property="og:image" content="https://ggtechnologies.sm/assets/og-security-en.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="en_GB">
+  <meta property="og:locale:alternate" content="it_IT">
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AI security: the scope of an agent — G&amp;G Technologies">
+  <meta name="twitter:description" content="AI agents with a defined scope of action, access limited to what is needed and human approval. A review of the AI tools already in use.">
+  <meta name="twitter:image" content="https://ggtechnologies.sm/assets/og-security-en.jpg">
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../../../assets/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../../../assets/favicon-32.png">
+  <!-- Pre-paint bootstrap: resolve the theme before first render -->
+  <script>
+    (function () {
+      var theme = '';
+      try { theme = localStorage.getItem('gg-theme') || ''; } catch (ignored) { /* unavailable */ }
+      if (theme !== 'light' && theme !== 'dark') {
+        theme = (window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+      }
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.classList.add('js');
+    })();
+  </script>
+  <link rel="stylesheet" href="../../../assets/site.css?v=018.b5a6dc7f">
+  <script type="application/ld+json">
+[
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://ggtechnologies.sm/en/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Services",
+        "item": "https://ggtechnologies.sm/en/#services"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "AI for security",
+        "item": "https://ggtechnologies.sm/en/services/ai-security/"
+      }
+    ]
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "AI for security",
+    "serviceType": "AI agent security and review",
+    "url": "https://ggtechnologies.sm/en/services/ai-security/",
+    "description": "AI agents with a defined scope of action, access limited to what is needed and human approval. A review of the AI tools already in use.",
+    "inLanguage": "en",
+    "provider": {
+      "@id": "https://ggtechnologies.sm/#organization"
+    },
+    "areaServed": [
+      {
+        "@type": "Country",
+        "name": "San Marino"
+      },
+      {
+        "@type": "Country",
+        "name": "Italy"
+      },
+      {
+        "@type": "Place",
+        "name": "Europe"
+      }
+    ]
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "inLanguage": "en",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is prompt injection?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "It is a request hidden inside a document, a message or a web page, which the agent reads and carries out as though it came from you. The defence lies in the powers: if the agent cannot issue a payment or delete an archive, a hidden request gets nothing."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I connect an assistant to the company mailbox?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, and it is an architecture decision rather than a setting: which folders it reads, what it may send, which messages need a confirmation. The difference between a trial and a live service lies in those answers."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "I already use AI tools bought elsewhere: can you review them?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. The review lists, for each tool, which data it reaches, which actions it takes on its own and where a person's approval is missing. What comes out is a list of fixes, most serious first, with the work each one takes."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is a local model enough to make an agent safe?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No, and the two answer different questions. A local model decides where the data is processed; the boundary decides what the agent may do. An agent running on your own servers can still write into your systems."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I know what the agent did?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "From the log: every action leaves the time, the operation and the data it touched. It is also how you measure whether it is doing the job it was put there for."
+        }
+      }
+    ]
+  }
+]
+  </script>
+</head>
+<body>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs><linearGradient id="icoGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#10b981"/></linearGradient></defs></svg>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <nav class="nav" aria-label="Main navigation">
+      <a href="/en/" class="brand">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><defs><linearGradient id="ggMark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5eecab"/><stop offset="1" stop-color="#10b981"/></linearGradient><mask id="ggWire"><path d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="#fff" stroke-width="13"/><path d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="#000" stroke-width="10"/></mask></defs><rect class="wire" width="100" height="100" mask="url(#ggWire)"/><path class="lit" d="M66 50 H86 A36 36 0 1 1 50 14" fill="none" stroke="url(#ggMark)" stroke-width="13" stroke-linecap="round"/><circle class="click" cx="50" cy="50" r="9" fill="none" stroke="#34d399" stroke-width="2"/><circle class="led" cx="50" cy="50" r="9"/></svg></span>
+        <span class="brand-text">
+          <span class="brand-name">G&amp;G Technologies</span>
+          <span class="brand-payoff">Powering the future</span>
+        </span>
+      </a>
+
+      <div class="nav-links" id="navLinks">
+        <a href="/en/#services">Services</a>
+        <a href="/en/training/">Training</a>
+        <a href="/en/podz-ai/">Podz.AI</a>
+        <a href="/en/insights/">Insights</a>
+        <a href="/en/app/">Apps</a>
+        <a href="/en/about/">About</a>
+        <a href="/en/#contact">Contact</a>
+      </div>
+
+      <div class="nav-actions">
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Tema chiaro/scuro · Light/dark theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2"/>
+            <path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.2 14.5A8.3 8.3 0 0 1 9.5 3.8a8.3 8.3 0 1 0 10.7 10.7Z"/>
+          </svg>
+        </button>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <span class="current">EN</span>
+          <a href="https://ggtechnologies.sm/servizi/ai-sicurezza/" hreflang="it" lang="it">IT</a>
+        </div>
+        <a class="btn btn-primary nav-cta" href="mailto:info@ggtechnologies.sm?subject=Information%20request">Talk to us</a>
+        <button class="menu-toggle" id="menuToggle" aria-label="Menu" aria-expanded="false" aria-controls="navLinks"><span></span></button>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero page-hero">
+      <div class="hero-bg" aria-hidden="true">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+        <div class="glow glow-3"></div>
+      </div>
+
+      <div class="container hero-inner">
+        <div>
+          <nav class="breadcrumb" aria-label="Breadcrumb"><ol><li><a href="/en/">Home</a></li><li><a href="/en/#services">Services</a></li><li aria-current="page">AI for security</li></ol></nav>
+          <div class="kicker">AI for security</div>
+          <h1>An agent does what it is <span class="grad-text">allowed to do</span>.</h1>
+          <p class="hero-sub">An AI agent reads data and instructions as the same text. The scope of its actions, the access it holds and the cases that need a confirmation are decided at design time.</p>
+          <div class="hero-ctas"><a class="btn btn-primary" href="mailto:info@ggtechnologies.sm?subject=Information%20request">Talk to us</a></div>
+          <p class="hero-note">Or write to us: <a href="mailto:info@ggtechnologies.sm">info@ggtechnologies.sm</a></p>
+          <div class="hero-stats">
+            <div class="stat">
+              <div class="num">1997</div>
+              <div class="label">the first project</div>
+            </div>
+            <div class="stat">
+              <div class="num">18</div>
+              <div class="label">years in manufacturing</div>
+            </div>
+            <div class="stat">
+              <div class="num">900</div>
+              <div class="label">workers in the study</div>
+            </div>
+          </div>
+        </div>
+
+      <div class="hero-visual">
+        <div class="orbit-ring ring-1" aria-hidden="true"></div>
+        <div class="orbit-ring ring-2" aria-hidden="true"></div>
+        <a class="orbit-core" href="/" aria-label="Go to the home page">
+          <span><strong>G&amp;G</strong><br><small>Technologies</small></span>
+        </a>
+        <a class="orbit-chip chip-1" href="/en/services/artificial-intelligence/"><span class="dot" aria-hidden="true"></span>Artificial Intelligence</a>
+        <a class="orbit-chip chip-2" href="/en/services/on-premise-ai/"><span class="dot" aria-hidden="true"></span>On-premise AI</a>
+        <a class="orbit-chip chip-3" href="/en/training/"><span class="dot" aria-hidden="true"></span>Training</a>
+      </div>
+      </div>
+    </section>
+    <section>
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">The starting point</div>
+          <h2>The risk is not the model. <span class="grad-text">It is what the model can reach</span>.</h2>
+        </div>
+        <div class="about-grid">
+          <div class="about-text reveal">
+            <p>A language model does not separate the data it reads from the instructions it receives: they are the same text. A document, an email or a web page can therefore carry a request that the agent carries out as though it came from you. It is called prompt injection, and it is why an agent is designed starting from its powers.</p><p>The method is the one used for any application that touches company data: which actions it may take, on which systems, with which credentials, and when a person has to approve. The choice of model comes afterwards, and it can be changed.</p>
+          </div>
+        <div class="about-facts page-facts reveal">
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>A public case</h4>
+              <p><strong>CVE-2025-32711</strong> has a date, two severity scores and an address where anyone can read it. <a href="/en/insights/autonomous-agents-boundaries/">The article that tells it</a>.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Rules</h4>
+              <p>The GDPR and the AI Act for processing and for the duties on high-risk systems; for offences and civil liability connected with AI, Italian Legislative Decree 160/2026.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>The people</h4>
+              <p>Whoever uses the tools learns to spot a request that should not be carried out: <a href="/en/training/professional-ai-use/">professional use of AI</a>.</p>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="f-dot" aria-hidden="true"></span>
+            <div>
+              <h4>Development</h4>
+              <p>Software designed and developed entirely in Europe.</p>
+            </div>
+          </div>
+        </div>
+        </div>
+        <aside class="research case reveal">
+          <div class="kicker">The proof · a public identifier</div>
+          <h3>We asked the hard question <span class="grad-text">in the open</span>.</h3>
+          <p>In 2025 a vulnerability in an AI assistant connected to company documents was given a public identifier, <strong>CVE-2025-32711</strong>: a request hidden inside a document got the assistant to hand over data the author of that document could never have read.</p><p>We wrote it up at length, with the date, the severity scores and the sources at the foot of the page. It is a case anyone can check without coming through us. <a href="/en/insights/autonomous-agents-boundaries/">Read the article</a>.</p><p>It proves one thing, and it is the thing that matters before signing: the reasoning about where an agent's boundary falls has been done, and it is written down.</p>
+        </aside>
+      </div>
+    </section>
+    <section class="tinted">
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">What we build</div>
+          <h2>Four decisions that bound what an agent is able to do.</h2>
+          <p class="section-intro">If the data cannot leave the company, that is another chapter: <a href="/en/services/on-premise-ai/">how on-premise AI works</a>. For the people who will use the tools there are the <a href="/en/training/">training courses</a>.</p>
+        </div>
+
+        <div class="cards-3 cards-4">
+          <article class="card reveal">
+            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7.5 3v5.5c0 4.4-3.1 8.3-7.5 9.5-4.4-1.2-7.5-5.1-7.5-9.5V6Z"/><path d="M9.2 12.2l2 2 3.6-4"/></svg></div>
+            <h3>The scope of action</h3>
+            <p>Every agent has a closed list of operations available to it: anything outside that list goes through a person.</p>
+            <ul><li>The tools on hand are declared one by one</li><li>Sensitive operations ask for a confirmation</li><li>Every action leaves a record you can read</li></ul>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5h7M14 8.5h7M3 15.5h4M11 15.5h10"/><rect x="9.5" y="6" width="3.5" height="5" rx="1"/><rect x="6.5" y="13" width="3.5" height="5" rx="1"/></svg></div>
+            <h3>Access limited to what is needed</h3>
+            <p>Credentials that belong to the agent, carrying the permissions of the task it has to do and nothing more.</p>
+            <ul><li>One account per agent, separate from the people's</li><li>Read-only where reading is enough</li><li>Immediate revocation, without touching the other systems</li></ul>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="7.5" ry="3"/><path d="M4.5 5.5v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/><path d="M4.5 11.5v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/></svg></div>
+            <h3>Where the processing happens</h3>
+            <p>Where the model runs is a design decision, and it changes who answers for the data the agent reads.</p>
+            <ul><li>Models on your own servers when the data stays in</li><li>Personal data masked in hybrid architectures</li><li><a href="/en/services/on-premise-ai/">On-premise AI</a></li></ul>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="url(#icoGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="5.5"/><path d="M9.5 9l1.8 1.8 3.2-3.4"/><path d="M8.6 13.6 7 21l5-2.5 5 2.5-1.6-7.4"/></svg></div>
+            <h3>A review of what is already running</h3>
+            <p>Assistants and automations wired to email, files or the management system, read through one by one.</p>
+            <ul><li>Which data each tool can reach</li><li>Where a person's approval is missing</li><li>A list of fixes, most serious first</li></ul>
+          </article>
+        </div>
+      </div>
+    </section>
+    <section>
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">How we work</div>
+          <h2>The boundary first, the model second. Never the other way round.</h2>
+        </div>
+        <div class="pillars">
+          <div class="pillar reveal">
+            <div class="n">01</div>
+            <h3>List the actions</h3>
+            <p>Which operations the agent performs on its own, and which stay with a person.</p>
+          </div>
+          <div class="pillar reveal">
+            <div class="n">02</div>
+            <h3>Grant the access</h3>
+            <p>Dedicated credentials and minimum permissions for every system the agent touches.</p>
+          </div>
+          <div class="pillar reveal">
+            <div class="n">03</div>
+            <h3>Try the abuses</h3>
+            <p>Documents and messages built to push the agent off course, before it goes live.</p>
+          </div>
+          <div class="pillar reveal">
+            <div class="n">04</div>
+            <h3>Keep the record</h3>
+            <p>A log of the actions, a periodic review and quick revocation when something changes.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="tinted">
+      <div class="container">
+        <div class="reveal">
+          <div class="kicker">FAQ</div>
+          <h2>Frequently asked questions</h2>
+        </div>
+        <div class="faq-list">
+          <details class="faq-item reveal">
+            <summary>What is prompt injection?</summary>
+            <p>It is a request hidden inside a document, a message or a web page, which the agent reads and carries out as though it came from you. The defence lies in the powers: if the agent cannot issue a payment or delete an archive, a hidden request gets nothing.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>Can I connect an assistant to the company mailbox?</summary>
+            <p>Yes, and it is an architecture decision rather than a setting: which folders it reads, what it may send, which messages need a confirmation. The difference between a trial and a live service lies in those answers.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>I already use AI tools bought elsewhere: can you review them?</summary>
+            <p>Yes. The review lists, for each tool, which data it reaches, which actions it takes on its own and where a person's approval is missing. What comes out is a list of fixes, most serious first, with the work each one takes.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>Is a local model enough to make an agent safe?</summary>
+            <p>No, and the two answer different questions. A local model decides where the data is processed; the boundary decides what the agent may do. An agent running on your own servers can still write into your systems.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>How do I know what the agent did?</summary>
+            <p>From the log: every action leaves the time, the operation and the data it touched. It is also how you measure whether it is doing the job it was put there for.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+    <section>
+      <div class="container">
+        <div class="reveal">
+          <h2>Where to go next</h2>
+        </div>
+        <div class="related-grid">
+          <a class="related-card reveal" href="/en/services/artificial-intelligence/">
+            <h3>Artificial Intelligence</h3>
+            <p>Agents that read documents and query your systems, with the measure agreed first.</p>
+          </a>
+          <a class="related-card reveal" href="/en/services/on-premise-ai/">
+            <h3>On-premise AI</h3>
+            <p>How to choose between fully local, hybrid and cloud, starting from your data.</p>
+          </a>
+          <a class="related-card reveal" href="/en/training/">
+            <h3>Training</h3>
+            <p>Practical four-hour courses on artificial intelligence, for companies and professionals.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+    <section class="cta-band">
+      <div class="container reveal">
+        <h2>Do you have an AI agent wired into your systems?</h2>
+        <p class="section-intro">Tell us what it does today and what it can reach. From there we can see where a boundary is needed and where a confirmation is.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-primary" href="mailto:info@ggtechnologies.sm?subject=AI%20agent%20security">Email us</a>
+          <a class="btn btn-ghost" href="tel:+3780549900824">Call us</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a href="/en/" class="brand">
+            <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><rect class="wire" width="100" height="100" mask="url(#ggWire)"/><path class="lit" d="M66 50 H86 A36 36 0 1 1 50 14" fill="none" stroke="url(#ggMark)" stroke-width="13" stroke-linecap="round"/><circle class="click" cx="50" cy="50" r="9" fill="none" stroke="#34d399" stroke-width="2"/><circle class="led" cx="50" cy="50" r="9"/></svg></span>
+            G&amp;G Technologies
+          </a>
+          <p>We design and build technology: medical wearables, robotics and artificial intelligence. Podz.AI is built on our DigiSense® framework.</p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Services</h4>
+          <ul>
+            <li><a href="/en/services/medical-wearables/">Medical wearables</a></li>
+            <li><a href="/en/services/robotics-automation/">Robotics &amp; Automation</a></li>
+            <li><a href="/en/services/artificial-intelligence/">Artificial Intelligence</a></li>
+            <li><a href="/en/services/on-premise-ai/">On-premise AI</a></li>
+            <li><a href="/en/services/ai-security/">AI for security</a></li>
+            <li><a href="/en/services/ai-software-development/">AI for software development</a></li>
+            <li><a href="/en/training/">Training</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Products and research</h4>
+          <ul>
+            <li><a href="/en/podz-ai/">Podz.AI</a></li>
+            <li><a href="/en/projects/home-care-robot/">Home care robot</a></li>
+            <li><a href="/en/digisense/">DigiSense®</a></li>
+            <li><a href="/en/insights/">Insights</a></li>
+            <li><a href="/en/app/">Free apps</a></li>
+            <li><a href="https://ggtechnologies.sm/digisense-releases/" target="_blank" rel="noopener">Podz.AI official website</a></li>
+            <li><a href="https://ggtechnologies.sm/digisense-releases/download.html" target="_blank" rel="noopener">Download Podz.AI</a></li>
+            <li><a href="https://github.com/G-G-Technologies-Srl/digisense-releases/releases" target="_blank" rel="noopener">Podz.AI releases</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contact</h4>
+          <ul>
+            <li><a href="/en/about/">About</a></li>
+            <li><a href="mailto:info@ggtechnologies.sm">info@ggtechnologies.sm</a></li>
+            <li><a href="tel:+3780549900824">+378 0549 900824</a></li>
+            <li><a href="https://www.linkedin.com/company/gg-technologies-srl" target="_blank" rel="noopener">LinkedIn</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-legal">
+        <span>© <span id="year">2026</span> G&amp;G Technologies Srl · Via Marino Moretti 23, 47899 Serravalle (RSM) · C.O.E./VAT SM29141</span>
+        <span>DigiSense® is a registered trademark. This site uses no cookies or trackers.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../../../assets/site.js?v=001.e222d9a6" defer></script>
+</body>
+</html>
