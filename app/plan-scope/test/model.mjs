@@ -1029,6 +1029,33 @@ test("un nome scritto a metà trova la persona che c'è già", () => {
   assert.deepEqual(model.contactsLike("Mar"), [], "e un pezzo di parola non fa domande");
 });
 
+test("l'agenda è un progetto che non si conta fra i progetti", () => {
+  const fiera = model.createProject({ name: "Fiera" });
+  assert.equal(model.agenda(), null, "non nasce da sola");
+  const diary = model.ensureAgenda("Agenda");
+  assert.equal(model.ensureAgenda("Agenda").id, diary.id, "e ne nasce una sola");
+  assert.deepEqual(model.plainProjects().map((one) => one.id), [fiera.id]);
+  assert.equal(model.liveProjects().length, 2, "ma per i dati è un progetto come gli altri");
+});
+
+test("il calendario d'insieme raccoglie incontri e scadenze di ogni progetto", () => {
+  const fiera = model.createProject({ name: "Fiera" });
+  const diary = model.ensureAgenda("Agenda");
+  model.createTask(fiera.id, { title: "Stand", end: "2026-10-12" });
+  model.createTask(fiera.id, { title: "Fuori mese", end: "2026-11-30" });
+  const uno = model.createPage(fiera.id, { title: "Riunione" });
+  model.setMarkdown(uno.id, "---\ntipo: incontro\ndata: 2026-10-14\nora: 15:00\n---\n");
+  const due = model.createPage(diary.id, { title: "Commercialista" });
+  model.setMarkdown(due.id, "---\ntipo: incontro\ndata: 2026-10-20\n---\n");
+
+  const mese = model.calendarBetween("2026-10-01", "2026-10-31");
+
+  assert.deepEqual(mese.tasks.map((one) => one.task.title), ["Stand"]);
+  assert.deepEqual(mese.meetings.map((one) => one.page.title).sort(), ["Commercialista", "Riunione"]);
+  assert.deepEqual(mese.meetings.map((one) => one.project.name).sort(), ["Agenda", "Fiera"],
+    "e ogni riga dice da dove viene");
+});
+
 test("una persona nel cestino non porta via il suo nome dai progetti", () => {
   const fiera = model.createProject({ name: "Fiera" });
   const marco = model.createContact({ name: "Marco Rossi" });

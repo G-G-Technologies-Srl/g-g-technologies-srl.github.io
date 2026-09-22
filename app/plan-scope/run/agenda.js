@@ -51,8 +51,10 @@ function _entry(one, today) {
   if (one.meeting) {
     const { meeting } = one;
     const entry = node("div", `cal-entry is-meeting${model.meetingAhead(meeting) ? "" : " is-gone"}`);
-    entry.append(node("span", "cal-at", meeting.time || "·"));
-    entry.append(node("span", "", meeting.page.title || t("pageUntitled")));
+    // L'ora davanti al titolo, in una riga sola: è come la disegna il calendario del progetto, e
+    // due viste dello stesso giorno non si scrivono in due modi.
+    entry.append(node("span", "", [meeting.time, meeting.page.title || t("pageUntitled")]
+      .filter(Boolean).join(" ")));
     entry.title = `${longDate(meeting.date)} · ${one.project.name || t("projectUntitled")}`;
     entry.addEventListener("click", (event) => {
       event.stopPropagation();

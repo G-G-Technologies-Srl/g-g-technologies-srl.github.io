@@ -563,7 +563,10 @@ function _paintDue(due, today) {
 
 export function paintHome(room) {
   const today = model.todayISO();
-  const all = model.liveProjects();
+  // Le schede sono i progetti veri. L'agenda non è uno di loro — è il posto di quello che un
+  // progetto non ce l'ha — quindi non prende una scheda con la sua barra di avanzamento a zero,
+  // ma quello che ci sta dentro entra nelle scadenze qui sotto, che è il motivo per cui esiste.
+  const all = model.plainProjects();
   // Le scadenze seguono il filtro insieme alle schede: «fammi vedere solo i clienti» e poi un
   // pannello che elenca le scadenze degli altri sarebbe una schermata che risponde a due domande.
   const projects = _picked(all);
@@ -576,7 +579,8 @@ export function paintHome(room) {
 
   // Everything due across every project, late first. This is what a morning opens the app for, and
   // it is missing from every project card: the cards say *how much*, this says *what*.
-  const due = projects
+  const diary = model.agenda();
+  const due = [...projects, ...(diary ? [diary] : [])]
     .flatMap((project) => [
       ...model.dueSoon(project.id, { from: today }).map((task) => ({ when: task.end, task, project })),
       // Gli appuntamenti nella stessa lista: è il pannello che si apre la mattina per sapere cosa
@@ -589,7 +593,7 @@ export function paintHome(room) {
     ])
     // A parità di giorno l'appuntamento viene prima: ha un'ora, quindi un posto nella giornata.
     .sort((a, b) => a.when.localeCompare(b.when) || (a.meeting ? -1 : 1) - (b.meeting ? -1 : 1));
-  el("todayPanel").hidden = projects.length === 0;
+  el("todayPanel").hidden = projects.length === 0 && !due.length;
   // La pastiglia del progetto serve a distinguere, e con un progetto solo non c'è niente da
   // distinguere: era lo stesso nome ripetuto su ogni riga, e su un telefono mandava ogni riga a
   // capo per dire una cosa che il titolo della schermata aveva già detto.

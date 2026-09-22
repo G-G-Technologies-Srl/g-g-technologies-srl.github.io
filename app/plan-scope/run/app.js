@@ -27,6 +27,7 @@ import * as templates from "./templates.js";
 import * as demo from "./demo.js";
 import * as cheer from "./cheer.js";
 import * as search from "./search.js";
+import * as agenda from "./agenda.js";
 import * as outputs from "./outputs.js";
 import * as csv from "./csv.js";
 import * as md from "gg/plan-markdown.js";
@@ -53,7 +54,7 @@ const IMAGE_CAP = 10 * 1024 * 1024;
 const FILE_CAP = 25 * 1024 * 1024;      // an attachment; the archive screen shows what they add up to
 
 const SCREENS = ["home", "project", "page", "plan", "pages", "trash", "awards", "folderScreen",
-  "rubrica", "person"];
+  "rubrica", "person", "agendaScreen"];
 
 let view = "home";
 let projectId = null;
@@ -173,6 +174,7 @@ function _restoreFromUrl() {
     return found ? _openPerson(found.id) : _openRubrica();
   }
   if (wanted === "rubrica") return _openRubrica();
+  if (wanted === "agendaScreen") return _openAgenda();
   if (wanted === "awards") return _openAwards();
   if (wanted === "folderScreen") return _openPlaces();
   return _openHome();
@@ -215,6 +217,7 @@ function _paintCrumbs() {
   if (view === "trash") parts.push({ label: t("openTrash") });
   else if (view === "folderScreen") parts.push({ label: t("placesTitle") });
   else if (view === "rubrica") parts.push({ label: t("rubricaTitle") });
+  else if (view === "agendaScreen") parts.push({ label: t("agendaTitle") });
   else if (view === "person") {
     parts.push({ label: t("rubricaTitle"), go: () => _openRubrica() });
     const person = personId ? model.contact(personId) : null;
@@ -252,10 +255,10 @@ function _paintCrumbs() {
  * con la data di oggi e la si correggeva subito dopo: il verso previsto era «ho appena finito una
  * riunione, scrivo il verbale», che è metà dei casi e non tutti.
  */
-async function _askMeeting(target, withName = "", { meeting = null } = {}) {
+async function _askMeeting(target, withName = "", { meeting = null, day = null } = {}) {
   const editing = Boolean(meeting);
   el("meetWhat").value = editing ? (meeting.page.title || "") : "";
-  el("meetDate").value = editing ? meeting.date : model.todayISO();
+  el("meetDate").value = editing ? meeting.date : (day || model.todayISO());
   el("meetTime").value = editing ? meeting.time : "";
   el("meetWith").value = editing ? meeting.with : withName;
   el("meetWhere").value = editing ? meeting.where : "";
@@ -576,6 +579,21 @@ function _paintPeople() {
 }
 
 /**
+ * Il calendario d'insieme, e il progetto che tiene quello che non sta in un progetto.
+ *
+ * `_agendaId` crea l'agenda alla prima cosa che ci finisce dentro e non prima: un archivio vuoto
+ * non deve contenere un progetto che nessuno ha chiesto.
+ */
+function _openAgenda() {
+  agenda.paint();
+  _show("agendaScreen");
+}
+
+function _agendaId() {
+  return model.ensureAgenda(t("agendaProject")).id;
+}
+
+/**
  * La rubrica: le persone, cercabili per nome, azienda o mestiere.
  *
  * Una riga dice il nome, chi è, e in quanti progetti lavora — che è la sola cosa che distingue una
@@ -692,7 +710,7 @@ function _paintPerson() {
   // Dove si può ancora aggiungerla: i progetti vivi in cui non lavora già. Un progetto qui non si
   // crea — un progetto ha un nome e una data, e nascerne uno da una scheda di rubrica sarebbe una
   // porta di servizio per una cosa che ne ha già una sua.
-  const altrove = model.liveProjects().filter((one) => !where.some(({ project }) => project.id === one.id));
+  const altrove = model.plainProjects().filter((one) => !where.some(({ project }) => project.id === one.id));
   el("addWhereForm").hidden = altrove.length === 0;
   el("addWhereNone").hidden = altrove.length > 0 || where.length === 0;
   // La prima voce è la domanda, non un progetto: un select che mostra «StartUp World Cup» in
@@ -1726,6 +1744,8 @@ async function _repaint() {
   else if (view === "trash") home.paintTrash();
   else if (view === "page") _paintTree();
   else if (view === "pages") pages.paintTable(projectId);
+  else if (view === "agendaScreen") agenda.paint();
+  else if (view === "person") _paintPerson();
 }
 
 /**
@@ -2553,7 +2573,10 @@ function _wire() {
     const person = personId ? model.contact(personId) : null;
     if (!person) return undefined;
     const where = model.projectsOfContact(person.uid || person.id);
-    if (!where.length) return snack(t("personProjectsNone"));
+    // Chi non lavora a niente di nostro ha comunque una telefonata da segnare: finisce in agenda,
+    // che è il posto di quello che non appartiene a un progetto. Prima qui la scheda rispondeva
+    // «non è ancora in nessun progetto» e il gesto moriva lì.
+    if (!where.length) return then(_agendaId(), person.name) && undefined;
     if (where.length === 1) return then(where[0].project.id, person.name) && undefined;
     const chosen = await ask(t("meetingWhere"), {
       options: where.map(({ project }) => ({ value: project.id, label: project.name || t("projectUntitled") })),
@@ -2592,6 +2615,13 @@ function _wire() {
     _paintPeople();
     snack(tf("peopleAdded", { name: person.name }));
   });
+
+  // ---- il calendario d'insieme
+  el("openAgenda").addEventListener("click", () => { agenda.toToday(); _openAgenda(); });
+  el("agPrev").addEventListener("click", () => { agenda.step(-1); agenda.paint(); });
+  el("agNext").addEventListener("click", () => { agenda.step(1); agenda.paint(); });
+  el("agToday").addEventListener("click", () => { agenda.toToday(); agenda.paint(); });
+  el("agMeeting").addEventListener("click", () => _askMeeting(_agendaId()));
 
   // ---- la rubrica
   el("openRubrica").addEventListener("click", () => _openRubrica());
@@ -2977,6 +3007,19 @@ function _connect() {
     }
     dropping = null;
     home.paintTrash();
+  });
+
+  // Il calendario d'insieme: guarda e apre, e non sposta niente — le date che disegna sono di
+  // dieci piani diversi, e trascinarle qui vorrebbe dire ripianificare un progetto senza averlo
+  // davanti.
+  agenda.connect({
+    openMeeting: (meeting, project) => { projectId = project.id; _openPage(meeting.page.id); },
+    openTask: (task, project) => {
+      plan.setProject(project.id);
+      _openPlan(project.id);
+      plan.openCard(task.id);
+    },
+    newMeeting: (day) => _askMeeting(_agendaId(), "", { day }),
   });
 
   plan.connect({
