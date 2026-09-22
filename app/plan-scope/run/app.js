@@ -2623,8 +2623,9 @@ function _wire() {
   el("agToday").addEventListener("click", () => { agenda.toToday(); agenda.paint(); });
   el("agMeeting").addEventListener("click", () => _askMeeting(_agendaId()));
 
-  // ---- la rubrica
+  // ---- la rubrica, da due porte: l'icona nella barra (ovunque) e il nome scritto in archivio
   el("openRubrica").addEventListener("click", () => _openRubrica());
+  el("openRubricaHome").addEventListener("click", () => _openRubrica());
   el("contactsCsv").addEventListener("click", () => outputs.exportContactsCsv());
   el("contactsVcf").addEventListener("click", () => outputs.exportContactsVcf());
   el("personSearch").addEventListener("input", () => _paintRubrica());

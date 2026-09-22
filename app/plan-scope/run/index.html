@@ -62,7 +62,8 @@
     <!-- La rubrica stava fra «Importa» e «Cestino», cioè fra le cose che si fanno una volta ogni
          tanto, e si apre invece tutti i giorni: chi non apriva il menù non sapeva che ci fosse.
          Qui sta accanto alla lente, che risponde all'altra domanda di ogni schermata: «chi era?». -->
-    <button type="button" id="openRubrica" class="ghost small icon" data-t-label="rubricaTitle">
+    <button type="button" id="openRubrica" class="ghost small icon" data-t-label="rubricaTitle"
+            data-t-title="rubricaTitle">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">
         <circle cx="9" cy="9" r="3.2"></circle>
         <path d="M3.5 19c0-3 2.5-4.6 5.5-4.6s5.5 1.6 5.5 4.6"></path>
@@ -146,6 +147,11 @@
       <div class="screen-head">
         <h1 data-t="homeTitle"></h1>
         <span class="spacer"></span>
+        <!-- Le due porte scritte, qui e non solo nella barra. L'icona lassù serve a chi è dentro un
+             progetto e vuole la rubrica senza tornare indietro; ma in archivio la rubrica va
+             **letta**, perché un profilo disegnato in sedici pixel lo riconosce solo chi sa già
+             che c'è — che è lo stesso difetto del menù ⋯ da cui la rubrica è appena uscita. -->
+        <button type="button" id="openRubricaHome" data-t="rubricaTitle"></button>
         <!-- Il mese intero, da qui: il pannello sotto guarda sette giorni, e la domanda «e dopo?»
              non aveva un posto dove andare. -->
         <button type="button" id="openAgenda" data-t="agendaTitle"></button>
