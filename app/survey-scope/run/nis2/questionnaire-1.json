@@ -4,8 +4,8 @@
   "respondent_question": "n004",
   "notes": "nis2-nucleo.md",
   "status": "published",
-  "revision": 2,
-  "note": "Secondo questionario dell'app. Il documento di progetto è _src/fonti/nis2-nucleo.md: le domande si scrivono lì prima che qui, e check_against_notes confronta i due testi. Revisione 2: le dieci correzioni della prova di chiarezza del 28 agosto, in _src/fonti/survey-scope-chiarezza.md. In ordine di gravita: «voi» comprende chi ti tiene i sistemi, detto nell'introduzione della prima sezione a punteggio, perche nove domande su ventidue hanno la risposta solo dal fornitore IT e chi compila da solo si dichiara peggio di com'e; n016 aveva quattro opzioni tutte affermative, unica del questionario senza un'uscita per chi non sa, e chi non sapeva prendeva la peggiore; n012 e il punto in cui un lettore ha smesso di compilare — non per la risposta, per la domanda — e ora chiede per esempi; n002 non afferma piu che il settore da solo qualifichi qualcuno, e n003 non fa piu dichiarare «non rientriamo» a chi ha appena detto il proprio settore; n001 dice chi contare, e la soglia dei cinquanta e di legge; n018 vale per tutt'e due i pubblici, con l'obbligo verso l'ACN nel suggerimento; tre suggerimenti chiedono il sistema messo peggio invece dell'ultimo, perche IT e impianti divergono e il punteggio alto copriva il buco; l'occhiello del ripristino non da piu una pacca sulla spalla al contrario, e n019 non chiede piu «restano tracce», che si leggeva come una domanda su cosa nascondi.",
+  "revision": 3,
+  "note": "Secondo questionario dell'app. Il documento di progetto è _src/fonti/nis2-nucleo.md: le domande si scrivono lì prima che qui, e check_against_notes confronta i due testi. Revisione 2: le dieci correzioni della prova di chiarezza del 28 agosto, in _src/fonti/survey-scope-chiarezza.md. In ordine di gravita: «voi» comprende chi ti tiene i sistemi, detto nell'introduzione della prima sezione a punteggio, perche nove domande su ventidue hanno la risposta solo dal fornitore IT e chi compila da solo si dichiara peggio di com'e; n016 aveva quattro opzioni tutte affermative, unica del questionario senza un'uscita per chi non sa, e chi non sapeva prendeva la peggiore; n012 e il punto in cui un lettore ha smesso di compilare — non per la risposta, per la domanda — e ora chiede per esempi; n002 non afferma piu che il settore da solo qualifichi qualcuno, e n003 non fa piu dichiarare «non rientriamo» a chi ha appena detto il proprio settore; n001 dice chi contare, e la soglia dei cinquanta e di legge; n018 vale per tutt'e due i pubblici, con l'obbligo verso l'ACN nel suggerimento; tre suggerimenti chiedono il sistema messo peggio invece dell'ultimo, perche IT e impianti divergono e il punteggio alto copriva il buco; l'occhiello del ripristino non da piu una pacca sulla spalla al contrario, e n019 non chiede piu «restano tracce», che si leggeva come una domanda su cosa nascondi. Revision 3 porta il testo italiano al registro formale deciso dall'utente il 18 settembre 2026: il questionario dava del tu, e i clienti di G&G sono imprese e professionisti. Cambiano solo le parole italiane — domande, opzioni, introduzioni delle sezioni — non che cosa viene chiesto né come si conta: le bande, i pesi e le regole sono quelli di prima, e l'inglese non si tocca perché «you» è già impersonale. **L'impronta però cambia**, perché è calcolata sul testo: le compilazioni esportate con la revisione precedente restano leggibili come file, ma l'app le rifiuta all'importazione e non le offre nel confronto. È il prezzo dichiarato della riscrittura, ed è stato scelto sapendolo.",
   "presentation": {
     "tagline": {
       "it": "Sicurezza e NIS2",
@@ -20,11 +20,11 @@
       "en": "NIS2 Check"
     },
     "lede": {
-      "it": "Quello che ti verrà chiesto sulla sicurezza, sapresti rispondertelo oggi? A chi è in perimetro lo chiederà l'ACN, a chi non lo è il suo cliente più importante. Le domande sono le stesse.",
+      "it": "Quello che vi verrà chiesto sulla sicurezza: sapreste rispondere oggi? A chi è in perimetro lo chiederà l'ACN, a chi non lo è il suo cliente più importante. Le domande sono le stesse.",
       "en": "The security questions you will be asked — could you answer them today? If you are in scope the ACN will ask them; if you are not, your most important customer will. The questions are the same."
     },
     "duration": {
-      "it": "Dieci minuti, e puoi fermarti a metà: quello che hai risposto resta.",
+      "it": "Dieci minuti, e ci si può fermare a metà: le risposte date restano.",
       "en": "Ten minutes, and you can stop half way: what you answered stays."
     },
     "dimensions_title": {
@@ -32,7 +32,7 @@
       "en": "The six dimensions"
     },
     "appendix_note": {
-      "it": "Ventidue domande, e cosa hai scelto. Il punteggio è una descrizione che hai dato tu: chi riceve questo foglio deve poterla leggere, non solo il numero che ne esce.",
+      "it": "Ventidue domande, e le opzioni scelte. Il punteggio è una descrizione che avete dato voi: chi riceve questo foglio deve poterla leggere, non solo il numero che ne esce.",
       "en": "Twenty-two questions, and what you chose. The score is a description you gave: whoever receives this sheet has to be able to read it, not only the number it produces."
     }
   },
@@ -47,7 +47,7 @@
     {
       "id": "d2",
       "text": {
-        "it": "Cosa hai, e chi ci entra",
+        "it": "Che cosa c'è, e chi ci entra",
         "en": "What you have, and who gets in"
       }
     },
@@ -84,11 +84,11 @@
     {
       "id": "s1",
       "text": {
-        "it": "Chi sei, e cosa ti riguarda",
+        "it": "Chi siete, e che cosa vi riguarda",
         "en": "Who you are, and what applies to you"
       },
       "intro": {
-        "it": "Quattro domande su di te. Restano fuori dal punteggio: una stabilisce quali obblighi ti mostriamo, le altre servono a chi mette insieme più compilazioni.",
+        "it": "Quattro domande su di voi. Restano fuori dal punteggio: una stabilisce quali obblighi mostriamo, le altre servono a chi mette insieme più compilazioni.",
         "en": "Four questions about you. They stay outside the score: one decides which obligations we show you, the others help whoever puts several runs together."
       },
       "questions": [
@@ -167,7 +167,7 @@
       "id": "s7",
       "dimension": "d6",
       "intro": {
-        "it": "Quello che hai firmato, e quello che firmi ai tuoi clienti. Tre domande.",
+        "it": "Quello che avete firmato, e quello che firmate ai vostri clienti. Tre domande.",
         "en": "What you have signed, and what you sign for your customers. Three questions."
       },
       "questions": [
@@ -215,7 +215,7 @@
     {
       "id": "n001",
       "text": {
-        "it": "Quante persone lavorano nella tua azienda?",
+        "it": "Quante persone lavorano nella vostra azienda?",
         "en": "How many people work in your company?"
       },
       "options": [
@@ -297,7 +297,7 @@
     {
       "id": "n003",
       "text": {
-        "it": "Il tuo rapporto con la NIS2, oggi",
+        "it": "Il vostro rapporto con la NIS2, oggi",
         "en": "Where you stand with NIS2 today"
       },
       "options": [
@@ -338,7 +338,7 @@
     {
       "id": "n004",
       "text": {
-        "it": "Che ruolo hai?",
+        "it": "Qual è il vostro ruolo?",
         "en": "What is your role?"
       },
       "options": [

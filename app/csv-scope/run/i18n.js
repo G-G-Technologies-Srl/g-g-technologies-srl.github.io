@@ -24,11 +24,11 @@ const IT = {
   // bar and used when you export. Left in one language it would appear untranslated on the screenshot
   // of the other one, which is where a stray Italian word is hardest to notice.
   sampleFileName: "esempio-ecg.csv",
-  dropPrivacy: "Il file resta sul tuo computer. Non viene caricato da nessuna parte.",
+  dropPrivacy: "Il file resta sul vostro computer. Non viene caricato da nessuna parte.",
   historyTitle: "Aperti di recente",
-  historyNote: "L'app ricorda com'era fatto un file e dove eri arrivato, non il file. Se lo riapri, "
-    + "torni allo stesso punto. Resta su questo computer, in questo browser.",
-  historyEmpty: "Qui compaiono i file che apri.",
+  historyNote: "L'app ricorda com'era fatto un file e a che punto si era arrivati, non il file. "
+    + "Riaprendolo, si torna allo stesso punto. Resta su questo computer, in questo browser.",
+  historyEmpty: "Qui compaiono i file aperti.",
   historyExport: "Esporta",
   historyImport: "Importa",
   historyClear: "Svuota",
@@ -80,7 +80,7 @@ const IT = {
   speedFixedHint: "Il file non dice quanto tempo copre, quindi a ×1 passa una schermata ogni "
     + "cinque secondi.",
   viewHint: "Con la tastiera: + e - per ingrandire e ridurre, 0 per tornare a tutto il file. "
-    + "Sulla barra di scorrimento: frecce per spostarti di mezza schermata, Pag su e Pag giù "
+    + "Sulla barra di scorrimento: frecce per spostarsi di mezza schermata, Pag su e Pag giù "
     + "di una intera.",
   viewChart: "Grafico",
   viewTable: "Tabella",
@@ -103,13 +103,13 @@ const IT = {
   langSwitch: "Switch to English",
   removalLabel: "Installata",
   removalDesktop: "Per toglierla: apri il menù ⋮ in alto a destra nella finestra dell'app e scegli "
-    + "«Disinstalla». I dati restano nel browser: se non ti servono più, esportali prima e poi "
+    + "«Disinstalla». I dati restano nel browser: se non servono più, esportali prima e poi "
     + "cancella i dati del sito da Impostazioni del browser.",
   removalAndroid: "Per toglierla: tieni premuta l'icona nella schermata Home e scegli «Disinstalla» "
-    + "o trascinala sul cestino. I dati restano nel browser: se non ti servono più, esportali "
+    + "o trascinala sul cestino. I dati restano nel browser: se non servono più, esportali "
     + "prima e poi cancella i dati del sito.",
   removalIos: "Per toglierla: tieni premuta l'icona nella schermata Home, poi «Rimuovi app». I "
-    + "dati restano in Safari: se non ti servono più, esportali prima e poi cancella i dati del "
+    + "dati restano in Safari: se non servono più, esportali prima e poi cancella i dati del "
     + "sito da Impostazioni.",
   versionLabel: "v{version}",
   versionNext: "v{current} → {next}",
@@ -121,9 +121,9 @@ const IT = {
   installButton: "Installa",
   installIos: "Per installarla: Condividi, poi «Aggiungi alla schermata Home».",
   installClose: "Chiudi",
-  errorTitle: "Non riesco a leggere questo file",
+  errorTitle: "Non è possibile leggere questo file",
   errorEmpty: "Il file è vuoto.",
-  errorNoColumns: "Non ho trovato colonne separate. Controlla che sia un CSV o un TSV.",
+  errorNoColumns: "Non risultano colonne separate. Controlla che sia un CSV o un TSV.",
   errorNoNumbers: "Nessuna colonna contiene numeri, quindi non c'è niente da disegnare. Questo "
     + "attrezzo serve a guardare misure: un elenco di nomi e indirizzi non ha niente da mostrare.",
   errorNoRows: "Il file ha solo l'intestazione: non c'è nessuna riga di dati.",
@@ -238,9 +238,9 @@ const EN = {
   installButton: "Install",
   installIos: "To install: Share, then “Add to Home Screen”.",
   installClose: "Close",
-  errorTitle: "I cannot read this file",
+  errorTitle: "This file cannot be read",
   errorEmpty: "The file is empty.",
-  errorNoColumns: "I found no separated columns. Check that it is a CSV or a TSV.",
+  errorNoColumns: "No separated columns were found. Check that it is a CSV or a TSV.",
   errorNoNumbers: "No column holds numbers, so there is nothing to plot. This tool is for looking "
     + "at measurements: a list of names and addresses has nothing to show.",
   errorNoRows: "The file has only a header row: there is no data in it.",

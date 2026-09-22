@@ -6,7 +6,7 @@
   "warn_days": 30,
   "note": "Compliance checklist, edition 1, rewritten after the adversarial review of 2026-08-27 which found two rows outright false. Rules: no row ever states whether the reader is compliant — it names the obligation, the date it starts and the source, and leaves the verb to whoever can answer; every row carries applies_from; a row with a known future change carries changes_on, and valid_until must not outlive the earliest of them. Field names and keys are English like everywhere else; only text under it/en is content. Sources: for the AI Act, the article pages of the Commission service desk and of artificialintelligenceact.eu, which quote the enacted text; for the GDPR, the consolidated text on EUR-Lex with the article named in the label, because EUR-Lex has no stable per-article anchor.",
   "scope": {
-    "it": "Queste voci riguardano il diritto dell'Unione europea. Un'impresa sammarinese non vi è soggetta per territorio, ma l'AI Act la raggiunge lo stesso se l'output del sistema viene usato nell'Unione o se vende a clienti europei; sul dato personale a San Marino vale la Legge 171/2018, con il proprio Garante. Se lavori solo dentro San Marino, leggi queste righe come la domanda che ti farà il primo cliente europeo.",
+    "it": "Queste voci riguardano il diritto dell'Unione europea. Un'impresa sammarinese non vi è soggetta per territorio, ma l'AI Act la raggiunge lo stesso se l'output del sistema viene usato nell'Unione o se vende a clienti europei; sul dato personale a San Marino vale la Legge 171/2018, con il proprio Garante. Per chi lavora solo dentro San Marino, queste righe sono la domanda che farà il primo cliente europeo.",
     "en": "These rows concern European Union law. A San Marino company is not subject to it by territory, but the AI Act reaches it all the same if the output of the system is used in the Union or if it sells to European customers; on personal data, San Marino applies Law 171/2018, with its own supervisory authority. If you work only inside San Marino, read these rows as the question your first European customer will ask you."
   },
   "answers": [
@@ -88,7 +88,7 @@
         "en": "If one of your automated assistants talks to customers, does the supplier contract say who must declare that it is AI?"
       },
       "obligation": {
-        "it": "L'obbligo di far sapere alla persona che sta interagendo con un'AI è del fornitore del sistema, non di chi lo usa — a meno che tu non lo metta sul mercato col tuo marchio, e allora il fornitore diventi tu. Per un'impresa che compra un chatbot la cosa da verificare è quindi contrattuale: che il fornitore lo faccia, e che il vostro modo di presentarlo non lo nasconda.",
+        "it": "L'obbligo di far sapere alla persona che sta interagendo con un'AI è del fornitore del sistema, non di chi lo usa — a meno che non lo mettiate sul mercato col vostro marchio, e allora il fornitore diventate voi. Per un'impresa che compra un chatbot la cosa da verificare è quindi contrattuale: che il fornitore lo faccia, e che il vostro modo di presentarlo non lo nasconda.",
         "en": "The duty to let a person know they are interacting with an AI lies with the provider of the system, not with whoever uses it — unless you place it on the market under your own brand, in which case you become the provider. For a company that buys a chatbot, what to check is therefore contractual: that the provider does it, and that the way you present it does not hide it."
       },
       "source": {
@@ -328,11 +328,11 @@
     }
   ],
   "disclaimer": {
-    "it": "Questa non è una consulenza legale, e nessuna riga qui sopra dice se la tua azienda sia in regola: dicono quale obbligo esiste, da quando, e dove leggerlo. Quello che vedi accanto a ogni voce è la risposta che hai dato tu, non un giudizio nostro. Le norme sono state verificate il 27 agosto 2026; l'AI Act è in evoluzione e alcune date sono già cambiate una volta.",
+    "it": "Questa non è una consulenza legale, e nessuna riga qui sopra dice se la vostra azienda sia in regola: dicono quale obbligo esiste, da quando, e dove leggerlo. Quello che compare accanto a ogni voce è la risposta che avete dato voi, non un giudizio nostro. Le norme sono state verificate il 27 agosto 2026; l'AI Act è in evoluzione e alcune date sono già cambiate una volta.",
     "en": "This is not legal advice, and no row above says whether your company complies: they say which obligation exists, from when, and where to read it. What you see next to each row is the answer you gave, not a judgement of ours. The rules were verified on 27 August 2026; the AI Act is still moving, and some dates have already changed once."
   },
   "disclaimer_for_distributors": {
-    "it": "Se distribuisci questo strumento alle imprese che segui, sappi che le voci qui dentro hanno una data di verifica e una di scadenza, e che dopo quella data il report lo dichiara. Non sono un parere legale né una certificazione, e chi le rilegge periodicamente sei tu insieme a chi ti assiste.",
+    "it": "Chi distribuisce questo strumento alle imprese che segue tenga presente che le voci qui dentro hanno una data di verifica e una di scadenza, e che dopo quella data il report lo dichiara. Non sono un parere legale né una certificazione, e la rilettura periodica resta a chi le distribuisce, insieme a chi lo assiste.",
     "en": "If you hand this tool to the companies you work with, know that the rows inside carry a verification date and an expiry date, and that after that date the report says so. They are neither legal advice nor a certification, and whoever reads them again periodically is you, together with whoever advises you."
   },
   "dimensions_note": "BOZZA, DA RIVEDERE NEL MERITO. `dimensions` dice quale area del questionario un obbligo tocca, e serve a una cosa sola: accanto a una dimensione debole, il report elenca le voci a cui quella persona ha risposto no o non lo so nella stessa area. Non è una mappa di conformità e non va letta come tale — un punteggio basso non è una violazione, e nessuna riga qui dice il contrario. La dimensione «d1» (casi d'uso e valore) non compare in nessuna voce, ed è un fatto e non una lacuna: non esiste un obbligo europeo sul fatto che l'AI ti sia utile. Finché questa nota c'è, il file resta in bozza."

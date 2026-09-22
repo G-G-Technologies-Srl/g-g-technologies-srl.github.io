@@ -17,7 +17,7 @@ export * from "gg/i18n.js";
 import { configure } from "gg/i18n.js";
 
 const IT = {
-  tagline: "Fatture elettroniche, sul tuo computer",
+  tagline: "Fatture elettroniche, sul vostro computer",
 
   // ---- navigazione
   navHome: "Situazione",
@@ -28,12 +28,12 @@ const IT = {
 
   // ---- casa
   homeTitle: "Situazione",
-  homeEmpty: "Qui compaiono le scadenze e quello che hai emesso quest'anno.",
+  homeEmpty: "Qui compaiono le scadenze e i documenti emessi quest'anno.",
   homeSetup: "Per arrivare alla prima fattura, nell'ordine:",
-  homeStepCompany: "I dati della tua azienda: nome, partita IVA, indirizzo",
+  homeStepCompany: "I dati della vostra azienda: nome, partita IVA, indirizzo",
   homeStepParty: "Il primo cliente",
   homeStepDoc: "La prima fattura, o un preventivo",
-  homeStepBackup: "Una cartella dove l'app tiene una copia dei tuoi dati",
+  homeStepBackup: "Una cartella dove l'app tiene una copia dei vostri dati",
   homeNew: "Nuova fattura",
   homeYear: "Fatturato dell'anno",
   homeDue: "In scadenza",
@@ -87,7 +87,7 @@ const IT = {
   homeAging: "Insoluto per età",
   solleciteOpen: "Prepara un sollecito",
   solleciteTitle: "Sollecito di pagamento",
-  solleciteNote: "Il testo è pronto da copiare in una email. Puoi modificarlo prima di copiarlo: "
+  solleciteNote: "Il testo è pronto da copiare in una email, e si può modificare prima di copiarlo: "
     + "l'applicazione non invia nulla.",
   solleciteWho: "Cliente",
   solleciteCopy: "Copia il testo",
@@ -152,27 +152,28 @@ const IT = {
   homeQuoteUntil: "fino al {data}",
   homeDrafts: "Bozze lasciate a metà",
   monthLetters: "G F M A M G L A S O N D",
-  homeBackupNever: "Non hai mai esportato un archivio. L'applicazione funziona senza server, quindi quella è "
-    + "l'unica copia che esiste.",
+  homeBackupNever: "Nessun archivio è stato ancora esportato. L'applicazione funziona senza server, "
+    + "quindi quella è l'unica copia che esiste.",
   homeBackupGo: "Esporta adesso",
 
   // La sicurezza dell'archivio, detta dove si guarda ogni giorno. Le decide `safety.js`, e i tre
   // stati «collegata ma non scrive» si dicono sempre: è lì che una persona si crede coperta.
-  safetyNoFolder: "Le tue fatture stanno solo in questo browser. Collega una cartella del computer: "
-    + "l'app ci tiene una copia aggiornata da sola, e se un giorno il browser si svuota la ritrovi lì.",
+  safetyNoFolder: "Le vostre fatture stanno solo in questo browser. Collega una cartella del computer: "
+    + "l'app ci tiene una copia aggiornata da sola, e se un giorno il browser si svuota la copia è lì.",
   safetyNoFolderGo: "Collega una cartella",
   safetyHeld: "La cartella «{folder}» è collegata ma non riceve copie: teneva già un archivio, e "
-    + "aspetta che tu dica quale versione vale.",
+    + "aspetta di sapere quale versione vale.",
   safetyPrompt: "La cartella «{folder}» aspetta il permesso del browser: finché non glielo dai, "
     + "nessuna copia ci arriva.",
-  safetyError: "L'ultima copia nella cartella «{folder}» non è riuscita ({error}). Da allora il "
-    + "tuo archivio sta solo qui.",
+  safetyError: "L'ultima copia nella cartella «{folder}» non è riuscita ({error}). Da allora il vostro "
+    + "archivio sta solo qui.",
   safetyNever: "La cartella «{folder}» è collegata, e non ha ancora ricevuto nessuna copia.",
   safetyGo: "Apri le impostazioni",
   safetyManualNever: "Questo browser non è in grado di conservare una copia autonomamente, e non "
     + "è mai stato esportato un archivio: i dati dell'applicazione esistono in una copia sola.",
-  safetyManualOld: "Questo browser non è in grado di conservare una copia autonomamente, e dall'ultimo archivio "
-    + "esportato — {giorni} giorni fa — hai lavorato ancora. Conviene esportarne uno adesso.",
+  safetyManualOld: "Questo browser non è in grado di conservare una copia autonomamente, e dall'ultimo "
+    + "archivio esportato — {giorni} giorni fa — il lavoro è andato avanti. Conviene esportarne uno "
+    + "adesso.",
   safetyManualGo: "Esporta un archivio",
 
   // ---- scadenzario
@@ -180,8 +181,8 @@ const IT = {
   // I promemoria dello scadenzario. Le stesse parole di Plan Scope dove la cosa è la stessa: le due
   // app stanno sulla stessa scrivania, e due nomi per la stessa funzione sono due funzioni.
   remindTitle: "Promemoria",
-  remindLead: "Quando una scadenza si avvicina, l'app te lo ricorda in tre modi — e quale funziona "
-    + "dipende da dove sei.",
+  remindLead: "Quando una scadenza si avvicina, l'app lo ricorda in tre modi — e quale funziona "
+    + "dipende da dove siete.",
   remindOn: "Ricordami le scadenze",
   remindDays: "Giorni prima",
   remindHour: "alle ore",
@@ -218,7 +219,7 @@ const IT = {
   remindNote: "Mentre non c'eri: {what}",
   dueIcs: "Esporta come calendario (.ics)",
   dueIcsNone: "Non c'è niente da mettere in calendario.",
-  dueIcsAlarm: "Con il promemoria dentro: lo farà suonare il tuo calendario.",
+  dueIcsAlarm: "Con il promemoria dentro: lo farà suonare il vostro calendario.",
 
   dueTitle: "Scadenzario",
   dueEmpty: "Non c'è niente da incassare.",
@@ -243,7 +244,8 @@ const IT = {
   dueAll: "Tutte",
   dueOnlyOverdue: "Solo scadute",
   dueChart: "Quanto scade, mese per mese. La parte accesa è già scaduta.",
-  dueChartTwoWay: "Mese per mese: sopra la linea quello che deve arrivare, sotto quello che devi pagare. La parte accesa è già scaduta.",
+  dueChartTwoWay: "Mese per mese: sopra la linea quello che deve arrivare, sotto quello che c'è da "
+    + "pagare. La parte accesa è già scaduta.",
   dueInTitle: "Da incassare",
   dueOutTitle: "Da pagare",
   dueOutEmpty: "Nessun acquisto scaduto.",
@@ -326,8 +328,8 @@ const IT = {
     + "Plan Scope, con estensione .zip o .json.",
   projectImportOther: "Questo file è di un altro programma.",
   projectsUntitled: "Senza nome",
-  projectsNote: "Il piano di un lavoro, con accanto quello che hai quotato, fatturato e incassato. "
-    + "Un progetto nasce anche da un preventivo accettato, con una fase per riga.",
+  projectsNote: "Il piano di un lavoro, con accanto quanto è stato quotato, fatturato e incassato. Un "
+    + "progetto nasce anche da un preventivo accettato, con una fase per riga.",
   projectsEmpty: "Qui compaiono i lavori che segui.",
   projectNeedsName: "Serve almeno il nome del progetto.",
   projectDeleteAsk: "Elimino questo progetto? Le fatture e i preventivi collegati restano dove "
@@ -359,8 +361,8 @@ const IT = {
   projPhaseBilled: "fatturata",
   projPhaseDrafted: "in bozza",
   projInvoiceDone: "Fattura le fasi fatte",
-  projInvoiceAsk: "Preparo una bozza di fattura con dentro {quante} fasi. Resta una bozza: la "
-    + "controlli e la emetti tu.",
+  projInvoiceAsk: "Preparo una bozza di fattura con dentro {quante} fasi. Resta una bozza: il "
+    + "controllo e l'emissione restano a voi.",
   projInvoiceNothing: "Non c'è nessuna fase fatta con un importo.",
   projDocsTitle: "Documenti collegati",
   projDocsEmpty: "Nessun documento collegato a questo progetto.",
@@ -444,7 +446,7 @@ const IT = {
   itemsEdit: "Modifica voce",
   itemDeleteAsk: "Elimino questa voce dal listino?",
   partyNeedsName: "Serve almeno la ragione sociale.",
-  partyWarnings: "Puoi salvare così, ma per fatturare a questo cliente servirà:",
+  partyWarnings: "Si può salvare così, ma per fatturare a questo cliente servirà:",
   sedeEsteraNote: "Su un indirizzo estero il tracciato vuole CAP 00000 e nessuna provincia: l'app "
     + "li scrive così da sé. Quello che metti qui compare sul foglio stampato, dove il CAP vero e "
     + "il nome della regione servono a chi riceve.",
@@ -601,11 +603,11 @@ const IT = {
   custBilledLabel: "Fatturato in tutto",
   custDueLabel: "Da incassare",
   custContactsTitle: "Persone di riferimento",
-  custContactsNote: "Chi risponde al telefono e a chi scrivi. Restano qui, sul tuo computer: la "
+  custContactsNote: "Chi risponde al telefono e a chi si scrive. Restano qui, sul vostro computer: la "
     + "fattura elettronica non ha un campo per il nome di una persona, e l'app non ne inventa uno.",
   custContactsEmpty: "Le persone che aggiungi compaiono qui.",
   custDiaryTitle: "Diario",
-  custDiaryNote: "Una riga per telefonata, email o incontro. Vale la volta dopo, quando ti chiedono "
+  custDiaryNote: "Una riga per telefonata, email o incontro. Vale la volta dopo, quando vi chiedono "
     + "che cosa vi eravate detti — e quando il preventivo arriva tre mesi più tardi.",
   custDiaryEmpty: "Qui compare quello che annoti.",
   custProjectsTitle: "I suoi progetti",
@@ -639,7 +641,7 @@ const IT = {
   actDeleteAsk: "Elimino questa voce del diario?",
 
   // ---- azienda
-  companyTitle: "La tua azienda",
+  companyTitle: "La vostra azienda",
   companyNote: "Sono i dati che finiscono nell'intestazione di ogni documento. Si compilano una "
     + "volta sola.",
   companySaved: "Dati dell'azienda salvati.",
@@ -657,10 +659,10 @@ const IT = {
 
   // ---- impostazioni
   settingsTitle: "Impostazioni",
-  settingsData: "I tuoi dati",
-  settingsDataNote: "Stanno solo in questo browser, su questo computer: non su un server. Se cambi "
-    + "computer o svuoti il browser, quello che non hai copiato è perso. La cartella qui sotto è "
-    + "il modo più semplice per avere sempre una copia.",
+  settingsData: "I vostri dati",
+  settingsDataNote: "Stanno solo in questo browser, su questo computer: non su un server. Cambiando "
+    + "computer, o svuotando il browser, quello che non è stato copiato è perso. La cartella qui sotto "
+    + "è il modo più semplice per avere sempre una copia.",
   settingsExport: "Esporta tutto",
   settingsImport: "Importa un archivio",
   settingsImportAsk: "L'importazione sostituisce quello che c'è adesso. Vado avanti?",
@@ -675,12 +677,12 @@ const IT = {
   settingsPersistUnknown: "Questo browser non dice se conserva l'archivio in modo permanente.",
 
   backupTitle: "Copia automatica in una cartella",
-  backupNote: "Scegli una cartella e l'app ci scrive da sola l'archivio a ogni modifica — lo "
-    + "stesso file di «Esporta tutto». Se la cartella è dentro Dropbox o iCloud, la copia arriva "
-    + "da sé sugli altri tuoi computer. Tiene anche una copia al giorno degli ultimi trenta "
-    + "giorni. Da qui scrive un computer solo: sull'altro apri l'archivio con «Importa un "
-    + "archivio». L'archivio porta il testo: le immagini dentro le pagine dei progetti viaggiano "
-    + "nel pacchetto del progetto, che è uno zip.",
+  backupNote: "Scegli una cartella e l'app ci scrive da sola l'archivio a ogni modifica — lo stesso "
+    + "file di «Esporta tutto». Se la cartella è dentro Dropbox o iCloud, la copia arriva da sé sugli "
+    + "altri vostri computer. Tiene anche una copia al giorno degli ultimi trenta giorni. Da qui "
+    + "scrive un computer solo: sull'altro l'archivio si apre con «Importa un archivio». L'archivio "
+    + "porta il testo: le immagini dentro le pagine dei progetti viaggiano nel pacchetto del progetto, "
+    + "che è uno zip.",
   backupPick: "Scegli la cartella…",
   backupResume: "Riprendi la cartella",
   backupUnlink: "Scollega la cartella",
@@ -689,15 +691,15 @@ const IT = {
   backupUnavailable: "Questo browser non consente di aprire una cartella: la funzione è disponibile su Chrome o "
     + "Edge da computer. Qui resta «Esporta tutto».",
   backupNone: "Nessuna cartella collegata.",
-  backupPrompt: "La cartella «{folder}» aspetta il tuo permesso: il browser lo chiede di nuovo a "
+  backupPrompt: "La cartella «{folder}» aspetta il vostro permesso: il browser lo chiede di nuovo a "
     + "ogni apertura.",
   backupLinked: "Cartella «{folder}» · ultima copia {when}.",
   backupNever: "Cartella «{folder}» · nessuna copia ancora.",
   // Cosa c'è dentro una copia: i conti li fa `archive.js`, queste sono le parole.
   archiveLook: "Cosa contiene",
   archiveReading: "Sto guardando…",
-  archiveSame: "in linea con quello che hai adesso",
-  archiveDiff: "diversa da quello che hai adesso",
+  archiveSame: "in linea con quello che c'è qui adesso",
+  archiveDiff: "diversa da quello che c'è qui adesso",
   archiveNow: "adesso",
   archiveWritten: "scritta il {when}",
   archiveUnreadable: "Questa copia non si legge.",
@@ -723,7 +725,7 @@ const IT = {
   backupCopySize: "{size}",
   backupChoose: "Scegli cosa fare",
   backupHeld: "La cartella «{folder}» teneva già delle copie, quindi non è stata scritta. Scegli se "
-    + "riportare quello che c'è o scriverci quello che hai qui.",
+    + "riportare quello che c'è o scriverci quello che c'è qui.",
   backupFoundAsk: "Questa cartella tiene già {n} copie, la più recente del {when}. "
     + "Riporto qui la più recente? Quello che c'è adesso nell'archivio viene sostituito.",
   // La più recente è spesso l'archivio corrente, che non è di un giorno: «la più recente del Copia
@@ -731,8 +733,8 @@ const IT = {
   backupFoundAskLatest: "Questa cartella tiene già {n} copie. Riporto qui la più recente? "
     + "Quello che c'è adesso nell'archivio viene sostituito.",
   backupFoundRestore: "Riporta la copia",
-  backupFoundMineAsk: "Allora scrivo nella cartella l'archivio che hai qui adesso. La copia "
-    + "corrente e quella di oggi vengono sostituite; le copie degli altri giorni restano.",
+  backupFoundMineAsk: "Allora scrivo nella cartella l'archivio che c'è qui adesso. La copia corrente e "
+    + "quella di oggi vengono sostituite; le copie degli altri giorni restano.",
   backupFoundMine: "Scrivi quello che ho qui",
   backupRestore: "Riporta questa",
   backupRestoreAsk: "Riporto l'archivio com'era in questa copia. Documenti, clienti, acquisti e "
@@ -742,7 +744,7 @@ const IT = {
   backupRestoreBad: "Questa copia non si è potuta riportare: il file non è un archivio di Invoice "
     + "Scope.",
   backupNoFolder: "Nessuna cartella collegata.",
-  backupNoPermission: "La cartella aspetta il tuo permesso: riprendila e riprova.",
+  backupNoPermission: "La cartella aspetta il vostro permesso: riprendila e riprova.",
   backupCopyGone: "Questa copia non è più nella cartella.",
   backupError: "Non è stato possibile scrivere nella cartella «{folder}» ({error}). Controlla che esista "
     + "ancora, oppure scegline un'altra.",
@@ -750,8 +752,8 @@ const IT = {
   settingsFormatNote: "L'app scrive il formato FatturaPA nella versione qui sopra. Quando "
     + "l'Agenzia pubblica una versione nuova, l'app va aggiornata.",
   dangerTitle: "Zona di cancellazione",
-  dangerNote: "Per ricominciare da capo, per esempio prima di rifare un'importazione. Quello che "
-    + "cancelli qui non torna: prima di ogni cancellazione l'app ti propone di esportare una copia.",
+  dangerNote: "Per ricominciare da capo, per esempio prima di rifare un'importazione. Quello che si "
+    + "cancella qui non torna: prima di ogni cancellazione l'app propone di esportare una copia.",
   dangerDocs: "Documenti e incassi",
   dangerDocsNote: "Fatture, preventivi, documenti di trasporto, note di credito, gli incassi "
     + "registrati e la numerazione, che riparte da uno.",
@@ -769,8 +771,7 @@ const IT = {
   dangerWipe: "Cancella",
   dangerWipeAll: "Cancella tutto",
   dangerNothing: "Non c'è niente da cancellare.",
-  dangerExportFirst: "Vuoi prima esportare una copia dell'archivio? È l'unico modo per tornare "
-    + "indietro.",
+  dangerExportFirst: "Esportare prima una copia dell'archivio? È l'unico modo per tornare indietro.",
   dangerExportYes: "Esporta prima",
   dangerExportNo: "No, vai avanti",
   dangerAsk: "Cancello {cosa}. Non si torna indietro.",
@@ -794,9 +795,9 @@ const IT = {
   dangerCountCompany: "i dati dell'azienda",
   settingsLimits: "Quello che l'app non fa",
   settingsLimitsNote: "Non trasmette il file, non fa la conservazione a norma e non firma "
-    + "digitalmente. Il file lo prepari qui e lo mandi tu: da «Fatture e Corrispettivi» "
-    + "dell'Agenzia delle Entrate, dal portale dell'Ufficio Tributario se emetti da San Marino, o "
-    + "tramite il tuo commercialista.",
+    + "digitalmente. Il file si prepara qui e lo mandate voi: da «Fatture e Corrispettivi» "
+    + "dell'Agenzia delle Entrate, dal portale dell'Ufficio Tributario per chi emette da San Marino, o "
+    + "tramite il vostro commercialista.",
 
   // ---- il documento
   docNewTitle: "{tipo} in bozza",
@@ -865,9 +866,9 @@ const IT = {
     + "credito. Emetto?",
   docIssued: "Emesso con il numero",
   docIssuedNext: "Adesso scarica l'XML — il pulsante è in cima, accanto al titolo — e mandalo: da "
-    + "«Fatture e Corrispettivi» dell'Agenzia delle Entrate, o tramite il tuo commercialista.",
+    + "«Fatture e Corrispettivi» dell'Agenzia delle Entrate, o tramite il vostro commercialista.",
   docIssuedNextSm: "Adesso scarica l'XML — il pulsante è in cima, accanto al titolo — e caricalo sul "
-    + "portale dell'Ufficio Tributario, o passalo al tuo commercialista.",
+    + "portale dell'Ufficio Tributario, o passalo al vostro commercialista.",
   docDeleteAsk: "Cancello questa bozza?",
   docCreditNote: "Storna con una nota di credito",
   docReopen: "Riporta in bozza",
@@ -916,11 +917,11 @@ const IT = {
   printFooterDdt: "Documento di trasporto: accompagna la merce. Non è un documento fiscale, la "
     + "fattura segue. Prodotto con Invoice Scope.",
   docPrint: "Stampa o PDF",
-  docXmlDone: "File scaricato. Ora caricalo su «Fatture e Corrispettivi» o passalo al tuo "
+  docXmlDone: "File scaricato. Ora caricalo su «Fatture e Corrispettivi» o passalo al vostro "
     + "intermediario: l'app non lo trasmette.",
   docXmlTooBig: "Il file peserebbe {mb} MB, e il massimo è 5. Caricato così verrebbe scartato all'ingresso, "
     + "quindi il download si ferma qui: il documento ha troppe righe e va diviso.",
-  docXmlAgain: "Di questo documento hai già scaricato un file. Ne scarico un altro, con un "
+  docXmlAgain: "Di questo documento è già stato scaricato un file. Ne scarico un altro, con un "
     + "progressivo nuovo?",
 
   // ---- pagamento, ritenuta, sconto
@@ -941,8 +942,8 @@ const IT = {
   payRemoveDue: "Togli la scadenza",
   payNoDue: "Senza scadenze il pagamento si intende a vista.",
   trasportoTitle: "Trasporto",
-  trasportoNote: "Sono i dati che accompagnano la merce, e chi la riceve li controlla alla "
-    + "consegna. Il porto è franco se il trasporto lo paghi tu, assegnato se lo paga chi riceve.",
+  trasportoNote: "Sono i dati che accompagnano la merce, e chi la riceve li controlla alla consegna. "
+    + "Il porto è franco se il trasporto lo paga chi vende, assegnato se lo paga chi riceve.",
   portoFranco: "Franco",
   portoAssegnato: "Assegnato",
   ritTitle: "Ritenuta d'acconto",
@@ -973,14 +974,14 @@ const IT = {
   sourceLabel: "Codice sorgente",
   removalLabel: "Installata",
   removalDesktop: "Per toglierla: apri il menù ⋮ in alto a destra nella finestra dell'app e scegli "
-    + "«Disinstalla». I dati restano nel browser: se non ti servono più, esportali prima e poi "
-    + "cancella i dati del sito da Impostazioni del browser.",
-  removalAndroid: "Per toglierla: tieni premuta l'icona nella schermata Home e scegli «Disinstalla» "
-    + "o trascinala sul cestino. I dati restano nel browser: se non ti servono più, esportali "
-    + "prima e poi cancella i dati del sito.",
-  removalIos: "Per toglierla: tieni premuta l'icona nella schermata Home, poi «Rimuovi app». I "
-    + "dati restano in Safari: se non ti servono più, esportali prima e poi cancella i dati del "
-    + "sito da Impostazioni.",
+    + "«Disinstalla». I dati restano nel browser: se non servono più, esportali prima e poi cancella i "
+    + "dati del sito da Impostazioni del browser.",
+  removalAndroid: "Per toglierla: tieni premuta l'icona nella schermata Home e scegli «Disinstalla» o "
+    + "trascinala sul cestino. I dati restano nel browser: se non servono più, esportali prima e poi "
+    + "cancella i dati del sito.",
+  removalIos: "Per toglierla: tieni premuta l'icona nella schermata Home, poi «Rimuovi app». I dati "
+    + "restano in Safari: se non servono più, esportali prima e poi cancella i dati del sito da "
+    + "Impostazioni.",
   versionLabel: "v{version}",
   versionNext: "v{current} → {next}",
   versionNextUnknown: "v{current} → nuova",
@@ -991,7 +992,7 @@ const IT = {
   installIos: "Per installarla: tocca Condividi, poi «Aggiungi alla schermata Home».",
 
   // ---- i campi, come li chiama chi compila
-  f_azienda: "la tua azienda",
+  f_azienda: "la vostra azienda",
   f_cliente: "il cliente",
   f_denominazione: "ragione sociale",
   f_partitaIva: "partita IVA",
@@ -1087,7 +1088,7 @@ const IT = {
   vProvinceFixSm: "Per San Marino si scrive SM.",
   vNoLines: "il documento non ha righe",
   vNoLinesFix: "Aggiungi almeno una riga: un documento senza righe non ha un imponibile.",
-  vDescriptionFix: "Descrivi che cosa hai venduto: è il campo che il cliente legge per primo.",
+  vDescriptionFix: "Descrivi che cosa è stato venduto: è il campo che il cliente legge per primo.",
   vUnitFix: "Usa un'abbreviazione: ora, kg, pz.",
   vRateFix: "Scrivi l'aliquota. Se l'operazione non ha IVA, scrivi 0 e scegli una natura.",
   vNaturaWhenZero: "è obbligatoria quando l'aliquota è zero",
@@ -1101,8 +1102,8 @@ const IT = {
   vOutsideSubset: "«{valore}» è fuori dal sottoinsieme che l'app emette",
   vNaturaOutsideFix: "Le nature del tracciato sono {elenco}.",
   vTypeUnknown: "«{valore}» non è un tipo che l'app conosce",
-  vTypeUnknownFix: "L'app emette {elenco}, e tiene preventivi e documenti di trasporto, che "
-    + "restano sul tuo computer.",
+  vTypeUnknownFix: "L'app emette {elenco}, e tiene preventivi e documenti di trasporto, che restano "
+    + "sul vostro computer.",
   vDateShape: "deve essere nella forma AAAA-MM-GG",
   vDateFix: "Per esempio {esempio}.",
   vNumberOnIssueFix: "Il numero si assegna quando emetti: una bozza non ne ha uno.",
@@ -1164,8 +1165,8 @@ const IT = {
   vImponibileZeroFix: "Togli le righe che si annullano fra loro, o mettile in un documento a parte.",
 
   // ---- il dimostrativo
-  demoNote: "Dimostrativo: i dati sono inventati e restano in memoria. Chiudendo la scheda "
-    + "spariscono, e le tue fatture non li vedono.",
+  demoNote: "Dimostrativo: i dati sono inventati e restano in memoria. Chiudendo la scheda spariscono, "
+    + "e le vostre fatture non li vedono.",
   demoItemProgettazione: "Progettazione meccanica",
   demoItemOfficina: "Ora di officina",
   demoItemTelaio: "Telaio saldato",
@@ -1205,12 +1206,11 @@ const IT = {
   // validatore, e per la stessa ragione — un messaggio scritto dentro la logica esiste in una lingua
   // sola, e questo è un progetto in cui una correzione a una lingua sola è già finita online.
   impTitle: "Da un altro programma",
-  impNote: "Porti dentro clienti, listino e documenti da Fatture in Cloud — con il dettaglio delle "
-    + "righe, se esporti anche quello — e le fatture in XML da qualsiasi gestionale: quelle che "
-    + "hai emesso tu vanno fra i documenti, quelle che hai ricevuto fra gli acquisti. Scegli i file "
-    + "così come li scarichi — .xlsx, .xls, XML, anche tutti "
-    + "insieme, anche lo ZIP del backup: prima di scrivere vedi cosa è stato letto, e niente entra "
-    + "finché non confermi.",
+  impNote: "Porta dentro clienti, listino e documenti da Fatture in Cloud — con il dettaglio delle "
+    + "righe, se viene esportato anche quello — e le fatture in XML da qualsiasi gestionale: quelle "
+    + "emesse vanno fra i documenti, quelle ricevute fra gli acquisti. Scegli i file così come li "
+    + "scarichi — .xlsx, .xls, XML, anche tutti insieme, anche lo ZIP del backup: prima di scrivere si "
+    + "vede che cosa è stato letto, e niente entra finché non si conferma.",
   impPick: "Scegli i file…",
   impReading: "Sto leggendo…",
   impEmpty: "Fra i file scelti non c'è un'esportazione che l'applicazione sappia leggere.",
@@ -1230,7 +1230,8 @@ const IT = {
   impKindRighe: "Dettaglio righe dei documenti",
   impKindFattura: "Fattura elettronica",
   impKindRicevuta: "Fattura ricevuta",
-  impMonofaseByHand: "il file porta l'IVA italiana; l'imposta monofase la aggiungi tu, aprendo l'acquisto",
+  impMonofaseByHand: "il file porta l'IVA italiana; l'imposta monofase si aggiunge a mano, aprendo "
+    + "l'acquisto",
   impKindVecchio: "Foglio Excel del 1995",
   impKindIgnoto: "Non lo riconosco",
 
@@ -1252,11 +1253,11 @@ const IT = {
   impUndoWhen: "Ultima importazione: {quando} — {clienti} clienti, {listino} voci di listino, "
     + "{documenti} documenti, {incassi} incassi.",
   impUndoAsk: "Tolgo tutto quello che è entrato con l'ultima importazione. I clienti a cui nel "
-    + "frattempo hai fatto un documento restano.",
+    + "frattempo è stato fatto un documento restano.",
   impUndoDone: "Tolti: {clienti} clienti, {listino} voci di listino, {documenti} documenti, "
     + "{incassi} incassi, {acquisti} acquisti.",
   impFrom: "Importato da {fonte} il {quando}.",
-  emptyImport: "Se arrivi da un altro programma, puoi importare quello che hai.",
+  emptyImport: "Se arrivate da un altro programma, potete importare quello che avete.",
   impTotalDiffers: "documento {numero}: il file dichiara {dichiarato}, le righe fanno {calcolato}",
   impLinesDiffer: "documento {numero}: il registro dice {dichiarato} di imponibile, le righe del "
     + "dettaglio fanno {calcolato}",
@@ -1310,9 +1311,9 @@ const IT = {
   // ---- valori predefiniti dell'azienda per le righe a IVA zero
   companyWho: "Chi sei",
   companyLetterhead: "Carta intestata",
-  companyLetterheadNote: "Quello che sta in testa a ogni documento stampato. Finché non ne scegli "
-    + "uno, il logo è quello di G&G Technologies: il tuo entra come immagine — PNG, JPG o SVG — e "
-    + "viene ridotto se è grande. Email, telefono e sito stanno sotto l'indirizzo.",
+  companyLetterheadNote: "Quello che sta in testa a ogni documento stampato. Finché non ne viene "
+    + "scelto uno, il logo è quello di G&G Technologies: il vostro entra come immagine — PNG, JPG o "
+    + "SVG — e viene ridotto se è grande. Email, telefono e sito stanno sotto l'indirizzo.",
   companyLogoPick: "Scegli il logo…",
   companyLogoRemove: "Togli il logo",
   companyLogoBad: "Questa immagine non si apre. Prova un PNG, un JPG o un SVG.",

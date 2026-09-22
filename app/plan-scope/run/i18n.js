@@ -22,7 +22,7 @@ import { configure } from "gg/i18n.js";
 const IT = {
 
   // chrome
-  tagline: "Progetti e scadenze, sul tuo computer",
+  tagline: "Progetti e scadenze, sul vostro computer",
   goHome: "Progetti",
   crumbsLabel: "Dove sei",
   viewsLabel: "Come guardare il progetto",
@@ -85,7 +85,7 @@ const IT = {
   peopleNone: "Ancora nessuno. Scrivi un nome qui sotto, o assegna un'attività a qualcuno: comparirà qui.",
   peopleAdd: "Nome di una persona",
   peopleAddDo: "Aggiungi",
-  peopleHint: "Scrivendo le prime lettere compaiono le persone che hai già in rubrica.",
+  peopleHint: "Scrivendo le prime lettere compaiono le persone già in rubrica.",
   peopleRole: "Ruolo qui",
   peopleRemove: "Togli",
   peopleAddToBook: "Aggiungi alla rubrica",
@@ -122,7 +122,7 @@ const IT = {
   personTasksTitle: "Come eravate rimasti",
   personTasksNone: "Nessuna attività aperta assegnata a lei.",
   personAddWhere: "In quale progetto?",
-  personAddWhereNone: "Lavora già a tutti i progetti che hai.",
+  personAddWhereNone: "Lavora già a tutti i progetti presenti.",
   personJoined: "Adesso lavora a «{project}».",
   personLeft: "Non lavora più a «{project}». La sua scheda resta in rubrica.",
   personNoRole: "senza ruolo",
@@ -146,14 +146,14 @@ const IT = {
   themeToDark: "Passa al tema scuro",
   removalLabel: "Installata",
   removalDesktop: "Per toglierla: apri il menù ⋮ in alto a destra nella finestra dell'app e scegli "
-    + "«Disinstalla». I dati restano nel browser: se non ti servono più, esportali prima e poi "
-    + "cancella i dati del sito da Impostazioni del browser.",
-  removalAndroid: "Per toglierla: tieni premuta l'icona nella schermata Home e scegli «Disinstalla» "
-    + "o trascinala sul cestino. I dati restano nel browser: se non ti servono più, esportali "
-    + "prima e poi cancella i dati del sito.",
-  removalIos: "Per toglierla: tieni premuta l'icona nella schermata Home, poi «Rimuovi app». I "
-    + "dati restano in Safari: se non ti servono più, esportali prima e poi cancella i dati del "
-    + "sito da Impostazioni.",
+    + "«Disinstalla». I dati restano nel browser: se non servono più, esportali prima e poi cancella i "
+    + "dati del sito da Impostazioni del browser.",
+  removalAndroid: "Per toglierla: tieni premuta l'icona nella schermata Home e scegli «Disinstalla» o "
+    + "trascinala sul cestino. I dati restano nel browser: se non servono più, esportali prima e poi "
+    + "cancella i dati del sito.",
+  removalIos: "Per toglierla: tieni premuta l'icona nella schermata Home, poi «Rimuovi app». I dati "
+    + "restano in Safari: se non servono più, esportali prima e poi cancella i dati del sito da "
+    + "Impostazioni.",
   versionLabel: "v{version}",
   versionNext: "v{current} → {next}",
   versionNextUnknown: "v{current} → nuova",
@@ -166,18 +166,18 @@ const IT = {
   searchTitle: "Cerca",
   searchEmpty: "Niente con queste parole.",
   searchHint: "Frecce per scegliere, Invio per aprire. Da ovunque: Ctrl+K",
-  installHint: "Puoi installarla: funziona anche senza connessione.",
+  installHint: "Si può installare: funziona anche senza connessione.",
   backToPage: "Torna alla scheda",
   sourceLabel: "Codice sorgente",
   errorTitle: "Qualcosa non ha funzionato",
-  errorText: "Ricarica la pagina. Se succede di nuovo, il tuo lavoro è comunque al suo posto.",
+  errorText: "Ricarica la pagina. Se succede di nuovo, il lavoro è comunque al suo posto.",
   retry: "Ricarica",
   noStoreTitle: "Questo browser non può ricordare niente",
-  noStore: "Sei in una finestra privata, o il browser ha lo spazio dati disattivato. Puoi usare "
-    + "l'app, ma quello che scrivi sparisce chiudendola: esporta prima di uscire.",
+  noStore: "Questa è una finestra privata, oppure il browser ha lo spazio dati disattivato. L'app si "
+    + "può usare, ma quello che si scrive sparisce chiudendola: esporta prima di uscire.",
 
   // home
-  homeTitle: "I tuoi progetti",
+  homeTitle: "I vostri progetti",
   newProject: "Nuovo progetto",
   projectNameLabel: "Come si chiama",
   projectNamePlaceholder: "Fiera di settembre",
@@ -189,25 +189,25 @@ const IT = {
   createProject: "Crea il progetto",
   cancelProject: "Lascia stare",
   folderTitle: "Le cartelle per lavorare in due",
-  folderHint: "Ogni progetto va nella cartella che scegli tu: uno da un cliente, un altro da un "
-    + "altro, e quelli che non condividi restano qui e basta. Una cartella dentro Dropbox, OneDrive, "
+  folderHint: "Ogni progetto va nella cartella scelta: uno da un cliente, un altro da un altro, e "
+    + "quelli che non si condividono restano qui e basta. Una cartella dentro Dropbox, OneDrive, "
     + "Google Drive o SharePoint porta il progetto a chi ce l'ha, e riporta indietro il suo lavoro.",
-  folderWho: "Come ti chiami",
+  folderWho: "Come vi chiamate",
   folderNote: "Il nome compare sulle copie che restano quando due persone cambiano la stessa pagina. "
     + "Funziona con Chrome o Edge sul computer.",
   folderList: "Le cartelle che conosci",
   folderEmpty: "Ancora nessuna cartella. Aggiungine una per condividerci un progetto, oppure apri "
-    + "quella che ti ha mandato qualcuno.",
+    + "quella che vi ha mandato qualcuno.",
   folderAdd: "Aggiungi una cartella…",
   folderOpen: "Apri una cartella condivisa…",
   folderOpenOne: "Apri",
-  folderNewNote: "I progetti indentati qui sotto stanno nelle tue cartelle e in quest'app ancora no. "
-    + "Aprili quando ti servono: niente entra da solo.",
+  folderNewNote: "I progetti indentati qui sotto stanno nelle vostre cartelle e in quest'app ancora "
+    + "no. Aprili quando servono: niente entra da solo.",
   folderForget: "Dimentica",
   folderResumeOne: "Riprendi",
   folderResume: "Riprendi la cartella",
   folderSeeAll: "Vedi le cartelle",
-  folderHere: "qui c'è anche la tua copia",
+  folderHere: "qui c'è anche la vostra copia",
   folderIsProject: "la cartella è il progetto",
   folderNothingIn: "ancora nessun progetto qui dentro",
   folderMore: "e altri {n}",
@@ -218,10 +218,10 @@ const IT = {
   folderLinkedOne: "Condiviso in una cartella · sei {who} · letta alle {time}",
   folderLinkedMany: "Condivisi in {n} cartelle · sei {who} · lette alle {time}",
   folderNeverRead: "Condivisi in {n} cartelle · sei {who} · non ancora lette",
-  folderPrompt: "Aspettano il tuo permesso: {names}. Riprendile una volta ricordando la scelta, "
+  folderPrompt: "Aspettano il vostro permesso: {names}. Riprendile una volta ricordando la scelta, "
     + "oppure installa l'app: allora il browser non lo chiede più.",
-  whoAsk: "Come ti chiami? Lo vede chi apre le cartelle che condividi.",
-  folderAdded: "Cartella aggiunta. Adesso puoi condividerci un progetto.",
+  whoAsk: "Come vi chiamate? Il nome lo vede chi apre le cartelle condivise.",
+  folderAdded: "Cartella aggiunta. Adesso ci si può condividere un progetto.",
   folderError: "La cartella non si legge o non si scrive: {error}",
   shareWhere: "In quale cartella lo metto?",
   shareOther: "Un'altra cartella…",
@@ -234,14 +234,15 @@ const IT = {
   sharedAdrift: "Risulta condiviso, ma non c'è nessuna cartella dove scriverlo: da qui non esce "
     + "niente. Succede ai progetti condivisi prima della 4.0, quando la cartella era una sola.",
   sharedFix: "Scegli dove",
-  sharedOff: "Spunta per scriverlo in una cartella: ti faccio scegliere quale. Da lì in poi si salva da solo, a ogni modifica: non c'è niente da premere.",
+  sharedOff: "Spunta per scriverlo in una cartella: l'app chiede quale. Da lì in poi si salva da solo, "
+    + "a ogni modifica: non c'è niente da premere.",
   sharedSoon: "Viene scritto nella cartella «{folder}» fra pochi secondi.",
   sharedWriting: "In scrittura nella cartella «{folder}»…",
   sharedOn: "Nella cartella «{folder}», sottocartella «{sub}» · scritto alle {time} · si aggiorna da solo a ogni modifica, entro pochi secondi.",
   sharedOnSelf: "Nella cartella «{folder}» · scritto alle {time} · si aggiorna da solo a ogni modifica, entro pochi secondi.",
   sharedNow: "Da adesso si salva da solo nella cartella, a ogni modifica.",
   pulled: "«{name}» aggiornato da {who}: {added} in più, {changed} aggiornate, {conflicts} da confrontare",
-  pulledTrashed: "«{name}» è nel cestino: ce l'ha messo {who}, e vale anche per la tua copia.",
+  pulledTrashed: "«{name}» è nel cestino: ce l'ha messo {who}, e vale anche per la vostra copia.",
   folderGone: "La cartella di «{name}» non c'è più: il progetto resta qui, ma non è più condiviso.",
 
   // ---- la cartella locale: la copia di tutto, scritta dall'app invece che da chi si ricorda
@@ -249,10 +250,10 @@ const IT = {
   backupHint: "Scegli una cartella e l'app ci scrive da sola tutto quello che tieni qui: gli stessi "
     + "dati di «Esporta tutto», più le immagini delle pagine. Da lì in poi si aggiorna a ogni "
     + "modifica, e non c'è niente da premere.",
-  backupNote: "Tiene anche una copia al giorno degli ultimi trenta giorni, così una modifica "
-    + "sbagliata si riprende da com'era ieri. Se la cartella sta dentro Dropbox, iCloud o OneDrive, "
-    + "la copia arriva da sé sugli altri tuoi computer. Questa è la copia tua: per lavorare in due "
-    + "c'è la cartella condivisa, che è un'altra cosa.",
+  backupNote: "Tiene anche una copia al giorno degli ultimi trenta giorni, così una modifica sbagliata "
+    + "si riprende da com'era ieri. Se la cartella sta dentro Dropbox, iCloud o OneDrive, la copia "
+    + "arriva da sé sugli altri vostri computer. Questa è la copia personale: per lavorare in due c'è "
+    + "la cartella condivisa, che è un'altra cosa.",
   backupPick: "Scegli la cartella…",
   backupResume: "Riprendi la cartella",
   backupUnlink: "Scollega la cartella",
@@ -261,7 +262,7 @@ const IT = {
   backupUnavailable: "Questo browser sa aprire una cartella con Chrome o Edge sul computer. Qui "
     + "resta «Esporta tutto», che fa lo stesso file.",
   backupNone: "Nessuna cartella collegata.",
-  backupPrompt: "La cartella «{folder}» aspetta il tuo permesso: riprendila ricordando la scelta, "
+  backupPrompt: "La cartella «{folder}» aspetta il vostro permesso: riprendila ricordando la scelta, "
     + "oppure installa l'app, e il browser non lo chiede più.",
   backupLinked: "Cartella «{folder}» · ultima copia {when}.",
   backupNever: "Cartella «{folder}» · la prima copia arriva alla prossima modifica.",
@@ -269,9 +270,10 @@ const IT = {
     + "un'altra.",
   backupDone: "Cartella collegata. Da adesso la copia si scrive da sola.",
   backupChoose: "Scegli cosa fare",
-  backupHeld: "La cartella «{folder}» teneva già delle copie: non ci ho scritto niente. "
-    + "Scegli se riportare quello che c'è o scriverci quello che hai qui.",
-  backupHeldStill: "Non ho scritto niente nella cartella. Puoi scegliere quando vuoi.",
+  backupHeld: "La cartella «{folder}» teneva già delle copie: non ci è stato scritto niente. Scegli se "
+    + "riportare quello che c'è o scriverci quello che c'è qui.",
+  backupHeldStill: "Nella cartella non è stato scritto niente. La scelta si può fare in qualsiasi "
+    + "momento.",
   backupFoundAsk: "Questa cartella tiene già {n} copie, la più recente del {when}. "
     + "Cosa faccio?",
   backupFoundRestore: "Riporta qui la copia più recente",
@@ -285,7 +287,7 @@ const IT = {
   backupRestoreDone: "Archivio riportato: {records} record e {images} immagini.",
   backupRestoreFail: "La copia resta com'è: {reason}",
   backupNoFolder: "Nessuna cartella collegata.",
-  backupNoPermission: "La cartella aspetta il tuo permesso: riprendila e riprova.",
+  backupNoPermission: "La cartella aspetta il vostro permesso: riprendila e riprova.",
   backupCopyGone: "Questa copia non è più nella cartella.",
   logTitle: "Dalla cartella",
   logLine: "{who}: {added} in più, {changed} aggiornate, {conflicts} da confrontare",
@@ -293,8 +295,8 @@ const IT = {
   logTrashed: "{who} l'ha messo nel cestino",
   dropFolder: "Elimina la cartella condivisa",
   dropTitle: "Eliminare la cartella condivisa?",
-  dropTextSelf: "Smetto di seguire la cartella «{folder}». La cartella non si tocca: è di chi te "
-    + "l'ha condivisa, e il lavoro che hai qui resta qui. Il progetto smette di aggiornarsi da solo.",
+  dropTextSelf: "Smetto di seguire la cartella «{folder}». La cartella non si tocca: è di chi ve l'ha "
+    + "condivisa, e il lavoro che sta qui resta qui. Il progetto smette di aggiornarsi da solo.",
   dropText: "«{folder}» sparisce dalla cartella condivisa, per tutti. Qui il progetto resta dov'è; da chi "
     + "ce l'ha resta, ma smette di essere condiviso. Non c'è un annulla.",
   dropConfirm: "Elimina la cartella",
@@ -382,15 +384,15 @@ const IT = {
   pasteAdd: "Aggiungi alla bacheca",
   pasted: "{n} attività aggiunte",
   copyForAssistant: "Copia per un assistente AI",
-  copied: "Copiato. Incollalo nel tuo assistente: le attività che ti restituisce le puoi incollare "
-    + "nella bacheca.",
+  copied: "Copiato. Incollalo nel vostro assistente: le attività che restituisce si incollano nella "
+    + "bacheca.",
   copyFailed: "Il browser non ha permesso la copia.",
-  copyPageLead: "Queste sono le note di un progetto, in Markdown. Leggile e rispondi a quello che "
-    + "ti chiedo qui sotto. Se ti chiedo delle attività, scrivile una per riga, con la scadenza "
-    + "come @AAAA-MM-GG e i tag come #parola.",
-  copyPlanLead: "Questo è il piano di un progetto: le attività, con colonna, scadenza e "
-    + "responsabile. Leggilo e rispondi a quello che ti chiedo qui sotto. Se ti chiedo delle "
-    + "attività nuove, scrivile una per riga, con la scadenza come @AAAA-MM-GG e i tag come #parola.",
+  copyPageLead: "Queste sono le note di un progetto, in Markdown. Leggile e rispondi a quello che ti "
+    + "chiedo qui sotto. Se ti chiedo delle attività, scrivile una per riga, con la scadenza come "
+    + "@AAAA-MM-GG e i tag come #parola.",
+  copyPlanLead: "Questo è il piano di un progetto: le attività, con colonna, scadenza e responsabile. "
+    + "Leggilo e rispondi a quello che ti chiedo qui sotto. Se ti chiedo delle attività nuove, "
+    + "scrivile una per riga, con la scadenza come @AAAA-MM-GG e i tag come #parola.",
   exportIcs: "Esporta come calendario (.ics)",
   exportCsv: "Esporta le attività in CSV",
   exportHtml: "Esporta come pagina web",
@@ -495,7 +497,7 @@ const IT = {
   exportData: "Esporta solo i dati",
   renameProject: "Rinomina",
   trashProject: "Sposta nel cestino",
-  exportInvite: "Questo progetto non è mai stato esportato. Un file sul disco è la tua copia.",
+  exportInvite: "Questo progetto non è mai stato esportato. Un file sul disco è la vostra copia.",
   exportedOn: "Esportato il {date}",
   renamePrompt: "Come si chiama adesso?",
 
@@ -612,8 +614,8 @@ const IT = {
   copyFrom: "{title} (copia di {name})",
   someone: "qualcun altro",
   importRestore: "Rimetti tutto com'era",
-  importBackupSummary: "Backup del {date}: {projects}, {pages}, {tasks}. Sostituisce quello che "
-    + "c'è adesso — prima ne scarico una copia, così puoi tornare indietro.",
+  importBackupSummary: "Backup del {date}: {projects}, {pages}, {tasks}. Sostituisce quello che c'è "
+    + "adesso — prima ne scarico una copia, così si può tornare indietro.",
   importCancel: "Lascia stare",
   importForeign: "Da {app}, per quello che si può portare:",
   importDone: "«{name}» importato",
@@ -663,7 +665,7 @@ const IT = {
   tpl_guide: "Guida",
   tpl_guide_lead: "Quattro pagine da leggere nell'editor stesso, e quattro cose da spuntare. Poi si butta.",
   gd_page_write: "Scrivere",
-  gd_body_write: "Questa pagina è un documento vero: puoi cambiarla, e quello che scrivi si salva da solo, "
+  gd_body_write: "Questa pagina è un documento vero: si può cambiare, e quello che si scrive si salva da solo, "
     + "a ogni lettera. Non c'è un pulsante «salva».\n\n"
     + "## I blocchi\n\nOgni riga è un blocco: un testo, un titolo, una voce di elenco. Per aggiungerne uno "
     + "premi **/** su una riga vuota e scegli dall'elenco, oppure usa il **+** che compare a sinistra.\n\n"
@@ -671,16 +673,17 @@ const IT = {
     + "- «# » fa un titolo grande, «## » uno medio, «### » uno piccolo\n"
     + "- «- » fa un elenco, «1. » un elenco numerato, «[] » una checklist\n"
     + "- «> » fa una citazione, «``` » un blocco di codice\n\n"
-    + "## Trasformare, spostare, formattare\n\nLa maniglia ⣿ accanto a un blocco lo sposta se la trascini "
-    + "e apre «Trasforma in» se la premi: un testo diventa un titolo senza riscriverlo. Seleziona una "
+    + "## Trasformare, spostare, formattare\n\nLa maniglia ⣿ accanto a un blocco lo sposta quando la si "
+    + "trascina, e apre «Trasforma in» quando la si preme: un testo diventa un titolo senza "
+    + "riscriverlo. Seleziona una "
     + "parola e compare la barretta con **grassetto**, *corsivo*, ~~barrato~~, `codice` e collegamento — "
     + "o usa Ctrl+B, Ctrl+I, Ctrl+E.\n\n"
     + "## Collegare le pagine\n\nScrivi il titolo di una pagina fra doppie parentesi quadre, come "
     + "[[Pianificare]], e diventa un collegamento. Se la pagina non c'è ancora, il collegamento è "
-    + "tratteggiato e il clic la crea. In fondo alla colonna di sinistra vedi anche **chi punta qui**.\n\n"
+    + "tratteggiato e il clic la crea. In fondo alla colonna di sinistra c'è anche **chi punta qui**.\n\n"
     + "## Nominare le persone\n\nScrivi «@» e scegli chi: il nome resta nel testo come @Giulia, "
     + "colorato, e il clic apre la sua scheda in rubrica. Un nome che in rubrica non c'è ci entra da "
-    + "solo quando chiudi la pagina. Nella sua scheda, la persona ritrova le pagine che la nominano.\n\n"
+    + "solo alla chiusura della pagina. Nella sua scheda, la persona ritrova le pagine che la nominano.\n\n"
     + "## L'albero delle pagine\n\nLa colonna di sinistra è l'indice del progetto. Da lì aggiungi una "
     + "pagina o una sottopagina, e sposti quelle che ci sono: prendi una riga dalla maniglia ⠿ e "
     + "trascinala. **Su e giù** scegli fra quali righe va; **a destra e a sinistra** scegli il "
@@ -690,21 +693,21 @@ const IT = {
     + "scrivendo nel campo in alto.\n\n"
     + "> [!nota]\n> Le pagine hanno dei **tag**, nella riga sotto il titolo: servono a ritrovarle con la "
     + "ricerca (Ctrl+K) e a raggrupparle nell'elenco del progetto. Sotto i tag ci sono le **proprietà** — "
-    + "tipo, stato, cliente, quello che vuoi — e «Vedi come tabella», nel progetto, le mette in colonna.\n\n"
-    + "## Immagini, allegati e tabelle\n\n«Aggiungi un'immagine» in alto mette la figura dove hai il "
+    + "tipo, stato, cliente, quello che serve — e «Vedi come tabella», nel progetto, le mette in colonna.\n\n"
+    + "## Immagini, allegati e tabelle\n\n«Aggiungi un'immagine» in alto mette la figura dove sta il "
     + "cursore; «Allega un file» fa lo stesso con un PDF o un foglio, che resta dentro il progetto. "
     + "In una tabella, Invio va alla riga sotto e Tab alla cella accanto.\n\n"
     + "## Da Word\n\nIncolla da Word o da Google Docs: titoli, elenchi e tabelle arrivano come "
     + "blocchi, non come righe.\n\n"
     + "## Le versioni\n\nOgni dieci minuti di scrittura l'app tiene un'istantanea della pagina, e ne "
-    + "tiene trenta. Menu ⋯ → «Versioni»: scegli un momento, vedi cosa cambierebbe paragrafo per "
-    + "paragrafo, e se vuoi torni lì.\n\n"
+    + "tiene trenta. Menu ⋯ → «Versioni»: scegli un momento, guarda che cosa cambierebbe paragrafo per "
+    + "paragrafo, e volendo torna lì.\n\n"
     + "| Cosa | Dove |\n| --- | --- |\n| Il sorgente Markdown | menu ⋯ → «Vedi il sorgente» |\n"
     + "| La pagina stampata o in PDF | menu ⋯ → «Stampa o salva in PDF» |\n",
   gd_page_plan: "Pianificare",
   gd_body_plan: "Ogni progetto ha un **piano**: le attività, su una bacheca a colonne, in un calendario e "
     + "su una timeline. Sono tre viste della stessa lista.\n\n"
-    + "## La bacheca\n\nUna carta per attività. Le colonne sono tue: rinominale, aggiungine una, togli "
+    + "## La bacheca\n\nUna carta per attività. Le colonne sono vostre: rinominale, aggiungine una, togli "
     + "quelle vuote. L'ultima è quella che segna il fatto — l'anello sulla dashboard conta quello.\n\n"
     + "- Trascina una carta per cambiarle colonna\n- Il quadratino la segna fatta\n"
     + "- Il clic apre la scheda: date, note, chi se ne occupa, priorità, tag, checklist, e cosa aspetta\n"
@@ -716,46 +719,46 @@ const IT = {
     + "la prossima con la data avanzata.\n\n"
     + "## Le date\n\nUna scadenza è un giorno, non un'ora. Nel calendario e nella timeline le attività si "
     + "spostano e si allungano trascinandole. Dalla scheda, «Aggiungi al calendario» porta la scadenza nel "
-    + "tuo calendario, come copia.\n\n"
+    + "vostro calendario, come copia.\n\n"
     + "## Le attività in serie\n\nUn elenco scritto altrove — in Word, in una mail, da un assistente — "
     + "entra tutto insieme: menu ⋯ del piano → «Incolla un elenco di attività», oppure Ctrl+V sulla "
     + "bacheca. Una riga, una carta; «@2026-09-20» è la scadenza, «#stampa» un tag.\n\n"
     + "> [!fatto]\n> Prova adesso: apri il piano di questa guida e sposta «Spostare una carta» nella "
     + "colonna «Fatto».\n",
   gd_page_share: "Esportare e condividere",
-  gd_body_share: "Tutto quello che scrivi resta in questo browser. È il motivo per cui l'app funziona "
-    + "senza rete, ed è anche il motivo per cui **il file sul disco è la tua copia**.\n\n"
+  gd_body_share: "Tutto quello che si scrive resta in questo browser. È il motivo per cui l'app funziona "
+    + "senza rete, ed è anche il motivo per cui **il file sul disco è la vostra copia**.\n\n"
     + "## Le copie\n\n- «Esporta il progetto» fa uno ZIP con pagine, attività e immagini\n"
     + "- «Backup di tutto», in «Progetti», salva ogni progetto in un file solo\n"
     + "- «Importa un progetto» rilegge lo ZIP: come progetto nuovo, oppure **aggiornando** quello che "
-    + "hai già, se il file è una sua copia\n"
+    + "c'è già, se il file è una sua copia\n"
     + "- Dalla stessa porta entrano una bacheca **Trello** (il suo export JSON) e un export **Notion** "
     + "in Markdown, per quello che si può portare\n\n"
     + "## Lavorare in due\n\nDa «Progetti», «Cartella condivisa»: scegli una cartella dentro Dropbox, "
-    + "OneDrive o Google Drive e di' come ti chiami. Poi, in un progetto, segna «Condiviso nella "
+    + "OneDrive o Google Drive e indicate il vostro nome. Poi, in un progetto, segna «Condiviso nella "
     + "cartella»: l'app lo scrive lì — un file per pagina, in Markdown, leggibile anche con Obsidian — "
-    + "e lo rilegge quando un collega lo cambia, appena torni sull'app e poi una volta al minuto. "
+    + "e lo rilegge quando un collega lo cambia, al ritorno sull'app e poi una volta al minuto. "
     + "Funziona su Chrome ed Edge, sul computer.\n\n"
-    + "Se cambiate la stessa pagina in due, nessuno perde niente: la tua resta, la sua arriva accanto "
+    + "Se cambiate la stessa pagina in due, nessuno perde niente: la vostra resta, la sua arriva accanto "
     + "come «Scaletta (copia di Marco)», e le confrontate. Per le attività vince chi scrive per ultimo.\n\n"
-    + "Senza una cartella in comune resta lo scambio di file: esporti, mandi, chi riceve **aggiorna** il "
+    + "Senza una cartella in comune resta lo scambio di file: si esporta, si manda, e chi riceve **aggiorna** il "
     + "suo progetto con le stesse regole.\n\n"
-    + "## Provarla in due, in dieci minuti\n\nPrima di fidarti, fai questa prova con un collega, "
-    + "ognuno sul suo computer e con la stessa cartella di Dropbox collegata:\n\n"
-    + "- [ ] Tu segni un progetto «Condiviso nella cartella»; entro un minuto il collega lo vede fra i suoi progetti\n"
-    + "- [ ] Il collega cambia una pagina; tu la vedi cambiare, e nella scheda del progetto compare «Dalla cartella»\n"
+    + "## Provarla in due, in dieci minuti\n\nPrima di fidarsi, conviene fare questa prova con un "
+    + "collega, ognuno sul suo computer e con la stessa cartella di Dropbox collegata:\n\n"
+    + "- [ ] Segnate un progetto «Condiviso nella cartella»; entro un minuto il collega lo vede fra i suoi progetti\n"
+    + "- [ ] Il collega cambia una pagina; la vedete cambiare, e nella scheda del progetto compare «Dalla cartella»\n"
     + "- [ ] Cambiate tutti e due la stessa pagina, senza aspettarvi: a uno dei due resta anche la copia "
     + "con il nome dell'altro, e nessun paragrafo è sparito\n"
-    + "- [ ] Tu metti un'attività nel cestino; il collega la vede sparire dalla bacheca\n\n"
-    + "Se una delle quattro non va, il difetto è dell'app, non tuo: segnalalo con «Codice sorgente» "
+    + "- [ ] Mettete un'attività nel cestino; il collega la vede sparire dalla bacheca\n\n"
+    + "Se una delle quattro non va, il difetto è dell'app: segnalalo con «Codice sorgente» "
     + "in fondo alla pagina.\n\n"
     + "## Per chi non ha l'app\n\n- «Esporta come pagina web»: un file HTML che si apre ovunque\n"
     + "- «Stampa o salva in PDF»: il PDF lo fa il browser, dalla finestra di stampa\n"
     + "- «Esporta le attività in CSV»: per Excel\n- «Esporta come calendario»: le scadenze nel calendario "
     + "di chiunque\n\n"
     + "## Con un assistente AI\n\n«Copia per un assistente AI» mette negli appunti la pagina o il piano, "
-    + "con un'istruzione in testa. Incolli nell'assistente che usi, e le attività che ti restituisce le "
-    + "incolli nella bacheca. L'app non parla con nessuno: sei tu che porti il testo avanti e indietro.\n",
+    + "con un'istruzione in testa. Si incolla nell'assistente in uso, e le attività che restituisce si "
+    + "incollano nella bacheca. L'app non parla con nessuno: il testo lo portate voi avanti e indietro.\n",
   gd_page_keys: "Scorciatoie",
   gd_body_keys: "Da ovunque:\n\n| Tasti | Cosa fa |\n| --- | --- |\n| Ctrl+K | Cerca in tutti i progetti |\n"
     + "| Ctrl+N | Una nuova attività, senza cambiare schermata |\n| ? | Questo elenco |\n"
@@ -785,7 +788,7 @@ const IT = {
   quickAdd: "Aggiungi",
   quickNone: "Prima serve un progetto.",
   quickDone: "«{name}» aggiunta a «{project}»",
-  exportNudge: "Sono più di due settimane che non fai un backup. Un file sul disco è la tua copia.",
+  exportNudge: "Sono più di due settimane senza un backup. Un file sul disco è la vostra copia.",
   exportNudgeOk: "Va bene",
   treeBacklinks: "Puntano qui",
   pageTagsPlaceholder: "Tag, separati da una virgola",
@@ -820,7 +823,7 @@ const IT = {
   projectsFiltered: "Nessun progetto con questa etichetta.",
   filterClear: "Togli il filtro",
   tpl_blank: "Vuoto",
-  tpl_blank_lead: "Tre colonne e basta. Il resto lo aggiungi tu.",
+  tpl_blank_lead: "Tre colonne e basta. Il resto si aggiunge strada facendo.",
 
   ev_page_brief: "Brief",
   ev_body_brief: "## Perché lo facciamo\n\nUna frase. Se serve un paragrafo, l'obiettivo non è "
@@ -890,8 +893,8 @@ const IT = {
   // I promemoria. Il dialogo dice tutti e tre gli strati invece di promettere «notifiche»: chi
   // legge deve poter capire prima, e non dopo, dove la sveglia arriva e dove no.
   remindTitle: "Promemoria",
-  remindLead: "Quando una scadenza si avvicina, l'app te lo ricorda in tre modi — e quale funziona "
-    + "dipende da dove sei.",
+  remindLead: "Quando una scadenza si avvicina, l'app lo ricorda in tre modi — e quale funziona "
+    + "dipende da dove siete.",
   remindOn: "Ricordami le scadenze",
   remindDays: "Giorni prima",
   remindHour: "alle ore",
@@ -899,7 +902,7 @@ const IT = {
   remindBeforeUnit: "minuti prima",
   remindSave: "Salva",
   remindAsk: "Permetti le notifiche",
-  remindSays: "Una scadenza del {date} te la ricordo {when}.",
+  remindSays: "Una scadenza del {date} viene ricordata {when}.",
   remindSaysDay: "il {date} alle {hour}",
   remindSaysSame: "lo stesso giorno alle {hour}",
   remindOff: "Spenti. Le scadenze restano nel calendario dell'app e sull'icona.",
@@ -927,21 +930,22 @@ const IT = {
   remindWhenLate: "in ritardo",
   remindWhenDays: "fra {n} giorni",
   remindSee: "Vedi",
-  dueIcsAlarm: "Con il promemoria dentro: lo farà suonare il tuo calendario.",
+  dueIcsAlarm: "Con il promemoria dentro: lo farà suonare il vostro calendario.",
 
   demoDateKey: "fiera",
   demoName: "Fiera di settembre",
   demoBadge: "Esempio",
-  demoStrip: "Questo è un progetto d'esempio: tocca tutto, cambia, cancella. Quando hai finito, buttalo.",
+  demoStrip: "Questo è un progetto d'esempio: tocca tutto, cambia, cancella. Alla fine, buttalo.",
   demoDrop: "Butta l'esempio",
-  demoDropped: "Esempio nel cestino. Il prossimo progetto è il tuo.",
+  demoDropped: "Esempio nel cestino. Il prossimo progetto è il vostro.",
   welcomeTitle: "Benvenuto in Plan Scope",
-  welcomeText: "Pagine da scrivere e scadenze da rispettare, nello stesso posto. «Fiera di settembre» è un esempio "
-    + "già pieno, per vedere come funziona: toccalo, cambialo, e quando hai capito buttalo.",
+  welcomeText: "Pagine da scrivere e scadenze da rispettare, nello stesso posto. «Fiera di settembre» "
+    + "è un esempio già pieno, per vedere come funziona: toccalo, cambialo, e quando è servito "
+    + "buttalo.",
   welcomeNote: "Tutto quello che scrivi resta in questo browser: l'app non manda niente a nessuno. Per averne una "
     + "copia sul disco c'è «Esporta».",
   welcomeExample: "Guarda l'esempio",
-  welcomeOwn: "Comincia dal tuo",
+  welcomeOwn: "Comincia dal vostro",
   welcomeGuide: "Leggi la Guida",
   openGuide: "Guida",
   demoTag: "stampa",
@@ -991,12 +995,12 @@ const IT = {
   demoCheck1: "Ripulire l'elenco dei contatti",
   demoCheck2: "Scrivere il testo dell'invito",
   demoPage: "Come funziona questa app",
-  demoBody: "Questo progetto è già pieno per farti vedere com'è fatto. **Buttalo quando vuoi**: "
+  demoBody: "Questo progetto è già pieno, per mostrare com'è fatto. **Buttatelo quando volete**: "
     + "in fondo alla schermata del progetto c'è «Sposta nel cestino».\n\n"
     + "## Le tre cose da sapere\n\n"
-    + "1. Quello che scrivi resta su questo computer. Non c'è un server a cui arrivi.\n"
+    + "1. Quello che si scrive resta su questo computer. Non c'è nessun server a cui arriva.\n"
     + "2. Si salva da solo, a ogni lettera. Non c'è un pulsante «salva».\n"
-    + "3. Quello che butti torna indietro: c'è «Annulla» sulla striscia, e poi il cestino.\n\n"
+    + "3. Quello che si butta torna indietro: c'è «Annulla» sulla striscia, e poi il cestino.\n\n"
     + "> [!nota]\n> Premi **/** su una riga vuota per aggiungere un titolo, un elenco, una "
     + "tabella. Oppure usa il **+** che compare accanto a ogni blocco.\n\n"
     + "## Un elenco di cose da fare\n\n"
@@ -1005,7 +1009,7 @@ const IT = {
     + "## Una tabella, se serve\n\n"
     + "| Voce | Previsto | Speso |\n| --- | ---: | ---: |\n| Stand | 1.200 | 1.150 |\n"
     + "| Stampa | 300 | 340 |\n\n"
-    + "---\n\nQuando hai finito di guardare, fai il tuo progetto: **Progetti → Nuovo progetto**.\n",
+    + "---\n\nFinito di guardare, si comincia dal proprio: **Progetti → Nuovo progetto**.\n",
 
   // counts
   projectOne: "1 progetto",

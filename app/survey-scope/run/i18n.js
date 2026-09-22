@@ -30,14 +30,14 @@ const IT = {
   themeToDark: "Passa al tema scuro",
   removalLabel: "Installata",
   removalDesktop: "Per toglierla: apri il menù ⋮ in alto a destra nella finestra dell'app e scegli "
-    + "«Disinstalla». I dati restano nel browser: se non ti servono più, esportali prima e poi "
-    + "cancella i dati del sito da Impostazioni del browser.",
-  removalAndroid: "Per toglierla: tieni premuta l'icona nella schermata Home e scegli «Disinstalla» "
-    + "o trascinala sul cestino. I dati restano nel browser: se non ti servono più, esportali "
-    + "prima e poi cancella i dati del sito.",
-  removalIos: "Per toglierla: tieni premuta l'icona nella schermata Home, poi «Rimuovi app». I "
-    + "dati restano in Safari: se non ti servono più, esportali prima e poi cancella i dati del "
-    + "sito da Impostazioni.",
+    + "«Disinstalla». I dati restano nel browser: se non servono più, esportali prima e poi cancella i "
+    + "dati del sito da Impostazioni del browser.",
+  removalAndroid: "Per toglierla: tieni premuta l'icona nella schermata Home e scegli «Disinstalla» o "
+    + "trascinala sul cestino. I dati restano nel browser: se non servono più, esportali prima e poi "
+    + "cancella i dati del sito.",
+  removalIos: "Per toglierla: tieni premuta l'icona nella schermata Home, poi «Rimuovi app». I dati "
+    + "restano in Safari: se non servono più, esportali prima e poi cancella i dati del sito da "
+    + "Impostazioni.",
   versionLabel: "v{version}",
   versionNext: "v{current} → {next}",
   versionNextUnknown: "v{current} → nuova",
@@ -46,7 +46,7 @@ const IT = {
   versionReload: "Aggiornata: ricarica",
   versionUpToDate: "v{version} · aggiornata",
   installButton: "Installa",
-  installHint: "Puoi installarla: funziona anche senza connessione.",
+  installHint: "Si può installare: funziona anche senza connessione.",
   backToPage: "Torna alla scheda",
   sourceLabel: "Codice sorgente",
   errorTitle: "Qualcosa non ha funzionato",
@@ -56,7 +56,7 @@ const IT = {
   // start
   factLocal: "Le risposte restano su questo computer. Nessuna esce da qui.",
   factExport: "Gli dai un nome all'inizio, lo esporti in JSON o CSV, e stampi il report.",
-  factHonest: "Nessuno verifica le risposte: il risultato vale quanto la tua sincerità.",
+  factHonest: "Nessuno verifica le risposte: il risultato vale quanto la sincerità con cui sono date.",
   // La quarta riga esisteva già come funzione e non era detta da nessuna parte: chi riceve un file
   // da qualcun altro non immagina di poterlo caricare qui, e quindi non ci prova.
   factCollect: "I file esportati da altri si caricano qui: entrano nello stesso elenco.",
@@ -74,17 +74,16 @@ const IT = {
 
   // saved results
   savedTitle: "Risultati salvati",
-  savedNote: "Restano su questo computer, in questo browser — questi e quelli che carichi da un "
-    + "file. Esportali se ti servono altrove, o se vuoi rifare il questionario fra sei mesi e "
-    + "confrontare.",
+  savedNote: "Restano su questo computer, in questo browser — questi e quelli caricati da un file. "
+    + "Esportali per averli altrove, o per rifare il questionario fra sei mesi e confrontare.",
   savedEmpty: "Qui compaiono i questionari che completi.",
   savedExport: "Esporta",
   savedClear: "Svuota",
   savedClearAsk: "Cancello i risultati salvati? Non si può annullare.",
   backupTitle: "Copia automatica in una cartella",
-  backupNote: "Scegli una cartella e l'app ci scrive da sola i risultati a ogni modifica — lo "
-    + "stesso file di «Esporta» — più una copia al giorno degli ultimi trenta giorni. Dentro "
-    + "Dropbox o iCloud, la copia arriva da sé sugli altri tuoi computer.",
+  backupNote: "Scegli una cartella e l'app ci scrive da sola i risultati a ogni modifica — lo stesso "
+    + "file di «Esporta» — più una copia al giorno degli ultimi trenta giorni. Dentro Dropbox o "
+    + "iCloud, la copia arriva da sé sugli altri vostri computer.",
   backupPick: "Scegli la cartella…",
   backupResume: "Riprendi la cartella",
   backupUnlink: "Scollega la cartella",
@@ -93,7 +92,7 @@ const IT = {
   backupUnavailable: "Questo browser non sa aprire una cartella: funziona con Chrome o Edge sul "
     + "computer. Qui resta «Esporta».",
   backupNone: "Nessuna cartella collegata.",
-  backupPrompt: "La cartella «{folder}» aspetta il tuo permesso: il browser lo chiede di nuovo a "
+  backupPrompt: "La cartella «{folder}» aspetta il vostro permesso: il browser lo chiede di nuovo a "
     + "ogni apertura.",
   backupLinked: "Cartella «{folder}» · ultima copia {when}.",
   backupNever: "Cartella «{folder}» · nessuna copia ancora.",
@@ -127,8 +126,8 @@ const IT = {
   importNothing: "Nell'esportazione non c'è niente da rimettere.",
   // L'impronta serve a questo: risposte date a domande diverse non si sommano, e il difetto sarebbe
   // silenzioso — venti righe in una lista, con dentro due questionari che non sono lo stesso.
-  importOtherQuestionnaire: "Questo file risponde a un questionario diverso da quello aperto. Se non ce l'hai, "
-                            + "fattelo mandare da chi ti ha mandato il file: si carica da qui come i risultati.",
+  importOtherQuestionnaire: "Questo file risponde a un questionario diverso da quello aperto. Se non è "
+    + "fra i vostri, fatevelo mandare da chi ha mandato il file: si carica da qui come i risultati.",
   importOtherEdition: "Questo file risponde a un'altra edizione del questionario: non si può "
     + "mettere insieme a questi.",
   importAdded: "Aggiunto all'elenco.",
@@ -142,12 +141,12 @@ const IT = {
   // Un default, non un campo vuoto: un vuoto obbliga a inventare un nome prima di sapere cosa si
   // sta per compilare, e chi non lo inventa lascia la riga anonima — che è il difetto di partenza.
   openerNameDefault: "Questionario {n}",
-  openerNameNote: "Puoi cambiarlo adesso o alla fine. Viaggia dentro il file che esporti.",
-  startAdminText: "Devi somministrarlo a più unità — reparti, uffici, associati? ",
+  openerNameNote: "Si può cambiare adesso o alla fine. Viaggia dentro il file esportato.",
+  startAdminText: "Va somministrato a più unità — reparti, uffici, associati?",
   startAdminLink: "Come si fa",
   helpButton: "Aiuto",
   helpTitle: "Come si usa",
-  helpIntro: "Puoi usarlo da solo, per la tua impresa. Oppure distribuirlo a più unità — reparti, "
+  helpIntro: "Si può usare da soli, per la propria impresa. Oppure distribuirlo a più unità — reparti, "
     + "uffici, aziende associate — e raccogliere i risultati in un elenco solo.",
   helpFlowTitle: "Distribuirlo a più unità",
   helpFlow1: "Decidi chi deve rispondere: i reparti dell'impresa, gli uffici dell'ente, le aziende "
@@ -155,9 +154,9 @@ const IT = {
   helpFlow2: "Manda a ciascuno l'indirizzo di questa pagina. Non serve un account, e le risposte "
     + "restano sul computer di chi compila.",
   helpFlow3: "Alla fine ognuno dà un nome al proprio questionario e lo esporta in JSON o in CSV. Il "
-    + "file te lo manda come manderebbe qualunque allegato.",
-  helpFlow4: "Tu carichi i file da «Importa un file esportato»: entrano nel tuo elenco e si cercano "
-    + "per nome. I CSV hanno le stesse colonne, quindi si impilano in un foglio solo.",
+    + "file ve lo manda come manderebbe qualunque allegato.",
+  helpFlow4: "I file si caricano da «Importa un file esportato»: entrano nel vostro elenco e si "
+    + "cercano per nome. I CSV hanno le stesse colonne, quindi si impilano in un foglio solo.",
   helpCasesTitle: "Quattro situazioni",
   helpCase1Title: "Un'impresa e i suoi reparti",
   helpCase1: "Produzione, amministrazione e commerciale rispondono separatamente. Le differenze fra "
@@ -175,25 +174,25 @@ const IT = {
   helpCase4: "Il quadro del settore, costruito da chi ci lavora dentro. Per ogni associato restano "
     + "tre cose da fare, che è anche un motivo concreto per ricontattarlo.",
 
-  helpPackTitle: "Se le domande che ti servono sono altre",
-  helpPackIntro: "I due questionari che trovi qui sono modelli, e si possono cambiare. Il giro è "
-                 + "questo, e resta tutto sul tuo computer:",
+  helpPackTitle: "Se le domande da fare sono altre",
+  helpPackIntro: "I due questionari qui dentro sono modelli, e si possono cambiare. Il giro è questo, "
+    + "e resta tutto sul vostro computer:",
   helpPack1: "Dalla prima schermata premi «Esporta questo modello di questionario»: esce un file "
              + "con dentro le domande, i testi del report e — se il modello ce li ha — gli "
              + "obblighi e l'approfondimento.",
-  helpPack2: "Aprilo con un editor di testo e cambia quello che ti serve. Cambia anche la chiave "
-             + "e il titolo: la chiave è il nome corto che distingue il tuo modello dagli altri, e "
-             + "finisce dentro ogni file che chi risponde ti manderà.",
-  helpPack3: "Ricaricalo da «Importa un file», la stessa porta dei risultati. Da quel momento è "
-             + "uno dei modelli che si scelgono in cima, e si toglie quando vuoi.",
-  helpPackNote: "Un modello che carichi tu non passa da nessun controllo nostro, e va bene così: "
-                + "è tuo. L'app verifica solo che sia scritto in modo da poter essere aperto, e "
-                + "se qualcosa manca ti dice cosa. Il modo più semplice per scriverne uno è "
-                + "partire da uno di questi due e cambiarlo un pezzo alla volta.",
+  helpPack2: "Aprilo con un editor di testo e cambia quello che serve. Cambia anche la chiave e il "
+    + "titolo: la chiave è il nome corto che distingue il vostro modello dagli altri, e finisce dentro "
+    + "ogni file che chi risponde vi manderà.",
+  helpPack3: "Ricaricalo da «Importa un file», la stessa porta dei risultati. Da quel momento è uno "
+    + "dei modelli che si scelgono in cima, e si toglie quando serve.",
+  helpPackNote: "Un modello caricato da voi non passa da nessun controllo nostro, e va bene così: è "
+    + "vostro. L'app verifica solo che sia scritto in modo da poter essere aperto, e se qualcosa manca "
+    + "lo dice. Il modo più semplice per scriverne uno è partire da uno di questi due e cambiarlo un "
+    + "pezzo alla volta.",
   helpLimitTitle: "Quello che non fa",
-  helpLimit: "Non c'è un server. Nessuno vede le risposte prima che qualcuno gliele mandi: è il "
-    + "motivo per cui l'app si distribuisce senza chiedere niente a nessuno, e vuol dire che la "
-    + "raccolta la fai tu, con i file che ti arrivano.",
+  helpLimit: "Non c'è un server. Nessuno vede le risposte prima che qualcuno gliele mandi: è il motivo "
+    + "per cui l'app si distribuisce senza chiedere niente a nessuno, e vuol dire che la raccolta la "
+    + "fate voi, con i file che vi arrivano.",
   helpClose: "Chiudi",
 
   // questions
@@ -209,7 +208,7 @@ const IT = {
   qResult: "Vedi il report",
   // La destinazione, non l'azione: «Interrompi» diceva cosa smetti di fare e non dove vai, e
   // chiedeva una conferma per rassicurare su una perdita che non c'era.
-  goHome: "I tuoi questionari",
+  goHome: "I vostri questionari",
   reviewKicker: "Tutte le domande",
   reviewTitle: "Rivedi e correggi",
   reviewIntro: "Ogni domanda porta alla sua schermata: aprila e cambia la risposta. Quello che "
@@ -217,13 +216,13 @@ const IT = {
   reviewBack: "Torna dove eri",
   reviewUnanswered: "Senza risposta",
   reviewSkipped: "Non chiesta: una risposta precedente la rende inutile",
-  reviewNotApplicable: "Fuori conteggio: non riguarda la tua azienda",
+  reviewNotApplicable: "Fuori conteggio: non riguarda la vostra azienda",
   reviewLeft: "Ne mancano {n}",
   reviewLeftOne: "Ne manca una",
-  reviewDone: "Hai risposto a tutte",
+  reviewDone: "Risposte complete",
   reviewDeep: "Le domande in più",
   reviewCompliance: "Gli obblighi",
-  reviewNotAsked: "Non ti riguarda, per come hai risposto",
+  reviewNotAsked: "Non vi riguarda, per come avete risposto",
   notApplicable: "Questa domanda non riguarda la mia azienda",
   notApplicableUndo: "Rispondi invece a questa domanda",
   // La spiegazione della contraddizione non sta più qui: sta accanto alla regola che la produce,
@@ -240,8 +239,8 @@ const IT = {
   // I due numeri erano scritti a mano ed erano di *questo* questionario, come le sette stringhe
   // già spostate: un modulo con sei voci avrebbe annunciato «Quattordici obblighi» sopra sei righe.
   clTitle: "{n} obblighi, e da quando valgono",
-  clIntro: "Nessuna di queste righe dice se sei in regola: dicono quale obbligo esiste, da quando, "
-    + "e dove leggerlo. La risposta che dai resta tua, e finisce nel file insieme al resto.",
+  clIntro: "Nessuna di queste righe dice se siete in regola: dicono quale obbligo esiste, da quando, e "
+    + "dove leggerlo. La risposta data resta vostra, e finisce nel file insieme al resto.",
   clStale: "Queste voci sono state verificate il {verified} e la verifica è scaduta il {until}. "
     + "Leggile come un punto di partenza e ricontrolla le fonti: l'AI Act cambia.",
   clFrom: "Vale dal {date}",
@@ -251,11 +250,11 @@ const IT = {
   clDone: "Vedi il risultato",
   // Added when the branch rule fires: a customer has already asked, so these rows have stopped
   // being a legal appendix and are the questions the next customer will ask.
-  clBecauseAsked: "Hai risposto che nell'ultimo anno un cliente ti ha già chiesto qualcosa su "
+  clBecauseAsked: "Avete risposto che nell'ultimo anno un cliente vi ha già chiesto qualcosa su "
     + "sicurezza o protezione dei dati: queste righe sono le domande che arriveranno.",
 
   // report
-  rKicker: "Il tuo quadro",
+  rKicker: "Il vostro quadro",
   rPrint: "Stampa",
   rJson: "Esporta JSON",
   rCsv: "Esporta CSV",
@@ -271,10 +270,10 @@ const IT = {
   // report: «da come l'hai descritta». Scartato «le voci che non hai confermato», che sembra più
   // preciso e non lo è: vale per «Non lo so» e non per «No», dove una conferma c'è — è la conferma
   // del contrario. Quello che unisce le due risposte non è l'ignoranza, è il lavoro che resta.
-  rComplianceTitle: "Dove hai risposto no o non lo so",
-  rComplianceIntro: "Sono {n} obblighi su {total}, ognuno con la sua data e la sua fonte. La "
-    + "prima cosa da fare è stabilire quali ti riguardano davvero, e chi risponde di ciascuno.",
-  rComplianceNone: "Hai risposto sì a tutte le voci che ti riguardano.",
+  rComplianceTitle: "Dove la risposta è no o non lo so",
+  rComplianceIntro: "Sono {n} obblighi su {total}, ognuno con la sua data e la sua fonte. La prima "
+    + "cosa da fare è stabilire quali vi riguardano davvero, e chi risponde di ciascuno.",
+  rComplianceNone: "Avete risposto sì a tutte le voci che vi riguardano.",
   // «Non è una violazione» resta al negativo di proposito, ed è uno dei tre casi ammessi: è un
   // confine di responsabilità, e detto in positivo confonderebbe proprio chi deve decidere.
   // Uguale nelle due lingue, e va bene: è una frazione, non una frase.
@@ -283,14 +282,14 @@ const IT = {
   rCompareNone: "Nessun confronto",
   rCompareWith: "Confronto con «{label}», compilato il {date}: {delta} sul punteggio complessivo. "
     + "I numeri accanto alle dimensioni sono la differenza fra le due compilazioni.",
-  rActionRelated: "Un punteggio basso non è una violazione. Queste però sono voci a cui hai "
-    + "risposto no o non lo so nella checklist, e toccano la stessa area:",
+  rActionRelated: "Un punteggio basso non è una violazione. Queste però sono voci a cui avete risposto "
+    + "no o non lo so nella checklist, e toccano la stessa area:",
   // **«Stampa» descriveva metà dell'effetto, e negava l'altra.** La casella non filtra la stampa:
   // aggiunge il blocco al foglio, che a schermo è l'anteprima di quello che esce dalla stampante —
   // ed è così che capisci di averla spuntata. Un comando che promette di agire solo altrove è un
   // comando che sembra rotto la prima volta che lo usi, perché la pagina cambia lo stesso.
   rAppendixLabel: "Aggiungi le risposte al foglio",
-  rAppendixTitle: "Le tue risposte",
+  rAppendixTitle: "Le vostre risposte",
   rAppendixSkipped: "Non chiesta",
   rAppendixNa: "Non applicabile",
   rGapsInForce: "Già in vigore",
@@ -303,17 +302,17 @@ const IT = {
   rActionCompliance: "Prendi in mano gli obblighi che hanno già una data",
   rActionComplianceWhy: "Le altre raccomandazioni migliorano qualcosa. Queste no: sono obblighi "
     + "in vigore, e il tempo passa anche se non fai niente.",
-  rActionComplianceHow: "Scorri le voci qui sotto, decidi chi risponde di ciascuna e mettici una "
-    + "data. Se non sai rispondere, quella è la prima domanda da fare a chi ti assiste.",
-  rActionComplianceEffort: "Un'ora per capire quali ti riguardano davvero.",
+  rActionComplianceHow: "Scorri le voci qui sotto, decidi chi risponde di ciascuna e mettici una data. "
+    + "Dove la risposta manca, quella è la prima domanda da fare a chi vi assiste.",
+  rActionComplianceEffort: "Un'ora per capire quali vi riguardano davvero.",
   rActionComplianceMeasure: "Per ogni voce c'è un nome e una data, e nessuna è più «non lo so».",
   rDimensionLabel: "Dimensione",
   rLabelLabel: "Dai un nome a questo questionario",
   rLabelPlaceholder: "Per esempio il nome dell'azienda",
   // L'avvertenza è obbligatoria, non cortese: è l'unico campo in cui finisce qualcosa che una
   // persona scrive, e va in un file che di solito viene mandato a qualcun altro.
-  rLabelNote: "Serve a ritrovarlo, e finisce dentro il file che esporti. Se il file lo mandi a "
-    + "qualcuno, scrivi solo quello che vuoi che legga.",
+  rLabelNote: "Serve a ritrovarlo, e finisce dentro il file esportato. Se il file va a qualcuno, "
+    + "scrivi solo quello che quella persona può leggere.",
   savedUnnamed: "Senza nome",
   savedSearch: "Cerca per nome o data",
   savedNoMatch: "Nessun questionario con questo nome.",
@@ -335,9 +334,9 @@ const IT = {
 
   packExport: "Esporta questo modello di questionario",
   packRemove: "Togli questo modello",
-  packRemoveAsk: "Togliere il modello «{title}» dall'elenco? Le compilazioni già fatte restano "
-                 + "nel deposito, e tornano visibili solo ricaricando questo modello: se ti "
-                 + "servono adesso, esportale prima.",
+  packRemoveAsk: "Togliere il modello «{title}» dall'elenco? Le compilazioni già fatte restano nel "
+    + "deposito, e tornano visibili solo ricaricando questo modello: se servono adesso, esportale "
+    + "prima.",
   packReplaceAsk: "«{title}» c'è già. Sostituirlo con questa versione?",
   packAdded: "Aggiunto «{title}». Lo trovi nella tendina in cima.",
   packReplaced: "Sostituito «{title}» con questa versione.",

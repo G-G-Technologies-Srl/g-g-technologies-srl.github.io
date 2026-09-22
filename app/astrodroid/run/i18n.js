@@ -25,19 +25,19 @@ const IT = {
   howTitle: "Come si gioca",
   howKeys: "Frecce per ruotare, freccia su per spingere, spazio per sparare, E per lo scudo, "
     + "Maiusc per l'iperspazio.",
-  howTouch: "Sul telefono usa i comandi in fondo allo schermo.",
-  howInertia: "Non c'è attrito: se spingi una volta continui ad andare. Per fermarti devi girarti "
-    + "e spingere dall'altra parte.",
-  howHyper: "L'iperspazio ti sposta altrove di colpo. Più lo usi, più è probabile che ti vada "
-    + "male all'arrivo.",
+  howTouch: "Sul telefono i comandi sono in fondo allo schermo.",
+  howInertia: "Non c'è attrito: una spinta continua a valere anche dopo. Per fermarsi ci si gira "
+    + "e si spinge dall'altra parte.",
+  howHyper: "L'iperspazio sposta la navicella altrove di colpo. Più si usa, più è probabile un "
+    + "arrivo sbagliato.",
   howRocks: "Una roccia grande si spezza in due medie, una media in due piccole. Le piccole "
     + "valgono di più.",
   shield: "Scudo",
   shieldReady: "pronto",
   shieldOn: "attivo",
   ctrlShield: "Scudo",
-  howShield: "Lo scudo (tasto E) ti rende intoccabile per un secondo. Poi ci mette dodici "
-    + "secondi a tornare, quindi tienilo per quando non hai altra via.",
+  howShield: "Lo scudo (tasto E) rende la navicella intoccabile per un secondo. Poi ci mette dodici "
+    + "secondi a tornare, quindi conviene tenerlo per quando non resta altra via.",
   howStreak: "Colpi a segno di fila alzano il moltiplicatore. Un colpo a vuoto lo azzera, e "
     + "chiudere un'ondata senza perdere vite vale un bonus.",
   pause: "Pausa",
@@ -51,12 +51,12 @@ const IT = {
   wave: "Ondata",
   lives: "Vite",
   gameOver: "Partita finita",
-  yourScore: "Hai fatto {score} punti, ondata {wave}.",
-  newBest: "È il tuo punteggio migliore.",
-  placed: "Entri in classifica al {place}º posto.",
-  notPlaced: "Non entri nei primi dieci, ma il punteggio resta registrato.",
-  nameLabel: "Il tuo nome",
-  namePlaceholder: "Come ti chiami",
+  yourScore: "Avete fatto {score} punti, ondata {wave}.",
+  newBest: "È il vostro punteggio migliore.",
+  placed: "Entrate in classifica al {place}º posto.",
+  notPlaced: "Il punteggio resta registrato, anche fuori dai primi dieci.",
+  nameLabel: "Il vostro nome",
+  namePlaceholder: "Come vi chiamate",
   nameNote: "Massimo dodici caratteri. Resta su questo computer.",
   save: "Registra",
   shareTitle: "Racconta la partita",
@@ -73,7 +73,7 @@ const IT = {
   //
   // È l'unico testo dell'app scritto in prima persona, e non è una svista: qui non parla il
   // prodotto, parla chi ha appena giocato. Ovunque altro l'app dà del tu e non dice mai «io».
-  shareText: "{score} punti su AstroDroid, ondata {wave}. Riesci a fare meglio? "
+  shareText: "{score} punti su AstroDroid, ondata {wave}. Riuscite a fare meglio? "
     + "Il gettone è gratis e gira nel browser:",
   shareMailSubject: "AstroDroid — batti i miei {score} punti",
   shareCardKicker: "Partita finita",
@@ -83,7 +83,7 @@ const IT = {
   scoresTitle: "Classifica",
   scoresLocal: "È la classifica di questo browser. Non ce n'è una mondiale, perché non c'è un "
     + "server a cui mandare i punteggi.",
-  scoresEmpty: "Qui compaiono le partite che giochi.",
+  scoresEmpty: "Qui compaiono le partite giocate.",
   scoresPos: "Pos.",
   scoresName: "Nome",
   scoresScore: "Punti",
@@ -113,13 +113,13 @@ const IT = {
   langSwitch: "Switch to English",
   removalLabel: "Installata",
   removalDesktop: "Per toglierla: apri il menù ⋮ in alto a destra nella finestra dell'app e scegli "
-    + "«Disinstalla». I dati restano nel browser: se non ti servono più, esportali prima e poi "
+    + "«Disinstalla». I dati restano nel browser: se non servono più, esportali prima e poi "
     + "cancella i dati del sito da Impostazioni del browser.",
   removalAndroid: "Per toglierla: tieni premuta l'icona nella schermata Home e scegli «Disinstalla» "
-    + "o trascinala sul cestino. I dati restano nel browser: se non ti servono più, esportali "
+    + "o trascinala sul cestino. I dati restano nel browser: se non servono più, esportali "
     + "prima e poi cancella i dati del sito.",
   removalIos: "Per toglierla: tieni premuta l'icona nella schermata Home, poi «Rimuovi app». I "
-    + "dati restano in Safari: se non ti servono più, esportali prima e poi cancella i dati del "
+    + "dati restano in Safari: se non servono più, esportali prima e poi cancella i dati del "
     + "sito da Impostazioni.",
   versionLabel: "v{version}",
   versionNext: "v{current} → {next}",

@@ -22,44 +22,44 @@ const IT = {
 
   howTitle: "Come si gioca",
   howGoalTitle: "Lo scopo",
-  howGoal: "Sei il rombo, e il tuo posto è il bordo del campo. Da lì stacchi, attraversi il campo aperto e "
-    + "torni sul bordo: la linea che ti sei lasciato dietro spezza l'aperto in due, e la parte in cui "
-    + "non è rimasto nessun Filo diventa tua. In alto a sinistra c'è quanto hai preso e quanto te ne "
-    + "serve: arrivato alla quota, il livello è chiuso.",
+  howGoal: "Il marcatore è il rombo, e il suo posto è il bordo del campo. Da lì stacca, attraversa il "
+    + "campo aperto e torna sul bordo: la linea che si lascia dietro spezza l'aperto in due, e la "
+    + "parte in cui non è rimasto nessun Filo diventa vostra. In alto a sinistra c'è quanto avete "
+    + "preso e quanto ve ne serve: arrivati alla quota, il livello è chiuso.",
   howMoveTitle: "Come ci si muove",
   howKeys: "Da tastiera: frecce o WASD, in otto direzioni. Maiusc tenuto premuto taglia lento. Invio o barra "
     + "spaziatrice inseriscono il gettone, Esc o P mettono in pausa.",
-  howPointer: "Col mouse o col dito indichi un punto e il marcatore ci va da solo. La linea tratteggiata mostra "
-    + "la strada prima che tu prema: se il punto è in mezzo al campo è un taglio, se è su una parete o "
-    + "lì vicino è una camminata lungo il bordo. Su un telefono tenuto in verticale il campo si gira di "
-    + "lato da solo, perché così ci sta molto più grande.",
+  howPointer: "Col mouse o col dito si indica un punto e il marcatore ci va da solo. La linea "
+    + "tratteggiata mostra la strada prima della pressione: se il punto è in mezzo al campo è un "
+    + "taglio, se è su una parete o lì vicino è una camminata lungo il bordo. Su un telefono tenuto in "
+    + "verticale il campo si gira di lato da solo, perché così ci sta molto più grande.",
   howSlowTitle: "Il tratto lento",
-  howSlow: "Tagliando piano il terreno che prendi vale il doppio dei punti, ma ci metti il doppio del tempo "
-    + "— e per tutto quel tempo la tua linea è fuori e può essere colpita. È la scommessa su cui è "
-    + "costruito tutto il gioco: ogni punto in più è un secondo in più di esposizione.",
+  howSlow: "Tagliando piano, il terreno conquistato vale il doppio dei punti, ma ci vuole il doppio "
+    + "del tempo — e per tutto quel tempo la linea è fuori e può essere colpita. È la scommessa su cui "
+    + "è costruito tutto il gioco: ogni punto in più è un secondo in più di esposizione.",
   howDangerTitle: "I tre modi di morire",
-  howFilo: "Il Filo è il nastro che si contorce nel campo aperto. Uccide toccando la linea che hai fuori — "
-    + "tutta la linea, non solo la punta — e non può niente contro di te finché sei sul bordo. Anche la "
-    + "scia che si vede dietro di lui è il suo corpo, e morde: qui niente ti uccide senza essere stato "
-    + "sullo schermo. Dal terzo livello i Fili sono due, tranne nelle arene troppo piccole per starci "
-    + "in due.",
-  howMiccia: "La Miccia è la tua stessa linea che prende fuoco. Se ti fermi con la linea fuori, dopo un terzo "
-    + "di secondo la fiamma parte da dove hai staccato e corre verso di te; quando ti raggiunge sei "
-    + "morto. Ripartire la spegne ma non ti restituisce niente: il pezzo mangiato è perso. Premere "
-    + "contro un muro è stare fermi. È la regola per cui non esiste un posto in cui aspettare di vedere "
-    + "cosa fanno gli altri.",
-  howScintille: "Le Scintille sono i puntini bianchi con i raggi, e corrono lungo il bordo — cioè esattamente là "
-    + "dove cammini tu. Sul bordo ti prendono, nel campo aperto non ti sfiorano. Accelerano più il "
-    + "livello dura, e ogni conquista riscrive il bordo e con lui la loro pista: possono arrivare da un "
-    + "lato che un attimo prima non esisteva.",
-  howDeath: "Quando muori riparti da dove il taglio era cominciato, non dall'inizio dell'arena: sbagliare una "
-    + "volta non deve costare anche tutta la strada rifatta. Il controllo però torna tuo solo quando il "
-    + "campo è libero, così non si muore due volte per la stessa distrazione.",
+  howFilo: "Il Filo è il nastro che si contorce nel campo aperto. Uccide toccando la linea lasciata "
+    + "fuori — tutta la linea, non solo la punta — e non può niente contro il marcatore finché sta sul "
+    + "bordo. Anche la scia che si vede dietro di lui è il suo corpo, e morde: qui niente uccide senza "
+    + "essere stato sullo schermo. Dal terzo livello i Fili sono due, tranne nelle arene troppo "
+    + "piccole per starci in due.",
+  howMiccia: "La Miccia è la linea stessa che prende fuoco. Se il marcatore si ferma con la linea "
+    + "fuori, dopo un terzo di secondo la fiamma parte da dove è cominciato il taglio e gli corre "
+    + "incontro; quando lo raggiunge, è morto. Ripartire la spegne ma non restituisce niente: il pezzo "
+    + "mangiato è perso. Premere contro un muro è stare fermi. È la regola per cui non esiste un posto "
+    + "in cui aspettare di vedere cosa fanno gli altri.",
+  howScintille: "Le Scintille sono i puntini bianchi con i raggi, e corrono lungo il bordo — cioè "
+    + "esattamente là dove cammina il marcatore. Sul bordo prendono, nel campo aperto non sfiorano. "
+    + "Accelerano più il livello dura, e ogni conquista riscrive il bordo e con lui la loro pista: "
+    + "possono arrivare da un lato che un attimo prima non esisteva.",
+  howDeath: "Dopo una morte si riparte da dove il taglio era cominciato, e non dall'inizio dell'arena: "
+    + "sbagliare una volta non deve costare anche tutta la strada rifatta. Il controllo però torna "
+    + "solo quando il campo è libero, così non si muore due volte per la stessa distrazione.",
   howPaysTitle: "Le due mosse che pagano",
-  howCapture: "Chiudere un Filo dentro una sacca abbastanza stretta non ti uccide: lo cattura. La sacca diventa "
-    + "tua e vale 3000 punti. Con due Fili in campo c'è di meglio: un taglio che li lascia in due "
-    + "regioni separate ne vale 5000. Sono le sole due cose che si possono andare a cercare invece che "
-    + "subire.",
+  howCapture: "Chiudere un Filo dentro una sacca abbastanza stretta non uccide: lo cattura. La sacca "
+    + "diventa vostra e vale 3000 punti. Con due Fili in campo c'è di meglio: un taglio che li lascia "
+    + "in due regioni separate ne vale 5000. Sono le sole due cose che si possono andare a cercare "
+    + "invece che subire.",
   howLevelsTitle: "I livelli",
   howGiro: "Le arene sono otto e poi ricominciano da capo, ma non uguali: a ogni giro completo le Scintille "
     + "partono più veloci. Livello dopo livello sale anche la quota da raggiungere, dal 70% fino "
@@ -85,9 +85,9 @@ const IT = {
   againCoin: "Un altro gettone",
   again: "Ricomincia",
 
-  deathFilo: "Il Filo ha toccato la tua linea",
+  deathFilo: "Il Filo ha toccato la vostra linea",
   deathMiccia: "La Miccia è arrivata in fondo",
-  deathScintilla: "Una Scintilla ti ha preso sul bordo",
+  deathScintilla: "Una Scintilla ha preso il marcatore sul bordo",
 
   arenaRettangolo: "rettangolo",
   arenaAnello: "anello",
@@ -123,14 +123,14 @@ const IT = {
   colName: "Nome",
   colScore: "Punti",
   colLevel: "Liv.",
-  nameAsk: "Il tuo nome",
+  nameAsk: "Il vostro nome",
   nameSave: "Salva",
   namePlaceholder: "tre lettere bastano",
-  placeLine: "Sei {place}° su questo computer.",
+  placeLine: "Siete {place}° su questo computer.",
   placeNone: "Fuori dalle prime dieci, per stavolta.",
   finalScore: "{score} punti, livello {level}",
   storageNote: "La classifica vive in questo browser, come quella del cabinato viveva nella sua "
-    + "macchina. Una pulizia del sito se la porta via: esportala se ci tieni.",
+    + "macchina. Una pulizia del sito se la porta via: conviene esportarla.",
   exportLabel: "Esporta",
   importLabel: "Importa",
   exportDone: "Classifica esportata.",

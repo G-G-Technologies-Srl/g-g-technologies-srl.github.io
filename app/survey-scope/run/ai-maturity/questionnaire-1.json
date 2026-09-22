@@ -3,8 +3,8 @@
   "key": "ai-maturity",
   "respondent_question": "q003",
   "status": "published",
-  "revision": 18,
-  "note": "Edition 1, revision 10 — the wording is frozen. Behind it sit six revisions, three simulations and three live tests. Two simulations compared an honest pass with a flattering one and found the same +29 point gap, before and after fifteen questions were rewritten: that gap is not a defect to remove, because a self-assessment measures how the respondent sees things. The third measured what does matter — two honest readings of the same company land 1.1 points apart, same band ten times out of ten. The live tests produced what no simulation can. Revision 8 answers the third of them, which was about comprehension rather than length: q011 asked two things in one sentence with a pronoun that had three possible referents; q013 asked «quanti» and offered feminine options; q014's third option mixed two constructions; q007 buried its question at the end. The same test asked for orientation, which is what `sections` is: eight groups, each with one or two lines saying what it looks at and why, shown before its questions. A section takes its title from its dimension when it has one, and carries its own only when it does not — a title written twice is a title that diverges. Revision 9 fixes q005, whose options were not one scale: the top one moved two things at once against the one below it — when the sum was done and whether it was written down — so a company that worked it out two years ago and wrote it down had nowhere to go, and neither did one that worked it out last month and did not. The two windows also left a gap: eight months ago fitted neither. The time reference is gone and the ladder is one thing getting stronger — no number, talk, a number in somebody's head, a number written down and findable. Recency is already carried by q006. **Rule it makes general: an option may differ from the one below it in one respect only, or the scale stops being a scale.** Revision 10 moves the explanation of a coherence rule next to the rule itself. It used to be one hardcoded interface string, which was wrong twice over: a second coherence rule would have shown the first one's text, and the interface had no way to know which questions the message was about — so it painted the warning on every screen, including questions that had nothing to do with it. Rules enforced in code: the best option asks for an event that happened, not a state that persists; no option describes a company that has not started trading; a question stops at 100 characters, an option at 62, a hint at 160, a section intro at 200, and the concrete example belongs in the hint. Ids stay working labels until status becomes published — which needs the English. Findings in _src/fonti/survey-scope-simulazione-{1,2,3}.md. Revision 17 comes from the clarity test of 28 August, and fixes an ordering defect a blind reader found: q016 scored a ban higher than governed use, so the top option was more immature than the one below it in any company where AI is actually used — either you forbade it, or you are declaring something false. The ladder now reads: do not know, no rule, a rule that forbids, a rule that permits where decided and verifies it. The technology section also states that «you» includes whoever keeps your systems, external or not, which is where the same reader kept answering about somebody else's knowledge. Findings in _src/fonti/survey-scope-chiarezza.md. Revision 18 does two things the clarity test asked for. It opens six questions that assumed a company selling products to customers who buy — turnover became revenue, «clienti» became «chi servi», the warehouse example went, and «the work that brings you most turnover» became «the work that takes most of your time» — because two of the four audiences the scheda promises are public bodies and trade associations, and their director stopped at «con quanto ha comprato ciascuno»: not at the word customer, which she had already translated, but at the assumption that every relationship has a price. And it closes the four ways a founder demonstrated he could raise five points without lying: q004 asked about the most used tool, which samples the best case and hides the six bought on a card; q005's top option was satisfied by a slide with a guessed number; q013's hint let three kickoffs add up to half a day; q020 said «aggiornato» with no expiry, so five months qualified. The ceiling itself is not raised — the scale still measures whether a practice is present, never how far it reaches, and fixing that means rewriting the bands and the twenty-four recommendations.",
+  "revision": 19,
+  "note": "Edition 1, revision 10 — the wording is frozen. Behind it sit six revisions, three simulations and three live tests. Two simulations compared an honest pass with a flattering one and found the same +29 point gap, before and after fifteen questions were rewritten: that gap is not a defect to remove, because a self-assessment measures how the respondent sees things. The third measured what does matter — two honest readings of the same company land 1.1 points apart, same band ten times out of ten. The live tests produced what no simulation can. Revision 8 answers the third of them, which was about comprehension rather than length: q011 asked two things in one sentence with a pronoun that had three possible referents; q013 asked «quanti» and offered feminine options; q014's third option mixed two constructions; q007 buried its question at the end. The same test asked for orientation, which is what `sections` is: eight groups, each with one or two lines saying what it looks at and why, shown before its questions. A section takes its title from its dimension when it has one, and carries its own only when it does not — a title written twice is a title that diverges. Revision 9 fixes q005, whose options were not one scale: the top one moved two things at once against the one below it — when the sum was done and whether it was written down — so a company that worked it out two years ago and wrote it down had nowhere to go, and neither did one that worked it out last month and did not. The two windows also left a gap: eight months ago fitted neither. The time reference is gone and the ladder is one thing getting stronger — no number, talk, a number in somebody's head, a number written down and findable. Recency is already carried by q006. **Rule it makes general: an option may differ from the one below it in one respect only, or the scale stops being a scale.** Revision 10 moves the explanation of a coherence rule next to the rule itself. It used to be one hardcoded interface string, which was wrong twice over: a second coherence rule would have shown the first one's text, and the interface had no way to know which questions the message was about — so it painted the warning on every screen, including questions that had nothing to do with it. Rules enforced in code: the best option asks for an event that happened, not a state that persists; no option describes a company that has not started trading; a question stops at 100 characters, an option at 62, a hint at 160, a section intro at 200, and the concrete example belongs in the hint. Ids stay working labels until status becomes published — which needs the English. Findings in _src/fonti/survey-scope-simulazione-{1,2,3}.md. Revision 17 comes from the clarity test of 28 August, and fixes an ordering defect a blind reader found: q016 scored a ban higher than governed use, so the top option was more immature than the one below it in any company where AI is actually used — either you forbade it, or you are declaring something false. The ladder now reads: do not know, no rule, a rule that forbids, a rule that permits where decided and verifies it. The technology section also states that «you» includes whoever keeps your systems, external or not, which is where the same reader kept answering about somebody else's knowledge. Findings in _src/fonti/survey-scope-chiarezza.md. Revision 18 does two things the clarity test asked for. It opens six questions that assumed a company selling products to customers who buy — turnover became revenue, «clienti» became «chi servi», the warehouse example went, and «the work that brings you most turnover» became «the work that takes most of your time» — because two of the four audiences the scheda promises are public bodies and trade associations, and their director stopped at «con quanto ha comprato ciascuno»: not at the word customer, which she had already translated, but at the assumption that every relationship has a price. And it closes the four ways a founder demonstrated he could raise five points without lying: q004 asked about the most used tool, which samples the best case and hides the six bought on a card; q005's top option was satisfied by a slide with a guessed number; q013's hint let three kickoffs add up to half a day; q020 said «aggiornato» with no expiry, so five months qualified. The ceiling itself is not raised — the scale still measures whether a practice is present, never how far it reaches, and fixing that means rewriting the bands and the twenty-four recommendations. Revision 19 porta il testo italiano al registro formale deciso dall'utente il 18 settembre 2026: il questionario dava del tu, e i clienti di G&G sono imprese e professionisti. Cambiano solo le parole italiane — domande, opzioni, introduzioni delle sezioni — non che cosa viene chiesto né come si conta: le bande, i pesi e le regole sono quelli di prima, e l'inglese non si tocca perché «you» è già impersonale. **L'impronta però cambia**, perché è calcolata sul testo: le compilazioni esportate con la revisione precedente restano leggibili come file, ma l'app le rifiuta all'importazione e non le offre nel confronto. È il prezzo dichiarato della riscrittura, ed è stato scelto sapendolo.",
   "dimensions": [
     {
       "id": "d1",
@@ -53,11 +53,11 @@
     {
       "id": "s1",
       "text": {
-        "it": "La tua azienda",
+        "it": "La vostra azienda",
         "en": "Your company"
       },
       "intro": {
-        "it": "Dai un nome a questa compilazione: con quello la ritrovi nel tuo elenco, e la ritrova chi te l'ha mandata. Poi tre domande su chi sei, fuori dal punteggio: servono a chi raccoglie più unità.",
+        "it": "Date un nome a questa compilazione: con quello la ritrovate nel vostro elenco, e la ritrova chi ve l'ha mandata. Poi tre domande su chi siete, fuori dal punteggio: servono a chi raccoglie più unità.",
         "en": "Give this run a name: it is how you find it again in your list, and how whoever sent it to you finds it. Then three questions about you, outside the score: they help whoever collects several units."
       },
       "questions": [
@@ -83,7 +83,7 @@
       "id": "s3",
       "dimension": "d2",
       "intro": {
-        "it": "L'AI lavora sui dati che hai già. Tre domande su quanto sono a portata di mano: non quanti sono, ma se li trovi quando servono.",
+        "it": "L'AI lavora sui dati che avete già. Tre domande su quanto sono a portata di mano: non quanti sono, ma se si trovano quando servono.",
         "en": "AI works on the data you already have. Three questions on how close to hand it is: not how much there is, but whether you find it when you need it."
       },
       "questions": [
@@ -122,7 +122,7 @@
       "id": "s6",
       "dimension": "d5",
       "intro": {
-        "it": "Quello che scrivi in uno strumento online esce dall'azienda. Qui conta anche chi ti tiene i sistemi, se è di fuori: quello che sa lui vale. Tre domande.",
+        "it": "Quello che si scrive in uno strumento online esce dall'azienda. Qui conta anche chi vi tiene i sistemi, se è di fuori: quello che sa lui vale. Tre domande.",
         "en": "What you type into an online tool leaves the company. Whoever keeps your systems counts here too, if they are external: what they know counts. Three questions."
       },
       "questions": [
@@ -147,11 +147,11 @@
     {
       "id": "s8",
       "text": {
-        "it": "I tuoi clienti",
+        "it": "I vostri clienti",
         "en": "Your customers"
       },
       "intro": {
-        "it": "Un'ultima domanda, su quanta pressione arriva già da chi ti compra. Subito dopo trovi quattordici obblighi europei, ognuno con la data da cui vale.",
+        "it": "Un'ultima domanda, su quanta pressione arriva già da chi compra. Subito dopo trovate quattordici obblighi europei, ognuno con la data da cui vale.",
         "en": "One last question, on how much pressure already comes from whoever buys from you. Straight after it you will find fourteen European obligations, each with the date it applies from."
       },
       "questions": [
@@ -164,7 +164,7 @@
       "from": 0,
       "to": 24,
       "text": {
-        "it": "Non hai ancora cominciato",
+        "it": "Non avete ancora cominciato",
         "en": "You have not started yet"
       }
     },
@@ -199,11 +199,11 @@
       "dimension": null,
       "scored": false,
       "text": {
-        "it": "Quante persone lavorano nella tua azienda?",
+        "it": "Quante persone lavorano nella vostra azienda?",
         "en": "How many people work in your company?"
       },
       "hint": {
-        "it": "Chi c'è tutto l'anno, stagionali esclusi. Se sei un ente o un'associazione, «azienda» qui è la tua struttura e «clienti» chi servi.",
+        "it": "Chi c'è tutto l'anno, stagionali esclusi. Per un ente o un'associazione, «azienda» qui è la vostra struttura e «clienti» chi servite.",
         "en": "Whoever is there all year, seasonal staff aside. For a public body or an association, «company» here is your organisation and «customers» whoever you serve."
       },
       "options": [
@@ -285,7 +285,7 @@
       "dimension": null,
       "scored": false,
       "text": {
-        "it": "Che ruolo hai?",
+        "it": "Qual è il vostro ruolo?",
         "en": "What is your role?"
       },
       "options": [
@@ -367,7 +367,7 @@
       "dimension": "d1",
       "scored": true,
       "text": {
-        "it": "Hai mai fatto due conti su quanto l'AI ti fa risparmiare o guadagnare?",
+        "it": "Avete mai fatto due conti su quanto l'AI fa risparmiare o guadagnare?",
         "en": "Have you ever worked out what AI saves you, or earns you?"
       },
       "options": [
@@ -539,7 +539,7 @@
       "dimension": "d2",
       "scored": true,
       "text": {
-        "it": "Ti chiedono copia di un documento di due anni fa: in quanto tempo lo mandi?",
+        "it": "Vi chiedono copia di un documento di due anni fa: in quanto tempo lo mandate?",
         "en": "Somebody asks for a copy of a document from two years ago: how soon do you send it?"
       },
       "options": [
@@ -632,7 +632,7 @@
       "dimension": "d3",
       "scored": true,
       "text": {
-        "it": "Il lavoro che ti occupa di più: chi lo fa ha istruzioni scritte?",
+        "it": "Il lavoro che occupa più tempo: chi lo fa ha istruzioni scritte?",
         "en": "The work that takes most of your time: does whoever does it have written instructions?"
       },
       "options": [
@@ -882,7 +882,7 @@
       "dimension": "d5",
       "scored": true,
       "text": {
-        "it": "I dati che metti negli strumenti AI: sai in che paese finiscono?",
+        "it": "I dati messi negli strumenti AI: sapete in che paese finiscono?",
         "en": "The data you put into AI tools: do you know which country it ends up in?"
       },
       "options": [
@@ -921,7 +921,7 @@
       "dimension": "d5",
       "scored": true,
       "text": {
-        "it": "L'ultima volta che hai scaricato i tuoi dati da un programma che usi: quando è stato?",
+        "it": "L'ultima volta che avete scaricato i vostri dati da un programma in uso: quando è stato?",
         "en": "The last time you downloaded your data out of a programme you use: when was it?"
       },
       "options": [
@@ -955,7 +955,7 @@
         }
       ],
       "hint": {
-        "it": "Non il backup automatico: proprio scaricarli per averne una copia tua.",
+        "it": "Non il backup automatico: proprio scaricarli per averne una copia vostra.",
         "en": "Not the automatic backup: actually downloading it to have a copy of your own."
       }
     },
@@ -1003,7 +1003,7 @@
       "dimension": "d6",
       "scored": true,
       "text": {
-        "it": "Ti chiedono quali strumenti AI toccano i dati di chi servi: cosa mandi?",
+        "it": "Vi chiedono quali strumenti AI toccano i dati di chi servite: cosa mandate?",
         "en": "Somebody asks which AI tools touch the data of whoever you serve: what do you send?"
       },
       "options": [
@@ -1096,7 +1096,7 @@
       "dimension": null,
       "scored": false,
       "text": {
-        "it": "Nell'ultimo anno chi servi ti ha chiesto qualcosa su sicurezza o dati?",
+        "it": "Nell'ultimo anno chi servite vi ha chiesto qualcosa su sicurezza o dati?",
         "en": "In the past year, has whoever you serve asked you anything about security or data?"
       },
       "options": [
@@ -1175,7 +1175,7 @@
           "q006": 3
         },
         "text": {
-          "it": "Hai risposto che in azienda non si usano strumenti AI, e anche che l'ultimo progetto con l'AI è in uso oggi. Una delle due non descrive la tua situazione.",
+          "it": "Avete risposto che in azienda non si usano strumenti AI, e anche che l'ultimo progetto con l'AI è in uso oggi. Una delle due non descrive la vostra situazione.",
           "en": "You answered that no AI tools are used in the company, and also that the last project with AI is in use today. One of the two does not describe your situation."
         }
       }
@@ -1205,11 +1205,11 @@
       "en": "AI Maturity Assessment"
     },
     "lede": {
-      "it": "Rispondi a ventidue domande sulla tua azienda e ottieni un quadro su sei dimensioni, con tre cose da fare per prime. Serve orientarsi, non certificarsi.",
+      "it": "Ventidue domande sulla vostra azienda, e un quadro su sei dimensioni, con tre cose da fare per prime. Serve orientarsi, non certificarsi.",
       "en": "Answer twenty-two questions about your company and get a picture across six dimensions, with three things to do first. It is here to orient you, not to certify you."
     },
     "duration": {
-      "it": "Dieci minuti, e puoi fermarti a metà: quello che hai risposto resta.",
+      "it": "Dieci minuti, e ci si può fermare a metà: le risposte date restano.",
       "en": "Ten minutes, and you can stop half way: what you answered stays."
     },
     "dimensions_title": {
@@ -1217,7 +1217,7 @@
       "en": "The six dimensions"
     },
     "appendix_note": {
-      "it": "Ventidue domande, e cosa hai scelto. Il punteggio è una descrizione che hai dato tu: chi riceve questo foglio deve poterla leggere, non solo il numero che ne esce.",
+      "it": "Ventidue domande, e le opzioni scelte. Il punteggio è una descrizione che avete dato voi: chi riceve questo foglio deve poterla leggere, non solo il numero che ne esce.",
       "en": "Twenty-two questions, and what you chose. The score is a description you gave: whoever receives this sheet has to be able to read it, not only the number it produces."
     }
   }

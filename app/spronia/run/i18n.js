@@ -25,8 +25,8 @@ const IT = {
   // -------------------------------------------------------------------------------------------
 
   insertCoin: "Inserisci il gettone",
-  coinFree: "Nelle sale giochi il gettone era l'unica cosa che costava. Qui è gratis, e ne puoi "
-    + "mettere quanti vuoi.",
+  coinFree: "Nelle sale giochi il gettone era l'unica cosa che costava. Qui è gratis, e se ne "
+    + "mettono quanti se ne vuole.",
   credits: "Crediti",
   pressStart: "In quanti giocate?",
   startHint: "Oppure premi un tasto del volo: quelli del primo giocatore avviano una partita a "
@@ -54,9 +54,9 @@ const IT = {
   waveNumber: "Ondata {n}",
   waveNormale: "",
   waveCelle: "Solo celle",
-  waveCelleNote: "Niente nemici in volo. Raccogli prima che si schiudano.",
+  waveCelleNote: "Niente nemici in volo. Le celle si raccolgono prima che si schiudano.",
   waveSopravvivenza: "Sopravvivenza",
-  waveSopravvivenzaNote: "Finiscila senza morire e c'è un premio.",
+  waveSopravvivenzaNote: "Chiuderla senza morire vale un premio.",
   waveSquadra: "Squadra",
   waveSquadraNote: "Nessuno dei due tocca l'altro, e il premio è a testa.",
   waveDuello: "Duello",
@@ -71,25 +71,25 @@ const IT = {
   howKeys: "Primo giocatore: A e D per girare, W per battere le ali, S per lo scudo.",
   howKeys2: "Secondo giocatore: frecce sinistra e destra, Maiusc destro per battere, freccia giù "
     + "per lo scudo.",
-  howTouch: "Col mouse o col dito: premi il campo dal lato in cui vuoi andare, e ogni pressione è "
-    + "un battito. Due tocchi rapidi sulla tua cavalcatura accendono lo scudo.",
+  howTouch: "Col mouse o col dito: premi il campo dal lato verso cui andare, e ogni pressione è "
+    + "un battito. Due tocchi rapidi sulla cavalcatura accendono lo scudo.",
 
   flightTitle: "Il volo",
   flightLead: "Quando due cavalcature si toccano resta in volo chi ha lo sperone — il trattino "
     + "davanti al muso — più in alto. È l'unica regola, o quasi.",
   howBeat: "Non c'è un comando per salire. Per restare in quota servono circa tre battiti al "
     + "secondo.",
-  howSkid: "In aria non c'è presa: per tornare indietro devi girarti e battere dall'altra parte.",
+  howSkid: "In aria non c'è presa: per tornare indietro ci si gira e si batte dall'altra parte.",
   howLance: "Guarda il trattino, non il cavaliere: è quello che decide il contatto. E il fondo è "
     + "metallo fuso: toccarlo costa una vita.",
-  howCells: "Chi abbatti lascia una cella: si prende dopo che ha toccato terra. Se la lasci, si "
+  howCells: "Chi viene abbattuto lascia una cella: si prende dopo che ha toccato terra. Se resta lì, si "
     + "schiude di una classe più alta.",
-  howShield: "Lo scudo brucia chi tocchi, comunque lo tocchi. Dura tre secondi e torna dopo "
-    + "dieci.",
-  howIntruder: "Se ci metti troppo, dal metallo fuso viene sputata una palla di fuoco: sale, "
-    + "ricade, rimbalza una volta e affonda. Si abbatte andandole incontro alla quota del suo "
-    + "cuore acceso.",
-  howClaw: "Dal metallo fuso esce una pinza che afferra chi vola basso. Per liberarti batti le "
+  howShield: "Lo scudo brucia chiunque lo tocchi, comunque lo tocchi. Dura tre secondi e torna "
+    + "dopo dieci.",
+  howIntruder: "Se l'ondata va per le lunghe, dal metallo fuso viene sputata una palla di fuoco: "
+    + "sale, ricade, rimbalza una volta e affonda. Si abbatte andandole incontro alla quota del "
+    + "suo cuore acceso.",
+  howClaw: "Dal metallo fuso esce una pinza che afferra chi vola basso. Per liberarsi si battono le "
     + "ali molto più in fretta del solito.",
   a11yNote: "È un gioco d'azione in tempo reale: serve vedere lo schermo.",
 
@@ -98,7 +98,7 @@ const IT = {
   // -------------------------------------------------------------------------------------------
 
   keysTitle: "Cambia i tasti",
-  keysIntro: "Clicca un tasto e premi quello che vuoi al suo posto. Restano in questo browser.",
+  keysIntro: "Clicca un tasto e premi quello che deve prenderne il posto. Restano in questo browser.",
   keysPlayer: "Giocatore {n}",
   keysLeft: "Sinistra",
   keysRight: "Destra",
@@ -185,13 +185,13 @@ const IT = {
   langSwitch: "Switch to English",
   removalLabel: "Installata",
   removalDesktop: "Per toglierla: apri il menù ⋮ in alto a destra nella finestra dell'app e scegli "
-    + "«Disinstalla». I dati restano nel browser: se non ti servono più, esportali prima e poi "
+    + "«Disinstalla». I dati restano nel browser: se non servono più, esportali prima e poi "
     + "cancella i dati del sito da Impostazioni del browser.",
   removalAndroid: "Per toglierla: tieni premuta l'icona nella schermata Home e scegli «Disinstalla» "
-    + "o trascinala sul cestino. I dati restano nel browser: se non ti servono più, esportali "
+    + "o trascinala sul cestino. I dati restano nel browser: se non servono più, esportali "
     + "prima e poi cancella i dati del sito.",
   removalIos: "Per toglierla: tieni premuta l'icona nella schermata Home, poi «Rimuovi app». I "
-    + "dati restano in Safari: se non ti servono più, esportali prima e poi cancella i dati del "
+    + "dati restano in Safari: se non servono più, esportali prima e poi cancella i dati del "
     + "sito da Impostazioni.",
   versionLabel: "v{version}",
   versionNext: "v{current} → {next}",
