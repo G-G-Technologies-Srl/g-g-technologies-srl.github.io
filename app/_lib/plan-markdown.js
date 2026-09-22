@@ -448,6 +448,11 @@ export function escape(text) {
 export function inlineHtml(text) {
   let out = escape(text);
   out = out.replace(/`([^`]+)`/g, (whole, code) => `<code>${code}</code>`);
+  // «[[#a7f3]]»: il gancio a un'attività del progetto, scritto prima del collegamento fra pagine
+  // perché ne condivide le due parentesi. Il testo visibile lo mette chi ospita l'editore: solo
+  // l'app sa se quell'attività è aperta, fatta o finita nel cestino, e questo file non parla.
+  out = out.replace(TASK_REF_ALL,
+    (whole, uid) => `<a class="task-link" data-task="${uid}" href="#"></a>`);
   out = out.replace(/\[\[([^\]]+)\]\]/g,
     (whole, title) => `<a class="wiki" data-page="${title}" href="#">${title}</a>`);
   out = out.replace(_mentionPattern(),
@@ -603,9 +608,35 @@ export function renameMention(text, from, to) {
   return String(text || "").replace(pattern, (whole, lead) => `${lead}@${after}`);
 }
 
-/** The titles this text links to, for the page that has to resolve them. */
+/**
+ * Il riferimento a un'attività: «[[#a7f3]]», dove `a7f3` è il `uid` che viaggia con il progetto.
+ *
+ * `uid` e non `id`: l'`id` è la chiave di questo browser e cambia a ogni importazione, mentre il
+ * `uid` è lo stesso su due computer che condividono la cartella — quindi una riga esportata e
+ * reimportata continua a puntare alla stessa attività invece che a niente.
+ */
+export const TASK_REF = /\[\[#([A-Za-z0-9_-]{1,64})\]\]/;
+const TASK_REF_ALL = new RegExp(TASK_REF.source, "g");
+
+/** I `uid` delle attività a cui questo testo è agganciato, una volta ciascuno. */
+export function taskRefs(text) {
+  const out = [];
+  for (const found of String(text || "").matchAll(TASK_REF_ALL)) {
+    if (!out.includes(found[1])) out.push(found[1]);
+  }
+  return out;
+}
+
+/**
+ * The titles this text links to, for the page that has to resolve them.
+ *
+ * I ganci alle attività restano fuori: cominciano per «#» e non sono il titolo di nessuna pagina —
+ * senza questa riga l'editore avrebbe disegnato «a7f3» come una pagina da creare.
+ */
 export function links(text) {
-  return [...String(text).matchAll(/\[\[([^\]]+)\]\]/g)].map((found) => found[1].trim());
+  return [...String(text).matchAll(/\[\[([^\]]+)\]\]/g)]
+    .map((found) => found[1].trim())
+    .filter((title) => !title.startsWith("#"));
 }
 
 /** Every image reference in a document, as paths. The page fetches those and nothing else. */

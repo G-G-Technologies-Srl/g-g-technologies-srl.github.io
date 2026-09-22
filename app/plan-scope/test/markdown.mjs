@@ -16,7 +16,7 @@
 
 import assert from "node:assert/strict";
 
-import { parse, serialize, inlineHtml, images, links, assets, frontmatter, withFrontmatter, setPeople, mentions, mentionNames, renameMention } from "gg/plan-markdown.js";
+import { parse, serialize, inlineHtml, images, links, assets, frontmatter, withFrontmatter, setPeople, mentions, mentionNames, renameMention, taskRefs, TASK_REF } from "gg/plan-markdown.js";
 
 let passed = 0;
 
@@ -391,6 +391,18 @@ test("una persona rinominata cambia nome anche nelle menzioni, e solo lei", () =
   assert.equal(dopo, "Parlato con @Anna Verdi e @Annalisa. Poi (@Anna Verdi) di nuovo, e anna@example.com resta.");
   assert.equal(renameMention(testo, "Anna", "Anna"), testo, "lo stesso nome non tocca niente");
   assert.equal(renameMention(testo, "", "Anna Verdi"), testo);
+});
+
+test("«[[#uid]]» è il gancio a un'attività: pastiglia nell'app, e non un collegamento a una pagina", () => {
+  const html = inlineHtml("Mandare il listino [[#a7f3-x]] e vedi [[Brief]]");
+  assert.match(html, /<a class="task-link" data-task="a7f3-x" href="#"><\/a>/);
+  assert.match(html, /<a class="wiki" data-page="Brief"/);
+  // La pagina «a7f3-x» non esiste e non deve comparire fra i collegamenti da creare.
+  assert.deepEqual(links("Mandare il listino [[#a7f3-x]] e vedi [[Brief]]"), ["Brief"]);
+  assert.deepEqual(taskRefs("[[#uno]] e [[#due]] e ancora [[#uno]]"), ["uno", "due"]);
+  assert.deepEqual(taskRefs("nessun gancio qui"), []);
+  assert.equal(TASK_REF.exec("- [ ] Titolo [[#a7f3]]")[1], "a7f3");
+  assert.equal(TASK_REF.test("- [ ] Titolo senza gancio"), false);
 });
 
 console.log(`markdown: ${passed} prove passate`);

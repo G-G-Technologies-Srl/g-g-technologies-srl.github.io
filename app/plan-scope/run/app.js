@@ -503,7 +503,10 @@ function _boxesToPlan() {
   const page = pageId ? model.page(pageId) : null;
   if (!page) return undefined;
   const text = page.markdown || "";
-  const found = csv.parseTaskList(csv.openBoxes(text), { people: _mentionable() });
+  // Le righe che già nominano un'attività restano fuori: portarle vorrebbe dire farne una seconda,
+  // con lo stesso titolo e nessun legame con la riga.
+  const open = csv.openBoxes(text).split("\n").filter((line) => !md.TASK_REF.test(line)).join("\n");
+  const found = csv.parseTaskList(open, { people: _mentionable() });
   if (!found.length) return snack(t("boxesNone"));
 
   const props = md.frontmatter(text).props || {};
@@ -522,6 +525,33 @@ function _boxesToPlan() {
   const words = found.length === 1 ? t("boxesDoneOne") : tf("boxesDone", { n: num(found.length, 0) });
   _offerUndo(step, words);
   return undefined;
+}
+
+/**
+ * Le caselle agganciate a un'attività, messe d'accordo con la bacheca.
+ *
+ * La verità è l'attività: una riga «- [ ] … [[#uid]]» si spunta da sola se quell'attività è nella
+ * colonna che chiude. Il verso opposto — la casella che spunta l'attività — passa da `taskTicked`,
+ * ed è immediato; questo gira quando la pagina si apre o torna in primo piano, che è il momento in
+ * cui una divergenza si vedrebbe.
+ */
+function _syncBoxes(id) {
+  const page = model.page(id);
+  if (!page) return;
+  const text = page.markdown || "";
+  if (!md.taskRefs(text).length) return;
+  const next = text.split("\n").map((line) => {
+    const box = /^(\s*[-*+]\s*)\[([ xX])\](\s*.*)$/.exec(line);
+    if (!box) return line;
+    const ref = md.TASK_REF.exec(box[3]);
+    if (!ref) return line;
+    const task = model.taskByUid(ref[1]);
+    if (!task || task.trashedAt) return line;
+    const done = model.isDone(task);
+    if (done === (box[2].toLowerCase() === "x")) return line;
+    return `${box[1]}[${done ? "x" : " "}]${box[3]}`;
+  }).join("\n");
+  if (next !== text) model.setMarkdown(id, next);
 }
 
 /**
@@ -1255,7 +1285,8 @@ function _openPage(id) {
   md.setPeople(_mentionable());
   // The properties at the head of the file are not blocks: they are read here, edited in the row
   // under the title, and written back in front of whatever the editor produces.
-  editor.load(pages.load(page.markdown));
+  _syncBoxes(id);
+  editor.load(pages.load(model.page(id).markdown));
   _countPage();
   _paintNote();
   _applySourceView(false);
@@ -1352,6 +1383,9 @@ function _countPage() {
 
 /** The page on screen, reloaded from the model: head, body, properties, tree. */
 function _reloadPage() {
+  // Le caselle prima del testo: la scheda di un'attività, aperta da una riga, può averla spuntata
+  // o cestinata, e quello che si rilegge deve essere già d'accordo con la bacheca.
+  _syncBoxes(pageId);
   const page = model.page(pageId);
   if (!page) return;
   editor.load(pages.load(page.markdown));
@@ -3131,6 +3165,44 @@ function _connect() {
     // Whether a link has somewhere to go: the editor draws the ones that do not in a lighter ink,
     // so that "make this page" and "open this page" look different before the click.
     exists: (title) => Boolean(_pageByTitle(title)),
+
+    // ---- le attività del progetto, nominate da una riga della pagina
+    // «Attività del progetto» nel menù «/»: il titolo si chiede qui, l'attività nasce nella prima
+    // colonna della bacheca, e la riga torna all'editore con il suo `uid`.
+    newTask: async (said = "") => {
+      const page = pageId ? model.page(pageId) : null;
+      if (!page) return null;
+      const title = String(await ask(t("taskAsk"), { value: said }) || "").trim();
+      if (!title) return null;
+      const task = model.createTask(page.projectId, { title });
+      await _repaint();
+      snack(tf("taskMade", { name: title }));
+      return { uid: task.uid || task.id, title };
+    },
+    // Com'è messa: aperta, fatta, o non c'è più. La pastiglia lo dice con una parola.
+    taskState: (uid) => {
+      const task = model.taskByUid(uid);
+      if (!task || task.trashedAt) return null;
+      return model.isDone(task) ? "done" : "open";
+    },
+    // La scheda dell'attività **sopra la pagina**: si assegna, si sposta la data, si elimina, si
+    // chiude e si continua a scrivere. La pagina si ridisegna dopo, perché la scheda può averla
+    // spuntata o cestinata e la riga lo deve dire.
+    openTask: (uid) => {
+      const task = model.taskByUid(uid);
+      if (!task || task.trashedAt) return snack(t("taskGoneHint"));
+      plan.setProject(task.projectId);
+      plan.openCard(task.id);
+      el("taskCard").addEventListener("close", () => { if (pageId) _reloadPage(); }, { once: true });
+      return undefined;
+    },
+    // La casella della pagina e la spunta della bacheca sono la stessa cosa vista da due parti.
+    taskTicked: (uid, checked) => {
+      const task = model.taskByUid(uid);
+      if (!task || task.trashedAt || model.isDone(task) === checked) return;
+      model.toggleDone(task.id);
+      _repaint();
+    },
   });
 }
 

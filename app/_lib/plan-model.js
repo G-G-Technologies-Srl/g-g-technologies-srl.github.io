@@ -1559,6 +1559,20 @@ export function task(id) {
   return tasks.get(id) || null;
 }
 
+/**
+ * Un'attività dal `uid`, che è quello che una pagina scrive quando la nomina.
+ *
+ * L'`id` non andrebbe bene: cambia a ogni importazione, quindi una riga «[[#…]]» esportata con il
+ * progetto e riaperta altrove punterebbe al vuoto. Il `uid` viaggia, e questa è la ragione per cui
+ * esiste.
+ */
+export function taskByUid(uid) {
+  const wanted = String(uid || "");
+  if (!wanted) return null;
+  for (const one of tasks.values()) if ((one.uid || one.id) === wanted) return one;
+  return null;
+}
+
 /** Live projects, newest touched first. */
 export function liveProjects() {
   return [...projects.values()]

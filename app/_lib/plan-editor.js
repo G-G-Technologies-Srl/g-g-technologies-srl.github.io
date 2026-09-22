@@ -84,6 +84,19 @@ const MENU = [
       items: _lines(text).map((line) => _item({ text: line, checked: false })),
     }),
   },
+  // L'attività del progetto: la voce c'è, ma quello che fa non lo sa questo file. La crea l'app —
+  // è lei che ha il progetto e la bacheca — e qui torna con il titolo e il suo `uid`, che la riga
+  // si porta dietro come «[[#uid]]». `make` resta per il campione nel menù e per il caso in cui
+  // l'app non risponda: allora è una casella come le altre, e nessuno ha perso niente.
+  {
+    key: "task",
+    label: "blockTask",
+    hosted: true,
+    make: (text = "") => ({
+      type: "list", ordered: false, marker: "-", start: 1,
+      items: _lines(text).map((line) => _item({ text: line, checked: false })),
+    }),
+  },
   { key: "quote", label: "blockQuote", make: (text = "") => ({ type: "quote", text }) },
   {
     key: "callout",
@@ -111,7 +124,10 @@ let blocks = [];
 let on = { change() {}, openPage() {}, exists: () => true, image() {}, attachment() {}, moved() {}, removed() {},
   // Le persone: chi si può nominare con «@» (l'app passa chi lavora al progetto e la rubrica), e
   // dove porta il nome quando lo si clicca.
-  people: () => [], openPerson() {}, named() {} };
+  people: () => [], openPerson() {}, named() {},
+  // Le attività del progetto: crearne una, sapere com'è messa, aprirla, spuntarla. Le risposte
+  // stanno tutte nell'app: qui un'attività è solo un `uid` dentro una riga di testo.
+  newTask: async () => null, taskState: () => null, openTask() {}, taskTicked() {} };
 
 /**
  * Le parole dell'editor, e la domanda per il collegamento.
@@ -135,6 +151,7 @@ let text = (key) => key;
 let askFor = async () => null;
 let host = null;
 let menuAt = null;                      // index the slash menu is acting on, or null
+let hostsTasks = false;                 // se chi ospita l'editore sa creare un'attività di progetto
 let caret = null;                       // { index, offset } to restore after the next draw
 
 // The history, and it is the document rather than a list of operations: each entry is the whole
@@ -216,6 +233,9 @@ function _fromHtml(root) {
     else if (tag === "em" || tag === "i") out += inner ? `*${inner}*` : "";
     else if (tag === "del" || tag === "s" || tag === "strike") out += inner ? `~~${inner}~~` : "";
     else if (tag === "code") out += inner ? `\`${inner}\`` : "";
+    // Prima del collegamento fra pagine, perché è anche lui un `a` con due parentesi: quello che
+    // conta è il `uid` nell'attributo, non le parole che la pastiglia mostra in quel momento.
+    else if (tag === "a" && child.classList.contains("task-link")) out += `[[#${child.dataset.task}]]`;
     else if (tag === "a" && child.classList.contains("wiki")) out += `[[${inner}]]`;
     else if (tag === "a" && child.classList.contains("mention")) out += inner;   // già «@Nome»
     else if (tag === "a") out += `[${inner}](${child.getAttribute("href") || ""})`;
@@ -493,6 +513,23 @@ function _markLinks(root) {
   }
 }
 
+/**
+ * Le pastiglie delle attività, riempite adesso e non quando la pagina è stata scritta.
+ *
+ * Il testo è lo stato: «apri» se l'attività è aperta, «fatta» se è finita, «eliminata» se non c'è
+ * più. Scriverlo nel file avrebbe voluto dire riscrivere la pagina a ogni spunta sulla bacheca, e
+ * tenere due verità dello stesso fatto.
+ */
+function _markTasks(root) {
+  for (const chip of root.querySelectorAll("a.task-link")) {
+    const state = on.taskState(chip.dataset.task);
+    chip.textContent = text(state === "done" ? "taskChipDone"
+      : state === "open" ? "taskChipOpen" : "taskChipGone");
+    chip.classList.toggle("done", state === "done");
+    chip.classList.toggle("missing", !state);
+  }
+}
+
 function _blockNode(block, index) {
   const wrap = node("div", `block block-${block.type}`);
   wrap.dataset.block = String(index);
@@ -553,7 +590,15 @@ function _blockNode(block, index) {
         const li = node("li", `depth-${item.indent || 0}`);
         if (item.checked !== null && item.checked !== undefined) {
           const box = button(item.checked ? "tick on" : "tick", item.checked ? "✓" : "",
-            () => { _snapshot(); item.checked = !item.checked; _apply({ index, item: i, offset: 0 }); },
+            () => {
+              _snapshot();
+              item.checked = !item.checked;
+              // La riga agganciata a un'attività: la casella qui e la spunta sulla bacheca sono la
+              // stessa cosa vista da due parti, quindi si muovono insieme.
+              const ref = md.TASK_REF.exec(item.text);
+              if (ref) on.taskTicked(ref[1], item.checked);
+              _apply({ index, item: i, offset: 0 });
+            },
             { label: item.checked ? text("taskUndone") : text("taskDone") });
           box.setAttribute("aria-pressed", item.checked ? "true" : "false");
           li.append(box);
@@ -654,6 +699,7 @@ export function draw() {
   if (!host) return;
   fill(host, blocks.map(_blockNode));
   _markLinks(host);
+  _markTasks(host);
   if (!caret) return;
   const field = _fieldAt(Math.min(caret.index, blocks.length - 1), caret.item ?? null);
   if (field) _placeCaret(field, caret.offset);
@@ -1242,9 +1288,9 @@ function _sample(key) {
     box.append(node("span", `h h${level} sample-text`, text("sampleHeading")));
   } else if (key === "paragraph") {
     box.append(node("span", "sample-text", text("sampleText")));
-  } else if (key === "list" || key === "ordered" || key === "check") {
+  } else if (key === "list" || key === "ordered" || key === "check" || key === "task") {
     const mark = key === "ordered" ? node("span", "sample-num", "1.")
-      : key === "check" ? node("span", "sample-box", "")
+      : key === "check" || key === "task" ? node("span", "sample-box", "")
         : node("span", "sample-dot", "");
     box.append(mark);
     box.append(node("span", "sample-text", text("sampleItem")));
@@ -1304,6 +1350,7 @@ function _fillMenu(query) {
   const holds = block ? _textOf(block).trim() : "";
 
   const found = MENU.filter((entry) => {
+    if (entry.hosted && !hostsTasks) return false;
     if (wanted && !text(entry.label).toLowerCase().includes(wanted)) return false;
     // An image has no words to carry across: only duplicate and delete apply, and they sit in the
     // footer of this same menu.
@@ -1327,6 +1374,16 @@ function _fillMenu(query) {
 
 function _chooseBlock(entry) {
   if (!menuAt) return;
+  // La voce che l'app deve servire: la finestra si chiude **prima** della domanda, perché due
+  // `<dialog>` aperti insieme sono il difetto scritto in `app/CLAUDE.md` — l'evento `close` del
+  // primo arriva quando il secondo è già sullo schermo.
+  if (entry.hosted) {
+    const where = { ...menuAt };
+    menuAt = null;
+    el("blockMenu").close();
+    _insertTask(where);
+    return;
+  }
   _snapshot();
   const { index, replace, transform } = menuAt;
   const block = blocks[index];
@@ -1344,6 +1401,30 @@ function _chooseBlock(entry) {
   menuAt = null;
   el("blockMenu").close();
   _apply({ index: transform || replace ? index : index + 1, offset: 0 });
+}
+
+/**
+ * Un'attività del progetto, scritta nella pagina.
+ *
+ * L'ordine conta: **prima nasce l'attività**, poi la riga. Al contrario — riga adesso, attività
+ * quando il titolo è finito — la pagina avrebbe tenuto per un po' una casella che sulla bacheca non
+ * esiste, e chi chiude la scheda a metà si ritrova un gancio verso il niente.
+ *
+ * Se l'app non dà un'attività — domanda annullata, nessun progetto — non si scrive niente: il menù
+ * si è chiuso, e la pagina è rimasta com'era.
+ */
+async function _insertTask({ index, replace, transform }) {
+  const block = blocks[index];
+  const made = await on.newTask(transform || replace ? _textOf(block).trim() : "");
+  if (!made || !made.uid) return;
+  _snapshot();
+  const line = _item({ text: `${made.title} [[#${made.uid}]]`, checked: false });
+  const list = { type: "list", ordered: false, marker: "-", start: 1, items: [line] };
+  if (transform || replace) blocks.splice(index, 1, list);
+  else blocks.splice(index + 1, 0, list);
+  const at = transform || replace ? index : index + 1;
+  // Il cursore dopo il titolo e prima della pastiglia: da lì si continua a scrivere la riga.
+  _apply({ index: at, item: 0, offset: made.title.length });
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -1456,6 +1537,10 @@ function _removeBlock() {
 export function mount(container, { text: words = null, ask = null, ...handlers } = {}) {
   host = container;
   on = { ...on, ...handlers };
+  // La voce «attività del progetto» compare solo dove qualcuno sa crearne una. Le due app che
+  // montano questo editore non fanno le stesse cose, e una voce di menù che non fa niente è
+  // peggio di una voce che manca: la si prova, non succede nulla, e si smette di fidarsi del menù.
+  hostsTasks = typeof handlers.newTask === "function";
   if (words) text = words;
   if (ask) askFor = ask;
 
@@ -1472,6 +1557,12 @@ export function mount(container, { text: words = null, ask = null, ...handlers }
     if (person) {
       event.preventDefault();
       on.openPerson(person.dataset.person || person.textContent.replace(/^@/, ""));
+      return;
+    }
+    const chip = event.target.closest ? event.target.closest("a.task-link") : null;
+    if (chip) {
+      event.preventDefault();
+      on.openTask(chip.dataset.task);
       return;
     }
     const link = event.target.closest ? event.target.closest("a.wiki") : null;

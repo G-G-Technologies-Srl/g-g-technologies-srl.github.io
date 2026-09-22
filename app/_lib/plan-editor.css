@@ -98,7 +98,30 @@
    hand clicks it. Clicking makes the page. */
 .editor a.wiki.missing { text-decoration-style: dotted; opacity: 0.8; }
 
-/* A person named in the text: the accent, as the app paints people everywhere, and no underline —
+/* Il gancio a un'attività del progetto: una pastiglia piccola in fondo alla riga, non un pezzo di
+   testo. Dice in una parola com'è messa l'attività — «apri», «fatta», «eliminata» — e aprendola
+   porta su la sua scheda. Piccola di proposito: la riga è la frase, questa è il suo bottone. */
+.editor a.task-link {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 0 7px;
+  height: 18px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--accent-text);
+  text-decoration: none;
+  vertical-align: 1px;
+  user-select: none;
+}
+.editor a.task-link:hover { border-color: var(--accent); }
+.editor a.task-link.done { color: var(--muted); }
+/* Eliminata dalla bacheca: la riga resta, il gancio dice che non porta più da nessuna parte. */
+.editor a.task-link.missing { color: var(--faint); border-style: dashed; }
+
+/* A person named in the text: the accent, as the app paints people everywhere, and no underline —/* A person named in the text: the accent, as the app paints people everywhere, and no underline —
    it is a name, not a link to be followed, though it opens the card when pressed. */
 .editor a.mention {
   color: var(--accent-text);

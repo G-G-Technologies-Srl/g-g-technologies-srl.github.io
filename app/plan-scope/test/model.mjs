@@ -1029,6 +1029,20 @@ test("un nome scritto a metà trova la persona che c'è già", () => {
   assert.deepEqual(model.contactsLike("Mar"), [], "e un pezzo di parola non fa domande");
 });
 
+test("un'attività si ritrova dal uid, che è quello che una pagina scrive", () => {
+  const fiera = model.createProject({ name: "Fiera" });
+  const task = model.createTask(fiera.id, { title: "Mandare il listino" });
+  assert.equal(model.taskByUid(task.uid).id, task.id);
+  assert.equal(model.taskByUid("niente"), null);
+  assert.equal(model.taskByUid(""), null);
+  // Il uid sopravvive al giro export → import, l'id no: è la ragione per cui la riga scrive quello.
+  const file = { project: model.project(fiera.id), pages: [], tasks: model.tasksOf(fiera.id) };
+  const { projectId } = model.adopt(JSON.parse(JSON.stringify(file)), { name: "Fiera (copia)" });
+  const copia = model.tasksOf(projectId)[0];
+  assert.notEqual(copia.id, task.id);
+  assert.equal(copia.uid, task.uid, "e la copia porta lo stesso uid");
+});
+
 test("l'agenda è un progetto che non si conta fra i progetti", () => {
   const fiera = model.createProject({ name: "Fiera" });
   assert.equal(model.agenda(), null, "non nasce da sola");
