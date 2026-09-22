@@ -262,8 +262,21 @@ function _placeCaret(element, offset) {
   element.focus();
 }
 
-function _fieldAt(index) {
-  return host.querySelector(`[data-block="${index}"] [contenteditable]`);
+/**
+ * Il campo di un blocco, e **quale voce** quando il blocco è un elenco.
+ *
+ * Senza il secondo argomento torna il primo campo del blocco, che per un elenco di otto voci è
+ * sempre la prima. È da lì che veniva il difetto più fastidioso di questo editore: premendo Invio
+ * la voce nuova nasceva al posto giusto e il cursore saltava in cima all'elenco, e chi scriveva si
+ * ritrovava le parole della riga nuova infilate nella prima.
+ */
+function _fieldAt(index, item = null) {
+  const where = `[data-block="${index}"]`;
+  if (item !== null) {
+    const one = host.querySelector(`${where} [data-item="${item}"]`);
+    if (one) return one;
+  }
+  return host.querySelector(`${where} [contenteditable]`);
 }
 
 function _atStart(element) {
@@ -279,10 +292,12 @@ function _atEnd(element) {
  *
  * Redrawing the whole page rather than patching it is deliberate at this size: fifty blocks is a
  * few milliseconds, and a patching editor is where the divergence between what is on screen and
- * what is in the model hides. The caret is the thing that must survive, so it travels separately.
+ * what is in the model hides. The caret is the thing that must survive, so it travels separately —
+ * e dentro un elenco «dove» sono due numeri, il blocco e la voce: con il solo blocco il cursore
+ * torna sempre sulla prima.
  */
-function _apply({ index = null, offset = 0 } = {}) {
-  caret = index === null ? null : { index, offset };
+function _apply({ index = null, offset = 0, item = null } = {}) {
+  caret = index === null ? null : { index, offset, item };
   on.change(md.serialize(blocks));
   draw();
 }
@@ -343,7 +358,9 @@ function _noteTyping(index, item) {
 function _restore(entry) {
   blocks = md.parse(entry.markdown);
   if (!blocks.length) blocks = [{ type: "paragraph", text: "" }];
-  caret = entry.caret ? { index: entry.caret.index, offset: entry.caret.offset } : null;
+  caret = entry.caret
+    ? { index: entry.caret.index, offset: entry.caret.offset, item: entry.caret.item ?? null }
+    : null;
   on.change(md.serialize(blocks));
   draw();
 }
@@ -536,7 +553,7 @@ function _blockNode(block, index) {
         const li = node("li", `depth-${item.indent || 0}`);
         if (item.checked !== null && item.checked !== undefined) {
           const box = button(item.checked ? "tick on" : "tick", item.checked ? "✓" : "",
-            () => { _snapshot(); item.checked = !item.checked; _apply({ index, offset: 0 }); },
+            () => { _snapshot(); item.checked = !item.checked; _apply({ index, item: i, offset: 0 }); },
             { label: item.checked ? text("taskUndone") : text("taskDone") });
           box.setAttribute("aria-pressed", item.checked ? "true" : "false");
           li.append(box);
@@ -638,7 +655,7 @@ export function draw() {
   fill(host, blocks.map(_blockNode));
   _markLinks(host);
   if (!caret) return;
-  const field = _fieldAt(Math.min(caret.index, blocks.length - 1));
+  const field = _fieldAt(Math.min(caret.index, blocks.length - 1), caret.item ?? null);
   if (field) _placeCaret(field, caret.offset);
   caret = null;
 }
@@ -695,7 +712,7 @@ function _splitAt(index, field) {
       indent: item.indent,
       checked: item.checked === null ? null : false,
     }));
-    return _apply({ index, offset: 0 });
+    return _apply({ index, item: at + 1, offset: 0 });
   }
 
   const { head, tail } = _cutAt(field);
@@ -734,14 +751,16 @@ function _mergeBack(index, field) {
     const item = block.items[at];
     if (item.indent > 0) {
       item.indent -= 1;
-      return _apply({ index, offset: 0 });
+      return _apply({ index, item: at, offset: 0 });
     }
     if (at > 0) {
       const before = block.items[at - 1];
       const offset = _plainLengthAt(index, at - 1);
       before.text += item.text;
       block.items.splice(at, 1);
-      return _apply({ index, offset });
+      // Il cursore dove finisce il testo che c'era prima: è il punto di giunzione, ed è dove la
+      // persona si aspetta di continuare a scrivere.
+      return _apply({ index, item: at - 1, offset });
     }
     // The first item of a list, at its start: the list becomes a paragraph, which is the way out.
     const rest = block.items.slice(1);
@@ -770,7 +789,7 @@ function _mergeBack(index, field) {
     const offset = _plainLengthAt(index - 1, before.items.length - 1);
     last.text += _textOf(block);
     blocks.splice(index, 1);
-    return _apply({ index: index - 1, offset });
+    return _apply({ index: index - 1, item: before.items.length - 1, offset });
   }
 
   const offset = _plainLengthAt(index - 1);
@@ -879,7 +898,7 @@ function _keys(event, index, field) {
     const at = Number(field.dataset.item || 0);
     const item = block.items[at];
     item.indent = Math.max(0, Math.min(6, (item.indent || 0) + (event.shiftKey ? -1 : 1)));
-    _apply({ index, offset: _offsetIn(field) });
+    _apply({ index, item: at, offset: _offsetIn(field) });
     return;
   }
 
@@ -889,7 +908,16 @@ function _keys(event, index, field) {
     && window.getSelection().isCollapsed) {
     const up = event.key === "ArrowUp";
     if ((up && _atStart(field)) || (!up && _atEnd(field))) {
-      const target = _fieldAt(index + (up ? -1 : 1));
+      // Dentro un elenco la voce accanto viene prima del blocco accanto: ogni voce è un campo suo,
+      // e senza questo le frecce uscivano dall'elenco dalla seconda riga in poi — otto voci, e la
+      // freccia in su dalla terza portava nel paragrafo sopra.
+      const at = field.dataset.item ? Number(field.dataset.item) : null;
+      const near = at === null ? null : _fieldAt(index, at + (up ? -1 : 1));
+      // Entrando in un elenco dall'alto si arriva all'ultima voce, non alla prima: è la riga che
+      // sullo schermo sta subito sopra.
+      const nextBlock = blocks[index + (up ? -1 : 1)];
+      const lastItem = up && nextBlock && nextBlock.type === "list" ? nextBlock.items.length - 1 : null;
+      const target = near || _fieldAt(index + (up ? -1 : 1), lastItem);
       if (target) {
         event.preventDefault();
         _placeCaret(target, up ? target.textContent.length : 0);
