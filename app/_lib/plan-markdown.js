@@ -588,6 +588,21 @@ export function mentions(text, names) {
   });
 }
 
+/**
+ * Una persona rinominata, dentro il testo: «@vecchio» diventa «@nuovo».
+ *
+ * Sta qui e non nel modello perché è una trasformazione di testo, e qui si prova senza costruire un
+ * archivio. Il confine della menzione è lo stesso di `mentions`, quindi «@Anna» non tocca
+ * «@Annalisa», e il carattere che precede la chiocciola resta com'era.
+ */
+export function renameMention(text, from, to) {
+  const before = String(from || "").trim();
+  const after = String(to || "").trim();
+  if (!before || !after || before === after) return String(text || "");
+  const pattern = new RegExp(`(^|[\\s(\\[])@${_rx(before)}(?![\\p{L}\\p{N}_])`, "giu");
+  return String(text || "").replace(pattern, (whole, lead) => `${lead}@${after}`);
+}
+
 /** The titles this text links to, for the page that has to resolve them. */
 export function links(text) {
   return [...String(text).matchAll(/\[\[([^\]]+)\]\]/g)].map((found) => found[1].trim());

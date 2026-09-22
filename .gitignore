@@ -95,8 +95,20 @@ _src/fonti/
 # carattere di controllo giusto, in `app/invoice-scope/test/`. Da un file vero si copia la **forma**
 # — quali colonne, in che ordine, con che formato di data — mai il contenuto.
 _src/fonti/fic/
-promemoria-invoice.png
-promemoria-plan.png
-etichette-filtro.png
-Claude outputs
-_to_delete
+
+# Materiale di lavoro che finisce alla radice: screenshot di revisione, cartelle che l'app desktop
+# crea quando salva un file, file messi da parte prima di cancellarli. Le righe sono ancorate alla
+# radice, perché una riga senza `/` iniziale ignora anche una cartella omonima più in basso.
+#
+# Che una riga qui ci sia non basta: `Claude outputs/` era già elencata e conteneva lo stesso
+# quattordici file tracciati — i README interni di due app e dodici screenshot — perché erano stati
+# aggiunti all'indice prima che la riga esistesse, e .gitignore non tocca quello che git segue già.
+# GitHub Pages li serviva: il 22 settembre 2026 `/Claude%20outputs/invoice-scope-README.md`
+# rispondeva 200. Sono stati spostati in `_src/claude-outputs/`, che è privato, e tolti dall'indice
+# con `git rm -r --cached`. Quando si aggiunge una riga qui, si controlla anche
+# `git ls-files <cartella>`: se stampa qualcosa, la riga sta chiudendo una porta già aperta.
+/promemoria-invoice.png
+/promemoria-plan.png
+/etichette-filtro.png
+/Claude outputs/
+/_to_delete/

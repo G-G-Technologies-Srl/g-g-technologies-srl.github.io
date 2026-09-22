@@ -491,6 +491,19 @@ function _taskCard(task, today) {
  * dove l'attività ha la casella, poi con chi e dove. Cliccarla apre la maschera dell'appuntamento,
  * non la pagina: sulla lavagna si sistemano giorno e ora, le note stanno un passo più in là.
  */
+/** Dove si tiene: un indirizzo resta testo, un link si apre in una scheda nuova. */
+function _whereNode(where) {
+  const said = String(where || "").trim();
+  if (!/^https?:\/\//i.test(said)) return node("span", "where", said);
+  const link = node("a", "where");
+  link.href = said;
+  link.target = "_blank";
+  link.rel = "noopener";
+  link.textContent = said;
+  link.addEventListener("click", (event) => event.stopPropagation());
+  return link;
+}
+
 function _meetingCard(meeting, today) {
   const card = node("div", "task-card is-meeting");
   card.dataset.meeting = meeting.page.id;
@@ -511,7 +524,8 @@ function _meetingCard(meeting, today) {
   meta.append(node("span", "when", meeting.date === today ? t("dueToday") : shortDate(meeting.date)));
   if (meeting.with) meta.append(node("span", "who", meeting.with));
   card.append(meta);
-  if (meeting.where) card.append(node("span", "where", meeting.where));
+  // Il link della web-call è un link: al momento della chiamata si preme, non si seleziona.
+  if (meeting.where) card.append(_whereNode(meeting.where));
 
   card.addEventListener("click", (event) => {
     if (event.target.closest("button")) return;

@@ -79,6 +79,9 @@ const IN_PROJECT = ["project", "plan", "pages", "page"];
 // I quattro modi di guardare un progetto, e il pulsante di ognuno.
 const VIEWS = [["goBoard", "kanban"], ["goCalendar", "calendar"], ["goTimeline", "timeline"], ["goPages", "pages"]];
 // I campi della scheda di una persona, e il campo del record a cui ognuno corrisponde.
+/** Quante persone della rubrica compaiono come pastiglie sotto «con chi», oltre a chi lavora qui. */
+const RUBRICA_CHIPS = 8;
+
 const PERSON_FIELDS = [["personName", "name"], ["personCompany", "company"], ["personRole", "role"],
   ["personEmail", "email"], ["personPhone", "phone"]];
 // Che il benvenuto sia già stato visto è un fatto di questo browser, non dei dati: sta anche qui.
@@ -258,6 +261,12 @@ async function _askMeeting(target, withName = "", { meeting = null } = {}) {
   el("meetWhere").value = editing ? meeting.where : "";
   _paintMeetPeople(target);
   el("meetWith").oninput = () => _paintMeetPeople(target);
+  const sayToday = () => {
+    el("meetTodayHint").hidden = !(el("meetDate").value === model.todayISO() && !el("meetTime").value);
+  };
+  sayToday();
+  el("meetDate").oninput = sayToday;
+  el("meetTime").oninput = sayToday;
   for (const [id, key] of [["meetWhatLabel", "meetWhat"], ["meetDateLabel", "meetDate"],
     ["meetTimeLabel", "meetTime"], ["meetWithLabel", "meetWith"], ["meetWhereLabel", "meetWhere"]]) {
     el(id).textContent = t(key);
@@ -292,6 +301,9 @@ async function _askMeeting(target, withName = "", { meeting = null } = {}) {
   if (said.open) { _openPage(meeting.page.id); return meeting.page; }
   if (said.trash) { _trashMeeting(meeting); return null; }
   if (!said.date) return null;
+  // Prima di scrivere: «Mario» può essere «Mario Bianchi», e la pagina deve nascere con il nome
+  // intero — è quello che la lega alla sua scheda.
+  said.with = await _resolveNames(said.with);
   if (!editing) return _newMeeting(target, said);
   const step = model.updateMeeting(meeting.page.id, said, {
     date: t("propDate"), time: t("propTime"), with: t("propWith"), where: t("propWhere"),
@@ -359,8 +371,15 @@ function _paintMeetPeople(target) {
     seen.add(clean.toLowerCase());
     offered.push(clean);
   };
+  // Chi lavora al progetto c'è sempre: sono pochi, e sono la risposta quasi sempre. La rubrica
+  // intera no — a venti schede erano già quattro righe di pastiglie sopra il pulsante, e a cento
+  // un muro: entra quella che corrisponde a quello che si sta scrivendo dopo l'ultima virgola.
   for (const one of model.peopleOf(target)) take(one.name);
-  for (const one of model.liveContacts()) take(one.name);
+  const writing = String(el("meetWith").value).split(",").pop().trim().toLowerCase();
+  const rest = model.liveContacts()
+    .filter((one) => writing ? String(one.name || "").toLowerCase().includes(writing) : true)
+    .slice(0, RUBRICA_CHIPS);
+  for (const one of rest) take(one.name);
   fill(el("meetWithPeople"), offered.map((name) => {
     const on = has(name);
     const chip = button(on ? `badge tag ${tagHue(name)} on` : "pick", name, () => {
@@ -373,6 +392,42 @@ function _paintMeetPeople(target) {
     chip.setAttribute("aria-pressed", on ? "true" : "false");
     return chip;
   }));
+}
+
+/**
+ * Il nome scritto, portato alla persona che è.
+ *
+ * La porta unica guardava solo il nome esatto, quindi «Mario» con «Mario Bianchi» già in rubrica
+ * faceva una seconda scheda, e da quel momento metà degli incontri stavano su una e metà
+ * sull'altra. Qui la domanda si fa **prima** di scrivere il nome nella pagina, così il testo nasce
+ * già con il nome intero: correggerlo dopo vorrebbe dire riscrivere le pagine.
+ *
+ * Chi chiude la domanda tiene quello che ha scritto: la persona nuova è sempre un esito legittimo.
+ */
+async function _resolveName(name) {
+  const clean = String(name || "").trim();
+  if (!clean || model.contactByName(clean)) return clean;
+  const maybe = model.contactsLike(clean);
+  if (!maybe.length) return clean;
+  const chosen = await ask(tf("personMaybe", { name: clean }), {
+    options: [...maybe.map((one) => ({ value: one.id, label: one.name })),
+      { value: "", label: tf("personMaybeNew", { name: clean }) }],
+  });
+  const person = chosen ? model.contact(chosen) : null;
+  return person ? person.name : clean;
+}
+
+/** La stessa domanda per ogni nome di una riga «con chi», nell'ordine in cui sono scritti. */
+async function _resolveNames(text) {
+  const out = [];
+  for (const one of _splitNames(text)) out.push(await _resolveName(one));
+  return out.join(", ");
+}
+
+/** La persona che quel nome nomina: quella che c'è, o una nuova. */
+async function _personFor(name) {
+  const real = await _resolveName(name);
+  return model.contactByName(real) || model.createContact({ name: real });
 }
 
 function _splitNames(text) {
@@ -388,7 +443,15 @@ async function _trashMeeting(meeting) {
   _offerUndo(step, tf("trashedPage", { name: page.title || t("pageUntitled") }));
 }
 
-function _newMeeting(target, said = {}) {
+/**
+ * L'incontro nasce, e l'app resta dov'è se non c'è niente da scrivere adesso.
+ *
+ * Prima apriva sempre l'editor con la striscia «Scrivi cosa vi siete detti»: giusto per un verbale,
+ * sbagliato per un appuntamento fra due giorni — di cui non c'è ancora niente da dire — e in più
+ * portava via dalla rubrica chi era partito di lì. Adesso l'editor si apre per quello che è già
+ * successo, e per quello che deve succedere la striscia offre «Apri le note» a chi le vuole.
+ */
+function _newMeeting(target, said = {}, { title = null } = {}) {
   const day = said.date || model.todayISO();
   // Solo quello che ha un valore: una proprietà vuota, in questo formato, non esiste — la riga
   // finisce fra quelle «portate e non lette» e nell'editore non compare. Le caselle rimaste da
@@ -405,13 +468,22 @@ function _newMeeting(target, said = {}) {
     "",
   ].join("\n");
   const page = model.createPage(target, {
-    title: said.what || tf("meetingTitle", { date: longDate(day) }),
+    title: said.what || tf(title || "meetingTitle", { date: longDate(day) }),
   });
   model.setMarkdown(page.id, head);
   projectId = target;
-  _openPage(page.id);
-  snack(t("meetingHint"));
   _welcome(said.with);
+  const ahead = model.meetingAhead({ date: day, time: said.time || "" });
+  if (!ahead) {
+    _openPage(page.id);
+    snack(t("meetingHint"));
+    return page;
+  }
+  _repaint();
+  snack(tf("meetingSet", { when: said.time ? `${longDate(day)}, ${said.time}` : longDate(day) }), {
+    action: t("meetOpen"),
+    onAction: () => _openPage(page.id),
+  });
   return page;
 }
 
@@ -553,6 +625,31 @@ function _openPerson(id) {
   return undefined;
 }
 
+/**
+ * I due recapiti come comandi, ridisegnati mentre si scrivono.
+ *
+ * Si ridipinge a ogni tasto sui due campi e non solo all'apertura: chi compila una scheda nuova
+ * scrive il numero e poi chiama, e un pulsante che compare solo la volta dopo non c'è quando serve.
+ */
+function _paintReach(person) {
+  const reach = [];
+  if (person.email) reach.push(_reachLink(`mailto:${person.email}`, t("personWrite"), person.email));
+  if (person.phone) {
+    reach.push(_reachLink(`tel:${String(person.phone).replace(/[^+\d]/g, "")}`, t("personCall"), person.phone));
+  }
+  el("personReach").hidden = reach.length === 0;
+  fill(el("personReach"), reach);
+}
+
+/** Un recapito da usare: il verbo si legge, l'indirizzo sta sotto il dito. */
+function _reachLink(href, label, said) {
+  const link = node("a", "reach");
+  link.href = href;
+  link.textContent = label;
+  link.setAttribute("aria-label", `${label} ${said}`);
+  return link;
+}
+
 function _paintPerson() {
   const person = model.contact(personId);
   if (!person) return;
@@ -563,6 +660,8 @@ function _paintPerson() {
   // Le stesse tre cose che si fanno dal pannello del progetto — il ruolo, e togliere — perché è
   // la stessa relazione guardata dall'altro capo, e due forme diverse per la stessa cosa sono due
   // cose da imparare invece di una.
+  _paintReach(person);
+
   const where = model.projectsOfContact(uid);
   el("personProjectsNone").hidden = where.length > 0;
   fill(el("personProjects"), where.map(({ project, role }) => {
@@ -2467,7 +2566,7 @@ function _wire() {
   // la regola del momento è già un verbale: non entra in nessuna lista e non suona mai.
   el("personNote").addEventListener("click", () => _fromPerson((target, name) => _newMeeting(target, {
     date: model.todayISO(), with: name,
-  })));
+  }, { title: "noteTitle" })));
   // E dalla bacheca, dove si lavora.
   el("planMeeting").addEventListener("click", () => { if (projectId) _askMeeting(projectId); });
   el("addWhereForm").addEventListener("submit", (event) => {
@@ -2481,12 +2580,13 @@ function _wire() {
     snack(tf("personJoined", { project: (project && project.name) || t("projectUntitled") }));
   });
 
-  el("addPersonForm").addEventListener("submit", (event) => {
+  el("addPersonForm").addEventListener("submit", async (event) => {
     event.preventDefault();
     const name = el("addPersonName").value.trim();
     if (!name || !projectId) return;
-    // La porta è una: si cerca prima di creare, così scrivere un nome che c'è già non ne fa un altro.
-    const person = model.contactByName(name) || model.createContact({ name });
+    // La porta è una: si cerca prima di creare, così scrivere un nome che c'è già non ne fa un altro,
+    // e un nome scritto a metà fa una domanda invece di una seconda scheda.
+    const person = await _personFor(name);
     model.addPerson(projectId, person.id);
     el("addPersonName").value = "";
     _paintPeople();
@@ -2502,7 +2602,7 @@ function _wire() {
     const name = String(await ask(t("newPersonAsk"), { value: "" }) || "").trim();
     if (!name) return undefined;
     // La porta è una: se c'è già, la si apre invece di farne una seconda.
-    const person = model.contactByName(name) || model.createContact({ name });
+    const person = await _personFor(name);
     return _openPerson(person.id);
   });
   // I campi si scrivono dove si leggono. Nessun «Salva»: come tutto il resto dell'app.
@@ -2516,6 +2616,7 @@ function _wire() {
         el("personTitle").textContent = el(id).value || t("personNoName");
         _paintCrumbs();
       }
+      if (field === "email" || field === "phone") _paintReach(model.contact(personId));
     });
   }
   el("personTrash").addEventListener("click", async () => {

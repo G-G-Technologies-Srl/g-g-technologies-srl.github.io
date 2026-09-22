@@ -27,7 +27,7 @@
 // creation, and travels through every export and import. Two copies of a project on two computers
 // have different ids and the same uids, and that is what `merge` matches on.
 
-import { links, frontmatter, withFrontmatter, mentions } from "./plan-markdown.js";
+import { links, frontmatter, withFrontmatter, mentions, renameMention } from "./plan-markdown.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -187,18 +187,64 @@ function _personFromName(projectId, name, { here = true } = {}) {
   return uid;
 }
 
-/** Il nome nuovo di una persona, dove i progetti l'avevano scritto. Per `uid`, quindi mai per caso. */
-function _renamePerson(person) {
+/**
+ * Il nome nuovo di una persona, dovunque sia scritto: nei progetti e nelle pagine.
+ *
+ * Nei progetti il nome sta accanto al `uid`, quindi si cambia per riferimento e mai per caso. Nelle
+ * pagine no: una riga «con: Marco» e una menzione «@Marco» sono testo, ed è la forma giusta — il
+ * Markdown deve restare leggibile fuori dall'app. Il prezzo è che la rinomina deve passare anche di
+ * lì, e finché non ci passava correggere un nome **staccava la persona dal suo storico**: la scheda
+ * diceva «Nessun incontro che la nomini» mentre gli incontri erano tutti al loro posto.
+ *
+ * Torna la funzione che disfa tutto quello che ha toccato, perché una rinomina è un passo solo:
+ * annullarla e ritrovarsi il nome vecchio sulla scheda e quello nuovo in dieci pagine sarebbe un
+ * archivio a metà.
+ */
+function _renamePerson(person, wasCalled) {
   const uid = person.uid || person.id;
+  const before = String(wasCalled || "").trim();
+  const after = String(person.name || "").trim();
+  const undo = [];
   for (const project of projects.values()) {
     const people = Array.isArray(project.people) ? project.people : [];
     if (!people.some((one) => one.uid === uid)) continue;
+    undo.push(_restoreTo("project", _copy(project)));
     _put("project", {
       ...project,
       people: people.map((one) => (one.uid === uid ? { ...one, name: person.name || "" } : one)),
       updated: _now(),
     });
   }
+  // Il nome vuoto non si insegue: cercare «» nelle pagine vorrebbe dire toccarle tutte.
+  if (before && after && before !== after) {
+    for (const pageRecord of pages.values()) {
+      if (pageRecord.trashedAt) continue;
+      const next = _renamedInPage(pageRecord.markdown || "", before, after);
+      if (next === (pageRecord.markdown || "")) continue;
+      undo.push(_restoreTo("page", _copy(pageRecord)));
+      _put("page", { ...pageRecord, markdown: next, updated: _now() });
+    }
+  }
+  return () => { for (const step of undo) step(); };
+}
+
+/** Lo stesso testo con il nome nuovo: la riga «con:» nella testa, e le menzioni nel corpo. */
+function _renamedInPage(markdown, before, after) {
+  const { props, extra, body } = frontmatter(markdown);
+  const head = { ...props };
+  let touched = false;
+  // Le due lingue della stessa riga, perché la testa la scrive una persona nella sua.
+  for (const key of ["con", "with"]) {
+    if (head[key] === undefined) continue;
+    const names = String(head[key]).split(",").map((one) => one.trim());
+    if (!names.some((one) => one.toLowerCase() === before.toLowerCase())) continue;
+    head[key] = names.map((one) => (one.toLowerCase() === before.toLowerCase() ? after : one)).join(", ");
+    touched = true;
+  }
+  const nextBody = renameMention(body, before, after);
+  if (!touched && nextBody === body) return markdown;
+  // Una pagina senza testa resta senza testa: `withFrontmatter` la rimette solo se c'era qualcosa.
+  return withFrontmatter(head, nextBody, extra);
 }
 
 function _touch(projectId) {
@@ -1137,8 +1183,12 @@ export function updateContact(id, changes) {
   if (!person) return null;
   const before = _copy(person);
   const after = _put("contact", { ...person, ...changes, updated: _now() });
-  if (changes.name !== undefined && changes.name !== before.name) _renamePerson(after);
-  return _step("contact", _restoreTo("contact", before));
+  const renamed = changes.name !== undefined && changes.name !== before.name
+    ? _renamePerson(after, before.name) : null;
+  return _step("contact", () => {
+    if (renamed) renamed();
+    _restoreTo("contact", before)();
+  });
 }
 
 export function trashContact(id) {
@@ -1207,6 +1257,24 @@ export function contactByName(name) {
     if (!person.trashedAt && String(person.name || "").trim().toLowerCase() === wanted) return person;
   }
   return null;
+}
+
+/**
+ * Le persone il cui nome contiene per intero quello scritto: «Mario» trova «Mario Bianchi».
+ *
+ * Serve alla porta unica, che per due versioni ha guardato solo il nome esatto: chi scriveva
+ * «Mario» con «Mario Bianchi» già in rubrica si ritrovava due schede, e lo storico diviso fra le
+ * due. Il confronto è per parole intere — «Mar» non trova nessuno, «Bianchi» trova «Mario Bianchi»
+ * — perché su un pezzo di parola la domanda arriverebbe quasi sempre, e una domanda che arriva
+ * sempre si impara a chiudere senza leggerla.
+ */
+export function contactsLike(name) {
+  const wanted = String(name || "").trim().toLowerCase();
+  if (!wanted) return [];
+  return liveContacts().filter((one) => {
+    const full = String(one.name || "").trim().toLowerCase();
+    return full !== wanted && ` ${full} `.includes(` ${wanted} `);
+  });
 }
 
 export function liveContacts() {
@@ -1496,6 +1564,61 @@ export function liveProjects() {
   return [...projects.values()]
     .filter((one) => !one.trashedAt)
     .sort((a, b) => String(b.updated).localeCompare(String(a.updated)));
+}
+
+/**
+ * L'agenda: il posto di quello che non sta in un progetto.
+ *
+ * Un appuntamento dal commercialista, una call conoscitiva, una nota su una persona che non lavora
+ * a niente di nostro: esistono prima del progetto, e spesso senza. Finché ogni incontro doveva
+ * stare dentro un progetto, la scheda di una persona nuova rispondeva «non è ancora in nessun
+ * progetto» e finiva lì; chi insisteva si faceva un progetto finto, che poi restava in archivio
+ * con la sua barra di avanzamento a zero.
+ *
+ * È un progetto anche lei, con `kind: "agenda"`, e questa è la scelta: così pagine, calendario,
+ * cestino, copie e cartelle condivise la trattano come tutto il resto, e non c'è un secondo tipo di
+ * contenitore da insegnare al modello. Quello che cambia è **dove non compare**: fra le schede
+ * dell'archivio e nelle domande «in quale progetto?», che è `plainProjects`.
+ *
+ * Il nome arriva da chi chiama, perché qui dentro non ci sono parole.
+ */
+export function agenda() {
+  return [...projects.values()].find((one) => one.kind === "agenda" && !one.trashedAt) || null;
+}
+
+export function ensureAgenda(name) {
+  const there = agenda();
+  if (there) return there;
+  const made = createProject({ name });
+  return _put("project", { ...projects.get(made.id), kind: "agenda", updated: _now() });
+}
+
+/** I progetti veri: quelli che si scelgono, si contano e si guardano come schede. */
+export function plainProjects() {
+  return liveProjects().filter((one) => one.kind !== "agenda");
+}
+
+/**
+ * Tutto quello che ha una data in un intervallo, attraverso ogni progetto e l'agenda.
+ *
+ * Serve al calendario d'insieme, ed è il motivo per cui sta qui e non nella schermata: la domanda
+ * «cosa c'è il 12» non è di un progetto, e rispondere a mano progetto per progetto avrebbe messo
+ * la stessa somma in due posti — il pannello delle scadenze la fa già.
+ */
+export function calendarBetween(from, to) {
+  const out = { meetings: [], tasks: [] };
+  if (!isDay(from) || !isDay(to)) return out;
+  for (const project of liveProjects()) {
+    for (const meeting of meetingsOf(project.id)) {
+      if (meeting.date < from || meeting.date > to) continue;
+      out.meetings.push({ ...meeting, project });
+    }
+    for (const task of tasksOf(project.id)) {
+      if (!task.end || task.end < from || task.end > to) continue;
+      out.tasks.push({ task, project });
+    }
+  }
+  return out;
 }
 
 export function pagesOf(projectId, { trashed = false } = {}) {

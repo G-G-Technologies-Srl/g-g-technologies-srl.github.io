@@ -16,7 +16,7 @@
 
 import assert from "node:assert/strict";
 
-import { parse, serialize, inlineHtml, images, links, assets, frontmatter, withFrontmatter, setPeople, mentions, mentionNames } from "gg/plan-markdown.js";
+import { parse, serialize, inlineHtml, images, links, assets, frontmatter, withFrontmatter, setPeople, mentions, mentionNames, renameMention } from "gg/plan-markdown.js";
 
 let passed = 0;
 
@@ -383,6 +383,14 @@ test("i nomi nominati si raccolgono una volta sola, e si cercano per nome senza 
   assert.deepEqual(mentionNames("@tizio caio e @Anna, poi ancora @Tizio Caio e @anna"), ["tizio caio", "Anna"]);
   assert.deepEqual(mentions("Parlato con @tizio caio ieri. @Annalisa", ["Tizio Caio", "Anna", "Marco"]), ["Tizio Caio"]);
   setPeople([]);
+});
+
+test("una persona rinominata cambia nome anche nelle menzioni, e solo lei", () => {
+  const testo = "Parlato con @Anna e @Annalisa. Poi (@Anna) di nuovo, e anna@example.com resta.";
+  const dopo = renameMention(testo, "Anna", "Anna Verdi");
+  assert.equal(dopo, "Parlato con @Anna Verdi e @Annalisa. Poi (@Anna Verdi) di nuovo, e anna@example.com resta.");
+  assert.equal(renameMention(testo, "Anna", "Anna"), testo, "lo stesso nome non tocca niente");
+  assert.equal(renameMention(testo, "", "Anna Verdi"), testo);
 });
 
 console.log(`markdown: ${passed} prove passate`);

@@ -59,6 +59,16 @@
         <path d="M20 20l-4.5-4.5"></path>
       </svg>
     </button>
+    <!-- La rubrica stava fra «Importa» e «Cestino», cioè fra le cose che si fanno una volta ogni
+         tanto, e si apre invece tutti i giorni: chi non apriva il menù non sapeva che ci fosse.
+         Qui sta accanto alla lente, che risponde all'altra domanda di ogni schermata: «chi era?». -->
+    <button type="button" id="openRubrica" class="ghost small icon" data-t-label="rubricaTitle">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="9" cy="9" r="3.2"></circle>
+        <path d="M3.5 19c0-3 2.5-4.6 5.5-4.6s5.5 1.6 5.5 4.6"></path>
+        <path d="M16 6.2a3.2 3.2 0 0 1 0 6.1M17.5 19c0-2.2-.9-3.7-2.4-4.5"></path>
+      </svg>
+    </button>
     <button type="button" id="install" class="ghost small" hidden></button>
     <!-- The awards are an accessory, not a function: they sit up here with the sound — the other
          half of the same game — and not among the commands of the archive, where a person looking
@@ -93,7 +103,6 @@
       <div class="more-menu" id="appMoreMenu" hidden>
         <button type="button" id="importProject" data-t="importProject"></button>
         <button type="button" id="backupAll" data-t="backupAll"></button>
-        <button type="button" id="openRubrica" data-t="rubricaTitle"></button>
         <button type="button" id="openRemind" data-t="remindTitle"></button>
         <button type="button" id="openTrash" data-t="openTrash"></button>
         <!-- Una voce sola per le due cartelle, perché portano allo stesso posto. Solo dove il
@@ -604,6 +613,9 @@
         <input type="email" id="personEmail" maxlength="160" autocomplete="off">
         <label for="personPhone" data-t="personPhone"></label>
         <input type="text" id="personPhone" maxlength="60" autocomplete="off">
+        <!-- I recapiti si usano, non solo si leggono: da qui partono il messaggio e la chiamata,
+             che su un telefono erano un copia e incolla. Compaiono quando c'è qualcosa da usare. -->
+        <p class="row person-reach" id="personReach" hidden></p>
         <!-- Detto qui, dove si scrivono, e non in una Guida che nessuno apre prima di scrivere. -->
         <p class="note" data-t="personPrivacy"></p>
       </div>
@@ -1061,6 +1073,10 @@
         <input type="time" id="meetTime">
       </div>
     </div>
+    <!-- La regola del momento, detta dove si decide: un incontro di oggi senza ora è già un verbale,
+         quindi non entra in nessuna lista e non suona. Chi segna un appuntamento per oggi lo scopriva
+         dopo, non vedendolo fra le scadenze. -->
+    <p class="note" id="meetTodayHint" data-t="meetTodayHint" hidden></p>
     <div class="field">
       <label for="meetWith" id="meetWithLabel"></label>
       <input type="text" id="meetWith" maxlength="200" autocomplete="off" data-t-placeholder="meetWithMany">

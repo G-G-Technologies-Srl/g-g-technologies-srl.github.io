@@ -981,6 +981,54 @@ test("rinominare una persona corregge il nome dove i progetti l'avevano scritto"
   assert.deepEqual(model.peopleOf(altro.id), [], "e i progetti che non la nominano restano fermi");
 });
 
+test("rinominare una persona porta con sé la riga «con:» e le menzioni nelle pagine", () => {
+  const fiera = model.createProject({ name: "Fiera" });
+  const marco = model.createContact({ name: "Marco Rosi" });
+  model.addPerson(fiera.id, marco.id, "grafico");
+  const incontro = model.createPage(fiera.id, { title: "Incontro" });
+  model.setMarkdown(incontro.id, "---\ntipo: incontro\ncon: Marco Rosi, Giulia\n---\n\n@Marco Rosi porta le misure.\n");
+  const inglese = model.createPage(fiera.id, { title: "Meeting" });
+  model.setMarkdown(inglese.id, "---\nwith: Marco Rosi\n---\n\nNiente da fare.\n");
+  const altra = model.createPage(fiera.id, { title: "Brief" });
+  model.setMarkdown(altra.id, "---\ncon: Giulia\n---\n\n@Giulia scrive i testi.\n");
+
+  model.updateContact(marco.id, { name: "Marco Rossi" });
+
+  assert.match(model.page(incontro.id).markdown, /con: Marco Rossi, Giulia/);
+  assert.match(model.page(incontro.id).markdown, /@Marco Rossi porta le misure/);
+  assert.match(model.page(inglese.id).markdown, /with: Marco Rossi/, "anche la testa scritta in inglese");
+  assert.equal(model.page(altra.id).markdown.includes("Giulia"), true);
+  assert.equal(model.page(altra.id).markdown.includes("Marco"), false, "e le pagine che non la nominano restano ferme");
+  // È il punto della faccenda: prima della correzione la scheda diceva «nessun incontro».
+  assert.deepEqual(model.pagesAbout(marco.uid).map((one) => one.page.title).sort(), ["Incontro", "Meeting"]);
+});
+
+test("la rinomina è un passo solo: annullarla rimette anche le pagine", () => {
+  const fiera = model.createProject({ name: "Fiera" });
+  const marco = model.createContact({ name: "Marco Rosi" });
+  model.addPerson(fiera.id, marco.id, "grafico");
+  const incontro = model.createPage(fiera.id, { title: "Incontro" });
+  const prima = "---\ncon: Marco Rosi\n---\n\n@Marco Rosi porta le misure.\n";
+  model.setMarkdown(incontro.id, prima);
+
+  model.updateContact(marco.id, { name: "Marco Rossi" });
+  model.undo();
+
+  assert.equal(model.contact(marco.id).name, "Marco Rosi");
+  assert.equal(model.page(incontro.id).markdown, prima);
+  assert.equal(model.personName(fiera.id, marco.uid), "Marco Rosi");
+});
+
+test("un nome scritto a metà trova la persona che c'è già", () => {
+  model.createContact({ name: "Mario Bianchi" });
+  model.createContact({ name: "Marta Neri" });
+  assert.deepEqual(model.contactsLike("Mario").map((one) => one.name), ["Mario Bianchi"]);
+  assert.deepEqual(model.contactsLike("Bianchi").map((one) => one.name), ["Mario Bianchi"],
+    "anche dal solo cognome");
+  assert.deepEqual(model.contactsLike("Mario Bianchi"), [], "chi c'è per intero non è un dubbio");
+  assert.deepEqual(model.contactsLike("Mar"), [], "e un pezzo di parola non fa domande");
+});
+
 test("una persona nel cestino non porta via il suo nome dai progetti", () => {
   const fiera = model.createProject({ name: "Fiera" });
   const marco = model.createContact({ name: "Marco Rossi" });
