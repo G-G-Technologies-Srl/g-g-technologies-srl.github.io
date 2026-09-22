@@ -121,7 +121,22 @@
 /* Eliminata dalla bacheca: la riga resta, il gancio dice che non porta più da nessuna parte. */
 .editor a.task-link.missing { color: var(--faint); border-style: dashed; }
 
-/* A person named in the text: the accent, as the app paints people everywhere, and no underline —/* A person named in the text: the accent, as the app paints people everywhere, and no underline —
+/* La ✕ della riga agganciata: piccola e smorzata finché non serve, come la ✕ di un appuntamento
+   sulla lavagna. Sempre presente e non solo al passaggio del mouse, perché su un telefono il
+   passaggio del mouse non esiste e il comando non si troverebbe mai. */
+.editor li .task-x {
+  flex: none;
+  margin-left: 2px;
+  color: var(--faint);
+  font-size: 12px;
+  line-height: 1;
+  min-height: 22px;
+  min-width: 22px;
+}
+.editor li .task-x:hover { color: var(--late); }
+
+
+/* A person named in the text: the accent, as the app paints people everywhere, and no underline —/* A person named in the text: the accent, as the app paints people everywhere, and no underline —/* A person named in the text: the accent, as the app paints people everywhere, and no underline —
    it is a name, not a link to be followed, though it opens the card when pressed. */
 .editor a.mention {
   color: var(--accent-text);
@@ -211,6 +226,9 @@
 .md-list li { margin: 1px 0; display: flex; gap: 8px; align-items: flex-start; }
 
 .md-list li .item { flex: 1 1 auto; }
+/* Accanto alla pastiglia e non in fondo alla riga: il campo prende tutto lo spazio che trova, e
+   senza questa riga la ✕ finiva al margine destro, lontana dalla cosa che elimina. */
+.md-list li:has(.task-x) .item { flex: 0 1 auto; }
 
 /* An `li` laid out as flex loses the browser's own marker, and it has to be flex to hold the tick
    beside the text. So an ordered list counts for itself, starting where the source said. */

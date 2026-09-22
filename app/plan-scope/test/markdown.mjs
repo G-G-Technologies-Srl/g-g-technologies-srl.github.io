@@ -16,7 +16,7 @@
 
 import assert from "node:assert/strict";
 
-import { parse, serialize, inlineHtml, images, links, assets, frontmatter, withFrontmatter, setPeople, mentions, mentionNames, renameMention, taskRefs, TASK_REF } from "gg/plan-markdown.js";
+import { parse, serialize, inlineHtml, images, links, assets, frontmatter, withFrontmatter, setPeople, mentions, mentionNames, renameMention, taskRefs, TASK_REF, withoutTaskRefs } from "gg/plan-markdown.js";
 
 let passed = 0;
 
@@ -403,6 +403,22 @@ test("«[[#uid]]» è il gancio a un'attività: pastiglia nell'app, e non un col
   assert.deepEqual(taskRefs("nessun gancio qui"), []);
   assert.equal(TASK_REF.exec("- [ ] Titolo [[#a7f3]]")[1], "a7f3");
   assert.equal(TASK_REF.test("- [ ] Titolo senza gancio"), false);
+});
+
+test("l'a-capo dentro un blocco si vede: nel testo è «\\n», sullo schermo è un <br>", () => {
+  assert.equal(inlineHtml("riga uno\nriga due"), "riga uno<br>riga due");
+  // E il giro si chiude: quello che il file dice, la pagina lo disegna, e quello che si scrive
+  // torna nel file com'era — `parse` e `serialize` tengono già l'a-capo dentro il paragrafo.
+  const blocchi = parse("riga uno\nriga due\n");
+  assert.equal(blocchi.length, 1);
+  assert.equal(blocchi[0].text, "riga uno\nriga due");
+  assert.equal(serialize(blocchi), "riga uno\nriga due\n");
+});
+
+test("il gancio a un'attività si toglie da un testo, per la riga che nasce da un Invio", () => {
+  assert.equal(withoutTaskRefs("Mandare il listino [[#a7f3]]"), "Mandare il listino");
+  assert.equal(withoutTaskRefs("[[#a7f3]] in testa"), "in testa");
+  assert.equal(withoutTaskRefs("niente da togliere"), "niente da togliere");
 });
 
 console.log(`markdown: ${passed} prove passate`);

@@ -127,7 +127,8 @@ let on = { change() {}, openPage() {}, exists: () => true, image() {}, attachmen
   people: () => [], openPerson() {}, named() {},
   // Le attività del progetto: crearne una, sapere com'è messa, aprirla, spuntarla. Le risposte
   // stanno tutte nell'app: qui un'attività è solo un `uid` dentro una riga di testo.
-  newTask: async () => null, taskState: () => null, openTask() {}, taskTicked() {} };
+  newTask: async () => null, taskState: () => null, openTask() {}, taskTicked() {},
+  taskRemoved: async () => false };
 
 /**
  * Le parole dell'editor, e la domanda per il collegamento.
@@ -506,7 +507,28 @@ function _read(index, field) {
   on.change(md.serialize(blocks));
 }
 
-/** A link to a page that is not there yet is drawn as such: following it will make the page. */
+/**
+ * La ✕ di una riga agganciata: l'attività nel cestino, e la riga via dal documento.
+ *
+ * L'ordine è questo perché l'app deve poter dire di no — l'attività può essere già sparita, e
+ * allora la riga resta dov'è con la sua pastiglia «eliminata», che è un'informazione. Quando
+ * l'attività se ne va, se ne va anche la riga: era l'unica ragione per cui esisteva.
+ */
+function _removeTaskButton(index, at, uid) {
+  return button("ghost small icon task-x", "✕", async () => {
+    const gone = await on.taskRemoved(uid);
+    if (gone === false) return;
+    _snapshot();
+    const block = blocks[index];
+    if (!block || block.type !== "list") return;
+    block.items.splice(at, 1);
+    // Un elenco rimasto senza voci non è un elenco vuoto: è il punto dove si ricomincia a scrivere.
+    if (!block.items.length) blocks.splice(index, 1, { type: "paragraph", text: "" });
+    _apply({ index, item: block.items.length ? Math.max(0, at - 1) : null, offset: 0 });
+  }, { label: text("taskRemove") });
+}
+
+/** A link to a page that is not there yet is drawn as such: following it will make the page. *//** A link to a page that is not there yet is drawn as such: following it will make the page. */
 function _markLinks(root) {
   for (const link of root.querySelectorAll("a.wiki")) {
     link.classList.toggle("missing", !on.exists(link.dataset.page || link.textContent));
@@ -607,6 +629,11 @@ function _blockNode(block, index) {
         field.dataset.item = String(i);
         if (item.checked) field.classList.add("struck");
         li.append(field);
+        // La riga che nomina un'attività porta anche il modo di disfarla: la pastiglia apre la
+        // scheda, la ✕ toglie l'attività **e** la riga. Senza, l'unico modo di liberarsi di una
+        // riga sbagliata era cancellare il testo e poi cercare l'attività sulla bacheca.
+        const gancio = md.TASK_REF.exec(item.text);
+        if (gancio) li.append(_removeTaskButton(index, i, gancio[1]));
         list.append(li);
       });
       body.append(list);
@@ -752,9 +779,16 @@ function _splitAt(index, field) {
       return _apply({ index: block.items.length ? index + 1 : index, offset: 0 });
     }
     const cut = _cutAt(field);
-    item.text = cut.head;
+    // **Il gancio a un'attività non si divide in due.** Premendo Invio con il cursore prima della
+    // pastiglia, la coda se la portava via: nasceva una seconda riga agganciata alla *stessa*
+    // attività, che diceva «apri» come la prima e non si riusciva a togliere senza togliere anche
+    // quella. Adesso i ganci restano alla riga che li aveva, e la riga nuova è una riga nuova.
+    const kept = md.taskRefs(cut.tail);
+    item.text = kept.length
+      ? `${md.withoutTaskRefs(cut.head)} ${kept.map((uid) => `[[#${uid}]]`).join(" ")}`.trim()
+      : cut.head;
     block.items.splice(at + 1, 0, _item({
-      text: cut.tail,
+      text: kept.length ? md.withoutTaskRefs(cut.tail) : cut.tail,
       indent: item.indent,
       checked: item.checked === null ? null : false,
     }));

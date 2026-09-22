@@ -73,6 +73,9 @@ function _escape(text) {
 /** Inline Markdown as HTML, with `[[page]]` links turned into plain emphasis: there is no app to open them. */
 function _inline(text, files = new Map()) {
   return md.inlineHtml(text)
+    // Il gancio a un'attività non ha senso fuori dall'app — non c'è nessuna bacheca da aprire — e
+    // la sua pastiglia esce vuota: si toglie, e la riga resta la frase che era.
+    .replace(/<a class="task-link"[^>]*><\/a>/g, "")
     .replace(/<a class="wiki"[^>]*>(.*?)<\/a>/g, "<em>$1</em>")
     // A person named with «@»: a name in emphasis, since there is no address book to open here.
     .replace(/<a class="mention"[^>]*>(.*?)<\/a>/g, "<em>$1</em>")

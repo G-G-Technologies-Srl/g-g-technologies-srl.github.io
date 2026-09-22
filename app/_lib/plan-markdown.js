@@ -474,6 +474,11 @@ export function inlineHtml(text) {
   out = out.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
   out = out.replace(/(^|[^*])\*([^*]+)\*/g, "$1<em>$2</em>");
   out = out.replace(/~~([^~]+)~~/g, "<del>$1</del>");
+  // L'a-capo dentro un blocco è un a-capo anche sullo schermo. Senza questa riga il testo tornava
+  // «tutto attaccato» alla riapertura: l'HTML ignora il carattere di fine riga, quindi il salto
+  // che si era scritto c'era nel file e spariva nella pagina. `fromHtml` legge `<br>` come «\n»,
+  // quindi il giro si chiude e il file resta identico a com'era.
+  out = out.replace(/\n/g, "<br>");
   return out;
 }
 
@@ -617,6 +622,11 @@ export function renameMention(text, from, to) {
  */
 export const TASK_REF = /\[\[#([A-Za-z0-9_-]{1,64})\]\]/;
 const TASK_REF_ALL = new RegExp(TASK_REF.source, "g");
+
+/** Lo stesso testo senza i ganci: la riga che nasce da un Invio non eredita l'attività di sopra. */
+export function withoutTaskRefs(text) {
+  return String(text || "").replace(TASK_REF_ALL, "").replace(/[ \t]{2,}/g, " ").trim();
+}
 
 /** I `uid` delle attività a cui questo testo è agganciato, una volta ciascuno. */
 export function taskRefs(text) {

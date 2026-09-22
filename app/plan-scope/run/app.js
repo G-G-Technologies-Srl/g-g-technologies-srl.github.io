@@ -3196,6 +3196,26 @@ function _connect() {
       el("taskCard").addEventListener("close", () => { if (pageId) _reloadPage(); }, { once: true });
       return undefined;
     },
+    // La ✕ della riga: l'attività nel cestino e la riga via, in un gesto solo che si annulla in un
+    // gesto solo. La striscia disfa tutt'e due — il modello per l'attività, l'editore per il testo —
+    // perché disfarne una sola lascerebbe un'attività senza riga o una riga senza attività.
+    taskRemoved: async (uid) => {
+      const task = model.taskByUid(uid);
+      if (!task || task.trashedAt) return true;
+      const name = task.title || t("taskUntitled");
+      const step = model.trashTask(task.id);
+      await _repaint();
+      snack(tf("taskRemoved", { name }), {
+        action: t("undo"),
+        onAction: async () => {
+          model.undoStep(step);
+          editor.undo();
+          await _repaint();
+          snack(t("undone"));
+        },
+      });
+      return true;
+    },
     // La casella della pagina e la spunta della bacheca sono la stessa cosa vista da due parti.
     taskTicked: (uid, checked) => {
       const task = model.taskByUid(uid);
