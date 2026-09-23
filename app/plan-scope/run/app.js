@@ -670,6 +670,13 @@ function _paintPeople() {
 /**
  * The first page of a project, from its card in the archive: the name asked, the page opened.
  */
+/** The archive button of the project on screen says what it will do: archive, or bring back. */
+function _paintArchiveButton() {
+  const project = projectId ? model.project(projectId) : null;
+  el("archiveProject").hidden = !project || project.kind === "agenda";
+  if (project) el("archiveProject").textContent = t(project.archivedAt ? "unarchiveProject" : "archiveProject");
+}
+
 async function _firstPage(id) {
   const title = String(await ask(t("newPagePrompt"), { value: "" }) || "").trim();
   if (!title || !model.project(id)) return;
@@ -1314,6 +1321,7 @@ function _openProject(id) {
   projectId = id;
   pageId = null;
   home.paintProject(id);
+  _paintArchiveButton();
   _paintPeople();
   _paintFolder();
   _paintLog(id);
@@ -1860,7 +1868,7 @@ async function _repaint() {
   // Il nome di un progetto o di una pagina può essere appena cambiato, e la riga lo porta.
   _paintCrumbs();
   if (view === "home") { home.paintHome(await db.room()); await _paintNudge(); await _paintFolder(); }
-  else if (view === "project") { home.paintProject(projectId); _paintPeople(); await _paintLog(projectId); }
+  else if (view === "project") { home.paintProject(projectId); _paintArchiveButton(); _paintPeople(); await _paintLog(projectId); }
   else if (view === "plan") plan.paint();
   else if (view === "trash") home.paintTrash();
   else if (view === "page") _paintTree();
@@ -2595,6 +2603,20 @@ function _wire() {
     _offerUndo(step, t("demoDropped"));
   });
 
+  el("archiveProject").addEventListener("click", async () => {
+    const project = model.project(projectId);
+    if (!project) return;
+    const name = project.name || t("projectUntitled");
+    if (project.archivedAt) {
+      model.setArchived(projectId, false);
+      _paintArchiveButton();
+      snack(tf("unarchivedDone", { name }));
+      return;
+    }
+    const step = model.setArchived(projectId, true);
+    await _openHome();
+    _offerUndo(step, tf("archivedDone", { name }));
+  });
   el("trashProject").addEventListener("click", async () => {
     const project = model.project(projectId);
     const step = model.trashProject(projectId);
@@ -3088,6 +3110,12 @@ function _connect() {
     openPage: (id) => _openPage(id),
     openAgenda: () => _openAgenda(),
     firstPage: (id) => _firstPage(id),
+    pinProject: async (id) => {
+      const project = model.project(id);
+      if (!project) return;
+      model.setPinned(id, !project.favourite);
+      home.paintHome(await db.room());
+    },
     firstTask: (id) => _firstTask(id),
     toggleTask: async (id) => {
       const outcome = model.toggleDone(id);

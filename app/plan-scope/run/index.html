@@ -210,6 +210,8 @@
           <button type="button" data-sort="name" data-t="homeSortName"></button>
         </div>
         <span class="spacer"></span>
+        <input type="search" id="projectSearch" autocomplete="off" data-t-placeholder="projectSearch" data-t-label="projectSearch" hidden>
+        <button type="button" id="showArchived" class="ghost small" hidden></button>
         <div class="views home-switch" id="homeView" role="group" data-t-label="homeViewLabel">
           <button type="button" data-view="cards" data-t="homeViewCards"></button>
           <button type="button" data-view="list" data-t="homeViewList"></button>
@@ -218,6 +220,12 @@
       <div class="filters" id="projectFilters" hidden></div>
       <div class="cards" id="projectList"></div>
       <p class="empty" id="projectsFiltered" data-t="projectsFiltered" hidden></p>
+      <p class="empty" id="projectsNoName" data-t="projectsNoName" hidden></p>
+      <!-- The finished projects, set aside: under the rest, and only when asked for. -->
+      <section class="archived-section" id="archivedSection" hidden>
+        <h2 data-t="archivedTitle"></h2>
+        <div class="cards" id="archivedList"></div>
+      </section>
 
       <!-- The folder's state, when there is one: its name, who we are, when it was last read; and
            the button to take the permission up again when the browser dropped it. -->
@@ -400,6 +408,8 @@
         <!-- A project started from a template is full of somebody else's pages and tasks: this
              puts them all in the bin at once, with one undo, and leaves the project. -->
         <button type="button" id="emptyProject" class="ghost small" data-t="emptyProject"></button>
+        <!-- Finished is not wrong: archiving takes it off the cards and keeps everything. -->
+        <button type="button" id="archiveProject" class="ghost small"></button>
         <button type="button" id="trashProject" class="ghost small" data-t="trashProject"></button>
       </div>
     </div>

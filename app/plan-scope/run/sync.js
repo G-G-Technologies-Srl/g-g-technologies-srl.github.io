@@ -138,11 +138,11 @@ function _withLock(fn) {
 
 /**
  * A fingerprint of a project's records: what decides whether a write is worth making. What is
- * personal or moves on its own stays out — the star, the export reminder, the stamp every
+ * personal or moves on its own stays out — the star, the archive, the export reminder, the stamp every
  * change moves — so that a merge that brought nothing does not look like a change.
  */
 function _fingerprint(payload) {
-  const { updated, exportedAt, favourite, ...project } = payload.project || {};
+  const { updated, exportedAt, favourite, archivedAt, ...project } = payload.project || {};
   const pages = payload.pages.map(({ favourite: star, ...page }) => page);
   return _hash(JSON.stringify({ project, pages, tasks: payload.tasks }));
 }

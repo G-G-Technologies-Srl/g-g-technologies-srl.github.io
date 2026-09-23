@@ -540,6 +540,19 @@ select:hover, select:focus { border-color: var(--border-strong); }
    the archive
    --------------------------------------------------------------------------------------------- */
 
+/* The star of a card, in its top corner and outside the card's button. Off, it waits in the faint
+   colour and does not ask for attention; on, it takes the accent, which in this app means chosen. */
+.card-pin { position: absolute; top: 10px; right: 10px; z-index: 1; font-size: 15px; line-height: 1;
+  color: var(--faint); }
+.card-pin.on { color: var(--accent-text); }
+.project-card-box .project-card-title { padding-right: 28px; }
+.project-card-box.is-archived { opacity: 0.78; }
+.archived-section { margin-top: 24px; }
+.archived-section h2 { font-size: 11.5px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted);
+  font-weight: 400; margin: 0 0 12px; }
+#projectSearch { width: min(200px, 100%); font-size: 13px; padding: 5px 10px; }
+#showArchived.on { color: var(--accent-text); background: var(--accent-soft); }
+
 /* The two switches over the cards: the order and the shape. */
 .home-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; margin: 0 0 12px; }
 .home-tools .field-label { margin: 0; }

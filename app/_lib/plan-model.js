@@ -419,6 +419,8 @@ export function createProject({ name, columns = null, tags = [], props = {}, dat
     // to travel.
     people: [],
     favourite: false,
+    // Set aside when finished: off the cards, still live. Personal, like the star.
+    archivedAt: null,
     exportedAt: null,
     created: stamp,
     updated: stamp,
@@ -1627,9 +1629,42 @@ export function ensureAgenda(name) {
   return _put("project", { ...projects.get(made.id), kind: "agenda", updated: _now() });
 }
 
-/** The real projects: the ones that are chosen, counted and looked at as cards. */
+/**
+ * The real projects: the ones that are chosen, counted and looked at as cards. An archived project
+ * is not among them — it is finished, and it stays readable in its own list — but it is still live:
+ * search, the calendar, copies and shared folders see it as before.
+ */
 export function plainProjects() {
-  return liveProjects().filter((one) => one.kind !== "agenda");
+  return liveProjects().filter((one) => one.kind !== "agenda" && !one.archivedAt);
+}
+
+/** The finished projects, set aside and still there: the most recently archived first. */
+export function archivedProjects() {
+  return liveProjects().filter((one) => one.kind !== "agenda" && one.archivedAt)
+    .sort((a, b) => String(b.archivedAt).localeCompare(String(a.archivedAt)));
+}
+
+/**
+ * A project set aside, or brought back. Not the bin: an archived project is finished, not wrong,
+ * and it keeps everything — it only stops asking for a place among the cards.
+ *
+ * Personal, like the star: it is written on this copy only and not merged from another one, so a
+ * colleague archiving a shared project does not take it off this archive.
+ */
+export function setArchived(id, archived) {
+  const project = projects.get(id);
+  if (!project) return null;
+  const before = _copy(project);
+  _put("project", { ...project, archivedAt: archived ? _now() : null, favourite: archived ? false : project.favourite });
+  return _step("project", _restoreTo("project", before));
+}
+
+/** The star on a project's card: pinned ones come first, whatever the order. Personal too. */
+export function setPinned(id, pinned) {
+  const project = projects.get(id);
+  if (!project) return null;
+  _put("project", { ...project, favourite: Boolean(pinned) });
+  return project;
 }
 
 /**
@@ -2053,6 +2088,9 @@ export function adopt({ project: incoming, pages: incomingPages = [], tasks: inc
     people: travelling(incoming.people),
     columns: _copy(columns),
     exportedAt: null,
+    // The star and the archive are the sender's choices, not the project's.
+    favourite: false,
+    archivedAt: null,
     created: incoming.created || stamp,
     updated: stamp,
     trashedAt: null,

@@ -43,6 +43,11 @@ const SORT_KEY = "gg.plan-scope.homeSort";
 const VIEW_KEY = "gg.plan-scope.homeView";
 let homeSort = "recent";
 let homeView = "cards";
+// Two states of the screen, not of the browser: a name typed to find a project, and whether the
+// archived ones are shown. Kept for as long as the screen and no longer — a search that survives
+// a reload is an archive that seems to have lost its projects.
+let nameQuery = "";
+let showArchived = false;
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
@@ -152,11 +157,18 @@ function _projectCard(project, today) {
   // tags, favourite pages, the last thing touched, the two first steps of an empty project — sits
   // beside it: a button inside a button is not valid HTML, and a click on a chip would open the
   // project as well.
-  const box = node("div", "project-card-box");
+  const box = node("div", project.archivedAt ? "project-card-box is-archived" : "project-card-box");
   const card = node("button", "project-card");
   card.type = "button";
   card.addEventListener("click", () => on.openProject(project.id));
   box.append(card);
+  // The star beside the name, outside the button: pinned projects come first whatever the order.
+  if (!project.archivedAt) {
+    const pin = button(`ghost small icon card-pin${project.favourite ? " on" : ""}`, project.favourite ? "★" : "☆",
+      () => on.pinProject(project.id), { label: t(project.favourite ? "pinRemove" : "pinAdd") });
+    pin.setAttribute("aria-pressed", project.favourite ? "true" : "false");
+    box.append(pin);
+  }
 
   const seen = glanceOf(project.props);
   const view = model.projectOverview(project.id);
@@ -166,6 +178,7 @@ function _projectCard(project, today) {
   if (project.shared) title.append(_sharedMark());
   card.append(title);
   if (project.demo) card.append(node("span", "badge example", t("demoBadge")));
+  if (project.archivedAt) card.append(node("span", "badge example", t("archivedBadge")));
 
   // What the project says about itself, besides its colour and its date: «cliente: Rossi».
   const said = _propsLine(project);
@@ -224,10 +237,12 @@ function _projectCard(project, today) {
   for (const page of view.favourites.slice(0, 3)) {
     extra.append(button("chip", `★ ${page.title || t("pageUntitled")}`, () => on.openPage(page.id)));
   }
-  if (empty) {
+  // A finished project offers nothing to start: only the way in.
+  const open = !project.archivedAt;
+  if (open && empty) {
     extra.append(button("small", t("cardFirstPage"), () => on.firstPage(project.id)));
     extra.append(button("small", t("cardFirstTask"), () => on.firstTask(project.id)));
-  } else if (!view.tasks) {
+  } else if (open && !view.tasks) {
     extra.append(button("chip", `+ ${t("cardFirstTask")}`, () => on.firstTask(project.id)));
   }
   if (extra.childElementCount) box.append(extra);
@@ -392,6 +407,12 @@ function _ago(iso) {
  * the alphabet. The order is a fact of this browser and stays in it.
  */
 function _sorted(projects) {
+  const ordered = _ordered(projects);
+  // Pinned first, each group in the order asked for.
+  return [...ordered.filter((one) => one.favourite), ...ordered.filter((one) => !one.favourite)];
+}
+
+function _ordered(projects) {
   const byName = (a, b) => String(a.name || "").localeCompare(String(b.name || ""), undefined, { sensitivity: "base" });
   if (homeSort === "name") return [...projects].sort(byName);
   if (homeSort === "due") {
@@ -478,9 +499,15 @@ function _projectRow(project, today) {
   return box;
 }
 
-/** The two switches over the cards, lit on the choice in force. */
-function _paintTools(any) {
+/** The two switches over the cards, lit on the choice in force; the search box; the archive. */
+function _paintTools(any, live = 0, archived = 0) {
   el("homeTools").hidden = !any;
+  // A search box for a handful of projects is one more thing to read: it comes with the seventh.
+  el("projectSearch").hidden = live + archived < 7 && !nameQuery;
+  el("showArchived").hidden = archived === 0;
+  el("showArchived").textContent = tf("archivedShow", { n: num(archived, 0) });
+  el("showArchived").classList.toggle("on", showArchived);
+  el("showArchived").setAttribute("aria-pressed", showArchived ? "true" : "false");
   for (const one of el("homeSort").querySelectorAll("button")) {
     one.classList.toggle("on", one.dataset.sort === homeSort);
     one.setAttribute("aria-pressed", one.dataset.sort === homeSort ? "true" : "false");
@@ -521,6 +548,19 @@ function _toggleTag(tag) {
 function _picked(projects) {
   if (!picked) return projects;
   return projects.filter((project) => (project.tags || []).some((tag) => tag.toLowerCase() === picked));
+}
+
+/** Lower case and without accents: «citta» finds «Città». */
+function _plain(text) {
+  return String(text || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+/** The projects whose name — or one of whose tags — holds what was typed in the search box. */
+function _named(projects) {
+  const wanted = _plain(nameQuery.trim());
+  if (!wanted) return projects;
+  return projects.filter((project) => _plain(project.name).includes(wanted)
+    || (project.tags || []).some((tag) => _plain(tag).includes(wanted)));
 }
 
 /** La riga sopra le schede: l'etichetta accesa, e il modo di toglierla. */
@@ -710,6 +750,14 @@ export function connect(handlers) {
     });
   }
   el("todayCalendar").addEventListener("click", () => on.openAgenda());
+  el("projectSearch").addEventListener("input", () => {
+    nameQuery = el("projectSearch").value;
+    on.repaintHome();
+  });
+  el("showArchived").addEventListener("click", () => {
+    showArchived = !showArchived;
+    on.repaintHome();
+  });
 }
 
 /**
@@ -842,14 +890,23 @@ export function paintHome(room) {
   const projects = _picked(all);
 
   _paintFilters();
-  _paintTools(all.length > 0);
-  const list = el("projectList");
-  list.className = homeView === "list" ? "project-rows" : "cards";
-  fill(list, _sorted(projects).map((project) => (homeView === "list"
-    ? _projectRow(project, today) : _projectCard(project, today))));
-  el("homeEmpty").hidden = all.length > 0;
+  const archived = model.archivedProjects();
+  _paintTools(all.length > 0 || archived.length > 0, all.length, archived.length);
+  const shown = _named(projects);
+  const draw = (list, items) => {
+    list.className = homeView === "list" ? "project-rows" : "cards";
+    fill(list, items.map((project) => (homeView === "list"
+      ? _projectRow(project, today) : _projectCard(project, today))));
+  };
+  draw(el("projectList"), _sorted(shown));
+  el("homeEmpty").hidden = all.length > 0 || archived.length > 0;
   // Un filtro che non lascia niente lo dice, invece di mostrare il vuoto di chi non ha progetti.
   el("projectsFiltered").hidden = !(all.length && !projects.length);
+  el("projectsNoName").hidden = !(projects.length && !shown.length);
+  // The archived ones, under the rest and only when asked: finished, and still one click away.
+  const archivedShown = showArchived && archived.length > 0;
+  el("archivedSection").hidden = !archivedShown;
+  if (archivedShown) draw(el("archivedList"), _named(archived));
 
   // Everything due across every project, late first. This is what a morning opens the app for, and
   // it is missing from every project card: the cards say *how much*, this says *what*.

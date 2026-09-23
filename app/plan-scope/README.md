@@ -126,6 +126,15 @@ per colonna —, l'attività aperta da riprendere (quella più avanti sulla bach
 preferite, l'ultima cosa toccata e le prime parole dell'ultima pagina (`excerptOf`). Il piede è
 uguale su ogni scheda: l'ultima modifica, che si apre con un clic, e le persone.
 
+La stella in alto a destra della scheda mette un progetto in cima, qualunque sia l'ordinamento
+(`setPinned`, sul campo `favourite` del progetto). «Archivia», in fondo alla scheda del progetto,
+lo toglie dalle schede senza toccarne niente (`setArchived`, `archivedAt`): `plainProjects()` non
+lo conta più, `liveProjects()` sì — la ricerca e il calendario continuano a vederlo — e
+`archivedProjects()` lo elenca sotto le altre schede quando si preme «Archiviati». Stella e
+archivio sono scelte personali: non entrano nell'impronta della cartella condivisa, un `merge` non
+le tocca, e un progetto importato arriva senza. Dal settimo progetto compare anche una casella per
+cercarne uno per nome o per etichetta.
+
 Ordinamento (ultima modifica, scadenza, nome) e vista (schede, elenco) sono fatti di questo
 browser: stanno in `localStorage` (`gg.plan-scope.homeSort`, `gg.plan-scope.homeView`), non nei
 dati, e un progetto mandato a qualcuno non se li porta dietro.

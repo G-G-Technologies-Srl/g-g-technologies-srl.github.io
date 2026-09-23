@@ -1824,4 +1824,26 @@ test("la ricerca non mostra la testa del file: il testo intorno, o la proprietà
   assert.equal(nellaTesta.snippet, "con Marco");
 });
 
+test("un progetto archiviato esce dalle schede, resta vivo, e l'archivio non viaggia", () => {
+  const fiera = model.createProject({ name: "Fiera" });
+  const sito = model.createProject({ name: "Sito" });
+  model.setPinned(sito.id, true);
+  assert.equal(model.project(sito.id).favourite, true);
+  const step = model.setArchived(fiera.id, true);
+  assert.deepEqual(model.plainProjects().map((one) => one.name), ["Sito"]);
+  assert.deepEqual(model.archivedProjects().map((one) => one.name), ["Fiera"]);
+  assert.ok(model.liveProjects().some((one) => one.id === fiera.id), "cercarlo e vederlo in calendario resta possibile");
+  model.undoStep(step);
+  assert.ok(!model.project(fiera.id).archivedAt);
+  // Archiviare toglie anche la stella: un progetto finito non sta in cima.
+  model.setArchived(sito.id, true);
+  assert.equal(model.project(sito.id).favourite, false);
+  // Un file che porta stella e archivio arriva senza tutti e due: sono scelte di chi l'ha mandato.
+  const uscita = model.exportable(sito.id);
+  const arrivato = model.adopt({ ...uscita, project: { ...uscita.project, favourite: true } });
+  const nuovo = model.project(arrivato.projectId);
+  assert.equal(nuovo.archivedAt, null);
+  assert.equal(nuovo.favourite, false);
+});
+
 console.log(`model: ${passed} prove passate`);
