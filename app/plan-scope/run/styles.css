@@ -554,10 +554,13 @@ select:hover, select:focus { border-color: var(--border-strong); }
 #showArchived.on { color: var(--accent-text); background: var(--accent-soft); }
 
 /* The outline of the page, over the tree: the headings as links, indented by level. */
-.page-outline { display: grid; gap: 2px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.page-outline { display: grid; align-content: start; flex: none; gap: 2px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
 .page-outline h3 { margin: 0 0 4px; font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase;
   color: var(--faint); font-weight: 400; }
-#pageOutlineList { display: grid; gap: 1px; }
+#pageOutlineList { display: grid; align-content: start; gap: 1px; }
+/* The tree's own rule gives every nav in the column the rest of its height; the outline takes only
+   what its headings need, and scrolls past two fifths of the column. */
+.page-tree nav.page-outline { flex: none; max-height: 40%; overflow-y: auto; }
 #pageOutlineList .link { font-size: 13px; color: var(--muted); padding: 3px 6px; text-align: left;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #pageOutlineList .link:hover { color: var(--text); background: rgba(127, 140, 170, 0.08); }
