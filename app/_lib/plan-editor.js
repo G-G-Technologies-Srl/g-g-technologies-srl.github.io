@@ -319,8 +319,26 @@ function _atEnd(element) {
  */
 function _apply({ index = null, offset = 0, item = null } = {}) {
   caret = index === null ? null : { index, offset, item };
+  _keepTail();
   on.change(md.serialize(blocks));
   draw();
+}
+
+/**
+ * An empty line at the bottom of the document, always.
+ *
+ * Whatever was put last — a table, a project task, a picture, a list — there has to be somewhere
+ * under it to click and carry on writing. Without it a page ending in a table had no way down at
+ * all: Enter in the last cell adds a row, and the arrows stop at the table's edge.
+ *
+ * It costs nothing on disk: `serialize` writes no empty paragraph, so the file does not change and
+ * the line is back every time the page is read — which is also why it cannot be «lost on reopening»
+ * the way a line typed by hand was.
+ */
+function _keepTail() {
+  const last = blocks[blocks.length - 1];
+  if (last && last.type === "paragraph" && !String(last.text || "").trim()) return;
+  blocks.push({ type: "paragraph", text: "" });
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -528,7 +546,7 @@ function _removeTaskButton(index, at, uid) {
   }, { label: text("taskRemove") });
 }
 
-/** A link to a page that is not there yet is drawn as such: following it will make the page. *//** A link to a page that is not there yet is drawn as such: following it will make the page. */
+/** A link to a page that is not there yet is drawn as such: following it will make the page. */
 function _markLinks(root) {
   for (const link of root.querySelectorAll("a.wiki")) {
     link.classList.toggle("missing", !on.exists(link.dataset.page || link.textContent));
@@ -778,17 +796,30 @@ function _splitAt(index, field) {
       else blocks.splice(index + 1, 0, after);
       return _apply({ index: block.items.length ? index + 1 : index, offset: 0 });
     }
+    // **A line hooked to a project task is not split, and does not breed a copy of itself.**
+    // Enter there used to cut the line at the caret and add a plain checkbox under it: a box with
+    // no task behind it, no «open» and no ✕, that looked like the line above and was not. The line
+    // is the task's; what Enter asks for is a place to go on writing. So the line stays whole, and
+    // an empty paragraph opens right under it — the list splitting there if more lines follow.
+    // Another project task is one «/» away from that paragraph.
+    if (md.taskRefs(item.text).length) {
+      const next = blocks[index + 1];
+      // The last line of a list already followed by an empty line: go there, do not add a second.
+      if (at === block.items.length - 1 && next && next.type === "paragraph" && !String(next.text || "").trim()) {
+        return _apply({ index: index + 1, offset: 0 });
+      }
+      const rest = block.items.splice(at + 1);
+      const after = [{ type: "paragraph", text: "" }];
+      if (rest.length) {
+        after.push({ ...block, items: rest, start: block.ordered ? (block.start || 1) + at + 1 : block.start });
+      }
+      blocks.splice(index + 1, 0, ...after);
+      return _apply({ index: index + 1, offset: 0 });
+    }
     const cut = _cutAt(field);
-    // **Il gancio a un'attività non si divide in due.** Premendo Invio con il cursore prima della
-    // pastiglia, la coda se la portava via: nasceva una seconda riga agganciata alla *stessa*
-    // attività, che diceva «apri» come la prima e non si riusciva a togliere senza togliere anche
-    // quella. Adesso i ganci restano alla riga che li aveva, e la riga nuova è una riga nuova.
-    const kept = md.taskRefs(cut.tail);
-    item.text = kept.length
-      ? `${md.withoutTaskRefs(cut.head)} ${kept.map((uid) => `[[#${uid}]]`).join(" ")}`.trim()
-      : cut.head;
+    item.text = cut.head;
     block.items.splice(at + 1, 0, _item({
-      text: kept.length ? md.withoutTaskRefs(cut.tail) : cut.tail,
+      text: cut.tail,
       indent: item.indent,
       checked: item.checked === null ? null : false,
     }));
@@ -1670,8 +1701,9 @@ export function load(markdown) {
   _hideBar();
   blocks = md.parse(markdown);
   // An empty page still needs somewhere to put the caret, or there is nothing to click on and no
-  // way to begin — the emptiest possible failure.
-  if (!blocks.length) blocks = [{ type: "paragraph", text: "" }];
+  // way to begin — the emptiest possible failure. `_keepTail` covers that case and the page that
+  // ends in a table or a task.
+  _keepTail();
   caret = null;
   draw();
 }

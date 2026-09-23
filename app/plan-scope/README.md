@@ -135,8 +135,9 @@ Le regole, che si rompono facilmente:
   `taskState` a ogni disegno. Nel file c'è solo la casella `[ ]`/`[x]`, che `_syncBoxes` rimette
   d'accordo con la bacheca quando la pagina si apre, quando la finestra torna in primo piano e quando
   un'altra scheda ha scritto;
-- **un gancio non si divide**: Invio con il cursore prima della pastiglia lascia il gancio alla riga
-  che lo aveva (`_splitAt`), altrimenti nascevano due righe legate alla stessa attività;
+- **Invio su una riga agganciata non la divide e non ne fa una copia**: la riga resta intera e sotto
+  si apre un paragrafo vuoto, dividendo l'elenco se ci sono altre righe (`_splitAt`). Prima nasceva
+  una casella semplice, senza attività dietro, che sembrava la riga di sopra e non lo era;
 - **«Porta le caselle nel piano» salta le righe agganciate**, che un'attività ce l'hanno già;
 - la voce del menù compare **solo dove l'app ospite passa `newTask`**: Invoice Scope monta lo stesso
   editore e non la mostra.
@@ -156,6 +157,14 @@ cambia**: cambia soltanto quello che se ne mostra.
 un filtro: `travelling` costruisce campo per campo quello che esce, e le note non sono fra quei campi.
 La ricerca le legge e ne mostra le parole trovate; il CSV della rubrica le mette nell'ultima colonna,
 la vCard nella `NOTE`, davanti ai progetti.
+
+### Una riga vuota in fondo, sempre
+
+L'editore tiene un paragrafo vuoto in fondo al documento (`_keepTail`, chiamato da `load` e da
+`_apply`), qualunque cosa sia stata inserita per ultima: una tabella, un'attività, un'immagine. Nel
+file non c'è — `serialize` non scrive paragrafi vuoti — quindi ricompare a ogni apertura. Le righe
+vuote **in mezzo** al testo invece non sopravvivono alla riapertura: il Markdown separa i blocchi
+con una riga vuota sola, e l'editore legge il file com'è scritto.
 
 `ui.js` tiene i pezzi piccoli: la striscia che offre di annullare, le date, le misure.
 
