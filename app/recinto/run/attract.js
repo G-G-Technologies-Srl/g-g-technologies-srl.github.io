@@ -21,8 +21,8 @@ import { canStep, contains, onBoundary, pathTo, selfCrosses, distanceToSegment }
 
 const WAYS = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
 
-// Quanto spazio vuole attorno al percorso prima di uscire, e quanto ne vuole per rischiare il
-// tratto lento. Sono le due manopole che decidono se la dimostrazione sembra spavalda o paurosa.
+// How much room it wants around the path before going out, and how much it wants before risking the
+// slow stroke. These are the two knobs that decide whether the demo looks cocky or scared.
 const NERVE = {
   room: 26,                   // lattice units of clearance from the Fili before it commits
   bold: 58,                   // …and beyond this it goes slow, for double
@@ -43,14 +43,14 @@ export function think(world, mind) {
   const face = _faceOf(world);
   if (!face) return NO_INTENT;
 
-  // Una volta fuori, si tiene la direzione scelta. Ripensarci a metà linea è quello che un giocatore
-  // bravo fa e un autopilota semplice fa male: cambia idea ogni fotogramma e disegna ghirigori.
+  // Once out, the chosen direction is kept. Reconsidering halfway along the line is what a good
+  // player does and a simple autopilot does badly: it changes its mind every frame and draws squiggles.
   //
-  // Ma tenerla **quando la direzione non è più percorribile** è peggio ancora. Una linea in diagonale
-  // può incontrare una parete a 45° lasciata da un taglio di prima: il passo viene rifiutato — non si
-  // taglia l'angolo attraverso un muro — e chi tiene la barra dritta resta lì appeso finché la Miccia
-  // non gli mangia la linea. È così che le prime tre partite di questa dimostrazione sono finite,
-  // tutte e tre. Un giocatore, arrivato contro il muro, gira.
+  // But keeping it **when the direction can no longer be travelled** is even worse. A diagonal line
+  // can meet a 45° wall left by an earlier cut: the step is refused — you do not cut the corner
+  // through a wall — and whoever holds the bar straight stays stuck there until the Fuse eats their
+  // line. That is how the first three games of this demo ended, all three of them. A player, on
+  // reaching the wall, turns.
   if (world.cut) {
     const held = _may(world, face, mind.dx, mind.dy);
     if (held) return { dx: mind.dx, dy: mind.dy, slow: mind.slow };
@@ -76,8 +76,8 @@ export function think(world, mind) {
     return { dx: way.dx, dy: way.dy, slow: mind.slow };
   }
 
-  // Niente di buono da qui: si cammina ancora un po' e si riguarda. Camminare non è gratis — le
-  // Scintille accelerano — ed è giusto che non lo sia.
+  // Nothing good from here: walk a little further and look again. Walking is not free — the Sparks
+  // speed up — and it is right that it should not be.
   mind.left = NERVE.walk[0] + Math.floor(_random(mind) * (NERVE.walk[1] - NERVE.walk[0]));
   const along = _walkWay(world, face, mind);
   return along ? { dx: along[0], dy: along[1], slow: false } : NO_INTENT;
@@ -104,8 +104,8 @@ function _faceOf(world) {
   return null;
 }
 
-// Si può ancora andare di là? Vale mentre si taglia: «aperto» prosegue, «chiuso» finisce il lavoro,
-// tutto il resto è un muro.
+// Can we still go that way? It applies while cutting: "open" carries on, "close" finishes the job,
+// everything else is a wall.
 function _may(world, face, dx, dy) {
   if (dx === 0 && dy === 0) return false;
   const to = [world.marker.at[0] + dx, world.marker.at[1] + dy];
@@ -114,9 +114,9 @@ function _may(world, face, dx, dy) {
   return !selfCrosses(world.cut.chain, to);
 }
 
-// Bloccati a metà linea: si gira. Chiudere subito è la scelta migliore — la linea è già fuori da un
-// pezzo e incassare vale più di allungare — e se non si può chiudere si prende la strada più lunga
-// che resta.
+// Stuck halfway along the line: turn. Closing straight away is the best choice — the line has been
+// out for a while and cashing in is worth more than stretching it — and if closing is not possible,
+// take the longest road that is left.
 function _carryOn(world, face, mind) {
   let best = null;
   for (const [dx, dy] of WAYS) {
@@ -176,7 +176,7 @@ function _walkWay(world, face, mind) {
     for (const spark of world.sparks) {
       gap = Math.min(gap, Math.hypot(spark.at[0] - to[0], spark.at[1] - to[1]));
     }
-    const keep = dx === mind.dx && dy === mind.dy ? 6 : 0;   // preferisce non rimbalzare avanti e indietro
+    const keep = dx === mind.dx && dy === mind.dy ? 6 : 0;   // prefers not to bounce back and forth
     const score = gap + keep;
     if (!best || score > best.score) best = { score, way: [dx, dy] };
   }

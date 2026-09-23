@@ -1,40 +1,40 @@
 /* Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0 */
 
-/* Il renderer non conosce nessun colore: li legge da qui. Due temi sono quindi una ripintura, non
-   una seconda tavolozza da tenere allineata a mano.
+/* The renderer knows no colours: it reads them from here. Two themes are therefore a repaint, not
+   a second palette to keep in step by hand.
 
-   I contrasti sono **misurati**, non scelti a occhio, e le soglie sono quelle di WCAG: 4,5 per il
-   testo, 3 per tutto ciò che porta informazione senza essere testo. Misurandoli è saltata fuori la
-   cosa peggiore di tutta l'app: il terreno conquistato stava a 1,23 contro il campo aperto — cioè
-   la distinzione più importante del gioco, «questo pezzo è tuo», era quasi invisibile per chiunque
-   non avesse una vista perfetta su un buon monitor. Adesso sta sopra 3.
+   The contrasts are **measured**, not picked by eye, and the thresholds are WCAG's: 4.5 for
+   text, 3 for anything that carries information without being text. Measuring them turned up the
+   worst thing in the whole app: claimed ground stood at 1.23 against the open field — that is,
+   the most important distinction in the game, "this piece is yours", was nearly invisible to anyone
+   without perfect eyesight on a good monitor. Now it is above 3.
 
-   `--line` e `--control` sono due ruoli e non due sfumature: il primo separa e può essere discreto,
-   il secondo disegna il bordo di una cosa che si preme e deve raggiungere 3. Fonderli vorrebbe dire
-   o separatori pesanti o bottoni senza contorno. */
+   `--line` and `--control` are two roles, not two shades: the first separates and can be discreet,
+   the second draws the outline of something you press and must reach 3. Merging them would mean
+   either heavy separators or buttons with no outline. */
 
 :root {
   --outside: #05070b;
-  --claimed: #476081;      /* 3,02 sul campo aperto: si vede quale metà è tua.
-                              Il contrasto è il minimo che serve; la **tinta** è scesa a metà,
-                              perché il minimo di contrasto non obbliga al massimo di colore. */
+  --claimed: #476081;      /* 3.02 on the open field: you can see which half is yours.
+                              The contrast is the minimum needed; the **hue** has come down by half,
+                              because a minimum of contrast does not demand a maximum of colour. */
   --open: #0a0d14;
   --wall: #2c4361;
   --edge: #5ad1ff;
   --cut: #ffcf5c;
-  --burnt: #6f5c39;        /* 3,02: quanta corda hai già perso resta leggibile */
+  --burnt: #6f5c39;        /* 3.02: how much rope you have already lost stays readable */
   --fuse: #ff9f45;
   --spark: #b48cff;
   --marker: #ffffff;
   --thread: #ff5d73;
   --ghost: #7fa8c9;
 
-  --page: #0d1220;        /* uguale a theme_color nel manifesto e alla barra del sito */
+  --page: #0d1220;        /* same as theme_color in the manifest and the site bar */
   --ink: #dce6f2;
   --muted: #7b8ea6;
   --chip: #131c28;
-  --line: #24334a;         /* separa, e basta: non porta informazione */
-  --control: #496896;      /* 3,02 sul chip: il bordo di una cosa che si preme */
+  --line: #24334a;         /* separates, nothing more: carries no information */
+  --control: #496896;      /* 3.02 on the chip: the outline of something you press */
   color-scheme: dark light;
 }
 
@@ -64,24 +64,24 @@
 
 * { box-sizing: border-box; }
 
-/* **La pagina non si muove, mai.**
+/* **The page does not move, ever.**
 
-   Su un telefono strisciare il dito spostava tutto lo schermo invece del marcatore, ed era il
-   secondo difetto che rendeva il gioco ingiocabile col dito. `touch-action: none` sul campo c'era
-   già e non bastava: il documento restava scorribile di suo. Tre ragioni insieme, e serve
-   toglierle tutte e tre.
+   On a phone, swiping a finger moved the whole screen instead of the marker, and it was the
+   second defect that made the game unplayable by finger. `touch-action: none` on the field was
+   already there and was not enough: the document stayed scrollable on its own. Three reasons
+   together, and all three have to go.
 
-   - `height: 100%` su un telefono è l'altezza della finestra **grande**, quella senza la barra
-     degli indirizzi. Con la barra visibile la pagina è più alta di quello che si vede, quindi
-     scorre — di pochi pixel, che è tutto quello che serve perché il dito muova la pagina invece
-     del gioco. `100dvh` è la finestra che c'è adesso.
-   - Il rimbalzo elastico ai bordi: `overscroll-behavior` stava su `body` e non su `html`, e la
-     propagazione parte da `html`.
-   - La pressione lunga, che seleziona testo e apre il menù di sistema proprio mentre si sta
-     tenendo premuto per tagliare. La selezione resta dove serve leggere — istruzioni e classifica.
+   - `height: 100%` on a phone is the height of the **large** viewport, the one without the address
+     bar. With the bar visible the page is taller than what you see, so it scrolls — by a few
+     pixels, which is all it takes for the finger to move the page instead of the game. `100dvh`
+     is the viewport that is there right now.
+   - The elastic bounce at the edges: `overscroll-behavior` was on `body` and not on `html`, and
+     propagation starts from `html`.
+   - The long press, which selects text and opens the system menu right while you are holding
+     down to cut. Selection stays where there is reading to do — instructions and high score table.
 
-   `position: fixed` è la cintura oltre alle bretelle: su iOS il documento rimbalza anche senza
-   avere niente da scorrere, e ancorarlo alla finestra è l'unica cosa che lo ferma davvero. */
+   `position: fixed` is belt and braces: on iOS the document bounces even with
+   nothing to scroll, and anchoring it to the viewport is the only thing that really stops it. */
 
 html {
   height: 100%;
@@ -91,9 +91,9 @@ html {
 body {
   position: fixed;
   inset: 0;
-  /* Con `top` e `bottom` già fissati, un'altezza esplicita vince su `bottom`: dove `dvh` esiste
-     comanda la finestra che c'è adesso, dove non esiste la riga si butta e restano gli ancoraggi.
-     Un fallback che non ha bisogno di `@supports`. */
+  /* With `top` and `bottom` already set, an explicit height wins over `bottom`: where `dvh` exists
+     the viewport that is there right now is in charge, where it does not the line is dropped and the
+     anchors remain. A fallback that has no need of `@supports`. */
   height: 100dvh;
   margin: 0;
   display: flex;
@@ -104,13 +104,13 @@ body {
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   overflow: hidden;
   overscroll-behavior: none;
-  touch-action: manipulation;      /* niente doppio tocco che ingrandisce, e niente attesa di 300ms */
+  touch-action: manipulation;      /* no double-tap zoom, and no 300ms wait */
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
 }
 
-/* Dove si legge, si seleziona: le istruzioni si copiano e un punteggio in classifica pure. */
+/* Where you read, you can select: the instructions can be copied, and so can a high score entry. */
 #howScreen, dialog {
   -webkit-user-select: text;
   user-select: text;
@@ -145,16 +145,16 @@ canvas {
   display: block;
   width: 100%;
   height: 100%;
-  touch-action: none;          /* niente scorrimento e niente pizzico: il campo è il campo */
+  touch-action: none;          /* no scrolling and no pinch: the field is the field */
   cursor: crosshair;
 }
 
-/* Le schermate stanno **sopra** il campo e non al posto suo: dietro il titolo la dimostrazione
-   continua a giocare, ed è quello che si vede.
-   Il velo è leggero di proposito. La prima versione copriva al 78% e il risultato era una schermata
-   di titolo con dietro un'ombra: tecnicamente la dimostrazione c'era, praticamente no — e quella
-   schermata è anche lo screenshot della scheda. La leggibilità del testo la porta il testo, con la
-   sua ombra, non il velo. */
+/* The screens sit **over** the field, not in its place: behind the title the demo keeps playing,
+   and that is what you see.
+   The veil is light on purpose. The first version covered 78% and the result was a title screen
+   with a shadow behind it: technically the demo was there, in practice it was not — and that
+   screen is also the screenshot on the card. The text's legibility comes from the text,
+   with its shadow, not from the veil. */
 .screen {
   position: absolute;
   inset: 0;
@@ -181,8 +181,8 @@ canvas {
 .tagline { color: var(--muted); }
 .small { color: var(--muted); font-size: 13px; }
 
-/* Le istruzioni si leggono, quindi lì il velo è pieno: è l'unica schermata in cui guardare il
-   campo dietro non serve a niente. */
+/* The instructions are for reading, so there the veil is full: it is the only screen where looking
+   at the field behind serves no purpose. */
 #howScreen {
   justify-content: flex-start;
   overflow-y: auto;
@@ -192,8 +192,8 @@ canvas {
 }
 #howScreen p { font-size: 14px; }
 
-/* Il testo delle istruzioni ha una larghezza sua, e i titoli la condividono: senza, il centraggio
-   della schermata allinea ogni riga alla propria lunghezza e la colonna si sfrangia. */
+/* The instructions text has a width of its own, and the headings share it: without it, the screen's
+   centring aligns each line to its own length and the column frays. */
 .how-body {
   width: 100%;
   max-width: 60ch;
@@ -213,10 +213,10 @@ canvas {
 
 .how-body h3:first-child { margin-top: 0; }
 
-/* Le istruzioni adesso sono lunghe — è il motivo per cui sono state riscritte — e il pulsante che
-   fa cominciare stava in fondo a millenovecento pixel di scorrimento: per giocare bisognava prima
-   leggere tutto. Appiccicato in basso resta a portata da qualunque punto della pagina, e chi ha
-   letto abbastanza comincia da lì. */
+/* The instructions are long now — that is why they were rewritten — and the button that starts the
+   game sat at the bottom of nineteen hundred pixels of scrolling: to play you first had to read
+   everything. Stuck to the bottom it stays within reach from anywhere on the page, and whoever has
+   read enough starts from there. */
 #howScreen #howBack {
   position: sticky;
   bottom: 0;
@@ -231,7 +231,7 @@ canvas {
 @media (prefers-reduced-motion: reduce) { #coinButton { animation: none; } }
 
 button {
-  min-height: 44px;            /* il pollice non è un puntatore */
+  min-height: 44px;            /* a thumb is not a pointer */
   padding: 0 16px;
   border: 1px solid var(--control);
   border-radius: 8px;
@@ -247,10 +247,10 @@ button[aria-pressed="true"] { border-color: var(--cut); color: var(--cut); }
 
 footer.bar button { flex: 1; }
 
-/* La versione, sotto il titolo e non nella barra. `base.css` la disegna per l'angolo di una barra
-   di applicazione — dieci pixel e colore tenue — e in mezzo a uno schermo quella misura sparisce.
-   Qui è la riga che si legge prima di inserire il gettone, e quando c'è un aggiornamento è la
-   riga che si preme: quarantaquattro pixel di altezza perché è un pulsante, non una didascalia. */
+/* The version, under the title and not in the bar. `base.css` draws it for the corner of an
+   application bar — ten pixels and a faint colour — and in the middle of a screen that size vanishes.
+   Here it is the line you read before inserting the coin, and when there is an update it is the
+   line you press: forty-four pixels tall because it is a button, not a caption. */
 #appVersion {
   margin-top: 14px;
   min-height: 44px;
@@ -267,9 +267,9 @@ footer.bar button { flex: 1; }
 }
 
 /* -----------------------------------------------------------------------------------------------
-   La classifica, e le domande che l'app si fa da sola.
-   Un `<dialog>` e non un `prompt`: gli avvisi del browser hanno il carattere di sistema, il nome
-   del dominio in cima, bloccano tutto, e in finestra installata su iOS a volte non compaiono.
+   The high score table, and the questions the app asks on its own.
+   A `<dialog>` and not a `prompt`: browser alerts use the system font, have the domain name at the
+   top, block everything, and in an installed window on iOS sometimes do not appear at all.
    ----------------------------------------------------------------------------------------------- */
 
 dialog {
@@ -317,9 +317,10 @@ input[type="text"] {
 
 .hint[hidden] { display: none; }
 
-/* Il fuoco da tastiera si vede, e si vede **sopra** qualunque sfondo: due anelli, uno chiaro e uno
-   scuro, così l'indicatore non sparisce né sul chip né sul campo. Chi gioca solo da tastiera senza
-   questo non sa su quale bottone si trova, e il gioco è giocabile da tastiera per progetto. */
+/* Keyboard focus is visible, and visible **over** any background: two rings, one light and one
+   dark, so the indicator disappears neither on the chip nor on the field. Without this, whoever
+   plays by keyboard alone does not know which button they are on, and the game is keyboard-playable
+   by design. */
 
 :focus-visible {
   outline: 2px solid var(--edge);
@@ -329,8 +330,8 @@ input[type="text"] {
 
 canvas:focus-visible { outline-offset: -4px; }
 
-/* Quello che i lettori di schermo devono sentire e nessuno deve vedere. Non `display: none`, che lo
-   toglierebbe anche a loro. */
+/* What screen readers must hear and nobody must see. Not `display: none`, which would take it away
+   from them too. */
 .only-spoken {
   position: absolute;
   width: 1px;
@@ -344,38 +345,38 @@ canvas:focus-visible { outline-offset: -4px; }
 }
 
 /* -----------------------------------------------------------------------------------------------
-   Il telefono in verticale.
+   The phone held upright.
 
-   Misurato a 360px: la pagina scorreva di lato — 529px di contenuto in 360 di finestra — e «High
-   scores» con i tre interruttori finiva tagliato fuori dallo schermo. Sotto i 560px la barra
-   cambia forma invece di traboccare: i riquadri si stringono, gli interruttori diventano icone, e
-   niente esce dai bordi.
+   Measured at 360px: the page scrolled sideways — 529px of content in a 360px viewport — and "High
+   scores" with the three toggles ended up cut off the screen. Below 560px the bar changes shape
+   instead of overflowing: the boxes narrow, the toggles become icons, and nothing spills past the
+   edges.
 
-   Quello che il CSS non poteva risolvere — un campo 4:3 dentro uno schermo verticale — non si è
-   risolto qui: si è risolto nel renderer, girando il campo di novanta gradi. Una rotazione è
-   un'isometria, quindi è lo stesso gioco; stirare per riempire non lo sarebbe stato.
+   What CSS could not solve — a 4:3 field inside a portrait screen — was not solved here: it was
+   solved in the renderer, by turning the field ninety degrees. A rotation is an isometry, so it
+   is the same game; stretching to fill would not have been.
    ----------------------------------------------------------------------------------------------- */
 
 @media (max-width: 560px) {
-  /* Due righe, non una riga stretta. Comprimendo tutto su una sola i bottoni scendevano a 40px —
-     sotto la soglia difesa in ogni altro punto dell'app, e proprio sullo schermo dove il dito è
-     l'unico puntatore. Quaranta pixel di altezza in più sono il prezzo, e li vale: un comando che
-     si manca non è un comando. */
+  /* Two rows, not one cramped row. Squeezing everything onto one, the buttons dropped to 40px —
+     below the threshold defended everywhere else in the app, and precisely on the screen where the
+     finger is the only pointer. Forty extra pixels of height are the price, and worth it: a control
+     you miss is not a control. */
   .bar { gap: 5px; padding: 7px 8px; flex-wrap: wrap; }
   .hud-item { padding: 4px 7px; min-width: 0; flex: 1 1 auto; }
   .hud-item b { font-size: 16px; }
   .hud-item small { font-size: 10px; }
 
-  /* Il nome dell'arena restava fuori: era la prima cosa che si poteva perdere, perché il livello lo
-     dice il numero accanto. Con otto arene — e con istruzioni che adesso le chiamano per nome — non
-     lo è più: «8» da solo non dice in che campo stai giocando.
+  /* The arena name used to be left out: it was the first thing that could go, because the number
+     next to it tells you the level. With eight arenas — and with instructions that now call them by
+     name — that no longer holds: "8" on its own does not tell you which field you are playing on.
 
-     Misurato prima di rimetterlo, perché la ragione per cui era sparito era vera: a 320, 360 e 390
-     pixel la barra resta alta uguale, il campo non perde un pixel e la pagina non scorre di lato.
-     I riquadri si stringono fra loro e ci sta — e non ci stava, prima che la barra andasse su due
-     righe. Era una scelta giusta che ha smesso di esserlo. */
+     Measured before putting it back, because the reason it had gone was real: at 320, 360 and 390
+     pixels the bar stays the same height, the field does not lose a pixel and the page does not
+     scroll sideways. The boxes squeeze together and it fits — and it did not fit before the bar
+     went onto two rows. It was a right choice that stopped being one. */
 
-  /* La riga degli interruttori comincia da capo, e la parola resta per chi legge con la voce. */
+  /* The toggles row starts on a new line, and the word stays for those who read by voice. */
   .spacer { flex-basis: 100%; height: 0; }
   #langButton, #scoresButton { font-size: 0; padding: 0 12px; }
   #langButton::after { content: "文"; font-size: 15px; }

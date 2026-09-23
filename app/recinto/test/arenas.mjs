@@ -1,15 +1,14 @@
 // Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
 
-// Le arene, controllate come dati e non come disegno.
+// The arenas, checked as data and not as drawings.
 //
-// Un'arena è dodici numeri scritti a mano, e ognuno dei modi in cui possono essere sbagliati rompe
-// qualcosa di diverso e lontano: un anello girato al contrario diventa un'isola che è tutto il
-// campo, una parete storta fa passare `canStep` attraverso un muro, una partenza su un vertice è
-// un livello che non comincia, un Filo che nasce appoggiato a una parete esce dalla faccia al
-// primo passo. Nessuno di questi errori si vede guardando l'arena: si vedono tre mosse dopo,
-// altrove.
+// An arena is a dozen hand-written numbers, and each of the ways they can be wrong breaks something
+// different and far away: a ring wound the wrong way round becomes an island that is the whole
+// field, a crooked wall lets `canStep` through a wall, a start on a vertex is a level that never
+// begins, a Thread born resting against a wall leaves the face on its first step. None of these
+// errors can be seen by looking at the arena: they show up three moves later, somewhere else.
 //
-// Questa suite è la ragione per cui aggiungerne una costa dieci minuti invece di mezza giornata.
+// This suite is the reason adding one costs ten minutes instead of half a day.
 //
 // Usage:  node app/recinto/test/arenas.mjs
 
@@ -40,9 +39,9 @@ for (const plan of ARENAS) {
   check(`${where}: la chiave è unica`, !seen.has(plan.key));
   seen.add(plan.key);
 
-  // L'orientamento **è** il significato: positivo vuol dire bordo, negativo vuol dire isola. Non
-  // c'è un campo che lo dichiara, quindi un anello scritto al rovescio non è un errore che qualcuno
-  // segnala, è un'arena che significa un'altra cosa.
+  // Orientation **is** the meaning: positive means border, negative means island. There is no
+  // field that declares it, so a ring written backwards is not an error anyone reports, it is an
+  // arena that means something else.
   check(`${where}: il bordo esterno gira nel verso del campo`, ringArea2(plan.rings[0]) > 0,
         `area doppia ${ringArea2(plan.rings[0])}`);
   plan.rings.slice(1).forEach((ring, i) => {
@@ -51,8 +50,8 @@ for (const plan of ARENAS) {
   });
   check(`${where}: l'area di partenza è positiva`, area2(face) > 0);
 
-  // Ogni parete diritta o a 45°. È l'ipotesi sotto `canStep`: fuori da quella, un passo che
-  // attraversa un muro può avere il punto di mezzo ancora dentro, e il muro non ferma niente.
+  // Every wall straight or at 45°. It is the assumption underneath `canStep`: outside it, a step
+  // that crosses a wall can still have its midpoint inside, and the wall stops nothing.
   for (const ring of plan.rings) {
     ring.forEach((from, i) => {
       const to = ring[(i + 1) % ring.length];
@@ -66,14 +65,15 @@ for (const plan of ARENAS) {
     });
   }
 
-  // La partenza. Sul bordo, e su **una parete sola**: dove due pareti si toccano non si può
-  // cominciare un taglio, e un'arena che parte da lì è un'arena in cui il primo tasto non fa niente.
+  // The start. On the border, and on **one wall only**: where two walls touch a cut cannot begin,
+  // and an arena that starts there is an arena in which the first key press does nothing.
   check(`${where}: la partenza è sul bordo`, onBoundary(face, plan.start), String(plan.start));
   check(`${where}: e non su un vertice dove due pareti si toccano`, wallsAt(face, plan.start) === 1,
         `wallsAt = ${wallsAt(face, plan.start)}`);
 
-  // I Fili. Due, perché dal terzo livello ne servono due, e nati lontani dalle pareti: i capi
-  // partono a `spread` l'uno dall'altro, e uno che nascesse più vicino di così sarebbe già fuori.
+  // The Threads. Two, because from the third level on two are needed, and born away from the
+  // walls: the ends start `spread` apart from each other, and one born any closer than that would
+  // already be outside.
   check(`${where}: ci sono due posizioni di Filo`, plan.threads.length >= 2);
   plan.threads.forEach((at, i) => {
     check(`${where}: il Filo ${i + 1} nasce dentro`, contains(face, at), String(at));
@@ -86,12 +86,13 @@ for (const plan of ARENAS) {
 
 // -----------------------------------------------------------------------------------------------------------------
 
-// **Da ogni punto del bordo di partenza si può fare qualcosa.**
+// **From every point of the starting border something can be done.**
 //
-// Un'arena è un disegno, e un disegno può contenere un punto da cui non si esce: un vertice troppo
-// stretto, una parete che tocca sé stessa. Lì il gioco non dà errore — semplicemente il tasto non
-// fa niente, e chi gioca pensa che si sia bloccato tutto. Costa un giro del bordo per arena, ed è
-// la differenza fra saperlo e crederlo: prima di questa prova era una cosa che avevo ragionato.
+// An arena is a drawing, and a drawing can contain a point you cannot get out of: a vertex that is
+// too tight, a wall that touches itself. There the game gives no error — the key simply does
+// nothing, and the player thinks everything has frozen. It costs one trip round the border per
+// arena, and it is the difference between knowing it and believing it: before this test it was
+// something I had reasoned out.
 const WAYS = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]];
 
 for (const plan of ARENAS) {
@@ -120,8 +121,8 @@ for (const plan of ARENAS) {
 
 // -----------------------------------------------------------------------------------------------------------------
 
-// Il giro. Finché l'elenco non è finito è zero; poi conta, e non si ferma — che è tutto il
-// contenuto della promessa «oltre l'ultima arena il gioco continua a cambiare».
+// The lap. Until the list runs out it is zero; then it counts, and does not stop — which is the
+// whole content of the promise "past the last arena the game keeps changing".
 const n = ARENAS.length;
 check("il primo livello è la prima arena", arena(1).key === ARENAS[0].key);
 check("l'ultimo livello del primo giro è l'ultima arena", arena(n).key === ARENAS[n - 1].key);
@@ -130,8 +131,8 @@ check("il primo giro è lo zero", lap(1) === 0 && lap(n) === 0);
 check("il secondo giro è l'uno", lap(n + 1) === 1 && lap(2 * n) === 1);
 check("e il giro non ha un tetto", lap(100 * n + 1) === 100);
 
-// Ogni arena sa nascere: `create` la percorre tutta — area, Fili, Scintille — e un'arena che
-// esplode qui esplode al livello che le tocca, con la partita in corso.
+// Every arena knows how to be born: `create` goes through all of it — area, Threads, Sparks — and
+// an arena that blows up here blows up on the level that falls to it, with the game in progress.
 for (let level = 1; level <= n; level += 1) {
   let world = null;
   try { world = create(level, 12345); } catch (error) { check(`il livello ${level} nasce`, false, error.message); }

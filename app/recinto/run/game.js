@@ -40,58 +40,59 @@ export const GRID = { w: FIELD.w / LATTICE, h: FIELD.h / LATTICE };
 
 export const STEP = 1 / 120;
 
-// Provvisorie, e si tarano giocando: qui c'è solo un fondo ragionevole. Attraversare il campo nel
-// lato corto costa 2,7 secondi scoperti col tratto veloce e 5,3 col lento, e il giro completo del
-// perimetro nove secondi. I primi numeri scritti erano la metà di questi e il gioco sembrava un
-// provino al rallentatore — è il genere di cosa che nessun test dice e che si vede al primo minuto
-// con le mani sopra.
+// Provisional, and tuned by playing: all there is here is a reasonable baseline. Crossing the field
+// along the short side costs 2.7 seconds exposed with the fast stroke and 5.3 with the slow one,
+// and a full lap of the perimeter nine seconds. The first numbers written down were half of these
+// and the game looked like a screen test in slow motion — it is the kind of thing no test tells
+// you and that you see in the first minute with your hands on it.
 export const MARKER = {
   walk: 96,                   // lattice units per second, along the border
   fast: 72,                   // cutting
   slow: 36,                   // cutting slowly — and worth double
 };
 
-// Il Filo. Due capi che vanno per conto loro e una scia di quello che il segmento fra loro è stato:
-// è così che si contorce senza che nessuno debba animarlo, ed è anche perché **quello che si vede
-// uccide** — la scia non è un effetto, è il corpo.
+// The Thread. Two ends that go their own way and a trail of what the segment between them has been:
+// that is how it writhes without anybody having to animate it, and it is also why **what you see
+// kills** — the trail is not an effect, it is the body.
 export const THREAD = {
   speed: 68,                  // lattice units per second, the leading end
   lead: 0.82,                 // the other end goes a little slower, which is what makes it writhe
 
-  // La deriva decide quanto il Filo gira il campo, e va bassa e non alta — che è il contrario di
-  // quello che sembra. Girata su, la direzione fa una passeggiata a caso, il percorso si arrotola e
-  // il Filo serpeggia sul posto per mezzo minuto; girata giù, corre dritto, rimbalza e attraversa.
-  // Misurato su quaranta semi, a 0,9 il numero di partite in cui **non trova mai** una linea
-  // lasciata fuori è il più basso.
+  // The drift decides how much the Thread roams the field, and it goes low, not high — which is the
+  // opposite of what it seems. Turned up, the heading takes a random walk, the path curls up and
+  // the Thread snakes on the spot for half a minute; turned down, it runs straight, bounces and
+  // crosses. Measured over forty seeds, at 0.9 the number of games in which it **never finds** a
+  // line left out is the lowest.
   wander: 0.9,                // rad/s of drift in each end's heading
   spread: 9,                  // how far apart the two ends start
   clearance: 3,               // how far it stays off the walls, so `contains` is never asked about
                               // a point sitting exactly on one
 
-  // Il guinzaglio. Due capi lasciati liberi non si contorcono: divergono, e dopo cinque secondi
-  // sono in due angoli opposti del campo con un segmento lungo mezzo schermo in mezzo. Fuori da
-  // questa forbice ciascuno viene sterzato verso l'altro o via dall'altro, dentro nessuno tocca
-  // niente — ed è nella banda che il Filo fa quello che deve.
+  // The leash. Two ends left free do not writhe: they diverge, and after five seconds they are in
+  // two opposite corners of the field with a segment half a screen long in between. Outside this
+  // range each one is steered towards the other or away from it, inside it nobody touches
+  // anything — and it is in the band that the Thread does what it should.
   near: 11,
   far: 44,
   tether: 5,                  // rad/s of steering back into the band
 
-  // La scia si campiona, non si prende a ogni passo: a 120 Hz trenta segmenti consecutivi sono lo
-  // stesso segmento trenta volte, da disegnare e contro cui collidere.
+  // The trail is sampled, not taken at every step: at 120 Hz thirty consecutive segments are the
+  // same segment thirty times, to draw and to collide against.
   every: 4,                   // steps between samples
   trail: 10,                  // samples kept — and every one of them still bites
 };
 
-// La Miccia. Non è un secondo nemico: è la regola che rende impossibile «esco di un passo e
-// aspetto di vedere cosa fa il Filo», che senza di lei è la strategia ottima e spegne il gioco.
-// Brucia solo mentre stai fermo e **non arretra** quando riparti — quello che hai perso è perso.
+// The Fuse. It is not a second enemy: it is the rule that makes "I step out by one step and wait to
+// see what the Thread does" impossible, which without it is the optimal strategy and kills the
+// game. It burns only while you stand still and **does not retreat** when you move off again —
+// what you have lost is lost.
 export const FUSE = {
   grace: 0.35,                // seconds of standing still before it lights
   speed: 26,                  // lattice units per second along your own line
 };
 
-// Le Scintille. Corrono sul confine delle facce aperte, cioè esattamente dove cammina il
-// marcatore, e ogni conquista riscrive la loro pista insieme al tabellone.
+// The Sparks. They run along the boundary of the open faces, that is exactly where the marker
+// walks, and every claim rewrites their track together with the board.
 export const SPARK = {
   speed: 30,                  // lattice units per second at the start of a level
   quicken: 1.1,               // extra units per second, for every second the level lasts
@@ -99,18 +100,18 @@ export const SPARK = {
   first: 3,                   // seconds of grace at the start of a level
   bite: 1.6,                  // lattice units: near enough is caught
 
-  // Quello che ogni giro completo dell'elenco delle arene aggiunge alla velocità di partenza.
+  // What each full lap of the list of arenas adds to the starting speed.
   //
-  // È la manopola che **non si ferma mai**, e c'è perché senza di lei il gioco smetteva di
-  // cambiare: dal livello sette la quota è al massimo, i Fili sono due e le Scintille quattro, e
-  // dall'ottavo in poi il numero del livello saliva davanti a una partita identica. Una classifica
-  // che a quel punto premia chi resiste più a lungo invece di chi gioca meglio non misura più
-  // niente.
+  // It is the knob that **never stops**, and it is there because without it the game stopped
+  // changing: from level seven the quota is at its maximum, there are two Threads and four Sparks,
+  // and from the eighth on the level number climbed in front of an identical game. A high score
+  // table that at that point rewards whoever holds out longest instead of whoever plays best no
+  // longer measures anything.
   //
-  // Uno spostamento della curva verso l'alto, non una pendenza diversa: `fastest` se lo mangia
-  // dopo un minuto abbondante di livello, e va benissimo — oltre quel tetto non si scappa da
-  // nessuna velocità, e un numero più grande non vorrebbe dire più difficile ma solo più uguale.
-  // Quello che il giro cambia è il primo minuto, che è dove i livelli si decidono.
+  // A shift of the curve upwards, not a different slope: `fastest` swallows it after a good minute
+  // of the level, and that is perfectly fine — past that ceiling there is no escaping at any speed,
+  // and a bigger number would not mean harder, only more of the same. What the lap changes is the
+  // first minute, which is where levels are decided.
   perLap: 9,
 };
 
@@ -126,29 +127,29 @@ export const RULES = {
   capture: 3000,
   separation: 5000,
 
-  // Il rientro, e sono due regole che si tengono insieme. Si ricompare **dove il taglio era
-  // partito**: è lì che stavi ragionando, e ributtare il marcatore all'inizio dell'arena punirebbe
-  // due volte lo stesso errore. Nessuna invulnerabilità — ma il controllo non torna finché il Filo
-  // non è lontano, così non esiste la morte che non hai giocato e non esiste nemmeno il secondo
-  // gratis che i giocatori userebbero per attraversare.
+  // The respawn, and it is two rules that hold each other up. You reappear **where the cut had
+  // started**: that is where you were thinking, and throwing the marker back to the start of the
+  // arena would punish the same mistake twice. No invulnerability — but control does not come back
+  // until the Thread is far away, so there is no death you did not play, and there is no free
+  // second either that players would use to get across.
   pause: 1.1,                 // seconds, at least
   safe: 30,                   // lattice units the Filo must be away before the marker moves again
 
-  // Il secondo Filo. Finché due Fili condividono la stessa faccia si ignorano: quello che cambia è
-  // che adesso il taglio che li mette in due regioni diverse esiste, e vale il premio — una mossa
-  // che al primo livello non è nemmeno pensabile.
+  // The second Thread. As long as two Threads share the same face they ignore each other: what
+  // changes is that now the cut that puts them in two different regions exists, and earns the
+  // bonus — a move that at the first level is not even conceivable.
   threadsFrom: 3,             // the level the second one turns up
   threadsMax: 2,
 
-  // **Un Filo vuole spazio, e l'arena può non averne.** Il secondo Filo compariva al terzo livello
-  // e basta, e nel diamante — che è un terzo di campo — voleva dire due Fili su una superficie
-  // dove uno solo è già stretto: l'autopilota ci moriva tre volte su tre, sempre, con qualunque
-  // seme. Non era difficile, era invivibile, ed era un difetto dell'arena piccola e non del
-  // livello.
+  // **A Thread wants room, and the arena may not have any.** The second Thread used to turn up at
+  // the third level, full stop, and in the diamante — which is a third of a field — that meant two
+  // Threads on a surface where a single one is already cramped: the autopilot died there three
+  // times out of three, always, with any seed. It was not difficult, it was unplayable, and it was
+  // a defect of the small arena and not of the level.
   //
-  // Quindicimila unità a testa è poco meno di un terzo del campo pieno. È il numero che decide, e
-  // decide una volta sola alla nascita del livello: un'arena grande ne prende due, una piccola
-  // resta a uno e non per questo è più facile — ha molto meno posto in cui scappare.
+  // Fifteen thousand units each is a little under a third of the full field. It is the number that
+  // decides, and it decides only once, when the level is born: a large arena takes two, a small
+  // one stays at one and is not easier for it — it has much less room to escape into.
   roomPerThread: 15000,
 
   sparks: 1,                  // at level 1
@@ -162,8 +163,8 @@ export const NO_INTENT = Object.freeze({ dx: 0, dy: 0, slow: false });
 //  t h e   w o r l d
 // -----------------------------------------------------------------------------------------------------------------
 
-// `carry` è quello che sopravvive al livello: punti e vite. Senza, ogni livello comincia da zero
-// punti e da tre vite — cioè non è un livello, è una partita nuova con un fondale diverso.
+// `carry` is what survives the level: points and lives. Without it, every level starts from zero
+// points and three lives — that is, it is not a level, it is a new game with a different backdrop.
 export function create(level = 1, seed = 1, carry = null) {
   const plan = arena(level);
   const face = { rings: plan.rings.map((ring) => ring.map((p) => p.slice())) };
@@ -173,8 +174,9 @@ export function create(level = 1, seed = 1, carry = null) {
     level,
     arena: plan.key,
     faces: [face],
-    // L'arena com'era prima che qualcuno la toccasse. Serve al renderer e a nient'altro: quello che
-    // è tuo è l'arena meno quello che è ancora aperto, e senza questa riga andrebbe ricostruito.
+    // The arena as it was before anybody touched it. It serves the renderer and nothing else: what
+    // is yours is the arena minus what is still open, and without this line it would have to be
+    // rebuilt.
     outline: plan.rings.map((ring) => ring.map((p) => p.slice())),
     total2: area2(face),
     claimed2: 0,
@@ -208,8 +210,8 @@ export function step(world, intent = NO_INTENT) {
   _moveThreads(world);
   _moveSparks(world);
 
-  // Dopo una morte tutto continua a girare e il marcatore aspetta. L'attesa finisce quando il tempo
-  // minimo è passato **e** il campo è libero: le due condizioni insieme, non una sola.
+  // After a death everything keeps running and the marker waits. The wait ends when the minimum
+  // time has passed **and** the field is clear: the two conditions together, not just one.
   if (world.waiting > 0) {
     world.waiting -= STEP;
     if (world.waiting <= 0 && !_roomToBreathe(world)) world.waiting = STEP;
@@ -273,9 +275,9 @@ function _threadsIn(world, face) {
 
 // -----------------------------------------------------------------------------------------------------------------
 
-// Restituisce se in questo fotogramma il marcatore ha davvero cambiato posto. Non se ce l'ha
-// messa, non se il giocatore stava premendo: **se si è mosso**. È quello che la Miccia deve sapere,
-// e premere contro un muro è stare fermi quanto non premere niente.
+// Returns whether in this frame the marker actually changed place. Not whether it tried, not
+// whether the player was pressing: **whether it moved**. That is what the Fuse needs to know, and
+// pressing against a wall is standing still just as much as pressing nothing.
 function _moveMarker(world, intent) {
   const { dx, dy } = intent;
   if (dx === 0 && dy === 0) { world.marker.travel = 0; return false; }
@@ -323,10 +325,10 @@ function _take(world, intent) {
   if (kind === "walk") { world.marker.at = to; return true; }
   if (kind !== "open" && kind !== "close") return false;
 
-  // Non si stacca da dove due pareti si toccano, per la stessa ragione per cui non ci si chiude:
-  // lì «da quale anello sono partito» non ha risposta. `canStep` guarda dove il passo **arriva** e
-  // non poteva saperlo — è questo il posto che sa che quel passo è l'inizio di un taglio.
-  // Camminarci sopra resta libero, ed è come si esce di lì.
+  // No setting off from where two walls touch, for the same reason you cannot close there: at that
+  // point "which ring did I start from" has no answer. `canStep` looks at where the step **lands**
+  // and could not know it — this is the place that knows the step is the start of a cut. Walking
+  // over it stays allowed, and that is how you get out of there.
   if (wallsAt(face, from) > 1) return false;
 
   // The stroke speed is read here and nowhere else: it is a bet placed on the way out, not a dial
@@ -335,9 +337,9 @@ function _take(world, intent) {
     chain: [from.slice(), to],
     slow: Boolean(intent.slow),
     face: index,
-    length: _cost(intent),    // quanto è lunga la linea, tenuta man mano e non ricontata
-    fuse: 0,                  // quanto ne ha già bruciato la Miccia
-    still: 0,                 // da quanto il marcatore non si muove
+    length: _cost(intent),    // how long the line is, kept as it goes and not recounted
+    fuse: 0,                  // how much of it the Fuse has already burnt
+    still: 0,                 // how long the marker has not moved for
   };
   world.marker.at = to;
   if (kind === "close") _close(world);
@@ -466,8 +468,8 @@ function _drift(world, face, end) {
   if (!wall || !wall.edge) { end.heading += Math.PI; return; }
   const along = Math.atan2(wall.edge[1][1] - wall.edge[0][1], wall.edge[1][0] - wall.edge[0][0]);
   end.heading = 2 * along - end.heading;
-  // Non si muove in questo passo, e va bene: `end.at` non è mai stato in un posto che non andasse,
-  // quindi il peggio che può fare è restare fermo un fotogramma con la direzione nuova.
+  // It does not move in this step, and that is fine: `end.at` has never been in a place that was
+  // not all right, so the worst it can do is stand still for one frame with the new heading.
 }
 
 // Inside, and no nearer than `clearance` to any wall. That margin is what keeps `contains` from
@@ -499,8 +501,8 @@ function _touched(world) {
   const box = _boxOf(world.cut.chain);
   for (const thread of world.threads) {
     for (const [a, b] of _body(thread)) {
-      // Un rifiuto a buon mercato prima di quello caro: la catena può essere lunga trecento punti,
-      // e quasi sempre il Filo non è nemmeno dalle sue parti.
+      // A cheap rejection before the expensive one: the chain can be three hundred points long,
+      // and almost always the Thread is nowhere near it.
       if (Math.min(a[0], b[0]) > box.x2 || Math.max(a[0], b[0]) < box.x1) continue;
       if (Math.min(a[1], b[1]) > box.y2 || Math.max(a[1], b[1]) < box.y1) continue;
       if (chainMeets(world.cut.chain, a, b)) return true;
@@ -520,8 +522,8 @@ function _boxOf(chain) {
   return { x1, y1, x2, y2 };
 }
 
-// Libero vuol dire libero da tutto quello che uccide, Scintille comprese — e le Scintille contano
-// più del Filo, perché il marcatore ricompare **sul bordo**, cioè proprio sulla loro pista.
+// Clear means clear of everything that kills, Sparks included — and the Sparks matter more than the
+// Thread, because the marker reappears **on the border**, that is right on their track.
 function _roomToBreathe(world) {
   for (const thread of world.threads) {
     if (distanceToSegment(world.marker.at, thread.a.at, thread.b.at) < RULES.safe) return false;
@@ -540,9 +542,9 @@ function _cost(intent) {
 
 // -----------------------------------------------------------------------------------------------------------------
 
-// La Miccia brucia solo da fermi, riparte da dove era arrivata e non torna mai indietro. Il minimo
-// di grazia serve perché un fotogramma di esitazione non è stare fermi — e perché a 120 Hz il
-// marcatore cambia posto ogni due passi anche mentre corre.
+// The Fuse burns only while standing still, resumes from where it had got to and never goes back.
+// The minimum grace is there because a frame of hesitation is not standing still — and because at
+// 120 Hz the marker changes place every two steps even while it is running.
 function _burn(world, moved) {
   const cut = world.cut;
   if (moved) { cut.still = 0; return; }
@@ -554,8 +556,8 @@ function _burn(world, moved) {
   if (cut.fuse >= cut.length) _die(world, "miccia");
 }
 
-// Dove è arrivata la Miccia, come punto: serve al disegno, e il disegno è l'unico posto che ne ha
-// bisogno — la regola sa già rispondere confrontando due lunghezze.
+// Where the Fuse has got to, as a point: it serves the drawing, and the drawing is the only place
+// that needs it — the rule can already answer by comparing two lengths.
 export function fuseAt(world) {
   if (!world.cut || world.cut.fuse <= 0) return null;
   const chain = world.cut.chain;
@@ -575,8 +577,8 @@ export function fuseAt(world) {
 
 // -----------------------------------------------------------------------------------------------------------------
 
-// Le Scintille corrono sul confine delle facce aperte, srotolato in punti del reticolo: occupano un
-// posto dove anche il marcatore potrebbe stare, così «ti ha preso» è un confronto e non una stima.
+// The Sparks run along the boundary of the open faces, unrolled into lattice points: they occupy a
+// place where the marker could also stand, so "it got you" is a comparison and not an estimate.
 function _sparksFor(world) {
   const many = Math.min(RULES.sparksMax, RULES.sparks + Math.floor((world.level - 1) / RULES.sparksEvery));
   const track = _trackAt(world, 0, 0);
@@ -614,20 +616,21 @@ function _moveSparks(world) {
   }
 }
 
-// Il posto dove una Scintilla sta correndo, ritrovato ogni volta che serve.
+// The place where a Spark is running, found again every time it is needed.
 //
-// È l'unico punto del gioco in cui una struttura dati cambia sotto i piedi di qualcuno che la stava
-// percorrendo: a ogni conquista gli anelli sono altri, e l'indice che la Scintilla aveva in mano
-// non indica più niente. Quindi l'indice è una **comodità che viene verificata**, non una verità: se
-// la pista non ha più quel punto lì, la Scintilla si riaggancia al punto più vicino del bordo nuovo
-// e tiene il verso di marcia. Una funzione sola, e nessun altro tocca `spark.index`.
+// It is the only spot in the game where a data structure changes under the feet of somebody who
+// was walking along it: at every claim the rings are different ones, and the index the Spark had
+// in hand no longer points to anything. So the index is a **convenience that gets checked**, not a
+// truth: if the track no longer has that point there, the Spark re-attaches to the nearest point
+// of the new border and keeps its direction of travel. One single function, and nobody else
+// touches `spark.index`.
 function _trackFor(world, spark) {
-  // Prima la scommessa: quasi sempre la pista è quella di un fotogramma fa e l'indice è ancora
-  // buono. Costa due confronti.
+  // First the bet: almost always the track is the one from a frame ago and the index is still
+  // good. It costs two comparisons.
   const held = _trackAt(world, spark.face, spark.ring);
   if (held && _isAt(held, spark.index, spark.at)) return held;
 
-  // Poi il ripescaggio: stesso bordo, posto diverso nell'elenco.
+  // Then the search: same border, a different place in the list.
   for (let f = 0; f < world.faces.length; f += 1) {
     if (!onBoundary(world.faces[f], spark.at)) continue;
     for (let r = 0; r < world.faces[f].rings.length; r += 1) {
@@ -641,8 +644,8 @@ function _trackFor(world, spark) {
     }
   }
 
-  // E infine il riaggancio vero: il bordo su cui correva non c'è più. Si passa al punto più vicino
-  // di quello che è rimasto, tenendo il verso di marcia.
+  // And finally the real re-attachment: the border it was running along is gone. It moves to the
+  // nearest point of what is left, keeping its direction of travel.
   let best = null;
   let distance = Infinity;
   for (let f = 0; f < world.faces.length; f += 1) {
@@ -669,9 +672,9 @@ function _isAt(track, index, at) {
   return Boolean(point) && point[0] === at[0] && point[1] === at[1];
 }
 
-// La pista di un anello, srotolata una volta e tenuta lì. Le facce si ricostruiscono a ogni taglio,
-// quindi una faccia nuova nasce senza pista e se la fabbrica al primo passo di una Scintilla — e
-// **ogni** anello ne ha una, isole comprese: su un'isola ci si cammina, quindi ci si viene presi.
+// The track of a ring, unrolled once and kept there. Faces are rebuilt at every cut, so a new face
+// is born with no track and builds one at a Spark's first step — and **every** ring has one,
+// islands included: you walk on an island, so you can get caught there.
 function _trackAt(world, faceIndex, ring) {
   const face = world.faces[faceIndex];
   if (!face) return null;
@@ -696,8 +699,8 @@ function _nearestOn(track, at) {
   return best;
 }
 
-// Una Scintilla prende il marcatore solo mentre è sul bordo. Con la linea fuori il marcatore non è
-// sulla sua pista, e lì la minaccia è un'altra.
+// A Spark catches the marker only while it is on the border. With the line out the marker is not on
+// its track, and there the threat is a different one.
 function _bitten(world) {
   if (world.cut) return false;
   if (world.age < SPARK.first) return false;
@@ -735,7 +738,7 @@ function _reseat(world) {
       if (_clearOf(face, end.at)) continue;
       end.at = _pushIn(face, end.at) || thread.a.at.slice();
     }
-    thread.trail.length = 0;      // la scia apparteneva a un campo che non c'è più
+    thread.trail.length = 0;      // the trail belonged to a field that no longer exists
   }
 }
 

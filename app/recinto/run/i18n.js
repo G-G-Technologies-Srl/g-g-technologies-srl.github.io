@@ -1,12 +1,12 @@
 // Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
 
-// Ogni stringa visibile di quest'app, in un file solo, due oggetti con le stesse chiavi. Testo
-// scritto dentro il markup o dentro una funzione è il modo in cui una lingua resta indietro
-// sull'altra in silenzio — il difetto che il CLAUDE.md alla radice chiama il più frequente del
-// progetto, e che è finito online due volte.
+// Every visible string of this app, in a single file, two objects with the same keys. Text written
+// inside the markup or inside a function is how one language silently falls behind the other — the
+// defect that the CLAUDE.md at the root calls the most frequent in the project, and that has gone
+// live twice.
 //
-// La macchina sta in `gg/i18n.js`. Qui c'è quello che appartiene a quest'app e a nessun'altra: le
-// parole. Il **nome** no: «Recinto» è lo stesso nelle due lingue e non si traduce.
+// The machinery lives in `gg/i18n.js`. Here is what belongs to this app and to no other: the words.
+// Not the **name**: "Recinto" is the same in both languages and is not translated.
 
 export * from "gg/i18n.js";
 

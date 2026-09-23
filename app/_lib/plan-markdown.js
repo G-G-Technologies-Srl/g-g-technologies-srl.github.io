@@ -21,9 +21,9 @@
 // divider — the original is carried in the block and written back. Normalising `*` to `-` would be
 // defensible for our own documents and rude to a file somebody brought with them.
 //
-// **In `_lib/` da quando lo usano due app.** Plan Scope lo ha scritto, Invoice Scope lo usa per i
-// piani dei progetti che fattura: due usi veri, e il file non nomina né l'app che lo ospita né uno
-// store — si è spostato senza toccare una riga, che è la prova che la linea era nel punto giusto.
+// **In `_lib/` since two apps use it.** Plan Scope wrote it, Invoice Scope uses it for the plans of
+// the projects it invoices: two real uses, and the file names neither the app hosting it nor a
+// store — it moved without touching a line, which is the proof that the line was in the right place.
 //
 // No DOM in here:
 // `node --import ./app/plan-scope/test/loader.mjs app/plan-scope/test/markdown.mjs`.
@@ -69,9 +69,9 @@ function _opensBlock(line) {
 /**
  * A paragraph line that *looks* like a block, written so that it stays a paragraph.
  *
- * Pubblica perché serve anche a chi il Markdown lo **scrive** da un'altra parte: l'importatore di
- * un `.docx` porta dentro righe scritte da qualcun altro, e «- 5 % di sconto» in Word è un
- * paragrafo che qui diventerebbe un elenco. Una regola sola, in un posto solo.
+ * Public because it is also needed by whoever **writes** the Markdown somewhere else: the `.docx`
+ * importer brings in lines written by somebody else, and "- 5 % di sconto" (5% discount) in Word is
+ * a paragraph that here would become a list. One rule only, in one place only.
  *
  * Somebody who types `## nota` into a plain paragraph — without the shortcut, which needs the
  * marker on its own — has written text. Without this it was text until the page was closed and a
@@ -462,9 +462,9 @@ export function escape(text) {
 export function inlineHtml(text) {
   let out = escape(text);
   out = out.replace(/`([^`]+)`/g, (whole, code) => `<code>${code}</code>`);
-  // «[[#a7f3]]»: il gancio a un'attività del progetto, scritto prima del collegamento fra pagine
-  // perché ne condivide le due parentesi. Il testo visibile lo mette chi ospita l'editore: solo
-  // l'app sa se quell'attività è aperta, fatta o finita nel cestino, e questo file non parla.
+  // "[[#a7f3]]": the hook to a project task, handled before the link between pages because it
+  // shares its two brackets. The visible text is supplied by whoever hosts the editor: only the app
+  // knows whether that task is open, done or ended up in the bin, and this file does not speak.
   out = out.replace(TASK_REF_ALL,
     (whole, uid) => `<a class="task-link" data-task="${uid}" href="#"></a>`);
   out = out.replace(/\[\[([^\]]+)\]\]/g,
@@ -488,10 +488,10 @@ export function inlineHtml(text) {
   out = out.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
   out = out.replace(/(^|[^*])\*([^*]+)\*/g, "$1<em>$2</em>");
   out = out.replace(/~~([^~]+)~~/g, "<del>$1</del>");
-  // L'a-capo dentro un blocco è un a-capo anche sullo schermo. Senza questa riga il testo tornava
-  // «tutto attaccato» alla riapertura: l'HTML ignora il carattere di fine riga, quindi il salto
-  // che si era scritto c'era nel file e spariva nella pagina. `fromHtml` legge `<br>` come «\n»,
-  // quindi il giro si chiude e il file resta identico a com'era.
+  // A line break inside a block is a line break on screen too. Without this line the text came back
+  // "all run together" on reopening: HTML ignores the end-of-line character, so the break that had
+  // been written was there in the file and vanished from the page. `fromHtml` reads `<br>` as "\n",
+  // so the round trip closes and the file stays identical to how it was.
   out = out.replace(/\n/g, "<br>");
   return out;
 }
@@ -613,19 +613,19 @@ export function mentions(text, names) {
 }
 
 /**
- * Una persona rinominata, dentro il testo: «@vecchio» diventa «@nuovo».
+ * A renamed person, inside the text: "@old" becomes "@new".
  *
- * Sta qui e non nel modello perché è una trasformazione di testo, e qui si prova senza costruire un
- * archivio. Il confine della menzione è lo stesso di `mentions`, quindi «@Anna» non tocca
- * «@Annalisa», e il carattere che precede la chiocciola resta com'era.
+ * It lives here and not in the model because it is a text transformation, and here it can be tested
+ * without building an archive. The mention boundary is the same as in `mentions`, so "@Anna" does
+ * not touch "@Annalisa", and the character before the at sign stays as it was.
  */
 export function renameMention(text, from, to) {
   const before = String(from || "").trim();
   const after = String(to || "").trim();
   if (!before || !after || before === after) return String(text || "");
-  // Quando il nome nuovo *allunga* quello vecchio — «Mario» che diventa «Mario Bianchi» — una
-  // menzione già intera non si tocca: senza questa guardia «@Mario Bianchi» diventava
-  // «@Mario Bianchi Bianchi».
+  // When the new name *extends* the old one — "Mario" becoming "Mario Bianchi" — a mention that is
+  // already whole is not touched: without this guard "@Mario Bianchi" became
+  // "@Mario Bianchi Bianchi".
   const longer = after.toLowerCase().startsWith(`${before.toLowerCase()} `)
     ? `(?!${_rx(after.slice(before.length))}(?![\\p{L}\\p{N}_]))` : "";
   const pattern = new RegExp(`(^|[\\s(\\[])@${_rx(before)}(?![\\p{L}\\p{N}_])${longer}`, "giu");
@@ -633,21 +633,21 @@ export function renameMention(text, from, to) {
 }
 
 /**
- * Il riferimento a un'attività: «[[#a7f3]]», dove `a7f3` è il `uid` che viaggia con il progetto.
+ * The reference to a task: "[[#a7f3]]", where `a7f3` is the `uid` that travels with the project.
  *
- * `uid` e non `id`: l'`id` è la chiave di questo browser e cambia a ogni importazione, mentre il
- * `uid` è lo stesso su due computer che condividono la cartella — quindi una riga esportata e
- * reimportata continua a puntare alla stessa attività invece che a niente.
+ * `uid` and not `id`: the `id` is this browser's key and changes with every import, while the `uid`
+ * is the same on two computers that share the folder — so a line exported and re-imported keeps
+ * pointing at the same task instead of at nothing.
  */
 export const TASK_REF = /\[\[#([A-Za-z0-9_-]{1,64})\]\]/;
 const TASK_REF_ALL = new RegExp(TASK_REF.source, "g");
 
-/** Lo stesso testo senza i ganci: la riga che nasce da un Invio non eredita l'attività di sopra. */
+/** The same text without the hooks: the line born from an Enter does not inherit the task above. */
 export function withoutTaskRefs(text) {
   return String(text || "").replace(TASK_REF_ALL, "").replace(/[ \t]{2,}/g, " ").trim();
 }
 
-/** I `uid` delle attività a cui questo testo è agganciato, una volta ciascuno. */
+/** The `uid`s of the tasks this text is hooked to, once each. */
 export function taskRefs(text) {
   const out = [];
   for (const found of String(text || "").matchAll(TASK_REF_ALL)) {
@@ -659,8 +659,8 @@ export function taskRefs(text) {
 /**
  * The titles this text links to, for the page that has to resolve them.
  *
- * I ganci alle attività restano fuori: cominciano per «#» e non sono il titolo di nessuna pagina —
- * senza questa riga l'editore avrebbe disegnato «a7f3» come una pagina da creare.
+ * The hooks to tasks stay out: they begin with "#" and are not the title of any page — without
+ * this line the editor would have drawn "a7f3" as a page to be created.
  */
 export function links(text) {
   return [...String(text).matchAll(/\[\[([^\]]+)\]\]/g)]

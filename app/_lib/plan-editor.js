@@ -84,10 +84,11 @@ const MENU = [
       items: _lines(text).map((line) => _item({ text: line, checked: false })),
     }),
   },
-  // L'attività del progetto: la voce c'è, ma quello che fa non lo sa questo file. La crea l'app —
-  // è lei che ha il progetto e la bacheca — e qui torna con il titolo e il suo `uid`, che la riga
-  // si porta dietro come «[[#uid]]». `make` resta per il campione nel menù e per il caso in cui
-  // l'app non risponda: allora è una casella come le altre, e nessuno ha perso niente.
+  // The project task: the entry is here, but what it does this file does not know. The app creates
+  // it — it is the app that has the project and the board — and it comes back here with the title
+  // and its `uid`, which the line carries along as "[[#uid]]". `make` stays for the sample in the
+  // menu and for the case where the app does not answer: then it is a checkbox like the others, and
+  // nobody has lost anything.
   {
     key: "task",
     label: "blockTask",
@@ -122,37 +123,38 @@ const MENU = [
 
 let blocks = [];
 let on = { change() {}, openPage() {}, exists: () => true, image() {}, attachment() {}, moved() {}, removed() {},
-  // Le persone: chi si può nominare con «@» (l'app passa chi lavora al progetto e la rubrica), e
-  // dove porta il nome quando lo si clicca.
+  // The people: who can be named with "@" (the app passes who works on the project and the address
+  // book), and where the name leads when it is clicked.
   people: () => [], openPerson() {}, named() {},
-  // Le attività del progetto: crearne una, sapere com'è messa, aprirla, spuntarla. Le risposte
-  // stanno tutte nell'app: qui un'attività è solo un `uid` dentro una riga di testo.
+  // The project's tasks: creating one, knowing how it stands, opening it, ticking it. The answers
+  // all live in the app: here a task is only a `uid` inside a line of text.
   newTask: async () => null, taskState: () => null, openTask() {}, taskTicked() {},
   taskRemoved: async () => false };
 
 /**
- * Le parole dell'editor, e la domanda per il collegamento.
+ * The editor's words, and the question for the link.
  *
- * **Un componente condiviso non ha una lingua**, quindi non tiene le parole: riceve la funzione che
- * le cerca — la stessa `t` dell'app che lo monta — come `gg/update.js` riceve le sue tre frasi.
+ * **A shared component has no language**, so it does not hold the words: it receives the function
+ * that looks them up — the same `t` of the app that mounts it — just as `gg/update.js` receives its
+ * three sentences.
  *
- * Una funzione e non un oggetto di stringhe perché **due chiavi si costruiscono mentre si disegna**:
- * l'etichetta di ogni voce del menù e il tipo di un riquadro, `callout_nota`. Con un oggetto,
- * l'elenco delle chiavi da passare sarebbe scritto due volte — qui e nell'app — e la seconda
- * dimenticherebbe quella aggiunta per ultima. Il ripiego restituisce la chiave, che si legge sullo
- * schermo e si nota: `check_apps.py` confronta le chiavi di ogni app, non quelle di questo file.
+ * A function and not an object of strings because **two keys are built while drawing**: the label
+ * of each menu entry and the kind of a callout, `callout_nota`. With an object, the list of keys to
+ * pass would be written twice — here and in the app — and the second would forget the one added
+ * last. The fallback returns the key, which can be read on screen and gets noticed: `check_apps.py`
+ * compares the keys of each app, not those of this file.
  *
- * Le chiavi che l'app deve avere: `addBlock`, `dragHandle`, `taskDone`, `taskUndone`, `menuTitle`,
+ * The keys the app must have: `addBlock`, `dragHandle`, `taskDone`, `taskUndone`, `menuTitle`,
  * `menuChange`, `linkPrompt`, `sampleHeading`, `sampleText`, `sampleItem`, `sampleQuote`,
- * `sampleNote`, le etichette di `MENU` e un `callout_<tipo>` per ogni riquadro.
+ * `sampleNote`, the labels of `MENU` and a `callout_<kind>` for each callout.
  */
 let text = (key) => key;
 
-/** La domanda con una risposta di testo. La disegna l'app, con il suo `<dialog>`. */
+/** The question with a text answer. The app draws it, with its own `<dialog>`. */
 let askFor = async () => null;
 let host = null;
 let menuAt = null;                      // index the slash menu is acting on, or null
-let hostsTasks = false;                 // se chi ospita l'editore sa creare un'attività di progetto
+let hostsTasks = false;                 // whether whoever hosts the editor can create a project task
 let caret = null;                       // { index, offset } to restore after the next draw
 
 // The history, and it is the document rather than a list of operations: each entry is the whole
@@ -234,11 +236,11 @@ function _fromHtml(root) {
     else if (tag === "em" || tag === "i") out += inner ? `*${inner}*` : "";
     else if (tag === "del" || tag === "s" || tag === "strike") out += inner ? `~~${inner}~~` : "";
     else if (tag === "code") out += inner ? `\`${inner}\`` : "";
-    // Prima del collegamento fra pagine, perché è anche lui un `a` con due parentesi: quello che
-    // conta è il `uid` nell'attributo, non le parole che la pastiglia mostra in quel momento.
+    // Before the link between pages, because it too is an `a` with two brackets: what counts is the
+    // `uid` in the attribute, not the words the pill happens to show at that moment.
     else if (tag === "a" && child.classList.contains("task-link")) out += `[[#${child.dataset.task}]]`;
     else if (tag === "a" && child.classList.contains("wiki")) out += `[[${inner}]]`;
-    else if (tag === "a" && child.classList.contains("mention")) out += inner;   // già «@Nome»
+    else if (tag === "a" && child.classList.contains("mention")) out += inner;   // already "@Name"
     else if (tag === "a") out += `[${inner}](${child.getAttribute("href") || ""})`;
     else out += inner;
   }
@@ -284,12 +286,12 @@ function _placeCaret(element, offset) {
 }
 
 /**
- * Il campo di un blocco, e **quale voce** quando il blocco è un elenco.
+ * The field of a block, and **which item** when the block is a list.
  *
- * Senza il secondo argomento torna il primo campo del blocco, che per un elenco di otto voci è
- * sempre la prima. È da lì che veniva il difetto più fastidioso di questo editore: premendo Invio
- * la voce nuova nasceva al posto giusto e il cursore saltava in cima all'elenco, e chi scriveva si
- * ritrovava le parole della riga nuova infilate nella prima.
+ * Without the second argument it returns the block's first field, which for a list of eight items
+ * is always the first one. That is where this editor's most annoying defect came from: pressing
+ * Enter, the new item was born in the right place and the cursor jumped to the top of the list, and
+ * whoever was writing found the words of the new line pushed into the first one.
  */
 function _fieldAt(index, item = null) {
   const where = `[data-block="${index}"]`;
@@ -314,8 +316,8 @@ function _atEnd(element) {
  * Redrawing the whole page rather than patching it is deliberate at this size: fifty blocks is a
  * few milliseconds, and a patching editor is where the divergence between what is on screen and
  * what is in the model hides. The caret is the thing that must survive, so it travels separately —
- * e dentro un elenco «dove» sono due numeri, il blocco e la voce: con il solo blocco il cursore
- * torna sempre sulla prima.
+ * and inside a list "where" is two numbers, the block and the item: with the block alone the cursor
+ * always goes back to the first one.
  */
 function _apply({ index = null, offset = 0, item = null } = {}) {
   caret = index === null ? null : { index, offset, item };
@@ -526,11 +528,11 @@ function _read(index, field) {
 }
 
 /**
- * La ✕ di una riga agganciata: l'attività nel cestino, e la riga via dal documento.
+ * The ✕ of a hooked line: the task into the bin, and the line out of the document.
  *
- * L'ordine è questo perché l'app deve poter dire di no — l'attività può essere già sparita, e
- * allora la riga resta dov'è con la sua pastiglia «eliminata», che è un'informazione. Quando
- * l'attività se ne va, se ne va anche la riga: era l'unica ragione per cui esisteva.
+ * The order is this one because the app must be able to say no — the task may already have gone,
+ * and then the line stays where it is with its "eliminata" (deleted) pill, which is information.
+ * When the task goes, the line goes too: it was the only reason it existed.
  */
 function _removeTaskButton(index, at, uid) {
   return button("ghost small icon task-x", "✕", async () => {
@@ -540,7 +542,7 @@ function _removeTaskButton(index, at, uid) {
     const block = blocks[index];
     if (!block || block.type !== "list") return;
     block.items.splice(at, 1);
-    // Un elenco rimasto senza voci non è un elenco vuoto: è il punto dove si ricomincia a scrivere.
+    // A list left with no items is not an empty list: it is the place where writing starts again.
     if (!block.items.length) blocks.splice(index, 1, { type: "paragraph", text: "" });
     _apply({ index, item: block.items.length ? Math.max(0, at - 1) : null, offset: 0 });
   }, { label: text("taskRemove") });
@@ -554,11 +556,11 @@ function _markLinks(root) {
 }
 
 /**
- * Le pastiglie delle attività, riempite adesso e non quando la pagina è stata scritta.
+ * The task pills, filled in now and not when the page was written.
  *
- * Il testo è lo stato: «apri» se l'attività è aperta, «fatta» se è finita, «eliminata» se non c'è
- * più. Scriverlo nel file avrebbe voluto dire riscrivere la pagina a ogni spunta sulla bacheca, e
- * tenere due verità dello stesso fatto.
+ * The text is the state: "apri" (open) if the task is open, "fatta" (done) if it is finished,
+ * "eliminata" (deleted) if it is no longer there. Writing it into the file would have meant
+ * rewriting the page at every tick on the board, and keeping two truths about the same fact.
  */
 function _markTasks(root) {
   for (const chip of root.querySelectorAll("a.task-link")) {
@@ -633,8 +635,8 @@ function _blockNode(block, index) {
             () => {
               _snapshot();
               item.checked = !item.checked;
-              // La riga agganciata a un'attività: la casella qui e la spunta sulla bacheca sono la
-              // stessa cosa vista da due parti, quindi si muovono insieme.
+              // The line hooked to a task: the checkbox here and the tick on the board are the same
+              // thing seen from two sides, so they move together.
               const ref = md.TASK_REF.exec(item.text);
               if (ref) on.taskTicked(ref[1], item.checked);
               _apply({ index, item: i, offset: 0 });
@@ -647,9 +649,9 @@ function _blockNode(block, index) {
         field.dataset.item = String(i);
         if (item.checked) field.classList.add("struck");
         li.append(field);
-        // La riga che nomina un'attività porta anche il modo di disfarla: la pastiglia apre la
-        // scheda, la ✕ toglie l'attività **e** la riga. Senza, l'unico modo di liberarsi di una
-        // riga sbagliata era cancellare il testo e poi cercare l'attività sulla bacheca.
+        // The line that names a task also carries the way to undo it: the pill opens the card, the
+        // ✕ removes the task **and** the line. Without it, the only way to get rid of a wrong line
+        // was to delete the text and then look for the task on the board.
         const gancio = md.TASK_REF.exec(item.text);
         if (gancio) li.append(_removeTaskButton(index, i, gancio[1]));
         list.append(li);
@@ -869,8 +871,8 @@ function _mergeBack(index, field) {
       const offset = _plainLengthAt(index, at - 1);
       before.text += item.text;
       block.items.splice(at, 1);
-      // Il cursore dove finisce il testo che c'era prima: è il punto di giunzione, ed è dove la
-      // persona si aspetta di continuare a scrivere.
+      // The cursor where the text that was there before ends: it is the join point, and it is where
+      // the person expects to carry on writing.
       return _apply({ index, item: at - 1, offset });
     }
     // The first item of a list, at its start: the list becomes a paragraph, which is the way out.
@@ -1019,13 +1021,13 @@ function _keys(event, index, field) {
     && window.getSelection().isCollapsed) {
     const up = event.key === "ArrowUp";
     if ((up && _atStart(field)) || (!up && _atEnd(field))) {
-      // Dentro un elenco la voce accanto viene prima del blocco accanto: ogni voce è un campo suo,
-      // e senza questo le frecce uscivano dall'elenco dalla seconda riga in poi — otto voci, e la
-      // freccia in su dalla terza portava nel paragrafo sopra.
+      // Inside a list the neighbouring item comes before the neighbouring block: each item is a
+      // field of its own, and without this the arrows left the list from the second line onwards —
+      // eight items, and the up arrow from the third led into the paragraph above.
       const at = field.dataset.item ? Number(field.dataset.item) : null;
       const near = at === null ? null : _fieldAt(index, at + (up ? -1 : 1));
-      // Entrando in un elenco dall'alto si arriva all'ultima voce, non alla prima: è la riga che
-      // sullo schermo sta subito sopra.
+      // Entering a list moving upwards lands on the last item, not the first: it is the line that
+      // sits immediately above on screen.
       const nextBlock = blocks[index + (up ? -1 : 1)];
       const lastItem = up && nextBlock && nextBlock.type === "list" ? nextBlock.items.length - 1 : null;
       const target = near || _fieldAt(index + (up ? -1 : 1), lastItem);
@@ -1439,9 +1441,9 @@ function _fillMenu(query) {
 
 function _chooseBlock(entry) {
   if (!menuAt) return;
-  // La voce che l'app deve servire: la finestra si chiude **prima** della domanda, perché due
-  // `<dialog>` aperti insieme sono il difetto scritto in `app/CLAUDE.md` — l'evento `close` del
-  // primo arriva quando il secondo è già sullo schermo.
+  // The entry the app has to serve: the dialog closes **before** the question, because two
+  // `<dialog>`s open together are the defect written up in `app/CLAUDE.md` — the first one's `close`
+  // event arrives when the second is already on screen.
   if (entry.hosted) {
     const where = { ...menuAt };
     menuAt = null;
@@ -1469,14 +1471,14 @@ function _chooseBlock(entry) {
 }
 
 /**
- * Un'attività del progetto, scritta nella pagina.
+ * A project task, written into the page.
  *
- * L'ordine conta: **prima nasce l'attività**, poi la riga. Al contrario — riga adesso, attività
- * quando il titolo è finito — la pagina avrebbe tenuto per un po' una casella che sulla bacheca non
- * esiste, e chi chiude la scheda a metà si ritrova un gancio verso il niente.
+ * The order matters: **the task is born first**, then the line. The other way round — line now,
+ * task when the title is finished — the page would for a while have held a checkbox that does not
+ * exist on the board, and whoever closes the card halfway through is left with a hook to nothing.
  *
- * Se l'app non dà un'attività — domanda annullata, nessun progetto — non si scrive niente: il menù
- * si è chiuso, e la pagina è rimasta com'era.
+ * If the app does not give a task — question cancelled, no project — nothing is written: the menu
+ * has closed, and the page has stayed as it was.
  */
 async function _insertTask({ index, replace, transform }) {
   const block = blocks[index];
@@ -1488,7 +1490,7 @@ async function _insertTask({ index, replace, transform }) {
   if (transform || replace) blocks.splice(index, 1, list);
   else blocks.splice(index + 1, 0, list);
   const at = transform || replace ? index : index + 1;
-  // Il cursore dopo il titolo e prima della pastiglia: da lì si continua a scrivere la riga.
+  // The cursor after the title and before the pill: from there the line is carried on.
   _apply({ index: at, item: 0, offset: made.title.length });
 }
 
@@ -1497,11 +1499,11 @@ async function _insertTask({ index, replace, transform }) {
 // -----------------------------------------------------------------------------------------------------------------
 
 /**
- * Chi nominare: lo stesso `<dialog>` dei blocchi, con i nomi al posto dei tipi.
+ * Whom to name: the same `<dialog>` as the blocks, with names instead of kinds.
  *
- * La selezione si tiene da parte mentre la finestra è aperta e si rimette al suo posto prima di
- * scrivere il nome — come fa già il collegamento — perché il nome va dopo la «@» appena battuta,
- * non dove la finestra ha lasciato il cursore.
+ * The selection is set aside while the dialog is open and put back in its place before writing the
+ * name — as the link already does — because the name goes after the "@" just typed, not where the
+ * dialog left the cursor.
  */
 function _openPeople(index, field) {
   const selection = window.getSelection();
@@ -1534,14 +1536,14 @@ function _choosePerson(name) {
   const { field, range } = menuAt;
   menuAt = null;
   el("blockMenu").close();
-  // Un nome che nessuno offriva è una persona nuova, e lo si dice subito: così «Tizio Caio» si
-  // veste intero, invece di diventare «@Tizio» e una parola.
+  // A name nobody was offering is a new person, and that is said straight away: that way
+  // "Tizio Caio" gets dressed whole, instead of becoming "@Tizio" and a word.
   if (!on.people().some((one) => one.toLowerCase() === name.toLowerCase())) on.named(name);
   _putBack(field, range);
-  // Scritto come battuto, così `input` lo porta nel blocco per la via di tutti; poi un ridisegno,
-  // perché il nome si vesta da menzione subito e non alla prossima apertura della pagina. Lo
-  // spazio viene dopo il ridisegno: in coda al blocco il Markdown lo perderebbe, e la parola dopo
-  // si attaccherebbe al nome.
+  // Written as if typed, so that `input` carries it into the block by the same road as everything
+  // else; then a redraw, so that the name is dressed as a mention straight away and not at the next
+  // opening of the page. The space comes after the redraw: at the end of the block the Markdown would
+  // lose it, and the next word would stick to the name.
   document.execCommand("insertText", false, name);
   const here = _here();
   if (here) _apply({ index: here.index, offset: here.offset });
@@ -1602,9 +1604,9 @@ function _removeBlock() {
 export function mount(container, { text: words = null, ask = null, ...handlers } = {}) {
   host = container;
   on = { ...on, ...handlers };
-  // La voce «attività del progetto» compare solo dove qualcuno sa crearne una. Le due app che
-  // montano questo editore non fanno le stesse cose, e una voce di menù che non fa niente è
-  // peggio di una voce che manca: la si prova, non succede nulla, e si smette di fidarsi del menù.
+  // The "project task" entry appears only where somebody knows how to create one. The two apps that
+  // mount this editor do not do the same things, and a menu entry that does nothing is worse than a
+  // missing entry: you try it, nothing happens, and you stop trusting the menu.
   hostsTasks = typeof handlers.newTask === "function";
   if (words) text = words;
   if (ask) askFor = ask;
@@ -1639,19 +1641,19 @@ export function mount(container, { text: words = null, ask = null, ...handlers }
   el("blockMenuField").addEventListener("input", (event) => (
     menuAt && menuAt.people ? _fillPeople(event.target.value) : _fillMenu(event.target.value)
   ));
-  // Invio nel campo di ricerca prende la prima voce: chi scrive «@giu» e preme Invio non vuole
-  // spostare la mano sul mouse.
+  // Enter in the search field takes the first entry: whoever types "@giu" and presses Enter does
+  // not want to move their hand to the mouse.
   el("blockMenuField").addEventListener("keydown", (event) => {
     if (event.key !== "Enter") return;
     event.preventDefault();
     const first = el("blockMenuList").querySelector("button");
     if (first) { first.click(); return; }
-    // Nessun nome così: quello scritto è la persona, nuova. Entra in rubrica quando la pagina si
-    // chiude, come ogni «@» battuto a mano.
+    // No such name: what was typed is the person, a new one. It enters the address book when the
+    // page closes, like every "@" typed by hand.
     const typed = el("blockMenuField").value.trim();
     if (menuAt && menuAt.people && typed) _choosePerson(typed);
   });
-  // Chiusa con Esc o con la ✕: le lettere battute nella casella non si perdono.
+  // Closed with Esc or with the ✕: the letters typed into the box are not lost.
   el("blockMenu").addEventListener("close", () => _leavePeople());
   el("blockMenuClose").addEventListener("click", () => {
     if (menuAt && menuAt.people) _leavePeople();

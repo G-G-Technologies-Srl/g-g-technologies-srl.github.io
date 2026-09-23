@@ -1,15 +1,15 @@
 // Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
 
-// La classifica, e i contatori sotto.
+// The high score table, and the counters underneath it.
 //
-// È la classifica di questa macchina, non del mondo, e l'app lo dice dove la mostra. Senza un
-// server non c'è nessun altro posto in cui possa stare: questi punteggi sono in questo browser, su
-// questo computer, e una pulizia del sito è una classifica azzerata. Non è un difetto da nascondere
-// — anche quella del cabinato era della macchina, e per batterla ci tornavi — ma va detto ad alta
-// voce, ed è quello che rende l'export più di una formalità.
+// It is this machine's high score table, not the world's, and the app says so where it shows it.
+// Without a server there is nowhere else it could live: these scores are in this browser, on this
+// computer, and clearing the site data is a high score table wiped. It is not a flaw to hide — the
+// arcade cabinet's table belonged to the machine too, and you went back to it to beat it — but it
+// has to be said out loud, and that is what makes the export more than a formality.
 //
-// Qui dentro non c'è niente che sappia di tagli o di Fili: tiene record attraverso `gg/store.js` e
-// funzionerebbe uguale per qualunque altra cosa che si mette in ordine.
+// Nothing in here knows about cuts or Threads: it keeps records through `gg/store.js` and would
+// work just the same for anything else that gets put in order.
 
 import { open, put, get, list, replaceAll, persist } from "gg/store.js";
 
@@ -18,9 +18,9 @@ const SCHEMA = 1;
 
 export const STORES = ["scores", "stats"];
 
-// Venticinque tenuti, dieci mostrati. Tenere solo quelli che si vedono vorrebbe dire che battere la
-// propria decima partita cancella per sempre l'undicesima, e una classifica che dimentica mentre
-// migliori è una cosa strana da dare a qualcuno.
+// Twenty-five kept, ten shown. Keeping only the ones on screen would mean that beating your own
+// tenth game erases the eleventh for ever, and a high score table that forgets while you improve
+// is a strange thing to hand anyone.
 export const KEEP = 25;
 export const SHOW = 10;
 
@@ -35,17 +35,17 @@ const EMPTY_STATS = { id: "totals", games: 0, coins: 0, bestLevel: 1, seconds: 0
 //  p r i v a t e
 // -----------------------------------------------------------------------------------------------------------------
 
-// Un nome, reso sicuro da tenere e da disegnare.
+// A name, made safe to keep and to draw.
 //
-// Finisce su uno schermo, dentro un export e magari in uno screenshot che qualcuno condivide,
-// quindi viene ridotto a una riga e a dodici caratteri **prima di essere salvato**, non mentre si
-// mostra. Ripulire al momento di mostrarlo vorrebbe dire che ogni lettore successivo deve
-// ricordarsi di fare lo stesso, e uno non se lo ricorderà.
+// It ends up on a screen, inside an export and perhaps in a screenshot someone shares, so it is
+// cut down to one line and twelve characters **before it is saved**, not while it is shown.
+// Cleaning it at display time would mean every later reader has to remember to do the same, and
+// one of them won't.
 //
-// Scritto come confronto sui punti di codice e non come classe di caratteri, e non è questione di
-// stile: con una classe i caratteri di controllo finiscono nel sorgente **come caratteri di
-// controllo**, invisibili in qualunque editor e sufficienti a far dire a `grep` che il file è
-// binario. Un intervallo che si legge è un intervallo che si può controllare.
+// Written as a comparison on code points rather than as a character class, and it is not a matter
+// of style: with a class the control characters end up in the source **as control characters**,
+// invisible in any editor and enough to make `grep` say the file is binary. A range you can read
+// is a range you can check.
 function _clean(name) {
   const kept = [];
   for (const ch of String(name ?? "")) {
@@ -54,8 +54,8 @@ function _clean(name) {
     const invisible = (code >= 0x200b && code <= 0x200f) || code === 0x2028 || code === 0x2029;
     kept.push(control || invisible ? " " : ch);
   }
-  // Ritagliato di nuovo **dopo** il taglio e non solo prima: dodici caratteri di cui l'ultimo uno
-  // spazio si vedono in tabella come un nome che non si allinea con quelli sotto.
+  // Trimmed again **after** the cut and not only before: twelve characters of which the last is a
+  // space show up in the table as a name that doesn't line up with the ones below.
   return kept.join("").replace(/\s+/g, " ").trim().slice(0, 12).trim();
 }
 
@@ -72,8 +72,8 @@ function _rank(records) {
 
 export async function connect() {
   const db = await open(DB, SCHEMA, SHAPE);
-  // Non è una garanzia e non viene mai presentata come tale: sposta la classifica fuori dalla prima
-  // cosa che un browser cancella quando vuole spazio. Senza un server, questa è l'unica copia.
+  // It is not a guarantee and is never presented as one: it moves the high score table out of the
+  // first thing a browser deletes when it wants space. Without a server, this is the only copy.
   if (db) persist();
   return db;
 }
@@ -82,18 +82,18 @@ export async function table(db) {
   return _rank(await list(db, "scores", { index: "score", descending: true, limit: KEEP }));
 }
 
-/** Dove finirebbe un punteggio, contando da 1, oppure 0 se non entrerebbe nella tabella mostrata. */
+/** Where a score would land, counting from 1, or 0 if it would not make the table on show. */
 export async function placeOf(db, score) {
   const above = (await table(db)).filter((record) => record.score >= score).length;
   return above < SHOW ? above + 1 : 0;
 }
 
-// Il nome si chiede a ogni partita, non solo sulle prime dieci. Col gettone infinito una partita
-// corta è normale, e un punteggio senza firma non può stare in una tabella il cui mestiere è essere
-// la memoria di questa macchina.
+// The name is asked for after every game, not only the top ten. With the infinite coin a short
+// game is normal, and an unsigned score cannot sit in a table whose job is to be this machine's
+// memory.
 //
-// Si tiene il **livello raggiunto** e non la percentuale finale: dicono quasi la stessa cosa, e una
-// classifica con quattro numeri non si legge su un telefono.
+// We keep the **level reached** and not the final percentage: they say almost the same thing, and
+// a high score table with four numbers can't be read on a phone.
 export async function record(db, { name, score, level }) {
   const entry = {
     id: `${Date.now()}-${Math.round(score)}-${Math.floor(Math.random() * 1e6)}`,
@@ -104,8 +104,8 @@ export async function record(db, { name, score, level }) {
   };
   await put(db, "scores", entry);
   const ranked = _rank(await list(db, "scores", { index: "score", descending: true }));
-  // Potata in scrittura e non in lettura: una tabella letta mille volte e scritta una dovrebbe fare
-  // le pulizie nel momento in cui cambia.
+  // Pruned on write and not on read: a table read a thousand times and written once should do its
+  // tidying at the moment it changes.
   await replaceAll(db, "scores", ranked);
   return { entry, ranked };
 }
@@ -114,9 +114,9 @@ export async function stats(db) {
   return (await get(db, "stats", "totals")) || { ...EMPTY_STATS };
 }
 
-// `coins` è l'unica cosa che il gettone conta davvero una volta che il credito è infinito, ed è
-// degna di essere contata: è quante partite sono state giocate su questa macchina, cioè l'unico
-// numero che un cabinato ha sempre saputo di sé.
+// `coins` is the only thing the coin really counts once credit is infinite, and it is worth
+// counting: it is how many games have been played on this machine, that is, the one number an
+// arcade cabinet has always known about itself.
 export async function addStats(db, { games = 0, coins = 0, level = 1, seconds = 0 }) {
   const current = await stats(db);
   const next = {

@@ -2,11 +2,11 @@
 
 // Deadlines as a calendar file, and as a link that opens Google Calendar already filled in.
 //
-// **In `_lib/` da quando le app con delle scadenze sono due.** Plan Scope esporta le attività di
-// un progetto, Invoice Scope lo scadenzario; il file è lo stesso formato e lo stesso conto, e
-// l'unica cosa che cambia è chi lo firma. Per questo `PRODID` e il dominio degli `UID` si passano
-// da fuori invece di stare scritti qui: un file esportato da Invoice che si dichiarasse Plan Scope
-// sarebbe una bugia piccola e inutile.
+// **In `_lib/` since there have been two apps with deadlines.** Plan Scope exports a project's
+// tasks, Invoice Scope its schedule of due dates; the file is the same format and the same
+// arithmetic, and the only thing that changes is who signs it. That is why `PRODID` and the domain
+// of the `UID`s are passed in from outside instead of being written here: a file exported by
+// Invoice that declared itself Plan Scope would be a small and pointless lie.
 //
 // The app never talks to a calendar service. It writes a `.ics` file — the format every calendar
 // reads, RFC 5545 — and the person opens it: Apple Calendar and Outlook add the events directly,
@@ -18,16 +18,17 @@
 // computer. `UID` is the task's stable identity, so importing the same file twice updates the
 // event in calendars that honour it instead of adding a twin.
 //
-// **Il promemoria viaggia dentro il file.** Un `VALARM` accanto all'evento è l'unico modo che
-// un'app senza server ha di far suonare qualcosa a telefono spento: a suonare è il calendario di
-// chi ha importato, alle nove, anche su un iPhone e anche se l'app non viene più aperta. Le righe
-// le scrive `gg/remind.js`, che sa il conto — «il giorno prima alle nove» sono quindici ore prima
-// di un evento che comincia a mezzanotte, non ventiquattro.
+// **The reminder travels inside the file.** A `VALARM` beside the event is the only way an app
+// with no server has to make something ring with the phone switched off: what rings is the
+// calendar of whoever imported it, at nine, even on an iPhone and even if the app is never opened
+// again. The lines are written by `gg/remind.js`, which knows the arithmetic — "the day before at
+// nine" is fifteen hours before an event that starts at midnight, not twenty-four.
 //
 // Pure: strings in, strings out, and it runs in Node for the tests.
 
-// Dentro `_lib/` i vicini si chiamano per nome: la mappa `gg/` è della pagina, e il loader dei
-// test la risolve rispetto a chi importa. Lo fa già `plan-model.js` con `plan-markdown.js`.
+// Inside `_lib/` neighbours are called by name: the `gg/` map belongs to the page, and the test
+// loader resolves it relative to the importer. `plan-model.js` already does this with
+// `plan-markdown.js`.
 import * as remind from "./remind.js";
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -37,12 +38,12 @@ import * as remind from "./remind.js";
 const FOLD_AT = 75;                     // octets per line, per the standard
 
 /**
- * Chi firma il file e sotto che dominio stanno gli `UID`, se l'app non lo dice.
+ * Who signs the file and under which domain the `UID`s sit, if the app does not say.
  *
- * **Neutro, e non il nome di una delle due app.** La regola del catalogo è scritta: un modulo che
- * nomina un'app non è condiviso, è copiato — e un valore di partenza che dice «Plan Scope» fa
- * uscire quel nome da un file di Invoice il giorno in cui qualcuno si dimentica di passare la
- * firma. Qui c'è il nome della società, che è vero per tutt'e due.
+ * **Neutral, and not the name of either app.** The catalogue's rule is written down: a module that
+ * names an app is not shared, it is copied — and a default that says "Plan Scope" lets that name
+ * out of an Invoice file the day somebody forgets to pass the signature. Here there is the
+ * company's name, which is true for both.
  */
 export const SIGN = { prodid: "-//G&G Technologies//iCalendar//EN", domain: "ggtechnologies.sm" };
 
@@ -71,18 +72,18 @@ function _dayAfter(iso) {
   return next.toISOString().slice(0, 10);
 }
 
-/** Un'ora come la scrive un `input[type=time]`. */
+/** A time as an `input[type=time]` writes it. */
 function _isTime(value) {
   return typeof value === "string" && /^\d{1,2}:\d{2}$/.test(value.trim());
 }
 
-/** Giorno e ora insieme, senza fuso: `20260920T150000`. */
+/** Day and time together, with no time zone: `20260920T150000`. */
 function _moment(iso, time) {
   const [hh, mm] = String(time).trim().split(":");
   return `${_day(iso)}T${String(hh).padStart(2, "0")}${mm}00`;
 }
 
-/** L'ora dopo quanti minuti, dentro lo stesso giorno: un incontro che sconfina a domani non c'è. */
+/** The time so many minutes later, within the same day: a meeting spilling into tomorrow isn't one. */
 function _later(time, minutes) {
   const [hh, mm] = String(time).trim().split(":").map(Number);
   const total = Math.min(23 * 60 + 59, hh * 60 + mm + Math.max(0, Number(minutes) || 0));
@@ -127,16 +128,17 @@ function _fold(line) {
 /**
  * One event: `{ uid, title, date, end, description, time, minutes, place }`.
  *
- * Senza `time` è un evento di giornata: `end` è l'ultimo giorno, incluso, e una cosa con un inizio
- * e una fine occupa i giorni in mezzo. **Con `time`** — `"15:00"` — diventa un appuntamento che
- * dura `minutes` (un'ora, se non lo si dice), ed è quello che serve a un incontro: nel calendario
- * di chi lo riceve sta alle tre, non come una fascia sopra tutta la giornata, e la sveglia del
- * telefono suona dieci minuti prima invece che la sera del giorno prima.
+ * Without `time` it is an all-day event: `end` is the last day, inclusive, and something with a
+ * start and an end fills the days in between. **With `time`** — `"15:00"` — it becomes an
+ * appointment lasting `minutes` (an hour, if nobody says), and that is what a meeting needs: in the
+ * calendar of whoever receives it, it sits at three, not as a band across the whole day, and the
+ * phone's alarm rings ten minutes before instead of the evening of the day before.
  *
- * **L'ora è fluttuante**, cioè scritta senza fuso e senza `Z`. Per un'app che gira sul computer di
- * chi la usa è la cosa giusta: le tre sono le tre dov'è quella persona. Un fuso scritto nel file
- * sarebbe una promessa che l'app non può mantenere — non sa in quale fuso si terrà quell'incontro —
- * e la si pagherebbe in riunioni che slittano di un'ora due volte l'anno.
+ * **The time is floating**, that is written with no time zone and no `Z`. For an app that runs on
+ * the computer of the person using it this is the right thing: three o'clock is three o'clock
+ * wherever that person is. A time zone written into the file would be a promise the app cannot
+ * keep — it does not know in which time zone that meeting will be held — and it would be paid for
+ * in meetings that slip by an hour twice a year.
  */
 export function event({ uid, title, date, end = null, description = "",
   time = null, minutes = 60, place = "" },
@@ -153,7 +155,7 @@ export function event({ uid, title, date, end = null, description = "",
     `SUMMARY:${_escape(title)}`,
     ...(place ? [`LOCATION:${_escape(place)}`] : []),
     ...(description ? [`DESCRIPTION:${_escape(description)}`] : []),
-    // La sveglia sta **dentro** l'evento e prima della sua fine, che è dove la specifica la vuole.
+    // The alarm sits **inside** the event and before its end, which is where the specification wants it.
     ...(alarm && alarm.on ? remind.alarm(alarm, title) : []),
     "END:VEVENT",
   ];
@@ -181,7 +183,7 @@ export function calendar(events, { now = new Date(), name = "", alarm = null, si
 export function googleLink({ title, date, end = null, description = "",
   time = null, minutes = 60, place = "" }) {
   const last = end && end >= date ? end : date;
-  // Con un'ora, Google vuole gli istanti nella stessa forma fluttuante del file.
+  // With a time, Google wants the instants in the same floating form as the file.
   const dates = _isTime(time)
     ? `${_moment(date, time)}/${_moment(date, _later(time, minutes))}`
     : `${_day(date)}/${_day(_dayAfter(last))}`;

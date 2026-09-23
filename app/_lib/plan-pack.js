@@ -17,8 +17,8 @@
 // Everything except `save` is free of the DOM, so `node app/plan-scope/test/pack.mjs` can take a
 // project out, cut it up and put it back without a browser.
 
-// Dentro `_lib/` un modulo chiama i suoi vicini per via relativa, come fa `io.js` con `store.js`:
-// la import map `gg/` è della pagina, e qui saremmo già a destinazione.
+// Inside `_lib/` a module calls its neighbours by relative path, as `io.js` does with `store.js`:
+// the `gg/` import map belongs to the page, and here we would already be at the destination.
 import * as zip from "./zip.js";
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -26,15 +26,15 @@ import * as zip from "./zip.js";
 // -----------------------------------------------------------------------------------------------------------------
 
 /**
- * Il marcatore che finisce dentro ogni pacchetto, e che si controlla leggendone uno.
+ * The marker that ends up inside every package, and that is checked when reading one.
  *
- * **È il nome del formato, non dell'app**, da quando le app che lo scrivono sono due: un pacchetto
- * esportato da Invoice Scope deve aprirsi in Plan Scope e viceversa, ed è tutto il senso di avere il
- * modello in comune. `plan-scope` resta accettato in lettura per sempre — i pacchetti scritti prima
- * di oggi stanno sul disco di qualcuno, e rifiutarli sarebbe rompere un file che era valido.
+ * **It is the name of the format, not of the app**, ever since the apps that write it became two: a
+ * package exported from Invoice Scope must open in Plan Scope and vice versa, and that is the whole
+ * point of sharing the model. `plan-scope` stays accepted on reading for ever — the packages written
+ * before today sit on somebody's disk, and refusing them would be breaking a file that was valid.
  *
- * L'archivio completo di un'app è un'altra cosa e tiene il nome dell'app: lì `gg/io.js` confronta
- * alla lettera, e un archivio di Plan Scope non va restituito a Invoice Scope.
+ * An app's full archive is another thing and keeps the app's name: there `gg/io.js` compares
+ * literally, and a Plan Scope archive must not be handed back to Invoice Scope.
  */
 export const APP = "gg-plan";
 
@@ -140,9 +140,9 @@ export function toZip(data, { schema, now = new Date() } = {}) {
 }
 
 /**
- * Il nome del file scaricato. `prefix` lo passa l'app, e non è il marcatore del formato: chi ha
- * esportato per anni dei `plan-scope-…zip` deve continuare a trovarli con quel nome nella cartella
- * dei download, e chi esporta da Invoice Scope si aspetta il nome di Invoice Scope.
+ * The name of the downloaded file. `prefix` is passed by the app, and it is not the format marker:
+ * whoever has exported `plan-scope-…zip` files for years must keep finding them under that name in
+ * the downloads folder, and whoever exports from Invoice Scope expects Invoice Scope's name.
  */
 export function fileName(project, { extension = "zip", now = new Date(), prefix = APP } = {}) {
   return `${prefix}-${safeName(project.name)}-${_stamp(now)}.${extension}`;

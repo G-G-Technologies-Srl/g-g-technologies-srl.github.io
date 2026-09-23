@@ -1,15 +1,15 @@
 // Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
 
-// Le regole del gioco, provate senza browser.
+// The rules of the game, tested without a browser.
 //
-// È il ritorno dell'aver tenuto `game.js` lontano dal canvas. Quello che si controlla qui è quello
-// che in un gioco così va storto davvero, e in cima a tutto c'è un invariante:
+// This is the payoff for having kept `game.js` away from the canvas. What is checked here is what
+// really goes wrong in a game like this, and at the top of it all there is an invariant:
 //
-//     conquistato + ancora aperto = quello che l'arena era all'inizio
+//     claimed + still open = what the arena was at the start
 //
-// Se smette di valere, la percentuale sullo schermo è un'invenzione, la quota si raggiunge quando
-// capita e la classifica confronta partite diverse. Costa una riga per prova ed è il controllo che
-// prende quasi tutto il resto.
+// If it stops holding, the percentage on screen is made up, the quota is reached whenever it
+// happens to be, and the high score table compares different games. It costs one line per test and
+// it is the check that catches almost everything else.
 //
 // Usage:  node app/recinto/test/rules.mjs
 
@@ -32,21 +32,21 @@ function equal(name, got, want) {
 
 const move = (dx, dy, slow = false) => ({ dx, dy, slow });
 
-// I Fili si muovono da soli, e per una prova sulle regole del taglio è rumore: `hold` li rimette
-// dove devono stare a ogni passo. Le prove che riguardano il mondo intero — l'invariante, la
-// ripetibilità — girano senza, che è il punto.
+// The Threads move on their own, and for a test of the cutting rules that is noise: `hold` puts
+// them back where they belong on every step. The tests about the whole world — the invariant,
+// repeatability — run without it, which is the point.
 //
-// Scrive **tutti e due i capi e la scia**, non una posizione sola. La prima versione scriveva
-// `thread.at`, che quando il segnaposto è diventato il Filo ha smesso di esistere: da lì in poi il
-// fermo non fermava più niente e le prove passavano per come cadeva il seme. Un fermo che non ferma
-// non fallisce, tace — ed è il motivo per cui questo commento è più lungo della funzione.
+// It writes **both ends and the trail**, not a single position. The first version wrote
+// `thread.at`, which stopped existing when the placeholder became the Thread: from then on the
+// hold held nothing and the tests passed depending on how the seed fell. A hold that does not hold
+// does not fail, it goes quiet — and that is why this comment is longer than the function.
 function hold(world, pin) {
   if (!pin) return;
   world.threads.forEach((thread, k) => {
     if (!pin[k]) return;
     thread.a.at = pin[k].slice();
-    // Due unità e non quattro: in una sacca stretta un capo largo sporge sulla linea che la sta
-    // chiudendo, e la prova sulla cattura diventa una prova sulla morte.
+    // Two units and not four: in a tight pocket a wide end sticks out over the line that is closing
+    // it, and the test of capture turns into a test of death.
     thread.b.at = [pin[k][0] + 2, pin[k][1]];
     thread.trail.length = 0;
   });
@@ -61,10 +61,10 @@ function play(world, intent, steps, pin = null) {
   return world;
 }
 
-// Contare i fotogrammi è il modo sbagliato di fermarsi dopo un taglio, e lo si scopre il giorno in
-// cui il marcatore diventa più veloce: gli stessi novecento passi che prima bastavano per un taglio
-// solo ne fanno due, il secondo dentro la faccia accanto, e la prova fallisce senza che il codice
-// sia cambiato. Ci si ferma su quello che si sta aspettando — la conquista — non sull'orologio.
+// Counting frames is the wrong way to stop after a cut, and you find that out the day the marker
+// gets faster: the same nine hundred steps that used to be enough for a single cut now make two,
+// the second inside the face next door, and the test fails without the code having changed. We
+// stop on what we are waiting for — the claim — not on the clock.
 function slice(world, intent, pin = null, cap = 6000) {
   for (let i = 0; i < cap; i += 1) {
     step(world, intent);
@@ -79,7 +79,7 @@ const openArea2 = (world) => world.faces.reduce((sum, face) => sum + area2(face)
 const intact = (world) => world.claimed2 + openArea2(world) === world.total2;
 
 // -----------------------------------------------------------------------------------------------------------------
-//  i l   m a r c a t o r e   s u l   b o r d o
+//  t h e   m a r k e r   o n   t h e   b o r d e r
 // -----------------------------------------------------------------------------------------------------------------
 
 {
@@ -98,9 +98,9 @@ const intact = (world) => world.claimed2 + openArea2(world) === world.total2;
   check("verso l'esterno non si va", world.marker.at[1] === 0 && world.cut === null);
 }
 
-// La velocità è costante in distanza: dieci passi in diagonale ne costano √2 ciascuno, quindi
-// impiegano √2 volte i fotogrammi di dieci passi dritti. Senza questa riga la diagonale sarebbe una
-// scorciatoia e nessuno taglierebbe più dritto.
+// Speed is constant in distance: ten diagonal steps cost √2 each, so they take √2 times the frames
+// of ten straight steps. Without this line the diagonal would be a shortcut and nobody would cut
+// straight any more.
 {
   const frames = (intent) => {
     const world = create(1, 5);
@@ -121,7 +121,7 @@ const intact = (world) => world.claimed2 + openArea2(world) === world.total2;
 }
 
 // -----------------------------------------------------------------------------------------------------------------
-//  i l   t a g l i o
+//  t h e   c u t
 // -----------------------------------------------------------------------------------------------------------------
 
 {
@@ -142,7 +142,7 @@ const intact = (world) => world.claimed2 + openArea2(world) === world.total2;
         `da ${reached} a ${world.marker.at}`);
 }
 
-// Il taglio dritto in mezzo: il vagante è a sinistra, quindi la metà di destra è tua.
+// The straight cut down the middle: the wanderer is on the left, so the right half is yours.
 {
   const world = create(1, 5);
   slice(world, move(0, 1), [[40, 96]]);
@@ -162,7 +162,7 @@ const intact = (world) => world.claimed2 + openArea2(world) === world.total2;
 }
 
 // -----------------------------------------------------------------------------------------------------------------
-//  l a   c a t t u r a   e   l a   s e p a r a z i o n e
+//  c a p t u r e   a n d   s e p a r a t i o n
 // -----------------------------------------------------------------------------------------------------------------
 
 {
@@ -175,9 +175,9 @@ const intact = (world) => world.claimed2 + openArea2(world) === world.total2;
   check("con il premio della cattura", world.score >= RULES.capture);
 }
 
-// La scommessa si piazza uscendo, non si regola per strada. Non si vede dal punteggio — quello
-// legge già il valore giusto — ma dal tempo: cambiare idea a linea fuori non deve rallentare il
-// marcatore, altrimenti si esce veloci e si rallenta appena il campo è libero.
+// The bet is placed on the way out, not adjusted along the way. It does not show in the score —
+// that already reads the right value — but in the time: changing your mind with the line out must
+// not slow the marker down, otherwise you go out fast and slow down as soon as the field is clear.
 {
   const closeFrames = (atStart, later) => {
     const world = create(1, 5);
@@ -202,7 +202,8 @@ const intact = (world) => world.claimed2 + openArea2(world) === world.total2;
   equal("una volta sola, e vale esattamente il premio", world.score, RULES.separation);
 }
 
-// Separare due volte non paga due volte: il premio è per aver capito la mossa, non per ripeterla.
+// Separating twice does not pay twice: the bonus is for having understood the move, not for
+// repeating it.
 {
   const world = create(1, 5);
   const one = JSON.stringify(world.threads[0]);
@@ -220,7 +221,7 @@ const intact = (world) => world.claimed2 + openArea2(world) === world.total2;
 }
 
 // -----------------------------------------------------------------------------------------------------------------
-//  l a   q u o t a
+//  t h e   q u o t a
 // -----------------------------------------------------------------------------------------------------------------
 
 {
@@ -236,7 +237,7 @@ check("cresce di livello in livello", quota(create(4, 1)) > quota(create(1, 1)))
 equal("e ha un tetto", quota(create(40, 1)), RULES.quotaMax);
 
 // -----------------------------------------------------------------------------------------------------------------
-//  l o   s t e s s o   s e m e   d a '   l a   s t e s s a   p a r t i t a
+//  t h e   s a m e   s e e d   g i v e s   t h e   s a m e   g a m e
 // -----------------------------------------------------------------------------------------------------------------
 
 {
@@ -254,17 +255,17 @@ equal("e ha un tetto", quota(create(40, 1)), RULES.quotaMax);
 }
 
 // -----------------------------------------------------------------------------------------------------------------
-//  t u t t e   l e   a r e n e ,   l o   s t e s s o   c i c l o
+//  e v e r y   a r e n a ,   t h e   s a m e   c y c l e
 // -----------------------------------------------------------------------------------------------------------------
 
-// Un buco è terra circondata. Se il contorno di un buco cammina sul muro dell'arena, non è terra
-// circondata: è un pezzo di bordo travestito, cioè una faccia che ha smesso di voler dire qualcosa.
+// A hole is enclosed ground. If a hole's outline walks along the arena wall, it is not enclosed
+// ground: it is a piece of border in disguise, that is, a face that has stopped meaning anything.
 //
-// **È l'invariante che ha trovato il difetto peggiore del progetto**, e per un giorno è vissuto in
-// una sonda usa-e-getta invece che qui. Sta qui adesso perché è l'unico che vede la malattia
-// *quando comincia*: l'area continuava a tornare esatta, la percentuale era giusta, le facce
-// superavano ogni altro controllo — e il gioco esplodeva cinquecento passi dopo, in un'altra
-// funzione, in un altro livello, su un taglio che nessuno avrebbe collegato a questo.
+// **This is the invariant that found the worst bug in the project**, and for a day it lived in a
+// throwaway probe instead of here. It is here now because it is the only one that sees the
+// sickness *when it starts*: the area kept coming out exact, the percentage was right, the faces
+// passed every other check — and the game blew up five hundred steps later, in another function,
+// on another level, on a cut nobody would have connected to this one.
 function leaning(world) {
   const wall = { rings: [world.outline[0]] };
   for (const face of world.faces) {
@@ -290,8 +291,8 @@ for (let level = 1; level <= ARENAS.length; level += 1) {
   check(`arena «${world.arena}»: nessun buco si appoggia al muro`, !leaning(world), leaning(world) || "");
 }
 
-// Fermarsi non è ancora pericoloso — la Miccia arriva al passo 5 — ma non deve nemmeno muovere
-// niente, e un mondo fermo deve restare identico a sé stesso.
+// Stopping is not dangerous yet — the Fuse arrives in step 5 of the work plan in DESIGN.md — but it
+// must not move anything either, and a world standing still must stay identical to itself.
 {
   const world = create(1, 5);
   play(world, move(0, 1), 200);
@@ -302,11 +303,11 @@ for (let level = 1; level <= ARENAS.length; level += 1) {
 }
 
 // -----------------------------------------------------------------------------------------------------------------
-//  i l   F i l o   e   l e   v i t e
+//  t h e   T h r e a d   a n d   t h e   l i v e s
 // -----------------------------------------------------------------------------------------------------------------
 
-// Porta fuori una linea e poi mette il Filo **sulla coda**, lontano dalla punta: è il caso che
-// distingue «il marcatore è letale» da «la linea è letale», e sono due giochi diversi.
+// Takes a line out and then puts the Thread **on its tail**, far from the tip: it is the case that
+// tells "the marker is lethal" apart from "the line is lethal", and those are two different games.
 function exposed(seed = 5) {
   const world = create(1, seed);
   play(world, move(0, 1), 100, [[40, 96]]);
@@ -354,8 +355,8 @@ function across(world, a = [124, 20], b = [132, 20]) {
 }
 
 {
-  // Sul bordo il Filo non può niente: ci sta lontano per costruzione, e senza linea fuori non c'è
-  // niente da toccare. Le Scintille, che arrivano dopo, sono la minaccia di quel posto lì.
+  // On the border the Thread can do nothing: it keeps away from it by construction, and with no
+  // line out there is nothing to touch. The Sparks, which come later, are the threat in that place.
   const world = create(1, 5);
   play(world, move(1, 0), 400, [[130, 6]]);
   equal("sul bordo il Filo non uccide", world.lives, RULES.lives);
@@ -363,10 +364,10 @@ function across(world, a = [124, 20], b = [132, 20]) {
 }
 
 {
-  // Il Filo che tocca la linea **sul bordo esatto** del riquadro che la contiene. Il rifiuto a buon
-  // mercato che precede il controllo caro va scritto con `>` e non con `>=`, e la differenza si
-  // vede solo qui: una catena dritta ha un riquadro largo zero, e col confronto sbagliato ogni Filo
-  // che la tocca viene scartato prima di essere guardato.
+  // The Thread touching the line **exactly on the edge** of the box that contains it. The cheap
+  // rejection that comes before the expensive check has to be written with `>` and not `>=`, and
+  // the difference only shows here: a straight chain has a box of zero width, and with the wrong
+  // comparison every Thread that touches it is discarded before it is looked at.
   const world = exposed();
   across(world, [128, 20], [140, 20]);
   step(world, move(0, 1));
@@ -374,7 +375,7 @@ function across(world, a = [124, 20], b = [132, 20]) {
 }
 
 {
-  // Quello che si vede uccide: la scia è il corpo, non un effetto.
+  // What you see kills: the trail is the body, not an effect.
   const world = exposed();
   const thread = world.threads[0];
   thread.a.at = [40, 96];
@@ -395,8 +396,8 @@ function across(world, a = [124, 20], b = [132, 20]) {
   equal("e dopo non succede più niente", String([world.marker.at, world.score, world.claimed2]), frozen);
 }
 
-// Il Filo non esce mai dalla sua faccia, in nessuna arena: è la condizione che rende `contains` una
-// domanda con risposta nel momento in cui il taglio si chiude.
+// The Thread never leaves its face, in any arena: it is the condition that makes `contains` a
+// question with an answer at the moment the cut closes.
 for (let level = 1; level <= ARENAS.length; level += 1) {
   const world = create(level, 31);
   let escaped = 0;
@@ -406,9 +407,9 @@ for (let level = 1; level <= ARENAS.length; level += 1) {
     for (const thread of world.threads) {
       const face = world.faces.find((f) => contains(f, thread.a.at));
       if (!face || !contains(face, thread.b.at)) { escaped += 1; continue; }
-      // Il margine dalle pareti non è un dettaglio del rimbalzo: è la promessa che `contains` non
-      // verrà mai interrogato su un punto appoggiato a un muro, cioè l'unica domanda a cui non sa
-      // rispondere — e quella risposta decide da che parte è finito il Filo dopo un taglio.
+      // The margin from the walls is not a detail of the bounce: it is the promise that `contains`
+      // will never be asked about a point resting on a wall, which is the one question it cannot
+      // answer — and that answer decides which side the Thread ended up on after a cut.
       for (const end of [thread.a, thread.b]) {
         const wall = nearestOnBoundary(face, end.at);
         if (wall && wall.distance < THREAD.clearance - 1e-9) tooClose += 1;
@@ -423,7 +424,7 @@ for (let level = 1; level <= ARENAS.length; level += 1) {
 }
 
 // -----------------------------------------------------------------------------------------------------------------
-//  l a   M i c c i a
+//  t h e   F u s e
 // -----------------------------------------------------------------------------------------------------------------
 
 const LEFT = [[40, 96]];
@@ -435,9 +436,9 @@ const LEFT = [[40, 96]];
   equal("muovendosi la Miccia non brucia", world.cut.fuse, 0);
 }
 
-// Premere non è muoversi. Spingere in una direzione che il gioco rifiuta — contro un muro, o
-// all'indietro sulla propria linea — è stare fermi tanto quanto non premere niente, e la Miccia non
-// distingue le due cose perché non c'è niente da distinguere.
+// Pressing is not moving. Pushing in a direction the game refuses — against a wall, or backwards
+// onto your own line — is standing still just as much as pressing nothing, and the Fuse does not
+// tell the two apart because there is nothing to tell apart.
 {
   const world = exposed();
   play(world, move(0, -1), 200, LEFT);
@@ -459,9 +460,9 @@ const LEFT = [[40, 96]];
   const burnt = world.cut.fuse;
   check("da fermi mangia la linea", burnt > 0);
 
-  // Un fotogramma o due di coda ci sono, e sono giusti: premere non è essersi mossi, e finché il
-  // marcatore non ha davvero cambiato posto è ancora fermo. Quello che non deve succedere è che la
-  // linea ricresca — la Miccia non restituisce niente.
+  // There are a frame or two of lag, and they are right: pressing is not having moved, and until
+  // the marker has really changed place it is still standing still. What must not happen is the
+  // line growing back — the Fuse gives nothing back.
   play(world, move(0, 1), 40, LEFT);
   const settled = world.cut.fuse;
   check("ripartendo non torna indietro", settled >= burnt, `${settled} < ${burnt}`);
@@ -479,13 +480,13 @@ const LEFT = [[40, 96]];
 }
 
 {
-  // Il Filo è lontano e le Scintille non arrivano su una linea fuori: se qui si muore, si muore
-  // della propria esitazione.
+  // The Thread is far away and the Sparks do not reach a line that is out: if you die here, you
+  // die of your own hesitation.
   //
-  // Ci si ferma **alla morte** e non dopo un tot di passi, e la prima versione di questa prova lo
-  // faceva: tirava dritto per duemila passi e ne collezionava due, perché dopo il rientro il
-  // marcatore resta fermo sul bordo e lì la Scintilla lo raggiunge. Che è il mestiere della
-  // Scintilla, non un difetto — ma di questa prova non fa parte.
+  // We stop **at the death** and not after some number of steps, and the first version of this
+  // test did the latter: it ran straight on for two thousand steps and collected two deaths,
+  // because after the respawn the marker stays still on the border and there the Spark reaches
+  // it. Which is the Spark's job, not a bug — but it is no part of this test.
   const world = exposed();
   let cause = null;
   for (let i = 0; i < 3000 && !cause; i += 1) {
@@ -499,8 +500,8 @@ const LEFT = [[40, 96]];
   equal("e si riparte senza linea", world.cut, null);
 }
 
-// E la controprova, che era una sorpresa e adesso è una regola: fermo sul bordo, senza linea fuori,
-// prima o poi la Scintilla arriva. Non esiste un posto dove aspettare.
+// And the counter-check, which was a surprise and is now a rule: standing still on the border, with
+// no line out, sooner or later the Spark arrives. There is no place to wait.
 {
   const world = create(1, 5);
   let cause = null;
@@ -514,7 +515,7 @@ const LEFT = [[40, 96]];
 }
 
 // -----------------------------------------------------------------------------------------------------------------
-//  l e   S c i n t i l l e
+//  t h e   S p a r k s
 // -----------------------------------------------------------------------------------------------------------------
 
 const spark = (at, forward = true) => ({ at: at.slice(), forward, travel: 0, face: 0, ring: 0, index: -1 });
@@ -537,14 +538,14 @@ equal("e hanno un tetto", create(40, 5).sparks.length, RULES.sparksMax);
 {
   const world = create(1, 5);
   world.age = SPARK.first + 1;
-  world.sparks = [spark([129, 0])];           // l'indice è sbagliato apposta: deve ritrovarsi da sé
+  world.sparks = [spark([129, 0])];           // index wrong on purpose: it must find its way back
   step(world, NO_INTENT);
   equal("prendono il marcatore fermo sul bordo", world.lives, RULES.lives - 1);
 }
 
-// Un passo solo dentro il campo: la linea è fuori e il bordo è a un'unità di distanza. È il posto
-// in cui una Scintilla è più vicina al marcatore di quanto lo sarà mai — e non può niente lo stesso,
-// perché il marcatore non è più sulla sua pista.
+// Just one step into the field: the line is out and the border is one unit away. It is the place
+// where a Spark is closer to the marker than it will ever be — and it can do nothing all the same,
+// because the marker is no longer on its track.
 {
   const world = create(1, 5);
   world.age = SPARK.first + 1;
@@ -557,9 +558,9 @@ equal("e hanno un tetto", create(40, 5).sparks.length, RULES.sparksMax);
   equal("con la linea fuori il marcatore non è più roba loro", world.lives, RULES.lives);
 }
 
-// Il riaggancio. È l'unico punto del gioco in cui una struttura dati cambia sotto i piedi di
-// qualcuno che la stava percorrendo, e qui il bordo su cui la Scintilla correva viene proprio
-// conquistato via.
+// Re-attaching. It is the only point in the game where a data structure changes under the feet of
+// someone who was travelling along it, and here the border the Spark was running on is claimed
+// away outright.
 {
   const world = create(1, 5);
   world.age = SPARK.first + 1;

@@ -327,10 +327,10 @@ export function backupWriter({ folder, snapshot, prefix, load, save, onStatus = 
   let writeTimer = null;
   let tickTimer = null;
   let watching = false;
-  // Trattenuto: la cartella è collegata e non ci si scrive, perché teneva già delle copie e nessuno
-  // ha ancora detto quali delle due versioni vale. Va salvato insieme al resto — se restasse in
-  // memoria, chiudere e riaprire l'app scriverebbe proprio la cosa che il collegamento non ha
-  // voluto scrivere, ed è il riavvio dopo una reinstallazione il momento in cui questo succede.
+  // Held: the folder is linked and nothing is written to it, because it already held copies and
+  // nobody has said yet which of the two versions counts. It is saved along with the rest — if it
+  // stayed in memory, closing and reopening the app would write exactly the thing the link chose
+  // not to write, and the restart after a reinstall is precisely the moment this happens.
   let held = false;
 
   const saveState = () => save(stateKey, { fingerprint, lastWrite, held });
@@ -414,28 +414,28 @@ export function backupWriter({ folder, snapshot, prefix, load, save, onStatus = 
     },
 
     /**
-     * «Scegli la cartella…»: si guarda prima di scrivere.
+     * "Scegli la cartella…" (choose the folder): look before writing.
      *
-     * Qui c'era scritto «una cartella nuova non sa niente, quindi la si scrive qualunque cosa ci
-     * sia» — e la cartella nuova non è quasi mai nuova. Il caso che quella riga non vedeva: si
-     * disinstalla l'app e la si reinstalla, il deposito riparte vuoto e si prende il dimostrativo,
-     * e poi si ricollega la cartella di sempre aspettandosi di rivedere il proprio lavoro. Il
-     * collegamento scriveva, e quello che scriveva era il dimostrativo: sopra l'archivio corrente
-     * e sopra la copia del giorno. Nessun errore, nessuna domanda, il danno fatto in silenzio.
+     * Here it used to say "a new folder knows nothing, so it gets written whatever is in it" — and
+     * the new folder is almost never new. The case that line did not see: the app is uninstalled
+     * and reinstalled, the store starts again empty and picks up the demo data, and then the usual
+     * folder is linked again in the expectation of seeing one's own work back. The link wrote, and
+     * what it wrote was the demo data: over the current archive and over the copy of the day. No
+     * error, no question, the damage done in silence.
      *
-     * Quindi: se la cartella tiene già delle copie di quest'app, non si scrive niente e non si
-     * decide niente — si riferisce cosa c'è e si resta **trattenuti**, che è uno stato in cui
-     * nessuna strada scrive, timer compresi. A scegliere è chi ha collegato, con `release()`.
+     * So: if the folder already holds copies from this app, nothing is written and nothing is
+     * decided — it reports what is there and stays **held**, which is a state in which no path
+     * writes, timers included. The choice belongs to whoever linked it, through `release()`.
      *
-     * Torna `false` se il selettore è stato chiuso, altrimenti `{ ok: true, found }`, dove `found`
-     * sono le copie trovate — vuoto quando la cartella era davvero nuova e la si è scritta.
+     * Returns `false` if the picker was closed, otherwise `{ ok: true, found }`, where `found` is
+     * the copies that were found — empty when the folder really was new and got written.
      */
     async link() {
       if (!(await folder.link())) return false;
       forget();
       let found = [];
-      // Una cartella che non si lascia leggere non è una cartella piena: si va avanti come prima,
-      // perché fermarsi qui vorrebbe dire non poter più collegare niente.
+      // A folder that will not let itself be read is not a full folder: carry on as before,
+      // because stopping here would mean never being able to link anything again.
       try {
         found = await copies(folder.handle, { prefix });
       } catch (ignored) { found = []; }
@@ -448,12 +448,12 @@ export function backupWriter({ folder, snapshot, prefix, load, save, onStatus = 
     },
 
     /**
-     * La scelta, detta dopo che il collegamento si è fermato.
+     * The choice, given after the link has stopped.
      *
-     * Una sola funzione per le due risposte, perché quello che cambia è cosa c'è nel deposito
-     * quando la si chiama, non cosa fa lei: dopo un ripristino il deposito tiene la cartella e la
-     * riscrittura è una formalità; dopo «scrivi quello che ho qui» il deposito tiene altro e la
-     * riscrittura è la risposta. In tutti e due i casi da qui in poi si scrive di nuovo.
+     * A single function for both answers, because what changes is what is in the store when it
+     * is called, not what it does: after a restore the store holds the folder's contents and the
+     * rewrite is a formality; after "write what I have here" the store holds something else and
+     * the rewrite is the answer. In both cases, from here on writing starts again.
      */
     async release() {
       if (!folder.handle) return false;

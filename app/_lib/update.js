@@ -116,25 +116,26 @@ export async function setup({ badge, texts, onVersion = () => {}, script = "./sw
     badge.hidden = false;
   };
 
-  // **La versione che gira si sa subito, e non ha niente a che vedere con la registrazione.**
+  // **The running version is known at once, and it has nothing to do with the registration.**
   //
-  // Chi sta servendo questa pagina è già lì: `controller` c'è dal primo istante e risponde in
-  // millisecondi. Eppure per mesi questa riga è arrivata *dopo* `await register(…)`, e con lei
-  // tutto il resto — il riquadro, l'ascolto degli aggiornamenti, i controlli periodici.
+  // Whoever is serving this page is already there: `controller` exists from the first instant and
+  // answers in milliseconds. Yet for months this line came *after* `await register(…)`, and with it
+  // everything else — the badge, the listening for updates, the periodic checks.
   //
-  // Finché quella promessa pende non si vede **niente**: non «c'è una versione nuova», proprio
-  // nessun numero, il riquadro nascosto come se l'app non avesse una versione. E quella promessa
-  // pende esattamente quando la pagina è più interessante, cioè subito dopo una pubblicazione,
-  // perché è allora che il browser ha un worker nuovo da scaricare e installare. Misurato in
-  // laboratorio: **sessantun secondi** di riquadro vuoto dopo un aggiornamento, e in quei
-  // sessantun secondi la risposta alla domanda «quale versione sto usando?» era: nessuna.
+  // While that promise is pending **nothing** shows: not "there is a new version", no number at
+  // all, the badge hidden as if the app had no version. And that promise is pending exactly when
+  // the page is most interesting, that is right after a release, because that is when the browser
+  // has a new worker to download and install. Measured in the lab: **sixty-one seconds** of empty
+  // badge after an update, and in those sixty-one seconds the answer to the question "which
+  // version am I using?" was: none.
   //
-  // Adesso il numero compare appena il worker risponde, e la registrazione va per conto suo. Le due
-  // cose non hanno mai avuto motivo di stare in fila.
-  // Torna anche *se* la domanda è stata fatta, non solo com'è andata: un worker di prima di questa
-  // libreria non risponde, e la differenza fra «ha taciuto» e «non gliel'ho chiesto» vale un'attesa
-  // intera. Rifargli la domanda sarebbe un secondo timeout identico, e chi aspetta questa risposta
-  // — l'annuncio della versione nuova — aspetterebbe il doppio per sapere la stessa cosa.
+  // Now the number appears as soon as the worker answers, and the registration goes its own way.
+  // The two things never had any reason to stand in line.
+  // It also returns *whether* the question was asked, not only how it went: a worker from before
+  // this library does not answer, and the difference between "it said nothing" and "I didn't ask
+  // it" is worth a whole wait. Asking it again would be a second identical timeout, and whoever is
+  // waiting for this answer — the announcement of the new version — would wait twice as long to
+  // learn the same thing.
   const early = (async () => {
     const now = navigator.serviceWorker.controller;
     if (!now) return { chiesto: false, versione: null };
@@ -167,7 +168,7 @@ export async function setup({ badge, texts, onVersion = () => {}, script = "./sw
   const currentKnown = (async () => {
     const first = await early;
     if (first.versione) return current;
-    if (first.chiesto) return null;     // c'era, ha taciuto: è un worker di prima della libreria
+    if (first.chiesto) return null;     // there, and silent: a worker from before the library
     const now = registration.active;
     if (now) return (current = await _versionOf(now));
     const ready = await Promise.race([

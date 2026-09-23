@@ -68,7 +68,7 @@ export function contains(face, point) {
 }
 
 // -----------------------------------------------------------------------------------------------------------------
-//  i n c r o c i
+//  c r o s s i n g s
 // -----------------------------------------------------------------------------------------------------------------
 
 // Do the two segments share at least one point? Touching at an endpoint counts, and so does lying
@@ -141,18 +141,18 @@ export function onBoundary(face, point) {
 // anything strange. A point where they touch belongs to both, and «which ring is this on» stops
 // having an answer. That question is the first thing `split` asks.
 //
-// **E un anello può toccare sé stesso**, che è la stessa cosa e per un anno non è stata contata.
-// La prima versione chiedeva «su quanti anelli sta questo punto» e rispondeva uno per un contorno
-// che ci passa due volte: succede a ogni insenatura, cioè ogni volta che un taglio arriva su
-// un'isola. Lì il bordo entra lungo la fenditura, gira l'isola e riesce lungo la stessa fenditura,
-// e ogni punto di quella fenditura — punta compresa — è un posto in cui «da che parte sto» non ha
-// risposta. Un taglio che partiva da lì veniva accettato, `split` sceglieva la prima delle due
-// occorrenze e restituiva un buco con due vertici appoggiati al muro dell'arena: un buco che non
-// è terra circondata ma un pezzo di bordo travestito. Il gioco continuava a tornare i conti giusti
-// e scoppiava quattro tagli dopo, altrove.
+// **And a ring can touch itself**, which is the same thing and for a year went uncounted. The
+// first version asked "how many rings is this point on" and answered one for an outline that
+// passes through it twice: it happens at every bay, that is, every time a cut reaches an island.
+// There the border runs in along the slit, goes round the island and comes back out along the same
+// slit, and every point of that slit — the tip included — is a place where "which side am I on"
+// has no answer. A cut starting from there was accepted, `split` picked the first of the two
+// occurrences and returned a hole with two vertices resting on the arena wall: a hole that is not
+// enclosed ground but a piece of border in disguise. The game kept getting the sums right and
+// blew up four cuts later, somewhere else.
 //
-// La domanda giusta è **quante volte il bordo ci passa**, e vale per tutti e due i casi in una
-// riga sola.
+// The right question is **how many times the border passes through it**, and it covers both cases
+// in a single line.
 export function wallsAt(face, point) {
   let many = 0;
   for (const ring of face.rings) many += _passes(ring, point);
@@ -160,7 +160,7 @@ export function wallsAt(face, point) {
 }
 
 // -----------------------------------------------------------------------------------------------------------------
-//  i l   p e r c o r s o
+//  t h e   p a t h
 // -----------------------------------------------------------------------------------------------------------------
 
 // The path the marker takes from where it is towards a target: one lattice step at a time,
@@ -180,12 +180,12 @@ export function wallsAt(face, point) {
 export function pathTo(face, from, target, limit = 1024) {
   const path = [[from[0], from[1]]];
 
-  // La stessa domanda che `game.js` fa un istante prima di staccare, fatta anche qui — e non per
-  // simmetria. **L'anteprima è la linea che verrà percorsa**: se qui si disegna un taglio che di
-  // là viene rifiutato, il tratteggio ha detto una bugia, e la bugia si scopre premendo e non
-  // vedendo succedere niente. È esattamente quello che faceva sulla fenditura di un'insenatura —
-  // il marcatore aveva otto direzioni legali secondo `canStep`, l'anteprima ne disegnava il
-  // taglio, e il mondo non si muoveva. Di lì si cammina soltanto, ed è così che se ne esce.
+  // The same question `game.js` asks an instant before leaving the wall, asked here too — and not
+  // for symmetry. **The preview is the line that will be walked**: if a cut is drawn here that is
+  // refused over there, the dashed line has told a lie, and the lie is found out by pressing and
+  // seeing nothing happen. That is exactly what it did on the slit of a bay — the marker had eight
+  // legal directions according to `canStep`, the preview drew the cut, and the world did not
+  // move. From there you can only walk, and that is how you get out.
   if (onBoundary(face, from) && wallsAt(face, from) > 1) return path;
 
   for (let n = 0; n < limit; n += 1) {
@@ -196,7 +196,7 @@ export function pathTo(face, from, target, limit = 1024) {
     const kind = canStep(face, p, q);
     if (kind === "open") { path.push(q); continue; }
     if (kind === "close") { path.push(q); break; }
-    break;                                   // "walk" e il rifiuto finiscono qui: non sono tagli
+    break;                                   // "walk" and a refusal end here: they are not cuts
   }
   return path;
 }
@@ -225,15 +225,15 @@ export function canStep(face, from, to) {
   const lands = onBoundary(face, to);
   if (onBoundary(face, middle)) return lands ? "walk" : null;
   if (!contains(face, middle)) return null;
-  // Chiudere dove due pareti si toccano non si può, e la ragione è sotto `wallsAt`: lì «su quale
-  // anello sono» non ha risposta, e il taglio verrebbe cucito al pezzo sbagliato. Camminarci sopra
-  // va benissimo — è chiudere che fa la domanda.
+  // You cannot close where two walls touch, and the reason is under `wallsAt`: there "which ring
+  // am I on" has no answer, and the cut would be stitched to the wrong piece. Walking over it is
+  // perfectly fine — it is closing that asks the question.
   if (lands) return wallsAt(face, to) > 1 ? null : "close";
   return contains(face, to) ? "open" : null;
 }
 
 // -----------------------------------------------------------------------------------------------------------------
-//  c a m m i n a r e   s u l   b o r d o
+//  w a l k i n g   t h e   b o r d e r
 // -----------------------------------------------------------------------------------------------------------------
 
 // The way round the outline from one point to another, the short way, as lattice steps.
@@ -271,21 +271,23 @@ export function walkRing(ring) {
   return _subdivide(ring.concat([ring[0]])).slice(0, -1);
 }
 
-// Camminare o tagliare, deciso una volta sola e in un posto che si può provare sotto Node.
+// Walk or cut, decided once and in a place that can be tested under Node.
 //
-// La prima versione guardava solo se il bersaglio era **vicino a una parete**, e con quella regola
-// cliccare la parete opposta per chiudere il taglio faceva camminare il marcatore tutto intorno al
-// perimetro. Era la risposta letterale alla domanda sbagliata: la domanda non è «quel punto è su un
-// muro», è **«da dove sono, quel punto lo raggiungo prima girando o tagliando?»**.
+// The first version only looked at whether the target was **near a wall**, and with that rule
+// clicking the opposite wall to close the cut made the marker walk all the way round the
+// perimeter. It was the literal answer to the wrong question: the question is not "is that point
+// on a wall", it is **"from where I am, do I reach that point sooner by going round or by
+// cutting?"**.
 //
-// Tre casi, in ordine, e nessuna soglia inventata fra il secondo e il terzo:
+// Three cases, in order, and no made-up threshold between the second and the third:
 //
-//  1. il bersaglio è sul bordo **e** ci si arriva con pochi passi → si cammina: è un
-//     riposizionamento, anche quando girare un angolo passerebbe per un pezzetto di campo;
-//  2. il taglio può partire → si taglia. Se una linea può uscire verso quel punto, è quello che
-//     chi la traccia voleva;
-//  3. il taglio non può nemmeno cominciare → si cammina, quanto serve. È il caso del bersaglio
-//     **sulla stessa parete su cui si è in piedi**: di là non si taglia, e non c'è altro da volere.
+//  1. the target is on the border **and** it can be reached in a few steps → walk: it is a
+//     repositioning, even when going round a corner would pass through a scrap of field;
+//  2. the cut can start → cut. If a line can set out towards that point, that is what whoever is
+//     drawing it wanted;
+//  3. the cut cannot even begin → walk, as far as needed. This is the case of a target **on the
+//     same wall you are standing on**: you cannot cut from there, and there is nothing else to
+//     want.
 export function aimAt(face, from, target, { band = 4, stroll = 48, walking = true } = {}) {
   const near = nearestOnBoundary(face, target);
   const atWall = Boolean(near) && near.distance <= band;
@@ -295,10 +297,10 @@ export function aimAt(face, from, target, { band = 4, stroll = 48, walking = tru
     if (walk && walk.length > 1 && walk.length <= stroll) return { kind: "walk", path: walk };
   }
 
-  // **Mirare vicino a un muro vuol dire quel muro.** Senza questa riga, puntare tre pixel prima del
-  // bordo manda il marcatore a un passo dal chiudere: si ferma lì, perché è lì che gli è stato
-  // detto di andare, e la Miccia gli mangia la linea mentre aspetta. Il giocatore però stava
-  // chiudendo il recinto, e il recinto si chiude sul muro.
+  // **Aiming near a wall means that wall.** Without this line, pointing three pixels short of the
+  // border sends the marker to one step from closing: it stops there, because that is where it
+  // was told to go, and the Fuse eats its line while it waits. But the player was closing the
+  // enclosure, and the enclosure closes on the wall.
   const aim = atWall ? near.at : target;
 
   const cut = pathTo(face, from, aim);
@@ -380,9 +382,9 @@ export function split(face, chain) {
 
   if (!a || !b) throw new Error("split: the chain must begin and end on the boundary of the face");
   if (a.ring === b.ring && a.at === b.at) throw new Error("split: the chain returns to where it started");
-  // La stessa domanda di `canStep`, rifatta qui: chi chiama può non averla fatta, e una risposta
-  // ambigua qui dentro non dà un errore — dà una faccia sbagliata che esplode tre tagli dopo, in
-  // un punto che non nomina né questa funzione né quel taglio.
+  // The same question as `canStep`, asked again here: the caller may not have asked it, and an
+  // ambiguous answer in here does not raise an error — it yields a wrong face that blows up three
+  // cuts later, at a point that names neither this function nor that cut.
   if (wallsAt(face, head) > 1 || wallsAt(face, tail) > 1) {
     throw new Error("split: the chain ends where two walls touch");
   }
@@ -454,16 +456,16 @@ function _turn(a, b, point) {
   return (b[0] - a[0]) * (point[1] - a[1]) - (b[1] - a[1]) * (point[0] - a[0]);
 }
 
-// Quante volte il contorno passa per un punto. Un vertice conta una volta — è l'estremo di due
-// segmenti ma è un passaggio solo — e un punto in mezzo a un segmento pure; quello che fa due è un
-// vertice ripetuto, cioè un contorno che torna a passare di lì.
+// How many times the outline passes through a point. A vertex counts once — it is the end of two
+// segments but only one pass — and so does a point in the middle of a segment; what makes two is a
+// repeated vertex, that is, an outline that comes back through there.
 function _passes(ring, point) {
   let many = 0;
   for (let i = 0; i < ring.length; i += 1) {
     const from = ring[i];
     if (from[0] === point[0] && from[1] === point[1]) { many += 1; continue; }
     const to = ring[(i + 1) % ring.length];
-    if (to[0] === point[0] && to[1] === point[1]) continue;   // lo conta il giro in cui è `from`
+    if (to[0] === point[0] && to[1] === point[1]) continue;   // counted on the turn it is `from`
     if (_onSegment(from, to, point)) many += 1;
   }
   return many;

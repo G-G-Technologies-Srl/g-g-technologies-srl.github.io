@@ -1,71 +1,72 @@
 // Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
 
-// I promemoria delle scadenze, per le due app che hanno delle scadenze.
+// Deadline reminders, for the two apps that have deadlines.
 //
-// **Tre strati, e sono tre perché nessuno dei tre basta.** La API che avrebbe permesso a una
-// pagina di dire «sveglia il telefono il 22 alle nove» — Notification Triggers — è stata
-// abbandonata da tutti i browser, e una push vera vuole un server che tenga le iscrizioni e un
-// cron che le mandi: cioè la cosa che queste app promettono di non avere. Quello che resta:
+// **Three layers, and there are three because none of the three is enough.** The API that would
+// have let a page say "wake the phone on the 22nd at nine" — Notification Triggers — has been
+// abandoned by every browser, and a real push wants a server that holds the subscriptions and a
+// cron that sends them: that is, the very thing these apps promise not to have. What is left:
 //
-//  1. **Il calendario di chi usa l'app.** L'`.ics` che esce di qui porta dentro il promemoria
-//     (`VALARM`), quindi a suonare è il calendario del telefono, alle nove, anche con l'app chiusa
-//     da mesi e su un iPhone. È l'unico strato che funziona ovunque e senza chiedere permessi,
-//     ed è per questo che è il primo.
-//  2. **Il riepilogo all'apertura.** Nessun permesso, nessuna API esotica: quando l'app si apre
-//     dice cosa è maturato mentre non c'era. Parla solo quando la si apre, ma non manca mai.
-//  3. **La notifica di sistema.** `periodicSync` sveglia il service worker ogni tanto e lì si può
-//     mostrare un avviso. Vale su Chromium, con l'app installata, e la frequenza la decide il
-//     browser — mai più di una volta ogni poche ore. Dove non c'è, restano i primi due.
+//  1. **The calendar of whoever uses the app.** The `.ics` that comes out of here carries the
+//     reminder inside it (`VALARM`), so what rings is the phone's calendar, at nine, even with the
+//     app closed for months and on an iPhone. It is the only layer that works everywhere and
+//     without asking for permissions, and that is why it is the first.
+//  2. **The summary on opening.** No permission, no exotic API: when the app opens it says what
+//     came due while it was not there. It only speaks when it is opened, but it never misses.
+//  3. **The system notification.** `periodicSync` wakes the service worker now and then, and there
+//     an alert can be shown. It works on Chromium, with the app installed, and the frequency is
+//     decided by the browser — never more than once every few hours. Where it is missing, the first
+//     two remain.
 //
-// **Il worker non sa niente e non calcola niente.** Il momento in cui ogni promemoria matura lo
-// calcola la pagina, che ha il modello e la lingua, e lo scrive in un `digest`: una lista di
-// `{ key, when, text }` già pronta. Al worker resta un confronto fra due stringhe di data. È la
-// stessa ragione per cui `sw.js` è scritto a mano e corto: meno cose sa, meno cose può sbagliare
-// mentre nessuno guarda.
+// **The worker knows nothing and computes nothing.** The moment each reminder comes due is computed
+// by the page, which has the model and the language, and written into a `digest`: a ready-made list
+// of `{ key, when, text }`. What is left to the worker is a comparison between two date strings. It
+// is the same reason `sw.js` is written by hand and short: the less it knows, the less it can get
+// wrong while nobody is watching.
 //
-// **Il digest sta nella cache dell'app, non in IndexedDB.** Un service worker classico non può
-// importare un modulo, quindi leggere IndexedDB da lì vorrebbe dire riscrivere venti righe di
-// apertura del database in due `sw.js` diversi; `caches.match` è una riga. La cache è di questa
-// origine come il database, quindi i titoli non vanno da nessuna parte dove non fossero già.
+// **The digest lives in the app's cache, not in IndexedDB.** A classic service worker cannot import
+// a module, so reading IndexedDB from there would mean rewriting twenty lines of database opening
+// in two different `sw.js` files; `caches.match` is one line. The cache belongs to this origin just
+// like the database, so the titles go nowhere they were not already.
 
 // -----------------------------------------------------------------------------------------------------------------
-//  l e   i m p o s t a z i o n i
+//  t h e   s e t t i n g s
 // -----------------------------------------------------------------------------------------------------------------
 
-/** Spento, un giorno prima, alle nove: il valore che nessuno deve scegliere per cominciare. */
-// `before` è l'anticipo degli appuntamenti, in minuti. Sta a parte da `days`/`hour` perché misura
-// una cosa diversa: una scadenza è un giorno, e «il giorno prima alle nove» è la frase giusta; un
-// appuntamento è un istante, e a una riunione delle 15:00 la sveglia serve alle 14:30 — dirle «il
-// giorno prima alle nove» sarebbe avvisare quando non si può ancora fare niente, e tacere quando
-// bisognerebbe uscire di casa.
+/** Off, one day before, at nine: the value nobody has to choose in order to get started. */
+// `before` is the advance notice for appointments, in minutes. It sits apart from `days`/`hour`
+// because it measures a different thing: a deadline is a day, and "the day before at nine" is the
+// right phrase; an appointment is an instant, and for a 15:00 meeting the alarm is needed at 14:30 —
+// telling it "the day before at nine" would mean alerting when nothing can be done yet, and staying
+// silent when it is time to leave the house.
 export const DEFAULT = { on: false, days: 1, hour: 9, before: 30 };
 
-/** Il tag di `periodicSync`, e il nome sotto cui il digest sta nella cache. */
+/** The `periodicSync` tag, and the name under which the digest sits in the cache. */
 export const TAG = "gg:due";
 export const DIGEST = "./gg-digest";
 
 /**
- * La cache del digest, una per app.
+ * The digest's cache, one per app.
  *
- * **Separata da quella dei file, e con un nome che non porta la versione.** La cache dell'app si
- * chiama col numero di versione e viene buttata intera a ogni aggiornamento: il digest lì dentro
- * sparirebbe proprio il giorno in cui l'app cambia, cioè senza che nessuno l'abbia chiesto e senza
- * che nessuno se ne accorga. Il `sw.js` di ogni app la risparmia per nome, ed è l'unica eccezione
- * alla regola «all'attivazione si tiene solo la cache di questa versione».
+ * **Separate from the files' cache, and with a name that does not carry the version.** The app's
+ * cache is named after the version number and is thrown away whole at every update: the digest in
+ * there would vanish precisely on the day the app changes, that is, without anybody having asked for
+ * it and without anybody noticing. Each app's `sw.js` spares it by name, and it is the only exception
+ * to the rule "on activation, only this version's cache is kept".
  *
- * Il nome porta la chiave dell'app perché le app del catalogo stanno tutte sulla stessa origine, e
- * una cache di nome generico sarebbe la stessa per Plan e per Invoice.
+ * The name carries the app's key because the catalogue's apps all sit on the same origin, and a
+ * cache with a generic name would be the same one for Plan and for Invoice.
  */
 export function notes(key) {
   return `${key}-remind`;
 }
 
 /**
- * Impostazioni che arrivano da un file o da un campo, rimesse dentro i limiti.
+ * Settings arriving from a file or from a field, brought back within the limits.
  *
- * Un mese di anticipo è già più di quanto serva a chiunque, e un'ora fuori dalle ventiquattro non
- * vuol dire niente: invece di rifiutare si riporta dentro, perché un promemoria alle 25 è un
- * errore di battitura e non una richiesta.
+ * A month of advance notice is already more than anybody needs, and an hour outside the twenty-four
+ * means nothing: instead of refusing, the value is brought back inside, because a reminder at 25 is
+ * a typo and not a request.
  */
 export function clean(settings) {
   const one = settings && typeof settings === "object" ? settings : {};
@@ -78,11 +79,11 @@ export function clean(settings) {
 }
 
 /**
- * Un numero, o quello di partenza.
+ * A number, or the starting one.
  *
- * `Number(null)` è zero, e `Number("")` pure: due modi in cui «non l'ha mai scelto» diventa
- * «mezzanotte» passando da un limite che non lo ferma, perché zero è un'ora buona. Qui un valore
- * assente resta assente, e il default vale.
+ * `Number(null)` is zero, and so is `Number("")`: two ways in which "never chose it" becomes
+ * "midnight" by passing through a limit that does not stop it, because zero is a valid hour. Here an
+ * absent value stays absent, and the default applies.
  */
 function _number(value, fallback) {
   if (value === null || value === undefined || value === "") return fallback;
@@ -91,17 +92,18 @@ function _number(value, fallback) {
 }
 
 // -----------------------------------------------------------------------------------------------------------------
-//  i l   c a l e n d a r i o
+//  t h e   c a l e n d a r
 // -----------------------------------------------------------------------------------------------------------------
 
 /**
- * Quanti minuti prima dell'inizio dell'evento suona il promemoria.
+ * How many minutes before the start of the event the reminder rings.
  *
- * Un evento di giornata comincia a mezzanotte, quindi «il giorno prima alle nove» non è «un giorno
- * prima»: è un giorno meno nove ore, cioè quindici ore prima. Il conto sbagliato — `-P1D` — fa
- * suonare la sveglia a mezzanotte, che è l'ora in cui nessuno vuole sapere niente.
+ * An all-day event starts at midnight, so "the day before at nine" is not "one day before": it is
+ * one day minus nine hours, that is fifteen hours before. The wrong sum — `-P1D` — makes the alarm
+ * ring at midnight, which is the hour at which nobody wants to know anything.
  *
- * Il numero può venire negativo, ed è giusto: «lo stesso giorno alle nove» suona *dopo* l'inizio.
+ * The number can come out negative, and that is right: "the same day at nine" rings *after* the
+ * start.
  */
 export function minutesBefore({ days, hour }) {
   const one = clean({ on: true, days, hour });
@@ -109,10 +111,10 @@ export function minutesBefore({ days, hour }) {
 }
 
 /**
- * Il blocco `VALARM` da mettere dentro un `VEVENT`.
+ * The `VALARM` block to put inside a `VEVENT`.
  *
- * `DESCRIPTION` non è un ornamento: per un allarme `DISPLAY` la specifica la richiede, e un
- * calendario che non la trova può rifiutare l'evento intero invece della sola sveglia.
+ * `DESCRIPTION` is not an ornament: for a `DISPLAY` alarm the specification requires it, and a
+ * calendar that does not find it may reject the whole event instead of just the alarm.
  */
 export function alarm({ days, hour }, description = "") {
   const minutes = minutesBefore({ days, hour });
@@ -127,11 +129,11 @@ export function alarm({ days, hour }, description = "") {
 }
 
 /**
- * Il momento in cui suona il promemoria di una scadenza, come istante vero.
+ * The moment a deadline's reminder rings, as a real instant.
  *
- * Costruito con i pezzi della data locale e non da `new Date(iso)`: una data senza ora, letta così,
- * è mezzanotte **UTC**, e a ovest di Londra diventa il giorno prima. È lo stesso errore che
- * `importers.js` racconta per le date lunghe di Notion, e qui costerebbe una sveglia a mezzanotte.
+ * Built from the pieces of the local date and not from `new Date(iso)`: a date without a time, read
+ * that way, is midnight **UTC**, and west of London it becomes the day before. It is the same error
+ * `importers.js` describes for Notion's long dates, and here it would cost an alarm at midnight.
  */
 export function when(date, { days, hour }) {
   const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(date || "").trim());
@@ -143,11 +145,11 @@ export function when(date, { days, hour }) {
 }
 
 /**
- * Quando suona per un appuntamento: il suo istante, meno l'anticipo.
+ * When it rings for an appointment: its instant, minus the advance notice.
  *
- * Come `when()`, l'istante si **costruisce** dalle parti invece di leggerlo da una stringa: un
- * `new Date("2026-09-24T15:00")` è a discrezione del browser, e sbagliarlo qui vorrebbe dire una
- * sveglia a un'ora che nessuno ha chiesto.
+ * As in `when()`, the instant is **built** from the parts instead of being read from a string: a
+ * `new Date("2026-09-24T15:00")` is at the browser's discretion, and getting it wrong here would mean
+ * an alarm at an hour nobody asked for.
  */
 export function whenAt(date, time, settings) {
   const day_ = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(date || "").trim());
@@ -161,12 +163,12 @@ export function whenAt(date, time, settings) {
 }
 
 /**
- * Un `Date` come giorno scritto, `2026-09-19`, **preso dalle parti locali**.
+ * A `Date` as a written day, `2026-09-19`, **taken from the local parts**.
  *
- * `toISOString().slice(0, 10)` su una mezzanotte locale dà il giorno prima ovunque a est di
- * Londra: a Roma `new Date(2026, 8, 19)` esce `2026-09-18`. È lo stesso errore che `when()` evita
- * costruendo invece di leggere, ed è qui perché è servito due volte — la seconda l'ho scritto a
- * mano e l'ho sbagliato.
+ * `toISOString().slice(0, 10)` on a local midnight gives the day before anywhere east of London: in
+ * Rome `new Date(2026, 8, 19)` comes out as `2026-09-18`. It is the same error `when()` avoids by
+ * building instead of reading, and it is here because it was needed twice — the second time I wrote
+ * it by hand and got it wrong.
  */
 export function day(date) {
   const at = date instanceof Date ? date : new Date(date);
@@ -176,30 +178,31 @@ export function day(date) {
 }
 
 // -----------------------------------------------------------------------------------------------------------------
-//  i l   d i g e s t
+//  t h e   d i g e s t
 // -----------------------------------------------------------------------------------------------------------------
 
 /**
- * La lista che il worker leggerà: una voce per scadenza, con il momento già calcolato e la frase
- * già scritta nella lingua di chi legge.
+ * The list the worker will read: one entry per deadline, with the moment already computed and the
+ * sentence already written in the reader's language.
  *
- * `key` tiene dentro la data: spostare una scadenza è una scadenza nuova, e va detta di nuovo.
- * Quello che è già stato detto resta detto — `said` viaggia col digest — ma solo per le voci che
- * esistono ancora, altrimenti l'elenco cresce per sempre.
+ * `key` holds the date inside it: moving a deadline makes a new deadline, and it must be announced
+ * again. What has already been said stays said — `said` travels with the digest — but only for the
+ * entries that still exist, otherwise the list grows for ever.
  *
- * **Ogni voce porta tre cose e non una, e il motivo è un difetto vero.** `text` è la frase che
- * mostra il worker, e deve essere vera *quando suona*: con dentro «fra 7 giorni», scritto il
- * giorno in cui il digest è nato, una sveglia che matura quattro giorni dopo dice un numero
- * sbagliato — e lo strato tre è proprio quello che parla dopo giorni di silenzio. Quindi `text`
- * porta la data com'è, `label` porta la cosa senza tempo, e `date` sta lì perché la pagina — che
- * l'orologio ce l'ha davvero — ricomponga «domani» nel momento in cui lo scrive sullo schermo.
+ * **Each entry carries three things and not one, and the reason is a real defect.** `text` is the
+ * sentence the worker shows, and it must be true *when it rings*: with "fra 7 giorni" (in 7 days)
+ * inside it, written on the day the digest was born, an alarm that comes due four days later states
+ * a wrong number — and layer three is precisely the one that speaks after days of silence. So `text`
+ * carries the date as it is, `label` carries the thing without time, and `date` is there so that the
+ * page — which really does have the clock — can recompose "domani" (tomorrow) at the moment it
+ * writes it on the screen.
  */
 export function digest(items, settings, { heading = "", said = [], now = new Date() } = {}) {
   const one = clean(settings);
   const out = [];
   for (const item of items || []) {
-    // Un appuntamento porta la sua ora, e allora la sveglia si misura da quella: `item.time` è
-    // quello che distingue «il giorno prima alle nove» da «mezz'ora prima».
+    // An appointment carries its own time, and then the alarm is measured from that: `item.time` is
+    // what tells "the day before at nine" apart from "half an hour before".
     const at = item.time ? whenAt(item.date, item.time, one) : when(item.date, one);
     if (!at) continue;
     out.push({
@@ -221,11 +224,11 @@ export function digest(items, settings, { heading = "", said = [], now = new Dat
 }
 
 /**
- * Quello che è maturo e non è ancora stato detto.
+ * What has come due and has not been said yet.
  *
- * Il confronto è fra due stringhe ISO, e questo è tutto quello che il service worker deve saper
- * fare: la stessa funzione gira nella pagina per il riepilogo all'apertura e — riscritta in cinque
- * righe, perché un worker classico non può importare questo file — dentro `sw.js`.
+ * The comparison is between two ISO strings, and that is all the service worker needs to be able to
+ * do: the same function runs in the page for the summary on opening and — rewritten in five lines,
+ * because a classic worker cannot import this file — inside `sw.js`.
  */
 export function ripe(saved, { now = new Date() } = {}) {
   if (!saved || !saved.on) return [];
@@ -235,12 +238,12 @@ export function ripe(saved, { now = new Date() } = {}) {
 }
 
 // -----------------------------------------------------------------------------------------------------------------
-//  i l   p e r m e s s o   e   i l   r i s v e g l i o
+//  t h e   p e r m i s s i o n   a n d   t h e   w a k e - u p
 // -----------------------------------------------------------------------------------------------------------------
 
 /**
- * Dove siamo con il permesso: `"no"` se il browser non sa mostrare notifiche, altrimenti quello
- * che la persona ha già risposto — `"ask"`, `"yes"`, `"denied"`.
+ * Where we stand with the permission: `"no"` if the browser cannot show notifications, otherwise
+ * what the person has already answered — `"ask"`, `"yes"`, `"denied"`.
  */
 export function state() {
   if (typeof Notification === "undefined") return "no";
@@ -251,32 +254,33 @@ export function state() {
 }
 
 /**
- * Il permesso, chiesto una volta e **solo da un clic**.
+ * The permission, asked once and **only from a click**.
  *
- * Chiederlo all'avvio è il modo più veloce per farselo negare per sempre: un «no» in quella
- * finestra non si può più riaprire dall'app, e da lì in poi lo strato tre è chiuso a chiave.
+ * Asking for it at startup is the quickest way to have it denied for ever: a "no" in that dialog
+ * can no longer be reopened from the app, and from then on layer three is locked.
  */
 export async function askPermission() {
   if (typeof Notification === "undefined") return "no";
   try {
     await Notification.requestPermission();
   } catch (ignored) {
-    // Il vecchio modo, con la callback: qualche browser risponde ancora solo a quello.
+    // The old way, with the callback: some browsers still answer only to that.
   }
   return state();
 }
 
-/** Se questo browser sa svegliare il worker da solo. Senza, restano i primi due strati. */
+/** Whether this browser can wake the worker on its own. Without it, the first two layers remain. */
 export function wakes(registration) {
   return Boolean(registration && registration.periodicSync);
 }
 
 /**
- * Chiede al browser di svegliare il worker ogni tanto.
+ * Asks the browser to wake the worker now and then.
  *
- * `minInterval` è una richiesta e non un accordo: il browser sveglia quando vuole, e su un sito
- * poco usato può non svegliare mai. Vale la pena chiederlo lo stesso — dove funziona è l'unica
- * notifica che arriva ad app chiusa — ma non è una promessa che l'interfaccia può fare.
+ * `minInterval` is a request and not an agreement: the browser wakes it when it likes, and on a
+ * little-used site it may never wake it at all. It is worth asking anyway — where it works it is the
+ * only notification that arrives with the app closed — but it is not a promise the interface can
+ * make.
  */
 export async function watch(registration, { hours = 12 } = {}) {
   if (!wakes(registration)) return false;
@@ -291,12 +295,12 @@ export async function watch(registration, { hours = 12 } = {}) {
 }
 
 /**
- * Se il risveglio è **registrato davvero**, chiesto al browser invece che dedotto.
+ * Whether the wake-up is **really registered**, asked of the browser instead of inferred.
  *
- * Serve perché `watch()` può fallire in silenzio per una ragione che passa da sola: Chromium
- * concede `periodic-background-sync` alle app installate e usate, cioè spesso *dopo* il momento in
- * cui una persona accende i promemoria. Una riga che dicesse «arrivano anche a finestra chiusa»
- * guardando se l'API esiste prometterebbe una cosa che non è ancora vera.
+ * It is needed because `watch()` can fail silently for a reason that goes away on its own: Chromium
+ * grants `periodic-background-sync` to apps that are installed and used, that is, often *after* the
+ * moment a person turns the reminders on. A line saying "they arrive even with the window closed"
+ * based on whether the API exists would promise something that is not true yet.
  */
 export async function watching(registration) {
   if (!wakes(registration)) return false;
@@ -307,21 +311,21 @@ export async function watching(registration) {
   }
 }
 
-/** E smette di chiederlo, quando la persona spegne i promemoria. */
+/** And stops asking for it, when the person turns the reminders off. */
 export async function stop(registration) {
   if (!wakes(registration)) return;
   try {
     await registration.periodicSync.unregister(TAG);
   } catch (ignored) {
-    // Non era registrato: è esattamente lo stato che si voleva.
+    // It was not registered: that is exactly the state we wanted.
   }
 }
 
 // -----------------------------------------------------------------------------------------------------------------
-//  l a   c a c h e
+//  t h e   c a c h e
 // -----------------------------------------------------------------------------------------------------------------
 
-/** Scrive il digest dove il worker lo troverà. Vero se c'è riuscita. */
+/** Writes the digest where the worker will find it. True if it succeeded. */
 export async function keep(cacheName, saved) {
   try {
     const cache = await caches.open(cacheName);
@@ -333,7 +337,7 @@ export async function keep(cacheName, saved) {
   }
 }
 
-/** E lo rilegge, per sapere cos'era già stato detto. */
+/** And reads it back, to know what had already been said. */
 export async function kept(cacheName) {
   try {
     const cache = await caches.open(cacheName);

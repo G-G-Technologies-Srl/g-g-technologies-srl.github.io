@@ -1,21 +1,21 @@
 // Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
 
-// Il guscio: il ciclo dei fotogrammi, le schermate, i numeri sullo schermo, i tre interruttori.
-// Possiede l'orologio e nient'altro — il mondo si fa avanzare, si disegna e gli si chiede, mai ci
-// si mette le mani dentro.
+// The shell: the frame loop, the screens, the numbers on screen, the three toggles.
+// It owns the clock and nothing else — the world is advanced, drawn and queried, never does anyone
+// put their hands inside it.
 //
-// Due regole vivono qui e in nessun altro posto, perché riguardano i fotogrammi e non il gioco:
+// Two rules live here and nowhere else, because they concern frames and not the game:
 //
-//  - **Il passo è fisso e si disegna una volta per fotogramma.** La simulazione avanza a passi
-//    interi di 1/120 s, così la stessa partita gira uguale su un portatile a 60 Hz e su un monitor
-//    a 144.
-//  - **Il tempo che si accumula ha un tetto.** Una scheda in secondo piano non riceve fotogrammi;
-//    al ritorno il tempo trascorso è di minuti, e senza tetto il gioco li eseguirebbe tutti in un
-//    colpo solo, con il livello già finito quando lo schermo torna.
+//  - **The step is fixed and drawing happens once per frame.** The simulation advances in whole
+//    steps of 1/120 s, so the same game runs identically on a 60 Hz laptop and on a 144 Hz
+//    monitor.
+//  - **Accumulated time has a ceiling.** A background tab receives no frames; on return the
+//    elapsed time is minutes, and without a ceiling the game would run them all in one go, with
+//    the level already over by the time the screen comes back.
 //
-// E una terza che riguarda la prima impressione: **dietro il titolo si gioca.** La dimostrazione
-// gira da sé finché nessuno inserisce il gettone, e quella schermata è anche lo screenshot della
-// scheda — così la prima cosa che si vede di questo gioco è un gioco giocato.
+// And a third one about first impressions: **behind the title, the game is being played.** The
+// demo runs on its own until someone inserts the coin, and that screen is also the screenshot on
+// the card — so the first thing you see of this game is a game being played.
 
 import { create, step, STEP, progress, quota, fuseAt } from "./game.js";
 import { mind, think } from "./attract.js";
@@ -31,29 +31,29 @@ import * as update from "gg/update.js";
 import { apply as applyTheme, initial as initialTheme, toggle as toggleTheme } from "gg/theme.js";
 import { t, tf, lang, setLang, resolveLang, otherLang } from "./i18n.js";
 
-const CEILING = 0.25;                 // secondi di recupero, al massimo
+const CEILING = 0.25;                 // seconds of catch-up, at most
 
 const canvas = el("field");
 let world = null;
-let demo = null;                      // { world, brain } — la dimostrazione dietro il titolo
+let demo = null;                      // { world, brain } — the demo behind the title
 let screen = "title";
 let previous = 0;
 let pool = 0;
 let db = null;
-let signed = false;                   // il punteggio di questa partita è già finito in classifica?
+let signed = false;                   // has this game's score already gone into the high score table?
 let began = 0;
 
-// Quello che il pulsante di fine schermata farà — continuare o ricominciare — e le chiavi di quello
-// che c'è scritto, perché la lingua può cambiare mentre la schermata è lì.
+// What the end-screen button will do — continue or start over — and the keys of what is written
+// on it, because the language can change while the screen is up.
 //
-// **Qui e non accanto a `_end`**, dove stavano per mezz'ora: le funzioni si issano e `let` no, e
-// `_words()` gira in fondo all'avvio, cioè prima. Il modulo moriva sulla prima riga con «Cannot
-// access before initialization» e l'app non partiva per niente.
+// **Here and not next to `_end`**, where they sat for half an hour: functions are hoisted and `let`
+// is not, and `_words()` runs at the end of startup, that is, earlier. The module died on the first
+// line with "Cannot access before initialization" and the app did not start at all.
 let onEnd = null;
 let endKeys = null;
 
 // -----------------------------------------------------------------------------------------------------------------
-//  a v v i o
+//  s t a r t u p
 // -----------------------------------------------------------------------------------------------------------------
 
 applyTheme(initialTheme());
@@ -66,24 +66,24 @@ _demo();
 window.addEventListener("resize", _fit);
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => render.repalette(canvas));
 
-// «Meno movimento», letto una volta e riletto quando cambia. La preferenza si chiede al sistema in
-// un punto solo e la ascoltano in due: il canvas smette di pulsare, il telefono smette di
-// sussultare. Il foglio di stile la rispettava già per conto suo — ma il canvas e il motore della
-// vibrazione non sanno cosa sia il CSS, e lì la richiesta restava lettera morta.
+// "Reduce motion", read once and read again when it changes. The preference is asked of the system
+// in one place only and two listen to it: the canvas stops pulsing, the phone stops jolting. The
+// stylesheet already respected it on its own — but the canvas and the vibration motor do not know
+// what CSS is, and there the request remained a dead letter.
 const stillness = matchMedia("(prefers-reduced-motion: reduce)");
 stillness.addEventListener("change", _calmness);
 _calmness();
 
 scores.connect().then((handle) => { db = handle; });
 
-// Il service worker, la versione sotto il nome dell'app, e la cosa di cui il worker taceva: che ce
-// n'è una più nuova che aspetta.
+// The service worker, the version under the app's name, and the thing the worker kept quiet about:
+// that there is a newer one waiting.
 //
-// Registrarlo a mano si può, e l'avevo fatto — sbagliando nello stesso punto in cui `gg/update.js`
-// dice di aver visto sbagliare tre app: dentro un `addEventListener("load", …)` che in un modulo
-// arriva quando `load` è già passato. Quel modulo aspetta sullo **stato** e non solo sull'evento, e
-// in più dice quello che al giocatore serve sapere: che c'è una versione nuova e che si prende
-// premendo, non a sorpresa mentre sta giocando.
+// Registering it by hand is possible, and I had done it — getting it wrong at the same spot where
+// `gg/update.js` says it has seen three apps get it wrong: inside an `addEventListener("load", …)`
+// which, in a module, arrives when `load` has already gone by. That module waits on the **state**
+// and not only on the event, and on top of that it says what the player needs to know: that there
+// is a new version and that you get it by pressing, not by surprise in the middle of a game.
 if ("serviceWorker" in navigator) {
   update.setup({
     badge: el("appVersion"),
@@ -102,8 +102,8 @@ setupInstall(el("installButton"), el("installHint"),
   { storageKey: "gg.recinto.install-dismissed", iosText: t("installIos") });
 
 el("coinButton").addEventListener("click", _coin);
-// Leggere la classifica non è una mossa: aprirla mette in pausa, perché altrimenti si muore mentre
-// si legge — e si muore per qualcosa che non si stava nemmeno guardando.
+// Reading the high score table is not a move: opening it pauses, because otherwise you die while
+// reading — and you die of something you were not even looking at.
 el("scoresButton").addEventListener("click", () => { _pause(true); _openScores(); });
 el("scoresClose").addEventListener("click", () => el("scoresDialog").close());
 el("scoresDialog").addEventListener("close", () => { if (screen === "paused") _pause(false); });
@@ -115,9 +115,9 @@ el("pauseButton").addEventListener("click", () => _pause(screen !== "paused"));
 el("resumeButton").addEventListener("click", () => _pause(false));
 el("quitButton").addEventListener("click", () => { world = null; _demo(); _show("title"); });
 
-// **Il gioco si ferma quando smetti di guardarlo.** Il tetto sul tempo accumulato impedisce che al
-// ritorno venga eseguito mezzo minuto in un colpo solo, ma non impedisce la cosa peggiore: passi ad
-// un'altra scheda con la linea fuori, e torni morto. Una telefonata non è una mossa del giocatore.
+// **The game stops when you stop looking at it.** The ceiling on accumulated time prevents half a
+// minute being run in one go on your return, but it does not prevent the worst thing: you switch to
+// another tab with your line out, and you come back dead. A phone call is not a player's move.
 document.addEventListener("visibilitychange", () => {
   if (document.hidden && screen === "playing") _pause(true);
 });
@@ -155,11 +155,11 @@ window.addEventListener("keydown", (event) => {
   }
   if (event.code !== "Enter" && event.code !== "Space") return;
 
-  // **Mentre si scrive, questi due tasti sono lettere.** L'ascoltatore sta sulla finestra e non
-  // guardava chi avesse il fuoco: battendo il proprio nome nella classifica, lo spazio faceva
-  // partire una partita nuova invece di entrare nel nome — e l'Invio che doveva salvare ne faceva
-  // partire una e poi ci registrava sopra il punteggio appena azzerato. Un difetto che si vede solo
-  // provando a scrivere «Gian Angelo» con lo spazio in mezzo.
+  // **While typing, these two keys are letters.** The listener sits on the window and did not look
+  // at who had focus: typing your own name into the high score table, the space started a new game
+  // instead of going into the name — and the Enter that was meant to save started one and then
+  // recorded the just-reset score on top of it. A defect you only see by trying to type
+  // "Gian Angelo" with the space in the middle.
   const target = event.target;
   if (target && typeof target.closest === "function"
       && target.closest('input, textarea, select, [contenteditable="true"], dialog[open]')) return;
@@ -167,9 +167,9 @@ window.addEventListener("keydown", (event) => {
   if (screen === "playing" || screen === "paused") return;
   event.preventDefault();
 
-  // **A livello chiuso, Invio continua.** Prima chiamava `_coin()` come dal titolo: la partita
-  // ripartiva da zero e i punti di cinque livelli sparivano senza che niente lo dicesse. Il gettone
-  // è il rito d'avvio di una partita, non di un livello.
+  // **With the level cleared, Enter continues.** It used to call `_coin()` as from the title: the
+  // game restarted from zero and five levels' worth of points vanished without anything saying so.
+  // The coin is the starting ritual of a game, not of a level.
   if (screen === "cleared") { _next(); return; }
   _coin();
 });
@@ -208,16 +208,15 @@ function _next() {
   _show("playing");
 }
 
-// La dimostrazione ha un seme suo, e ricomincia da sola quando perde: chi guarda il titolo non deve
-// trovare uno schermo fermo perché l'autopilota è morto due minuti fa.
+// The demo has a seed of its own, and restarts by itself when it loses: whoever looks at the title
+// must not find a frozen screen because the autopilot died two minutes ago.
 function _demo() {
   const seed = (Date.now() >>> 0) || 1;
   demo = { world: create(1, seed), brain: mind(seed * 7 + 1) };
 }
 
-// Un cabinato, dopo trenta secondi che nessuno lo tocca, tornava all'attrazione. È anche il motivo
-// per cui quella schermata esiste: uno schermo di «partita finita» che resta lì per un'ora non
-// invita nessuno.
+// An arcade cabinet, after thirty seconds of nobody touching it, went back to attract mode. That is
+// also why that screen exists: a "game over" screen that stays there for an hour invites nobody.
 const IDLE = 30000;
 let idleAt = 0;
 
@@ -242,8 +241,8 @@ function _show(next) {
   el("pauseButton").disabled = next !== "playing" && next !== "paused";
 }
 
-// In pausa il mondo non avanza e il tempo accumulato si butta: ripartire non deve mai voler dire
-// recuperare i secondi passati a leggere.
+// While paused the world does not advance and accumulated time is thrown away: resuming must never
+// mean catching up on the seconds spent reading.
 function _pause(on) {
   if (!world || world.over || world.cleared) return;
   if (on && screen !== "playing") return;
@@ -298,9 +297,9 @@ function _live() {
   }
 }
 
-// Un evento, due sensi. Passa lo stesso nome a tutti e due e non chiede a nessuno dei due se ha
-// qualcosa da dire: un evento che il suono non canta o che la mano non sente è un caso in meno da
-// ricordare qui, e sono proprio i casi che si dimenticano quando se ne aggiunge uno.
+// One event, two senses. It passes the same name to both and asks neither whether it has anything
+// to say: an event the sound does not sing or the hand does not feel is one less case to remember
+// here, and those are exactly the cases that get forgotten when a new one is added.
 function _felt(kind) {
   audio.play(kind);
   haptics.buzz(kind);
@@ -337,14 +336,14 @@ function _end(title, hint) {
   el("endGo").textContent = cleared ? t("nextLevel") : t("againCoin");
   _show(cleared ? "cleared" : "over");
 
-  // Il fuoco va sul pulsante solo a livello chiuso. A partita finita lo vuole il campo del nome,
-  // che è la cosa che si sta per fare — e glielo dà `_ask`, un istante dopo.
+  // Focus goes to the button only when the level is cleared. When the game is over the name field
+  // wants it, since that is what you are about to do — and `_ask` gives it to it, a moment later.
   if (cleared) el("endGo").focus();
 }
 
-// La firma si chiede a ogni partita, non solo sulle prime dieci: col gettone infinito una partita
-// corta è normale, e un punteggio senza nome non può stare in una tabella il cui mestiere è essere
-// la memoria di questa macchina.
+// The signature is asked for after every game, not only for the top ten: with unlimited coins a
+// short game is normal, and a score without a name cannot sit in a table whose job is to be the
+// memory of this machine.
 async function _ask() {
   el("endFinal").textContent = tf("finalScore", {
     score: world.score.toLocaleString(lang() === "it" ? "it-IT" : "en-GB"),
@@ -400,8 +399,8 @@ async function _export() {
   _note(t("exportDone"));
 }
 
-// L'esito si dice **dentro l'app**, in una riga sua. `alert` sarebbe carattere di sistema, il nome
-// del dominio in cima, e su un telefono installato a volte nemmeno compare.
+// The outcome is told **inside the app**, on a line of its own. `alert` would mean the system font,
+// the domain name at the top, and on an installed phone app it sometimes does not even appear.
 async function _import(event) {
   const file = event.target.files && event.target.files[0];
   event.target.value = "";
@@ -416,8 +415,8 @@ function _note(line) {
   el("ioNote").hidden = false;
 }
 
-// Quello che il canvas racconta a chi non lo vede, riscritto **solo quando cambia**. Riscriverlo a
-// ogni fotogramma vorrebbe dire un lettore di schermo che parla centoventi volte al secondo.
+// What the canvas tells those who cannot see it, rewritten **only when it changes**. Rewriting it on
+// every frame would mean a screen reader talking a hundred and twenty times a second.
 let described = "";
 
 function _describe(shown) {
@@ -432,8 +431,8 @@ function _describe(shown) {
   el("field").setAttribute("aria-label", line);
 }
 
-// E quello che va **detto** quando succede, invece che mostrato. Una regione viva e gentile: si
-// intromette fra una frase e l'altra, non a metà parola.
+// And what must be **said** when it happens, instead of shown. A polite live region: it cuts in
+// between one sentence and the next, not halfway through a word.
 function _say(line) {
   el("spoken").textContent = line;
 }
@@ -448,8 +447,8 @@ function _numbers(shown) {
   _describe(shown);
 }
 
-// Ogni nodo che porta una chiave viene riscritto quando la lingua cambia. Scrivere il testo a mano
-// in due posti è esattamente come una lingua resta indietro sull'altra.
+// Every node that carries a key is rewritten when the language changes. Writing the text by hand in
+// two places is exactly how one language falls behind the other.
 function _words() {
   for (const node of document.querySelectorAll("[data-t]")) {
     node.textContent = t(node.getAttribute("data-t"));
@@ -460,8 +459,8 @@ function _words() {
   el("soundButton").setAttribute("aria-label", audio.enabled() ? t("soundOn") : t("soundOff"));
   el("nameField").placeholder = t("namePlaceholder");
 
-  // La schermata di fine non porta chiavi nel markup — il suo testo dipende da com'è andata — e
-  // cambiando lingua restava nell'altra. Si riscrive da quello che `_end` si è ricordato.
+  // The end screen carries no keys in the markup — its text depends on how things went — and on a
+  // language change it stayed in the other one. It is rewritten from what `_end` remembered.
   if (endKeys && (screen === "cleared" || screen === "over")) {
     el("endTitle").textContent = t(endKeys.title);
     el("endHint").textContent = t(endKeys.hint);

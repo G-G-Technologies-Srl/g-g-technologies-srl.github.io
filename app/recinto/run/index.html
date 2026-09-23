@@ -14,8 +14,8 @@
 <link rel="stylesheet" href="../../_lib/base.css">
 <link rel="stylesheet" href="./styles.css">
 <script>
-  // Prima della prima pittura, di proposito. Applicato da un modulo girerebbe dopo il foglio di
-  // stile, e l'app lampeggerebbe scura per poi saltare al chiaro a ogni avvio.
+  // Before the first paint, on purpose. Applied from a module it would run after the stylesheet,
+  // and the app would flash dark and then jump to light on every launch.
   try {
     var saved = localStorage.getItem('gg-theme');
     var light = saved ? saved === 'light'
@@ -26,15 +26,15 @@
     }
   } catch (ignored) {}
 
-  // **L'invito a installare, preso al volo.**
+  // **The install invitation, caught on the fly.**
   //
-  // `beforeinstallprompt` è un evento che non aspetta: il browser lo manda appena riconosce l'app
-  // come installabile, e alla seconda visita — con il service worker già attivo e il manifesto già
-  // letto — quel momento arriva **prima che un modulo abbia finito di caricarsi**. Un modulo che si
-  // registra dopo non lo vede mai, e il pulsante non compare.
+  // `beforeinstallprompt` is an event that does not wait: the browser sends it as soon as it
+  // recognises the app as installable, and on the second visit — with the service worker already
+  // active and the manifest already read — that moment arrives **before a module has finished
+  // loading**. A module that registers later never sees it, and the button does not appear.
   //
-  // Si vede solo su un telefono, ed è per questo che un difetto così resta in piedi: su un computer
-  // l'evento arriva tardi e il pulsante c'è.
+  // It only shows on a phone, and that is why a defect like this survives: on a computer the event
+  // arrives late and the button is there.
   window.__ggInstall = null;
   window.addEventListener('beforeinstallprompt', function (event) {
     event.preventDefault();
@@ -62,10 +62,10 @@
   </header>
 
   <main class="field">
-    <!-- Per un lettore di schermo un canvas è un rettangolo muto. `role="img"` più una
-         descrizione che si aggiorna gli danno almeno lo stato; il campo prende il fuoco perché il
-         gioco si gioca da tastiera, e un elemento che si comanda e non si può raggiungere con Tab
-         è un comando che per qualcuno non esiste. -->
+    <!-- To a screen reader a canvas is a mute rectangle. `role="img"` plus a description that
+         keeps itself updated give it at least the state; the field takes focus because the game is
+         played by keyboard, and an element that can be controlled but cannot be reached with Tab
+         is a control that, for someone, does not exist. -->
     <canvas id="field" tabindex="0" role="img" aria-label="Campo di gioco"></canvas>
     <p id="spoken" class="only-spoken" role="status" aria-live="polite"></p>
 
@@ -76,22 +76,22 @@
       <p class="small" data-t="coinFree">I gettoni sono infiniti: è il rito, non un limite.</p>
       <button type="button" id="howButton" data-t="howTitle">Come si gioca</button>
 
-      <!-- La versione sta qui e non nella barra. Nella barra c'era, ed era un numero di dieci
-           pixel che galleggiava fra i punteggi e quattro pulsanti grandi: chi la cercava non la
-           trovava. Qui ha attorno la schermata che si guarda prima di cominciare, ed è anche il
-           posto giusto per la luce dell'aggiornamento — che si accende *prima* della partita e non
-           a metà. Nasce nascosta: dove un service worker non c'è, un pulsante vuoto sarebbe peggio
-           di niente. -->
+      <!-- The version lives here and not in the bar. It used to be in the bar, and it was a
+           ten-pixel number floating between the scores and four big buttons: whoever looked for it
+           could not find it. Here it is surrounded by the screen you look at before starting, and
+           it is also the right place for the update light — which comes on *before* the game and
+           not halfway through. It starts out hidden: where there is no service worker, an empty
+           button would be worse than nothing. -->
       <button type="button" class="gg-version" id="appVersion" data-t-label="versionOf" hidden></button>
     </section>
 
     <section class="screen" id="howScreen" hidden>
       <h2 data-t="howTitle">Come si gioca</h2>
 
-      <!-- Otto paragrafi di fila erano una lista di fatti veri e un testo che nessuno finiva: per
-           sapere come si muore bisognava leggere anche come si contano i punti. I titoli non sono
-           decorazione — sono il modo in cui si torna a cercare la cosa che serve, che è quello che
-           si fa davvero con le istruzioni di un gioco. -->
+      <!-- Eight paragraphs in a row were a list of true facts and a text nobody finished: to find
+           out how you die you also had to read how points are counted. The headings are not
+           decoration — they are how you go back to look for the thing you need, which is what
+           people actually do with a game's instructions. -->
       <div class="how-body">
         <h3 data-t="howGoalTitle">Lo scopo</h3>
         <p data-t="howGoal"></p>
@@ -136,10 +136,10 @@
       </form>
       <p id="endPlace" class="small"></p>
 
-      <!-- Il comando per andare avanti c'era e non lo diceva nessuno: bisognava toccare il campo,
-           e il campo dietro il velo di una schermata non sembra una cosa che si preme. Adesso è un
-           pulsante, prende il fuoco appena la schermata compare, e il tocco sul campo resta come
-           scorciatoia per chi l'ha imparata. -->
+      <!-- The control to move on was there and nothing said so: you had to tap the field, and a
+           field behind a screen's veil does not look like something you press. Now it is a button,
+           it takes focus as soon as the screen appears, and tapping the field remains as a shortcut
+           for those who have learnt it. -->
       <button type="button" id="endGo"></button>
       <p id="endHint" class="small"></p>
     </section>

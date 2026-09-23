@@ -2,12 +2,12 @@
 
 // What a project, a page and a task are, and every change that can be made to one.
 //
-// **In `_lib/` da quando lo usano due app**, e ci è arrivato senza modifiche: la persistenza gli
-// arriva come porta — `connect({save, drop})` — detta nelle sue parole, `project | page | task`, e
-// non nei nomi degli store. Plan Scope lo usa per i suoi piani, Invoice Scope per i progetti che
-// fattura, e nessuno dei due compare qui dentro. Il rovescio da ricordare: **lo stato è uno solo per
-// pagina**, perché è un modulo con dentro il suo modello, quindi due app non lo condividono mai
-// nello stesso momento — si condivide il codice, mai i dati.
+// **In `_lib/` since two apps use it**, and it got there without changes: persistence reaches it
+// as a port — `connect({save, drop})` — spoken in its own words, `project | page | task`, and not
+// in store names. Plan Scope uses it for its plans, Invoice Scope for the projects it invoices,
+// and neither of the two appears in here. The flip side to remember: **there is only one state per
+// page**, because it is a module with its model inside, so two apps never share it at the same
+// moment — the code is shared, never the data.
 //
 // **This file does not know the DOM and does not know IndexedDB.** It is the same line AstroDroid
 // draws between `game.js` and its canvas, and for the same reason: this is where the defects that
@@ -55,9 +55,10 @@ export const DEFAULT_COLUMNS = [
 const projects = new Map();
 const pages = new Map();
 const tasks = new Map();
-// Le persone, e sono la prima cosa qui dentro che **non appartiene a un progetto**: la stessa torna
-// su lavori diversi, ed è quello che una rubrica è. Il ruolo che ha in un progetto non sta qui —
-// sta sul progetto, perché lo stesso Marco è il grafico di uno e il cliente di un altro.
+// People, and they are the first thing in here that **does not belong to a project**: the same
+// person comes back on different jobs, and that is what an address book is. The role they have in
+// a project does not live here — it lives on the project, because the same Marco is the designer
+// of one and the client of another.
 const contacts = new Map();
 
 let port = { save() {}, drop() {} };
@@ -148,27 +149,28 @@ function _restoreTo(kind, before) {
 }
 
 /**
- * Un nome scritto come testo che diventa una persona.
+ * A name written as text that becomes a person.
  *
- * È la porta unica applicata a quello che arriva da fuori: una bacheca di Trello, un export di
- * Notion e un file di Plan Scope più vecchio di questa versione portano tutti l'assegnatario come
- * stringa. Risolverlo qui invece che in ogni importatore vuol dire che gli importatori non sanno
- * nulla delle persone, e che il giorno che ne arriva un quarto non c'è niente da ricordarsi.
+ * It is the single gate applied to what comes from outside: a Trello board, a Notion export and a
+ * Plan Scope file older than this version all carry the assignee as a string. Resolving it here
+ * instead of in every importer means the importers know nothing about people, and that the day a
+ * fourth one arrives there is nothing to remember.
  */
 /**
- * Un nome scritto su un'attività, risolto in una persona.
+ * A name written on a task, resolved into a person.
  *
- * `here` dice da dove arriva quel nome, e cambia tutto. **Scritto qui**, il nome cerca in rubrica e
- * se non trova crea: è la porta unica per cui due grafie della stessa persona non si accumulano.
- * **Arrivato da un file**, no — e la ragione è la stessa per cui il § 4 fa viaggiare i `uid` invece
- * dei nomi: due «Giulia» su due computer sono due persone finché qualcuno non dice il contrario, e
- * agganciare la scheda di casa a un nome scritto da un altro è asserire un'identità per omonimia,
- * proprio attraverso il confine dove i nomi non valgono.
+ * `here` says where that name comes from, and it changes everything. **Written here**, the name
+ * looks in the address book and, if it finds nothing, creates: it is the single gate that stops
+ * two spellings of the same person from piling up. **Arrived from a file**, no — and the reason is
+ * the same one for which § 4 makes `uid`s travel instead of names: two "Giulia"s on two computers
+ * are two people until somebody says otherwise, and hooking the local contact card to a name
+ * written by someone else is asserting an identity by sharing a name, right across the border where
+ * names count for nothing.
  *
- * Da fuori il nome resta un nome: entra fra le persone del progetto, con un `uid` suo e **senza
- * scheda**. Chi riconosce la persona la adotta con un gesto, e da lì in poi le due copie parlano
- * della stessa — che è esattamente quello che `adoptPerson` fa già per le persone che arrivano
- * dalla cartella condivisa.
+ * From outside, the name stays a name: it joins the project's people, with a `uid` of its own and
+ * **no card**. Whoever recognises the person adopts them with one gesture, and from then on the two
+ * copies speak of the same one — which is exactly what `adoptPerson` already does for the people
+ * who arrive from the shared folder.
  */
 function _personFromName(projectId, name, { here = true } = {}) {
   const clean = String(name || "").trim();
@@ -188,17 +190,18 @@ function _personFromName(projectId, name, { here = true } = {}) {
 }
 
 /**
- * Il nome nuovo di una persona, dovunque sia scritto: nei progetti e nelle pagine.
+ * A person's new name, wherever it is written: in the projects and in the pages.
  *
- * Nei progetti il nome sta accanto al `uid`, quindi si cambia per riferimento e mai per caso. Nelle
- * pagine no: una riga «con: Marco» e una menzione «@Marco» sono testo, ed è la forma giusta — il
- * Markdown deve restare leggibile fuori dall'app. Il prezzo è che la rinomina deve passare anche di
- * lì, e finché non ci passava correggere un nome **staccava la persona dal suo storico**: la scheda
- * diceva «Nessun incontro che la nomini» mentre gli incontri erano tutti al loro posto.
+ * In the projects the name sits next to the `uid`, so it changes by reference and never by
+ * chance. In the pages it does not: a line "con: Marco" and a mention "@Marco" are text, and that
+ * is the right form — the Markdown has to stay readable outside the app. The price is that the
+ * rename has to go through there too, and as long as it did not, correcting a name **cut the person
+ * off from their history**: the card said "Nessun incontro che la nomini" (no meeting names them)
+ * while the meetings were all in their place.
  *
- * Torna la funzione che disfa tutto quello che ha toccato, perché una rinomina è un passo solo:
- * annullarla e ritrovarsi il nome vecchio sulla scheda e quello nuovo in dieci pagine sarebbe un
- * archivio a metà.
+ * It returns the function that undoes everything it touched, because a rename is a single step:
+ * undoing it and finding the old name on the card and the new one in ten pages would be a
+ * half-done archive.
  */
 function _renamePerson(person, wasCalled) {
   const uid = person.uid || person.id;
@@ -215,7 +218,7 @@ function _renamePerson(person, wasCalled) {
       updated: _now(),
     });
   }
-  // Il nome vuoto non si insegue: cercare «» nelle pagine vorrebbe dire toccarle tutte.
+  // The empty name is not chased: looking for "" in the pages would mean touching all of them.
   if (before && after && before !== after) {
     for (const pageRecord of pages.values()) {
       if (pageRecord.trashedAt) continue;
@@ -228,12 +231,12 @@ function _renamePerson(person, wasCalled) {
   return () => { for (const step of undo) step(); };
 }
 
-/** Lo stesso testo con il nome nuovo: la riga «con:» nella testa, e le menzioni nel corpo. */
+/** The same text with the new name: the "con:" line in the head, and the mentions in the body. */
 function _renamedInPage(markdown, before, after) {
   const { props, extra, body } = frontmatter(markdown);
   const head = { ...props };
   let touched = false;
-  // Le due lingue della stessa riga, perché la testa la scrive una persona nella sua.
+  // The two languages of the same line, because the head is written by a person in their own.
   for (const key of ["con", "with"]) {
     if (head[key] === undefined) continue;
     const names = String(head[key]).split(",").map((one) => one.trim());
@@ -243,7 +246,8 @@ function _renamedInPage(markdown, before, after) {
   }
   const nextBody = renameMention(body, before, after);
   if (!touched && nextBody === body) return markdown;
-  // Una pagina senza testa resta senza testa: `withFrontmatter` la rimette solo se c'era qualcosa.
+  // A page without a head stays without one: `withFrontmatter` puts it back only if there was
+  // something in it.
   return withFrontmatter(head, nextBody, extra);
 }
 
@@ -391,26 +395,28 @@ export function createProject({ name, columns = null, tags = [], props = {}, dat
     id,
     uid: id,
     name: name || "",
-    // Le stesse etichette che hanno le pagine e le attività, un piano più su: servono a chi ha
-    // dieci progetti e li tiene in testa per categoria — i clienti, gli interni, l'anno — e non
-    // per nome. Viaggiano con il progetto, perché sono una cosa del progetto e non di chi guarda.
+    // The same tags that pages and tasks have, one floor up: they serve whoever has ten projects
+    // and keeps them in mind by category — the clients, the internal ones, the year — and not by
+    // name. They travel with the project, because they are a thing of the project and not of
+    // whoever is looking.
     tags: cleanTags(tags),
-    // E gli attributi, le stesse coppie chiave-valore che una pagina tiene nella sua testa: la
-    // data di consegna, il colore con cui lo si riconosce, il numero d'ordine del cliente. Qui
-    // stanno nel record e non in un testo, perché un progetto non è un file — ma si scrivono con
-    // lo stesso editore, e si leggono con le stesse regole.
+    // And the attributes, the same key-value pairs a page keeps in its head: the delivery date,
+    // the colour it is recognised by, the client's order number. Here they live in the record and
+    // not in a text, because a project is not a file — but they are written with the same editor,
+    // and read with the same rules.
     props: { ...(props || {}) },
-    // Quale delle proprietà è **la** data del progetto: la chiave, non il valore. Prima esisteva un
-    // campo `eventDate` a parte, e con lui la parola «evento» addosso a ogni progetto — che per un
-    // progetto di sviluppo o di documenti non vuol dire niente. Adesso la data sta fra gli
-    // attributi come le altre, si chiama come la chiami tu — «consegna», «rilascio», «fiera» — e
-    // una sola porta il conto alla rovescia. `null` è la risposta giusta per i progetti che una
-    // data non ce l'hanno, che sono tanti.
+    // Which of the properties is **the** date of the project: the key, not the value. There used
+    // to be a separate `eventDate` field, and with it the word "evento" (event) stuck on every
+    // project — which for a software or a documents project means nothing. Now the date sits among
+    // the attributes like the others, it is called whatever you call it — "consegna", "rilascio",
+    // "fiera" (delivery, release, trade fair) — and only one carries the countdown. `null` is the
+    // right answer for the projects that have no date, and there are many of them.
     dateKey: dateKey || null,
     columns: _copy(columns || DEFAULT_COLUMNS),
-    // Chi ci lavora, e con che ruolo. Il nome è scritto qui accanto al `uid` e non risolto dalla
-    // scheda: è quello che permette a un progetto arrivato da fuori di dire «Marco Rossi, grafico»
-    // anche a chi la scheda di Marco non ce l'ha, senza che la scheda debba viaggiare.
+    // Who works on it, and in what role. The name is written here next to the `uid` and not
+    // resolved from the card: that is what lets a project arrived from outside say "Marco Rossi,
+    // grafico" (designer) even to someone who does not have Marco's card, without the card having
+    // to travel.
     people: [],
     favourite: false,
     exportedAt: null,
@@ -422,8 +428,8 @@ export function createProject({ name, columns = null, tags = [], props = {}, dat
 
 export function updateProject(id, changes) {
   const project = projects.get(id);
-  // Le etichette non entrano mai come sono state battute: la pulizia sta in un posto solo, o due
-  // grafie della stessa finiscono a dividere in due il suo filtro.
+  // Tags never go in as they were typed: the cleaning lives in one place only, or two spellings of
+  // the same one end up splitting its filter in two.
   const wanted = "tags" in (changes || {}) ? { ...changes, tags: cleanTags(changes.tags) } : changes;
   if (!project) return null;
   const before = _copy(project);
@@ -673,19 +679,19 @@ export function trashPage(id) {
 }
 
 /**
- * Il documento di un'attività, e l'attività di un documento.
+ * The document of a task, and the task of a document.
  *
- * Le note di un'attività stanno in un campo di testo: bastano per «chiamare il fornitore», non per
- * una procedura con le immagini, gli allegati e le sottopagine che servono a chi la esegue. Quella
- * è una pagina, e l'app le pagine ce le ha già: qui c'è solo il filo che le lega.
+ * A task's notes live in a text field: they are enough for "call the supplier", not for a
+ * procedure with the images, the attachments and the sub-pages that whoever carries it out needs.
+ * That is a page, and the app already has pages: here there is only the thread that ties them.
  *
- * **Il filo è uno solo, e sta sull'attività.** Un documento per attività, un'attività per
- * documento: due fili — uno per parte — sarebbero due verità da tenere d'accordo, e la seconda
- * volta che si scollega qualcosa non lo sono più. Il verso opposto si legge cercando, che su
- * qualche decina di attività costa niente e non può mai essere in disaccordo con sé stesso.
+ * **There is only one thread, and it lives on the task.** One document per task, one task per
+ * document: two threads — one on each side — would be two truths to keep in agreement, and the
+ * second time something gets unlinked they no longer are. The opposite direction is read by
+ * searching, which over a few dozen tasks costs nothing and can never disagree with itself.
  *
- * Per `uid` e non per `id`, come `assigneeUid`: l'`id` cambia da un browser all'altro e un
- * progetto esportato e reimportato si porterebbe dietro un filo che non lega più niente.
+ * By `uid` and not by `id`, like `assigneeUid`: the `id` changes from one browser to another, and a
+ * project exported and re-imported would drag along a thread that no longer ties anything.
  */
 export function pageOfTask(task) {
   const wanted = task && task.pageUid ? String(task.pageUid) : "";
@@ -693,7 +699,7 @@ export function pageOfTask(task) {
   return pagesOf(task.projectId).find((one) => (one.uid || one.id) === wanted) || null;
 }
 
-/** L'attività di cui questa pagina è il documento, o niente. */
+/** The task this page is the document of, or nothing. */
 export function taskOfPage(pageId) {
   const pageRecord = pages.get(pageId);
   if (!pageRecord || pageRecord.trashedAt) return null;
@@ -702,20 +708,20 @@ export function taskOfPage(pageId) {
 }
 
 /**
- * Attacca un documento a un'attività, o lo stacca con `null`.
+ * Attaches a document to a task, or detaches it with `null`.
  *
- * Se quella pagina era il documento di un'altra attività, quella lo perde: un documento solo per
- * attività vale anche al contrario, altrimenti due carte sulla bacheca mostrerebbero la stessa
- * pagina e chi la apre non saprebbe da quale delle due è arrivato. Un passo di undo per tutto,
- * perché è un gesto solo.
+ * If that page was the document of another task, that task loses it: one document per task holds
+ * the other way round too, otherwise two cards on the board would show the same page and whoever
+ * opens it would not know which of the two they came from. One undo step for all of it, because it
+ * is a single gesture.
  */
 export function setTaskPage(taskId, pageId) {
   const task = tasks.get(taskId);
   if (!task) return null;
   if (!pageId) return task.pageUid ? updateTask(taskId, { pageUid: null }) : null;
   const pageRecord = pages.get(pageId);
-  // Una pagina di un altro progetto non è il documento di questa attività: il progetto è la
-  // scatola, e un filo che la attraversa si spezza al primo export.
+  // A page from another project is not the document of this task: the project is the box, and a
+  // thread that crosses it snaps at the first export.
   if (!pageRecord || pageRecord.trashedAt || pageRecord.projectId !== task.projectId) return null;
   const wanted = pageRecord.uid || pageRecord.id;
   const taken = taskOfPage(pageId);
@@ -765,12 +771,12 @@ export function createTask(projectId, { title = "", status = null, end = null,
     start: null,
     end,
     priority: null,
-    // Un riferimento, non un nome. Il nome si legge da `people` sul progetto, che è quello che
-    // viaggia: così un'attività arrivata a qualcun altro mostra sempre chi la fa, e non c'è un
-    // secondo posto dove lo stesso nome possa restare indietro.
+    // A reference, not a name. The name is read from `people` on the project, which is what
+    // travels: that way a task that reached somebody else always shows who does it, and there is
+    // no second place where the same name could fall behind.
     assigneeUid: null,
-    // Il documento dell'attività, per `uid` e non per `id`: l'identità che sopravvive all'export,
-    // così il legame regge anche quando il progetto passa a un altro computer. Vedi `pageOfTask`.
+    // The task's document, by `uid` and not by `id`: the identity that survives the export, so the
+    // link holds even when the project moves to another computer. See `pageOfTask`.
     pageUid: null,
     tags: [],
     checklist: [],
@@ -925,12 +931,11 @@ export function setColumns(projectId, columns) {
 }
 
 /**
- * Etichette come le scrive una persona — «fiera, cliente , Fiera» — rimesse in ordine.
+ * Tags as a person writes them — "fiera, cliente , Fiera" — put back in order.
  *
- * Tolti gli spazi, tolti i vuoti, tolti i doppioni **senza badare alle maiuscole**: «Fiera» e
- * «fiera» sono la stessa etichetta, e due pastiglie uguali su una scheda sono un filtro che si
- * divide in due. Resta la prima grafia scritta, perché è quella che chi scrive si aspetta di
- * rileggere.
+ * Spaces removed, empties removed, duplicates removed **regardless of case**: "Fiera" and "fiera"
+ * are the same tag, and two identical pills on a card are a filter that splits in two. The first
+ * spelling written is the one that stays, because it is the one the writer expects to read back.
  */
 export function cleanTags(tags) {
   const out = [];
@@ -945,23 +950,23 @@ export function cleanTags(tags) {
   return out;
 }
 
-/** Ogni chiave di attributo in uso sui progetti vivi, nell'ordine in cui è comparsa. */
-/** Una data come la scrive un `input[type=date]`: la sola forma che il conto alla rovescia legge. */
+/** Every attribute key in use on the live projects, in the order it appeared. */
+/** A date as an `input[type=date]` writes it: the only form the countdown reads. */
 export function isDay(value) {
   return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value.trim());
 }
 
 /**
- * La data del progetto: quale, e come si chiama.
+ * The project's date: which one, and what it is called.
  *
- * Torna `{ key, value }` — il nome che le hai dato e il giorno — oppure `null`, che è la risposta
- * per la maggioranza dei progetti. Il nome torna insieme al giorno di proposito: una scheda che
- * dice «fra 12 giorni» e basta lascia indovinare cosa succede fra dodici giorni, e «Consegna · fra
- * 12 giorni» no.
+ * Returns `{ key, value }` — the name you gave it and the day — or `null`, which is the answer for
+ * the majority of projects. The name comes back together with the day on purpose: a card that says
+ * "fra 12 giorni" (in 12 days) and nothing else leaves you guessing what happens in twelve days,
+ * and "Consegna · fra 12 giorni" (Delivery · in 12 days) does not.
  *
- * Una chiave che punta a una proprietà cancellata, o a una che adesso tiene un testo invece di una
- * data, non è un errore da segnalare: è un conto alla rovescia che smette, e il progetto torna a
- * essere uno senza data.
+ * A key that points to a deleted property, or to one that now holds a text instead of a date, is
+ * not an error to report: it is a countdown that stops, and the project goes back to being one
+ * without a date.
  */
 export function projectDate(project) {
   if (!project || !project.dateKey) return null;
@@ -969,14 +974,14 @@ export function projectDate(project) {
   return isDay(value) ? { key: project.dateKey, value: String(value).trim() } : null;
 }
 
-/** Le proprietà che potrebbero portare il conto: quelle che tengono una data. */
+/** The properties that could carry the countdown: the ones that hold a date. */
 export function projectDateKeys(project) {
   return Object.entries((project && project.props) || {})
     .filter(([, value]) => isDay(value))
     .map(([key]) => key);
 }
 
-/** I nomi di data già usati dai progetti: i suggerimenti di chi ne fa un altro. */
+/** The date names already used by the projects: the suggestions for whoever makes another one. */
 export function projectDateNames() {
   const seen = new Set();
   for (const project of projects.values()) {
@@ -986,7 +991,7 @@ export function projectDateNames() {
   return [...seen].sort((a, b) => a.localeCompare(b));
 }
 
-/** «Questa conta»: una sola per progetto, e ripetuto sulla stessa smarca. */
+/** "Questa conta" (this one counts): one per project, and repeated on the same one it unmarks. */
 export function markProjectDate(id, key) {
   const project = projects.get(id);
   if (!project) return null;
@@ -995,20 +1000,20 @@ export function markProjectDate(id, key) {
 }
 
 /**
- * `eventDate` diventa una proprietà, una volta sola.
+ * `eventDate` becomes a property, once only.
  *
- * I progetti fatti prima tengono la data in un campo a sé, che la schermata di creazione chiamava
- * «Data dell'evento» per tutti — anche per un progetto di sviluppo, dove quella parola non vuol
- * dire niente. Qui quel campo si svuota e il suo giorno va fra gli attributi, sotto il nome che
- * l'app passa nella lingua in cui sta parlando, e quella proprietà nasce già marcata.
+ * Projects made earlier keep the date in a field of its own, which the creation screen called
+ * "Data dell'evento" (event date) for everyone — even for a software project, where that word means
+ * nothing. Here that field is emptied and its day goes among the attributes, under the name the app
+ * passes in the language it is speaking, and that property is born already marked.
  *
- * Il nome lo passa chi chiama perché questo file non ha lingua. Gira a ogni avvio e la seconda
- * volta non trova più niente da spostare, che è quello che la rende sicura da ripetere: la
- * condizione è `eventDate`, e dopo il primo giro `eventDate` è vuoto.
+ * The caller passes the name because this file has no language. It runs at every start and the
+ * second time finds nothing left to move, which is what makes it safe to repeat: the condition is
+ * `eventDate`, and after the first run `eventDate` is empty.
  *
- * Non tocca `updated` né `edited`: spostare un dato da un campo all'altro non è una modifica fatta
- * da qualcuno, e se lo fosse due copie condivise si accuserebbero a vicenda di aver cambiato il
- * progetto ognuna al proprio avvio.
+ * It touches neither `updated` nor `edited`: moving a piece of data from one field to another is
+ * not a change made by somebody, and if it were, two shared copies would accuse each other of
+ * having changed the project, each one at its own start.
  */
 export function migrateEventDates(label) {
   const wanted = String(label || "data").trim() || "data";
@@ -1021,13 +1026,13 @@ export function migrateEventDates(label) {
     }
     const props = { ...(project.props || {}) };
     let key = wanted;
-    // Una chiave già presa da un altro valore non si sovrascrive: si numera. Perdere una proprietà
-    // scritta a mano per far posto a una migrazione sarebbe il danno che questa evita.
+    // A key already taken by another value is not overwritten: it gets a number. Losing a property
+    // written by hand to make room for a migration would be the very damage this one avoids.
     if (props[key] !== undefined && props[key] !== project.eventDate) {
       let n = 2;
-      // Con il trattino basso e non con uno spazio: l'editore delle proprietà ripulisce le chiavi
-      // e uno spazio diventerebbe proprio questo, ma un giro dopo — e nel frattempo `dateKey`
-      // punterebbe a un nome che non c'è più.
+      // With an underscore and not a space: the property editor cleans up keys and a space would
+      // become exactly this, but one round later — and meanwhile `dateKey` would point to a name
+      // that no longer exists.
       while (props[`${key}_${n}`] !== undefined) n += 1;
       key = `${key}_${n}`;
     }
@@ -1046,7 +1051,7 @@ export function projectPropKeys() {
   return out;
 }
 
-/** Ogni etichetta in uso sui progetti vivi, una volta sola, in ordine alfabetico. */
+/** Every tag in use on the live projects, once only, in alphabetical order. */
 export function projectTags() {
   const seen = new Map();
   for (const project of liveProjects()) {
@@ -1058,28 +1063,28 @@ export function projectTags() {
   return [...seen.values()].sort((a, b) => a.localeCompare(b));
 }
 
-/** Every tag in use in a project. Chi ci lavora lo dice `peopleOf`, che è un elenco e non una spia. */
+/** Every tag in use in a project. Who works on it is told by `peopleOf`, which is a list, not a light. */
 export function tagsOf(projectId) {
   const seen = new Set();
   for (const task of tasksOf(projectId)) for (const tag of task.tags || []) seen.add(tag);
   return [...seen].sort((a, b) => a.localeCompare(b));
 }
 
-/** Il nome con cui il progetto di questa attività conosce il suo assegnatario, o vuoto. */
+/** The name by which this task's project knows its assignee, or empty. */
 export function assigneeName(taskRecord) {
   if (!taskRecord || !taskRecord.assigneeUid) return "";
   return personName(taskRecord.projectId, taskRecord.assigneeUid);
 }
 
 /**
- * Assegnare un'attività scrivendo un nome.
+ * Assigning a task by writing a name.
  *
- * La porta unica, applicata dove si digita in fretta: la persona si cerca, se non c'è nasce, entra
- * fra chi lavora al progetto, e l'attività punta a lei. Chi scrive «Giulia» sulla bacheca non sta
- * compilando una scheda, e non gliene viene chiesta una — ma dalla volta dopo Giulia è una persona
- * vera, con i suoi progetti e le sue attività aperte.
+ * The single gate, applied where people type in a hurry: the person is looked up, if they are not
+ * there they are created, they join those who work on the project, and the task points to them.
+ * Whoever writes "Giulia" on the board is not filling in a contact card, and is not asked for one —
+ * but from the next time on Giulia is a real person, with her projects and her open tasks.
  *
- * Un nome vuoto toglie l'assegnatario e non tocca nessuno: disassegnare non è cancellare.
+ * An empty name removes the assignee and touches nobody: unassigning is not deleting.
  */
 export function assignByName(taskId, name) {
   const taskRecord = tasks.get(taskId);
@@ -1200,8 +1205,8 @@ export function trashContact(id) {
   if (!person || person.trashedAt) return null;
   const before = _copy(person);
   const stamp = _now();
-  // I progetti che la nominano non si toccano: `people` porta il nome, quindi continuano a dire chi
-  // ci lavorava. Una scheda tolta non riscrive la storia degli incontri.
+  // The projects that name the person are not touched: `people` carries the name, so they go on
+  // saying who worked on them. A card taken away does not rewrite the history of the meetings.
   _put("contact", { ...person, trashedAt: stamp, updated: stamp });
   return _step("contact", _restoreTo("contact", before));
 }
@@ -1230,16 +1235,16 @@ export function contactByUid(uid) {
  * «giulia » where «Giulia» already exists finds her instead of making a second card.
  */
 /**
- * I nomi scritti in una riga «con:» o nella maschera di un appuntamento, portati in rubrica.
+ * The names written in a "con:" line or in an appointment's form, brought into the address book.
  *
- * Chi scrive «con: Luca, Giulia» sta dicendo che quelle due persone esistono: farle cercare e
- * creare a mano in rubrica, una per una, è chiedere due volte la stessa cosa. Chi c'è già resta
- * com'è — per nome, senza distinguere le maiuscole — e chi manca nasce con il solo nome, da
- * completare dalla sua scheda. Nessun passo di undo, come `createContact`: una scheda in più in
- * rubrica non è un danno da disfare, e si cestina da lì.
+ * Whoever writes "con: Luca, Giulia" is saying that those two people exist: making them search for
+ * and create them by hand in the address book, one by one, is asking for the same thing twice.
+ * Whoever is already there stays as they are — by name, ignoring case — and whoever is missing is
+ * born with just the name, to be completed from their card. No undo step, like `createContact`: one
+ * more card in the address book is not damage to be undone, and it can be binned from there.
  *
- * Accetta una stringa con le virgole o un elenco. Torna le schede nuove, perché chi chiama possa
- * dirlo.
+ * Accepts a comma-separated string or a list. Returns the new cards, so that the caller can say
+ * so.
  */
 export function ensureContacts(names) {
   const list = Array.isArray(names) ? names : String(names || "").split(",");
@@ -1264,13 +1269,13 @@ export function contactByName(name) {
 }
 
 /**
- * Le persone il cui nome contiene per intero quello scritto: «Mario» trova «Mario Bianchi».
+ * The people whose name wholly contains the one written: "Mario" finds "Mario Bianchi".
  *
- * Serve alla porta unica, che per due versioni ha guardato solo il nome esatto: chi scriveva
- * «Mario» con «Mario Bianchi» già in rubrica si ritrovava due schede, e lo storico diviso fra le
- * due. Il confronto è per parole intere — «Mar» non trova nessuno, «Bianchi» trova «Mario Bianchi»
- * — perché su un pezzo di parola la domanda arriverebbe quasi sempre, e una domanda che arriva
- * sempre si impara a chiudere senza leggerla.
+ * It serves the single gate, which for two versions looked only at the exact name: whoever wrote
+ * "Mario" with "Mario Bianchi" already in the address book ended up with two cards, and the history
+ * split between the two. The comparison is by whole words — "Mar" finds nobody, "Bianchi" finds
+ * "Mario Bianchi" — because on a fragment of a word the question would come up almost every time,
+ * and a question that always comes up is one people learn to close without reading.
  */
 export function contactsLike(name) {
   const wanted = String(name || "").trim().toLowerCase();
@@ -1294,24 +1299,24 @@ export function trashedContacts() {
 //  w h o   w o r k s   o n   w h a t
 // -----------------------------------------------------------------------------------------------------------------
 
-/** Chi lavora a un progetto, con il ruolo che ha lì. */
+/** Who works on a project, with the role they have there. */
 export function peopleOf(projectId) {
   const project = projects.get(projectId);
   return project && Array.isArray(project.people) ? project.people : [];
 }
 
-/** Il nome con cui questo progetto conosce quella persona, o vuoto. */
+/** The name by which this project knows that person, or empty. */
 export function personName(projectId, uid) {
   const found = peopleOf(projectId).find((one) => one.uid === uid);
   return found ? found.name || "" : "";
 }
 
 /**
- * Una persona fra chi lavora a un progetto, con un ruolo. Chiamarla di nuovo cambia il ruolo.
+ * A person among those who work on a project, with a role. Calling it again changes the role.
  *
- * Il nome viene copiato qui, e non risolto ogni volta dalla scheda, per una ragione sola: un
- * progetto che arriva a qualcun altro deve poter dire chi ci lavora anche a chi le schede non ce
- * l'ha. È lo stesso motivo per cui la scheda non viaggia.
+ * The name is copied here, and not resolved from the card every time, for one reason only: a
+ * project that reaches somebody else must be able to say who works on it even to someone who does
+ * not have the cards. It is the same reason the card does not travel.
  */
 export function addPerson(projectId, contactId, role = null) {
   const project = projects.get(projectId);
@@ -1319,8 +1324,8 @@ export function addPerson(projectId, contactId, role = null) {
   if (!project || !person) return null;
   const uid = person.uid || person.id;
   const existing = peopleOf(projectId).find((one) => one.uid === uid);
-  // Senza un ruolo detto, quello che c'era resta: assegnare un'attività a Marco non deve degradarlo
-  // da «capoprogetto» a niente.
+  // With no role given, the one there was stays: assigning a task to Marco must not demote him
+  // from "capoprogetto" (project lead) to nothing.
   const kept = role === null ? (existing ? existing.role || "" : "") : role;
   const rest = peopleOf(projectId).filter((one) => one.uid !== uid);
   return updateProject(projectId, { people: [...rest, { uid, name: person.name || "", role: kept }] });
@@ -1335,11 +1340,11 @@ export function removePerson(projectId, uid) {
 }
 
 /**
- * Le attività di una persona, attraverso tutti i progetti.
+ * A person's tasks, across all projects.
  *
- * È metà della risposta a «come eravamo rimasti»: non un campo da compilare, ma quello che è
- * rimasto aperto dopo che ci siamo parlati. Ordinate per scadenza, e quelle senza scadenza in
- * fondo — perché una data è una promessa e il resto è un'intenzione.
+ * It is half of the answer to "where did we leave things": not a field to fill in, but what was
+ * left open after we talked. Sorted by deadline, and those without a deadline at the bottom —
+ * because a date is a promise and the rest is an intention.
  */
 export function tasksOfContact(uid, { open = true } = {}) {
   const out = [];
@@ -1354,30 +1359,30 @@ export function tasksOfContact(uid, { open = true } = {}) {
 }
 
 /**
- * Le pagine che nominano una persona in testa, attraverso tutti i progetti.
+ * The pages that name a person in their head, across all projects.
  *
- * L'altra metà: cosa ci siamo detti. Il confronto è **per nome e non per riferimento**, ed è una
- * scelta obbligata: quelle righe stanno in testa a un file Markdown, che deve restare leggibile in
- * Obsidian dentro la cartella condivisa. Un `uid` lì sarebbe una stringa che non dice niente a
- * nessuno, e il patto di quest'app è che i tuoi appunti restino tuoi anche senza l'app.
+ * The other half: what we said to each other. The comparison is **by name and not by reference**,
+ * and it is a forced choice: those lines sit at the head of a Markdown file, which has to stay
+ * readable in Obsidian inside the shared folder. A `uid` there would be a string that says nothing
+ * to anybody, and this app's pact is that your notes stay yours even without the app.
  *
- * Il nome regge il confronto perché la porta è una: chi scrive un nome crea o ritrova una persona,
- * quindi due grafie della stessa non si accumulano come farebbero con il testo libero.
+ * The name holds up to the comparison because there is one gate: whoever writes a name creates or
+ * finds a person, so two spellings of the same one do not pile up as they would with free text.
  */
-/** Un'ora come la scrive un `input[type=time]`. Niente secondi: un incontro non li ha. */
+/** A time as an `input[type=time]` writes it. No seconds: a meeting does not have them. */
 export function isTime(value) {
   return typeof value === "string" && /^\d{2}:\d{2}$/.test(value.trim());
 }
 
 /**
- * Gli incontri di un progetto: le pagine che si dichiarano tali nella loro testa.
+ * A project's meetings: the pages that declare themselves as such in their head.
  *
- * Un incontro **è** una pagina, e non un record a parte: è la pagina che porta le note, le persone
- * e il giro «le caselle diventano attività», cioè tutto quello per cui un incontro si scrive. Qui
- * si legge soltanto la sua testa, per poterlo mettere dove stanno le date — il calendario, le
- * prossime scadenze, il file da dare a un calendario vero.
+ * A meeting **is** a page, and not a separate record: it is the page that carries the notes, the
+ * people and the "checkboxes become tasks" round, that is everything a meeting is written for. Here
+ * only its head is read, so that it can be put where the dates are — the calendar, the upcoming
+ * deadlines, the file to hand to a real calendar.
  *
- * Le due lingue, perché la testa la scrive una persona nella sua, e questo file non ne ha una.
+ * The two languages, because the head is written by a person in their own, and this file has none.
  */
 export function meetingsOf(projectId, { kinds = [] } = {}) {
   const wanted = new Set(kinds.map((one) => String(one).trim().toLowerCase()).filter(Boolean));
@@ -1397,28 +1402,28 @@ export function meetingsOf(projectId, { kinds = [] } = {}) {
       where: String(props.dove || props.where || "").trim(),
     });
   }
-  // Per giorno, e dentro il giorno per ora: quello senza ora viene prima, come una cosa che quel
-  // giorno c'è ma non si sa quando.
+  // By day, and within the day by time: the one without a time comes first, like something that is
+  // on that day but nobody knows when.
   return out.sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
 }
 
 /**
- * La regola del momento: un incontro è un appuntamento finché il suo momento non è passato, dopo è
- * un verbale.
+ * The rule of the moment: a meeting is an appointment until its moment has passed; after that it
+ * is minutes.
  *
- * Nessun tipo nuovo e nessun segno da mettere a mano. La stessa pagina cambia natura da sola quando
- * l'orologio la supera, che è quello che succede nella realtà: alle 14:59 è un appuntamento, alle
- * 17:00 è una riunione da verbalizzare. Senza questa regola le note di ieri suonavano come una
- * sveglia e la conversazione della settimana scorsa stava in «cosa mi aspetta».
+ * No new type and no mark to set by hand. The same page changes nature on its own when the clock
+ * passes it, which is what happens in reality: at 14:59 it is an appointment, at 17:00 it is a
+ * meeting to write up. Without this rule yesterday's notes rang like an alarm clock and last week's
+ * conversation sat under "cosa mi aspetta" (what's ahead of me).
  *
- * Il momento è il giorno e l'ora. **Senza ora, l'incontro è davanti solo se il giorno è ancora
- * domani o oltre**: un incontro di oggi senza ora è quasi sempre una nota scritta dopo averlo
- * fatto, e trattarlo come «ancora davanti» fino a mezzanotte vorrebbe dire rimetterlo nella lista
- * del mattino di chi l'ha appena chiuso. L'appuntamento di oggi senza ora — raro, perché chi lo
- * prende l'ora la sa — è il prezzo, e si paga con un'ora scritta.
+ * The moment is the day and the time. **Without a time, the meeting is ahead only if the day is
+ * still tomorrow or later**: a meeting today without a time is almost always a note written after
+ * having it, and treating it as "still ahead" until midnight would mean putting it back into the
+ * morning list of the person who has just closed it. Today's appointment without a time — rare,
+ * because whoever books it knows the time — is the price, and it is paid with a written time.
  *
- * L'istante si costruisce dalle parti, mai da una stringa: `new Date("2026-09-24T15:00")` è a
- * discrezione del browser.
+ * The instant is built from its parts, never from a string: `new Date("2026-09-24T15:00")` is at
+ * the browser's discretion.
  */
 export function meetingMoment(meeting) {
   const day_ = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(meeting && meeting.date || ""));
@@ -1437,12 +1442,13 @@ export function meetingAhead(meeting, now = new Date()) {
 }
 
 /**
- * Gli incontri ancora davanti, cioè gli appuntamenti; il resto sono verbali.
+ * The meetings still ahead, that is the appointments; the rest are minutes.
  *
- * `days` è l'orizzonte, e serve dove la lista ne dichiara uno. Il pannello delle scadenze si ferma
- * a una settimana perché così fa `dueSoon`, e senza questo limite un appuntamento di dicembre
- * finiva sotto «Prossimi giorni» accanto a un'attività di giovedì: la stessa parola per due
- * distanze diverse. Chi vuole tutto — «il prossimo impegno», i promemoria — non lo passa.
+ * `days` is the horizon, and it is used where the list declares one. The deadlines panel stops at a
+ * week because that is what `dueSoon` does, and without this limit an appointment in December ended
+ * up under "Prossimi giorni" (next few days) next to a task on Thursday: the same word for two
+ * different distances. Whoever wants everything — "il prossimo impegno" (the next engagement), the
+ * reminders — does not pass it.
  */
 export function meetingsAhead(projectId, now = new Date(), { days = null } = {}) {
   const limit = days === null ? null : addDays(todayISO(now), days);
@@ -1451,13 +1457,13 @@ export function meetingsAhead(projectId, now = new Date(), { days = null } = {})
 }
 
 /**
- * L'appuntamento riscritto dalla maschera: il titolo e la testa, in un passo di undo solo.
+ * The appointment rewritten from the form: the title and the head, in a single undo step.
  *
- * Una riga che c'è già tiene la sua chiave — «data» resta «data» anche sotto l'interfaccia
- * inglese, perché la pagina è un file che una persona legge nella lingua in cui l'ha scritto — e
- * solo una riga nuova prende il nome che le passa chi la aggiunge. Un valore svuotato toglie la
- * riga: una proprietà vuota in questo formato non esiste, e lasciarla vuota la farebbe finire fra
- * quelle «portate e non lette».
+ * A line that is already there keeps its key — "data" stays "data" even under the English
+ * interface, because the page is a file a person reads in the language they wrote it in — and only
+ * a new line takes the name passed by whoever adds it. An emptied value removes the line: an empty
+ * property does not exist in this format, and leaving it empty would make it end up among those
+ * "carried and not read".
  */
 export function updateMeeting(id, said = {}, keys = {}) {
   const pageRecord = pages.get(id);
@@ -1486,9 +1492,10 @@ export function pagesAbout(uid) {
   for (const one of liveProjects()) {
     for (const pageRecord of pagesOf(one.id)) {
       const props = frontmatter(pageRecord.markdown || "").props || {};
-      // Le due lingue dell'app, perché la pagina la scrive una persona nella sua.
+      // The app's two languages, because the page is written by a person in their own.
       const named = String(props.con || props.with || "").split(",").map((name) => name.trim().toLowerCase());
-      // Oppure nominata nel testo con «@»: una pagina che parla di lei anche senza averla in testa.
+      // Or named in the text with "@": a page that talks about the person even without having
+      // them in its head.
       if (!named.includes(wanted) && !mentions(pageRecord.markdown, [person.name]).length) continue;
       out.push({ page: pageRecord, project: one, date: String(props.data || props.date || "") });
     }
@@ -1498,12 +1505,12 @@ export function pagesAbout(uid) {
 }
 
 /**
- * Il ruolo di una persona in un progetto, **anche quando la sua scheda qui non c'è**.
+ * A person's role in a project, **even when their card is not here**.
  *
- * È il caso di un progetto arrivato da qualcun altro: porta nome e ruolo, non la scheda. Chi lo
- * riceve deve poter correggere «grafico» in «capoprogetto» senza prima adottare una persona che
- * magari non gli interessa avere in rubrica. Il ruolo è del progetto, e questo lo rende vero anche
- * nel codice.
+ * It is the case of a project that arrived from somebody else: it carries name and role, not the
+ * card. Whoever receives it must be able to correct "grafico" (designer) to "capoprogetto"
+ * (project lead) without first adopting a person they may not care to have in their address book.
+ * The role belongs to the project, and this makes it true in the code too.
  */
 export function setPersonRole(projectId, uid, role) {
   const people = peopleOf(projectId);
@@ -1514,10 +1521,10 @@ export function setPersonRole(projectId, uid, role) {
 }
 
 /**
- * Una persona che il progetto nomina e di cui qui non c'è la scheda: la scheda nasce.
+ * A person the project names and whose card is not here: the card is born.
  *
- * Il `uid` è quello che il progetto portava, non uno nuovo, ed è tutto il punto: da quel momento le
- * due copie parlano della stessa persona, e il collegamento si forma senza confrontare nomi.
+ * The `uid` is the one the project carried, not a new one, and that is the whole point: from that
+ * moment the two copies speak of the same person, and the link forms without comparing names.
  */
 export function adoptPerson(projectId, uid) {
   const found = peopleOf(projectId).find((one) => one.uid === uid);
@@ -1538,7 +1545,7 @@ export function adoptPerson(projectId, uid) {
   });
 }
 
-/** I progetti in cui una persona lavora, con il ruolo che ha in ognuno. */
+/** The projects a person works on, with the role they have in each. */
 export function projectsOfContact(uid) {
   const out = [];
   for (const project of liveProjects()) {
@@ -1565,18 +1572,18 @@ export function task(id) {
 }
 
 /**
- * Un'attività dal `uid`, che è quello che una pagina scrive quando la nomina.
+ * A task by its `uid`, which is what a page writes when it names it.
  *
- * L'`id` non andrebbe bene: cambia a ogni importazione, quindi una riga «[[#…]]» esportata con il
- * progetto e riaperta altrove punterebbe al vuoto. Il `uid` viaggia, e questa è la ragione per cui
- * esiste.
+ * The `id` would not do: it changes at every import, so a "[[#…]]" line exported with the project
+ * and reopened elsewhere would point at nothing. The `uid` travels, and that is the reason it
+ * exists.
  */
 export function taskByUid(uid, { projectId = null } = {}) {
   const wanted = String(uid || "");
   if (!wanted) return null;
-  // **Prima nel progetto di chi chiede.** Lo stesso file importato due volte fa due progetti — è
-  // voluto — e le loro attività hanno lo stesso `uid`, perché il `uid` viaggia. Senza questa
-  // precedenza la riga di una copia apriva e spuntava l'attività dell'originale: la prima trovata.
+  // **First in the caller's project.** The same file imported twice makes two projects — on
+  // purpose — and their tasks have the same `uid`, because the `uid` travels. Without this
+  // precedence a copy's line opened and ticked the original's task: the first one found.
   let elsewhere = null;
   for (const one of tasks.values()) {
     if ((one.uid || one.id) !== wanted) continue;
@@ -1594,20 +1601,20 @@ export function liveProjects() {
 }
 
 /**
- * L'agenda: il posto di quello che non sta in un progetto.
+ * The agenda: the place for what does not sit in a project.
  *
- * Un appuntamento dal commercialista, una call conoscitiva, una nota su una persona che non lavora
- * a niente di nostro: esistono prima del progetto, e spesso senza. Finché ogni incontro doveva
- * stare dentro un progetto, la scheda di una persona nuova rispondeva «non è ancora in nessun
- * progetto» e finiva lì; chi insisteva si faceva un progetto finto, che poi restava in archivio
- * con la sua barra di avanzamento a zero.
+ * An appointment with the accountant, an introductory call, a note about a person who works on
+ * nothing of ours: they exist before the project, and often without one. As long as every meeting
+ * had to sit inside a project, a new person's card answered "non è ancora in nessun progetto" (not
+ * in any project yet) and that was it; whoever insisted made themselves a fake project, which then
+ * stayed in the archive with its progress bar at zero.
  *
- * È un progetto anche lei, con `kind: "agenda"`, e questa è la scelta: così pagine, calendario,
- * cestino, copie e cartelle condivise la trattano come tutto il resto, e non c'è un secondo tipo di
- * contenitore da insegnare al modello. Quello che cambia è **dove non compare**: fra le schede
- * dell'archivio e nelle domande «in quale progetto?», che è `plainProjects`.
+ * It is a project too, with `kind: "agenda"`, and that is the choice: that way pages, calendar,
+ * bin, copies and shared folders treat it like everything else, and there is no second kind of
+ * container to teach the model. What changes is **where it does not appear**: among the archive's
+ * cards and in the "which project?" questions, which is `plainProjects`.
  *
- * Il nome arriva da chi chiama, perché qui dentro non ci sono parole.
+ * The name comes from the caller, because there are no words in here.
  */
 export function agenda() {
   return [...projects.values()].find((one) => one.kind === "agenda" && !one.trashedAt) || null;
@@ -1620,17 +1627,17 @@ export function ensureAgenda(name) {
   return _put("project", { ...projects.get(made.id), kind: "agenda", updated: _now() });
 }
 
-/** I progetti veri: quelli che si scelgono, si contano e si guardano come schede. */
+/** The real projects: the ones that are chosen, counted and looked at as cards. */
 export function plainProjects() {
   return liveProjects().filter((one) => one.kind !== "agenda");
 }
 
 /**
- * Tutto quello che ha una data in un intervallo, attraverso ogni progetto e l'agenda.
+ * Everything that has a date in a range, across every project and the agenda.
  *
- * Serve al calendario d'insieme, ed è il motivo per cui sta qui e non nella schermata: la domanda
- * «cosa c'è il 12» non è di un progetto, e rispondere a mano progetto per progetto avrebbe messo
- * la stessa somma in due posti — il pannello delle scadenze la fa già.
+ * It serves the overall calendar, and that is why it lives here and not in the screen: the
+ * question "what's on the 12th" does not belong to one project, and answering it by hand project by
+ * project would have put the same sum in two places — the deadlines panel already does it.
  */
 export function calendarBetween(from, to) {
   const out = { meetings: [], tasks: [] };
@@ -1706,14 +1713,14 @@ export function isDone(taskRecord) {
  * interface must not do is shout — amber and a way forward, never red.
  */
 /**
- * Quello che scade entro la settimana, **arretrati compresi**.
+ * What falls due within the week, **overdue included**.
  *
- * Non ha un limite inferiore, ed è voluto: questa è la lista delle prossime scadenze, e una lista
- * che lascia fuori le cose già scadute lascia fuori proprio quelle da fare per prime.
+ * It has no lower bound, and that is on purpose: this is the list of upcoming deadlines, and a list
+ * that leaves out the things already overdue leaves out exactly the ones to do first.
  *
- * Ma è una trappola per chi conta invece di elencare: `dueSoon(...).length` non è «quante ne
- * scadono questa settimana», è quella somma più gli arretrati, e chi li mostra tutti e due finisce
- * per contarne alcune due volte. È già successo. Per contare c'è `dueAhead`.
+ * But it is a trap for whoever counts instead of listing: `dueSoon(...).length` is not "how many
+ * fall due this week", it is that sum plus the overdue ones, and whoever shows both ends up
+ * counting some of them twice. It has happened already. For counting there is `dueAhead`.
  */
 export function dueSoon(projectId, { from = todayISO(), days = SOON_DAYS } = {}) {
   const limit = addDays(from, days);
@@ -1722,7 +1729,7 @@ export function dueSoon(projectId, { from = todayISO(), days = SOON_DAYS } = {})
     .sort((a, b) => a.end.localeCompare(b.end));
 }
 
-/** Quello che scade da oggi in poi, entro la settimana: gli arretrati li conta `lateCount`. */
+/** What falls due from today on, within the week: the overdue ones are counted by `lateCount`. */
 export function dueAhead(projectId, { from = todayISO(), days = SOON_DAYS } = {}) {
   const limit = addDays(from, days);
   return tasksOf(projectId)
@@ -1731,11 +1738,11 @@ export function dueAhead(projectId, { from = todayISO(), days = SOON_DAYS } = {}
 }
 
 /**
- * La prossima cosa che scade, aperta e con una data: la più vicina, in ritardo o no.
+ * The next thing that falls due, open and with a date: the nearest one, late or not.
  *
- * Senza limite inferiore di proposito. Un progetto dove è già tutto in ritardo è proprio quello su
- * cui serve sapere da dove ricominciare, e un «prossimo impegno» che tace quando le date sono tutte
- * passate tacerebbe nel momento peggiore.
+ * No lower bound, on purpose. A project where everything is already late is exactly the one where
+ * you need to know where to start again, and a "prossimo impegno" (next engagement) that goes quiet
+ * when the dates have all passed would go quiet at the worst moment.
  */
 export function nextDue(projectId) {
   return tasksOf(projectId)
@@ -1921,10 +1928,11 @@ export function search(query) {
     }
   }
 
-  // Le persone. L'app ha una rubrica, i nomi nelle teste degli incontri e le menzioni con «@»:
-  // una persona è una cosa di prima classe, e cercarla era l'unica strada chiusa — si trovava il
-  // progetto, la pagina e l'attività, e non chi ci lavora. Il recapito conta quanto il nome,
-  // perché «chi era quello della tipografia?» si cerca dall'azienda, non dal cognome.
+  // People. The app has an address book, the names in the meetings' heads and the mentions with
+  // "@": a person is a first-class thing, and searching for one was the only road closed — you
+  // found the project, the page and the task, and not who works on it. The contact details count
+  // as much as the name, because "who was that from the print shop?" is searched by company, not
+  // by surname.
   for (const person of liveContacts()) {
     const nameAt = _plain(person.name).indexOf(needle);
     const other = [person.company, person.role, person.email, person.phone]
@@ -1940,7 +1948,7 @@ export function search(query) {
       project: null,
       rank: nameAt >= 0 ? 1 : 3,
       snippet: nameAt < 0 && !other && notesAt >= 0 ? _snippet(person.notes, needle) : "",
-      // Quello che distingue due persone con lo stesso nome, e che spiega perché è saltata fuori.
+      // What tells apart two people with the same name, and explains why this one turned up.
       meta: [person.company, person.role].filter(Boolean).join(" · "),
     });
   }
@@ -2008,22 +2016,23 @@ export function adopt({ project: incoming, pages: incomingPages = [], tasks: inc
     ? incoming.columns : fallback;
   if (!columns.some((column) => column.done)) columns[columns.length - 1].done = true;
 
-  // Il `uid` è l'identità che sopravvive all'export, e per questo un progetto importato lo tiene.
-  // Ma tenerlo **quando qui ce n'è già uno che ce l'ha** fa due progetti con una identità sola, e
-  // tutto quello che è indicizzato per uid — i marks delle cartelle, la fusione — smette di
-  // distinguerli: due progetti che l'occhio vede affiancati rivendicano la stessa sottocartella e
-  // si sovrascrivono a vicenda. È lo stesso ragionamento per cui l'`id` è nuovo, applicato al piano
-  // sopra: importare due volte lo stesso file è una cosa ordinaria — «un collega ti manda la sua
-  // copia mentre tu hai ancora la tua» — e le due copie da quel momento sono due cose, non una.
-  // Chi le voleva unite ha `merge`, che è l'altra porta e chiede a quale progetto.
+  // The `uid` is the identity that survives the export, and that is why an imported project keeps
+  // it. But keeping it **when there is already one here that has it** makes two projects with a
+  // single identity, and everything indexed by uid — the folders' marks, the merge — stops telling
+  // them apart: two projects the eye sees side by side claim the same subfolder and overwrite each
+  // other. It is the same reasoning for which the `id` is new, applied one floor up: importing the
+  // same file twice is an ordinary thing — "a colleague sends you their copy while you still have
+  // yours" — and from that moment the two copies are two things, not one. Whoever wanted them joined
+  // has `merge`, which is the other gate and asks which project.
   const wanted = incoming.uid || incoming.id;
-  // Solo fra i progetti **vivi**: uno nel cestino non contende niente a nessuno, e rifiutargli
-  // l'identità vorrebbe dire che ripescarlo dopo aver reimportato il file lo rende un estraneo.
+  // Only among the **live** projects: one in the bin contends nothing with anybody, and refusing it
+  // the identity would mean that fishing it back out after re-importing the file makes it a
+  // stranger.
   const twin = liveProjects().find((one) => (one.uid || one.id) === wanted) || null;
-  // E se una copia c'era già, il nome lo dice. Una identità nuova assegnata in silenzio lascia la
-  // persona con un progetto in più e nessuna spiegazione — due «Fiera di settembre» affiancati, e
-  // nessuno dei due che racconta da dove viene. È la stessa convenzione con cui una pagina scritta
-  // da tutti e due resta in due copie: chi l'ha fatta nascere, e quando.
+  // And if a copy was already there, the name says so. A new identity assigned in silence leaves the
+  // person with one more project and no explanation — two "Fiera di settembre" side by side, and
+  // neither of them telling where it comes from. It is the same convention by which a page written
+  // by both sides stays in two copies: who brought it into being, and when.
   const title = name || incoming.name;
   _put("project", {
     ...incoming,
@@ -2081,8 +2090,8 @@ export function adopt({ project: incoming, pages: incomingPages = [], tasks: inc
   for (const one of incomingTasks) taskIds.set(one.id, _id());
   for (const one of incomingTasks) {
     const parentId = one.parentId && one.parentId !== one.id ? taskIds.get(one.parentId) || null : null;
-    // `assignee` è la forma vecchia, e arriva da un importatore o da un file di prima: si risolve in
-    // una persona qui, e il campo non entra nel record.
+    // `assignee` is the old form, and it comes from an importer or from an earlier file: it is
+    // resolved into a person here, and the field does not go into the record.
     const { assignee, ...rest } = one;
     _put("task", {
       ...rest,
@@ -2097,8 +2106,9 @@ export function adopt({ project: incoming, pages: incomingPages = [], tasks: inc
     });
   }
 
-  // `copyOf` è il progetto che quella identità ce l'aveva già, e serve a chi chiama per dirlo a
-  // chi guarda: da lì si vede che la strada per unirle, invece di affiancarle, è `merge`.
+  // `copyOf` is the project that already had that identity, and it lets the caller tell whoever is
+  // looking: from there one can see that the way to join them, instead of setting them side by
+  // side, is `merge`.
   return { projectId, copyOf: twin ? twin.id : null };
 }
 
@@ -2172,9 +2182,9 @@ export function merge({ project: incoming, pages: incomingPages = [], tasks: inc
     _put("project", {
       ...target,
       name: takeTheirs && incoming.name ? incoming.name : target.name,
-      // Etichette, attributi e la chiave della data seguono il nome: o si prende la testa di quella
-      // copia, o si tiene la propria. Prenderne metà da una e metà dall'altra vorrebbe dire una
-      // `dateKey` che punta a una proprietà che l'altra copia non ha.
+      // Tags, attributes and the date key follow the name: either that copy's head is taken, or
+      // this one keeps its own. Taking half from one and half from the other would mean a
+      // `dateKey` pointing to a property the other copy does not have.
       tags: takeTheirs ? cleanTags(incoming.tags || []) : (target.tags || []),
       props: takeTheirs ? { ...(incoming.props || {}) } : { ...(target.props || {}) },
       dateKey: takeTheirs ? (incoming.dateKey || null) : (target.dateKey || null),

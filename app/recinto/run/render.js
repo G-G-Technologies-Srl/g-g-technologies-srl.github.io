@@ -15,19 +15,19 @@ import { FIELD, LATTICE } from "./game.js";
 
 let palette = null;
 
-// La scia delle Scintille. Sta **qui** e non nel mondo di proposito: è decorazione, non regola —
-// serve a far vedere da che parte stanno arrivando — e una cosa che non decide niente non deve
-// finire in un salvataggio, in una ripetizione o in un test.
+// The Sparks' trail. It lives **here** and not in the world on purpose: it is decoration, not rule —
+// it is there to show which way they are coming from — and something that decides nothing must not
+// find its way into a save, a replay or a test.
 let tails = [];
 
-// «Meno movimento», chiesto al sistema operativo e non a questo gioco. Il foglio di stile lo
-// rispettava già per l'animazione del gettone, ma il canvas non è governato dal CSS: la fiamma
-// pulsava, i raggi tremolavano e il marcatore in attesa lampeggiava lo stesso — cioè proprio le
-// tre cose che si muovono di più, spente ovunque tranne dove sono.
+// "Reduce motion", asked of the operating system and not of this game. The stylesheet already
+// respected it for the coin animation, but the canvas is not governed by CSS: the flame pulsed,
+// the rays flickered and the waiting marker blinked all the same — that is, precisely the three
+// things that move the most, switched off everywhere except where they are.
 //
-// Quello che si spegne è il **battito**, non la forma: i raggi restano, di lunghezze diverse, e
-// smettono di cambiare; l'alone resta, e smette di respirare. Niente sparisce, perché quelle forme
-// sono lì per farsi vedere e chi ha chiesto meno movimento non ha chiesto di vedere meno.
+// What gets switched off is the **beat**, not the shape: the rays stay, of different lengths, and
+// stop changing; the halo stays, and stops breathing. Nothing disappears, because those shapes are
+// there to be seen, and whoever asked for less motion did not ask to see less.
 let calm = false;
 
 export function motion(reduce) {
@@ -68,14 +68,15 @@ export function repalette(canvas) {
 // The transform, exported because `input.js` has to run it backwards to turn a tap into a place on
 // the field. One definition, used in both directions.
 //
-// **Su una finestra più alta che larga il campo si gira di novanta gradi**, e questa è tutta la
-// risposta al campo piccolo sui telefoni. Le misure del campo non si toccano — sono quelle su cui
-// la classifica confronta partite diverse, ed è la ragione per cui non si stira per riempire — ma
-// una rotazione non è uno stiramento: è un'**isometria**. Stesse aree, stesse distanze, stessi
-// angoli, stesso gioco, tenuto di traverso. Su un telefono da 360×740 il campo passa da 360×270 a
-// 360×480: il settantotto per cento in più, senza che una riga di `game.js` se ne accorga.
+// **On a window taller than it is wide the field turns ninety degrees**, and that is the whole
+// answer to the small field on phones. The field's dimensions are not touched — they are what the
+// high score table compares different games on, and that is why it is not stretched to fill — but
+// a rotation is not a stretch: it is an **isometry**. Same areas, same distances, same angles, same
+// game, held sideways. On a 360×740 phone the field goes from 360×270 to 360×480: seventy-eight
+// per cent more, without a single line of `game.js` noticing.
 //
-// Ne segue che anche i comandi girano, e `input.js` li gira: su schermo «giù» deve restare giù.
+// It follows that the controls turn too, and `input.js` turns them: on screen, "down" must stay
+// down.
 export function view(canvas) {
   const turned = canvas.height > canvas.width;
   const wide = turned ? FIELD.h : FIELD.w;
@@ -138,7 +139,8 @@ export function draw(canvas, world, { preview = null, fuse = null } = {}) {
   _trails(world);
   world.sparks.forEach((spark, i) => _spark(ctx, v, unit, spark, tails[i] || []));
   for (const thread of world.threads) _ribbon(ctx, v, unit, thread, palette.thread);
-  // In attesa il marcatore pulsa: il controllo non è tuo e va detto senza scrivere una parola.
+  // While waiting the marker pulses: control is not yours, and that has to be said without writing
+  // a word.
   if (world.waiting > 0) ctx.globalAlpha = calm ? 0.5 : 0.35 + 0.4 * Math.abs(Math.sin(world.waiting * 9));
   _marker(ctx, v, unit, world.marker.at, world.cut ? palette.cut : palette.marker);
   ctx.globalAlpha = 1;
@@ -192,8 +194,9 @@ function _line(ctx, v, unit, points, colour, width, glow, dash = null) {
   ctx.shadowBlur = 0;
 }
 
-// La linea, in due pezzi: quello che la Miccia ha già mangiato e quello che ti resta. Sono due
-// colori e non un'animazione perché è un'informazione, non un effetto — quanta corda hai ancora.
+// The line, in two pieces: what the Fuse has already eaten and what you have left. They are two
+// colours and not an animation because it is information, not an effect — how much rope you still
+// have.
 function _cut(ctx, v, unit, cut, fuse) {
   if (!fuse) {
     _line(ctx, v, unit, cut.chain, palette.cut, 2.5, 14);
@@ -209,16 +212,16 @@ function _cut(ctx, v, unit, cut, fuse) {
   }
   burnt.push(fuse);
 
-  // La parte mangiata resta visibile e resta leggibile — è l'informazione «quanta corda hai ancora»
-  // — ma sottile: è cenere, non linea.
+  // The eaten part stays visible and stays readable — it is the "how much rope you still have"
+  // information — but thin: it is ash, not line.
   _line(ctx, v, unit, burnt, palette.burnt, 1.5, 0);
   _line(ctx, v, unit, [fuse].concat(cut.chain.slice(burnt.length - 1)), palette.cut, 2.5, 14);
 }
 
-// Un numero fra 0 e 1 che dipende solo da quello che gli si passa. Serve alla fiamma per tremolare
-// senza che il disegno smetta di essere **una funzione del mondo**: lo stesso mondo torna a disegnare
-// lo stesso fotogramma, e lo screenshot della scheda resta lo stesso a ogni build. Con `Math.random`
-// la fiamma sarebbe più facile e quella proprietà sparirebbe.
+// A number between 0 and 1 that depends only on what it is given. The flame needs it to flicker
+// without the drawing ceasing to be **a function of the world**: the same world draws the same
+// frame again, and the screenshot on the card stays the same on every build. With `Math.random`
+// the flame would be easier and that property would vanish.
 function _wobble(seed) {
   const x = Math.sin(seed * 127.1 + 11.7) * 43758.5453;
   return x - Math.floor(x);
@@ -235,11 +238,11 @@ function _trails(world) {
   });
 }
 
-// La Scintilla. Prima era un puntino di tre pixel appoggiato sopra la linea del bordo, che è la cosa
-// più luminosa dello schermo: il contrasto col campo andava benissimo e non si vedeva lo stesso,
-// perché competeva con un muro acceso. Adesso ha tre cose che il puntino non aveva — una **scia**
-// che dice da che parte arriva, un **cuore bianco** che non è del colore di nient'altro, e dei
-// **raggi** che tremolano e che rompono la linea invece di starci sopra.
+// The Spark. It used to be a three-pixel dot resting on the border line, which is the brightest
+// thing on the screen: its contrast with the field was perfectly fine and it still could not be
+// seen, because it was competing with a lit wall. Now it has three things the dot did not have — a
+// **trail** that says which way it is coming from, a **white core** that is the colour of nothing
+// else, and **rays** that flicker and break the line instead of sitting on it.
 function _spark(ctx, v, unit, spark, tail) {
   const [x, y] = _at(v, unit, spark.at);
   const size = Math.max(3.5, unit * 1.5);
@@ -250,8 +253,8 @@ function _spark(ctx, v, unit, spark, tail) {
   });
   ctx.globalAlpha = 1;
 
-  // I raggi: quattro, di lunghezza diversa, e la differenza dipende da dove si trova — così
-  // tremolano muovendosi e restano fermi se lei è ferma.
+  // The rays: four, of different lengths, and the difference depends on where it is — so they
+  // flicker as it moves and stay still if it is still.
   const heat = calm ? 0 : spark.at[0] * 3 + spark.at[1] * 7;
   ctx.strokeStyle = palette.spark;
   ctx.lineWidth = Math.max(1, 1.4 * (window.devicePixelRatio || 1));
@@ -271,7 +274,7 @@ function _spark(ctx, v, unit, spark, tail) {
   ctx.fillStyle = palette.spark;
   ctx.fill();
 
-  // Il cuore, bianco: è quello che la distingue dal muro acceso su cui corre.
+  // The core, white: it is what sets it apart from the lit wall it runs along.
   ctx.beginPath();
   ctx.arc(x, y, size * 0.42, 0, Math.PI * 2);
   ctx.fillStyle = palette.marker;
@@ -279,11 +282,11 @@ function _spark(ctx, v, unit, spark, tail) {
   ctx.shadowBlur = 0;
 }
 
-// La testa della Miccia, cioè il punto in cui la tua linea sta bruciando adesso.
+// The head of the Fuse, that is, the point where your line is burning right now.
 //
-// Tre strati, dal freddo al caldo, più le faville che saltano via: un punto arancione da solo dice
-// «qui», e quello che serve dire è «**qui sta bruciando**». Le faville puntano all'indietro, verso
-// la parte già mangiata, perché è da lì che la fiamma è arrivata.
+// Three layers, from cold to hot, plus the embers flying off: an orange dot on its own says
+// "here", and what needs saying is "**it is burning here**". The embers point backwards, towards
+// the part already eaten, because that is where the flame came from.
 function _burning(ctx, v, unit, at, burnt) {
   const [x, y] = _at(v, unit, at);
   const size = Math.max(4, unit * 1.9);
@@ -326,8 +329,9 @@ function _burning(ctx, v, unit, at, burnt) {
   ctx.shadowBlur = 0;
 }
 
-// Il Filo: la scia che sbiadisce e sopra il segmento vivo. Quello che si vede è il corpo — non c'è
-// una sagoma di collisione diversa da questa, e niente che uccida senza essere stato sullo schermo.
+// The Thread: the fading trail, and on top of it the live segment. What you see is the body — there
+// is no collision shape different from this one, and nothing that kills without having been on the
+// screen.
 function _ribbon(ctx, v, unit, thread, colour) {
   thread.trail.forEach((pair, i) => {
     ctx.globalAlpha = ((i + 1) / (thread.trail.length + 1)) * 0.5;
@@ -348,7 +352,8 @@ function _dot(ctx, v, unit, point, colour, radius, glow) {
   ctx.shadowBlur = 0;
 }
 
-// Un rombo e non un cerchio: sta su un reticolo e si muove in otto direzioni, e un rombo lo dice.
+// A diamond and not a circle: it sits on a lattice and moves in eight directions, and a diamond
+// says so.
 function _marker(ctx, v, unit, point, colour) {
   const [x, y] = _at(v, unit, point);
   const r = Math.max(4, unit * 1.6);

@@ -160,16 +160,16 @@ export function setup(button, hint, { storageKey, iosText, removal = null }) {
     if (localStorage.getItem(storageKey) === "1") localStorage.removeItem(storageKey);
   } catch (ignored) { /* a locked-down profile: nothing to clean */ }
 
-  // **Quello che è già arrivato, e quello che deve ancora arrivare.**
+  // **What has already arrived, and what is still to come.**
   //
-  // `beforeinstallprompt` non aspetta nessuno: alla seconda visita, con il service worker già
-  // attivo, Chrome lo manda prima che un modulo abbia finito di caricarsi. Chi si registra qui e
-  // basta non lo vede mai — e il difetto si presenta **solo su un telefono**, perché su un computer
-  // l'app si apre una volta, l'evento arriva tardi e il pulsante compare.
+  // `beforeinstallprompt` waits for nobody: on the second visit, with the service worker already
+  // active, Chrome sends it before a module has finished loading. Whoever only registers here never
+  // sees it — and the defect shows up **only on a phone**, because on a computer the app opens
+  // once, the event arrives late and the button appears.
   //
-  // Per questo ogni pagina che usa questo modulo lo cattura in uno script inline in testa e lo
-  // lascia in `window.__ggInstallPrompt`. Le due strade servono tutt'e due: questa per l'evento già
-  // passato, il listener qui sotto per quello che deve ancora arrivare.
+  // That is why every page that uses this module catches it in an inline script in the head and
+  // leaves it in `window.__ggInstallPrompt`. Both paths are needed: this one for the event that has
+  // already gone by, the listener below for the one that is still to come.
   if (window.__ggInstallPrompt) offer(window.__ggInstallPrompt);
 
   window.addEventListener("beforeinstallprompt", (event) => {

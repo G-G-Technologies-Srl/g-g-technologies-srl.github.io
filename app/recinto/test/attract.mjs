@@ -1,15 +1,15 @@
 // Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
 
-// La dimostrazione dietro il titolo gioca, fa punti e prima o poi perde.
+// The demo behind the title screen plays, scores points and sooner or later loses.
 //
-// Serve perché **un autopilota che non fa niente non sembra rotto**: lo schermo non è vuoto, la
-// console tace, e siccome quella schermata è anche lo screenshot della scheda, la prima cosa che si
-// vedrebbe del gioco sarebbe il gioco non giocato.
+// It is needed because **an autopilot that does nothing does not look broken**: the screen is not
+// empty, the console is silent, and since that screen is also the screenshot on the app's card, the
+// first thing anyone would see of the game would be the game not being played.
 //
-// Una prova in particolare è una cicatrice. Le prime partite finivano tutte e tre per Miccia, e non
-// perché l'autopilota esitasse: una linea in diagonale può incontrare una parete a 45° lasciata da
-// un taglio di prima, il passo viene rifiutato, e chi tiene la barra dritta resta lì appeso. Sotto
-// c'è il controllo che non si ripianti mai più.
+// One test in particular is a scar. The first games all ended, all three of them, by Fuse, and not
+// because the autopilot hesitated: a diagonal line can meet a 45° wall left by an earlier cut, the
+// step is refused, and whoever keeps holding the stick straight is left hanging there. Below is the
+// check that it never gets stuck again.
 //
 // Usage:  node app/recinto/test/attract.mjs
 
@@ -27,22 +27,22 @@ function check(name, condition, detail = "") {
   console.log(`  !  ${name}${detail ? `\n       ${detail}` : ""}`);
 }
 
-// Una faccia sana: l'anello esterno è positivo, ogni buco è negativo, ogni buco sta dentro
-// l'esterno, e **nessun buco sta dentro un altro buco**.
+// A healthy face: the outer ring is positive, every hole is negative, every hole sits inside the
+// outer ring, and **no hole sits inside another hole**.
 //
-// L'ultima è quella che conta, ed è la ragione per cui questo controllo esiste: un buco dentro un
-// altro buco è terreno conquistato dentro terreno conquistato, che non vuol dire niente. Quando è
-// successo, il gioco è andato avanti per tre tagli prima di esplodere in un punto lontano. Si
-// controlla dopo ogni conquista, perché è l'unico momento in cui le facce cambiano.
+// The last one is the one that matters, and it is the reason this check exists: a hole inside
+// another hole is claimed ground inside claimed ground, which means nothing. When it happened, the
+// game carried on for three cuts before blowing up somewhere far away. It is checked after every
+// claim, because that is the only moment the faces change.
 function illness(face, wall) {
   const outer = face.rings[0];
 
-  // **E nessun buco si appoggia al muro dell'arena.** Un buco è terra circondata; se il suo
-  // contorno cammina sul muro non è circondata da niente, ed è una faccia che ha già smesso di
-  // voler dire qualcosa. È il controllo che ha trovato il difetto più caro del progetto: l'area
-  // tornava esatta, la percentuale era giusta, tutti gli altri controlli qui sotto passavano, e il
-  // gioco esplodeva cinquecento passi più tardi in un altro livello. Costa un giro di anello per
-  // ogni buco, e solo alle conquiste.
+  // **And no hole leans on the arena wall.** A hole is enclosed ground; if its outline walks along
+  // the wall it is not enclosed by anything, and it is a face that has already stopped meaning
+  // anything. This is the check that found the costliest bug in the project: the area came out
+  // exact, the percentage was right, every other check below passed, and the game blew up five
+  // hundred steps later on another level. It costs one trip round the ring for each hole, and only
+  // on claims.
   for (let i = 1; i < face.rings.length; i += 1) {
     const on = face.rings[i].filter((point) => onBoundary(wall, point));
     if (on.length) return `il buco ${i} ha ${on.length} vertici sul muro dell'arena, il primo in ${on[0]}`;
@@ -65,7 +65,7 @@ function illness(face, wall) {
   return null;
 }
 
-// Una partita intera, di livello in livello, come la vedrebbe chi guarda il titolo.
+// A whole game, level after level, as someone watching the title screen would see it.
 function demo(seed, cap = 90000) {
   let world = create(1, seed);
   const brain = mind(seed * 7 + 1);
@@ -92,11 +92,11 @@ function demo(seed, cap = 90000) {
     }
     out.best = Math.max(out.best, progress(world));
 
-    // **Il marcatore ha sempre almeno una mossa.** Nasce dal giro in cui `wallsAt` è diventata più
-    // severa: da quel momento ci sono più punti da cui un taglio non può cominciare, e che
-    // «camminare resta sempre possibile» era una cosa che avevo ragionato e non misurato —
-    // ragionare è esattamente quello che aveva prodotto il difetto. Campionato una volta al
-    // secondo simulato: otto `canStep` a ogni passo costerebbero più di tutta la suite.
+    // **The marker always has at least one move.** It comes from the round of changes in which
+    // `wallsAt` became stricter: from then on there are more points from which a cut cannot
+    // begin, and "walking is always still possible" was something I had reasoned out and not
+    // measured — reasoning is exactly what had produced the bug. Sampled once per simulated
+    // second: eight `canStep` calls on every step would cost more than the whole suite.
     if (out.steps % 120 === 0 && world.waiting <= 0 && !out.trapped) {
       const face = world.cut ? world.faces[world.cut.face]
                              : world.faces.find((f) => onBoundary(f, world.marker.at));
@@ -136,8 +136,9 @@ check("fa punti", games.every((game) => game.score > 0));
 check("e prima o poi perde", games.every((game) => game.over),
       games.filter((game) => !game.over).length + " partite non finite");
 
-// Il controllo che nasce dal difetto: mai più appesi a un muro con la linea fuori. Mezzo secondo di
-// immobilità mentre si taglia è già tantissimo — la Miccia si accende dopo un terzo di secondo.
+// The check born from the bug: never again left hanging on a wall with the line out. Half a second
+// of standing still while cutting is already a great deal — the Fuse lights after a third of a
+// second.
 const sick = games.map((game) => game.sick).filter(Boolean);
 check("e nessuna faccia si ammala mai", sick.length === 0, sick.join(" · "));
 
@@ -147,7 +148,7 @@ check("e il marcatore ha sempre almeno una mossa", trapped.length === 0, trapped
 const worst = Math.max(...games.map((game) => game.longestStall));
 check("non resta mai piantato a metà linea", worst < 60, `${worst} passi fermo`);
 
-// E la dimostrazione deve durare abbastanza da guardarla, ma non tanto da non finire mai.
+// And the demo has to last long enough to be watched, but not so long that it never ends.
 const seconds = games.map((game) => game.steps / 120);
 check("dura fra i quindici secondi e i tre minuti",
       seconds.every((s) => s > 15 && s < 180),

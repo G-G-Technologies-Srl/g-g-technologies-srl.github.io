@@ -44,13 +44,13 @@ function cut(name, face, chain) {
   return faces;
 }
 
-const SQUARE = [[0, 0], [64, 0], [64, 48], [0, 48]];          //  64 × 48, doppia 6144
-const ISLAND = [[16, 12], [16, 36], [48, 36], [48, 12]];      //  32 × 24, doppia 1536, oraria
+const SQUARE = [[0, 0], [64, 0], [64, 48], [0, 48]];          //  64 × 48, doubled 6144
+const ISLAND = [[16, 12], [16, 36], [48, 36], [48, 12]];      //  32 × 24, doubled 1536, clockwise
 const field = () => ({ rings: [SQUARE.map((p) => p.slice())] });
 const atoll = () => ({ rings: [SQUARE.map((p) => p.slice()), ISLAND.map((p) => p.slice())] });
 
 // -----------------------------------------------------------------------------------------------------------------
-//  l ' a r e a   e '   d o p p i a ,   i n t e r a   e   c o n   s e g n o
+//  t h e   a r e a   i s   d o u b l e d ,   w h o l e   a n d   s i g n e d
 // -----------------------------------------------------------------------------------------------------------------
 
 equal("il quadrato misura il doppio della sua area", ringArea2(SQUARE), 2 * 64 * 48);
@@ -60,7 +60,7 @@ check("un anello percorso al rovescio cambia solo di segno",
       ringArea2(SQUARE.slice().reverse()) === -ringArea2(SQUARE));
 
 // -----------------------------------------------------------------------------------------------------------------
-//  i l   c o n t e n i m e n t o
+//  c o n t a i n m e n t
 // -----------------------------------------------------------------------------------------------------------------
 
 check("un punto nel campo è dentro", contains(atoll(), [4, 4]));
@@ -68,15 +68,15 @@ check("un punto nell'isola è fuori", !contains(atoll(), [32, 24]));
 check("un punto oltre il bordo è fuori", !contains(atoll(), [80, 4]));
 check("un punto frazionario risponde come gli altri", contains(atoll(), [31.75, 8.5]));
 
-// Il raggio passa esattamente per due vertici dell'isola. Con la fascia chiusa invece che
-// semiaperta questa riga risponde a caso, ed è la risposta che decide da che parte è finito un
-// Filo dopo un taglio.
+// The ray passes exactly through two vertices of the island. With the span closed instead of half
+// open this line answers at random, and it is the answer that decides which side a Thread ended
+// up on after a cut.
 check("il raggio che infila due vertici conta lo stesso", contains(atoll(), [8, 12]));
 check("appena sopra l'isola si è ancora nel campo", contains(atoll(), [32, 11]));
 check("appena dentro l'isola si è fuori dal campo", !contains(atoll(), [32, 13]));
 
 // -----------------------------------------------------------------------------------------------------------------
-//  i l   t a g l i o   o r d i n a r i o
+//  t h e   o r d i n a r y   c u t
 // -----------------------------------------------------------------------------------------------------------------
 
 {
@@ -96,7 +96,7 @@ check("appena dentro l'isola si è fuori dal campo", !contains(atoll(), [32, 13]
 }
 
 {
-  // Una spezzata vera, non un segmento solo: è quello che il marcatore lascia dietro di sé.
+  // A real polyline, not a single segment: it is what the marker leaves behind it.
   const faces = cut("a gradini", field(), [[0, 40], [16, 40], [16, 44], [64, 44]]);
   equal("a gradini: due facce", faces.length, 2);
 }
@@ -108,10 +108,11 @@ check("appena dentro l'isola si è fuori dal campo", !contains(atoll(), [32, 13]
 }
 
 // -----------------------------------------------------------------------------------------------------------------
-//  i l   c a s o   c h e   n e s s u n o   p r e v e d e
+//  t h e   c a s e   n o b o d y   p r e d i c t s
 // -----------------------------------------------------------------------------------------------------------------
 
-// Dal bordo esterno all'isola. Non divide niente: apre l'isola, e la faccia resta una.
+// From the outer border to the island. It divides nothing: it opens the island, and the face
+// stays one.
 {
   const faces = cut("dal bordo all'isola", atoll(), [[0, 24], [16, 24]]);
   equal("dal bordo all'isola: una faccia sola", faces.length, 1);
@@ -119,8 +120,8 @@ check("appena dentro l'isola si è fuori dal campo", !contains(atoll(), [32, 13]
   equal("dal bordo all'isola: l'area è quella di prima", area2(faces[0]), 4608);
 }
 
-// Dall'isola all'isola, passando per il campo: una sacca. Viene giusto senza una riga sua, perché
-// la sacca si misura positiva e il resto dell'isola resta negativo.
+// From the island to the island, by way of the field: a pocket. It comes out right without a line
+// of its own, because the pocket measures positive and the rest of the island stays negative.
 {
   const faces = cut("una sacca sull'isola", atoll(), [[16, 16], [8, 16], [8, 20], [16, 20]]);
   equal("la sacca è una faccia a sé", faces.length, 2);
@@ -132,7 +133,7 @@ check("appena dentro l'isola si è fuori dal campo", !contains(atoll(), [32, 13]
 }
 
 // -----------------------------------------------------------------------------------------------------------------
-//  q u a n d o   d e v e   r i f i u t a r s i
+//  w h e n   i t   m u s t   r e f u s e
 // -----------------------------------------------------------------------------------------------------------------
 
 function refuses(name, face, chain) {
@@ -149,11 +150,11 @@ refuses("una catena di un punto solo", field(), [[0, 24]]);
 refuses("una catena che torna dov'era", field(), [[0, 24], [20, 20], [0, 24]]);
 
 // -----------------------------------------------------------------------------------------------------------------
-//  g l i   i n c r o c i
+//  c r o s s i n g s
 // -----------------------------------------------------------------------------------------------------------------
 
-// Il caso che paga le otto direzioni: due passi diagonali opposti si tagliano a mezza cella, dove
-// non c'è nessun vertice da ritrovare in un insieme di punti visitati.
+// The case that pays for the eight directions: two opposite diagonal steps cross at half a cell,
+// where there is no vertex to find again in a set of visited points.
 check("due diagonali si incrociano a mezza cella", meet([0, 0], [2, 2], [2, 0], [0, 2]));
 check("due diagonali parallele no", !meet([0, 0], [2, 2], [1, 0], [3, 2]));
 check("toccarsi in punta conta", meet([0, 0], [2, 0], [2, 0], [2, 2]));
@@ -183,12 +184,12 @@ check("e uno sul bordo dell'isola pure", onBoundary(atoll(), [16, 24]));
 check("uno in mezzo al campo no", !onBoundary(atoll(), [8, 24]));
 
 // -----------------------------------------------------------------------------------------------------------------
-//  i l   p e r c o r s o   c h e   l ' a n t e p r i m a   d i s e g n a
+//  t h e   p a t h   t h e   p r e v i e w   d r a w s
 // -----------------------------------------------------------------------------------------------------------------
 
-// Due confronti e non uno: `here` prende due punti, `same` due percorsi. Scritti come uno solo,
-// confrontare due punti finisce per leggere `p[0][0]` su un numero, che è `undefined` da tutte e
-// due le parti — e un controllo che confronta due `undefined` passa sempre.
+// Two comparisons and not one: `here` takes two points, `same` two paths. Written as a single one,
+// comparing two points ends up reading `p[0][0]` on a number, which is `undefined` on both sides —
+// and a check that compares two `undefined`s always passes.
 const here = (a, b) => a[0] === b[0] && a[1] === b[1];
 const same = (a, b) => a.length === b.length && a.every((p, i) => here(p, b[i]));
 const last = (path) => path[path.length - 1];
@@ -201,16 +202,16 @@ const last = (path) => path[path.length - 1];
 }
 
 {
-  // Prima le diagonali, poi il dritto: quattro passi obliqui e sei in linea.
+  // Diagonals first, then straight: four slanting steps and six in a line.
   const path = pathTo(field(), [8, 8], [18, 12]);
   equal("in obliquo: undici punti", path.length, 11);
   check("in obliquo: prima si va di sbieco", path[4][0] === 12 && path[4][1] === 12);
   check("in obliquo: poi dritti fino al bersaglio", path[10][0] === 18 && path[10][1] === 12);
 }
 
-// Il controllo che vale per tutti gli altri: ricalcolare il percorso da un punto qualsiasi in cui
-// si trova deve dare la coda di quello disegnato. Se non lo dà, `input.js` cammina una linea e
-// `render.js` ne ha disegnata un'altra — ed è l'anteprima a mentire.
+// The check that stands for all the others: recomputing the path from any point it passes through
+// must give the tail of the one that was drawn. If it does not, `input.js` walks one line and
+// `render.js` has drawn another — and it is the preview that lies.
 {
   const face = field();
   const target = [40, 30];
@@ -223,7 +224,7 @@ const last = (path) => path[path.length - 1];
 }
 
 {
-  // Bersaglio oltre la parete: il percorso si ferma sul bordo, che è dove il taglio si chiude.
+  // Target beyond the wall: the path stops on the border, which is where the cut closes.
   const path = pathTo(field(), [8, 24], [200, 24]);
   const end = last(path);
   check("il bersaglio fuori dal campo non è un errore", end[0] === 64 && end[1] === 24,
@@ -232,14 +233,14 @@ const last = (path) => path[path.length - 1];
 }
 
 {
-  // Verso l'isola: si ferma sulla sua riva, non ci entra.
+  // Towards the island: it stops on its shore, it does not go in.
   const path = pathTo(atoll(), [4, 24], [32, 24]);
   const end = last(path);
   check("verso l'isola ci si ferma sulla riva", end[0] === 16 && end[1] === 24, `finito in ${end}`);
 }
 
 {
-  // E il percorso appena tracciato è una catena che `split` accetta: è il giro completo.
+  // And the path just traced is a chain that `split` accepts: that closes the whole loop.
   const face = field();
   const path = pathTo(face, [0, 12], [64, 40]);
   const faces = cut("il percorso tracciato si può tagliare", face, path);
@@ -247,8 +248,8 @@ const last = (path) => path[path.length - 1];
 }
 
 {
-  // Una parete obliqua: il passo diagonale che la taglierebbe fra due punti del reticolo va rifiutato,
-  // altrimenti il marcatore esce dal campo passando per uno spigolo.
+  // A slanted wall: the diagonal step that would cut through it between two lattice points has to
+  // be refused, otherwise the marker leaves the field by slipping through a corner.
   const wedge = { rings: [[[0, 0], [40, 40], [0, 40]]] };
   const path = pathTo(wedge, [4, 36], [36, 4]);
   check("nessun punto del percorso esce dal cuneo",
@@ -259,15 +260,15 @@ const last = (path) => path[path.length - 1];
 }
 
 {
-  // Il taglio di prima diventa un muro, e il muro non ha spessore.
+  // The earlier cut becomes a wall, and the wall has no thickness.
   //
-  // Aperta un'isola, la faccia si porta dentro una fenditura di larghezza zero: la linea appena
-  // tagliata. Di qua e di là è la stessa faccia, quindi `contains` dice «dentro» da tutte e due le
-  // parti e il punto d'arrivo non è sul bordo — eppure attraversarla significa passare attraverso
-  // un taglio già fatto. È l'unico caso in cui il controllo di mezzo passo è l'unica cosa che
-  // rimane, e serve una fenditura obliqua perché con una dritta ci si finisce sempre sopra.
+  // Once an island is opened, the face carries a slit of zero width inside it: the line just cut.
+  // On this side and that it is the same face, so `contains` says "inside" on both sides and the
+  // landing point is not on the border — and yet crossing it means going through a cut already
+  // made. It is the only case in which the half-step check is the only thing left, and it takes a
+  // slanted slit because with a straight one you always end up on top of it.
   const diagonal = [];
-  for (let k = 0; k <= 12; k += 1) diagonal.push([4 + k, k]);       // dal bordo di sotto allo spigolo dell'isola
+  for (let k = 0; k <= 12; k += 1) diagonal.push([4 + k, k]);       // from the bottom border to the island corner
   const opened = cut("aprire l'isola in obliquo", atoll(), diagonal);
   equal("aprire l'isola in obliquo: una faccia sola", opened.length, 1);
 
@@ -279,7 +280,7 @@ const last = (path) => path[path.length - 1];
 }
 
 // -----------------------------------------------------------------------------------------------------------------
-//  c a m m i n a r e   s u l   b o r d o
+//  w a l k i n g   t h e   b o r d e r
 // -----------------------------------------------------------------------------------------------------------------
 
 {
@@ -289,9 +290,9 @@ const last = (path) => path[path.length - 1];
 }
 
 {
-  // Da (8,0) a (0,8): girando l'angolo sono sedici passi, dall'altra parte sarebbe tutto il
-  // perimetro. Andare dritti al bersaglio invece uscirebbe dal bordo al primo angolo — che è tutta
-  // la ragione per cui camminare non è tagliare.
+  // From (8,0) to (0,8): going round the corner it is sixteen steps, the other way it would be the
+  // whole perimeter. Heading straight for the target instead would leave the border at the first
+  // corner — which is the whole reason walking is not cutting.
   const path = walkTo(field(), [8, 0], [0, 8]);
   equal("si gira l'angolo dalla parte corta", path.length, 17);
   check("passando per lo spigolo", path.some((q) => q[0] === 0 && q[1] === 0));
@@ -301,7 +302,7 @@ const last = (path) => path[path.length - 1];
 equal("dal bordo esterno a un'isola non si cammina", walkTo(atoll(), [0, 24], [16, 24]), null);
 
 {
-  // Una parete a 45°: i passi devono restare sopra, non accanto.
+  // A 45° wall: the steps have to stay on it, not beside it.
   const wedge = { rings: [[[0, 0], [40, 40], [0, 40]]] };
   const path = walkTo(wedge, [4, 4], [20, 20]);
   check("sulla parete obliqua si cammina in diagonale", path.every((q) => onBoundary(wedge, q)),
@@ -319,30 +320,30 @@ equal("dal bordo esterno a un'isola non si cammina", walkTo(atoll(), [0, 24], [1
   const snapped = nearestOnBoundary(wedge, [21, 19]).at;
   check("e sulla parete obliqua si appoggia sulla parete", onBoundary(wedge, snapped), String(snapped));
 
-  // Fuori dallo spigolo: la proiezione cade **oltre** la fine del lato, e senza il taglio agli
-  // estremi si finirebbe appoggiati al prolungamento del muro invece che al muro.
+  // Outside the corner: the projection falls **beyond** the end of the edge, and without clamping
+  // at the ends you would end up resting on the wall's continuation instead of on the wall.
   const corner = nearestOnBoundary(field(), [100, -20]);
   check("un punto oltre lo spigolo si appoggia allo spigolo",
         here(corner.at, [64, 0]) && onBoundary(field(), corner.at), String(corner.at));
 }
 
 // -----------------------------------------------------------------------------------------------------------------
-//  d o v e   d u e   p a r e t i   s i   t o c c a n o
+//  w h e r e   t w o   w a l l s   t o u c h
 // -----------------------------------------------------------------------------------------------------------------
 
-// Dopo una manciata di tagli succede da solo, senza che nessuno faccia niente di strano: un pezzo
-// di terreno conquistato finisce appoggiato alla parete esterna lungo un tratto intero. I punti di
-// quel tratto stanno su **due** anelli, e «su quale anello sono» smette di avere risposta — che è
-// la prima domanda che si fa `split`.
+// After a handful of cuts it happens on its own, without anybody doing anything strange: a piece
+// of claimed ground ends up leaning against the outer wall along a whole run. The points of that
+// run lie on **two** rings, and "which ring am I on" stops having an answer — which is the first
+// question `split` asks itself.
 //
-// Non è teoria: l'ha trovato la dimostrazione giocando, e per tre tagli il gioco è andato avanti con
-// una faccia in cui un buco stava dentro un altro buco, prima di esplodere altrove con un messaggio
-// che non nominava né questo punto né quel taglio.
+// This is not theory: the demo found it while playing, and for three cuts the game carried on with
+// a face in which one hole sat inside another hole, before blowing up elsewhere with a message
+// that named neither this point nor that cut.
 {
   const touching = {
     rings: [
       [[0, 0], [64, 0], [64, 48], [0, 48]],
-      [[16, 12], [48, 12], [48, 0], [16, 0]],      // appoggiato alla parete di sopra, da 16 a 48
+      [[16, 12], [48, 12], [48, 0], [16, 0]],      // leaning on the top wall, from 16 to 48
     ],
   };
   equal("il buco appoggiato alla parete è un buco", ringArea2(touching.rings[1]) < 0, true);
@@ -360,12 +361,12 @@ equal("dal bordo esterno a un'isola non si cammina", walkTo(atoll(), [0, 24], [1
 }
 
 // -----------------------------------------------------------------------------------------------------------------
-//  c a m m i n a r e   o   t a g l i a r e
+//  w a l k   o r   c u t
 // -----------------------------------------------------------------------------------------------------------------
 
-// Il difetto: cliccando la parete **opposta** per chiudere il taglio, il marcatore faceva il giro
-// del perimetro. La regola guardava solo se il bersaglio fosse vicino a un muro — risposta corretta
-// a una domanda sbagliata. La domanda è da dove si è in piedi, non dov'è il bersaglio.
+// The bug: clicking the **opposite** wall to close the cut, the marker went all the way round the
+// perimeter. The rule only looked at whether the target was near a wall — a correct answer to a
+// wrong question. The question is where you are standing, not where the target is.
 {
   const kind = (from, to) => aimAt(field(), from, to).kind;
 
@@ -376,13 +377,13 @@ equal("dal bordo esterno a un'isola non si cammina", walkTo(atoll(), [0, 24], [1
   equal("due passi più in là sulla stessa parete si cammina", kind([32, 0], [40, 0]), "walk");
   equal("e anche molto più in là, perché di lì non si taglia", kind([32, 0], [4, 0]), "walk");
 
-  // L'angolo: appena girato c'è già campo aperto in mezzo, quindi tecnicamente un taglio si
-  // potrebbe fare. Con pochi passi vince il camminare, che è quello che uno intende.
+  // The corner: just round it there is already open field in between, so technically a cut could
+  // be made. With only a few steps walking wins, which is what anyone means.
   const wedge = aimAt(field(), [4, 0], [0, 4]);
   equal("girare l'angolo di due passi è camminare", wedge.kind, "walk");
 
-  // Chiudere mirando **vicino** al muro e non esattamente sopra: con un mouse è quello che succede
-  // sempre, e fermarsi a un passo dal chiudere vuol dire restare lì con la Miccia accesa.
+  // Closing by aiming **near** the wall and not exactly on it: with a mouse that is what always
+  // happens, and stopping one step short of closing means staying there with the Fuse lit.
   {
     const shy = aimAt(field(), [32, 0], [32, 46], { walking: false });
     const end = shy.path[shy.path.length - 1];
@@ -397,23 +398,23 @@ equal("dal bordo esterno a un'isola non si cammina", walkTo(atoll(), [0, 24], [1
 }
 
 // -----------------------------------------------------------------------------------------------------------------
-//  l a   p u n t a   d e l l ' i n s e n a t u r a
+//  t h e   t i p   o f   t h e   b a y
 // -----------------------------------------------------------------------------------------------------------------
 
-// La cicatrice più cara di tutte, perché il gioco continuava a tornare i conti giusti mentre era
-// già rotto.
+// The costliest scar of all, because the game kept getting the sums right while it was already
+// broken.
 //
-// Un taglio che arriva su un'isola non divide: apre. La faccia resta una e il suo contorno entra
-// lungo la fenditura, gira l'isola e riesce lungo la **stessa** fenditura — un muro di larghezza
-// zero. Su ogni punto di quella fenditura il bordo passa due volte, e «da che parte sto» non ha
-// risposta.
+// A cut that reaches an island does not divide: it opens. The face stays one and its outline runs
+// in along the slit, goes round the island and comes back out along the **same** slit — a wall of
+// zero width. At every point of that slit the border passes twice, and "which side am I on" has no
+// answer.
 //
-// `wallsAt` esisteva apposta per rifiutare quei punti, e li lasciava passare tutti: contava su
-// **quanti anelli** stava il punto, e la fenditura è un anello solo percorso due volte. Il taglio
-// successivo partiva dalla punta, `split` sceglieva la prima delle due occorrenze, e restituiva un
-// buco con due vertici appoggiati al muro dell'arena. L'area tornava, la percentuale era giusta,
-// le facce sembravano sane — e quattro tagli dopo, da un'altra parte, il gioco esplodeva con
-// «un buco senza faccia intorno».
+// `wallsAt` existed precisely to refuse those points, and it let every one of them through: it
+// counted **how many rings** the point was on, and the slit is a single ring walked twice. The next
+// cut started from the tip, `split` picked the first of the two occurrences, and returned a hole
+// with two vertices resting on the arena wall. The area added up, the percentage was right, the
+// faces looked healthy — and four cuts later, somewhere else, the game blew up with "a hole with
+// no face around it".
 {
   const anello = {
     rings: [
@@ -435,17 +436,18 @@ equal("dal bordo esterno a un'isola non si cammina", walkTo(atoll(), [0, 24], [1
   const bay = opened[0];
   equal("sulla punta dell'insenatura il bordo passa due volte", wallsAt(bay, [128, 72]), 2);
   equal("e a metà fenditura anche", wallsAt(bay, [128, 36]), 2);
-  // Alla bocca dell'insenatura sono due e non tre: il muro **non** si ferma lì, ci passa una volta
-  // sola — entra nella fenditura e più tardi ne riesce. Tre sarebbe contare il muro due volte.
+  // At the mouth of the bay it is two and not three: the wall does **not** stop there, it passes
+  // through only once — it goes into the slit and later comes back out. Three would be counting
+  // the wall twice.
   equal("e alla bocca, dove la fenditura tocca il muro, ancora due", wallsAt(bay, [128, 0]), 2);
 
-  // Il resto del bordo non deve essersi ammalato: un contatore troppo generoso rifiuterebbe tagli
-  // legittimi ovunque, e sarebbe un difetto peggiore di quello che sostituisce.
+  // The rest of the border must not have fallen ill: a counter that is too generous would refuse
+  // legitimate cuts everywhere, and that would be a worse bug than the one it replaces.
   equal("ma un punto qualunque del muro resta a uno", wallsAt(bay, [40, 0]), 1);
   equal("e un angolo dell'arena pure", wallsAt(bay, [0, 0]), 1);
   equal("e un vertice dell'isola pure", wallsAt(bay, [96, 72]), 1);
 
-  // E la conseguenza: di lì non si chiude.
+  // And the consequence: you cannot close there.
   check("chiudere un taglio sulla punta è rifiutato",
         canStep(bay, [129, 71], [128, 72]) !== "close",
         String(canStep(bay, [129, 71], [128, 72])));
@@ -454,16 +456,17 @@ equal("dal bordo esterno a un'isola non si cammina", walkTo(atoll(), [0, 24], [1
   try { split(bay, [[128, 72], [129, 71], [130, 70]]); } catch (ignored) { refused = true; }
   check("e `split` non accetta una catena che parte di lì", refused);
 
-  // E l'anteprima deve dire la **stessa** cosa che farà il mondo.
+  // And the preview must say the **same** thing the world will do.
   //
-  // Da un punto della fenditura `canStep` risponde ancora «open» in otto direzioni, e ha ragione:
-  // guarda dove il passo *arriva*, e lì arriva dentro la faccia. Ma staccare da lì è vietato, e
-  // quel divieto viveva solo in `game.js`. Per un giro intero le due cose non si sono parlate: il
-  // tratteggio disegnava un taglio di settanta passi, si premeva, e non succedeva niente — cioè
-  // esattamente la bugia che tutta la scelta di rendere `pathTo` senza memoria serve a impedire.
+  // From a point on the slit `canStep` still answers "open" in eight directions, and it is right:
+  // it looks at where the step *lands*, and there it lands inside the face. But leaving the wall
+  // from there is forbidden, and that ban lived only in `game.js`. For a whole round the two did
+  // not talk to each other: the dashed line drew a cut seventy steps long, you pressed, and nothing
+  // happened — that is, exactly the lie that the whole choice of making `pathTo` memoryless is
+  // there to prevent.
   //
-  // Trovato misurando una cosa che avevo affermato: che dalla fenditura si potesse sempre almeno
-  // camminare. Si poteva — ed è saltato fuori l'altro difetto, quello accanto.
+  // Found by measuring something I had claimed: that from the slit you could always at least walk.
+  // You could — and the other bug turned up, the one next to it.
   equal("dalla punta non parte nessun taglio", pathTo(bay, [128, 72], [60, 40]).length, 1);
   equal("e l'anteprima lo dice: di lì si cammina", aimAt(bay, [128, 72], [60, 40]).kind, "walk");
   equal("a metà fenditura è lo stesso", aimAt(bay, [128, 36], [60, 40]).kind, "walk");

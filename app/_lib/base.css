@@ -111,15 +111,15 @@ button {
 
 button:hover:not(:disabled) { border-color: var(--border-strong); }
 
-/* **Il testo di un comando è un'etichetta, non contenuto.** Trascinando sopra un pulsante — o
-   toccandolo un attimo di troppo sul telefono — il browser ne seleziona la scritta: compare
-   l'evidenziazione, sul telefono spesso anche la lente e il menù «copia», e per un istante il
-   comando sembra rotto invece che premuto. Non c'è nessun caso in cui qualcuno voglia copiare la
-   parola «Stampa».
-   Vale per i comandi, **non per i link e non per il testo**: l'etichetta di una fonte normativa —
-   «AI Act, art. 50(1)» — si copia eccome, ed è il punto di tutta la sezione della conformità. Per
-   questo la regola nomina `button`, `summary` e `label`, e si ferma lì.
-   Il prefisso `-webkit-` resta per i Safari più vecchi, dove quello senza non è supportato. */
+/* **The text of a control is a label, not content.** Dragging across a button — or touching it a
+   moment too long on a phone — makes the browser select its caption: the highlight appears, on a
+   phone often the magnifier and the "Copy" menu too, and for an instant the control looks broken
+   instead of pressed. There is no case in which anybody wants to copy the word "Stampa" (Print).
+   This applies to controls, **not to links and not to text**: the label of a legal source —
+   "AI Act, art. 50(1)" — very much gets copied, and that is the whole point of the compliance
+   section. That is why the rule names `button`, `summary` and `label`, and stops there.
+   The `-webkit-` prefix stays for older Safari versions, where the unprefixed one is not
+   supported. */
 button, summary, label, [role="button"] {
   -webkit-user-select: none;
   user-select: none;
@@ -184,16 +184,16 @@ button:disabled, input:disabled {
    and low-contrast — everything below it is what the visitor is actually doing, and gets the
    contrast. Six controls at one altitude read as six equally important things. */
 
-/* **Va a capo, e non è una rifinitura: senza, i comandi escono dallo schermo.**
+/* **It wraps, and that is not a finishing touch: without it, the controls leave the screen.**
 
-   È una riga flex, e una riga flex che non va a capo non trabocca in modo visibile — spinge fuori
-   gli ultimi elementi e basta. Su un telefono da 360 pixel, che è la larghezza di mezzo Android,
-   l'ultima icona finiva sedici pixel oltre il bordo destro: c'era, e non c'era modo di premerla.
+   It is a flex row, and a flex row that does not wrap does not overflow visibly — it just pushes
+   the last items out. On a 360-pixel phone, which is the width of half of Android, the last icon
+   ended up sixteen pixels past the right edge: it was there, and there was no way to press it.
 
-   Il difetto si è presentato come «non vedo il pulsante per il tutto schermo», ed è il tipo di cosa
-   che non si trova su un computer perché lì lo spazio avanza sempre. Andare a capo costa una riga
-   nei casi estremi e non la costa mai nei casi normali, perché sotto i 620 il sottotitolo sparisce
-   e l'etichetta della lingua si accorcia. */
+   The defect showed up as "I can't see the full-screen button", and it is the kind of thing you
+   do not find on a computer because there the space is always more than enough. Wrapping costs a
+   line in the extreme cases and never costs one in the normal cases, because below 620 the
+   tagline disappears and the language label gets shorter. */
 .appbar {
   display: flex;
   flex-wrap: wrap;
@@ -205,26 +205,27 @@ button:disabled, input:disabled {
   min-height: 34px;
 }
 
-/* **E i comandi non si stringono**, che è la metà della correzione — anzi, è quella che spiega il
-   difetto vero.
+/* **And the controls do not shrink**, which is half of the fix — in fact, it is the half that
+   explains the real defect.
 
-   Un elemento flex, per impostazione predefinita, **si restringe prima di traboccare**. Quindi la
-   riga non usciva dallo schermo: schiacciava gli ultimi pulsanti fino a **zero pixel di larghezza**.
-   Non erano fuori, erano larghi niente — invisibili e non premibili, esattamente nel punto in cui li
-   si stava cercando.
+   A flex item, by default, **shrinks before it overflows**. So the row was not leaving the screen:
+   it was squeezing the last buttons down to **zero pixels wide**. They were not outside, they were
+   nothing wide — invisible and impossible to press, exactly in the spot where somebody was looking
+   for them.
 
-   È il motivo per cui il difetto è comparso tutto insieme: il pulsante per installare, tornato a
-   funzionare, ha portato via sessanta pixel, e i due che gli stanno accanto sono spariti.
+   That is why the defect appeared all at once: the install button, working again, took away sixty
+   pixels, and the two next to it vanished.
 
-   `flex-shrink: 0` sui comandi e sul nome; il sottotitolo resta l'unica cosa che può cedere, e sotto
-   i 620 se ne va del tutto. Quello che non ci sta va a capo, che è visibile e si può premere. */
+   `flex-shrink: 0` on the controls and on the name; the tagline stays the only thing that can give
+   way, and below 620 it goes altogether. Whatever does not fit wraps, which is visible and can be
+   pressed. */
 .appbar button,
 .appbar .brand { flex-shrink: 0; }
 
 .appbar .meta { min-width: 0; }
 
-/* Il sottotitolo è la prima cosa che se ne va quando lo spazio manca: il nome dell'app è lì accanto,
-   e su un telefono nessuno legge un payoff da undici pixel. */
+/* The tagline is the first thing to go when space runs short: the app's name is right beside it,
+   and on a phone nobody reads an eleven-pixel strapline. */
 @media (max-width: 620px) {
   .appbar .meta { display: none; }
 }
@@ -283,23 +284,24 @@ button:disabled, input:disabled {
 
 .foot a { color: var(--faint); }
 
-/* ---------------------------------------------------------------- il marchio nel piè di pagina
+/* ---------------------------------------------------------------- the brand mark in the footer
 
-   Al centro, fra i comandi a sinistra e la licenza a destra, e porta al sito. È l'unico punto in cui
-   un'app dice da dove viene: le app si installano, si aprono da sole e vivono mesi senza che nessuno
-   ripassi dalla scheda.
+   In the middle, between the controls on the left and the licence on the right, and it leads to the
+   site. It is the only place where an app says where it comes from: the apps get installed, open on
+   their own and live for months without anybody passing by the product page again.
 
-   **Maschera e non immagine.** Un `<img>` non eredita il colore, quindi in un'app che ha due temi
-   servirebbero due file e una regola per scegliere; `mask-image` con `background: currentColor`
-   segue il tema da sé. E la geometria sta qui come data URI invece che in un file dentro `_lib/`:
-   un file in più andrebbe aggiunto all'elenco di precache di tutte e quattro le app, e questo è un
-   arco e un punto. */
+   **A mask and not an image.** An `<img>` does not inherit the colour, so an app with two themes
+   would need two files and a rule to choose between them; `mask-image` with `background:
+   currentColor` follows the theme by itself. And the geometry sits here as a data URI instead of in
+   a file inside `_lib/`: one more file would have to be added to the precache list of all four
+   apps, and this is an arc and a dot. */
 
-/* **Ancorato al centro della pagina, non fra i due gruppi.** Due spaziatori `flex: 1` dividono lo
-   spazio libero in parti uguali, il che centra il marchio fra quello che ha a sinistra e quello che
-   ha a destra — e i due gruppi hanno larghezze diverse, «Torna alla scheda · Codice sorgente» contro
-   «Apache-2.0», quindi finiva spostato. Al centro *della pagina* ci si arriva solo uscendo dal
-   flusso. Gli spaziatori restano perché tengono separati i due gruppi. */
+/* **Anchored to the centre of the page, not between the two groups.** Two `flex: 1` spacers split
+   the free space in equal parts, which centres the mark between what it has on its left and what it
+   has on its right — and the two groups have different widths, "Torna alla scheda · Codice
+   sorgente" (back to the product page · source code) against "Apache-2.0", so it ended up off
+   centre. The centre *of the page* can only be reached by leaving the flow. The spacers stay
+   because they keep the two groups apart. */
 .foot-brand {
   position: absolute;
   left: 50%;
@@ -323,11 +325,12 @@ button:disabled, input:disabled {
   mask: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20100%20100%22%3E%3Cpath%20d=%22M50%2014%20A36%2036%200%201%200%2086%2050%20H66%22%20fill=%22none%22%20stroke=%22%23fff%22%20stroke-width=%2213%22%20stroke-linecap=%22round%22/%3E%3Ccircle%20cx=%2250%22%20cy=%2250%22%20r=%229%22%20fill=%22%23fff%22/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
-/* Sotto i 520px il piè di pagina va a capo e i due spaziatori collassano: il marchio finirebbe
-   attaccato al bordo sinistro invece che al centro, cioè in un posto che nessuno ha scelto. Lì
-   prende la riga tutta per sé. */
-/* Sotto i 700px i due gruppi si allargano fino a passare sotto il marchio, che essendo fuori dal
-   flusso non li respinge: lì rientra, prende la riga per sé e resta centrato dal flusso normale. */
+/* Below 520px the footer wraps and the two spacers collapse: the mark would end up stuck to the
+   left edge instead of the centre, that is in a place nobody chose. There it takes the whole line
+   for itself. */
+/* Below 700px the two groups widen until they pass under the mark, which, being out of the flow,
+   does not push them back: there it comes back in, takes the line for itself and stays centred by
+   the normal flow. */
 @media (max-width: 700px) {
   .foot-brand {
     position: static;

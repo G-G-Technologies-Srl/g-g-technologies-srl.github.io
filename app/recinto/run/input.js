@@ -19,27 +19,28 @@ import { NO_INTENT, LATTICE } from "./game.js";
 import { aimAt, contains, onBoundary } from "./geometry.js";
 import { toLattice, view } from "./render.js";
 
-// Quanto scarto conta ancora come «intendevo il muro», in **pixel di schermo**.
+// How far off still counts as "I meant the wall", in **screen pixels**.
 //
-// In pixel e non in unità di reticolo, perché non è una proprietà del campo: è la larghezza di un
-// polpastrello, ed è la stessa su ogni telefono. Quattro unità di reticolo — la misura di prima —
-// sono sette pixel su uno schermo da 360, cioè meno della precisione con cui un dito sa dove sta
-// andando. Col mouse bastavano; col dito il muro non si raggiungeva mai, il taglio si fermava a
-// qualche pixel dal bordo e la Miccia se lo mangiava.
-// Sedici col mouse non è «poco»: su un monitor tipico sono le stesse quattro unità di reticolo
-// che c'erano prima, misurate invece che scritte a mano, più un filo di margine. Ventiquattro col
-// dito sono circa dodici unità di reticolo su un telefono: molto, e giusto così — un taglio che si
-// ferma dodici unità prima del muro non è una scelta del giocatore, è una mira che non c'è.
+// In pixels and not in lattice units, because it is not a property of the field: it is the width
+// of a fingertip, and it is the same on every phone. Four lattice units — the previous measure —
+// are seven pixels on a 360 screen, that is, less than the precision with which a finger knows
+// where it is going. With the mouse they were enough; with a finger the wall was never reached, the
+// cut stopped a few pixels short of the border and the Fuse ate it up.
+// Sixteen with the mouse is not "a little": on a typical monitor it is the same four lattice units
+// there were before, measured instead of written by hand, plus a sliver of margin. Twenty-four with
+// a finger is about twelve lattice units on a phone: a lot, and rightly so — a cut that stops
+// twelve units short of the wall is not the player's choice, it is aim that is not there.
 const REACH = { mouse: 16, touch: 24 };
 
-// Di quanto la mira sta **sopra** il dito, così la mano non copre il bersaglio.
+// How far **above** the finger the aim sits, so the hand does not cover the target.
 //
-// Fissa non poteva funzionare, e questo è il difetto che rendeva il gioco quasi ingiocabile su un
-// telefono: verso il fondo dello schermo sotto il dito non c'è più posto, e quarantaquattro pixel
-// di alzata non scoprono il bersaglio — lo portano via. Il muro in basso era **irraggiungibile**,
-// qualunque cosa facesse il giocatore. Adesso l'alzata si consuma avvicinandosi al fondo: piena in
-// mezzo al campo, zero sull'ultimo pixel, e lì il dito mira esattamente dove appoggia — che è
-// giusto, perché quando si punta un muro non c'è niente da guardare sotto la mano.
+// A fixed amount could not work, and this is the defect that made the game nearly unplayable on a
+// phone: towards the bottom of the screen there is no more room below the finger, and forty-four
+// pixels of lift do not uncover the target — they carry it away. The bottom wall was
+// **unreachable**, whatever the player did. Now the lift wears off as you approach the bottom: full
+// in the middle of the field, zero on the last pixel, and there the finger aims exactly where it
+// rests — which is right, because when you are pointing at a wall there is nothing to look at
+// under your hand.
 const THUMB = 44;
 
 const KEYS = {
@@ -65,11 +66,11 @@ let field = null;
 export function setup(canvas) {
   field = canvas;
   window.addEventListener("keydown", (event) => {
-    // **Mentre si scrive, WASD sono lettere.** L'ascoltatore sta sulla finestra e non guardava chi
-    // avesse il fuoco: nel campo del nome della classifica la «a» non si riusciva a scrivere,
-    // perché `KeyA` qui vuol dire «sinistra» e l'evento veniva annullato. Il nome «Gian Angelo»
-    // usciva «Gin ngelo», e la stessa cosa capitava a ogni w, s e d. Chi scrive non sta giocando,
-    // quindi si lascia perdere anche quello che era premuto.
+    // **While typing, WASD are letters.** The listener sits on the window and did not look at who
+    // had focus: in the high score table's name field the "a" could not be typed, because `KeyA`
+    // here means "left" and the event was cancelled. The name "Gian Angelo" came out as
+    // "Gin ngelo", and the same happened to every w, s and d. Someone typing is not playing, so
+    // whatever was held down is let go as well.
     if (_typing(event.target)) { held.clear(); return; }
     const key = KEYS[event.code];
     if (!key) return;
@@ -102,7 +103,7 @@ export function setup(canvas) {
     target = aim.slice();
   });
   canvas.addEventListener("pointermove", (event) => {
-    if (!dragging && event.pointerType === "touch") return;   // il tocco non ha il passaggio sopra
+    if (!dragging && event.pointerType === "touch") return;   // touch has no hover
     aim = place(event);
     if (dragging) { byKeyboard = false; target = aim.slice(); }
   });
@@ -132,14 +133,15 @@ export function plan(world, to = null) {
   const face = _faceOf(world);
   if (!face) return null;
 
-  // Con la linea già fuori non c'è niente da scegliere fra camminare e tagliare — si taglia — ma la
-  // fascia lungo il muro serve lo stesso, e serve proprio adesso: è chiudendo che si mira al bordo.
+  // With the line already out there is no choosing between walking and cutting — you cut — but the
+  // band along the wall is needed all the same, and needed right now: closing is when you aim for
+  // the border.
   return aimAt(face, world.marker.at, where, { band: _band(), walking: !world.cut });
 }
 
-// Lo scarto, dai pixel dello schermo alle unità del reticolo. Passa per `view`, che è l'unico posto
-// che sa quanto è grande il campo adesso: la stessa fascia vale un quarto di campo su un telefono e
-// una briciola su un monitor, e in tutti e due i casi vale un polpastrello.
+// The tolerance, from screen pixels to lattice units. It goes through `view`, which is the only place
+// that knows how big the field is right now: the same band is worth a quarter of the field on a phone
+// and a crumb on a monitor, and in both cases it is worth one fingertip.
 function _band() {
   if (!field) return 4;
   const scale = view(field).scale;
@@ -148,11 +150,12 @@ function _band() {
   return Math.max(2, ((byTouch ? REACH.touch : REACH.mouse) * ratio) / (scale * LATTICE));
 }
 
-// Col campo girato, «giù» sullo schermo non è «giù» nel campo. Il giocatore preme quello che vede,
-// quindi la direzione si gira qui — nell'unico posto che conosce sia lo schermo sia il mondo.
-// Il fuoco è in un posto dove i tasti sono testo: un campo, un menù a tendina, una finestra di
-// dialogo aperta. Lo stesso confine vale in `app.js` per Invio e barra spaziatrice, e per la stessa
-// ragione — un ascoltatore sulla finestra sente tutto, anche quello che non è per lui.
+// With the field turned, "down" on the screen is not "down" in the field. The player presses what
+// they see, so the direction is turned here — in the only place that knows both the screen and the
+// world.
+// Focus is somewhere keys are text: an input field, a drop-down menu, an open dialog. The same
+// boundary holds in `app.js` for Enter and the space bar, and for the same reason — a listener on
+// the window hears everything, even what is not meant for it.
 function _typing(node) {
   if (!node || typeof node.closest !== "function") return false;
   return Boolean(node.closest('input, textarea, select, [contenteditable="true"], dialog[open]'));

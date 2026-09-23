@@ -11,7 +11,7 @@
 //    when the person presses «Aggiorna» on the line gg/update.js shows. Swapping files under
 //    a running app means changing the code while somebody is halfway through a game.
 
-const VERSION = '1.8.2';
+const VERSION = '1.8.3';
 const CACHE = `spronia-v${VERSION}`;
 
 // Every file the app is made of, plus the shared modules it borrows. Kept by hand and checked by
@@ -52,19 +52,18 @@ const ASSETS = [
   '../../_lib/io.js',
 ];
 
-// **Ogni file si prende dalla rete, non dalla cache del browser.**
+// **Every file is taken from the network, not from the browser's cache.**
 //
-// `cache.addAll` fa dei fetch normali, e un fetch normale rispetta la cache HTTP. Con un `max-age`
-// di dieci minuti — quello che mette un host statico qualunque — un worker nuovo che si installa
-// poco dopo una pubblicazione si riempie dei file **vecchi**, che lì dentro sono ancora freschi.
-// L'unico che sfugge è `sw.js`, perché quello il browser lo ricontrolla sempre da sé.
+// `cache.addAll` makes ordinary fetches, and an ordinary fetch honours the HTTP cache. With a
+// ten-minute `max-age` — what any static host sets — a new worker installing shortly after a release
+// fills up with the **old** files, which are still fresh in there. The only one that escapes is
+// `sw.js`, because the browser always rechecks that one by itself.
 //
-// L'effetto è il peggiore che un aggiornamento possa avere: **l'app dichiara la versione nuova e
-// gira col codice vecchio**, perché il numero di versione viene proprio da questo file. Misurato e
-// non temuto: in prova, la cache che porta il nome della versione nuova conteneva i file della
-// versione precedente.
+// The effect is the worst an update can have: **the app announces the new version and runs the old
+// code**, because the version number comes from this very file. Measured, not feared: in a test, the
+// cache named after the new version held the files of the previous one.
 //
-// `cache: 'reload'` toglie di mezzo la cache HTTP per questi file, una volta sola, all'installazione.
+// `cache: 'reload'` takes the HTTP cache out of the way for these files, once, at install time.
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then(
     (cache) => cache.addAll(ASSETS.map((url) => new Request(url, { cache: 'reload' })))));

@@ -1,10 +1,10 @@
 // Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
 
-// Il suono, sintetizzato. Nessun file: un gioco che scarica campioni ha una cartella di roba
-// binaria che nessuno può leggere, e un'app di questo catalogo si apre e si legge.
+// Sound, synthesised. No files: a game that downloads samples has a folder of binary stuff that
+// nobody can read, and an app in this catalogue is one you open up and read.
 //
-// Il contesto audio nasce **spento** e si accende al gettone. Non è una scelta: i browser non
-// fanno partire l'audio senza un gesto, e il gettone è il gesto — il rito si paga da sé.
+// The audio context starts out **off** and switches on at the coin. It is not a choice: browsers
+// do not start audio without a gesture, and the coin is the gesture — the ritual pays for itself.
 
 let context = null;
 let master = null;
@@ -32,8 +32,8 @@ export function enable(value) {
   return on;
 }
 
-// Un evento del mondo, tradotto in un suono. `game.js` non sa che questo file esista: gli passa
-// davanti la sua lista di eventi e qui si decide cosa farne.
+// An event from the world, translated into a sound. `game.js` does not know this file exists: its
+// list of events passes in front of it and here we decide what to do with them.
 export function play(kind) {
   if (!context || !on) return;
   switch (kind) {

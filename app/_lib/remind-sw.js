@@ -1,32 +1,33 @@
 // Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
 
-// Quello che il service worker fa quando il browser lo sveglia: legge una lista pronta, dice cosa
-// è maturo, si segna di averlo detto.
+// What the service worker does when the browser wakes it: it reads a ready-made list, says what
+// has come due, and notes that it has said so.
 //
-// **Uno script classico e non un modulo, e non è una svista.** Un service worker di questo
-// catalogo è registrato come script classico, e uno script classico non può `import`: l'unico modo
-// che ha di prendere codice da fuori è `importScripts`, che vuole un file come questo. Il fratello
-// `remind.js` è il modulo che usa la pagina; qui c'è solo la metà che gira mentre nessuno guarda.
+// **A classic script and not a module, and that is not an oversight.** A service worker in this
+// catalogue is registered as a classic script, and a classic script cannot `import`: the only way
+// it has to take code from outside is `importScripts`, which wants a file like this one. Its sibling
+// `remind.js` is the module the page uses; here there is only the half that runs while nobody is
+// watching.
 //
-// **Il worker non sa cos'è una scadenza.** La pagina — che ha il modello, l'orologio e la lingua —
-// lascia nella cache una lista di `{ key, when, text }` con il momento già calcolato e la frase
-// già scritta; qui si confrontano due stringhe ISO. Nessun modello, nessun database, nessuna
-// traduzione: le tre cose che, in un file che gira senza nessuno davanti, non si possono né
-// provare né vedere fallire.
+// **The worker does not know what a deadline is.** The page — which has the model, the clock and
+// the language — leaves in the cache a list of `{ key, when, text }` with the moment already
+// computed and the sentence already written; here two ISO strings are compared. No model, no
+// database, no translation: the three things that, in a file that runs with nobody in front of it,
+// can be neither tested nor seen to fail.
 //
-// Era scritto due volte, una per app, in un file che `app/CLAUDE.md` chiama «il pezzo che può fare
-// più danni» — e provato in una copia sola. Due usi veri sono la soglia che il catalogo si è dato
-// per `_lib/`, e questo la passava dal primo giorno.
+// It was written twice, once per app, in a file that `app/CLAUDE.md` calls "the piece that can do
+// the most damage" — and tested in only one copy. Two real uses are the threshold the catalogue set
+// itself for `_lib/`, and this one passed it from day one.
 
 /* eslint-env serviceworker */
 /* global self, caches, Request, Response */
 
 /**
- * Monta i due gestori sul worker che chiama.
+ * Mounts the two handlers on the worker that calls it.
  *
- * `notes` è la cache del digest — il nome lo costruisce `remind.notes()` dall'altra parte —,
- * `title` è come si chiama l'app quando il digest non porta un'intestazione sua, e `scope` è il
- * pezzo di indirizzo che riconosce una finestra di *questa* app fra quelle aperte.
+ * `notes` is the digest's cache — the name is built by `remind.notes()` on the other side —,
+ * `title` is what the app is called when the digest does not carry a heading of its own, and
+ * `scope` is the piece of address that recognises a window of *this* app among the open ones.
  */
 function remindSetup({ notes, title, scope, digest = './gg-digest', tag = 'gg:due' }) {
   async function announce() {
@@ -42,8 +43,8 @@ function remindSetup({ notes, title, scope, digest = './gg-digest', tag = 'gg:du
     const due = (saved.items || []).filter((one) => one.when <= now && !said.has(one.key));
     if (!due.length) return;
 
-    // Una notifica sola, anche per cinque scadenze: cinque avvisi impilati sono cinque cose da
-    // togliere di mezzo, e chi li toglie non legge la quinta.
+    // A single notification, even for five deadlines: five stacked alerts are five things to clear
+    // out of the way, and whoever clears them does not read the fifth.
     const body = due.length === 1
       ? due[0].text
       : due.slice(0, 3).map((one) => one.text).join('\n');
@@ -64,8 +65,8 @@ function remindSetup({ notes, title, scope, digest = './gg-digest', tag = 'gg:du
     if (event.tag === tag) event.waitUntil(announce());
   });
 
-  // Un clic sulla notifica apre l'app se è chiusa, e porta in primo piano quella che c'è già: due
-  // finestre della stessa app aperte da un avviso sono un avviso che ha fatto danno.
+  // A click on the notification opens the app if it is closed, and brings the existing one to the
+  // front: two windows of the same app opened by one alert are an alert that has done damage.
   self.addEventListener('notificationclick', (event) => {
     event.notification.close();
     event.waitUntil((async () => {

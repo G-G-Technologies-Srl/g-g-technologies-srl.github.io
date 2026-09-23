@@ -1,17 +1,17 @@
 // Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
 
-// Quattro righe di DOM che ogni schermata riscrive: un nodo, un pulsante, il contenuto di un
-// contenitore, e l'elemento con quell'id.
+// Four lines of DOM that every screen writes again: a node, a button, the contents of a
+// container, and the element with that id.
 //
-// **Sono qui perché le usa un componente condiviso.** L'editor di `plan-editor.js` costruisce il suo
-// disegno con queste quattro, e vive in due app: senza questo file ognuna avrebbe la sua copia — o,
-// peggio, il componente importerebbe il modulo di un'app. Plan Scope le ri-esporta dal suo `ui.js`,
-// così chi le chiamava continua a chiamarle da lì.
+// **They are here because a shared component uses them.** The editor in `plan-editor.js` builds its
+// drawing with these four, and it lives in two apps: without this file each would have its own copy
+// — or, worse, the component would import one app's module. Plan Scope re-exports them from its
+// `ui.js`, so whoever called them keeps calling them from there.
 //
-// Niente di più: `snack`, `ask`, le date e i numeri restano nell'app, perché parlano una lingua e
-// una lingua è dell'app che la sceglie.
+// Nothing more: `snack`, `ask`, dates and numbers stay in the app, because they speak a language
+// and a language belongs to the app that chooses it.
 
-/** L'elemento con quell'id. Il nome corto è quello che si scrive cento volte in una schermata. */
+/** The element with that id. The short name is the one you write a hundred times in a screen. */
 export const el = (id) => document.getElementById(id);
 
 export function node(tag, className = "", text = "") {
@@ -29,7 +29,7 @@ export function button(className, text, onClick, { label = null } = {}) {
   return element;
 }
 
-/** Il contenuto di un contenitore, sostituito in un colpo. */
+/** The contents of a container, replaced in one go. */
 export function fill(target, children) {
   target.replaceChildren(...children);
 }

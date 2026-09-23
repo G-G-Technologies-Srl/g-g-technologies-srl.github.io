@@ -1,14 +1,15 @@
 /* Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0 */
 
-/* L'aspetto dell'editor a blocchi di `plan-editor.js`, e nient'altro.
+/* The look of the block editor in `plan-editor.js`, and nothing else.
  *
- * Sta qui per la stessa ragione del suo JavaScript: da quando l'editor vive in due app, una copia
- * per app sarebbe due fogli che divergono — e divergerebbero in silenzio, perché nessuno script
- * confronta due CSS. Chi lo usa lo carica dopo `base.css` e prima del proprio.
+ * It lives here for the same reason as its JavaScript: ever since the editor has lived in two apps,
+ * one copy per app would be two stylesheets that drift apart — and they would drift in silence,
+ * because no script compares two CSS files. Whoever uses it loads it after `base.css` and before
+ * their own.
  *
- * **Usa solo variabili di `base.css`** — accento, bordi, pannelli, caratteri, raggi — quindi non
- * dichiara una tavolozza sua e segue il tema dell'app che lo ospita, chiaro o scuro. Quello che
- * resta all'app è la disposizione intorno: dove sta l'editor nella pagina, e quanto è largo.
+ * **It uses only variables from `base.css`** — accent, borders, panels, fonts, radii — so it does
+ * not declare a palette of its own and follows the theme of the app hosting it, light or dark. What
+ * is left to the app is the layout around it: where the editor sits in the page, and how wide it is.
  */
 
 /* The column of writing is the same width as the site's prose, and for the same reason: a line of
@@ -98,9 +99,9 @@
    hand clicks it. Clicking makes the page. */
 .editor a.wiki.missing { text-decoration-style: dotted; opacity: 0.8; }
 
-/* Il gancio a un'attività del progetto: una pastiglia piccola in fondo alla riga, non un pezzo di
-   testo. Dice in una parola com'è messa l'attività — «apri», «fatta», «eliminata» — e aprendola
-   porta su la sua scheda. Piccola di proposito: la riga è la frase, questa è il suo bottone. */
+/* The hook to a project task: a small pill at the end of the line, not a piece of text. It says in
+   one word how the task stands — "apri", "fatta", "eliminata" (open, done, deleted) — and opening it
+   brings up its card. Small on purpose: the line is the sentence, this is its button. */
 .editor a.task-link {
   display: inline-flex;
   align-items: center;
@@ -118,12 +119,12 @@
 }
 .editor a.task-link:hover { border-color: var(--accent); }
 .editor a.task-link.done { color: var(--muted); }
-/* Eliminata dalla bacheca: la riga resta, il gancio dice che non porta più da nessuna parte. */
+/* Deleted from the board: the line stays, the hook says it no longer leads anywhere. */
 .editor a.task-link.missing { color: var(--faint); border-style: dashed; }
 
-/* La ✕ della riga agganciata: piccola e smorzata finché non serve, come la ✕ di un appuntamento
-   sulla lavagna. Sempre presente e non solo al passaggio del mouse, perché su un telefono il
-   passaggio del mouse non esiste e il comando non si troverebbe mai. */
+/* The ✕ of the hooked line: small and muted until it is needed, like the ✕ of an appointment on the
+   board. Always present and not only on mouse hover, because on a phone mouse hover does not exist
+   and the control would never be found. */
 .editor li .task-x {
   flex: none;
   margin-left: 2px;
@@ -226,8 +227,8 @@
 .md-list li { margin: 1px 0; display: flex; gap: 8px; align-items: flex-start; }
 
 .md-list li .item { flex: 1 1 auto; }
-/* Accanto alla pastiglia e non in fondo alla riga: il campo prende tutto lo spazio che trova, e
-   senza questa riga la ✕ finiva al margine destro, lontana dalla cosa che elimina. */
+/* Next to the pill and not at the end of the line: the field takes all the space it finds, and
+   without this rule the ✕ ended up at the right margin, far from the thing it deletes. */
 .md-list li:has(.task-x) .item { flex: 0 1 auto; }
 
 /* An `li` laid out as flex loses the browser's own marker, and it has to be flex to hold the tick
