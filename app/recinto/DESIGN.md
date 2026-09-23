@@ -28,6 +28,8 @@ qui sono girate tutte in Chromium senza testa, cioè con un mouse che finge di e
 | `manifest.webmanifest` · `sw.js` · tre icone | installabile, e funzionante senza rete dopo la prima apertura |
 | `_src/apps.py` · `_src/article_art.py` | anagrafica e scheda nelle due lingue, e il disegno della card |
 | `test/geometry.mjs` · `test/rules.mjs` · `test/attract.mjs` | verdi, e provati rompendo i moduli apposta |
+| `tools/tune.mjs` | il banco di taratura: l'autopilota su un livello per volta, molti semi, e i conti. Non è una prova e `check_tests.py` non lo lancia |
+| `tools/pilots.mjs` | i giocatori del banco: `base`, che è quello del titolo, e `vigile`, più bravo, che esiste solo per misurare |
 
 L'esclusione di `run/` in `check_site.py` **non è servita**: `_pages()` la scrive già come schema
 (`app/<chiave>/run/index.html`), quindi vale per ogni app presente e futura. Era in elenco perché
@@ -341,6 +343,11 @@ due confronti; il ripescaggio — stesso bordo, posto diverso nell'elenco; e il 
 quando il bordo su cui correva è stato proprio conquistato via, che va al punto più vicino di quello
 che è rimasto tenendo il verso di marcia. Nessun altro tocca quell'indice.
 
+**E il punto più vicino non può essere il marcatore.** Dal 23 settembre 2026 il riaggancio sceglie il
+punto più vicino del bordo rimasto **fra quelli ad almeno 30 unità dal marcatore** (`SPARK.clear`).
+Se in una sacca piccola nessun punto è abbastanza lontano, sceglie il più lontano. Il perché, e le
+misure, stanno in «La Scintilla non ricompare sotto il marcatore».
+
 E le piste ci sono per **ogni anello**, isole comprese: su un'isola si cammina, quindi sull'isola ti
 prendono.
 
@@ -369,32 +376,42 @@ Filo», che senza di lei è la strategia ottima e uccide il gioco.
 ## Il punteggio
 
 ```
-punti del taglio = celle conquistate × VALORE_CELLA × (lento ? 2 : 1) × moltiplicatore di livello
+punti del taglio = area conquistata × 5 × (lento ? 2 : 1) × numero del livello
 ```
 
 Più tre voci che non dipendono dall'area:
 
-- **Cattura** — chiudere un Filo sotto la soglia. Premio fisso, più alto se restano altri Fili in
-  giro: catturare quando sei ancora sotto pressione vale più che catturare l'ultimo.
-- **Separazione** — una volta per livello, quando due Fili finiscono in facce diverse.
-- **Oltre quota** — ogni punto percentuale conquistato oltre il bersaglio del livello, pagato alla
-  chiusura. È ciò che convince a non fermarsi al 70% esatto.
+- **Cattura**: chiudere un Filo in una sacca sotto la soglia vale 3000 punti a Filo, fissi.
+- **Separazione**: vale 5000 punti, una volta per livello, quando due Fili finiscono in facce diverse.
+- **Oltre quota**: 250 punti per ogni punto percentuale conquistato oltre il bersaglio del livello,
+  pagati alla chiusura. È ciò che convince a non fermarsi al 70% esatto.
 
-Una vita in più a soglie fisse. La taratura si fa **guardando la dimostrazione**: in AstroDroid la
-soglia era stata presa dal gioco originale e regalava una nave a ondata, al punto che l'autopilota
-non moriva più e l'attrazione non tornava mai alla classifica. Stessa prova qui, stesso criterio.
+**Il moltiplicatore è il numero del livello, lineare e senza tetto.** Al decimo livello un taglio
+vale dieci volte lo stesso taglio al primo. È stato lasciato così di proposito: cambiarlo senza
+partite vere vorrebbe dire scegliere a tavolino chi vince in classifica, se chi va lontano o chi
+gioca pulito.
+
+**Vite in più non ce ne sono.** Le tre vite iniziali passano da un livello all'altro e non
+ricrescono. Questo diario prometteva «una vita in più a soglie fisse», un Filo che accelera del 6% a
+livello e una soglia di cattura che si stringe. Nessuna delle tre cose è mai stata scritta nel
+codice. Il diario le ha date per fatte fino al 23 settembre 2026, quando le ho confrontate con
+`game.js`. La scheda e le istruzioni non le avevano mai promesse. Se una delle tre torna, torna come
+decisione da misurare, non come riga di questa tabella.
 
 ---
 
 ## I livelli
 
+Tutto quello che cresce, com'è **nel codice** (`RULES` e `SPARK` in `game.js`):
+
 | | Livello 1 | Come cresce | Tetto |
 |---|---|---|---|
-| Quota | 70% | +2% a livello | 85% |
-| Fili | 1 | il secondo dal livello 3 | 2 |
-| Scintille | 1 | +1 ogni due livelli | 4 |
-| Velocità del Filo | base | +6% a livello | +60% |
-| Soglia di cattura | generosa | si stringe | — |
+| Quota | 70% | +2% a livello | 85%, dal livello 9 |
+| Fili | 1 | 2 dal livello 3, se l'arena ha almeno 15.000 unità d'area a Filo | 2 |
+| Scintille | 1 | +1 ogni due livelli: 2 al 3, 3 al 5, 4 al 7 | 4 |
+| Velocità delle Scintille | 30 | +1,1 al secondo dentro il livello, dopo 3 s di tregua; +9 alla partenza a ogni giro delle otto arene | 110 |
+| Velocità del Filo | 68 | **non cresce** | — |
+| Soglia di cattura | sacca sotto 700 unità d'area | **non cambia** | — |
 
 **L'arena cambia forma.** È la cosa che il poligono regala: rettangolo, elle, anello con un'isola
 al centro, esagono, e più avanti forme composte. Le arene stanno in un file di dati — una lista di
@@ -1328,6 +1345,232 @@ per tutto quel tempo non si vedesse niente.
 
 Le regole sono finite in `app/CLAUDE.md`, dove valgono per tutte le app, e non solo qui: una lezione
 che vive nel diario di un'app sola è una lezione che la prossima app non riceve.
+
+---
+
+## Il banco di taratura, e dove il gioco diventa difficile davvero
+
+Il diario diceva che l'autopilota, sui livelli dal 5 all'8, chiudeva fra il 23% e il 50% delle
+partite. Quel numero non era scritto da nessuna parte, né qui né in una prova, e non si sapeva come
+fosse stato misurato. Prima di decidere se quei livelli sono ingiusti serviva uno strumento che
+misurasse sempre allo stesso modo.
+
+**`tools/tune.mjs`** gioca l'autopilota su un livello per volta, con quaranta semi per livello, e
+conta. Ogni livello parte con **vite nuove e zero punti**: trascinarsi dietro le vite vorrebbe dire
+misurare com'è andato il livello prima, non questo. Per ogni livello riporta:
+
+- quante partite chiudono, e in quanto tempo;
+- le morti divise per causa: Filo, Scintilla, Miccia;
+- quanta parte dell'arena si è presa quando si perde;
+- quanti tagli sono lenti, e quante linee lente e veloci finiscono con una morte.
+
+Le manopole si girano da riga di comando (`--set RULES.threadsMax=1`) sulle tabelle esportate da
+`game.js`, e solo dentro quel processo. `--arena` mette un'arena al posto di quella del livello: così
+si separa quanto pesa la forma da quanto pesano i numeri. Lo strumento sta fuori da `run/` apposta:
+misurare non vuol dire alzare una versione. Un livello con quaranta semi costa da dieci a trenta
+secondi. Gli otto livelli, in parallelo sui quattro processori, poco meno di un minuto.
+
+**La curva misurata il 23 settembre 2026**, sulla 0.15.3:
+
+| liv | arena | Fili | Scintille | quota | chiusi | Filo | Scintilla | Miccia |
+|---|---|---|---|---|---|---|---|---|
+| 1 | rettangolo | 1 | 1 | 70% | 85% | 92% | 8% | 0% |
+| 2 | esagono | 1 | 1 | 72% | 98% | 86% | 14% | 0% |
+| 3 | scala | 2 | 2 | 74% | **10%** | 80% | 20% | 0% |
+| 4 | croce | 2 | 2 | 76% | 15% | 81% | 19% | 0% |
+| 5 | elle | 2 | 3 | 78% | 8% | 66% | 34% | 0% |
+| 6 | diamante | 1 | 3 | 80% | 13% | 51% | 49% | 0% |
+| 7 | anello | 2 | 4 | 82% | 10% | 64% | 36% | 0% |
+| 8 | isole | 2 | 4 | 84% | 3% | 53% | 47% | 0% |
+
+**Il salto non è fra il quarto e il quinto livello: è al terzo**, da 98% a 10% in un livello solo.
+Dal terzo in poi la curva è piatta e bassa. Le tre prove per fattore dicono da dove viene:
+
+| prova | risultato |
+|---|---|
+| un Filo solo, livelli 3–8 | livello 3 dal 10% al 68%, livello 4 dal 15% al 58%. Dal 5 all'8 si chiude fra il 13% e il 35%, e le morti passano alle Scintille: al livello 5 sono il 69% |
+| una Scintilla sola, livelli 3–8 | quasi niente sul 3 (dal 10% al 13%); dal 5 all'8 si sale al 25–28%, e le morti tornano al Filo per il 90% |
+| ogni arena alle condizioni del livello 1 | fra il 58% (diamante) e il 98% (esagono): le arene da sole non fanno il salto |
+| il rettangolo alle condizioni dei livelli 3, 5 e 7 | 40%, 15% e **0 su 40** |
+
+Quindi **la difficoltà la fanno i numeri, non le forme.** Al terzo livello è il secondo Filo quasi da
+solo. Dal quinto si sommano il secondo Filo e la terza e quarta Scintilla, e togliere uno dei due
+fattori sposta le morti sull'altro. La Miccia non uccide mai l'autopilota: non si ferma mai.
+
+**Quello che queste prove non dicono è se il limite sia del livello o dell'autopilota.** Dicono
+quale manopola rende il livello difficile per *lui*. Ed è un giocatore con un buco noto: quando decide
+di staccare guarda quanto sono lontani i Fili (`NERVE.room`) e ignora le Scintille, che evita solo
+mentre cammina. Dal quinto livello le Scintille fanno fra un terzo e metà delle morti. Il prossimo
+passo è quindi un secondo autopilota che le veda: se chiude molto di più, i livelli si possono
+giocare; se resta basso, i numeri sono da rivedere. E va provato giocando: un salto dal 98% al 10%
+in un livello solo, se una persona lo sente come l'autopilota, è il primo difetto da correggere.
+
+Le quattro prove per fattore, lanciate un livello per processo e in parallelo, hanno richiesto
+circa quattro minuti in tutto. Una controprova gratuita: il diamante ha un Filo solo per via dello
+spazio, quindi con `RULES.threadsMax=1` deve uscire identico, e infatti esce 5 su 40 in tutte e due
+le misure.
+
+---
+
+## Un giocatore più bravo, e una regola che uccide senza preavviso
+
+Il banco diceva quale manopola rende difficile un livello *per l'autopilota*. Restava da capire se
+quei livelli sono difficili o se l'autopilota li gioca male. La prova è un secondo giocatore, più
+bravo: se chiude molto di più, i livelli si possono giocare.
+
+**`vigile`** sta in `tools/pilots.mjs` e non nel gioco. Entra dalla stessa porta dell'altro — una
+direzione e una velocità di tratto a ogni passo — e corregge i due difetti che il banco aveva
+misurato in `base`:
+
+- **Taglia a morsi, non da parete a parete.** `base` esce in una direzione e va dritto fino al muro
+  opposto: le linee su cui moriva di Filo erano lunghe da sessanta a ottanta passi. `vigile` prova
+  anche la mossa che chi gioca a questo genere impara per prima: fuori di poco, lungo il muro, di
+  nuovo dentro. Ogni candidata la pesa per l'area che prenderebbe contro il tempo che la linea resta
+  scoperta.
+- **Guarda le Scintille dove atterra.** Metà delle morti di Scintilla di `base` arrivavano entro mezzo
+  secondo dal rientro: chiudeva la linea davanti a una Scintilla. `vigile` controlla il punto
+  d'arrivo e, se è occupato, aspetta un quinto di secondo nel campo, dentro la tolleranza della
+  Miccia, oppure cerca un altro muro. Da una Scintilla vicina scappa uscendo, perché fuori non può
+  morderlo.
+
+Tre cose trovate costruendolo, e sono lezioni di metodo:
+
+- **Il primo `vigile` moriva più di prima.** Scappando da una Scintilla la sua linea d'emergenza
+  veniva annullata al passo dopo da un controllo più severo, e lui tornava al muro più vicino, cioè
+  addosso alla Scintilla da cui scappava. Il registro passo per passo di una partita l'ha mostrato
+  in venti righe. Le percentuali dicevano solo «peggio».
+- **Trenta secondi per una partita del primo livello non sono uno strumento.** Quasi tutto il tempo lo prendeva `canStep`,
+  che per ogni passo ripercorre tutti i lati della faccia. Adesso la faccia è disegnata una volta su
+  una griglia a mezza unità, e la griglia risponde solo «aperto». Tutto il resto, e ogni passo vicino
+  a un muro, lo chiede ancora a `canStep`. Così un errore del disegno può solo far sembrare peggiore
+  un piano, mai far sembrare legale un piano che non lo è. Con `VIGILE_CHECK=1` ogni risposta della
+  griglia viene riverificata con `canStep`. Seimila passi al livello 3: nessuna differenza. La
+  partita costa quattro volte meno.
+- **Una chiamata dura al massimo tre minuti.** Sul Mac i processi lasciati in fondo muoiono con la
+  chiamata che li ha lanciati, e quaranta partite di `vigile` non ci stanno. Il banco quindi divide i semi
+  (`--part 3/8`) e poi rimette insieme i pezzi (`--merge`). La tabella che esce è identica a quella di
+  una corsa sola, e la prova è stata fatta.
+
+**La curva, rimisurata con i due giocatori**, quaranta semi, vite nuove a ogni livello:
+
+| liv | arena | `base` | `vigile` | partite di `vigile` senza fine |
+|---|---|---|---|---|
+| 1 | rettangolo | 85% | 95% | 1 |
+| 2 | esagono | 98% | 98% | 0 |
+| 3 | scala | 10% | **60%** | 7 |
+| 4 | croce | 15% | 43% | 6 |
+| 5 | elle | 8% | 38% | 8 |
+| 6 | diamante | 13% | 40% | 5 |
+| 7 | anello | 10% | **18%** | 9 |
+| 8 | isole | 3% | **5%** | 6 |
+
+«Senza fine» vuol dire tre minuti senza chiudere e senza perdere: `vigile` è prudente, e in quei
+casi resta a girare sul bordo. Non sono partite vinte, ed è giusto contarle così.
+
+Quindi **dal terzo al sesto livello il gioco si può giocare**. Un giocatore migliore chiude quattro o
+sei volte più di `base`, e quel salto era in buona parte dell'autopilota. **Il settimo e l'ottavo
+restano chiusi anche per lui**, e il motivo non è di abilità.
+
+**Il riaggancio mette la Scintilla sul marcatore.** Quando un taglio si prende il tratto di muro su
+cui correva una Scintilla, la Scintilla viene riagganciata al punto più vicino del bordo nuovo. Il
+bordo nuovo è la linea appena tracciata, e il punto più vicino è spesso quello dove il marcatore è
+appena atterrato. Contato con `base`, su quaranta semi per livello: al livello 7, 18 riagganci sono
+finiti entro 1,6 unità dal marcatore, cioè a distanza di morso, e le morti di Scintilla arrivate
+entro un quarto di secondo da un riaggancio sono state 17. Al livello 8, 20 e 19.
+Per `vigile`, che le altre morti di Scintilla le evita, i riagganci sono la causa principale:
+
+| liv | morti di Scintilla | entro ¼ s da un riaggancio | all'atterraggio, senza riaggancio | sul bordo da più di 0,1 s |
+|---|---|---|---|---|
+| 5 | 67 | 27 | 30 | 10 |
+| 7 | 79 | **42** | 23 | 14 |
+| 8 | 94 | **50** | 25 | 19 |
+
+Una morte così non si vede arrivare. La Scintilla stava su un muro che nel fotogramma dopo non
+esiste più, e ricompare sotto il marcatore. **È una regola da decidere, non una manopola da tarare**, e
+non l'ho toccata. Le strade possibili, tutte da misurare con il banco prima di scegliere:
+
+- riagganciare al punto più vicino **tra quelli ad almeno una certa distanza dal marcatore**;
+- dare alla Scintilla riagganciata **un attimo di tregua**, per esempio mezzo secondo senza morso,
+  e farla vedere mentre ricompare;
+- toglierla dal livello, come premio per averle chiuso il muro.
+
+La colonna «all'atterraggio, senza riaggancio» è in parte di `vigile` e in parte dello stesso
+fenomeno: un riaggancio che sposta la Scintilla di meno di due unità il banco non lo vede come salto.
+
+---
+
+## La Scintilla non ricompare sotto il marcatore
+
+Deciso il 23 settembre 2026, fra le tre strade scritte qui sopra: **riagganciare al punto più vicino
+fra quelli ad almeno 30 unità dal marcatore.** Le altre due sono state scartate prima di misurarle,
+per ragioni di progetto:
+
+- **la tregua** lascia la Scintilla ricomparire sotto il marcatore, aggiunge uno stato da disegnare
+  («c'è ma non morde») e alla fine della tregua il marcatore ce l'ha addosso. Sposta il colpo di
+  mezzo secondo, non lo toglie;
+- **toglierla dal livello** cambia il gioco invece di correggerlo. Chiudere il muro di una Scintilla
+  diventerebbe una tattica da cercare, e ai livelli 7 e 8 la pressione calerebbe proprio dove deve
+  essere più alta. È una scelta da partite vere, come il terzo Filo.
+
+**Trenta unità** perché il numero c'era già: è `RULES.safe`, la distanza che il gioco pretende dal
+nemico prima di ridare il comando dopo una morte. Il cambio sta tutto nel terzo gradino di
+`_trackFor`, cioè nell'unico punto che tocca l'indice di una Scintilla. Il mondo non ha uno stato in
+più e il disegno non cambia.
+
+**Una seconda regola è stata misurata e scartata.** In linea d'aria 30 unità possono essere poche:
+una Scintilla rimessa dietro il marcatore e diretta verso di lui a 100 unità al secondo lo
+raggiunge in tre decimi. Era stato provato quindi anche un tempo minimo lungo la pista, nel suo
+verso. Autopilota del titolo, livello 7, 40 semi:
+
+| | prima | distanza 30 | tempo 0,6 s + distanza 8 | tutte e due |
+|---|---|---|---|---|
+| Scintille rimesse a distanza di morso | 18 | **0** | 0 | 0 |
+| morti di Scintilla entro 0,6 s da una Scintilla rimessa | 24 | **11** | 16 | 12 |
+
+Il tempo non aggiunge niente alla distanza, e da solo fa peggio. È rimasta la regola più semplice.
+Con la manopola a zero il banco ridà esattamente i numeri di prima: è la prova che misura la cosa
+cambiata e non altro.
+
+**Le prove in `rules.mjs`** sono tre. La Scintilla sul muro che sparisce, a pochi passi da dove la
+linea atterra, si rimette ad almeno 30 unità e il marcatore resta vivo. Fra i punti lontani
+abbastanza sceglie il più vicino a dove correva. Se nessun punto lo è, sceglie il più lontano, e non
+il marcatore. La funzione è stata rotta apposta in quattro modi: ogni volta almeno un controllo si
+ferma.
+
+**La curva dopo**, quaranta semi per livello, vite nuove:
+
+| liv | arena | `base` prima | `base` dopo | `vigile` prima | `vigile` dopo | `vigile`: morti a partita, prima → dopo | `vigile` senza fine, dopo |
+|---|---|---|---|---|---|---|---|
+| 1 | rettangolo | 85% | 83% | 95% | 98% | 0,35 → 0,20 | 1 |
+| 2 | esagono | 98% | 98% | 98% | 98% | 0,33 → 0,38 | 0 |
+| 3 | scala | 10% | 15% | 60% | 73% | 1,60 → 1,23 | 6 |
+| 4 | croce | 15% | 28% | 43% | 43% | 1,90 → 1,63 | 13 |
+| 5 | elle | 8% | 8% | 38% | 33% | 2,08 → 1,52 | 17 |
+| 6 | diamante | 13% | 20% | 40% | 55% | 2,15 → 1,65 | 5 |
+| 7 | anello | 10% | 8% | 18% | **38%** | 2,30 → 1,45 | 18 |
+| 8 | isole | 3% | 3% | 5% | **23%** | 2,75 → 2,08 | 14 |
+
+Le morti di Scintilla di `vigile` arrivate entro un quarto di secondo da un riaggancio erano 42 al
+livello 7 e 50 all'8. Adesso sono 2 e 3.
+
+Come si legge:
+
+- **i primi due livelli non cambiano**, ed era la condizione. Il gioco non è diventato facile dove
+  insegna;
+- **il settimo e l'ottavo tornano giocabili per un giocatore attento**, e restano i più duri;
+- **l'autopilota del titolo quasi non se ne accorge**, perché muore soprattutto di Filo;
+- con quaranta semi uno scarto di dieci punti è dentro il rumore. Il 33% contro il 38% del livello 5
+  non dice niente. Dicono qualcosa le morti a partita, scese su ogni livello dal 3 in su;
+- **le partite «senza fine» di `vigile` sono aumentate**: muore meno, ma non per questo chiude, e
+  resta sul bordo ad aspettare. È un limite suo, di giocatore prudente, e il gioco non c'entra. Una
+  persona a quel punto rischia.
+
+Resta la prova che nessun banco sostituisce: giocare il settimo e l'ottavo livello e sentire se
+sono duri e giusti.
+
+Versione 0.15.4. La scheda e le istruzioni non descrivono il riaggancio e non cambiano. «Ogni
+conquista riscrive il bordo… possono arrivare da un lato che un attimo prima non esisteva» resta
+vero.
 
 ---
 

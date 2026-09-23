@@ -113,6 +113,16 @@ export const SPARK = {
   // and a bigger number would not mean harder, only more of the same. What the lap changes is the
   // first minute, which is where levels are decided.
   perLap: 9,
+
+  // Where a Spark goes when the border it was running on is claimed away: the nearest point of the
+  // border that is left, **at least this many lattice units from the marker** in a straight line.
+  // Without it the nearest point was often the marker itself. See `_trackFor`.
+  //
+  // It is the same thirty units `RULES.safe` asks of the enemy before control comes back after a
+  // death. A second rule was measured alongside — a Spark set down at least 0.6 s away along the
+  // track, at its speed — and it added nothing: at level 7, deaths within 0.6 s of a re-attachment
+  // went from 24 to 11 with the distance alone and to 12 with both. The simpler one stayed.
+  clear: 30,
 };
 
 export const RULES = {
@@ -600,9 +610,7 @@ function _sparksFor(world) {
 
 function _moveSparks(world) {
   if (world.age < SPARK.first) return;
-  const speed = Math.min(SPARK.fastest,
-                         SPARK.speed + SPARK.perLap * lap(world.level)
-                                     + SPARK.quicken * (world.age - SPARK.first));
+  const speed = _sparkSpeed(world);
 
   for (const spark of world.sparks) {
     const track = _trackFor(world, spark);
@@ -645,26 +653,50 @@ function _trackFor(world, spark) {
   }
 
   // And finally the real re-attachment: the border it was running along is gone. It moves to the
-  // nearest point of what is left, keeping its direction of travel.
+  // nearest point of what is left **that is not on top of the marker**, keeping its direction of
+  // travel.
+  //
+  // The second half is from 23 September 2026. The border that was claimed away ends where the new
+  // line ends, that is where the marker has just landed — so "the nearest point of what is left" was
+  // often the marker itself. Counted on the tuning bench with the title-screen autopilot, forty seeds
+  // a level: at level 7, 18 re-attachments within biting distance of the marker and 17 deaths within
+  // a quarter of a second; for the better player of `tools/pilots.mjs` it was the first cause of
+  // death at levels 7 and 8. A death nobody can see coming: the Spark was on a wall that one frame
+  // later no longer exists.
   let best = null;
-  let distance = Infinity;
   for (let f = 0; f < world.faces.length; f += 1) {
-    const found = nearestOnBoundary(world.faces[f], spark.at);
-    if (found && found.distance < distance) { distance = found.distance; best = { f, at: found.at }; }
+    for (let r = 0; r < world.faces[f].rings.length; r += 1) {
+      const track = _trackAt(world, f, r);
+      for (let i = 0; i < track.length; i += 1) {
+        const margin = Math.hypot(track[i][0] - world.marker.at[0], track[i][1] - world.marker.at[1])
+                     / SPARK.clear;
+        const distance = Math.hypot(track[i][0] - spark.at[0], track[i][1] - spark.at[1]);
+        // Clear of the marker first, nearest second. If nowhere is clear — an arena too small for
+        // the margin — the point that comes closest to being clear.
+        const clear = margin >= 1;
+        let better;
+        if (!best) better = true;
+        else if (clear !== best.clear) better = clear;
+        else if (clear) better = distance < best.distance;
+        else better = margin > best.margin;
+        if (better) best = { f, r, i, margin, distance, clear };
+      }
+    }
   }
   if (!best) return null;
 
-  for (let r = 0; r < world.faces[best.f].rings.length; r += 1) {
-    const track = _trackAt(world, best.f, r);
-    const found = _indexOn(track, best.at);
-    if (found < 0) continue;
-    spark.face = best.f;
-    spark.ring = r;
-    spark.index = found;
-    spark.at = track[found].slice();
-    return track;
-  }
-  return null;
+  const track = _trackAt(world, best.f, best.r);
+  spark.face = best.f;
+  spark.ring = best.r;
+  spark.index = best.i;
+  spark.at = track[best.i].slice();
+  return track;
+}
+
+function _sparkSpeed(world) {
+  return Math.min(SPARK.fastest,
+                  SPARK.speed + SPARK.perLap * lap(world.level)
+                              + SPARK.quicken * Math.max(0, world.age - SPARK.first));
 }
 
 function _isAt(track, index, at) {

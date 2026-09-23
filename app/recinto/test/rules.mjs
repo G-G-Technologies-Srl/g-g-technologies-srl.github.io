@@ -577,6 +577,50 @@ equal("e hanno un tetto", create(40, 5).sparks.length, RULES.sparksMax);
   check("tenendo il verso di marcia", world.sparks[0].forward === true);
 }
 
+// The re-attachment that killed. The Spark runs on the bottom wall of the half being claimed, a few
+// units from where the line lands: the nearest point of what is left is the landing point itself,
+// that is the marker. Before 23 September 2026 it went there, and bit in the same frame.
+{
+  const world = create(1, 5);
+  world.age = SPARK.first + 1;
+  world.sparks = [spark([140, 192])];
+  slice(world, move(0, 1), LEFT);
+  equal("la linea atterra in fondo", String(world.marker.at), "128,192");
+
+  world.sparks[0].at = [140, 192];
+  world.sparks[0].index = 0;
+  world.sparks[0].travel = 0;       // so that this step re-attaches it and does not also move it on
+  check("il muro su cui correva non c'è più", world.faces.every((face) => !onBoundary(face, [140, 192])));
+
+  step(world, NO_INTENT);
+  const at = world.sparks[0].at;
+  const gap = Math.hypot(at[0] - world.marker.at[0], at[1] - world.marker.at[1]);
+  check("si riaggancia lontano dal marcatore", gap >= SPARK.clear, `${at}, a ${gap.toFixed(1)}`);
+  equal("e il marcatore resta vivo", world.lives, RULES.lives);
+  // The other half, the one that gets forgotten: clear does not mean anywhere. Of the points far
+  // enough away it takes the nearest to where it was, which here is up the new line.
+  equal("il più vicino fra quelli lontani abbastanza", String(at), `128,${192 - SPARK.clear}`);
+}
+
+// And when nowhere is far enough — a pocket smaller than the margin, late in a level — it does not
+// give up and it does not fall back on the marker: it takes the point that comes closest to being
+// clear, that is the farthest one. The same setup, with a margin no arena can satisfy.
+{
+  const kept = SPARK.clear;
+  SPARK.clear = 10000;
+  try {
+    const world = create(1, 5);
+    world.age = SPARK.first + 1;
+    world.sparks = [spark([140, 192])];
+    slice(world, move(0, 1), LEFT);
+    Object.assign(world.sparks[0], { at: [140, 192], index: 0, travel: 0 });
+    step(world, NO_INTENT);
+    equal("senza un posto lontano abbastanza, il più lontano", String(world.sparks[0].at), "0,0");
+  } finally {
+    SPARK.clear = kept;
+  }
+}
+
 {
   const world = exposed();
   across(world);
