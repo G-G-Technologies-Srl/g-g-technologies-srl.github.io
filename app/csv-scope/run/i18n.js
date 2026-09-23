@@ -102,15 +102,15 @@ const IT = {
   themeToDark: "Passa al tema scuro",
   langSwitch: "Switch to English",
   removalLabel: "Installata",
-  removalDesktop: "Per toglierla: apri il menù ⋮ in alto a destra nella finestra dell'app e scegli "
-    + "«Disinstalla». I dati restano nel browser: se non servono più, esportali prima e poi "
-    + "cancella i dati del sito da Impostazioni del browser.",
-  removalAndroid: "Per toglierla: tieni premuta l'icona nella schermata Home e scegli «Disinstalla» "
-    + "o trascinala sul cestino. I dati restano nel browser: se non servono più, esportali "
-    + "prima e poi cancella i dati del sito.",
-  removalIos: "Per toglierla: tieni premuta l'icona nella schermata Home, poi «Rimuovi app». I "
-    + "dati restano in Safari: se non servono più, esportali prima e poi cancella i dati del "
-    + "sito da Impostazioni.",
+  removalDesktop: "Per toglierla: aprite il menù ⋮ in alto a destra nella finestra dell'app e "
+    + "scegliete «Disinstalla». I dati restano nel browser: se non servono più, conviene "
+    + "esportarli e poi cancellare i dati del sito dalle impostazioni del browser.",
+  removalAndroid: "Per toglierla: tenete premuta l'icona nella schermata Home e scegliete "
+    + "«Disinstalla», oppure trascinatela sul cestino. I dati restano nel browser: se non "
+    + "servono più, conviene esportarli e poi cancellare i dati del sito.",
+  removalIos: "Per toglierla: tenete premuta l'icona nella schermata Home, poi «Rimuovi app». I "
+    + "dati restano in Safari: se non servono più, conviene esportarli e poi cancellare i dati "
+    + "del sito dalle Impostazioni.",
   versionLabel: "v{version}",
   versionNext: "v{current} → {next}",
   versionNextUnknown: "v{current} → nuova",

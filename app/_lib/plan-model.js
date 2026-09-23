@@ -1899,16 +1899,24 @@ export function search(query) {
 
     for (const page of pagesOf(project.id)) {
       const titleAt = _plain(page.title).indexOf(needle);
-      const bodyAt = _plain(page.markdown).indexOf(needle);
+      // The head and the body apart: a match in the text shows the words around it, a match in
+      // the properties shows the property as a person reads it — «con Marco», never the file's
+      // «tipo: incontro data: 2026-09-17 con: Marco» that the snippet used to open with.
+      const split = frontmatter(page.markdown || "");
+      const body = split.body || "";
+      const bodyAt = _plain(body).indexOf(needle);
+      const saidIn = Object.entries(split.props || {})
+        .filter(([key, value]) => _plain(`${key} ${value}`).includes(needle))
+        .map(([key, value]) => `${key} ${value}`);
       const tagged = (page.tags || []).some((tag) => _plain(tag).includes(needle));
-      if (titleAt < 0 && bodyAt < 0 && !tagged) continue;
+      if (titleAt < 0 && bodyAt < 0 && !saidIn.length && !tagged) continue;
       hits.push({
         kind: "kindPage",
         id: page.id,
         title: page.title,
         project,
         rank: titleAt >= 0 || tagged ? 2 : 4,
-        snippet: bodyAt >= 0 ? _snippet(page.markdown, needle) : "",
+        snippet: bodyAt >= 0 ? _snippet(body, needle) : saidIn.join(" · "),
       });
     }
 

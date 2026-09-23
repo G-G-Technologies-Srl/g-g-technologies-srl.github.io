@@ -436,3 +436,6 @@ ul.md-list li:not(:has(.tick))::before {
 .sample-table span { background: var(--border-strong); border-radius: 1px; }
 
 #blockMenuField { width: 100%; }
+
+/* Under the last block: a click here goes on writing at the bottom of the document. */
+.editor-tail { min-height: 72px; cursor: text; }

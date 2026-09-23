@@ -1813,4 +1813,15 @@ test("l'estratto di una pagina si taglia su una parola", () => {
   assert.equal(model.excerptOf("| A | B |\n| --- | --- |\n| 1 | 2 |"), "A B 1 2");
 });
 
+test("la ricerca non mostra la testa del file: il testo intorno, o la proprietà come si legge", () => {
+  const fiera = model.createProject({ name: "Fiera" });
+  const incontro = model.createPage(fiera.id, { title: "Incontro" });
+  model.setMarkdown(incontro.id, "---\ntipo: incontro\ndata: 2026-09-17\ncon: Marco\n---\nMisurato lo spazio con il metro.\n");
+  const nelTesto = model.search("metro").find((hit) => hit.kind === "kindPage");
+  assert.ok(!/tipo|data:|2026-09-17/.test(nelTesto.snippet), nelTesto.snippet);
+  assert.match(nelTesto.snippet, /Misurato lo spazio/);
+  const nellaTesta = model.search("marco").find((hit) => hit.kind === "kindPage");
+  assert.equal(nellaTesta.snippet, "con Marco");
+});
+
 console.log(`model: ${passed} prove passate`);

@@ -744,13 +744,38 @@ function _blockNode(block, index) {
 /** Redraw every block, then put the caret back where the last change asked for it. */
 export function draw() {
   if (!host) return;
-  fill(host, blocks.map(_blockNode));
+  fill(host, [...blocks.map(_blockNode), _tailZone()]);
   _markLinks(host);
   _markTasks(host);
   if (!caret) return;
   const field = _fieldAt(Math.min(caret.index, blocks.length - 1), caret.item ?? null);
   if (field) _placeCaret(field, caret.offset);
   caret = null;
+}
+
+/**
+ * The space under the last block, and what a click there means: go on writing at the bottom.
+ *
+ * `_keepTail` keeps an empty line at the end after every structural change, but not while somebody
+ * types into that line — redrawing under the caret would lose it. So the bottom of the document is
+ * also a target of its own: a click there lands in the empty last line, or makes one.
+ */
+function _tailZone() {
+  const zone = node("div", "editor-tail");
+  zone.setAttribute("aria-hidden", "true");
+  zone.addEventListener("mousedown", (event) => {
+    event.preventDefault();
+    const last = blocks[blocks.length - 1];
+    if (last && last.type === "paragraph" && !String(last.text || "").trim()) {
+      const field = _fieldAt(blocks.length - 1);
+      if (field) _placeCaret(field, 0);
+      return;
+    }
+    _snapshot();
+    blocks.push({ type: "paragraph", text: "" });
+    _apply({ index: blocks.length - 1, offset: 0 });
+  });
+  return zone;
 }
 
 // -----------------------------------------------------------------------------------------------------------------

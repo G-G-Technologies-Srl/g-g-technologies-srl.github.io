@@ -2319,6 +2319,17 @@ body.printing .page-props { display: none; }
 .prop-key { flex: 0 1 140px; width: 140px; min-width: 46px; color: var(--muted); margin-left: -6px; }
 .prop-value { flex: 1 1 auto; width: auto; min-width: 60px; }
 .prop input:hover, .prop input:focus { border-color: var(--border); }
+
+/* On a phone the key keeps one width on every row, so the colons line up and the value gets what
+   is left; the date and time pickers shrink to the size of what they show. Before, each key shrank
+   by how much its own row needed, and no two colons stood in the same place. */
+@media (max-width: 560px) {
+  .prop .prop-key { flex: 0 0 76px; width: 76px; min-width: 0; }
+  .prop .prop-value { flex: 1 1 auto; min-width: 0; }
+  .prop .prop-date { width: 112px; }
+  .prop .prop-time { width: 84px; }
+  .prop .prop-people { max-width: 108px; }
+}
 .prop-colon { color: var(--faint); }
 
 /* Il nome della data e il giorno, sulla stessa riga: sono una cosa sola, e due righe le farebbero
