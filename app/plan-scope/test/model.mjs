@@ -1767,4 +1767,50 @@ test("le note di una persona stanno sulla sua scheda, si annullano e si cercano"
   assert.equal(luca.notes, "");
 });
 
+test("la scheda di un progetto senza date dice lo stesso cosa contiene", () => {
+  const manuale = model.createProject({ name: "Manuale" });
+  const indice = model.createPage(manuale.id, { title: "Indice" });
+  model.setMarkdown(indice.id, "## Cosa c'è\n\nIl **manuale** in quattro parti.\n\n&nbsp;\n\n- [ ] Rileggere [[#u1]]\n");
+  const incontro = model.createPage(manuale.id, { title: "Incontro" });
+  model.setMarkdown(incontro.id, "---\ntipo: incontro\ndata: 2026-09-10\n---\nAppunti.\n");
+  const [todo, doing, done] = manuale.columns;
+  model.createTask(manuale.id, { title: "Rileggere il capitolo 1" });
+  const scelta = model.createTask(manuale.id, { title: "Scegliere le immagini" });
+  model.updateTask(scelta.id, { status: doing.id });
+  const fatta = model.createTask(manuale.id, { title: "Impaginare" });
+  model.updateTask(fatta.id, { status: done.id });
+  model.updatePage(indice.id, { favourite: true });
+
+  const seen = model.projectOverview(manuale.id);
+  assert.equal(seen.pages, 1, "un incontro non è una pagina scritta");
+  assert.equal(seen.meetings, 1);
+  assert.equal(seen.tasks, 3);
+  assert.deepEqual(seen.columns.map((one) => one.count), [1, 1, 1]);
+  assert.equal(seen.columns.at(-1).done, true);
+  // Quello a metà viene prima di quello non cominciato, e porta il nome della sua colonna.
+  assert.equal(seen.next.task.title, "Scegliere le immagini");
+  assert.equal(seen.next.column, doing.name);
+  assert.deepEqual(seen.favourites.map((one) => one.title), ["Indice"]);
+  assert.equal(seen.latest.title, "Indice");
+  assert.equal(seen.excerpt, "Cosa c'è · Il manuale in quattro parti. Rileggere", "niente segni, ganci o righe vuote");
+  assert.ok(seen.last, "l'ultima cosa toccata c'è");
+
+  const vuoto = model.createProject({ name: "Idee" });
+  const nulla = model.projectOverview(vuoto.id);
+  assert.equal(nulla.pages + nulla.tasks + nulla.meetings, 0);
+  assert.equal(nulla.next, null);
+  assert.equal(nulla.last, null);
+  assert.equal(nulla.excerpt, "");
+  assert.equal(model.projectOverview("nessuno"), null);
+});
+
+test("l'estratto di una pagina si taglia su una parola", () => {
+  const lungo = "parola ".repeat(40);
+  const out = model.excerptOf(lungo, 30);
+  assert.ok(out.endsWith("…"));
+  assert.ok(out.length <= 31);
+  assert.ok(!out.includes("  "));
+  assert.equal(model.excerptOf("| A | B |\n| --- | --- |\n| 1 | 2 |"), "A B 1 2");
+});
+
 console.log(`model: ${passed} prove passate`);

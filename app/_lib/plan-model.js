@@ -1748,6 +1748,89 @@ export function lateCount(projectId, { from = todayISO() } = {}) {
 }
 
 
+/**
+ * What a project holds, for its card in the archive — everything that is there without a date.
+ *
+ * A card used to speak almost only through dates: the project's day, the next deadline, what is
+ * late. A project without dates showed its name and «0 of 0», which read as empty even with four
+ * pages written in it. This is the rest: how many pages, tasks and meetings; the board's columns
+ * with their counts; the open task to pick up; the last thing touched; the favourite pages; the
+ * latest page, whose first words can speak for a project that has nothing else yet.
+ *
+ * Meetings are counted apart and are not pages here, as in the tree: a project with twenty calls
+ * and one document has one document.
+ */
+export function projectOverview(projectId) {
+  const project = projects.get(projectId);
+  if (!project) return null;
+  const meetingIds = new Set(meetingsOf(projectId).map((one) => one.page.id));
+  const allPages = pagesOf(projectId);
+  const docs = allPages.filter((one) => !meetingIds.has(one.id));
+  const list = tasksOf(projectId);
+
+  const known = new Set(project.columns.map((column) => column.id));
+  const columns = project.columns.map((column, index) => ({
+    id: column.id,
+    name: column.name,
+    done: Boolean(column.done),
+    // A task whose column is gone sits in the first one, as the board draws it.
+    count: list.filter((one) => one.status === column.id || (index === 0 && !known.has(one.status))).length,
+  }));
+
+  // The task to pick up: the one furthest along that is not finished — what somebody is in the
+  // middle of comes before what has not been started — then the board's own order.
+  const rank = new Map(project.columns.map((column, index) => [column.id, index]));
+  const open = topTasksOf(projectId).filter((one) => !isDone(one));
+  open.sort((a, b) => (rank.get(b.status) ?? 0) - (rank.get(a.status) ?? 0));
+  const pick = open[0] || null;
+  const pickColumn = pick ? project.columns.find((column) => column.id === pick.status) || project.columns[0] : null;
+
+  const touched = [
+    ...allPages.map((record) => ({ kind: "page", record, at: String(record.updated || record.created || "") })),
+    ...list.map((record) => ({ kind: "task", record, at: String(record.updated || record.created || "") })),
+  ].sort((a, b) => b.at.localeCompare(a.at));
+
+  const latest = [...docs].sort((a, b) => String(b.updated || "").localeCompare(String(a.updated || "")))[0] || null;
+  return {
+    pages: docs.length,
+    meetings: meetingIds.size,
+    tasks: list.length,
+    columns,
+    next: pick ? { task: pick, column: pickColumn ? pickColumn.name : "" } : null,
+    last: touched[0] || null,
+    favourites: allPages.filter((one) => one.favourite),
+    latest,
+    excerpt: latest ? excerptOf(latest.markdown) : "",
+  };
+}
+
+/**
+ * The first words of a page, as they read and not as they are written: no head, no marks, no
+ * hooks to tasks, no blank-line marks. Cut on a word, with an ellipsis when something was cut.
+ */
+export function excerptOf(markdown, max = 140) {
+  const body = frontmatter(String(markdown || "")).body || "";
+  const plain = body
+    .replace(/&nbsp;/g, " ")
+    .replace(/\[\[#[A-Za-z0-9_-]+\]\]/g, " ")
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
+    .replace(/\[\[([^\]]+)\]\]/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    // A heading ends where its line ends: without a mark it would run into the sentence after it.
+    .replace(/^\s*#{1,6}\s+(.+?)\s*$/gm, "$1 ·")
+    .replace(/^\s*(>|[-*+]|\d+\.)\s+/gm, "")
+    .replace(/^\s*\[[ xX]\]\s+/gm, "")
+    .replace(/^\s*\[![a-z]+\]\s*$/gim, "")
+    .replace(/^\s*\|?\s*:?-{3,}.*$/gm, "")
+    .replace(/[*_`~|]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (plain.length <= max) return plain;
+  const cut = plain.slice(0, max);
+  const edge = cut.lastIndexOf(" ");
+  return `${(edge > max * 0.6 ? cut.slice(0, edge) : cut).replace(/[\s,.;:]+$/, "")}…`;
+}
+
 // -----------------------------------------------------------------------------------------------------------------
 //  s e a r c h
 // -----------------------------------------------------------------------------------------------------------------

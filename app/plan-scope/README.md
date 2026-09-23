@@ -117,6 +117,19 @@ Il **calendario d'insieme** (`agenda.js`) chiede a `calendarBetween(da, a)` tutt
 data in ogni progetto, e disegna un mese. **Non si trascina niente**: sono date di piani diversi, e
 spostarne una lì vorrebbe dire ripianificare un progetto senza averlo davanti.
 
+### Le schede dei progetti, in archivio
+
+Una scheda parla anche senza date. Quello che mostra viene da `projectOverview` in
+`gg/plan-model.js`, che non guarda il calendario: quante pagine, attività e incontri (gli incontri
+non sono pagine), le colonne della bacheca con i loro conteggi — la barra ne disegna uno spezzone
+per colonna —, l'attività aperta da riprendere (quella più avanti sulla bacheca), le pagine
+preferite, l'ultima cosa toccata e le prime parole dell'ultima pagina (`excerptOf`). Il piede è
+uguale su ogni scheda: l'ultima modifica, che si apre con un clic, e le persone.
+
+Ordinamento (ultima modifica, scadenza, nome) e vista (schede, elenco) sono fatti di questo
+browser: stanno in `localStorage` (`gg.plan-scope.homeSort`, `gg.plan-scope.homeView`), non nei
+dati, e un progetto mandato a qualcuno non se li porta dietro.
+
 ### Le attività scritte dentro una pagina
 
 Dal menù «/» dell'editore, «Attività del progetto» crea un'attività sulla bacheca e scrive nella

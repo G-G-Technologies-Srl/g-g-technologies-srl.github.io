@@ -540,6 +540,53 @@ select:hover, select:focus { border-color: var(--border-strong); }
    the archive
    --------------------------------------------------------------------------------------------- */
 
+/* The two switches over the cards: the order and the shape. */
+.home-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; margin: 0 0 12px; }
+.home-tools .field-label { margin: 0; }
+.home-switch { padding: 0; border-bottom: 0; }
+.today-head { display: flex; align-items: baseline; gap: 10px; }
+.today-head h2 { flex: 1 1 auto; }
+.today-head .link { font-size: 12.5px; color: var(--accent-text); padding: 0; background: none; }
+
+/* The list: one project a row, the same facts as a card in columns. Under 720px a row folds into
+   two lines, the name and the work on the first. */
+.project-rows {
+  display: grid;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: linear-gradient(170deg, var(--panel-2), var(--panel) 60%);
+  overflow: hidden;
+}
+.project-row-box { position: relative; border-bottom: 1px solid var(--border); }
+.project-row-box:last-child { border-bottom: 0; }
+.project-row-box.edge-late { box-shadow: inset 3px 0 0 var(--late); }
+.project-row-box.edge-soon { box-shadow: inset 3px 0 0 color-mix(in srgb, var(--late) 45%, transparent); }
+.project-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.3fr) minmax(0, 2fr) minmax(0, 1.6fr) 80px;
+  gap: 16px;
+  align-items: center;
+  width: 100%;
+  padding: 12px 16px;
+  border: 0;
+  background: none;
+  text-align: left;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.project-row:hover { background: rgba(127, 140, 170, 0.06); }
+.project-row .row-name, .project-row .row-work { display: grid; gap: 4px; min-width: 0; }
+.project-row .row-sub { font-size: 12px; color: var(--faint); }
+.project-row .row-sub.late, .project-row .row-next.late { color: var(--late); }
+.project-row .row-next { font-size: 13.5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.project-row .row-last { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.project-row .project-card-crew { justify-content: flex-end; }
+@media (max-width: 720px) {
+  .project-row { grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr); gap: 8px 12px; }
+  .project-row .row-last, .project-row .project-card-crew { display: none; }
+}
+
 .cards {
   display: grid;
   /* 250 e non più 220: la scheda adesso porta anche il prossimo impegno — un titolo e una data
@@ -591,7 +638,7 @@ select:hover, select:focus { border-color: var(--border-strong); }
   flex: 1 1 auto;
   flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
+  gap: 8px;
   width: 100%;
   text-align: left;
   border: 0;
@@ -657,34 +704,95 @@ select:hover, select:focus { border-color: var(--border-strong); }
 
 .project-card-next .next-who { font-size: 10.5px; padding: 0 7px; line-height: 16px; }
 
-/* La barra e il suo numero sulla stessa riga: sono la stessa informazione detta due volte, per chi
-   guarda e per chi legge. `margin-top: auto` spinge il blocco in fondo, com'era il solo numero,
-   così le schede di una fila restano allineate anche con contenuti di lunghezza diversa. */
-.project-card-bar-row {
+/* The board in one line: a stretch per column over the first column's track. The finished one in
+   the accent, the ones between at half of it — one colour, two strengths, as for the late edge. */
+.project-card-columns {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  gap: 2px;
   width: 100%;
-  margin-top: auto;
-}
-
-.project-card-bar {
-  flex: 1 1 auto;
-  height: 4px;
+  height: 6px;
   border-radius: 999px;
-  background: var(--border);
+  overflow: hidden;
+  background: var(--border-strong);
+}
+.project-card-columns .seg { display: block; height: 100%; }
+.project-card-columns .seg.done { background: var(--accent); }
+.project-card-columns .seg.doing { background: var(--accent); opacity: 0.5; }
+
+.project-card-legend { display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: 11.5px; color: var(--faint); }
+.project-card-legend .swatch {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 5px;
+  border-radius: 2px;
+  background: var(--border-strong);
+}
+.project-card-legend .swatch.done { background: var(--accent); }
+.project-card-legend .swatch.doing { background: var(--accent); opacity: 0.5; }
+
+/* What the project holds, counted, each with its small drawing. */
+.project-card-counts { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; color: var(--muted); }
+.project-card-counts .count { display: inline-flex; align-items: center; gap: 5px; }
+.icon16 { width: 14px; height: 14px; flex: none; fill: none; stroke: var(--faint); stroke-width: 1.6;
+  stroke-linecap: round; stroke-linejoin: round; }
+
+.project-card-props { font-size: 12.5px; color: var(--faint); max-width: 100%; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; }
+
+.project-card-shared { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; flex: none;
+  font-size: 11.5px; color: var(--faint); }
+
+/* The open task to pick up, when there is no date: its column says how far it has come. */
+.project-card-next .next-label { color: var(--faint); }
+.project-card-next.is-open .next-title { color: var(--text); }
+
+/* The first words of the latest page, for a project that has only pages; and the invitation of an
+   empty one. Two lines at most: a preview, not the page. */
+.project-card-excerpt {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.project-card-bar-fill {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-  background: var(--accent);
-  transition: width 180ms ease;
-}
+/* Beside the card's button: favourite pages, and the first steps of an empty project. */
+.project-card-extra { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 16px 12px; }
+.project-card-extra .chip { color: var(--accent-text); border: 1px solid var(--border); background: none; cursor: pointer; }
+.project-card-extra button:not(.chip) { font-size: 12.5px; padding: 5px 10px; }
+.project-card-extra .chip:hover { border-color: var(--border-strong); }
 
-.project-card-progress { flex: 0 0 auto; font-size: 12px; color: var(--muted); }
+/* The same foot on every card, pushed to the bottom so a row of cards lines up whatever each one
+   holds: the last thing touched, which opens, and the people. */
+.project-card-foot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  padding: 9px 16px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--faint);
+  min-height: 24px;
+}
+.project-card-foot button.link {
+  padding: 0;
+  font-size: inherit;
+  color: var(--muted);
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+.project-card-foot button.link:hover { color: var(--text); }
+.project-card-foot > span { flex: none; }
+.project-card-foot .project-card-crew { margin-left: auto; }
 
 /* I contatori e le facce sulla stessa riga, le facce spinte a destra: sono due cose diverse — cosa
    chiede attenzione, e chi c'è — e affiancate senza uno stacco si leggerebbero come una sola. */

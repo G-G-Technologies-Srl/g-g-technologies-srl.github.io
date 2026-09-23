@@ -12,9 +12,9 @@
 // to be argued for rather than a thing to be added.
 
 import * as model from "gg/plan-model.js";
-import { glance, glanceOf, colorDot, editProps, addProp } from "./pages.js";
+import { glance, glanceOf, colorDot, editProps, addProp, isColor } from "./pages.js";
 import { t, tf, num } from "./i18n.js";
-import { el, node, button, fill, shortDate, longDate, bytes, tagHue } from "./ui.js";
+import { el, node, button, fill, shortDate, longDate, bytes, tagHue, count } from "./ui.js";
 
 // The ring is a circle of radius 52 in a 120 box: this is how far round it goes.
 const RING = 2 * Math.PI * 52;
@@ -36,6 +36,13 @@ const RING = 2 * Math.PI * 52;
 let picked = null;
 
 let on = {};   // i gestori che la schermata chiede all'app: aprire, spuntare, e ridisegnare
+
+// The order and the shape of the archive: facts of this browser, not of the data, so they stay in
+// `localStorage` and a project sent to somebody does not carry them.
+const SORT_KEY = "gg.plan-scope.homeSort";
+const VIEW_KEY = "gg.plan-scope.homeView";
+let homeSort = "recent";
+let homeView = "cards";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
@@ -141,60 +148,44 @@ function _whenLabel(project, today) {
 }
 
 function _projectCard(project, today) {
-  // La scatola porta la cornice, il bottone porta il progetto, e sotto ci stanno le etichette —
-  // che sono bottoni anche loro. Un bottone dentro un bottone non è HTML valido, e un clic su una
-  // pastiglia aprirebbe anche il progetto: è il motivo per cui la scheda è fatta di due pezzi.
+  // The box holds the frame, the button holds the project, and whatever else can be pressed —
+  // tags, favourite pages, the last thing touched, the two first steps of an empty project — sits
+  // beside it: a button inside a button is not valid HTML, and a click on a chip would open the
+  // project as well.
   const box = node("div", "project-card-box");
   const card = node("button", "project-card");
   card.type = "button";
   card.addEventListener("click", () => on.openProject(project.id));
   box.append(card);
 
-  // Il pallino del colore che il progetto si è dato negli attributi, prima del nome: lo stesso
-  // segno che hanno le pagine, per la stessa ragione — ritrovare senza rileggere. Sulla stessa
-  // riga del nome, dentro una riga sua: la scheda è una colonna, e un pallino appeso direttamente
-  // a lei finiva da solo sopra il nome, come un titolo di una lettera.
   const seen = glanceOf(project.props);
+  const view = model.projectOverview(project.id);
   const title = node("span", "project-card-title");
   if (seen.color) title.append(colorDot(seen.color));
   title.append(node("span", "project-card-name", project.name || t("projectUntitled")));
+  if (project.shared) title.append(_sharedMark());
   card.append(title);
   if (project.demo) card.append(node("span", "badge example", t("demoBadge")));
 
-  // Il nome della data davanti al giorno: senza, «fra 12 giorni» lascia indovinare cosa succede
-  // fra dodici giorni, ed è proprio la cosa che «Data evento» dava per scontata su ogni progetto.
+  // What the project says about itself, besides its colour and its date: «cliente: Rossi».
+  const said = _propsLine(project);
+  if (said) card.append(node("span", "project-card-props", said));
+
+  // Il nome della data davanti al giorno: senza, «fra 12 giorni» lascia indovinare cosa succede.
   const dated = model.projectDate(project);
-  const said = dated && _whenLabel(project, today);
-  // Niente data, niente riga: scrivere «senza data» occupa il posto di un'informazione per dire
-  // che non ce n'è una, e su una dashboard di progetti che una data non ce l'hanno è la parola
-  // che si ripete di più.
-  // Il colore dice quanto manca: «fra 42 giorni» e «fra 2 giorni» pesavano uguale, ed è il peso
-  // che si legge per primo.
-  if (said) {
+  const distance = dated && _whenLabel(project, today);
+  if (distance) {
     card.append(node("span", `project-card-when ${_urgency(dated.value, today)}`,
-      `${dated.key} · ${shortDate(dated.value)} · ${said}`));
+      `${dated.key} · ${shortDate(dated.value)} · ${distance}`));
   }
 
-  // L'avanzamento come forma, non come conto. «3 di 20» va letto e diviso; una barra si capisce
-  // senza leggerla, e il numero resta accanto per chi il numero lo vuole.
-  const { done, total } = model.progressOf(project.id);
-  const row = node("span", "project-card-bar-row");
-  const bar = node("span", "project-card-bar");
-  const fill_ = node("span", "project-card-bar-fill");
-  fill_.style.width = `${total ? Math.round((done / total) * 100) : 0}%`;
-  bar.append(fill_);
-  row.append(bar);
-  row.append(node("span", "project-card-progress",
-    tf("projectProgress", { done: num(done, 0), total: num(total, 0) })));
-  card.append(row);
+  const empty = view.pages + view.tasks + view.meetings === 0;
+  if (!empty) card.append(_countsLine(view));
+  if (view.tasks) card.append(_columnsBar(view.columns), _columnsLegend(view.columns));
 
-  // Il prossimo impegno: cosa fare di questo progetto, senza aprirlo. Un incontro conta quanto
-  // un'attività — se giovedì c'è una riunione e venerdì scade una consegna, quello che viene
-  // prima è la riunione, e una riga che dicesse la consegna direbbe la seconda cosa.
+  // The next thing: a date when there is one, otherwise the open task to pick up. A project
+  // without dates still has something to do next, and the card used to keep quiet about it.
   const next = _nextThing(project.id);
-  // A pezzi e non in una stringa sola: l'ora di un appuntamento in verde, come ovunque nell'app,
-  // il titolo nel colore del testo, il giorno smorzato, e ogni persona nella sua tinta — la stessa
-  // che il suo nome porta fra le etichette. Una riga grigia diceva tutto con la stessa voce.
   if (next) {
     const line = node("span", `project-card-next ${_urgency(next.date, today)}${next.meeting ? " is-meeting" : ""}`);
     if (next.time) line.append(node("span", "next-time", next.time));
@@ -204,40 +195,46 @@ function _projectCard(project, today) {
       line.append(node("span", `badge tag next-who ${tagHue(name)}`, name));
     }
     card.append(line);
+  } else if (view.next) {
+    const line = node("span", "project-card-next is-open");
+    line.append(node("span", "next-label", view.next.column));
+    line.append(node("span", "next-title", view.next.task.title || t("taskUntitled")));
+    card.append(line);
   }
 
-  // I due contatori insieme quando ci sono tutti e due. Prima era «se in ritardo, altrimenti in
-  // scadenza»: un progetto con tre arretrati e cinque in settimana ne mostrava uno solo, e spariva
-  // quello in più proprio dove ce n'era di più.
+  // Pages and no tasks: the latest page speaks for the project, in its first words.
+  if (!view.tasks && view.excerpt) card.append(node("span", "project-card-excerpt", `«${view.excerpt}»`));
+  if (empty) card.append(node("span", "project-card-excerpt", t("cardEmpty")));
+
   const late = model.lateCount(project.id, { from: today });
   const soon = model.dueAhead(project.id, { from: today }).length;
-  const marks = node("span", "project-card-marks");
-  if (late) marks.append(node("span", "badge late", tf("projectLate", { n: num(late, 0) })));
-  if (soon) marks.append(node("span", "badge soon", tf("projectDueWeek", { n: num(soon, 0) })));
-
-  // Chi ci lavora, per iniziali. Il modello le sa da sempre e la dashboard non le ha mai dette:
-  // per sapere se un progetto era in mano a qualcuno bisognava aprirlo.
-  const crew = model.peopleOf(project.id);
-  if (crew.length) {
-    const faces = node("span", "project-card-crew");
-    for (const one of crew.slice(0, 3)) {
-      const face = node("span", "face", _initials(one.name));
-      face.title = one.name || "";
-      faces.append(face);
-    }
-    if (crew.length > 3) faces.append(node("span", "face more", `+${crew.length - 3}`));
-    marks.append(faces);
+  if (late || soon) {
+    const marks = node("span", "project-card-marks");
+    if (late) marks.append(node("span", "badge late", tf("projectLate", { n: num(late, 0) })));
+    if (soon) marks.append(node("span", "badge soon", tf("projectDueWeek", { n: num(soon, 0) })));
+    card.append(marks);
   }
-  if (marks.childElementCount) card.append(marks);
 
-  // Il segno sul bordo: le schede che chiedono attenzione si trovano scorrendo con la coda
-  // dell'occhio, senza leggerle una per una.
-  const edge = late ? "late" : (next && _urgency(next.end, today)) || (dated && _urgency(dated.value, today));
+  const edge = late ? "late" : (next && _urgency(next.date, today)) || (dated && _urgency(dated.value, today));
   if (edge && edge !== "far") box.classList.add(`edge-${edge}`);
 
-  // Le etichette: si leggono, e si cliccano per restare su quelle. Quella già accesa si spegne,
-  // così la stessa pastiglia fa e disfa — cercare altrove come si toglie un filtro che si è messo
-  // con un clic è il modo più rapido di non usarlo più.
+  // Beside the button: the favourite pages, straight to them; the first steps of an empty project;
+  // a task for a project that has only pages.
+  const extra = node("div", "project-card-extra");
+  for (const page of view.favourites.slice(0, 3)) {
+    extra.append(button("chip", `★ ${page.title || t("pageUntitled")}`, () => on.openPage(page.id)));
+  }
+  if (empty) {
+    extra.append(button("small", t("cardFirstPage"), () => on.firstPage(project.id)));
+    extra.append(button("small", t("cardFirstTask"), () => on.firstTask(project.id)));
+  } else if (!view.tasks) {
+    extra.append(button("chip", `+ ${t("cardFirstTask")}`, () => on.firstTask(project.id)));
+  }
+  if (extra.childElementCount) box.append(extra);
+
+  box.append(_cardFoot(project, view));
+
+  // Le etichette: si leggono, e si cliccano per restare su quelle. Quella già accesa si spegne.
   const tags = project.tags || [];
   if (tags.length) {
     const row = node("div", "project-card-tags");
@@ -249,6 +246,262 @@ function _projectCard(project, today) {
   }
 
   return box;
+}
+
+/**
+ * The foot of a card, the same on every one: the last thing touched, which opens it, and the
+ * people. «Where was I» is the question a project without dates is opened for.
+ */
+function _cardFoot(project, view) {
+  const foot = node("div", "project-card-foot");
+  if (view.last) {
+    const { kind, record, at } = view.last;
+    foot.append(node("span", "", t("cardEdited")));
+    const name = record.title || t(kind === "page" ? "pageUntitled" : "taskUntitled");
+    foot.append(button("link", name, () => (kind === "page" ? on.openPage(record.id) : on.openTask(record.id))));
+    foot.append(node("span", "", `· ${_ago(at)}`));
+  } else {
+    foot.append(node("span", "", tf("cardCreated", { when: _ago(project.created) })));
+  }
+  const crew = model.peopleOf(project.id);
+  if (crew.length) {
+    const faces = node("span", "project-card-crew");
+    for (const one of crew.slice(0, 3)) {
+      const face = node("span", "face", _initials(one.name));
+      face.title = one.name || "";
+      faces.append(face);
+    }
+    if (crew.length > 3) faces.append(node("span", "face more", `+${crew.length - 3}`));
+    foot.append(faces);
+  }
+  return foot;
+}
+
+/** Up to two of the project's own properties, «key: value», leaving out its colour and its date. */
+function _propsLine(project) {
+  const dateKey = (model.projectDate(project) || {}).key;
+  return Object.entries(project.props || {})
+    .filter(([key, value]) => {
+      const clean = String(value || "").trim();
+      return clean && key !== dateKey && !isColor(clean) && !/^\d{4}-\d{2}-\d{2}$/.test(clean);
+    })
+    .slice(0, 2)
+    .map(([key, value]) => `${key}: ${String(value).trim()}`)
+    .join(" · ");
+}
+
+/** «4 pagine · 3 attività · 1 incontro», each with its small drawing; the zero ones are left out. */
+function _countsLine(view) {
+  const line = node("span", "project-card-counts");
+  const add = (n, icon, one, many) => {
+    if (!n) return;
+    const piece = node("span", "count");
+    piece.append(_icon(icon), document.createTextNode(count(n, one, many)));
+    line.append(piece);
+  };
+  add(view.pages, "page", "pageOne", "pageMany");
+  add(view.tasks, "task", "taskOne", "taskMany");
+  add(view.meetings, "meeting", "meetingOne", "meetingMany");
+  return line;
+}
+
+/**
+ * The board in one line: a stretch per column, the finished one in the accent, the ones between
+ * in half of it, the first left as the track. It says where the work stands without a date, which
+ * «done of total» could not.
+ */
+function _columnsBar(columns) {
+  const total = columns.reduce((sum, one) => sum + one.count, 0) || 1;
+  const bar = node("span", "project-card-columns");
+  bar.setAttribute("role", "img");
+  bar.setAttribute("aria-label", columns.map((one) => `${one.name} ${num(one.count, 0)}`).join(", "));
+  const ordered = [...columns.filter((one) => one.done), ...columns.slice(1).filter((one) => !one.done).reverse()];
+  for (const column of ordered) {
+    if (!column.count) continue;
+    const piece = node("span", column.done ? "seg done" : "seg doing");
+    piece.style.width = `${(column.count / total) * 100}%`;
+    bar.append(piece);
+  }
+  return bar;
+}
+
+function _columnsLegend(columns) {
+  const legend = node("span", "project-card-legend");
+  legend.setAttribute("aria-hidden", "true");
+  columns.forEach((column, index) => {
+    const piece = node("span", "");
+    piece.append(node("span", `swatch ${column.done ? "done" : index === 0 ? "todo" : "doing"}`));
+    piece.append(document.createTextNode(`${num(column.count, 0)} ${column.name}`));
+    legend.append(piece);
+  });
+  return legend;
+}
+
+/** The sign of a project written in a shared folder. */
+function _sharedMark() {
+  const mark = node("span", "project-card-shared");
+  mark.append(_icon("share"), document.createTextNode(t("cardShared")));
+  return mark;
+}
+
+// The small drawings, stroked in the text colour: a page, a ticked box, a calendar, a share.
+const ICONS = {
+  page: "M4 1.5h5.5L12.5 4.5V14.5h-8.5z M9.5 1.5V4.5H12.5",
+  task: "M3.5 2h9a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 12.5v-9A1.5 1.5 0 0 1 3.5 2z M5 8l2 2 4-4",
+  meeting: "M3.5 3h9a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 12.5v-8A1.5 1.5 0 0 1 3.5 3z M2 6.5h12 M5.5 1.5v3 M10.5 1.5v3",
+  share: "M6 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0z M14 4a2 2 0 1 1-4 0 2 2 0 0 1 4 0z M14 12a2 2 0 1 1-4 0 2 2 0 0 1 4 0z M5.8 7.1l4.4-2.2 M5.8 8.9l4.4 2.2",
+};
+
+function _icon(name) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 16 16");
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("class", "icon16");
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("d", ICONS[name]);
+  svg.append(path);
+  return svg;
+}
+
+/**
+ * How long ago, in the words a person uses: «adesso», «12 min fa», «3 ore fa», «ieri», «4 giorni
+ * fa», and the date itself past a week — «40 giorni fa» makes the reader do a sum.
+ */
+function _ago(iso) {
+  if (!iso) return "";
+  const then = new Date(iso);
+  if (Number.isNaN(then.getTime())) return "";
+  const now = new Date();
+  const minutes = Math.floor((now - then) / 60000);
+  if (minutes < 1) return t("agoNow");
+  if (minutes < 60) return tf("agoMinutes", { n: num(minutes, 0) });
+  const day = (date) => model.todayISO(date);
+  const days = model.daysBetween(day(then), day(now));
+  if (days === 0) {
+    const hours = Math.floor(minutes / 60);
+    return hours === 1 ? t("agoHour") : tf("agoHours", { n: num(hours, 0) });
+  }
+  if (days === 1) return t("agoYesterday");
+  if (days < 7) return tf("agoDays", { n: num(days, 0) });
+  return shortDate(day(then));
+}
+
+/**
+ * The archive in the order asked for. By last change the project somebody was just in comes
+ * first; by deadline the next thing due, and the ones without a date after, by name; by name,
+ * the alphabet. The order is a fact of this browser and stays in it.
+ */
+function _sorted(projects) {
+  const byName = (a, b) => String(a.name || "").localeCompare(String(b.name || ""), undefined, { sensitivity: "base" });
+  if (homeSort === "name") return [...projects].sort(byName);
+  if (homeSort === "due") {
+    const when = (project) => {
+      const next = _nextThing(project.id);
+      const dated = model.projectDate(project);
+      return [next && next.date, dated && dated.value].filter(Boolean).sort()[0] || "";
+    };
+    return [...projects].sort((a, b) => {
+      const x = when(a);
+      const y = when(b);
+      if (x && y) return x.localeCompare(y) || byName(a, b);
+      if (x || y) return x ? -1 : 1;
+      return byName(a, b);
+    });
+  }
+  const stamp = (project) => {
+    const view = model.projectOverview(project.id);
+    return String((view && view.last && view.last.at) || project.updated || project.created || "");
+  };
+  return [...projects].sort((a, b) => stamp(b).localeCompare(stamp(a)) || byName(a, b));
+}
+
+/** One project as a row of the list view: the same facts as the card, in columns. */
+function _projectRow(project, today) {
+  const view = model.projectOverview(project.id);
+  const row = node("button", "project-row");
+  row.type = "button";
+  row.addEventListener("click", () => on.openProject(project.id));
+
+  const who = node("span", "row-name");
+  const title = node("span", "project-card-title");
+  const seen = glanceOf(project.props);
+  if (seen.color) title.append(colorDot(seen.color));
+  title.append(node("span", "project-card-name", project.name || t("projectUntitled")));
+  who.append(title);
+  const sub = [view.pages ? count(view.pages, "pageOne", "pageMany") : "",
+    project.shared ? t("cardShared") : "", _propsLine(project)].filter(Boolean).join(" · ");
+  if (sub) who.append(node("span", "row-sub", sub));
+  row.append(who);
+
+  const work = node("span", "row-work");
+  if (view.tasks) {
+    work.append(_columnsBar(view.columns));
+    const done = view.columns.filter((one) => one.done).reduce((sum, one) => sum + one.count, 0);
+    const late = model.lateCount(project.id, { from: today });
+    work.append(node("span", late ? "row-sub late" : "row-sub",
+      late ? tf("projectLate", { n: num(late, 0) }) : tf("projectProgress", { done: num(done, 0), total: num(view.tasks, 0) })));
+  } else {
+    work.append(node("span", "row-sub", t("cardNoTasks")));
+  }
+  row.append(work);
+
+  const next = _nextThing(project.id);
+  const ahead = node("span", "row-next");
+  if (next) {
+    ahead.classList.add(_urgency(next.date, today));
+    ahead.append(node("span", "", next.title), node("span", "row-sub", ` · ${shortDate(next.date)}`));
+  } else if (view.next) {
+    ahead.append(node("span", "row-sub", `${view.next.column} · `), node("span", "", view.next.task.title || t("taskUntitled")));
+  } else {
+    ahead.append(node("span", "row-sub", "—"));
+  }
+  row.append(ahead);
+
+  const last = node("span", "row-sub row-last");
+  last.textContent = view.last
+    ? `${view.last.record.title || t(view.last.kind === "page" ? "pageUntitled" : "taskUntitled")} · ${_ago(view.last.at)}`
+    : tf("cardCreated", { when: _ago(project.created) });
+  row.append(last);
+
+  const faces = node("span", "project-card-crew");
+  for (const one of model.peopleOf(project.id).slice(0, 3)) {
+    const face = node("span", "face", _initials(one.name));
+    face.title = one.name || "";
+    faces.append(face);
+  }
+  row.append(faces);
+
+  const box = node("div", "project-row-box");
+  const edge = model.lateCount(project.id, { from: today }) ? "late" : next && _urgency(next.date, today);
+  if (edge && edge !== "far") box.classList.add(`edge-${edge}`);
+  box.append(row);
+  return box;
+}
+
+/** The two switches over the cards, lit on the choice in force. */
+function _paintTools(any) {
+  el("homeTools").hidden = !any;
+  for (const one of el("homeSort").querySelectorAll("button")) {
+    one.classList.toggle("on", one.dataset.sort === homeSort);
+    one.setAttribute("aria-pressed", one.dataset.sort === homeSort ? "true" : "false");
+  }
+  for (const one of el("homeView").querySelectorAll("button")) {
+    one.classList.toggle("on", one.dataset.view === homeView);
+    one.setAttribute("aria-pressed", one.dataset.view === homeView ? "true" : "false");
+  }
+}
+
+function _remember(key, value) {
+  try { localStorage.setItem(key, value); } catch { /* a private window: the choice lasts the session */ }
+}
+
+function _recall(key, allowed, fallback) {
+  try {
+    const said = localStorage.getItem(key);
+    return allowed.includes(said) ? said : fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 /**
@@ -440,6 +693,23 @@ export function paintLog(entries) {
 
 export function connect(handlers) {
   on = handlers;
+  homeSort = _recall(SORT_KEY, ["recent", "due", "name"], "recent");
+  homeView = _recall(VIEW_KEY, ["cards", "list"], "cards");
+  for (const one of el("homeSort").querySelectorAll("button")) {
+    one.addEventListener("click", () => {
+      homeSort = one.dataset.sort;
+      _remember(SORT_KEY, homeSort);
+      on.repaintHome();
+    });
+  }
+  for (const one of el("homeView").querySelectorAll("button")) {
+    one.addEventListener("click", () => {
+      homeView = one.dataset.view;
+      _remember(VIEW_KEY, homeView);
+      on.repaintHome();
+    });
+  }
+  el("todayCalendar").addEventListener("click", () => on.openAgenda());
 }
 
 /**
@@ -572,7 +842,11 @@ export function paintHome(room) {
   const projects = _picked(all);
 
   _paintFilters();
-  fill(el("projectList"), projects.map((project) => _projectCard(project, today)));
+  _paintTools(all.length > 0);
+  const list = el("projectList");
+  list.className = homeView === "list" ? "project-rows" : "cards";
+  fill(list, _sorted(projects).map((project) => (homeView === "list"
+    ? _projectRow(project, today) : _projectCard(project, today))));
   el("homeEmpty").hidden = all.length > 0;
   // Un filtro che non lascia niente lo dice, invece di mostrare il vuoto di chi non ha progetti.
   el("projectsFiltered").hidden = !(all.length && !projects.length);

@@ -667,6 +667,29 @@ function _paintPeople() {
  * `_agendaId` crea l'agenda alla prima cosa che ci finisce dentro e non prima: un archivio vuoto
  * non deve contenere un progetto che nessuno ha chiesto.
  */
+/**
+ * The first page of a project, from its card in the archive: the name asked, the page opened.
+ */
+async function _firstPage(id) {
+  const title = String(await ask(t("newPagePrompt"), { value: "" }) || "").trim();
+  if (!title || !model.project(id)) return;
+  projectId = id;
+  const page = model.createPage(id, { title });
+  _openPage(page.id);
+  snack(tf("pageMade", { name: title }));
+}
+
+/**
+ * A task, from the card: the archive stays on screen, and the card shows it at once.
+ */
+async function _firstTask(id) {
+  const title = String(await ask(t("taskAsk"), { value: "" }) || "").trim();
+  if (!title || !model.project(id)) return;
+  model.createTask(id, { title });
+  await _repaint();
+  snack(tf("taskMade", { name: title }));
+}
+
 function _openAgenda() {
   agenda.paint();
   _show("agendaScreen");
@@ -3063,6 +3086,9 @@ function _connect() {
     repaintHome: async () => home.paintHome(await db.room()),
     openProject: (id) => _openProject(id),
     openPage: (id) => _openPage(id),
+    openAgenda: () => _openAgenda(),
+    firstPage: (id) => _firstPage(id),
+    firstTask: (id) => _firstTask(id),
     toggleTask: async (id) => {
       const outcome = model.toggleDone(id);
       await _repaint();

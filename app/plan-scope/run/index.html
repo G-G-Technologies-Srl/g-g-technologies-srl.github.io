@@ -187,7 +187,11 @@
       <!-- What the morning asks first — not "which projects do I have" but "what is due". One
            list across every project, late first, and it is the reason to open the app at all. -->
       <div class="card today" id="todayPanel" hidden>
-        <h2 data-t="todayTitle"></h2>
+        <!-- The week, and the way to everything after it: the panel stops at seven days. -->
+        <div class="today-head">
+          <h2 data-t="todayTitle"></h2>
+          <button type="button" id="todayCalendar" class="link" data-t="todayCalendar"></button>
+        </div>
         <div class="due-groups" id="todayList"></div>
         <p class="note" id="todayEmpty" data-t="todayEmpty" hidden></p>
       </div>
@@ -196,6 +200,21 @@
       <!-- Le etichette accese, ognuna con la sua croce, e un modo di togliere tutto in un colpo.
            La stessa riga che ha la tabella delle pagine, perché è la stessa domanda: «fammi vedere
            solo questi». Sparisce quando non c'è niente di acceso. -->
+      <!-- How the cards are ordered and drawn. Last change first by default: a project without
+           dates is opened to pick up where it was left, and that is the one to find first. -->
+      <div class="home-tools" id="homeTools" hidden>
+        <span class="field-label" data-t="homeSortLabel"></span>
+        <div class="views home-switch" id="homeSort" role="group" data-t-label="homeSortLabel">
+          <button type="button" data-sort="recent" data-t="homeSortRecent"></button>
+          <button type="button" data-sort="due" data-t="homeSortDue"></button>
+          <button type="button" data-sort="name" data-t="homeSortName"></button>
+        </div>
+        <span class="spacer"></span>
+        <div class="views home-switch" id="homeView" role="group" data-t-label="homeViewLabel">
+          <button type="button" data-view="cards" data-t="homeViewCards"></button>
+          <button type="button" data-view="list" data-t="homeViewList"></button>
+        </div>
+      </div>
       <div class="filters" id="projectFilters" hidden></div>
       <div class="cards" id="projectList"></div>
       <p class="empty" id="projectsFiltered" data-t="projectsFiltered" hidden></p>
