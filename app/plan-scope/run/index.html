@@ -494,6 +494,8 @@
     <div class="pagebar">
       <input type="text" id="pageTitleField" maxlength="120" autocomplete="off" data-t-label="pageTitlePlaceholder" data-t-placeholder="pageTitlePlaceholder" data-t-title="pageTitleHint">
       <span class="spacer"></span>
+      <!-- How long the page is, and how long it takes to read: quiet, beside the save state. -->
+      <span class="meta" id="pageWords" hidden></span>
       <span class="meta" id="saveState"></span>
       <button type="button" id="addImage" data-t="addImage"></button>
       <button type="button" id="addFile" class="ghost small" data-t="addFile"></button>
@@ -543,11 +545,17 @@
            page two clicks away from the one being written, and a knowledge base is made of pages
            that point at each other. Hidden on a narrow screen, where the column would be the text's. -->
       <div class="page-tree" id="pageTreeWrap">
+        <!-- The headings of the page on screen, over the tree: a long page read by its sections. -->
+        <nav class="page-outline" id="pageOutline" data-t-label="outlineTitle" hidden>
+          <h3 data-t="outlineTitle"></h3>
+          <div id="pageOutlineList"></div>
+        </nav>
         <nav id="pageTree" data-t-label="treeLabel"></nav>
         <!-- Under the tree, always: the two things somebody looking at a tree wants to do to it. -->
         <div class="tree-foot">
           <button type="button" id="treeAddPage" class="ghost small" data-t="treeAddPage"></button>
           <button type="button" id="treeAddSubpage" class="ghost small" data-t="treeAddSubpage"></button>
+          <button type="button" id="treeFromTemplate" class="ghost small" data-t="treeFromTemplate"></button>
         </div>
       </div>
       <div class="page-column">

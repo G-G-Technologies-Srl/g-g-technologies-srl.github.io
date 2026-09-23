@@ -131,6 +131,16 @@ export const TEMPLATES = [
  * just thrown the example away often wants exactly that, and last in the row it was the one nobody
  * saw. The list above keeps it last, because `byKey` falls back to the last one.
  */
+/**
+ * The shapes a single page can start from, inside a project that already exists: the minutes of a
+ * meeting, a brief, a checklist. Keys only, like the project templates above.
+ */
+export const PAGE_TEMPLATES = [
+  { key: "minutes", title: "pageTpl_minutes", body: "pageTplBody_minutes" },
+  { key: "brief", title: "pageTpl_brief", body: "pageTplBody_brief" },
+  { key: "checklist", title: "pageTpl_checklist", body: "pageTplBody_checklist" },
+];
+
 export function shown() {
   const blank = TEMPLATES.find((one) => one.key === "blank");
   const rest = TEMPLATES.filter((one) => one !== blank);

@@ -64,6 +64,7 @@ let source = false;                     // the source view, off by default and o
 let template = "event";                 // what a new project starts from
 let booted = false;                     // history entries only once the first screen is up
 let restoring = false;                  // true while Back/Forward is putting a screen back
+let aidsTimer = null;                   // the outline and the word count follow the typing, a beat later
 const demoMode = new URLSearchParams(location.search).get("demo") === "1";
 let recent = [];                        // page ids, most recently opened first, kept in meta
 let days = [];                          // the days the app was opened on, as ISO dates, kept in meta
@@ -675,6 +676,43 @@ function _paintArchiveButton() {
   const project = projectId ? model.project(projectId) : null;
   el("archiveProject").hidden = !project || project.kind === "agenda";
   if (project) el("archiveProject").textContent = t(project.archivedAt ? "unarchiveProject" : "archiveProject");
+}
+
+/**
+ * The two aids beside a page: its outline in the column, its length by the save state. Read from
+ * the editor on screen and not from the file, so a heading being typed shows up as it is typed.
+ */
+function _paintPageAids() {
+  const heads = [...document.querySelectorAll("#editor .block-heading")]
+    .map((wrap) => ({ wrap, field: wrap.querySelector("[contenteditable]") }))
+    .filter((one) => one.field && one.field.textContent.trim());
+  // Two headings at least: one is a title, not an outline.
+  el("pageOutline").hidden = heads.length < 2;
+  fill(el("pageOutlineList"), heads.map(({ wrap, field }) => {
+    const level = (/\bh(\d)\b/.exec(field.className) || [0, "2"])[1];
+    return button(`link outline-${level}`, field.textContent.trim(),
+      () => wrap.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }));
+  // Words, and minutes at two hundred a minute: a reading pace, not a promise.
+  const words = model.excerptOf(editor.markdown(), 1e9).split(/\s+/)
+    .filter((word) => /[\p{L}\p{N}]/u.test(word)).length;
+  el("pageWords").hidden = words === 0;
+  el("pageWords").textContent = `${count(words, "wordOne", "wordMany")} · ${tf("readMinutes", { n: num(Math.max(1, Math.round(words / 200)), 0) })}`;
+}
+
+/** A page from one of the page templates, in the project on screen: the shape chosen, the name asked. */
+async function _pageFromTemplate() {
+  if (!projectId) return;
+  const key = await ask(t("pageTplAsk"), { options: templates.PAGE_TEMPLATES.map((one) => ({
+    value: one.key, label: t(one.title) })) });
+  const chosen = templates.PAGE_TEMPLATES.find((one) => one.key === key);
+  if (!chosen) return;
+  const title = String(await ask(t("newPagePrompt"), { value: t(chosen.title) }) || "").trim();
+  if (!title) return;
+  const page = model.createPage(projectId, { title });
+  model.setMarkdown(page.id, t(chosen.body));
+  _openPage(page.id);
+  snack(tf("pageMade", { name: title }));
 }
 
 async function _firstPage(id) {
@@ -1500,6 +1538,7 @@ function _openPages(id) {
 /** The column beside the editor, and the star in the menu, from what the model says now. */
 function _paintTree() {
   if (!pageId) return;
+  _paintPageAids();
   home.paintTree(projectId, pageId, recent);
   const page = model.page(pageId);
   el("starPage").textContent = t(page && page.favourite ? "starRemove" : "starAdd");
@@ -3008,6 +3047,7 @@ function _wire() {
   // «Beside»: a chapter of the same parent, or at the top when the page is at the top.
   el("newSibling").addEventListener("click", () => makePage(model.page(pageId) ? model.page(pageId).parentId : null));
   el("treeAddPage").addEventListener("click", () => makePage(null));
+  el("treeFromTemplate").addEventListener("click", () => _pageFromTemplate());
 
   el("trashPage").addEventListener("click", () => {
     const page = model.page(pageId);
@@ -3242,6 +3282,8 @@ function _connect() {
       if (!pageId) return;
       model.setMarkdown(pageId, pages.wrap(markdown));
       versions.snapshot(model.page(pageId));
+      clearTimeout(aidsTimer);
+      aidsTimer = setTimeout(_paintPageAids, 400);
     },
     // The bytes of a picture come from the store, never from the network. The URL is remembered so
     // it can be given back when the page closes.

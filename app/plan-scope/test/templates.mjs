@@ -25,7 +25,7 @@ import { dirname, join } from "node:path";
 import * as templates from "../run/templates.js";
 import * as demo from "../run/demo.js";
 import * as model from "gg/plan-model.js";
-import { frontmatter } from "gg/plan-markdown.js";
+import { frontmatter, parse, serialize } from "gg/plan-markdown.js";
 
 let passed = 0;
 
@@ -277,6 +277,23 @@ test("ogni chiave chiesta dai template esiste in italiano e in inglese", () => {
 
   assert.deepEqual(missing, [], `chiavi chieste e non presenti:\n  ${missing.join("\n  ")}`);
   assert.ok(asked.size > 60, `solo ${asked.size} chiavi chieste: il test non sta coprendo niente`);
+});
+
+test("i modelli di pagina hanno nome e testo nelle due lingue, e il testo è Markdown che torna uguale", () => {
+  const keysOf = (name) => {
+    const block = new RegExp(`const ${name} = \\{(.*?)\\n\\};`, "s").exec(dictionary);
+    return new Set([...block[1].matchAll(/^ {2}([A-Za-z_]\w*):/gm)].map((one) => one[1]));
+  };
+  const it = keysOf("IT");
+  const en = keysOf("EN");
+  assert.deepEqual(templates.PAGE_TEMPLATES.map((one) => one.key), ["minutes", "brief", "checklist"]);
+  for (const one of templates.PAGE_TEMPLATES) {
+    for (const key of [one.title, one.body]) assert.ok(it.has(key) && en.has(key), key);
+  }
+  // Un modello che il formato riscrive al primo salvataggio sarebbe un modello che cambia sotto le
+  // dita: il testo deve essere già un punto fisso.
+  const brief = "## Obiettivo\n\nUna frase.\n\n- \n\n- [ ] \n";
+  assert.equal(serialize(parse(serialize(parse(brief)))), serialize(parse(brief)));
 });
 
 test("i modelli che contano i giorni dicono come si chiama il loro giorno-zero", () => {

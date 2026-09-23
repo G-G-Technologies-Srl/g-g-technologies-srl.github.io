@@ -553,6 +553,19 @@ select:hover, select:focus { border-color: var(--border-strong); }
 #projectSearch { width: min(200px, 100%); font-size: 13px; padding: 5px 10px; }
 #showArchived.on { color: var(--accent-text); background: var(--accent-soft); }
 
+/* The outline of the page, over the tree: the headings as links, indented by level. */
+.page-outline { display: grid; gap: 2px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.page-outline h3 { margin: 0 0 4px; font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase;
+  color: var(--faint); font-weight: 400; }
+#pageOutlineList { display: grid; gap: 1px; }
+#pageOutlineList .link { font-size: 13px; color: var(--muted); padding: 3px 6px; text-align: left;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#pageOutlineList .link:hover { color: var(--text); background: rgba(127, 140, 170, 0.08); }
+#pageOutlineList .outline-2 { padding-left: 16px; }
+#pageOutlineList .outline-3 { padding-left: 28px; font-size: 12.5px; }
+#pageWords { font-size: 12px; color: var(--faint); white-space: nowrap; }
+@media (max-width: 720px) { #pageWords { display: none; } }
+
 /* The two switches over the cards: the order and the shape. */
 .home-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; margin: 0 0 12px; }
 .home-tools .field-label { margin: 0; }

@@ -138,8 +138,11 @@ export function ask(message, { value = null, options = null, ok = null } = {}) {
       if (dialog.open) dialog.close();
       resolve(outcome);
     };
-    // Esc is «leave it», for every shape.
-    const onClose = () => close(nothing);
+    // Esc is «leave it», for every shape. **Only if the dialog is really closed**: `close()` does not
+    // fire its event on the spot, it queues it, so when an answer opens the next question at once
+    // the first question's event arrives with the second one on screen — and resolved it as «leave
+    // it». The page template asked for its kind and then for a name, and the name never came.
+    const onClose = () => { if (!dialog.open) close(nothing); };
     dialog.addEventListener("close", onClose);
     el("askForm").onsubmit = (event) => { event.preventDefault(); close(answer()); };
     el("askCancel").onclick = () => close(nothing);
