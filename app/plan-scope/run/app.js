@@ -83,6 +83,9 @@ const VIEWS = [["goBoard", "kanban"], ["goCalendar", "calendar"], ["goTimeline",
 /** I canali di una nota presa dalla scheda di una persona, nell'ordine in cui si offrono. */
 const NOTE_CHANNELS = ["call", "meeting", "email", "message"];
 
+/** The rhythms a meeting can repeat at, in the order the mask offers them. */
+const REPEAT_CODES = ["week", "fortnight", "month"];
+
 /** Quante persone della rubrica compaiono come pastiglie sotto «con chi», oltre a chi lavora qui. */
 const RUBRICA_CHIPS = 8;
 
@@ -266,6 +269,12 @@ async function _askMeeting(target, withName = "", { meeting = null, day = null }
   el("meetTime").value = editing ? meeting.time : "";
   el("meetWith").value = editing ? meeting.with : withName;
   el("meetWhere").value = editing ? meeting.where : "";
+  fill(el("meetRepeat"), ["", ...REPEAT_CODES].map((code) => {
+    const option = node("option", "", t(code ? `repeat_${code}` : "repeat_none"));
+    option.value = code;
+    return option;
+  }));
+  el("meetRepeat").value = editing ? meeting.repeat || "" : "";
   _paintMeetPeople(target);
   el("meetWith").oninput = () => _paintMeetPeople(target);
   const sayToday = () => {
@@ -275,7 +284,8 @@ async function _askMeeting(target, withName = "", { meeting = null, day = null }
   el("meetDate").oninput = sayToday;
   el("meetTime").oninput = sayToday;
   for (const [id, key] of [["meetWhatLabel", "meetWhat"], ["meetDateLabel", "meetDate"],
-    ["meetTimeLabel", "meetTime"], ["meetWithLabel", "meetWith"], ["meetWhereLabel", "meetWhere"]]) {
+    ["meetTimeLabel", "meetTime"], ["meetWithLabel", "meetWith"], ["meetWhereLabel", "meetWhere"],
+    ["meetRepeatLabel", "meetRepeat"]]) {
     el(id).textContent = t(key);
   }
   // La stessa maschera per prendere un appuntamento e per correggerlo: cambiano il titolo, il
@@ -298,7 +308,8 @@ async function _askMeeting(target, withName = "", { meeting = null, day = null }
       event.preventDefault();
       close({ what: el("meetWhat").value.trim(), date: el("meetDate").value,
         time: el("meetTime").value, with: el("meetWith").value.trim(),
-        where: el("meetWhere").value.trim() });
+        where: el("meetWhere").value.trim(),
+        repeat: el("meetRepeat").value ? t(`repeat_${el("meetRepeat").value}`) : "" });
     };
     el("meetCancel").onclick = () => close(null);
     el("meetOpen").onclick = () => close({ open: true });
@@ -314,6 +325,7 @@ async function _askMeeting(target, withName = "", { meeting = null, day = null }
   if (!editing) return _newMeeting(target, said);
   const step = model.updateMeeting(meeting.page.id, said, {
     date: t("propDate"), time: t("propTime"), with: t("propWith"), where: t("propWhere"),
+    repeat: t("propRepeat"),
   });
   _welcome(said.with);
   await _repaint();
@@ -501,6 +513,7 @@ function _newMeeting(target, said = {}, { title = null } = {}) {
     ...(said.with ? [`${t("propWith")}: ${said.with}`] : []),
     ...(said.where ? [`${t("propWhere")}: ${said.where}`] : []),
     ...(said.channel ? [`${t("propChannel")}: ${said.channel}`] : []),
+    ...(said.repeat ? [`${t("propRepeat")}: ${said.repeat}`] : []),
     "---",
     "",
     "",
@@ -773,6 +786,9 @@ function _paintRubrica() {
     const where = model.projectsOfContact(one.uid || one.id).length;
     said.push(where === 0 ? t("rubricaNowhere")
       : where === 1 ? t("rubricaInOne") : tf("rubricaIn", { n: num(where, 0) }));
+    // When the last conversation was: the question a list of people is most often opened for.
+    const last = model.lastContact(one.uid || one.id);
+    if (last) said.push(tf("lastContact", { when: _daysAgo(last) }));
     row.append(node("span", "meta", said.join(" · ")));
     return row;
   }));
@@ -785,6 +801,16 @@ function _paintRubrica() {
  * lavora, cosa vi siete detti, come eravate rimasti — tutte e tre **attraverso tutti i progetti**,
  * che è la domanda a cui una pagina dentro un progetto non poteva rispondere.
  */
+/** A past day, the way a person says it: «oggi», «ieri», «5 giorni fa», then the date itself. */
+function _daysAgo(iso) {
+  const days = model.daysBetween(iso, model.todayISO());
+  if (days === null || days < 0) return shortDate(iso);
+  if (days === 0) return t("agoToday");
+  if (days === 1) return t("agoYesterday");
+  if (days < 14) return tf("agoDays", { n: num(days, 0) });
+  return shortDate(iso);
+}
+
 function _openPerson(id) {
   const person = model.contact(id);
   if (!person) return _openRubrica();
@@ -825,6 +851,9 @@ function _paintPerson() {
   const uid = person.uid || person.id;
   el("personTitle").textContent = person.name || t("personNoName");
   for (const [id, field] of PERSON_FIELDS) el(id).value = person[field] || "";
+  const last = model.lastContact(uid);
+  el("personLast").hidden = !last;
+  if (last) el("personLast").textContent = tf("lastContact", { when: _daysAgo(last) });
 
   // Le stesse tre cose che si fanno dal pannello del progetto — il ruolo, e togliere — perché è
   // la stessa relazione guardata dall'altro capo, e due forme diverse per la stessa cosa sono due
@@ -1616,6 +1645,19 @@ async function _emptyBin() {
 async function _hydrate() {
   model.hydrate(await db.loadAll());
   model.migrateEventDates(t("propDateDefault"));
+  _rollMeetings();
+}
+
+/**
+ * The next occurrence of the repeating meetings whose moment has passed. A title the app wrote for
+ * the old date — «Incontro del 21 set» — follows the new one; a title somebody chose stays.
+ */
+function _rollMeetings() {
+  if (demoMode) return [];
+  return model.rollMeetings({
+    title: (page, before, after) => (page.title === tf("meetingTitle", { date: longDate(before) })
+      ? tf("meetingTitle", { date: longDate(after) }) : page.title),
+  });
 }
 
 /** Ctrl+N: a new task, into the project on screen or the one chosen in the box. */
@@ -3108,6 +3150,8 @@ function _wire() {
     // bacheca, che nel frattempo può essere cambiata in un'altra scheda. Solo se qualcosa cambia —
     // altrimenti la pagina resta com'è, cursore compreso.
     if (document.visibilityState === "visible") {
+      // Back after a while: a weekly meeting may have passed meanwhile, and its next one is due.
+      if (_rollMeetings().length) _repaint();
       if (view === "page" && pageId && _boxesDrift(pageId)) _reloadPage();
       return;
     }

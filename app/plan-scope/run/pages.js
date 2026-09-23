@@ -113,7 +113,8 @@ function _paintKind() {
       : longDate(meeting.date);
     const far = days === 0 ? t("dueToday") : days === 1 ? t("dueTomorrow")
       : tf("eventIn", { n: num(days, 0) });
-    words = [t("kindAppointment"), ...(channel ? [channel.toLowerCase()] : []), when, far];
+    words = [t("kindAppointment"), ...(channel ? [channel.toLowerCase()] : []), when, far,
+      ...(meeting.repeat ? [t(`repeat_${meeting.repeat}`).toLowerCase()] : [])];
   } else if (channel) {
     words = [tf("kindRecordAs", { what: channel, day: longDate(meeting.date) })];
   } else {
@@ -284,7 +285,7 @@ const PEOPLE_KEYS = ["con", "with", "chi", "who", "partecipanti", "attendees"];
 /* The keys a meeting is made of, in the two languages. On a meeting page they are read in the line
    above the title and in the row under the tags, and their raw rows fold away until «Edit». */
 const MEETING_KEYS = ["tipo", "type", "data", "date", "ora", "orario", "time", "con", "with",
-  "dove", "where", "canale", "channel"];
+  "dove", "where", "canale", "channel", ...model.REPEAT_KEYS];
 const YES_NO = [["sì", "no"], ["si", "no"], ["true", "false"], ["yes", "no"], ["vero", "falso"]];
 
 /**

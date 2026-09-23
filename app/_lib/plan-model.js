@@ -1402,6 +1402,7 @@ export function meetingsOf(projectId, { kinds = [] } = {}) {
       time: isTime(time) ? time : "",
       with: String(props.con || props.with || "").trim(),
       where: String(props.dove || props.where || "").trim(),
+      repeat: repeatOf(props),
     });
   }
   // By day, and within the day by time: the one without a time comes first, like something that is
@@ -1434,6 +1435,73 @@ export function meetingMoment(meeting) {
   if (!clock) return null;
   return new Date(Number(day_[1]), Number(day_[2]) - 1, Number(day_[3]),
     Number(clock[1]), Number(clock[2]), 0, 0);
+}
+
+/** The keys a repeating meeting writes its rhythm under, in the two languages of the app. */
+export const REPEAT_KEYS = ["ripete", "repeats", "ricorrenza", "repeat"];
+
+// The rhythms, and the words that name them — what the app writes and what a person would type.
+const REPEATS = {
+  week: ["ogni settimana", "settimanale", "every week", "weekly"],
+  fortnight: ["ogni 2 settimane", "ogni due settimane", "every 2 weeks", "every two weeks", "fortnightly"],
+  month: ["ogni mese", "mensile", "every month", "monthly"],
+};
+
+/** The rhythm of a meeting from its head — `week`, `fortnight`, `month` — or null. */
+export function repeatOf(props) {
+  const key = REPEAT_KEYS.find((one) => Object.prototype.hasOwnProperty.call(props || {}, one));
+  if (!key) return null;
+  const said = String(props[key] || "").trim().toLowerCase();
+  return Object.keys(REPEATS).find((code) => REPEATS[code].includes(said)) || null;
+}
+
+/** The next day of a rhythm: a week, two, or the same day next month (the 31st becomes the 30th). */
+export function nextRepeat(iso, every) {
+  if (every === "week") return addDays(iso, 7);
+  if (every === "fortnight") return addDays(iso, 14);
+  if (every === "month") return addMonths(iso, 1);
+  return null;
+}
+
+/**
+ * The next occurrence of every repeating meeting whose moment has passed — the same rule as a
+ * repeating task, which is born when the last one is ticked: here the tick is the clock.
+ *
+ * The meeting that passed becomes an ordinary record of what was said, and the rhythm moves to the
+ * new page: one link in the chain carries it, never two. When the app was not opened for weeks the
+ * next date is the first one still ahead, not a backlog of meetings nobody held.
+ *
+ * The new page's `uid` is the old one's plus its date, so two copies of a shared project that both
+ * roll the same meeting make the same page, and the folder merges them into one. `title` names the
+ * new page: the app knows the words, and keeps a title it wrote itself in step with the date.
+ */
+export function rollMeetings({ now = new Date(), title = (page) => page.title } = {}) {
+  const today = todayISO(now);
+  const made = [];
+  for (const project of liveProjects()) {
+    for (const meeting of meetingsOf(project.id)) {
+      const split = frontmatter(meeting.page.markdown || "");
+      const every = repeatOf(split.props);
+      if (!every || meetingAhead(meeting, now)) continue;
+      let date = nextRepeat(meeting.date, every);
+      while (date && date < today) date = nextRepeat(date, every);
+      if (!date) continue;
+      const uid = `${meeting.page.uid || meeting.page.id}~${date}`;
+      // The one that passed keeps everything but the rhythm.
+      const kept = { ...split.props };
+      for (const key of REPEAT_KEYS) delete kept[key];
+      setMarkdown(meeting.page.id, withFrontmatter(kept, split.body, split.extra));
+      if (pagesOf(project.id).some((one) => one.uid === uid)) continue;
+      const dateKey = ["data", "date"].find((one) => Object.prototype.hasOwnProperty.call(split.props, one)) || "data";
+      const page = createPage(project.id, {
+        title: title(meeting.page, meeting.date, date),
+        parentId: meeting.page.parentId || null,
+        markdown: withFrontmatter({ ...split.props, [dateKey]: date }, "", split.extra),
+      });
+      made.push(_put("page", { ...page, uid }));
+    }
+  }
+  return made;
 }
 
 export function meetingAhead(meeting, now = new Date()) {
@@ -1482,8 +1550,19 @@ export function updateMeeting(id, said = {}, keys = {}) {
   set(["ora", "time", "orario"], keys.time, said.time);
   set(["con", "with"], keys.with, said.with);
   set(["dove", "where"], keys.where, said.where);
+  if ("repeat" in said) set(REPEAT_KEYS, keys.repeat, said.repeat);
   const title = String(said.what == null ? "" : said.what).trim() || pageRecord.title;
   return updatePage(id, { title, markdown: withFrontmatter(props, body, extra) });
+}
+
+/**
+ * The last day something happened with a person: the most recent meeting or note that names them,
+ * up to today. An appointment next week is not a contact yet. The day, or `""`.
+ */
+export function lastContact(uid, now = new Date()) {
+  const today = todayISO(now);
+  const found = pagesAbout(uid).find((one) => isDay(one.date) && one.date <= today);
+  return found ? found.date : "";
 }
 
 export function pagesAbout(uid) {

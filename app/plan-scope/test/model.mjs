@@ -1846,4 +1846,40 @@ test("un progetto archiviato esce dalle schede, resta vivo, e l'archivio non via
   assert.equal(nuovo.favourite, false);
 });
 
+test("un appuntamento che si ripete nasce di nuovo quando il suo momento passa, una volta sola", () => {
+  const corso = model.createProject({ name: "Corso" });
+  const lunedi = model.createPage(corso.id, { title: "Riunione del lunedì" });
+  model.setMarkdown(lunedi.id, "---\ntipo: incontro\ndata: 2026-09-07\nora: 09:00\nripete: ogni settimana\n---\nAppunti.\n");
+  assert.equal(model.meetingsOf(corso.id)[0].repeat, "week");
+  const now = new Date(2026, 8, 23, 12, 0);    // mercoledì 23 settembre, a mezzogiorno
+  const made = model.rollMeetings({ now });
+  assert.equal(made.length, 1);
+  // Non tre riunioni arretrate: la prima ancora davanti, lunedì 28.
+  const incontri = model.meetingsOf(corso.id);
+  assert.deepEqual(incontri.map((one) => one.date), ["2026-09-07", "2026-09-28"]);
+  assert.equal(incontri[0].repeat, null, "quella passata non si ripete più: il ritmo è passato alla nuova");
+  assert.equal(incontri[1].repeat, "week");
+  assert.equal(incontri[1].time, "09:00");
+  assert.ok(!/Appunti/.test(incontri[1].page.markdown), "la nuova nasce senza gli appunti di quella prima");
+  assert.equal(incontri[1].page.uid, `${lunedi.uid}~2026-09-28`);
+  // Rilanciato, non fa niente: la nuova è ancora davanti.
+  assert.deepEqual(model.rollMeetings({ now }), []);
+  // Il mese: il 31 diventa l'ultimo giorno del mese dopo.
+  assert.equal(model.nextRepeat("2026-01-31", "month"), "2026-02-28");
+  assert.equal(model.nextRepeat("2026-09-07", "fortnight"), "2026-09-21");
+  assert.equal(model.repeatOf({ repeats: "Every month" }), "month");
+  assert.equal(model.repeatOf({ ripete: "quando capita" }), null);
+});
+
+test("l'ultimo contatto con una persona è l'ultimo incontro passato, non il prossimo", () => {
+  const fiera = model.createProject({ name: "Fiera" });
+  const anna = model.createContact({ name: "Anna Rossi" });
+  assert.equal(model.lastContact(anna.uid), "");
+  for (const [title, date] of [["Prima", "2026-09-01"], ["Seconda", "2026-09-15"], ["Prossima", "2026-10-02"]]) {
+    const page = model.createPage(fiera.id, { title });
+    model.setMarkdown(page.id, `---\ntipo: incontro\ndata: ${date}\ncon: Anna Rossi\n---\n`);
+  }
+  assert.equal(model.lastContact(anna.uid, new Date(2026, 8, 23)), "2026-09-15");
+});
+
 console.log(`model: ${passed} prove passate`);

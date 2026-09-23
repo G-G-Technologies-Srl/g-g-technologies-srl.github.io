@@ -679,6 +679,7 @@
         <button type="button" id="personTrash" class="ghost small danger" data-t="personTrash"></button>
       </div>
 
+      <p class="note" id="personLast" hidden></p>
       <div class="card" id="personCard">
         <label for="personName" data-t="personName"></label>
         <input type="text" id="personName" maxlength="120" autocomplete="off">
@@ -1177,6 +1178,11 @@
       <label for="meetWhere" id="meetWhereLabel"></label>
       <input type="text" id="meetWhere" maxlength="200" autocomplete="off"
              data-t-placeholder="meetWhereHint">
+    </div>
+    <!-- A meeting that comes back: the next one is written when this one's moment has passed. -->
+    <div class="field">
+      <label for="meetRepeat" id="meetRepeatLabel"></label>
+      <select id="meetRepeat"></select>
     </div>
     <div class="row form-foot">
       <button type="submit" id="meetOk" class="primary" data-t="meetOk"></button>

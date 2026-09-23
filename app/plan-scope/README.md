@@ -139,6 +139,18 @@ Ordinamento (ultima modifica, scadenza, nome) e vista (schede, elenco) sono fatt
 browser: stanno in `localStorage` (`gg.plan-scope.homeSort`, `gg.plan-scope.homeView`), non nei
 dati, e un progetto mandato a qualcuno non se li porta dietro.
 
+### Gli appuntamenti che si ripetono
+
+Un appuntamento con `ripete: ogni settimana` (o `ogni 2 settimane`, `ogni mese`, e le stesse
+parole in inglese: `REPEAT_KEYS` e `repeatOf` in `gg/plan-model.js`) nasce di nuovo quando il suo
+momento passa, come un'attività che si ripete nasce di nuovo quando la si spunta: qui la spunta è
+l'orologio. `rollMeetings` gira a ogni caricamento dei dati e quando la finestra torna in primo
+piano; la pagina passata resta com'è, senza il ritmo, e la nuova porta la testa con la data
+avanzata e il testo vuoto. Se l'app non è stata aperta per settimane, la data nuova è la prima
+ancora davanti, non una fila di riunioni arretrate. Il `uid` della pagina nuova è quello della
+vecchia più la data: due copie di un progetto condiviso che fanno lo stesso passo fanno la stessa
+pagina, e la cartella le fonde in una.
+
 ### Le attività scritte dentro una pagina
 
 Dal menù «/» dell'editore, «Attività del progetto» crea un'attività sulla bacheca e scrive nella
