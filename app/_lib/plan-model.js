@@ -1153,7 +1153,7 @@ export function topTasksOf(projectId) {
  * email before it existed is a card nobody would ever make in that moment — which would push people
  * back to writing names as loose text, which is the thing this replaces.
  */
-export function createContact({ name = "", company = "", role = "", email = "", phone = "" } = {}) {
+export function createContact({ name = "", company = "", role = "", email = "", phone = "", notes = "" } = {}) {
   const stamp = _now();
   const id = _id();
   return _put("contact", {
@@ -1164,6 +1164,10 @@ export function createContact({ name = "", company = "", role = "", email = "", 
     role,
     email,
     phone,
+    // Free text about the person, not about a project: «prefers a call after five». It lives on the
+    // card and nowhere else — `travelling` builds what leaves with a project field by field, so a
+    // note written here never reaches the people a project is shared with.
+    notes,
     created: stamp,
     updated: stamp,
     trashedAt: null,
@@ -1527,6 +1531,7 @@ export function adoptPerson(projectId, uid) {
     role: "",
     email: "",
     phone: "",
+    notes: "",
     created: stamp,
     updated: stamp,
     trashedAt: null,
@@ -1840,14 +1845,17 @@ export function search(query) {
     const nameAt = _plain(person.name).indexOf(needle);
     const other = [person.company, person.role, person.email, person.phone]
       .some((one) => _plain(one).includes(needle));
-    if (nameAt < 0 && !other) continue;
+    // The notes count too, and show the words that matched: «who was it who wanted the proofs in
+    // PDF?» is a question about what was written on a card, not about a name.
+    const notesAt = _plain(person.notes).indexOf(needle);
+    if (nameAt < 0 && !other && notesAt < 0) continue;
     hits.push({
       kind: "kindPerson",
       id: person.id,
       title: person.name,
       project: null,
       rank: nameAt >= 0 ? 1 : 3,
-      snippet: "",
+      snippet: nameAt < 0 && !other && notesAt >= 0 ? _snippet(person.notes, needle) : "",
       // Quello che distingue due persone con lo stesso nome, e che spiega perché è saltata fuori.
       meta: [person.company, person.role].filter(Boolean).join(" · "),
     });

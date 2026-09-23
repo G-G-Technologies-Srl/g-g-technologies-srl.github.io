@@ -165,7 +165,7 @@ export function build({ t, model, columns }) {
   // nome solo dice che la rubrica c'è; con tre dice a cosa serve.
   const CAST = [
     { who: "demoWho", company: "demoCompany", trade: "demoTrade", role: "demoRole",
-      email: "demoMail", phone: "demoPhone", does: ["ev_invite", "ev_artwork"] },
+      email: "demoMail", phone: "demoPhone", notes: "demoNotes", does: ["ev_invite", "ev_artwork"] },
     { who: "demoWho2", company: "demoCompany2", trade: "demoTrade2", role: "demoRole2",
       email: "demoMail2", does: ["ev_setup", "ev_pack"] },
     { who: "demoWho3", trade: "demoTrade3", role: "demoRole3", does: ["ev_rsvp", "ev_contacts"] },
@@ -178,6 +178,7 @@ export function build({ t, model, columns }) {
       role: t(one.trade),
       email: one.email ? t(one.email) : "",
       phone: one.phone ? t(one.phone) : "",
+      notes: one.notes ? t(one.notes) : "",
     });
     model.addPerson(project.id, person.id, t(one.role));
     for (const key of one.does) {

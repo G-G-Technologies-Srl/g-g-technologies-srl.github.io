@@ -224,17 +224,20 @@ test("un testo senza caselle non ne inventa", () => {
 test("la rubrica esce come foglio e come vCard", () => {
   const gente = [
     { name: "Marco Rossini", company: "Studio Rossi", role: "grafico",
-      email: "marco@studiorossi.it", phone: "0549 900100" },
+      email: "marco@studiorossi.it", phone: "0549 900100", notes: "Dopo le 17; mai il lunedì" },
     { name: "Giulia", company: "", role: "", email: "", phone: "" },
   ];
 
   const foglio = csv.contactsCsv(gente, {
-    labels: ["Nome", "Azienda", "Mestiere", "Email", "Telefono", "Progetti"],
+    labels: ["Nome", "Azienda", "Ruolo", "Email", "Telefono", "Progetti", "Note"],
     where: (one) => (one.name === "Marco Rossini" ? "Fiera" : ""),
   });
   const righe = foglio.replace(/^\ufeff/, "").trim().split("\r\n");
   assert.equal(righe.length, 3, "l'intestazione e due persone");
-  assert.equal(righe[1], "Marco Rossini;Studio Rossi;grafico;marco@studiorossi.it;0549 900100;Fiera");
+  // Le note in fondo, e fra virgolette perché contengono il separatore.
+  assert.equal(righe[1],
+    'Marco Rossini;Studio Rossi;grafico;marco@studiorossi.it;0549 900100;Fiera;"Dopo le 17; mai il lunedì"');
+  assert.equal(righe[2], "Giulia;;;;;;", "una scheda senza note ha la colonna vuota, non assente");
   assert.ok(foglio.startsWith("\ufeff"), "col segno d'ordine, o Excel non legge gli accenti");
 
   const carte = csv.vcards(gente);

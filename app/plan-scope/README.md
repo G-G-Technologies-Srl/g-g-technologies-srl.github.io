@@ -15,9 +15,9 @@ PWA installabile, export e import, anagrafica in `_src/apps.py`.
 1. `app/CLAUDE.md` — le regole del catalogo. È lungo: si legge l'indice e si aprono le sezioni che
    toccano la modifica in corso.
 2. Questo file.
-3. **Il commento in cima al modulo che stai per toccare.** Ogni file di `run/` si apre con dieci-venti
+3. **Il commento in cima al modulo che si sta per toccare.** Ogni file di `run/` si apre con dieci-venti
    righe che dicono cosa fa, cosa deliberatamente non fa, e quale difetto ha già prodotto la scelta
-   che ci trovi dentro. Sono la documentazione vera: qui sotto c'è la mappa, lì c'è il perché.
+   che ci si trova dentro. Sono la documentazione vera: qui sotto c'è la mappa, lì c'è il perché.
 
 In questo programma il terzo passo pesa più che altrove, perché **metà delle decisioni sono cose che
 l'app non fa**: niente grafo delle dipendenze, niente percorso critico, niente date che si
@@ -37,7 +37,7 @@ Due persone lavorano allo stesso progetto **senza un server**: l'app scrive il p
 una cartella scelta dalla persona — dentro Dropbox, OneDrive o Drive — e il sistema operativo lo
 porta all'altra, che lo legge e lo fonde. L'app non chiama nessuno.
 
-**Non è** un gestore di progetti che mantiene un modello del piano al posto tuo. La persona per cui è
+**Non è** un gestore di progetti che mantiene un modello del piano al posto di chi lo usa. La persona per cui è
 scritto tiene cinque eventi l'anno in un foglio di calcolo: quello che c'è è una colonna, una data e
 le due o tre cose che si scrivono su un foglietto.
 
@@ -141,6 +141,22 @@ Le regole, che si rompono facilmente:
 - la voce del menù compare **solo dove l'app ospite passa `newTask`**: Invoice Scope monta lo stesso
   editore e non la mostra.
 
+### La testa di un incontro
+
+Una pagina con `tipo: incontro` e una data valida mostra le sue proprietà **chiuse**: l'occhiello sopra
+il titolo dice cosa è, quando, con chi e — per una nota — com'è avvenuta («Telefonata del 23 set»);
+la riga sotto i tag porta il posto, cliccabile, e «Modifica i dettagli». Le righe `chiave: valore`
+restano nel riquadro, nascoste e non tolte (`_fold` in `pages.js`), perché `_readProps` rilegge ogni
+riga del riquadro: toglierle dal DOM le toglierebbe dal file al primo salvataggio. **Il Markdown non
+cambia**: cambia soltanto quello che se ne mostra.
+
+### Le note di una persona
+
+`notes` sta sulla scheda in rubrica, testo libero. Non viaggia con un progetto condiviso, e non per
+un filtro: `travelling` costruisce campo per campo quello che esce, e le note non sono fra quei campi.
+La ricerca le legge e ne mostra le parole trovate; il CSV della rubrica le mette nell'ultima colonna,
+la vCard nella `NOTE`, davanti ai progetti.
+
 `ui.js` tiene i pezzi piccoli: la striscia che offre di annullare, le date, le misure.
 
 ### La libreria condivisa
@@ -157,8 +173,8 @@ insieme a Invoice Scope — `plan-model.js`, `plan-markdown.js`, `plan-editor.js
 
 ## Le otto cose che non si rompono
 
-1. **`model.js` non conosce il browser, `db.js` non conosce i progetti.** Se ti trovi a importare
-   l'uno dall'altro, la cosa che stai scrivendo va in `app.js` o in un file suo.
+1. **`model.js` non conosce il browser, `db.js` non conosce i progetti.** Se ci si trova a importare
+   l'uno dall'altro, la cosa che si sta scrivendo va in `app.js` o in un file suo.
 2. **Niente si scrive da un bottone.** Ogni modifica entra nel modello, che disegna subito e accoda
    la scrittura dietro di sé. L'indicatore dice «Salvato» quando la coda è vuota, ed è l'unica cosa
    che l'app afferma sul disco.
@@ -178,7 +194,7 @@ insieme a Invoice Scope — `plan-model.js`, `plan-markdown.js`, `plan-editor.js
 8. **Nessuna richiesta di rete**, con l'unica eccezione dichiarata nella scheda: `gg/update.js` fa
    rileggere `sw.js`. La cartella condivisa è del sistema operativo, e il trasporto pure.
 
-E una che non è tecnica ma vale come le altre: **dove sei sta nell'URL.** Ricaricare ti rimette lì, e
+E una che non è tecnica ma vale come le altre: **dove ci si trova sta nell'URL.** Ricaricare riporta lì, e
 il tasto «indietro» fa la cosa che sembra fare — che conta il doppio una volta installata, dove quel
 tasto non c'è.
 
@@ -215,18 +231,18 @@ schermata si prova sopra un DOM finto, non aprendo la pagina.
 
 ## Ricette
 
-| Vuoi | Tocchi | E poi |
+| Per | Si tocca | E poi |
 |---|---|---|
-| un campo nuovo su progetto, pagina o attività | `gg/plan-model.js` | **è condiviso con Invoice Scope**: gira la versione di tutte e due |
+| un campo nuovo su progetto, pagina o attività | `gg/plan-model.js` | **è condiviso con Invoice Scope**: si gira la versione di tutte e due |
 | una vista nuova del piano | un file accanto a `plan.js`/`timeline.js`, che legge le stesse attività | non una seconda copia dei dati: non c'è niente da sincronizzare |
 | un formato in ingresso | una funzione in `importers.js` che restituisce `{project, pages, tasks, assets}` | da lì in poi è codice che esiste già ed è già provato |
 | un formato in uscita | un modulo puro (come `ics.js`), più una riga in `outputs.js` | `test/exchange.mjs` |
 | qualcosa nel file Markdown di una pagina | `gg/plan-markdown.js` | `parse(serialize(x)) == x` deve restare vero |
 | qualcosa nella cartella condivisa | `vault.js` per il formato, `sync.js` per la fusione | una cartella scritta da una versione vecchia deve restare leggibile |
-| un traguardo | `cheer.js` | leggi prima cosa quel file tiene fuori, e perché — gli incontri non sono pagine scritte, l'agenda non è un progetto |
+| un traguardo | `cheer.js` | prima si legge cosa quel file tiene fuori, e perché — gli incontri non sono pagine scritte, l'agenda non è un progetto |
 | un elenco di progetti da mostrare o da contare | `plainProjects()`, non `liveProjects()` | l'agenda sta nella seconda e non nella prima |
 | una parola | `i18n.js`, **entrambe le lingue nella stessa modifica**, una chiave per riga | `check_apps.py` legge il file con una espressione regolare |
-| un file nuovo in `run/` | il file + l'elenco `ASSETS` in `sw.js` | e gira la versione |
+| un file nuovo in `run/` | il file + l'elenco `ASSETS` in `sw.js` | e si gira la versione |
 
 **Ogni file nuovo comincia con l'intestazione di licenza** (`// Copyright 2026 G&G Technologies
 S.r.l. — SPDX-License-Identifier: Apache-2.0`) e con il commento che dice perché esiste.
@@ -240,14 +256,14 @@ S.r.l. — SPDX-License-Identifier: Apache-2.0`) e con il commento che dice perc
       vecchia, senza errori e per sempre. `_check_version_moved` lo verifica
 - [ ] `ASSETS` in `sw.js` elenca esattamente quello che l'app importa, `_lib/` compreso
 - [ ] Le chiavi italiane e inglesi di `i18n.js` coincidono, una per riga
-- [ ] `python3 _src/check_apps.py` passa; se hai toccato la scheda, anche `build.py` e `check_site.py`
-- [ ] Le prove sopra passano — in particolare `markdown`, `model`, `pack` e `vault` se hai toccato il
+- [ ] `python3 _src/check_apps.py` passa; se si è toccata la scheda, anche `build.py` e `check_site.py`
+- [ ] Le prove sopra passano — in particolare `markdown`, `model`, `pack` e `vault` se si sono toccati il
       testo, il modello o quello che esce
-- [ ] Il giro completo funziona: esporta, reimporta, e ottieni la stessa cosa
+- [ ] Il giro completo funziona: esportare e reimportare restituisce la stessa cosa
 - [ ] Provata **davvero**: nelle due lingue, nei due temi (con il chiaro impostato *prima* di
       aprirla), installata in finestra `standalone`, e su un telefono vero
 - [ ] Nessuna richiesta di rete nel pannello di rete, a scheda aperta
-- [ ] Se hai toccato `_lib/`: girata anche la versione di **Invoice Scope**
+- [ ] Se si è toccato `_lib/`: girata anche la versione di **Invoice Scope**
 
 La lista completa, con le voci che riguardano la scheda e il sito, è in «Prima di pubblicare un'app»
 dentro `app/CLAUDE.md`.

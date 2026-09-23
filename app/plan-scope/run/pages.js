@@ -22,6 +22,8 @@ import { el, node, button, fill, shortDate, longDate, tagHue } from "./ui.js";
 
 let on = { pageId: () => null, body: () => "", openPage() {}, openPerson() {}, told() {}, openTask() {} };
 let head = { props: {}, extra: [] };    // the frontmatter of the page on screen; the editor holds the body
+let unfolded = false;                   // a meeting's own rows are open for editing
+let visible = true;                     // the head is shown: the source view hides it
 
 // The table's state: one filter at a time — a tag, or a key and a value — and the sort column.
 // One filter and not a query: the table is for finding a page in thirty, not for reporting.
@@ -95,28 +97,116 @@ function _paintKind() {
   const meeting = page ? model.meetingsOf(page.projectId).find((one) => one.page.id === page.id) : null;
   box.hidden = !meeting;
   box.classList.toggle("ahead", Boolean(meeting && model.meetingAhead(meeting)));
-  if (!meeting) return;
+  if (!meeting) {
+    _paintFacts(null);
+    return;
+  }
   const today = model.todayISO();
   const days = model.daysBetween(today, meeting.date);
   let words;
+  // How it happened, when the note said so: «Telefonata del 23 set» reads as what it was, where
+  // «Incontro del 23 set» called every call a meeting.
+  const channel = _channel();
   if (model.meetingAhead(meeting)) {
     const when = meeting.time
       ? tf("kindWhenAt", { day: longDate(meeting.date), time: meeting.time })
       : longDate(meeting.date);
     const far = days === 0 ? t("dueToday") : days === 1 ? t("dueTomorrow")
       : tf("eventIn", { n: num(days, 0) });
-    words = [t("kindAppointment"), when, far];
+    words = [t("kindAppointment"), ...(channel ? [channel.toLowerCase()] : []), when, far];
+  } else if (channel) {
+    words = [tf("kindRecordAs", { what: channel, day: longDate(meeting.date) })];
   } else {
     words = [tf("kindRecord", { day: longDate(meeting.date) })];
   }
   // Le persone in fondo, una per una e cliccabili: il nome porta alla scheda in rubrica, che è
   // dove si trova il telefono di chi si sta per incontrare.
   const pieces = [node("span", "", words.join(" · "))];
-  for (const name of _splitNames(meeting.with)) {
-    pieces.push(node("span", "", "·"));
-    pieces.push(button("who", name, () => on.openPerson(name), { label: t("propOpenPerson") }));
-  }
+  const names = _splitNames(meeting.with);
+  if (names.length) pieces.push(node("span", "", `· ${t("kindWith")}`));
+  names.forEach((name, index) => {
+    // The comma travels with the name before it, so a line that wraps never starts with one.
+    const who = node("span", "who-one");
+    who.append(button("who", name, () => on.openPerson(name), { label: t("propOpenPerson") }));
+    if (index < names.length - 1) who.append(",");
+    pieces.push(who);
+  });
   fill(box, pieces);
+  _paintFacts(meeting);
+}
+
+/** The channel written in the head, capitalised as a word that opens a line: «Telefonata». */
+function _channel() {
+  const said = String(head.props[t("propChannel")] || head.props.canale || head.props.channel || "").trim();
+  return said ? said.charAt(0).toUpperCase() + said.slice(1) : "";
+}
+
+/**
+ * Il resto di un incontro, detto in una riga, e il comando che apre le righe vere.
+ *
+ * Sopra il titolo l'occhiello dice già cosa, quando e con chi. Qui sta il posto — un link della
+ * web-call o un indirizzo, cliccabile — e «Modifica», che apre le proprietà come sono scritte nel
+ * file. Chiuse, `tipo: incontro` e `data: 2026-09-21` non si vedono: erano il formato del file
+ * esposto a chi voleva soltanto un appuntamento, con la data scritta due volte, in cifre e nel
+ * selettore. Il file non cambia: cambia soltanto quello che se ne mostra.
+ */
+function _paintFacts(meeting) {
+  const box = el("pageFacts");
+  if (!box) return;
+  box.hidden = !meeting || !visible;
+  if (!meeting) {
+    _fold(false);
+    return;
+  }
+  const pieces = [];
+  if (meeting.where) {
+    const target = _placeLink(meeting.where);
+    if (target) {
+      // Without the scheme: «meet.google.com/abc» is what a person reads, «https://» is noise.
+      const link = node("a", "place", meeting.where.replace(/^https?:\/\//i, ""));
+      link.href = target;
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.title = t("propOpenWhere");
+      const go = node("span", "place-go", "↗");
+      go.setAttribute("aria-hidden", "true");
+      pieces.push(link, go);
+    } else {
+      pieces.push(node("span", "place", meeting.where));
+    }
+  }
+  pieces.push(node("span", "spacer"));
+  const toggle = button("ghost small", t(unfolded ? "meetingFold" : "meetingUnfold"), () => {
+    unfolded = !unfolded;
+    _paintFacts(meeting);
+  });
+  toggle.setAttribute("aria-expanded", unfolded ? "true" : "false");
+  toggle.setAttribute("aria-controls", "pageProps");
+  pieces.push(toggle);
+  fill(box, pieces);
+  _fold(!unfolded);
+}
+
+/**
+ * Le righe di un incontro, chiuse o aperte.
+ *
+ * Nascoste e non tolte: `_readProps` rilegge ogni riga del riquadro, anche quelle che non si
+ * vedono, quindi chiuderle non toglie niente dal file. Si decide sulla chiave scritta in quel
+ * momento, non su quella di quando la riga è nata, perché una chiave si può riscrivere.
+ */
+function _fold(folded) {
+  const box = el("pageProps");
+  if (!box) return;
+  let shown = 0;
+  for (const row of box.querySelectorAll(".prop")) {
+    const key = String(row.querySelector(".prop-key").value || "").trim().toLowerCase();
+    row.hidden = folded && MEETING_KEYS.includes(key);
+    if (!row.hidden) shown += 1;
+  }
+  // An empty box still takes its margin: with every row folded away it goes, and comes back with
+  // the first property that is not the meeting's own.
+  box.hidden = !visible || shown === 0;
+  el("propAdd").hidden = !visible || folded;
 }
 
 /**
@@ -161,6 +251,8 @@ function _paintProps() {
     model.setMarkdown(pageId, md.withFrontmatter(head.props, on.body(), head.extra));
     _paintKind();
   }, {}, { key: name, focus: false });
+  // Painted before the rows existed: fold again, so every row follows the same rule.
+  _fold(!el("pageFacts").hidden && !unfolded);
 }
 
 /** Le chiavi già in uso, dentro una `datalist`: scrivere la seconda volta non è ricordarsi. */
@@ -189,6 +281,10 @@ const WHERE_KEYS = ["dove", "where", "luogo", "posto", "place"];
    accanto al campo sta una tendina con chi lavora al progetto e la rubrica, da cui un nome si
    aggiunge senza riscriverlo. */
 const PEOPLE_KEYS = ["con", "with", "chi", "who", "partecipanti", "attendees"];
+/* The keys a meeting is made of, in the two languages. On a meeting page they are read in the line
+   above the title and in the row under the tags, and their raw rows fold away until «Edit». */
+const MEETING_KEYS = ["tipo", "type", "data", "date", "ora", "orario", "time", "con", "with",
+  "dove", "where", "canale", "channel"];
 const YES_NO = [["sì", "no"], ["si", "no"], ["true", "false"], ["yes", "no"], ["vero", "falso"]];
 
 /**
@@ -492,6 +588,17 @@ function _readProps(box, save) {
   save(props);
 }
 
+/** «+»: a new row under the page's properties, saved like the others. */
+function _addPageProp() {
+  addProp(el("pageProps"), (props) => {
+    const pageId = on.pageId();
+    if (!pageId) return;
+    head = { ...head, props };
+    model.setMarkdown(pageId, md.withFrontmatter(head.props, on.body(), head.extra));
+    _paintKind();
+  });
+}
+
 // -----------------------------------------------------------------------------------------------------------------
 //  p u b l i c
 // -----------------------------------------------------------------------------------------------------------------
@@ -502,18 +609,18 @@ function _readProps(box, save) {
  */
 export function setup(handlers) {
   on = { ...on, ...handlers };
-  el("propAdd").addEventListener("click", () => addProp(el("pageProps"), (props) => {
-    const pageId = on.pageId();
-    if (!pageId) return;
-    head = { ...head, props };
-    model.setMarkdown(pageId, md.withFrontmatter(head.props, on.body(), head.extra));
-  }));
+  el("propAdd").addEventListener("click", () => {
+    el("pageProps").hidden = false;
+    _addPageProp();
+  });
 }
 
 /** Read the head off a page's Markdown, paint the row, and hand back the body for the editor. */
 export function load(markdown) {
   const split = md.frontmatter(markdown);
   head = { props: split.props, extra: split.extra };
+  // Every page opens with a meeting's rows folded: «Edit» is a choice made on one page, not a mode.
+  unfolded = false;
   _paintProps();
   return split.body;
 }
@@ -524,9 +631,12 @@ export function wrap(body) {
 }
 
 /** The properties row, shown with the blocks and hidden with the source view. */
-export function show(visible) {
+export function show(shown) {
+  visible = shown;
   el("pageProps").hidden = !visible;
   el("propAdd").hidden = !visible;
+  // A meeting keeps its own rule: the facts line and the folded rows come back as they were left.
+  _paintKind();
 }
 
 /**

@@ -120,7 +120,7 @@ export function exportContactsCsv() {
   const people = model.liveContacts();
   if (!people.length) return;
   const labels = [t("personName"), t("personCompany"), t("personRole"), t("personEmail"),
-    t("personPhone"), t("personProjectsTitle")];
+    t("personPhone"), t("personProjectsTitle"), t("personNotes")];
   const text = csv.contactsCsv(people, {
     labels,
     sep: lang() === "it" ? ";" : ",",
@@ -138,8 +138,14 @@ export function exportContactsVcf() {
   const text = csv.vcards(people, {
     // La nota porta dove lavora: in una vCard non c'è un campo per «i progetti», e perdere quel
     // dato nel passaggio sarebbe perdere l'unica cosa che questa rubrica sa in più.
-    note: (one) => model.projectsOfContact(one.uid || one.id)
-      .map(({ project, role }) => (role ? `${project.name} (${role})` : project.name)).join(", "),
+    // A vCard has one NOTE, so the card's own notes come first and the projects follow under
+    // their heading: without the heading a list of names after a paragraph reads as part of it.
+    note: (one) => {
+      const where = model.projectsOfContact(one.uid || one.id)
+        .map(({ project, role }) => (role ? `${project.name} (${role})` : project.name)).join(", ");
+      return [String(one.notes || "").trim(), where ? `${t("personProjectsTitle")}: ${where}` : ""]
+        .filter(Boolean).join("\n\n");
+    },
   });
   pack.save(`${pack.safeName(t("rubricaTitle"), "rubrica")}.vcf`, text, "text/vcard;charset=utf-8");
 }

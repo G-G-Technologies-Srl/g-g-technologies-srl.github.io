@@ -1185,6 +1185,7 @@ test("di una persona esce il nome e il ruolo, e nient'altro: la rubrica non viag
     company: "Studio Rossi",
     email: "marco@studiorossi.it",
     phone: "0549 900100",
+    notes: "Preferisce essere chiamato dopo le 17.",
   });
   model.addPerson(fiera.id, marco.id, "capoprogetto");
 
@@ -1196,7 +1197,7 @@ test("di una persona esce il nome e il ruolo, e nient'altro: la rubrica non viag
   // prova che regge e una che passa finché qualcuno non aggiunge un campo alla scheda.
   assert.deepEqual(Object.keys(uscita.project.people[0]).sort(), ["name", "role", "uid"]);
   const scritto = JSON.stringify(uscita);
-  for (const recapito of ["marco@studiorossi.it", "0549 900100", "Studio Rossi"]) {
+  for (const recapito of ["marco@studiorossi.it", "0549 900100", "Studio Rossi", "dopo le 17"]) {
     assert.ok(!scritto.includes(recapito), `«${recapito}» non esce`);
   }
 });
@@ -1740,6 +1741,30 @@ test("la ricerca trova anche le persone, per nome e per recapito", () => {
   const via = model.contactByName("Marco Verdi");
   model.trashContact(via.id);
   assert.deepEqual(model.search("verdi"), []);
+});
+
+test("le note di una persona stanno sulla sua scheda, si annullano e si cercano", () => {
+  const anna = model.createContact({ name: "Anna Rossi" });
+  assert.equal(anna.notes, "", "una scheda nuova ha le note vuote, non assenti");
+  const step = model.updateContact(anna.id, { notes: "Vuole le bozze in PDF." });
+  assert.equal(model.contact(anna.id).notes, "Vuole le bozze in PDF.");
+  // Nessun progetto cambia: le note non sono un nome, e non toccano chi la nomina.
+  assert.ok(!written.some(({ kind }) => kind === "project"));
+  step.undo();
+  assert.equal(model.contact(anna.id).notes, "");
+
+  model.updateContact(anna.id, { notes: "Vuole le bozze in PDF, con le modifiche a margine." });
+  const trovate = model.search("bozze").filter((hit) => hit.kind === "kindPerson");
+  assert.deepEqual(trovate.map((hit) => hit.title), ["Anna Rossi"]);
+  assert.match(trovate[0].snippet, /bozze in PDF/, "e mostra le parole trovate");
+  // Trovata per nome, la riga non ripete le note: il nome basta a dire perché è lì.
+  assert.equal(model.search("anna").find((hit) => hit.kind === "kindPerson").snippet, "");
+
+  // Una scheda adottata da un progetto arrivato da fuori nasce con le stesse caselle delle altre.
+  const fiera = model.createProject({ name: "Fiera" });
+  model.hydrate({ projects: [{ ...fiera, people: [{ uid: "u-luca", name: "Luca", role: "" }] }] });
+  const luca = model.adoptPerson(fiera.id, "u-luca");
+  assert.equal(luca.notes, "");
 });
 
 console.log(`model: ${passed} prove passate`);

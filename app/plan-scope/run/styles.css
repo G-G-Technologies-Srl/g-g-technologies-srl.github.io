@@ -145,6 +145,9 @@ body.fixed { height: 100%; overflow: hidden; }
 #personCard label { font-size: 13px; color: var(--muted); margin-bottom: -4px; }
 #personCard input { width: min(360px, 100%); justify-self: start; }
 #personCard input#personPhone { width: min(220px, 100%); }
+/* As wide as the column allows, and growing with what is written where the browser can: a note of
+   four lines in a box of two hides half of itself behind a scroll bar. */
+#personCard textarea { width: min(560px, 100%); justify-self: start; min-height: 4.5em; resize: vertical; field-sizing: content; }
 
 #personSearch { width: min(360px, 100%); }
 
@@ -2087,6 +2090,23 @@ dialog.search input[type="search"] { width: 100%; font-size: 16px; }
   cursor: pointer;
 }
 .page-kind .who:hover { color: var(--text); }
+.page-kind .who-one { display: inline-flex; }
+
+/* The rest of a meeting in one quiet line inside the head: the place, and the command that opens
+   the rows. The place keeps one line and ends in an ellipsis — a call link is a hundred characters
+   of which the host is the part that says anything. */
+.page-facts { display: flex; align-items: center; gap: 8px; margin: 2px 0 2px; font-size: 13px; min-width: 0; }
+.page-facts .place {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+}
+.page-facts a.place { color: var(--accent-text); text-decoration: underline; text-underline-offset: 3px; }
+.page-facts .place-go { flex: none; margin-left: -4px; color: var(--accent-text); }
+.page-facts .spacer { flex: 1 1 auto; }
+.page-facts button { flex: none; font-size: 12px; }
 .page-kind.ahead { color: var(--accent-text); }
 .page-kind:not(.ahead)::before { background: var(--border-strong); }
 
@@ -2278,7 +2298,7 @@ body.printing .page-props { display: none; }
    «chiave : valore», e una riga larga quanto lo schermo mette il selettore della data a mezzo metro
    dalla sua chiave. */
 .project-head { max-width: 720px; margin-top: 10px; }
-body.printing .props, body.printing #propAdd { display: none; }
+body.printing .props, body.printing #propAdd, body.printing .page-facts button { display: none; }
 
 /* the pages as a table */
 .table-wrap { flex: 1 1 auto; overflow: auto; padding: 14px 18px 40px; }

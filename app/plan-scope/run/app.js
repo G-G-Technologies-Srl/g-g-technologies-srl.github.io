@@ -79,15 +79,15 @@ const PLAN_VIEWS = { kanban: "viewKanban", calendar: "viewCalendar", timeline: "
 const IN_PROJECT = ["project", "plan", "pages", "page"];
 // I quattro modi di guardare un progetto, e il pulsante di ognuno.
 const VIEWS = [["goBoard", "kanban"], ["goCalendar", "calendar"], ["goTimeline", "timeline"], ["goPages", "pages"]];
-// I campi della scheda di una persona, e il campo del record a cui ognuno corrisponde.
 /** I canali di una nota presa dalla scheda di una persona, nell'ordine in cui si offrono. */
 const NOTE_CHANNELS = ["call", "meeting", "email", "message"];
 
 /** Quante persone della rubrica compaiono come pastiglie sotto «con chi», oltre a chi lavora qui. */
 const RUBRICA_CHIPS = 8;
 
+// I campi della scheda di una persona, e il campo del record a cui ognuno corrisponde.
 const PERSON_FIELDS = [["personName", "name"], ["personCompany", "company"], ["personRole", "role"],
-  ["personEmail", "email"], ["personPhone", "phone"]];
+  ["personEmail", "email"], ["personPhone", "phone"], ["personNotes", "notes"]];
 // Che il benvenuto sia già stato visto è un fatto di questo browser, non dei dati: sta anche qui.
 const WELCOMED_KEY = "gg.plan-scope.welcomed";
 // Quante pagine sono state aperte su questo browser, e la scelta esplicita di chi ha detto se la

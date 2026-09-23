@@ -102,7 +102,8 @@ export function tasksCsv(tasks, { columns = [], labels, sep = ";", done = () => 
 export function contactsCsv(contacts, { labels, sep = ";", where = () => "" } = {}) {
   const rows = [labels.map((cell) => _cell(cell, sep)).join(sep)];
   for (const one of contacts) {
-    rows.push([one.name, one.company, one.role, one.email, one.phone, where(one)]
+    // The notes last: the only free text of the row, and the column a spreadsheet lets grow.
+    rows.push([one.name, one.company, one.role, one.email, one.phone, where(one), one.notes]
       .map((cell) => _cell(cell, sep)).join(sep));
   }
   return `\ufeff${rows.join("\r\n")}\r\n`;

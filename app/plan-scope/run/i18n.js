@@ -49,6 +49,10 @@ const IT = {
   kindAppointment: "Appuntamento",
   kindWhenAt: "{day} alle {time}",
   kindRecord: "Incontro del {day}",
+  kindRecordAs: "{what} del {day}",
+  kindWith: "con",
+  meetingUnfold: "Modifica i dettagli",
+  meetingFold: "Chiudi i dettagli",
   meetTitle: "Un appuntamento",
   meetWhat: "Di cosa si tratta",
   meetDate: "Il giorno",
@@ -120,8 +124,10 @@ const IT = {
   personRole: "Ruolo",
   personEmail: "Email",
   personPhone: "Telefono",
+  personNotes: "Note",
+  personNotesHint: "Per esempio: preferisce essere chiamata dopo le 17.",
   personPrivacy: "Questi dati restano qui. Condividendo un progetto viaggiano solo il nome e il "
-    + "ruolo che ha in quel progetto: i recapiti non escono da questo computer.",
+    + "ruolo che ha in quel progetto: recapiti e note non escono da questo computer.",
   personTrash: "Sposta nel cestino",
   personTrashAsk: "Sposto «{name}» nel cestino. I progetti in cui lavora continuano a dire il suo "
     + "nome, e gli incontri restano dove sono. Vado avanti?",
@@ -185,8 +191,9 @@ const IT = {
   errorText: "Ricarica la pagina. Se succede di nuovo, il lavoro è comunque al suo posto.",
   retry: "Ricarica",
   noStoreTitle: "Questo browser non può ricordare niente",
-  noStore: "Questa è una finestra privata, oppure il browser ha lo spazio dati disattivato. L'app si "
-    + "può usare, ma quello che si scrive sparisce chiudendola: esporta prima di uscire.",
+  noStore: "Questa è una finestra privata, oppure il browser ha lo spazio dati disattivato. "
+    + "L'app si può usare, ma quello che si scrive sparisce chiudendola: conviene esportare "
+    + "prima di chiuderla.",
 
   // home
   homeTitle: "I vostri progetti",
@@ -227,9 +234,9 @@ const IT = {
   folderToOpenMany: "{n} da aprire",
   folderForgetAsk: "Tolgo «{folder}» dall'elenco. I file restano dove sono; i progetti che stanno "
     + "lì dentro smettono di essere condivisi. Vado avanti?",
-  folderLinkedOne: "Condiviso in una cartella · sei {who} · letta alle {time}",
-  folderLinkedMany: "Condivisi in {n} cartelle · sei {who} · lette alle {time}",
-  folderNeverRead: "Condivisi in {n} cartelle · sei {who} · non ancora lette",
+  folderLinkedOne: "Condiviso in una cartella · a nome di {who} · letta alle {time}",
+  folderLinkedMany: "Condivisi in {n} cartelle · a nome di {who} · lette alle {time}",
+  folderNeverRead: "Condivisi in {n} cartelle · a nome di {who} · non ancora lette",
   folderPrompt: "Aspettano il vostro permesso: {names}. Riprendile una volta ricordando la scelta, "
     + "oppure installa l'app: allora il browser non lo chiede più.",
   whoAsk: "Come vi chiamate? Il nome lo vede chi apre le cartelle condivise.",
@@ -239,7 +246,8 @@ const IT = {
   shareOther: "Un'altra cartella…",
   shareNowhere: "Serve una cartella: senza, non c'è dove scriverlo.",
   projectCopyOf: "{name} (seconda copia)",
-  openedCopy: "«{name}» è arrivato. Di «{other}» avevi già una copia qui: restano due progetti separati, e quello che c'era non è stato toccato.",
+  openedCopy: "«{name}» è arrivato. Di «{other}» qui c'era già una copia: restano due progetti "
+    + "separati, e quello che c'era non è stato toccato.",
   opened: "«{name}» è arrivato. Da adesso si aggiorna da solo.",
   openedNothing: "In questa cartella non c'è un progetto di Plan Scope.",
   sharedToggle: "Condiviso nella cartella",
@@ -259,9 +267,9 @@ const IT = {
 
   // ---- la cartella locale: la copia di tutto, scritta dall'app invece che da chi si ricorda
   backupTitle: "Copia automatica in una cartella",
-  backupHint: "Scegli una cartella e l'app ci scrive da sola tutto quello che tieni qui: gli stessi "
-    + "dati di «Esporta tutto», più le immagini delle pagine. Da lì in poi si aggiorna a ogni "
-    + "modifica, e non c'è niente da premere.",
+  backupHint: "Scegli una cartella e l'app ci scrive da sola tutto quello che c'è qui: gli "
+    + "stessi dati di «Esporta tutto», più le immagini delle pagine. Da lì in poi si aggiorna a "
+    + "ogni modifica, e non c'è niente da premere.",
   backupNote: "Tiene anche una copia al giorno degli ultimi trenta giorni, così una modifica sbagliata "
     + "si riprende da com'era ieri. Se la cartella sta dentro Dropbox, iCloud o OneDrive, la copia "
     + "arriva da sé sugli altri vostri computer. Questa è la copia personale: per lavorare in due c'è "
@@ -271,8 +279,8 @@ const IT = {
   backupUnlink: "Scollega la cartella",
   backupUnlinkAsk: "L'app smette di scrivere nella cartella. I file che ci sono restano dove sono. "
     + "Vado avanti?",
-  backupUnavailable: "Questo browser sa aprire una cartella con Chrome o Edge sul computer. Qui "
-    + "resta «Esporta tutto», che fa lo stesso file.",
+  backupUnavailable: "Questo browser non consente di scrivere in una cartella: serve Chrome o "
+    + "Edge sul computer. Qui resta «Esporta tutto», che produce lo stesso file.",
   backupNone: "Nessuna cartella collegata.",
   backupPrompt: "La cartella «{folder}» aspetta il vostro permesso: riprendila ricordando la scelta, "
     + "oppure installa l'app, e il browser non lo chiede più.",
@@ -289,9 +297,9 @@ const IT = {
   backupFoundAsk: "Questa cartella tiene già {n} copie, la più recente del {when}. "
     + "Cosa faccio?",
   backupFoundRestore: "Riporta qui la copia più recente",
-  backupFoundMine: "Scrivi nella cartella quello che ho qui",
+  backupFoundMine: "Scrivi nella cartella quello che c'è qui",
   backupCopies: "Le copie nella cartella",
-  backupCopiesNone: "La prima copia arriva appena colleghi la cartella.",
+  backupCopiesNone: "La prima copia arriva appena la cartella è collegata.",
   backupCopyLatest: "Copia corrente",
   backupRestore: "Riporta questa",
   backupRestoreAsk: "Riporto l'archivio com'era in questa copia. Quello che c'è adesso nell'app "
@@ -324,7 +332,7 @@ const IT = {
   backupAll: "Backup di tutto",
   openTrash: "Cestino",
   storageUsed: "Spazio usato: {size}",
-  storageTight: "Lo spazio sta per finire. Esporta i progetti a cui tieni.",
+  storageTight: "Lo spazio sta per finire. Conviene esportare i progetti importanti.",
   projectProgress: "{done} di {total}",
   projectLate: "{n} in ritardo",
   projectDueWeek: "{n} in scadenza",
@@ -415,7 +423,7 @@ const IT = {
   printHint: "Il PDF lo fa il browser: nella finestra di stampa scegli «Salva come PDF».",
   cardIcs: "Aggiungi al calendario (.ics)",
   cardGoogle: "Apri in Google Calendar",
-  calendarCopy: "È una copia: quello che cambi nel calendario non torna qui.",
+  calendarCopy: "È una copia: quello che si cambia nel calendario non torna qui.",
   icsNone: "Nessuna attività con una data.",
   csvColumn: "Colonna",
   csvTags: "Tag",
@@ -458,7 +466,7 @@ const IT = {
   // cartellino, e spuntarlo fa partire i coriandoli. Verificate nel codice prima di scriverle.
   fieldMilestoneHint: "Una data che conta. Sulla linea del tempo diventa un rombo su un giorno "
     + "solo invece di una barra, sulla bacheca e sul calendario porta un cartellino «Traguardo», "
-    + "e quando la spunti l'app fa festa.",
+    + "e, una volta spuntata, l'app lo celebra.",
   cardListsHint: "Una sottoattività è una carta vera, con la sua data e il suo responsabile, e "
     + "compare sulla bacheca. Una voce di checklist resta qui dentro.",
   checklistAdd: "Aggiungi una voce",
@@ -469,8 +477,8 @@ const IT = {
   priorityLow: "Bassa",
   priorityHigh: "Alta",
   fieldRepeat: "Si ripete",
-  fieldRepeatHint: "Quando la spunti, quella resta fatta e ne nasce una nuova, un periodo dopo. "
-    + "Non è una serie: sul calendario e sulla linea del tempo si vede sempre e solo la prossima.",
+  fieldRepeatHint: "Una volta spuntata, resta fatta e ne nasce una nuova, un periodo dopo. Non "
+    + "è una serie: sul calendario e sulla linea del tempo si vede sempre e solo la prossima.",
   repeatNever: "Mai",
   repeatDaily: "Ogni giorno",
   repeatWeekly: "Ogni settimana",
@@ -591,7 +599,7 @@ const IT = {
   callout_fatto: "Fatto",
   saveSaved: "Salvato",
   saveSaving: "Salvo…",
-  saveFailed: "Non sono riuscito a salvare. Esporta il progetto per non perdere niente.",
+  saveFailed: "Il salvataggio non è riuscito. Esporta il progetto per non perdere niente.",
   addImage: "Aggiungi un'immagine",
   exportPage: "Esporta come Markdown",
   imageTooBig: "L'immagine supera i {size}. Riducila prima, oppure esportala più leggera.",
@@ -688,102 +696,104 @@ const IT = {
   tpl_launch: "Lancio",
   tpl_launch_lead: "Cosa cambia per chi lo usa, e le due settimane dopo.",
   tpl_guide: "Guida",
-  tpl_guide_lead: "Quattro pagine da leggere nell'editor stesso, e quattro cose da spuntare. Poi si butta.",
+  tpl_guide_lead: "Quattro pagine da leggere nell'editor stesso, e quattro cose da spuntare. "
+    + "Poi si sposta nel cestino.",
   gd_page_write: "Scrivere",
-  gd_body_write: "Questa pagina è un documento vero: si può cambiare, e quello che si scrive si salva da solo, "
-    + "a ogni lettera. Non c'è un pulsante «salva».\n\n"
-    + "## I blocchi\n\nOgni riga è un blocco: un testo, un titolo, una voce di elenco. Per aggiungerne uno "
-    + "premi **/** su una riga vuota e scegli dall'elenco, oppure usa il **+** che compare a sinistra.\n\n"
-    + "Le scorciatoie di chi scrive in fretta, all'inizio di una riga vuota:\n\n"
-    + "- «# » fa un titolo grande, «## » uno medio, «### » uno piccolo\n"
-    + "- «- » fa un elenco, «1. » un elenco numerato, «[] » una checklist\n"
-    + "- «> » fa una citazione, «``` » un blocco di codice\n\n"
-    + "## Trasformare, spostare, formattare\n\nLa maniglia ⣿ accanto a un blocco lo sposta quando la si "
-    + "trascina, e apre «Trasforma in» quando la si preme: un testo diventa un titolo senza "
-    + "riscriverlo. Seleziona una "
-    + "parola e compare la barretta con **grassetto**, *corsivo*, ~~barrato~~, `codice` e collegamento — "
-    + "o usa Ctrl+B, Ctrl+I, Ctrl+E.\n\n"
-    + "## Collegare le pagine\n\nScrivi il titolo di una pagina fra doppie parentesi quadre, come "
-    + "[[Pianificare]], e diventa un collegamento. Se la pagina non c'è ancora, il collegamento è "
-    + "tratteggiato e il clic la crea. In fondo alla colonna di sinistra c'è anche **chi punta qui**.\n\n"
-    + "## Nominare le persone\n\nScrivi «@» e scegli chi: il nome resta nel testo come @Giulia, "
-    + "colorato, e il clic apre la sua scheda in rubrica. Un nome che in rubrica non c'è ci entra da "
-    + "solo alla chiusura della pagina. Nella sua scheda, la persona ritrova le pagine che la nominano.\n\n"
-    + "## L'albero delle pagine\n\nLa colonna di sinistra è l'indice del progetto. Da lì aggiungi una "
-    + "pagina o una sottopagina, e sposti quelle che ci sono: prendi una riga dalla maniglia ⠿ e "
-    + "trascinala. **Su e giù** scegli fra quali righe va; **a destra e a sinistra** scegli il "
-    + "livello: più a destra diventa un capitolo della riga sopra, più a sinistra risale fino al "
-    + "livello base. La linea compare esattamente dove atterrerà, con il suo rientro. Lo stesso dal "
-    + "menu ⋯ della pagina: «Sposta sotto…», «Sposta su», «Sposta giù». Il titolo si cambia "
-    + "scrivendo nel campo in alto.\n\n"
-    + "> [!nota]\n> Le pagine hanno dei **tag**, nella riga sotto il titolo: servono a ritrovarle con la "
-    + "ricerca (Ctrl+K) e a raggrupparle nell'elenco del progetto. Sotto i tag ci sono le **proprietà** — "
-    + "tipo, stato, cliente, quello che serve — e «Vedi come tabella», nel progetto, le mette in colonna.\n\n"
-    + "## Immagini, allegati e tabelle\n\n«Aggiungi un'immagine» in alto mette la figura dove sta il "
-    + "cursore; «Allega un file» fa lo stesso con un PDF o un foglio, che resta dentro il progetto. "
-    + "In una tabella, Invio va alla riga sotto e Tab alla cella accanto.\n\n"
-    + "## Da Word\n\nIncolla da Word o da Google Docs: titoli, elenchi e tabelle arrivano come "
-    + "blocchi, non come righe.\n\n"
-    + "## Le versioni\n\nOgni dieci minuti di scrittura l'app tiene un'istantanea della pagina, e ne "
-    + "tiene trenta. Menu ⋯ → «Versioni»: scegli un momento, guarda che cosa cambierebbe paragrafo per "
-    + "paragrafo, e volendo torna lì.\n\n"
-    + "| Cosa | Dove |\n| --- | --- |\n| Il sorgente Markdown | menu ⋯ → «Vedi il sorgente» |\n"
-    + "| La pagina stampata o in PDF | menu ⋯ → «Stampa o salva in PDF» |\n",
+  gd_body_write: "Questa pagina è un documento vero: si può modificare, e quello che si scrive "
+    + "si salva da solo, a ogni lettera. Non c'è un pulsante «salva».\n\n"
+    + "## I blocchi\n\nOgni riga è un blocco: un testo, un titolo, una voce di elenco. Per "
+    + "aggiungerne uno si preme **/** su una riga vuota e si sceglie dall'elenco, oppure si usa "
+    + "il **+** che compare a sinistra.\n\nLe scorciatoie di chi scrive in fretta, all'inizio di "
+    + "una riga vuota:\n\n- «# » fa un titolo grande, «## » uno medio, «### » uno piccolo\n- «- "
+    + "» fa un elenco, «1. » un elenco numerato, «[] » una checklist\n- «> » fa una citazione, "
+    + "«``` » un blocco di codice\n\n## Trasformare, spostare, formattare\n\n"
+    + "La maniglia ⣿ accanto a un blocco lo sposta quando la si trascina, e apre «Trasforma in» "
+    + "quando la si preme: un testo diventa un titolo senza riscriverlo. Selezionando una parola "
+    + "compare la barretta con **grassetto**, *corsivo*, ~~barrato~~, `codice` e collegamento; "
+    + "le stesse cose si ottengono con Ctrl+B, Ctrl+I, Ctrl+E.\n\n"
+    + "## Collegare le pagine\n\nIl titolo di una pagina scritto fra doppie parentesi quadre, "
+    + "come [[Pianificare]], diventa un collegamento. Se la pagina non c'è ancora, il "
+    + "collegamento è tratteggiato e il clic la crea. In fondo alla colonna di sinistra c'è "
+    + "anche **chi punta qui**.\n\n## Nominare le persone\n\n"
+    + "Dopo «@» si sceglie la persona: il nome resta nel testo come @Giulia, colorato, e il clic "
+    + "apre la sua scheda in rubrica. Un nome che in rubrica non c'è ci entra da solo alla "
+    + "chiusura della pagina. Nella sua scheda, la persona ritrova le pagine che la nominano.\n\n"
+    + "## L'albero delle pagine\n\nLa colonna di sinistra è l'indice del progetto. Da lì si "
+    + "aggiunge una pagina o una sottopagina, e si spostano quelle che ci sono trascinando una "
+    + "riga dalla maniglia ⠿. **Su e giù** si sceglie fra quali righe va; **a destra e a "
+    + "sinistra**, il livello: più a destra diventa un capitolo della riga sopra, più a sinistra "
+    + "risale fino al livello base. La linea compare esattamente dove atterrerà, con il suo "
+    + "rientro. Lo stesso dal menu ⋯ della pagina: «Sposta sotto…», «Sposta su», «Sposta giù». "
+    + "Il titolo si cambia scrivendo nel campo in alto.\n\n"
+    + "> [!nota]\n> Le pagine hanno dei **tag**, nella riga sotto il titolo: servono a "
+    + "ritrovarle con la ricerca (Ctrl+K) e a raggrupparle nell'elenco del progetto. Sotto i tag "
+    + "ci sono le **proprietà** — tipo, stato, cliente, quello che serve — e «Vedi come "
+    + "tabella», nel progetto, le mette in colonna.\n\n"
+    + "## Immagini, allegati e tabelle\n\n«Aggiungi un'immagine» in alto mette la figura dove "
+    + "sta il cursore; «Allega un file» fa lo stesso con un PDF o un foglio, che resta dentro il "
+    + "progetto. In una tabella, Invio va alla riga sotto e Tab alla cella accanto.\n\n"
+    + "## Da Word\n\nIl testo incollato da Word o da Google Docs arriva a blocchi: titoli, "
+    + "elenchi e tabelle restano tali, e non diventano righe di testo.\n\n"
+    + "## Le versioni\n\nOgni dieci minuti di scrittura l'app tiene un'istantanea della pagina, "
+    + "e ne tiene trenta. Dal menu ⋯ → «Versioni» si sceglie un momento, si vede che cosa "
+    + "cambierebbe paragrafo per paragrafo e, volendo, si torna a quella versione.\n\n"
+    + "| Cosa | Dove |\n| --- | --- |\n| Il sorgente Markdown | menu ⋯ → «Vedi il sorgente» |\n| "
+    + "La pagina stampata o in PDF | menu ⋯ → «Stampa o salva in PDF» |\n",
   gd_page_plan: "Pianificare",
-  gd_body_plan: "Ogni progetto ha un **piano**: le attività, su una bacheca a colonne, in un calendario e "
-    + "su una timeline. Sono tre viste della stessa lista.\n\n"
-    + "## La bacheca\n\nUna carta per attività. Le colonne sono vostre: rinominale, aggiungine una, togli "
-    + "quelle vuote. L'ultima è quella che segna il fatto — l'anello sulla dashboard conta quello.\n\n"
-    + "- Trascina una carta per cambiarle colonna\n- Il quadratino la segna fatta\n"
-    + "- Il clic apre la scheda: date, note, chi se ne occupa, priorità, tag, checklist, e cosa aspetta\n"
-    + "- Maiusc+clic seleziona più carte: la barra in basso le sposta, le assegna, le tagga in una volta\n\n"
-    + "## Sottoattività e checklist\n\nNella scheda, «Sottoattività» sono attività vere — con data e "
-    + "responsabile — appese a questa, e compaiono rientrate sotto la carta. La **checklist** è per le "
-    + "cose piccole; una voce che cresce ha «Diventa attività».\n\n"
-    + "## Quello che si ripete\n\n«Si ripete», nella scheda sotto «Mostra altro»: spuntata una, nasce "
-    + "la prossima con la data avanzata.\n\n"
-    + "## Le date\n\nUna scadenza è un giorno, non un'ora. Nel calendario e nella timeline le attività si "
-    + "spostano e si allungano trascinandole. Dalla scheda, «Aggiungi al calendario» porta la scadenza nel "
-    + "vostro calendario, come copia.\n\n"
-    + "## Le attività in serie\n\nUn elenco scritto altrove — in Word, in una mail, da un assistente — "
-    + "entra tutto insieme: menu ⋯ del piano → «Incolla un elenco di attività», oppure Ctrl+V sulla "
-    + "bacheca. Una riga, una carta; «@2026-09-20» è la scadenza, «#stampa» un tag.\n\n"
-    + "> [!fatto]\n> Prova adesso: apri il piano di questa guida e sposta «Spostare una carta» nella "
-    + "colonna «Fatto».\n",
+  gd_body_plan: "Ogni progetto ha un **piano**: le attività, su una bacheca a colonne, in un "
+    + "calendario e su una timeline. Sono tre viste della stessa lista.\n\n"
+    + "## La bacheca\n\nUna carta per attività. Le colonne sono vostre: si possono rinominare, "
+    + "aggiungere e, quando sono vuote, togliere. L'ultima è quella che segna il fatto — "
+    + "l'anello sulla dashboard conta quello.\n\n- Una carta trascinata cambia colonna\n- Il "
+    + "quadratino la segna fatta\n- Il clic apre la scheda: date, note, chi se ne occupa, "
+    + "priorità, tag, checklist, e cosa aspetta\n- Maiusc+clic seleziona più carte: la barra in "
+    + "basso le sposta, le assegna, le tagga in una volta\n\n"
+    + "## Sottoattività e checklist\n\nNella scheda, «Sottoattività» sono attività vere — con "
+    + "data e responsabile — appese a questa, e compaiono rientrate sotto la carta. La "
+    + "**checklist** è per le cose piccole; una voce che cresce ha «Diventa attività».\n\n"
+    + "## Quello che si ripete\n\n«Si ripete», nella scheda sotto «Mostra altro»: spuntata una, "
+    + "nasce la prossima con la data avanzata.\n\n## Le date\n\n"
+    + "Una scadenza è un giorno, non un'ora. Nel calendario e nella timeline le attività si "
+    + "spostano e si allungano trascinandole. Dalla scheda, «Aggiungi al calendario» porta la "
+    + "scadenza nel vostro calendario, come copia.\n\n"
+    + "## Le attività in serie\n\nUn elenco scritto altrove — in Word, in una mail, da un "
+    + "assistente — entra tutto insieme: menu ⋯ del piano → «Incolla un elenco di attività», "
+    + "oppure Ctrl+V sulla bacheca. Una riga, una carta; «@2026-09-20» è la scadenza, «#stampa» "
+    + "un tag.\n\n> [!fatto]\n> Per provare adesso: aprite il piano di questa guida e spostate "
+    + "«Spostare una carta» nella colonna «Fatto».\n",
   gd_page_share: "Esportare e condividere",
-  gd_body_share: "Tutto quello che si scrive resta in questo browser. È il motivo per cui l'app funziona "
-    + "senza rete, ed è anche il motivo per cui **il file sul disco è la vostra copia**.\n\n"
-    + "## Le copie\n\n- «Esporta il progetto» fa uno ZIP con pagine, attività e immagini\n"
-    + "- «Backup di tutto», in «Progetti», salva ogni progetto in un file solo\n"
-    + "- «Importa un progetto» rilegge lo ZIP: come progetto nuovo, oppure **aggiornando** quello che "
-    + "c'è già, se il file è una sua copia\n"
-    + "- Dalla stessa porta entrano una bacheca **Trello** (il suo export JSON) e un export **Notion** "
-    + "in Markdown, per quello che si può portare\n\n"
-    + "## Lavorare in due\n\nDa «Progetti», «Cartella condivisa»: scegli una cartella dentro Dropbox, "
-    + "OneDrive o Google Drive e indicate il vostro nome. Poi, in un progetto, segna «Condiviso nella "
-    + "cartella»: l'app lo scrive lì — un file per pagina, in Markdown, leggibile anche con Obsidian — "
-    + "e lo rilegge quando un collega lo cambia, al ritorno sull'app e poi una volta al minuto. "
-    + "Funziona su Chrome ed Edge, sul computer.\n\n"
-    + "Se cambiate la stessa pagina in due, nessuno perde niente: la vostra resta, la sua arriva accanto "
-    + "come «Scaletta (copia di Marco)», e le confrontate. Per le attività vince chi scrive per ultimo.\n\n"
-    + "Senza una cartella in comune resta lo scambio di file: si esporta, si manda, e chi riceve **aggiorna** il "
-    + "suo progetto con le stesse regole.\n\n"
-    + "## Provarla in due, in dieci minuti\n\nPrima di fidarsi, conviene fare questa prova con un "
-    + "collega, ognuno sul suo computer e con la stessa cartella di Dropbox collegata:\n\n"
-    + "- [ ] Segnate un progetto «Condiviso nella cartella»; entro un minuto il collega lo vede fra i suoi progetti\n"
-    + "- [ ] Il collega cambia una pagina; la vedete cambiare, e nella scheda del progetto compare «Dalla cartella»\n"
-    + "- [ ] Cambiate tutti e due la stessa pagina, senza aspettarvi: a uno dei due resta anche la copia "
-    + "con il nome dell'altro, e nessun paragrafo è sparito\n"
-    + "- [ ] Mettete un'attività nel cestino; il collega la vede sparire dalla bacheca\n\n"
-    + "Se una delle quattro non va, il difetto è dell'app: segnalalo con «Codice sorgente» "
-    + "in fondo alla pagina.\n\n"
+  gd_body_share: "Tutto quello che si scrive resta in questo browser. È il motivo per cui l'app "
+    + "funziona senza rete, ed è anche il motivo per cui **il file sul disco è la vostra "
+    + "copia**.\n\n## Le copie\n\n- «Esporta il progetto» fa uno ZIP con pagine, attività e "
+    + "immagini\n- «Backup di tutto», in «Progetti», salva ogni progetto in un file solo\n- "
+    + "«Importa un progetto» rilegge lo ZIP: come progetto nuovo, oppure **aggiornando** quello "
+    + "che c'è già, se il file è una sua copia\n- Dalla stessa porta entrano una bacheca "
+    + "**Trello** (il suo export JSON) e un export **Notion** in Markdown, per quello che si può "
+    + "portare\n\n## Lavorare in due\n\nDa «Progetti», «Cartella condivisa»: scegliete una "
+    + "cartella dentro Dropbox, OneDrive o Google Drive e indicate il vostro nome. Poi, in un "
+    + "progetto, segnate «Condiviso nella cartella»: l'app lo scrive lì — un file per pagina, in "
+    + "Markdown, leggibile anche con Obsidian — e lo rilegge quando un collega lo cambia, al "
+    + "ritorno sull'app e poi una volta al minuto. Funziona su Chrome ed Edge, sul computer.\n\n"
+    + "Se cambiate la stessa pagina in due, nessuno perde niente: la vostra resta, la sua arriva "
+    + "accanto come «Scaletta (copia di Marco)», e le confrontate. Per le attività vince chi "
+    + "scrive per ultimo.\n\nSenza una cartella in comune resta lo scambio di file: si esporta, "
+    + "si manda, e chi riceve **aggiorna** il suo progetto con le stesse regole.\n\n"
+    + "## Provarla in due, in dieci minuti\n\nPrima di fidarsi, conviene fare questa prova con "
+    + "un collega, ognuno sul suo computer e con la stessa cartella di Dropbox collegata:\n\n"
+    + "- [ ] Segnate un progetto «Condiviso nella cartella»; entro un minuto il collega lo vede "
+    + "fra i suoi progetti\n- [ ] Il collega cambia una pagina; la vedete cambiare, e nella "
+    + "scheda del progetto compare «Dalla cartella»\n- [ ] Cambiate tutti e due la stessa "
+    + "pagina, senza aspettarvi: a uno dei due resta anche la copia con il nome dell'altro, e "
+    + "nessun paragrafo è sparito\n- [ ] Mettete un'attività nel cestino; il collega la vede "
+    + "sparire dalla bacheca\n\nSe una delle quattro non riesce, il difetto è dell'app: si può "
+    + "segnalare da «Codice sorgente», in fondo alla pagina.\n\n"
     + "## Per chi non ha l'app\n\n- «Esporta come pagina web»: un file HTML che si apre ovunque\n"
-    + "- «Stampa o salva in PDF»: il PDF lo fa il browser, dalla finestra di stampa\n"
-    + "- «Esporta le attività in CSV»: per Excel\n- «Esporta come calendario»: le scadenze nel calendario "
-    + "di chiunque\n\n"
-    + "## Con un assistente AI\n\n«Copia per un assistente AI» mette negli appunti la pagina o il piano, "
-    + "con un'istruzione in testa. Si incolla nell'assistente in uso, e le attività che restituisce si "
-    + "incollano nella bacheca. L'app non parla con nessuno: il testo lo portate voi avanti e indietro.\n",
+    + "- «Stampa o salva in PDF»: il PDF lo fa il browser, dalla finestra di stampa\n- «Esporta "
+    + "le attività in CSV»: per Excel\n- «Esporta come calendario»: le scadenze nel calendario "
+    + "di chiunque\n\n## Con un assistente AI\n\n«Copia per un assistente AI» mette negli "
+    + "appunti la pagina o il piano, con un'istruzione in testa. Si incolla nell'assistente in "
+    + "uso, e le attività che restituisce si incollano nella bacheca. L'app non parla con "
+    + "nessuno: il testo lo portate voi avanti e indietro.\n",
   gd_page_keys: "Scorciatoie",
   gd_body_keys: "Da ovunque:\n\n| Tasti | Cosa fa |\n| --- | --- |\n| Ctrl+K | Cerca in tutti i progetti |\n"
     + "| Ctrl+N | Una nuova attività, senza cambiare schermata |\n| ? | Questo elenco |\n"
@@ -821,7 +831,7 @@ const IT = {
   versionsOpen: "Versioni",
   versionsTitle: "Le versioni di questa pagina",
   versionsHint: "Un'istantanea ogni dieci minuti di scrittura, le ultime trenta. Scegline una: "
-    + "accanto vedi cosa cambierebbe, paragrafo per paragrafo.",
+    + "accanto compare cosa cambierebbe, paragrafo per paragrafo.",
   versionsEmpty: "Ancora nessuna versione: arriva dopo dieci minuti di scrittura.",
   versionNow: "Adesso",
   versionChange: "{gone} paragrafi via, {added} in più",
@@ -932,19 +942,19 @@ const IT = {
   remindSaysSame: "lo stesso giorno alle {hour}",
   remindOff: "Spenti. Le scadenze restano nel calendario dell'app e sull'icona.",
   // I tre stati della notifica di sistema, detti come stanno.
-  remindStateNo: "Questo browser non mostra notifiche: restano il calendario che esporti e il "
+  remindStateNo: "Questo browser non mostra notifiche: restano il calendario esportato e il "
     + "riepilogo all'apertura.",
-  remindStateAsk: "Le notifiche di sistema sono da permettere. Senza, restano il calendario che "
-    + "esporti e il riepilogo all'apertura.",
+  remindStateAsk: "Le notifiche di sistema sono da permettere. Senza, restano il calendario "
+    + "esportato e il riepilogo all'apertura.",
   remindStateYes: "Notifiche permesse. Con l'app installata su Chrome o Edge arrivano anche a "
     + "finestra chiusa, quando il browser sveglia l'app — non a un orario preciso.",
   remindStateDenied: "Notifiche negate a questo sito. Si riattivano dalle impostazioni del "
-    + "browser, non da qui. Restano il calendario che esporti e il riepilogo all'apertura.",
+    + "browser, non da qui. Restano il calendario esportato e il riepilogo all'apertura.",
   remindStateWaiting: "Notifiche permesse. Il risveglio automatico non è ancora concesso: il "
     + "browser lo dà alle app installate che si usano un po', e l'app riprova a ogni apertura. "
-    + "Intanto restano il calendario che esporti e il riepilogo all'apertura.",
-  remindStateSleeps: "Notifiche permesse. Questo browser però non sveglia l'app da solo: le vedrai "
-    + "aprendola, e nel calendario che esporti.",
+    + "Intanto restano il calendario esportato e il riepilogo all'apertura.",
+  remindStateSleeps: "Notifiche permesse. Questo browser però non sveglia l'app da solo: "
+    + "compaiono all'apertura, e nel calendario esportato.",
   // Il riepilogo all'apertura, e la notifica: la stessa frase nei due posti.
   remindHeading: "Scadenze",
   remindOne: "{title} — {when}",
@@ -960,15 +970,16 @@ const IT = {
   demoDateKey: "fiera",
   demoName: "Fiera di settembre",
   demoBadge: "Esempio",
-  demoStrip: "Questo è un progetto d'esempio: tocca tutto, cambia, cancella. Alla fine, buttalo.",
+  demoStrip: "Questo è un progetto d'esempio: si può modificare e cancellare liberamente e, "
+    + "alla fine, spostare nel cestino.",
   demoDrop: "Butta l'esempio",
   demoDropped: "Esempio nel cestino. Il prossimo progetto è il vostro.",
   welcomeTitle: "Benvenuto in Plan Scope",
-  welcomeText: "Pagine da scrivere e scadenze da rispettare, nello stesso posto. «Fiera di settembre» "
-    + "è un esempio già pieno, per vedere come funziona: toccalo, cambialo, e quando è servito "
-    + "buttalo.",
-  welcomeNote: "Tutto quello che scrivi resta in questo browser: l'app non manda niente a nessuno. Per averne una "
-    + "copia sul disco c'è «Esporta».",
+  welcomeText: "Pagine da scrivere e scadenze da rispettare, nello stesso posto. «Fiera di "
+    + "settembre» è un esempio già compilato, per vedere come funziona: si può modificare "
+    + "liberamente e, quando non serve più, spostare nel cestino.",
+  welcomeNote: "Tutto quello che si scrive resta in questo browser: l'app non manda niente a "
+    + "nessuno. Per averne una copia sul disco c'è «Esporta».",
   welcomeExample: "Guarda l'esempio",
   welcomeOwn: "Comincia dal vostro",
   welcomeGuide: "Leggi la Guida",
@@ -984,6 +995,7 @@ const IT = {
   // escono da questo computer» e con le caselle vuote quella riga non aveva niente da difendere.
   demoMail: "giulia@studiobianchi.example",
   demoPhone: "+378 0549 000 000",
+  demoNotes: "Preferisce ricevere le bozze in PDF, con le modifiche segnate a margine.",
   demoWho2: "Marco",
   demoCompany2: "Allestimenti Rossi",
   demoTrade2: "allestimenti",
@@ -1020,21 +1032,18 @@ const IT = {
   demoCheck1: "Ripulire l'elenco dei contatti",
   demoCheck2: "Scrivere il testo dell'invito",
   demoPage: "Come funziona questa app",
-  demoBody: "Questo progetto è già pieno, per mostrare com'è fatto. **Buttatelo quando volete**: "
-    + "in fondo alla schermata del progetto c'è «Sposta nel cestino».\n\n"
-    + "## Le tre cose da sapere\n\n"
-    + "1. Quello che si scrive resta su questo computer. Non c'è nessun server a cui arriva.\n"
-    + "2. Si salva da solo, a ogni lettera. Non c'è un pulsante «salva».\n"
-    + "3. Quello che si butta torna indietro: c'è «Annulla» sulla striscia, e poi il cestino.\n\n"
-    + "> [!nota]\n> Premi **/** su una riga vuota per aggiungere un titolo, un elenco, una "
-    + "tabella. Oppure usa il **+** che compare accanto a ogni blocco.\n\n"
-    + "## Un elenco di cose da fare\n\n"
-    + "- [x] Aprire l'app\n- [ ] Scrivere due righe qui sotto\n- [ ] Aprire il piano e spostare "
-    + "una carta\n\n"
-    + "## Una tabella, se serve\n\n"
-    + "| Voce | Previsto | Speso |\n| --- | ---: | ---: |\n| Stand | 1.200 | 1.150 |\n"
-    + "| Stampa | 300 | 340 |\n\n"
-    + "---\n\nFinito di guardare, si comincia dal proprio: **Progetti → Nuovo progetto**.\n",
+  demoBody: "Questo progetto è già pieno, per mostrare com'è fatto. **Quando non serve più, si "
+    + "sposta nel cestino**: il comando è in fondo alla schermata del progetto.\n\n"
+    + "## Le tre cose da sapere\n\n1. Quello che si scrive resta su questo computer. Non c'è "
+    + "nessun server a cui arriva.\n2. Si salva da solo, a ogni lettera. Non c'è un pulsante "
+    + "«salva».\n3. Quello che si elimina si recupera: c'è «Annulla» sulla striscia, e poi il "
+    + "cestino.\n\n> [!nota]\n> Con **/** su una riga vuota si aggiunge un titolo, un elenco, "
+    + "una tabella; lo stesso fa il **+** che compare accanto a ogni blocco.\n\n"
+    + "## Un elenco di cose da fare\n\n- [x] Aprire l'app\n- [ ] Scrivere due righe qui sotto\n- "
+    + "[ ] Aprire il piano e spostare una carta\n\n## Una tabella, se serve\n\n"
+    + "| Voce | Previsto | Speso |\n| --- | ---: | ---: |\n| Stand | 1.200 | 1.150 |\n| Stampa | "
+    + "300 | 340 |\n\n---\n\nFinito di guardare, si comincia dal proprio: **Progetti → Nuovo "
+    + "progetto**.\n",
 
   // counts
   projectOne: "1 progetto",
@@ -1088,6 +1097,10 @@ const EN = {
   kindAppointment: "Appointment",
   kindWhenAt: "{day} at {time}",
   kindRecord: "Meeting of {day}",
+  kindRecordAs: "{what} on {day}",
+  kindWith: "with",
+  meetingUnfold: "Edit the details",
+  meetingFold: "Close the details",
   meetTitle: "An appointment",
   meetWhat: "What it is about",
   meetDate: "The day",
@@ -1159,8 +1172,10 @@ const EN = {
   personRole: "Role",
   personEmail: "Email",
   personPhone: "Phone",
+  personNotes: "Notes",
+  personNotesHint: "For example: prefers a call after 5 pm.",
   personPrivacy: "This stays here. Sharing a project carries only the name and the role they have "
-    + "in that project: the contact details never leave this computer.",
+    + "in that project: the contact details and the notes never leave this computer.",
   personTrash: "Move to the bin",
   personTrashAsk: "I move “{name}” to the bin. The projects they work on go on saying their name, "
     + "and the meetings stay where they are. Go ahead?",
@@ -1224,8 +1239,8 @@ const EN = {
   errorText: "Reload the page. If it happens again, your work is still where you left it.",
   retry: "Reload",
   noStoreTitle: "This browser cannot remember anything",
-  noStore: "You are in a private window, or the browser has site storage turned off. You can use "
-    + "the app, but what you write goes when you close it: export before you leave.",
+  noStore: "You are in a private window, or the browser has site storage turned off. You can "
+    + "use the app, but what you write goes when you close it: export before closing it.",
 
   // home
   homeTitle: "Your projects",
@@ -1267,9 +1282,9 @@ const EN = {
   folderToOpenMany: "{n} to open",
   folderForgetAsk: "I take “{folder}” off the list. The files stay where they are; the projects "
     + "inside it stop being shared. Go ahead?",
-  folderLinkedOne: "Shared in one folder · you are {who} · read at {time}",
-  folderLinkedMany: "Shared in {n} folders · you are {who} · read at {time}",
-  folderNeverRead: "Shared in {n} folders · you are {who} · not read yet",
+  folderLinkedOne: "Shared in one folder · as {who} · read at {time}",
+  folderLinkedMany: "Shared in {n} folders · as {who} · read at {time}",
+  folderNeverRead: "Shared in {n} folders · as {who} · not read yet",
   folderPrompt: "Waiting for your permission: {names}. Take them up once and let the browser "
     + "remember, or install the app: then it stops asking.",
   whoAsk: "What is your name? Whoever opens the folders you share will see it.",
@@ -1279,7 +1294,8 @@ const EN = {
   shareOther: "Another folder…",
   shareNowhere: "A folder is needed: without one there is nowhere to write it.",
   projectCopyOf: "{name} (second copy)",
-  openedCopy: "“{name}” has arrived. You already had a copy of “{other}” here: they stay two separate projects, and the one that was here was not touched.",
+  openedCopy: "“{name}” has arrived. A copy of “{other}” was already here: they stay two "
+    + "separate projects, and the one that was here was not touched.",
   opened: "“{name}” has arrived. From now on it updates itself.",
   openedNothing: "There is no Plan Scope project in this folder.",
   sharedToggle: "Shared in the folder",
@@ -1298,9 +1314,9 @@ const EN = {
 
   // ---- the local folder: the copy of everything, written by the app rather than by whoever remembers
   backupTitle: "Automatic copy in a folder",
-  backupHint: "Choose a folder and the app writes everything you keep here into it by itself: the "
-    + "same data as “Export everything”, plus the images in the pages. From then on it updates at "
-    + "every change, and there is nothing to press.",
+  backupHint: "Choose a folder and the app writes everything that is here into it by itself: "
+    + "the same data as “Export everything”, plus the images in the pages. From then on it "
+    + "updates at every change, and there is nothing to press.",
   backupNote: "It also keeps one copy a day for the last thirty days, so a change made wrongly is "
     + "taken back from how it was yesterday. If the folder is inside Dropbox, iCloud or OneDrive, "
     + "the copy reaches your other computers by itself. This one is your copy: for working as two "
@@ -1310,8 +1326,8 @@ const EN = {
   backupUnlink: "Unlink the folder",
   backupUnlinkAsk: "The app stops writing into the folder. The files there stay where they are. "
     + "Go ahead?",
-  backupUnavailable: "This browser opens a folder with Chrome or Edge on a computer. Here there is "
-    + "“Export everything”, which makes the same file.",
+  backupUnavailable: "This browser cannot write into a folder: that takes Chrome or Edge on a "
+    + "computer. Here there is “Export everything”, which makes the same file.",
   backupNone: "No folder linked.",
   backupPrompt: "The folder “{folder}” is waiting for your permission: take it up and let the "
     + "browser remember, or install the app, and it stops asking.",
@@ -1327,7 +1343,7 @@ const EN = {
   backupFoundAsk: "This folder already holds {n} copies, the most recent from {when}. "
     + "What should I do?",
   backupFoundRestore: "Bring the most recent copy back here",
-  backupFoundMine: "Write what I have here into the folder",
+  backupFoundMine: "Write what is here into the folder",
   backupCopies: "The copies in the folder",
   backupCopiesNone: "The first copy comes as soon as you link the folder.",
   backupCopyLatest: "Current copy",
@@ -1363,7 +1379,7 @@ const EN = {
   backupAll: "Back up everything",
   openTrash: "Bin",
   storageUsed: "Space used: {size}",
-  storageTight: "Space is running out. Export the projects you care about.",
+  storageTight: "Space is running out. The projects that matter are worth exporting.",
   projectProgress: "{done} of {total}",
   projectLate: "{n} late",
   projectDueWeek: "{n} due",
@@ -1491,8 +1507,8 @@ const EN = {
   fieldBlocked: "Waits for",
   fieldMilestone: "It is a milestone",
   fieldMilestoneHint: "A date that counts. On the timeline it becomes a diamond on a single day "
-    + "instead of a bar, on the board and the calendar it carries a “Milestone” badge, and when "
-    + "you tick it the app celebrates.",
+    + "instead of a bar, on the board and the calendar it carries a “Milestone” badge, and, once "
+    + "ticked, the app marks the moment.",
   cardListsHint: "A sub-task is a real card, with its own date and owner, and it shows on the "
     + "board. A checklist item stays in here.",
   checklistAdd: "Add an item",
@@ -1503,8 +1519,8 @@ const EN = {
   priorityLow: "Low",
   priorityHigh: "High",
   fieldRepeat: "Repeats",
-  fieldRepeatHint: "When you tick it, that one stays done and a new one appears, a period later. "
-    + "It is not a series: the calendar and the timeline only ever show the next one.",
+  fieldRepeatHint: "Once ticked, it stays done and a new one appears, a period later. It is not "
+    + "a series: the calendar and the timeline only ever show the next one.",
   repeatNever: "Never",
   repeatDaily: "Every day",
   repeatWeekly: "Every week",
@@ -1626,7 +1642,7 @@ const EN = {
   callout_fatto: "Done",
   saveSaved: "Saved",
   saveSaving: "Saving…",
-  saveFailed: "I could not save. Export the project so nothing is lost.",
+  saveFailed: "Saving failed. Export the project so nothing is lost.",
   addImage: "Add an image",
   exportPage: "Export as Markdown",
   imageTooBig: "The image is over {size}. Make it smaller first, or export it lighter.",
@@ -1723,7 +1739,8 @@ const EN = {
   tpl_launch: "Launch",
   tpl_launch_lead: "What changes for whoever uses it, and the fortnight after.",
   tpl_guide: "Guide",
-  tpl_guide_lead: "Four pages to read in the editor itself, and four things to tick. Then bin it.",
+  tpl_guide_lead: "Four pages to read in the editor itself, and four things to tick. Then it "
+    + "goes to the bin.",
   gd_page_write: "Writing",
   gd_body_write: "This page is a real document: you can change it, and what you write saves itself, "
     + "letter by letter. There is no “save” button.\n\n"
@@ -1854,7 +1871,7 @@ const EN = {
   versionsOpen: "Versions",
   versionsTitle: "This page's versions",
   versionsHint: "A snapshot every ten minutes of writing, the last thirty kept. Choose one: "
-    + "beside it you see what would change, paragraph by paragraph.",
+    + "beside it appears what would change, paragraph by paragraph.",
   versionsEmpty: "No version yet: the first comes after ten minutes of writing.",
   versionNow: "Now",
   versionChange: "{gone} paragraphs gone, {added} added",
@@ -1962,19 +1979,19 @@ const EN = {
   remindSaysDay: "on {date} at {hour}",
   remindSaysSame: "the same day at {hour}",
   remindOff: "Off. Deadlines still show in the calendar you export and on the icon.",
-  remindStateNo: "This browser shows no notifications: the calendar you export and the summary on "
+  remindStateNo: "This browser shows no notifications: the exported calendar and the summary on "
     + "opening remain.",
-  remindStateAsk: "System notifications need your permission. Without it, the calendar you export "
+  remindStateAsk: "System notifications need your permission. Without it, the exported calendar "
     + "and the summary on opening remain.",
   remindStateYes: "Notifications allowed. With the app installed on Chrome or Edge they also "
     + "arrive with the window closed, when the browser wakes the app — not at an exact time.",
   remindStateDenied: "Notifications are blocked for this site. They are turned back on in the "
-    + "browser's settings, not here. The calendar you export and the summary on opening remain.",
-  remindStateWaiting: "Notifications allowed. The automatic wake-up has not been granted yet: the "
-    + "browser gives it to installed apps that get used, and the app asks again every time it "
-    + "opens. Meanwhile the calendar you export and the summary on opening remain.",
+    + "browser's settings, not here. The exported calendar and the summary on opening remain.",
+  remindStateWaiting: "Notifications allowed. The automatic wake-up has not been granted yet: "
+    + "the browser gives it to installed apps that get used, and the app asks again every time "
+    + "it opens. Meanwhile the exported calendar and the summary on opening remain.",
   remindStateSleeps: "Notifications allowed. This browser does not wake the app on its own, "
-    + "though: you will see them when you open it, and in the calendar you export.",
+    + "though: they appear when it opens, and in the exported calendar.",
   remindHeading: "Deadlines",
   remindOne: "{title} — {when}",
   remindMeetingAt: "{title} — {when} at {time}",
@@ -1989,12 +2006,14 @@ const EN = {
   demoDateKey: "fair",
   demoName: "September trade fair",
   demoBadge: "Example",
-  demoStrip: "This is an example project: touch everything, change it, delete it. When you are done, throw it away.",
+  demoStrip: "This is an example project: it can be changed and deleted freely and, at the end, "
+    + "moved to the bin.",
   demoDrop: "Throw the example away",
   demoDropped: "Example in the bin. The next project is yours.",
   welcomeTitle: "Welcome to Plan Scope",
-  welcomeText: "Pages to write and deadlines to keep, in one place. “September trade fair” is an example, "
-    + "already full, to see how it works: touch it, change it, and once you have got it throw it away.",
+  welcomeText: "Pages to write and deadlines to keep, in one place. “September trade fair” is "
+    + "an example, already filled in, to see how it works: it can be changed freely and, once it "
+    + "is no longer needed, moved to the bin.",
   welcomeNote: "Everything you write stays in this browser: the app sends nothing to anybody. For a copy on "
     + "disk there is “Export”.",
   welcomeExample: "See the example",
@@ -2009,6 +2028,7 @@ const EN = {
   demoRole: "does the artwork",
   demoMail: "giulia@bianchistudio.example",
   demoPhone: "+378 0549 000 000",
+  demoNotes: "Prefers proofs as PDF, with the changes marked in the margin.",
   demoWho2: "Marco",
   demoCompany2: "Rossi Stands",
   demoTrade2: "stand builder",
@@ -2035,7 +2055,7 @@ const EN = {
     + "| | Light background | Dark background |\n| --- | --- | --- |\n"
     + "| In print | the quote we have | about 20% more |\n"
     + "| On the stand | reads from a distance | looks better in the evening |\n\n"
-    + "> [!note]\n> To be decided by Friday: after that the printer cannot promise delivery "
+    + "> [!nota]\n> To be decided by Friday: after that the printer cannot promise delivery "
     + "before the stand goes up.\n\n"
     + "## How we left it\n\n"
     + "- [x] Send her the panel measurements\n"
@@ -2045,21 +2065,18 @@ const EN = {
   demoCheck1: "Tidy up the contact list",
   demoCheck2: "Write the wording of the invitation",
   demoPage: "How this app works",
-  demoBody: "This project is already full so you can see how it fits together. **Throw it away "
-    + "whenever you like**: at the bottom of the project screen there is “Move to the bin”.\n\n"
-    + "## Three things worth knowing\n\n"
-    + "1. What you write stays on this computer. There is no server for it to reach.\n"
-    + "2. It saves itself, letter by letter. There is no save button.\n"
-    + "3. What you throw away comes back: there is “Undo” on the strip, and then the bin.\n\n"
-    + "> [!nota]\n> Press **/** on an empty line to add a heading, a list, a table. Or use the "
-    + "**+** that appears beside every block.\n\n"
-    + "## A list of things to do\n\n"
-    + "- [x] Open the app\n- [ ] Write a couple of lines below\n- [ ] Open the plan and move a "
-    + "card\n\n"
-    + "## A table, if you need one\n\n"
-    + "| Item | Planned | Spent |\n| --- | ---: | ---: |\n| Stand | 1,200 | 1,150 |\n"
-    + "| Print | 300 | 340 |\n\n"
-    + "---\n\nWhen you have finished looking, make your own: **Projects → New project**.\n",
+  demoBody: "This project is already full so you can see how it fits together. **When it is no "
+    + "longer needed, it goes to the bin**: the command is at the bottom of the project "
+    + "screen.\n\n## Three things worth knowing\n\n1. What you write stays on this computer. "
+    + "There is no server for it to reach.\n2. It saves itself, letter by letter. There is no "
+    + "save button.\n3. What is deleted can be recovered: there is “Undo” on the strip, and then "
+    + "the bin.\n\n> [!nota]\n> Press **/** on an empty line to add a heading, a list, a table. "
+    + "Or use the **+** that appears beside every block.\n\n"
+    + "## A list of things to do\n\n- [x] Open the app\n- [ ] Write a couple of lines below\n- [ "
+    + "] Open the plan and move a card\n\n## A table, if you need one\n\n"
+    + "| Item | Planned | Spent |\n| --- | ---: | ---: |\n| Stand | 1,200 | 1,150 |\n| Print | "
+    + "300 | 340 |\n\n---\n\nWhen you have finished looking, make your own: **Projects → New "
+    + "project**.\n",
 
   // counts
   projectOne: "1 project",

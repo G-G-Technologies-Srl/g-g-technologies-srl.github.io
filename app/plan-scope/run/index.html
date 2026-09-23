@@ -539,6 +539,9 @@
           <p class="kicker page-kind" id="pageKind" hidden></p>
           <div class="page-head">
             <input type="text" id="pageTags" class="tags-field" maxlength="200" autocomplete="off" data-t-label="pageTagsLabel">
+            <!-- On a meeting: the place, as a link, and «Edit the details», which opens the rows as
+                 the file writes them. Closed, the raw head of the file stays out of sight. -->
+            <p class="page-facts" id="pageFacts" hidden></p>
             <!-- The properties: key and value, one line each, kept at the head of the Markdown as
                  the block Obsidian reads. «+» adds a line; a line emptied goes away on its own. -->
             <div class="props" id="pageProps"></div>
@@ -653,6 +656,10 @@
         <!-- I recapiti si usano, non solo si leggono: da qui partono il messaggio e la chiamata,
              che su un telefono erano un copia e incolla. Compaiono quando c'è qualcosa da usare. -->
         <p class="row person-reach" id="personReach" hidden></p>
+        <!-- What is worth knowing about the person and belongs to no project: before this field it
+             went into a project page, and was found only by whoever opened that project. -->
+        <label for="personNotes" data-t="personNotes"></label>
+        <textarea id="personNotes" rows="3" maxlength="4000" data-t-placeholder="personNotesHint"></textarea>
         <!-- Detto qui, dove si scrivono, e non in una Guida che nessuno apre prima di scrivere. -->
         <p class="note" data-t="personPrivacy"></p>
       </div>
