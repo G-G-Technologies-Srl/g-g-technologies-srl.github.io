@@ -609,7 +609,12 @@ export function renameMention(text, from, to) {
   const before = String(from || "").trim();
   const after = String(to || "").trim();
   if (!before || !after || before === after) return String(text || "");
-  const pattern = new RegExp(`(^|[\\s(\\[])@${_rx(before)}(?![\\p{L}\\p{N}_])`, "giu");
+  // Quando il nome nuovo *allunga* quello vecchio — «Mario» che diventa «Mario Bianchi» — una
+  // menzione già intera non si tocca: senza questa guardia «@Mario Bianchi» diventava
+  // «@Mario Bianchi Bianchi».
+  const longer = after.toLowerCase().startsWith(`${before.toLowerCase()} `)
+    ? `(?!${_rx(after.slice(before.length))}(?![\\p{L}\\p{N}_]))` : "";
+  const pattern = new RegExp(`(^|[\\s(\\[])@${_rx(before)}(?![\\p{L}\\p{N}_])${longer}`, "giu");
   return String(text || "").replace(pattern, (whole, lead) => `${lead}@${after}`);
 }
 

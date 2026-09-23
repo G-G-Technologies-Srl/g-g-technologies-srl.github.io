@@ -871,9 +871,18 @@ export function paintTree(projectId, currentId, recentIds = []) {
     .slice(0, 5);
   section("treeRecent", recent.map((page) => row(page)));
 
+  // Gli incontri in un gruppo loro, dal più recente. Stavano nell'albero accanto a «Brief» e
+  // «Scaletta», e dopo qualche mese di telefonate l'albero era per metà verbali: i documenti del
+  // progetto non si trovavano più. Resta nell'albero l'incontro che qualcuno ha messo sotto una
+  // pagina, o che ha pagine sotto di sé — lì la posizione l'ha scelta una persona.
+  const meetings = new Map(model.meetingsOf(projectId).map((one) => [one.page.id, one]));
+  const apart = (page) => meetings.has(page.id) && !page.parentId
+    && !pages.some((one) => one.parentId === page.id);
+
   const rows = [];
   const walk = (parentId, depth) => {
     for (const page of pages.filter((one) => one.parentId === parentId)) {
+      if (depth === 0 && apart(page)) continue;
       rows.push(row(page, depth, { grip: true }));
       walk(page.id, depth + 1);
     }
@@ -883,6 +892,10 @@ export function paintTree(projectId, currentId, recentIds = []) {
     if (page.parentId && !pages.some((one) => one.id === page.parentId)) rows.push(row(page, 0, { grip: true }));
   }
   section("treePages", rows);
+
+  const met = pages.filter(apart)
+    .sort((a, b) => meetings.get(b.id).date.localeCompare(meetings.get(a.id).date));
+  section("treeMeetings", met.map((page) => row(page)));
 
   // The other direction of a link. A page that is pointed at from three places is a page that
   // matters, and without this list the only way to know was to remember.

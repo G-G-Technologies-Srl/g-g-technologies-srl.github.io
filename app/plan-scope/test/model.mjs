@@ -1041,6 +1041,13 @@ test("un'attività si ritrova dal uid, che è quello che una pagina scrive", () 
   const copia = model.tasksOf(projectId)[0];
   assert.notEqual(copia.id, task.id);
   assert.equal(copia.uid, task.uid, "e la copia porta lo stesso uid");
+  // Quindi chi chiede dice da quale progetto: la riga di una copia apre la sua attività, non quella
+  // dell'originale — che era la prima trovata, e per un giorno è stata la risposta.
+  assert.equal(model.taskByUid(task.uid, { projectId }).id, copia.id);
+  assert.equal(model.taskByUid(task.uid, { projectId: fiera.id }).id, task.id);
+  // Un progetto che non la ha: la si trova lo stesso, altrove, invece di dire che non c'è.
+  const altro = model.createProject({ name: "Altro" });
+  assert.ok(model.taskByUid(task.uid, { projectId: altro.id }));
 });
 
 test("l'agenda è un progetto che non si conta fra i progetti", () => {

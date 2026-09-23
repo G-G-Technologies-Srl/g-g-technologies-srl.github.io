@@ -245,8 +245,13 @@ export function progress(model, { days = 0 } = {}) {
 }
 
 export function check(model, { exported = false, days = 0 } = {}) {
-  const projects = model.liveProjects();
-  const pages = projects.reduce((sum, one) => sum + model.pagesOf(one.id).length, 0);
+  // I progetti veri, senza l'agenda: «il primo progetto» è un gesto di chi comincia qualcosa, e
+  // l'agenda nasce da sola alla prima telefonata segnata.
+  const projects = model.plainProjects ? model.plainProjects() : model.liveProjects();
+  // Le pagine scritte, senza gli incontri: un appuntamento preso non è una pagina scritta, e
+  // contandolo il traguardo «dieci pagine» scattava prendendo tre appuntamenti in una mattina.
+  const meetings = (id) => (model.meetingsOf ? model.meetingsOf(id).length : 0);
+  const pages = projects.reduce((sum, one) => sum + model.pagesOf(one.id).length - meetings(one.id), 0);
 
   let done = 0;
   let milestone = false;

@@ -939,8 +939,20 @@ function _paintCalendar() {
     // non nascere lì: il gesto che tutti provano per primo su un calendario — clic sul giorno,
     // scrivo cosa c'è da fare — non faceva niente. Il titolo si chiede prima di creare, così un
     // ripensamento non lascia in giro un'attività senza nome.
+    // **Attività o appuntamento.** Il clic sul giorno faceva sempre un'attività, e su un
+    // calendario il primo gesto per fissare un incontro è proprio questo: toccare il giorno. La
+    // domanda viene prima, con l'attività già scelta — un Invio e si prosegue come prima — e
+    // l'appuntamento apre la sua maschera con il giorno già scritto.
     cell.addEventListener("click", async (event) => {
       if (event.target.closest(".cal-entry") || justDragged) return;
+      const kind = await ask(tf("calDayAsk", { day: shortDate(iso) }), {
+        options: [{ value: "task", label: t("calDayTask") }, { value: "meeting", label: t("calDayMeeting") }],
+      });
+      if (!kind) return;
+      if (kind === "meeting") {
+        on.newMeeting(projectId, iso);
+        return;
+      }
       const title = await ask(tf("calNewTask", { day: shortDate(iso) }), { value: "" });
       if (title === null || !title.trim()) return;
       model.createTask(projectId, { title: title.trim(), end: iso });

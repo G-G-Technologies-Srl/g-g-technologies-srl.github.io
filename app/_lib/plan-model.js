@@ -1566,11 +1566,19 @@ export function task(id) {
  * progetto e riaperta altrove punterebbe al vuoto. Il `uid` viaggia, e questa è la ragione per cui
  * esiste.
  */
-export function taskByUid(uid) {
+export function taskByUid(uid, { projectId = null } = {}) {
   const wanted = String(uid || "");
   if (!wanted) return null;
-  for (const one of tasks.values()) if ((one.uid || one.id) === wanted) return one;
-  return null;
+  // **Prima nel progetto di chi chiede.** Lo stesso file importato due volte fa due progetti — è
+  // voluto — e le loro attività hanno lo stesso `uid`, perché il `uid` viaggia. Senza questa
+  // precedenza la riga di una copia apriva e spuntava l'attività dell'originale: la prima trovata.
+  let elsewhere = null;
+  for (const one of tasks.values()) {
+    if ((one.uid || one.id) !== wanted) continue;
+    if (!projectId || one.projectId === projectId) return one;
+    if (!elsewhere) elsewhere = one;
+  }
+  return elsewhere;
 }
 
 /** Live projects, newest touched first. */

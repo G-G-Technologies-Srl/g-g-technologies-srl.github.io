@@ -94,11 +94,52 @@ proposito.
 
 ### Le schermate
 
-Dieci, in `SCREENS` dentro `app.js`: `home`, `project`, `page`, `plan`, `pages`, `trash`, `awards`,
-`folderScreen`, `rubrica`, `person`. Il disegno sta in `home.js`, `plan.js`, `timeline.js`,
-`pages.js`, `search.js`, `outputs.js`; i comandi tornano sempre in `app.js`, passati una volta con
-`connect`. È quello che evita l'import circolare, ed è anche perché ogni file di schermata si legge
-da solo.
+Undici, in `SCREENS` dentro `app.js`: `home`, `project`, `page`, `plan`, `pages`, `trash`, `awards`,
+`folderScreen`, `rubrica`, `person`, `agendaScreen`. Il disegno sta in `home.js`, `plan.js`,
+`timeline.js`, `agenda.js`, `pages.js`, `search.js`, `outputs.js`; i comandi tornano sempre in
+`app.js`, passati una volta con `connect`. È quello che evita l'import circolare, ed è anche perché
+ogni file di schermata si legge da solo.
+
+### L'agenda, e il calendario d'insieme
+
+**L'agenda è un progetto con `kind: "agenda"`**, creato da `ensureAgenda` alla prima cosa che ci
+finisce dentro: una nota o un appuntamento con una persona che non lavora a nessun progetto, o un
+appuntamento preso dal calendario d'insieme. È un progetto e non un secondo contenitore apposta,
+così pagine, cestino, copie e cartelle condivise la trattano come tutto il resto.
+
+Cambia soltanto **dove non compare**: `plainProjects()` la tiene fuori dalle schede dell'archivio,
+dalle domande «in quale progetto?» e dai traguardi; le sue scadenze entrano invece nel pannello della
+home. Chi scrive codice nuovo che elenca progetti deve scegliere fra i due: `liveProjects()` per i
+dati — copie, ricerca, sincronizzazione — e `plainProjects()` per quello che una persona sceglie o
+conta.
+
+Il **calendario d'insieme** (`agenda.js`) chiede a `calendarBetween(da, a)` tutto quello che ha una
+data in ogni progetto, e disegna un mese. **Non si trascina niente**: sono date di piani diversi, e
+spostarne una lì vorrebbe dire ripianificare un progetto senza averlo davanti.
+
+### Le attività scritte dentro una pagina
+
+Dal menù «/» dell'editore, «Attività del progetto» crea un'attività sulla bacheca e scrive nella
+pagina una riga agganciata:
+
+```
+- [ ] Mandare il listino aggiornato [[#a7f3…]]
+```
+
+Le regole, che si rompono facilmente:
+
+- **il gancio è il `uid`, non l'`id`**: l'`id` cambia a ogni importazione, il `uid` viaggia. Il
+  rovescio è che un progetto importato due volte ha attività con lo stesso `uid`, quindi
+  `taskByUid(uid, { projectId })` cerca **prima nel progetto della pagina**;
+- **lo stato non si scrive nel file**: la pastiglia («apri», «fatta», «eliminata») la riempie
+  `taskState` a ogni disegno. Nel file c'è solo la casella `[ ]`/`[x]`, che `_syncBoxes` rimette
+  d'accordo con la bacheca quando la pagina si apre, quando la finestra torna in primo piano e quando
+  un'altra scheda ha scritto;
+- **un gancio non si divide**: Invio con il cursore prima della pastiglia lascia il gancio alla riga
+  che lo aveva (`_splitAt`), altrimenti nascevano due righe legate alla stessa attività;
+- **«Porta le caselle nel piano» salta le righe agganciate**, che un'attività ce l'hanno già;
+- la voce del menù compare **solo dove l'app ospite passa `newTask`**: Invoice Scope monta lo stesso
+  editore e non la mostra.
 
 `ui.js` tiene i pezzi piccoli: la striscia che offre di annullare, le date, le misure.
 
@@ -182,7 +223,8 @@ schermata si prova sopra un DOM finto, non aprendo la pagina.
 | un formato in uscita | un modulo puro (come `ics.js`), più una riga in `outputs.js` | `test/exchange.mjs` |
 | qualcosa nel file Markdown di una pagina | `gg/plan-markdown.js` | `parse(serialize(x)) == x` deve restare vero |
 | qualcosa nella cartella condivisa | `vault.js` per il formato, `sync.js` per la fusione | una cartella scritta da una versione vecchia deve restare leggibile |
-| un traguardo | `cheer.js` | leggi prima cosa quel file tiene fuori, e perché |
+| un traguardo | `cheer.js` | leggi prima cosa quel file tiene fuori, e perché — gli incontri non sono pagine scritte, l'agenda non è un progetto |
+| un elenco di progetti da mostrare o da contare | `plainProjects()`, non `liveProjects()` | l'agenda sta nella seconda e non nella prima |
 | una parola | `i18n.js`, **entrambe le lingue nella stessa modifica**, una chiave per riga | `check_apps.py` legge il file con una espressione regolare |
 | un file nuovo in `run/` | il file + l'elenco `ASSETS` in `sw.js` | e gira la versione |
 

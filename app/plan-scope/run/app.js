@@ -80,6 +80,9 @@ const IN_PROJECT = ["project", "plan", "pages", "page"];
 // I quattro modi di guardare un progetto, e il pulsante di ognuno.
 const VIEWS = [["goBoard", "kanban"], ["goCalendar", "calendar"], ["goTimeline", "timeline"], ["goPages", "pages"]];
 // I campi della scheda di una persona, e il campo del record a cui ognuno corrisponde.
+/** I canali di una nota presa dalla scheda di una persona, nell'ordine in cui si offrono. */
+const NOTE_CHANNELS = ["call", "meeting", "email", "message"];
+
 /** Quante persone della rubrica compaiono come pastiglie sotto «con chi», oltre a chi lavora qui. */
 const RUBRICA_CHIPS = 8;
 
@@ -342,7 +345,36 @@ function _settleMentions() {
   const page = writingIn ? model.page(writingIn) : null;
   writingIn = null;
   if (!page || page.trashedAt) return;
-  _welcome(md.mentionNames(md.frontmatter(page.markdown || "").body));
+  const names = md.mentionNames(md.frontmatter(page.markdown || "").body);
+  // I nomi scritti a metà — «@Mario» con «Mario Bianchi» in rubrica — aspettano una domanda; gli
+  // altri entrano subito. Era la quarta porta, l'unica rimasta senza: tre chiedevano prima di fare
+  // un doppione, questa lo faceva e basta.
+  const doubtful = names.filter((one) => !model.contactByName(one) && model.contactsLike(one).length);
+  _welcome(names.filter((one) => !doubtful.includes(one)));
+  // Dopo il cambio di schermata e non durante: la domanda arriva sulla schermata nuova, e dice di
+  // quale pagina parla, perché chi l'ha lasciata ha già la testa altrove.
+  if (doubtful.length) setTimeout(() => _askMentions(page.id, doubtful), 0);
+}
+
+/** Le menzioni a metà di una pagina appena lasciata: una domanda per nome, e il testo corretto. */
+async function _askMentions(id, names) {
+  let changed = false;
+  for (const name of names) {
+    const before = model.page(id);
+    if (!before || before.trashedAt) return;
+    const real = await _resolveName(name, { where: before.title || t("pageUntitled") });
+    if (real === name) {
+      _welcome([name]);
+      continue;
+    }
+    const page = model.page(id);
+    const next = md.renameMention(page.markdown || "", name, real);
+    if (next !== page.markdown) {
+      model.updatePage(id, { markdown: next });
+      changed = true;
+    }
+  }
+  if (changed && pageId === id && view === "page") _reloadPage();
 }
 
 /**
@@ -407,12 +439,13 @@ function _paintMeetPeople(target) {
  *
  * Chi chiude la domanda tiene quello che ha scritto: la persona nuova è sempre un esito legittimo.
  */
-async function _resolveName(name) {
+async function _resolveName(name, { where = null } = {}) {
   const clean = String(name || "").trim();
   if (!clean || model.contactByName(clean)) return clean;
   const maybe = model.contactsLike(clean);
   if (!maybe.length) return clean;
-  const chosen = await ask(tf("personMaybe", { name: clean }), {
+  const question = where ? tf("personMaybeIn", { name: clean, page: where }) : tf("personMaybe", { name: clean });
+  const chosen = await ask(question, {
     options: [...maybe.map((one) => ({ value: one.id, label: one.name })),
       { value: "", label: tf("personMaybeNew", { name: clean }) }],
   });
@@ -466,6 +499,7 @@ function _newMeeting(target, said = {}, { title = null } = {}) {
     ...(said.time ? [`${t("propTime")}: ${said.time}`] : []),
     ...(said.with ? [`${t("propWith")}: ${said.with}`] : []),
     ...(said.where ? [`${t("propWhere")}: ${said.where}`] : []),
+    ...(said.channel ? [`${t("propChannel")}: ${said.channel}`] : []),
     "---",
     "",
     "",
@@ -527,6 +561,19 @@ function _boxesToPlan() {
   return undefined;
 }
 
+/** Se le caselle agganciate di una pagina sono rimaste indietro rispetto alla bacheca. */
+function _boxesDrift(id) {
+  const page = model.page(id);
+  if (!page || !md.taskRefs(page.markdown || "").length) return false;
+  return _boxesFor(page) !== (page.markdown || "");
+}
+
+/** Il progetto della pagina aperta: è lì che una riga «[[#…]]» cerca prima la sua attività. */
+function _pageProject() {
+  const page = pageId ? model.page(pageId) : null;
+  return page ? page.projectId : null;
+}
+
 /**
  * Le caselle agganciate a un'attività, messe d'accordo con la bacheca.
  *
@@ -540,18 +587,24 @@ function _syncBoxes(id) {
   if (!page) return;
   const text = page.markdown || "";
   if (!md.taskRefs(text).length) return;
-  const next = text.split("\n").map((line) => {
+  const next = _boxesFor(page);
+  if (next !== text) model.setMarkdown(id, next);
+}
+
+/** Il testo della pagina con le caselle agganciate come le vuole la bacheca. */
+function _boxesFor(page) {
+  const text = page.markdown || "";
+  return text.split("\n").map((line) => {
     const box = /^(\s*[-*+]\s*)\[([ xX])\](\s*.*)$/.exec(line);
     if (!box) return line;
     const ref = md.TASK_REF.exec(box[3]);
     if (!ref) return line;
-    const task = model.taskByUid(ref[1]);
+    const task = model.taskByUid(ref[1], { projectId: page.projectId });
     if (!task || task.trashedAt) return line;
     const done = model.isDone(task);
     if (done === (box[2].toLowerCase() === "x")) return line;
     return `${box[1]}[${done ? "x" : " "}]${box[3]}`;
   }).join("\n");
-  if (next !== text) model.setMarkdown(id, next);
 }
 
 /**
@@ -758,17 +811,28 @@ function _paintPerson() {
     return option;
   })]);
 
-  const met = model.pagesAbout(uid);
-  el("personMeetingsNone").hidden = met.length > 0;
-  el("personMeetingsNone").textContent = tf("personMeetingsNone", { name: person.name || "" });
-  fill(el("personMeetings"), met.map(({ page, project, date }) => {
+  // Le pagine che la nominano, divise in due: gli appuntamenti ancora davanti, in ordine di data,
+  // e tutto il resto — verbali, note, documenti che la citano — dal più recente.
+  const about = model.pagesAbout(uid).map((one) => {
+    const props = md.frontmatter(one.page.markdown || "").props || {};
+    const meeting = { date: one.date, time: String(props.ora || props.time || props.orario || "").trim() };
+    return { ...one, time: meeting.time, ahead: Boolean(props.tipo || props.type) && model.meetingAhead(meeting) };
+  });
+  const ahead = about.filter((one) => one.ahead).sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
+  const met = about.filter((one) => !one.ahead);
+  const aboutRow = ({ page, project, date, time }) => {
     const row = node("li", "row-item");
     row.append(button("link", page.title || t("pageUntitled"), () => _openPage(page.id)));
     const said = [project.name || t("projectUntitled")];
-    if (date) said.unshift(longDate(date));
+    if (date) said.unshift(time ? `${longDate(date)}, ${time}` : longDate(date));
     row.append(node("span", "meta", said.join(" · ")));
     return row;
-  }));
+  };
+  el("personAheadCard").hidden = ahead.length === 0;
+  fill(el("personAhead"), ahead.map(aboutRow));
+  el("personMeetingsNone").hidden = met.length > 0;
+  el("personMeetingsNone").textContent = tf("personMeetingsNone", { name: person.name || "" });
+  fill(el("personMeetings"), met.map(aboutRow));
 
   const open = model.tasksOfContact(uid);
   el("personTasksNone").hidden = open.length > 0;
@@ -2621,9 +2685,17 @@ function _wire() {
   el("personMeeting").addEventListener("click", () => _fromPerson((target, name) => _askMeeting(target, name)));
   // «Nota»: ho parlato con questa persona, mi segno cosa ci siamo detti. Oggi, senza ora — che per
   // la regola del momento è già un verbale: non entra in nessuna lista e non suona mai.
-  el("personNote").addEventListener("click", () => _fromPerson((target, name) => _newMeeting(target, {
-    date: model.todayISO(), with: name,
-  }, { title: "noteTitle" })));
+  // Con il canale: «Telefonata del 22 set», «Email del 22 set». Tutte le note si chiamavano
+  // «Nota del …», e in un elenco di trenta non si capiva quale fosse la telefonata di martedì. La
+  // telefonata è la prima scelta, perché è il caso per cui la porta è nata: un Invio e si scrive.
+  el("personNote").addEventListener("click", () => _fromPerson(async (target, name) => {
+    const channel = await ask(t("noteChannelAsk"), { options: NOTE_CHANNELS.map((key) => ({
+      value: key, label: t(`noteChannel_${key}`),
+    })) });
+    if (!channel) return;
+    _newMeeting(target, { date: model.todayISO(), with: name, channel: t(`noteChannel_${channel}`).toLowerCase() },
+      { title: `noteTitle_${channel}` });
+  }));
   // E dalla bacheca, dove si lavora.
   el("planMeeting").addEventListener("click", () => { if (projectId) _askMeeting(projectId); });
   el("addWhereForm").addEventListener("submit", (event) => {
@@ -2947,7 +3019,13 @@ function _wire() {
   // The two that actually arrive on a phone. `beforeunload` alone does not, which is why the
   // promise about losing nothing rests on these.
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState !== "hidden") return;
+    // Di ritorno alla finestra, con una pagina aperta: le caselle agganciate si allineano alla
+    // bacheca, che nel frattempo può essere cambiata in un'altra scheda. Solo se qualcosa cambia —
+    // altrimenti la pagina resta com'è, cursore compreso.
+    if (document.visibilityState === "visible") {
+      if (view === "page" && pageId && _boxesDrift(pageId)) _reloadPage();
+      return;
+    }
     db.flush();
     // E il digest, qui e non a ogni ridisegno: deve essere fresco nel momento in cui l'app smette
     // di guardare, che è l'unico in cui qualcun altro lo leggerà.
@@ -3064,6 +3142,8 @@ function _connect() {
     openPage: (id) => _openPage(id),
     // La scheda di un appuntamento sulla lavagna: la maschera per correggerlo, o il cestino.
     editMeeting: (meeting) => _askMeeting(meeting.page.projectId, "", { meeting }),
+    // Un giorno del calendario scelto per un appuntamento: la maschera, con quel giorno già dentro.
+    newMeeting: (target, day) => _askMeeting(target, "", { day }),
     trashMeeting: (meeting) => _trashMeeting(meeting),
     // The board writes the address bar and nothing else: what it changed is already in the model.
     // Unless the card was opened from somewhere else — the dashboard's deadlines — in which case
@@ -3181,7 +3261,7 @@ function _connect() {
     },
     // Com'è messa: aperta, fatta, o non c'è più. La pastiglia lo dice con una parola.
     taskState: (uid) => {
-      const task = model.taskByUid(uid);
+      const task = model.taskByUid(uid, { projectId: _pageProject() });
       if (!task || task.trashedAt) return null;
       return model.isDone(task) ? "done" : "open";
     },
@@ -3189,7 +3269,7 @@ function _connect() {
     // chiude e si continua a scrivere. La pagina si ridisegna dopo, perché la scheda può averla
     // spuntata o cestinata e la riga lo deve dire.
     openTask: (uid) => {
-      const task = model.taskByUid(uid);
+      const task = model.taskByUid(uid, { projectId: _pageProject() });
       if (!task || task.trashedAt) return snack(t("taskGoneHint"));
       plan.setProject(task.projectId);
       plan.openCard(task.id);
@@ -3200,7 +3280,7 @@ function _connect() {
     // gesto solo. La striscia disfa tutt'e due — il modello per l'attività, l'editore per il testo —
     // perché disfarne una sola lascerebbe un'attività senza riga o una riga senza attività.
     taskRemoved: async (uid) => {
-      const task = model.taskByUid(uid);
+      const task = model.taskByUid(uid, { projectId: _pageProject() });
       if (!task || task.trashedAt) return true;
       const name = task.title || t("taskUntitled");
       const step = model.trashTask(task.id);
@@ -3218,7 +3298,7 @@ function _connect() {
     },
     // La casella della pagina e la spunta della bacheca sono la stessa cosa vista da due parti.
     taskTicked: (uid, checked) => {
-      const task = model.taskByUid(uid);
+      const task = model.taskByUid(uid, { projectId: _pageProject() });
       if (!task || task.trashedAt || model.isDone(task) === checked) return;
       model.toggleDone(task.id);
       _repaint();
@@ -3313,7 +3393,14 @@ async function _boot() {
     if (view === "page" && pageId) {
       const after = model.page(pageId);
       if (!after || after.trashedAt) return _openHome();
-      if (before && after.markdown !== before.markdown) editor.load(after.markdown);
+      // Due cose, e tutt'e due passano da `_reloadPage`. La pagina cambiata altrove si rilegge
+      // **dalla testa**: prima entrava nell'editore il file intero, testa compresa, e al primo
+      // tasto la testa finiva scritta una seconda volta nel corpo. E le caselle agganciate si
+      // rimettono d'accordo con la bacheca, che l'altra scheda può aver cambiato senza toccare
+      // questa pagina.
+      const drift = before && after.markdown !== before.markdown;
+      const boxes = _boxesDrift(pageId);
+      if (drift || boxes) _reloadPage();
       home.paintPage(pageId);
       return undefined;
     }

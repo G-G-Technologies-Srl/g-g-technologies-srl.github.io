@@ -421,4 +421,11 @@ test("il gancio a un'attività si toglie da un testo, per la riga che nasce da u
   assert.equal(withoutTaskRefs("niente da togliere"), "niente da togliere");
 });
 
+test("un nome che si allunga non allunga le menzioni già intere", () => {
+  // «@Mario» scritto a metà diventa «@Mario Bianchi»; «@Mario Bianchi» resta com'è, e non diventa
+  // «@Mario Bianchi Bianchi».
+  assert.equal(renameMention("@Mario e @Mario Bianchi, poi (@Mario).", "Mario", "Mario Bianchi"),
+    "@Mario Bianchi e @Mario Bianchi, poi (@Mario Bianchi).");
+});
+
 console.log(`markdown: ${passed} prove passate`);
