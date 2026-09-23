@@ -1765,6 +1765,7 @@ function _snippet(text, needle) {
   // The marks go, the words stay: a snippet reading `| Stand | 1.200 |` or `**Stand**` shows
   // the syntax the editor exists to hide.
   const source = String(text || "")
+    .replace(/&nbsp;/g, " ")
     .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
     .replace(/\[\[([^\]]+)\]\]/g, "$1")
     .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")

@@ -50,6 +50,10 @@ const FENCE = /^(\s*)(`{3,}|~{3,})(.*)$/;
 const IMAGE = /^!\[([^\]]*)\]\(([^)\s]+)\)$/;
 const TABLE_ROW = /^\s*\|.*\|\s*$/;
 const TABLE_RULE = /^\s*\|(?:\s*:?-{1,}:?\s*\|)+\s*$/;
+// An empty line somebody left between two paragraphs, as the file writes it. Markdown has no blank
+// paragraph — any run of blank lines is one separator — so it needs a mark to survive, and this is
+// the one Obsidian and every renderer show as an empty line: a no-break space as an entity.
+export const BLANK_LINE = "&nbsp;";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
@@ -314,7 +318,9 @@ export function parse(markdown) {
       continue;
     }
     closeRaw();
-    blocks.push({ type: "paragraph", text: paragraph.join("\n") });
+    // A paragraph that is only the blank-line mark is the empty line it stands for.
+    const blank = paragraph.length === 1 && paragraph[0].trim() === BLANK_LINE;
+    blocks.push({ type: "paragraph", text: blank ? "" : paragraph.join("\n") });
   }
 
   closeRaw();
@@ -367,13 +373,21 @@ function _tableLines(block) {
  */
 export function serialize(blocks) {
   const out = [];
+  const empty = (block) => block.type === "paragraph" && !String(block.text || "").trim();
+  // Where the document really ends: the empty lines after it are the editor's own — the one it
+  // keeps at the bottom, the one Enter makes before anything is typed — and write nothing.
+  let end = blocks.length;
+  while (end > 0 && empty(blocks[end - 1])) end -= 1;
 
-  for (const block of blocks) {
-    // An empty paragraph writes nothing at all. The editor makes them all the time — pressing Enter
-    // creates one before there is anything in it — and writing an empty string between two blank
-    // lines would put a run of four newlines in the file for every one of them. Parsing never
-    // produces one, so nothing is lost on the way back.
-    if (block.type === "paragraph" && !String(block.text || "").trim()) continue;
+  for (const [at, block] of blocks.entries()) {
+    if (at >= end) break;
+    // An empty line between two blocks is one somebody wanted: it is written as `&nbsp;`, or the
+    // file would lose it — Markdown reads any run of blank lines as a single separator, and the
+    // line was gone at the next opening.
+    if (empty(block)) {
+      out.push(BLANK_LINE);
+      continue;
+    }
 
     switch (block.type) {
       case "heading":

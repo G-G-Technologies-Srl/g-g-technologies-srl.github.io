@@ -169,17 +169,24 @@ test("dentro un recinto le righe vuote e i cancelletti non sono blocchi", () => 
   assert.equal(block.text, "# non è un titolo\n\n- non è un elenco");
 });
 
-test("un paragrafo vuoto non lascia righe vuote nel file", () => {
-  // The editor makes them constantly: pressing Enter creates a paragraph before there is anything
-  // in it. Written out as an empty string between two blank lines it would put four newlines in the
-  // file every time, and the file is what somebody opens in another editor.
-  const out = serialize([
+test("una riga vuota fra due paragrafi si salva, quelle in fondo no", () => {
+  // Markdown reads any run of blank lines as one separator, so an empty line somebody left between
+  // two paragraphs was lost at the next opening. It is written as `&nbsp;`, which Obsidian and
+  // every renderer show as an empty line. The ones at the end are the editor's — the line it keeps
+  // at the bottom, the paragraph Enter makes before anything is typed — and write nothing.
+  const blocks = [
     { type: "paragraph", text: "Primo" },
     { type: "paragraph", text: "" },
+    { type: "paragraph", text: "" },
     { type: "paragraph", text: "Secondo" },
-  ]);
-  assert.equal(out, "Primo\n\nSecondo\n");
+    { type: "paragraph", text: "" },
+  ];
+  const out = serialize(blocks);
+  assert.equal(out, "Primo\n\n&nbsp;\n\n&nbsp;\n\nSecondo\n");
+  assert.deepEqual(parse(out), blocks.slice(0, 4), "e tornano righe vuote, non testo");
+  assert.equal(serialize(parse(out)), out);
   assert.equal(serialize([{ type: "paragraph", text: "" }]), "");
+  assert.equal(serialize([{ type: "paragraph", text: "" }, { type: "paragraph", text: "" }]), "");
 });
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -251,6 +258,7 @@ fixed("annidato e disordinato", [
 
 fixed("vuoto", "");
 fixed("solo righe vuote", "\n\n\n");
+fixed("righe vuote salvate fra i blocchi", "# Titolo\n\n&nbsp;\n\nTesto.\n\n&nbsp;\n\n&nbsp;\n\n- voce\n");
 fixed("una riga sola senza a capo finale", "Solo questo");
 
 test("il testo di partenza sopravvive parola per parola", () => {

@@ -115,7 +115,8 @@ function _block(block, images) {
       return `<h${level}>${_inline(block.text)}</h${level}>`;
     }
     case "paragraph":
-      return `<p>${_inline(block.text, images).replace(/\n/g, "<br>")}</p>`;
+      // An empty line kept on purpose: an empty `<p>` would collapse to nothing.
+      return block.text ? `<p>${_inline(block.text, images).replace(/\n/g, "<br>")}</p>` : "<p>&nbsp;</p>";
     case "list":
       return _list(block);
     case "quote":

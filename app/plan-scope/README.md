@@ -162,9 +162,12 @@ la vCard nella `NOTE`, davanti ai progetti.
 
 L'editore tiene un paragrafo vuoto in fondo al documento (`_keepTail`, chiamato da `load` e da
 `_apply`), qualunque cosa sia stata inserita per ultima: una tabella, un'attività, un'immagine. Nel
-file non c'è — `serialize` non scrive paragrafi vuoti — quindi ricompare a ogni apertura. Le righe
-vuote **in mezzo** al testo invece non sopravvivono alla riapertura: il Markdown separa i blocchi
-con una riga vuota sola, e l'editore legge il file com'è scritto.
+file non c'è — `serialize` non scrive i paragrafi vuoti in fondo — quindi ricompare a ogni apertura.
+
+Le righe vuote **in mezzo** al testo si salvano come `&nbsp;` su una riga sua (`BLANK_LINE` in
+`gg/plan-markdown.js`): il Markdown legge qualunque serie di righe vuote come un separatore solo, e
+senza un segno la riga spariva alla riapertura. `&nbsp;` è quello che Obsidian e ogni visualizzatore
+mostrano come una riga vuota, e `parse` lo rilegge come un paragrafo vuoto.
 
 `ui.js` tiene i pezzi piccoli: la striscia che offre di annullare, le date, le misure.
 
