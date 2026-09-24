@@ -214,7 +214,7 @@ const IT = {
   folderWho: "Come vi chiamate",
   folderNote: "Il nome compare sulle copie che restano quando due persone cambiano la stessa pagina. "
     + "Funziona con Chrome o Edge sul computer.",
-  folderList: "Le cartelle che conosci",
+  folderList: "Le cartelle già usate",
   folderEmpty: "Ancora nessuna cartella. Aggiungine una per condividerci un progetto, oppure apri "
     + "quella che vi ha mandato qualcuno.",
   folderAdd: "Aggiungi una cartella…",
@@ -690,7 +690,7 @@ const IT = {
   restoredOne: "«{name}» è tornato al suo posto",
 
   // import and export
-  importTitle: "Stai per importare",
+  importTitle: "Il file da importare",
   importSummary: "{name}: {pages}, {tasks}, {assets}",
   importNew: "Importa come progetto nuovo",
   importReplace: "Sostituisci «{name}»",
@@ -716,7 +716,7 @@ const IT = {
   zipNotArchive: "Questo file non è un archivio leggibile.",
   zipBroken: "L'archivio è danneggiato: qualche pezzo non torna.",
   zipCompressed: "L'archivio è compresso in un modo che questa app non legge.",
-  backupDone: "Backup scritto: {name}. Contiene i testi; per le immagini esporta il progetto.",
+  backupFileDone: "Backup scritto: {name}. Contiene i testi; per le immagini esporta il progetto.",
   backupNothing: "Non c'è ancora niente da salvare.",
   restoreDone: "Rimessi a posto {n} elementi.",
 
@@ -1317,7 +1317,7 @@ const EN = {
   folderWho: "Your name",
   folderNote: "The name appears on the copies kept when two people change the same page. Works on "
     + "a computer, with Chrome or Edge.",
-  folderList: "The folders you know",
+  folderList: "Folders already used",
   folderEmpty: "No folders yet. Add one to share a project into it, or open the one somebody sent "
     + "you.",
   folderAdd: "Add a folder…",
@@ -1814,7 +1814,7 @@ const EN = {
   zipNotArchive: "This file is not a readable archive.",
   zipBroken: "The archive is damaged: some of it does not add up.",
   zipCompressed: "The archive is compressed in a way this app does not read.",
-  backupDone: "Backup written: {name}. It holds the text; for the images, export the project.",
+  backupFileDone: "Backup written: {name}. It holds the text; for the images, export the project.",
   backupNothing: "There is nothing to save yet.",
   restoreDone: "{n} things put back.",
 

@@ -2300,7 +2300,7 @@ async function _backup() {
     schema: db.SCHEMA,
     stores: db.DOCUMENT_STORES,
   });
-  snack(tf("backupDone", { name }));
+  snack(tf("backupFileDone", { name }));
 }
 
 // ---- language and theme

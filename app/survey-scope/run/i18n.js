@@ -55,7 +55,7 @@ const IT = {
 
   // start
   factLocal: "Le risposte restano su questo computer. Nessuna esce da qui.",
-  factExport: "Gli dai un nome all'inizio, lo esporti in JSON o CSV, e stampi il report.",
+  factExport: "Si dà un nome all'inizio, si esporta in JSON o CSV, e si stampa il report.",
   factHonest: "Nessuno verifica le risposte: il risultato vale quanto la sincerità con cui sono date.",
   // La quarta riga esisteva già come funzione e non era detta da nessuna parte: chi riceve un file
   // da qualcun altro non immagina di poterlo caricare qui, e quindi non ci prova.
@@ -69,7 +69,7 @@ const IT = {
   savedOpenDialog: "Apri un questionario salvato",
   savedClose: "Chiudi",
   savedImportFile: "Importa un file",
-  startPrivacy: "L'app non fa richieste di rete. Quello che scrivi non viene inviato a nessuno, "
+  startPrivacy: "L'app non fa richieste di rete. Quello che si scrive non viene inviato a nessuno, "
     + "e non c'è nessun account da creare.",
 
   // saved results
@@ -150,7 +150,7 @@ const IT = {
     + "uffici, aziende associate — e raccogliere i risultati in un elenco solo.",
   helpFlowTitle: "Distribuirlo a più unità",
   helpFlow1: "Decidi chi deve rispondere: i reparti dell'impresa, gli uffici dell'ente, le aziende "
-    + "che segui. Una compilazione per unità.",
+    + "che seguite. Una compilazione per unità.",
   helpFlow2: "Manda a ciascuno l'indirizzo di questa pagina. Non serve un account, e le risposte "
     + "restano sul computer di chi compila.",
   helpFlow3: "Alla fine ognuno dà un nome al proprio questionario e lo esporta in JSON o in CSV. Il "
@@ -301,7 +301,7 @@ const IT = {
   // «Prendi in mano» dice il gesto — qualcuno se ne occupa — senza promettere l'esito.
   rActionCompliance: "Prendi in mano gli obblighi che hanno già una data",
   rActionComplianceWhy: "Le altre raccomandazioni migliorano qualcosa. Queste no: sono obblighi "
-    + "in vigore, e il tempo passa anche se non fai niente.",
+    + "in vigore, e il tempo passa anche senza fare niente.",
   rActionComplianceHow: "Scorri le voci qui sotto, decidi chi risponde di ciascuna e mettici una data. "
     + "Dove la risposta manca, quella è la prima domanda da fare a chi vi assiste.",
   rActionComplianceEffort: "Un'ora per capire quali vi riguardano davvero.",
@@ -338,7 +338,7 @@ const IT = {
     + "deposito, e tornano visibili solo ricaricando questo modello: se servono adesso, esportale "
     + "prima.",
   packReplaceAsk: "«{title}» c'è già. Sostituirlo con questa versione?",
-  packAdded: "Aggiunto «{title}». Lo trovi nella tendina in cima.",
+  packAdded: "Aggiunto «{title}». Si trova nella tendina in cima.",
   packReplaced: "Sostituito «{title}» con questa versione.",
   packNotAPack: "Questo file non è un modello di questionario di Survey Scope.",
   packWrongSchema: "Questo questionario è scritto in un formato più nuovo di quello che "
@@ -374,7 +374,7 @@ const IT = {
   packNoFrame: "Al report mancano la cornice o le azioni, e senza l'app arriva in fondo alle "
                + "domande e si ferma lì.",
   savedOtherEditionAsk: "Questa compilazione risponde a una versione diversa delle domande. I "
-                        + "punteggi che vedrai vengono dal file, non ricalcolati su queste. "
+                        + "punteggi mostrati vengono dal file, non ricalcolati su queste. "
                         + "Aprirla lo stesso?",
 };
 

@@ -176,7 +176,7 @@
         "en": "An afternoon."
       },
       "measure": {
-        "it": "L'elenco esiste, e ci trovi almeno una cosa che avevi dimenticato.",
+        "it": "L'elenco esiste, e dentro c'è almeno una cosa che era stata dimenticata.",
         "en": "The list exists, and you find at least one thing on it you had forgotten."
       }
     },
@@ -216,7 +216,7 @@
         "en": "It is the measure that stops the highest share of attacks at the lowest cost, and the exceptions left are usually important accounts — the old ones, the shared ones."
       },
       "how": {
-        "it": "Prendi l'elenco delle eccezioni che conosci e chiudile una per una. Comincia da quelle di chi ha più privilegi.",
+        "it": "Prendi l'elenco delle eccezioni note e chiudile una per una. Comincia da quelle di chi ha più privilegi.",
         "en": "Take the list of exceptions you know about and close them one by one. Start with the people who hold the most privileges."
       },
       "effort": {
@@ -304,7 +304,7 @@
       "dimension": "d3",
       "band": 2,
       "title": {
-        "it": "Fai guardare da fuori quello che esponi",
+        "it": "Fai guardare da fuori quello che è esposto",
         "en": "Have what you expose looked at from outside"
       },
       "why": {
@@ -472,7 +472,7 @@
       "dimension": "d5",
       "band": 1,
       "title": {
-        "it": "Decidi entro quando avviserai il cliente, prima che serva",
+        "it": "Decidi entro quando avvisare il cliente, prima che serva",
         "en": "Decide by when you will tell the customer, before you need to"
       },
       "why": {
