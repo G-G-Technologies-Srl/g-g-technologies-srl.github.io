@@ -76,7 +76,6 @@ const IT = {
   savedTitle: "Risultati salvati",
   savedNote: "Restano su questo computer, in questo browser — questi e quelli caricati da un file. "
     + "Esportali per averli altrove, o per rifare il questionario fra sei mesi e confrontare.",
-  savedEmpty: "Qui compaiono i questionari che completi.",
   savedExport: "Esporta",
   savedClear: "Svuota",
   savedClearAsk: "Cancello i risultati salvati? Non si può annullare.",
@@ -245,7 +244,6 @@ const IT = {
     + "Leggile come un punto di partenza e ricontrolla le fonti: l'AI Act cambia.",
   clFrom: "Vale dal {date}",
   clChanges: "Cambia il {date}",
-  clSource: "Fonte",
   clBack: "Indietro",
   clDone: "Vedi il risultato",
   // Added when the branch rule fires: a customer has already asked, so these rows have stopped
@@ -324,8 +322,6 @@ const IT = {
   rCountNaOne: "{na} non applicabile",
   rCountNaMany: "{na} non applicabili",
   rCountNone: "Nessuna domanda applicabile: la dimensione non entra nel totale.",
-  exportedJson: "Esportato {name}",
-  exportedCsv: "Esportato {name}",
 
   // pacchi — un questionario intero che esce e rientra
   // gli avvisi dell'app: due tasti, e il secondo sparisce quando c'è solo da prendere atto
@@ -428,7 +424,6 @@ const EN = {
   savedNote: "They stay on this computer, in this browser — these and the ones you load from a "
     + "file. Export them if you need them elsewhere, or if you want to take the questionnaire "
     + "again in six months and compare.",
-  savedEmpty: "The questionnaires you finish appear here.",
   savedExport: "Export",
   savedClear: "Clear",
   savedClearAsk: "Delete the saved results? This cannot be undone.",
@@ -576,7 +571,6 @@ const EN = {
     + "them as a starting point and check the sources again: the AI Act changes.",
   clFrom: "Applies from {date}",
   clChanges: "Changes on {date}",
-  clSource: "Source",
   clBack: "Back",
   clDone: "See the result",
   clBecauseAsked: "You answered that a customer has already asked you something about security or "
@@ -631,8 +625,6 @@ const EN = {
   rCountNaOne: "{na} not applicable",
   rCountNaMany: "{na} not applicable",
   rCountNone: "No question applies: this dimension does not enter the total.",
-  exportedJson: "Exported {name}",
-  exportedCsv: "Exported {name}",
 
   // packs — a whole questionnaire that goes out and comes back
   askOk: "All right",

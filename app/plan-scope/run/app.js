@@ -531,7 +531,11 @@ function _newMeeting(target, said = {}, { title = null } = {}) {
     return page;
   }
   _repaint();
-  snack(tf("meetingSet", { when: said.time ? `${longDate(day)}, ${said.time}` : longDate(day) }), {
+  // Into the agenda, the strip says so: an appointment with somebody who works on no project goes
+  // there by itself, and whoever just made it would otherwise not know where to look for it.
+  const intoAgenda = model.project(target) && model.project(target).kind === "agenda";
+  const set = tf("meetingSet", { when: said.time ? `${longDate(day)}, ${said.time}` : longDate(day) });
+  snack(intoAgenda ? `${set} ${t("agendaMade")}` : set, {
     action: t("meetOpen"),
     onAction: () => _openPage(page.id),
   });

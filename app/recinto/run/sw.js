@@ -11,7 +11,7 @@
 //    start. Swapping the files under a running app means changing the code under somebody who is
 //    halfway through a game.
 
-const VERSION = '0.15.4';
+const VERSION = '0.15.5';
 const CACHE = `recinto-v${VERSION}`;
 
 // Every file the app is made of, plus the shared modules it borrows. Kept by hand and checked by

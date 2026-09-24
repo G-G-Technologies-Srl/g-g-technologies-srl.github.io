@@ -243,6 +243,8 @@ function _drawCessione() {
   const profile = profileFor(company, party);
   box.hidden = !profile.cessioni || !rimborsabile(current);
   el("docTcNote").hidden = box.hidden;
+  // The «NR» column shows under the same condition, so its explanation follows the same switch.
+  el("docNonRimbNote").hidden = box.hidden;
   if (box.hidden) return;
 
   const menu = el("docTipoCessione");

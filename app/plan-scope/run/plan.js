@@ -656,6 +656,8 @@ function _paintSelection() {
   for (const id of live) selected.add(id);
   const bar = el("selectBar");
   bar.hidden = !selected.size || view !== "kanban";
+  // The hint says how to get here, and goes once somebody has: with two cards or more, on the board.
+  el("boardHint").hidden = view !== "kanban" || selected.size > 0 || _filtered().length < 2;
   if (bar.hidden) return;
   el("selectCount").textContent = tf("selectCount", { n: num(selected.size, 0) });
   const move = el("selectMove");
@@ -962,6 +964,11 @@ function _paintCalendar() {
     cells.push(cell);
   }
   fill(el("calGrid"), cells);
+
+  // Whether the month on view holds anything, counted on the same set the grid drew.
+  const last = model.todayISO(new Date(first.getFullYear(), first.getMonth() + 1, 0));
+  const inMonth = [...byDay.keys()].some((day) => day >= month && day <= last);
+  el("calEmpty").hidden = inMonth;
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -1228,6 +1235,8 @@ export function paint() {
   // I due comandi dello zoom sono della linea del tempo, e nelle altre due viste non vogliono dire
   // niente: la barra è una sola, quindi la riempie chi è in scena.
   if (view !== "timeline") el("planZoom").hidden = true;
+  // The empty month belongs to the calendar, and sits outside it: the other views hide it here.
+  if (view !== "calendar") el("calEmpty").hidden = true;
 
   _paintFilters();
   _paintSelection();

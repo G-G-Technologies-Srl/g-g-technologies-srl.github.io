@@ -152,9 +152,6 @@ const IT = {
   homeQuoteUntil: "fino al {data}",
   homeDrafts: "Bozze lasciate a metà",
   monthLetters: "G F M A M G L A S O N D",
-  homeBackupNever: "Nessun archivio è stato ancora esportato. L'applicazione funziona senza server, "
-    + "quindi quella è l'unica copia che esiste.",
-  homeBackupGo: "Esporta adesso",
 
   // La sicurezza dell'archivio, detta dove si guarda ogni giorno. Le decide `safety.js`, e i tre
   // stati «collegata ma non scrive» si dicono sempre: è lì che una persona si crede coperta.
@@ -777,7 +774,6 @@ const IT = {
     + "arrivano fino a trenta giorni indietro. Servono per il giorno in cui quello che c'è adesso "
     + "è sbagliato: riportare una copia rimette l'archivio com'era quel giorno.",
   backupCopyLatest: "Copia corrente",
-  backupCopySize: "{size}",
   backupChoose: "Scegli cosa fare",
   backupHeld: "La cartella «{folder}» teneva già delle copie, quindi non è stata scritta. Scegli se "
     + "riportare quello che c'è o scriverci quello che c'è qui.",
@@ -945,7 +941,6 @@ const IT = {
   docIssueAskTD04: "Una volta emessa, la nota di credito prende un numero e non si modifica più. Emetto?",
   docIssueAskDdt: "Una volta emesso, il documento di trasporto prende un numero e non si modifica "
     + "più. Emetto?",
-  printFrom: "Mittente",
   printTo: "Destinatario",
   printPiva: "P. IVA",
   printCoe: "COE",
@@ -1077,7 +1072,7 @@ const IT = {
   docVariazioni: "Nota per variazioni contrattuali",
   docVariazioniNota: "Non rettifica una fattura: dipende da un contratto già in essere. Il riferimento "
     + "alla fattura non finisce nel file.",
-  nonRimbNota: "Spunta le righe che restano fuori dal rimborso monofase.",
+  nonRimbNota: "Nella colonna «NR» si spuntano le righe che restano fuori dal rimborso monofase.",
   causaleHint: "di cosa si tratta — es. «Rifacimento porta d'ingresso»",
   ibanHint: "aggiungi un conto in Azienda, e comparirà già qui",
   f_denominazioneCliente: "ragione sociale, o nome e cognome",
@@ -1564,9 +1559,6 @@ const EN = {
   homeQuoteUntil: "until {data}",
   homeDrafts: "Drafts left half-way",
   monthLetters: "J F M A M J J A S O N D",
-  homeBackupNever: "You have never exported an archive. The application runs without a server, so that is the "
-    + "only copy there is.",
-  homeBackupGo: "Export now",
 
   safetyNoFolder: "Your invoices live in this browser alone. Link a folder on your computer: the "
     + "app keeps an up-to-date copy there by itself, and if this browser is ever emptied you still "
@@ -2159,7 +2151,6 @@ const EN = {
     + "thirty days. They are there for the day what you have now is wrong: bringing a copy back "
     + "puts the archive as it was on that day.",
   backupCopyLatest: "Current copy",
-  backupCopySize: "{size}",
   backupChoose: "Choose what to do",
   backupHeld: "The folder “{folder}” already held copies, so nothing was written to it. Choose whether to "
     + "bring back what is there or write what you have here.",
@@ -2333,7 +2324,6 @@ const EN = {
   docIssueAskTD04: "Once issued, the credit note takes a number and cannot be changed. Issue it?",
   docIssueAskDdt: "Once issued, a delivery note takes a number and cannot be changed. Shall I "
     + "issue it?",
-  printFrom: "From",
   printTo: "To",
   printPiva: "VAT no.",
   printCoe: "COE",
@@ -2463,7 +2453,7 @@ const EN = {
   docVariazioni: "Note for contractual variations",
   docVariazioniNota: "It does not correct an invoice: it follows from a standing contract. The "
     + "reference to the invoice stays out of the file.",
-  nonRimbNota: "Tick the lines that stay out of the single-stage refund.",
+  nonRimbNota: "In the «NR» column, tick the lines that stay out of the single-stage refund.",
   causaleHint: "what it is about — e.g. “Front door replacement”",
   ibanHint: "add an account under Company and it shows up here by itself",
   f_denominazioneCliente: "company name, or first and last name",

@@ -193,6 +193,10 @@ function _translate() {
   for (const select of [el("companyForm").elements.naturaPredefinita, el("itemNatura")]) _fillNature(select);
   _fillMerce(el("companyForm").elements.tmPredefinito);
   el("docsSearch").placeholder = t("docsSearchHint");
+  // The search box of the shared editor's block menu: the markup is ours, so are its words. Without
+  // these two lines the field had no name for a screen reader and no hint on screen.
+  el("blockMenuField").placeholder = t("menuFind");
+  el("blockMenuField").setAttribute("aria-label", t("menuFind"));
   // Due campi che un nome solo non spiega: «causale» a chi fa la prima fattura non dice niente,
   // e un IBAN vuoto non dice da dove arriverebbe.
   el("docCausale").placeholder = t("causaleHint");

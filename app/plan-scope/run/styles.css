@@ -2528,3 +2528,11 @@ a.attachment:hover { border-color: var(--border-strong); }
 #sharedLine .check-line { margin: 0; }
 #folderDialog label { display: block; font-size: 12.5px; color: var(--faint); margin: 8px 0 4px; }
 #folderDialog input { width: 100%; }
+
+/* How to pick several cards: a note under the board, and nowhere on a touch screen, where there is
+   no Shift to hold and the hint would describe a gesture nobody can make. */
+.board-hint { margin: 0; padding: 0 14px 12px; }
+@media (hover: none) { .board-hint { display: none; } }
+
+/* The month with nothing in it, under the grid it belongs to. */
+.cal-empty { margin: 0 14px 16px; }

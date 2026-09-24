@@ -18,7 +18,6 @@ const IT = {
   insertCoin: "Inserisci un gettone",
   coinFree: "I gettoni sono infiniti: è il rito, non un limite.",
   start: "Start",
-  startHint: "Invio, oppure il pulsante qui sopra",
 
   howTitle: "Come si gioca",
   howGoalTitle: "Lo scopo",
@@ -150,7 +149,6 @@ const EN = {
   insertCoin: "Insert a coin",
   coinFree: "Coins are endless: it is the ritual, not a limit.",
   start: "Start",
-  startHint: "Enter, or the button above",
 
   howTitle: "How to play",
   howGoalTitle: "What you are doing",

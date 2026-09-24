@@ -457,6 +457,10 @@
     </div>
 
     <div class="board" id="board"></div>
+    <!-- How to pick several cards. The selection bar below existed, and nothing said how to reach
+         it: Shift-click is not a gesture anybody tries on their own. Hidden on touch screens,
+         where there is no Shift to hold. -->
+    <p class="note board-hint" id="boardHint" data-t="selectHint" hidden></p>
     <!-- The selection bar: Shift-click picks cards, and this says what can be done to all of them
          at once. It is at the bottom, where the hand goes after it has finished picking. -->
     <div class="select-bar" id="selectBar" hidden>
@@ -479,6 +483,9 @@
       <div class="cal-week" id="calWeekdays"></div>
       <div class="cal-grid" id="calGrid"></div>
     </div>
+    <!-- A month with nothing in it says so: an empty grid reads as one that has not loaded. Outside
+         the calendar, as on the agenda: inside, the grid's rules drew it as a seventh row. -->
+    <p class="empty cal-empty" id="calEmpty" data-t="calEmpty" hidden></p>
 
     <!-- The third view. The rows follow the board's columns on purpose: grouped by date it would
          be a second way of reading the same plan, and somebody who knows where a task sits on the
