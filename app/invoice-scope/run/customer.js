@@ -459,7 +459,9 @@ function _drawProjects() {
     });
     const avanzamento = progressOf(record.id);
     for (const [valore, classe] of [
-      [record.name || t("projectsUntitled"), null],
+      // An archived project stays in the customer's history — it is part of it — and says so.
+      [record.archivedAt ? tf("custProjectArchived", { nome: record.name || t("projectsUntitled") })
+        : record.name || t("projectsUntitled"), null],
       [tf("projectPhasesCount", { fatte: avanzamento.done, tutte: avanzamento.total }), "nowrap"],
       [money(progetti.billableTotal(record.id)), "right"],
     ]) {

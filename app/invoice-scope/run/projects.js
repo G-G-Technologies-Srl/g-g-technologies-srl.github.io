@@ -126,6 +126,7 @@ export async function setup(db) {
   // Trenta giorni dopo, e non prima: il cestino del modello è la sola rete che ha chi cancella un
   // progetto per sbaglio. `purge` è l'unico posto in cui qualcosa sparisce davvero.
   plan.purge();
+  roll();
   await flush();
   // E quello che `purge` non sa togliere: le figure di un progetto che non c'è più. Il modello non
   // conosce gli allegati — sono di questa app — quindi senza questa riga i byte resterebbero nel
@@ -175,9 +176,113 @@ export async function flush() {
 //  p u b l i c   —   i l   p r o g e t t o
 // -----------------------------------------------------------------------------------------------------------------
 
-/** I progetti vivi, dal più toccato di recente. */
+/**
+ * Every live project, archived ones included, the most recently touched first.
+ *
+ * This is the list for the money and for the customer's history: an archived project still has
+ * invoices and payments, and a sum that forgot it would be wrong without saying so. The agenda of
+ * Plan Scope stays out: it is not a job, and it can only get here inside a package.
+ */
 export function projects() {
-  return plan.liveProjects();
+  return plan.liveProjects().filter((one) => one.kind !== "agenda");
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  p u b l i c   —   s h e l f ,   s t a r   a n d   a r c h i v e
+// -----------------------------------------------------------------------------------------------------------------
+
+/**
+ * The projects on the shelf: not archived, starred ones first, then by last change.
+ *
+ * `plainProjects` is the model's word for «what a person chooses or counts», which is exactly what
+ * the list of projects is. The star and the archive are personal choices — the model keeps them out
+ * of a shared folder's fingerprint — and a package imported here arrives without either.
+ */
+export function openProjects() {
+  const live = plan.plainProjects();
+  return [...live.filter((one) => one.favourite), ...live.filter((one) => !one.favourite)];
+}
+
+/** The finished projects, set aside and still there: the most recently archived first. */
+export function archivedProjects() {
+  return plan.archivedProjects();
+}
+
+/** The star on a project: it goes to the top of the list, whatever else changes. */
+export function setPinned(id, pinned) {
+  return plan.setPinned(id, pinned);
+}
+
+/** Archive a project, or bring it back. Returns the model's undo step. */
+export function setArchived(id, archived) {
+  return plan.setArchived(id, archived);
+}
+
+/**
+ * What a project still has open in money: phases done and not invoiced, and invoiced but not
+ * collected. Asked before archiving, because an archived project leaves the list and a sum that
+ * nobody sees any more is a sum nobody chases.
+ */
+export async function openMoney(db, projectId) {
+  const n = await figures(db, projectId);
+  const daIncassare = cmp(n.fatturato, n.incassato) > 0 ? sub(n.fatturato, n.incassato) : ZERO;
+  return { daFatturare: n.daFatturare, daIncassare };
+}
+
+/**
+ * A project found by name or by customer, without minding accents or case.
+ *
+ * `customerName` is given by the caller, which already holds the customers by id: this file reads
+ * the store only for the money, and a lookup per keystroke would be one for nothing.
+ */
+export function matches(record, query, customerName = "") {
+  const fold = (text) => String(text || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const wanted = fold(query).trim();
+  if (!wanted) return true;
+  return fold(`${record.name || ""} ${customerName}`).includes(wanted);
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  p u b l i c   —   t h e   b i n
+// -----------------------------------------------------------------------------------------------------------------
+
+/**
+ * Everything in the bin, newest first: projects, and the pages and phases binned on their own.
+ *
+ * The pages and phases of a binned project are not listed one by one: they went in with it and
+ * come back with it, and listing them would offer to restore a page into a project that is gone.
+ */
+export function binned() {
+  const out = [];
+  for (const record of plan.trashedProjects()) {
+    if (record.kind === "agenda") continue;
+    out.push({ kind: "project", record, project: record });
+  }
+  for (const owner of projects()) {
+    for (const record of plan.pagesOf(owner.id, { trashed: true })) out.push({ kind: "page", record, project: owner });
+    for (const record of plan.tasksOf(owner.id, { trashed: true })) {
+      // A sub-task that went in with its parent comes back with it: one row, the parent's.
+      if (record.trashedWith) continue;
+      out.push({ kind: "task", record, project: owner });
+    }
+  }
+  return out.sort((a, b) => String(b.record.trashedAt).localeCompare(String(a.record.trashedAt)));
+}
+
+/** Out of the bin, by kind. Returns what came back, or null. */
+export function restore(kind_, id) {
+  if (kind_ === "project") return plan.restoreProject(id);
+  if (kind_ === "page") return plan.restorePage(id);
+  if (kind_ === "task") return plan.restoreTask(id);
+  return null;
+}
+
+/**
+ * The repeating meetings of pages written in Plan Scope: when their moment has passed, the next one
+ * is written. Plan Scope does it at every start, and a project brought here must not stop the clock.
+ */
+export function roll() {
+  return plan.rollMeetings();
 }
 
 export function project(id) {
@@ -244,9 +349,11 @@ export function unlinkDoc(projectId, docId) {
  * fatturare due volte.
  */
 export function forgetDoc(docId) {
-  for (const record of plan.liveProjects()) {
+  // The binned projects too: one restored later would otherwise come back with a phase «invoiced»
+  // on a document that no longer exists, and that phase could never be invoiced again.
+  for (const record of [...plan.liveProjects(), ...plan.trashedProjects()]) {
     if ((record.docIds || []).includes(docId)) unlinkDoc(record.id, docId);
-    for (const one of plan.tasksOf(record.id)) {
+    for (const one of [...plan.tasksOf(record.id), ...plan.tasksOf(record.id, { trashed: true })]) {
       if (one.docId === docId) plan.updateTask(one.id, { docId: null });
     }
   }

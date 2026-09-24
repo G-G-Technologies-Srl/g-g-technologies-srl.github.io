@@ -163,8 +163,8 @@ const IT = {
   safetyNoFolderGo: "Collega una cartella",
   safetyHeld: "La cartella «{folder}» è collegata ma non riceve copie: teneva già un archivio, e "
     + "aspetta di sapere quale versione vale.",
-  safetyPrompt: "La cartella «{folder}» aspetta il permesso del browser: finché non glielo dai, "
-    + "nessuna copia ci arriva.",
+  safetyPrompt: "La cartella «{folder}» aspetta il permesso del browser: finché non viene "
+    + "concesso, nessuna copia ci arriva.",
   safetyError: "L'ultima copia nella cartella «{folder}» non è riuscita ({error}). Da allora il vostro "
     + "archivio sta solo qui.",
   safetyNever: "La cartella «{folder}» è collegata, e non ha ancora ricevuto nessuna copia.",
@@ -191,21 +191,21 @@ const IT = {
   remindSays: "Una scadenza del {date} viene annunciata {when}.",
   remindSaysDay: "il {date} alle {hour}",
   remindSaysSame: "lo stesso giorno alle {hour}",
-  remindOff: "Spenti. Le scadenze restano nello Scadenzario e nel calendario che esporti.",
-  remindStateNo: "Questo browser non mostra notifiche: restano il calendario che esporti e il "
+  remindOff: "Spenti. Le scadenze restano nello Scadenzario e nel calendario esportato.",
+  remindStateNo: "Questo browser non mostra notifiche: restano il calendario esportato e il "
     + "riepilogo all'apertura.",
-  remindStateAsk: "Le notifiche di sistema sono da permettere. Senza, restano il calendario che "
-    + "esporti e il riepilogo all'apertura.",
+  remindStateAsk: "Le notifiche di sistema sono da permettere. Senza, restano il calendario "
+    + "esportato e il riepilogo all'apertura.",
   remindStateYes: "Notifiche permesse. Con l'app installata su Chrome o Edge arrivano anche a "
     + "finestra chiusa, quando il browser sveglia l'app — non a un orario preciso.",
   remindStateDenied: "Notifiche negate a questo sito. Si riattivano dalle impostazioni del "
-    + "browser, non da qui. Restano il calendario che esporti e il riepilogo all'apertura.",
+    + "browser, non da qui. Restano il calendario esportato e il riepilogo all'apertura.",
   remindStateWaiting: "Notifiche permesse. Il risveglio automatico non è ancora concesso: il "
     + "browser lo riserva alle applicazioni installate e usate con una certa regolarità, e "
-    + "l'applicazione lo richiede a ogni apertura. Intanto restano il calendario che esporti e il "
+    + "l'applicazione lo richiede a ogni apertura. Intanto restano il calendario esportato e il "
     + "riepilogo all'apertura.",
-  remindStateSleeps: "Notifiche permesse. Questo browser però non sveglia l'app da solo: le vedrai "
-    + "aprendola, e nel calendario che esporti.",
+  remindStateSleeps: "Notifiche permesse. Questo browser però non sveglia l'app da solo: le "
+    + "notifiche compaiono all'apertura, e le scadenze restano nel calendario esportato.",
   remindSavedNote: "Salvato.",
   remindHeading: "Scadenze",
   remindIn: "Fattura",
@@ -234,7 +234,7 @@ const IT = {
   dueOverpaid: "Incasso registrato. È {di_piu} più di quello che risultava da incassare: il "
     + "documento risulta saldato.",
   incassiTitle: "Incassi",
-  incassiEmpty: "Gli incassi che registri compaiono qui.",
+  incassiEmpty: "Qui compaiono gli incassi registrati.",
   incassiAmount: "Importo",
   incassiNote: "Nota",
   incassiTotal: "Incassato",
@@ -330,10 +330,8 @@ const IT = {
   projectsUntitled: "Senza nome",
   projectsNote: "Il piano di un lavoro, con accanto quanto è stato quotato, fatturato e incassato. Un "
     + "progetto nasce anche da un preventivo accettato, con una fase per riga.",
-  projectsEmpty: "Qui compaiono i lavori che segui.",
+  projectsEmpty: "Qui compaiono i lavori in corso.",
   projectNeedsName: "Serve almeno il nome del progetto.",
-  projectDeleteAsk: "Elimino questo progetto? Le fatture e i preventivi collegati restano dove "
-    + "sono. Torna indietro dal cestino entro trenta giorni.",
   projectPhases: "Fasi",
   projectPhasesCount: "{fatte} di {tutte}",
   projectToBill: "Da fatturare",
@@ -351,13 +349,12 @@ const IT = {
   projPhasesNote: "Spunta una fase quando è fatta. Una fase con un importo, quando è fatta, diventa "
     + "una riga di fattura: è il motivo per cui il piano sta qui e non in un programma a parte. "
     + "L'importo di una fase è l'imponibile: l'IVA la aggiunge la fattura.",
-  projPhasesEmpty: "Qui compaiono le fasi che aggiungi.",
+  projPhasesEmpty: "Qui compaiono le fasi del lavoro, una per riga.",
   projDone: "fatta",
   projPhase: "fase",
   projAmount: "importo",
   projPhaseAdd: "Aggiungi la fase",
   projPhaseNeedsTitle: "Scrivi che cos'è, anche solo due parole.",
-  projPhaseDeleteAsk: "Elimino questa fase?",
   projPhaseBilled: "fatturata",
   projPhaseDrafted: "in bozza",
   projInvoiceDone: "Fattura le fasi fatte",
@@ -370,6 +367,72 @@ const IT = {
   docMakeProject: "Crea il progetto",
   docInProject: "Progetto: {nome}",
 
+  // ---- the list: star, search, archive, bin
+  custProjectArchived: "{nome} · archiviato",
+  projectsSearch: "Cerca",
+  projectsSearchHint: "Nome del progetto o del cliente",
+  projectsNoMatch: "Nessun progetto con questo nome o con questo cliente.",
+  projectsShowArchived: "Archiviati · {n}",
+  projectsHideArchived: "Nascondi gli archiviati",
+  projectsArchivedTitle: "Archiviati",
+  projectsArchivedNote: "I lavori conclusi, tolti dall'elenco senza toccarne niente. I loro importi "
+    + "contano ancora nella Situazione.",
+  projectsShowBin: "Cestino · {n}",
+  projectsHideBin: "Chiudi il cestino",
+  projectsBinTitle: "Cestino",
+  projectsBinNote: "Progetti, pagine e fasi eliminati restano qui per trenta giorni, poi spariscono. "
+    + "Un progetto ripristinato torna con le sue pagine e le sue fasi.",
+  binKind_project: "Progetto",
+  binKind_page: "Pagina",
+  binKind_task: "Fase",
+  binSince: "nel cestino dal {data}",
+  binIn: "in «{nome}»",
+  binRestore: "Ripristina",
+  pinAdd: "Metti in evidenza",
+  pinRemove: "Togli dall'evidenza",
+  undo: "Annulla",
+
+  // ---- archive, and the strip after a deletion
+  projArchive: "Archivia",
+  projUnarchive: "Togli dall'archivio",
+  projArchivedNote: "Archiviato il {data}. Non compare nell'elenco dei progetti, ma i suoi importi "
+    + "contano ancora nella Situazione.",
+  projArchiveAsk: "Resta qualcosa di aperto su questo progetto. Archiviato, non comparirà più "
+    + "nell'elenco:",
+  projArchiveToBill: "{importo} da fatturare",
+  projArchiveToCollect: "{importo} fatturati e non ancora incassati",
+  snackProjectBinned: "Progetto «{nome}» nel cestino.",
+  snackPageBinned: "Pagina «{nome}» nel cestino.",
+  snackPhaseBinned: "Fase «{nome}» nel cestino.",
+  snackArchived: "Progetto «{nome}» archiviato.",
+  snackUnarchived: "Progetto «{nome}» di nuovo fra i progetti.",
+  snackRestored: "«{nome}» è di nuovo al suo posto.",
+  snackUndone: "Rimesso com'era.",
+
+  // ---- page templates, and the people named with «@»
+  projPageFromTemplate: "Da un modello…",
+  pageTplAsk: "Da quale modello?",
+  pageTpl_visit: "Verbale di sopralluogo",
+  pageTplNote_visit: "Chi c'era, cosa si è visto, le misure, cosa resta da definire",
+  pageTplBody_visit: "## Presenti\n\n- \n\n## Cosa si è visto\n\n- \n\n## Misure\n\n"
+    + "| Punto | Misura |\n| --- | --- |\n|  |  |\n\n## Da definire\n\n- [ ] \n",
+  pageTpl_spec: "Specifiche della fornitura",
+  pageTplNote_spec: "Oggetto, requisiti, materiali, esclusioni, criteri di accettazione",
+  pageTplBody_spec: "## Oggetto\n\nUna frase: che cosa si consegna.\n\n## Requisiti\n\n- \n\n"
+    + "## Materiali e prodotti\n\n- \n\n## Cosa è escluso\n\n- \n\n## Criteri di accettazione\n\n- [ ] \n",
+  pageTpl_delivery: "Checklist di consegna",
+  pageTplNote_delivery: "Prima, alla consegna e dopo, fino alla fattura",
+  pageTplBody_delivery: "## Prima della consegna\n\n- [ ] \n\n## Alla consegna\n\n"
+    + "- [ ] Verbale di consegna firmato dal cliente\n\n## Dopo la consegna\n\n"
+    + "- [ ] Fattura delle fasi fatte\n",
+  pageTpl_minutes: "Verbale di riunione",
+  pageTplNote_minutes: "Presenti, punti discussi, decisioni, prossimi passi",
+  pageTplBody_minutes: "## Presenti\n\n- \n\n## Punti discussi\n\n- \n\n## Decisioni\n\n- \n\n"
+    + "## Prossimi passi\n\n- [ ] \n",
+  menuPeople: "Chi?",
+  projPersonUnknown: "«{nome}» non è fra le persone di riferimento del cliente. Si aggiunge dalla "
+    + "scheda del cliente, e da lì si può nominare in ogni pagina del progetto.",
+
   // ---- le pagine di un progetto, e le parole dell'editor condiviso
   //
   // **Le stesse chiavi che ha Plan Scope**, perché `gg/plan-editor.js` le cerca con la funzione che
@@ -378,8 +441,8 @@ const IT = {
   // giusto così: sono le parole di questa app.
   projPagesTitle: "Pagine",
   projPagesNote: "Il capitolato, il verbale di un sopralluogo, le misure prese in cantiere. Stanno "
-    + "nel progetto, e viaggiano con lui quando lo esporti.",
-  projPagesEmpty: "Qui compaiono le pagine che aggiungi.",
+    + "nel progetto, e viaggiano con lui quando lo si esporta.",
+  projPagesEmpty: "Qui compaiono le pagine del progetto.",
   projPageNew: "Nuova pagina",
   projPageImage: "Immagine",
   projPageFile: "Allegato",
@@ -393,8 +456,6 @@ const IT = {
   projPageSubAsk: "Come si chiama la sotto-pagina?",
   projPageTooDeep: "Le sotto-pagine arrivano a quattro livelli, e questa è già in fondo. Se serve "
     + "un altro scalino, di solito conviene una pagina in più accanto.",
-  projPageDeleteAsk: "Elimino questa pagina? Le sue sotto-pagine restano, e salgono di un livello. "
-    + "Torni indietro dal cestino entro trenta giorni.",
   addBlock: "Aggiungi un blocco",
   dragHandle: "Trascina per spostare, tocca per trasformare — con la tastiera, Alt e le frecce",
   taskDone: "Fatto",
@@ -414,12 +475,6 @@ const IT = {
   blockHeading1: "Titolo grande",
   blockHeading2: "Titolo medio",
   blockHeading3: "Titolo piccolo",
-  blockHeading1: "Titolo grande",
-  blockHeading2: "Titolo medio",
-  blockHeading3: "Titolo piccolo",
-  blockHeading2: "Titolo medio",
-  blockHeading3: "Titolo piccolo",
-  blockHeading3: "Titolo piccolo",
   blockList: "Elenco puntato",
   blockOrdered: "Elenco numerato",
   blockCheck: "Checklist",
@@ -438,7 +493,7 @@ const IT = {
   partiesTitle: "Anagrafiche",
   partiesClients: "Clienti",
   partiesItems: "Listino",
-  partiesEmpty: "Qui compaiono i clienti che aggiungi.",
+  partiesEmpty: "Qui compaiono i clienti in anagrafica.",
   partiesNew: "Nuovo cliente",
   partiesEdit: "Modifica cliente",
   partyDeleteAsk: "Elimino questo cliente? I documenti già emessi restano come sono.",
@@ -448,10 +503,10 @@ const IT = {
   partyNeedsName: "Serve almeno la ragione sociale.",
   partyWarnings: "Si può salvare così, ma per fatturare a questo cliente servirà:",
   sedeEsteraNote: "Su un indirizzo estero il tracciato vuole CAP 00000 e nessuna provincia: l'app "
-    + "li scrive così da sé. Quello che metti qui compare sul foglio stampato, dove il CAP vero e "
+    + "li scrive così da sé. Quello che si scrive qui compare sul foglio stampato, dove il CAP vero e "
     + "il nome della regione servono a chi riceve.",
 
-  itemsEmpty: "Qui compaiono le voci che usi spesso.",
+  itemsEmpty: "Qui compaiono le voci usate più spesso.",
   partiesLastContact: "Ultimo contatto",
 
   // ---- due schede per lo stesso soggetto
@@ -568,14 +623,14 @@ const IT = {
   toIssueTitle: "Fatture da emettere",
   toIssueNote: "Le occorrenze delle fatture ricorrenti che non hanno ancora un documento. «Crea la "
     + "bozza» prepara la fattura con il cliente, la riga e la scadenza già dentro: il numero si "
-    + "assegna quando la emetti.",
+    + "assegna all'emissione.",
   toIssueTotal: "In tutto {totale}",
   toIssueMake: "Crea la bozza",
   toIssueLate: "da fare",
   plansTitle: "Fatture ricorrenti",
   plansNew: "Nuova ricorrenza",
-  plansNote: "Il canone, il monte ore fisso, l'abbonamento: quello che fatturi allo stesso cliente "
-    + "a intervalli regolari. Si scrive una volta.",
+  plansNote: "Il canone, il monte ore fisso, l'abbonamento: quello che si fattura allo stesso "
+    + "cliente a intervalli regolari. Si scrive una volta.",
   plansEmpty: "Qui compaiono le fatture che si ripetono.",
   plansHint: "La bozza nasce con la data dell'occorrenza e la scadenza calcolata dai giorni "
     + "indicati. Natura e tipo merce li decide il canale del cliente al momento di crearla.",
@@ -605,11 +660,11 @@ const IT = {
   custContactsTitle: "Persone di riferimento",
   custContactsNote: "Chi risponde al telefono e a chi si scrive. Restano qui, sul vostro computer: la "
     + "fattura elettronica non ha un campo per il nome di una persona, e l'app non ne inventa uno.",
-  custContactsEmpty: "Le persone che aggiungi compaiono qui.",
+  custContactsEmpty: "Qui compaiono le persone di riferimento del cliente.",
   custDiaryTitle: "Diario",
   custDiaryNote: "Una riga per telefonata, email o incontro. Vale la volta dopo, quando vi chiedono "
     + "che cosa vi eravate detti — e quando il preventivo arriva tre mesi più tardi.",
-  custDiaryEmpty: "Qui compare quello che annoti.",
+  custDiaryEmpty: "Qui compare il diario dei contatti con il cliente.",
   custProjectsTitle: "I suoi progetti",
   partyDefaultsTitle: "Nei suoi documenti",
   partyDefaultsNote: "Quello che l'app propone su un documento nuovo per questo cliente. Vuoti, "
@@ -646,13 +701,13 @@ const IT = {
     + "volta sola.",
   companySaved: "Dati dell'azienda salvati.",
   progressivoNote: "Il numero che porterà il prossimo file, nel nome e dentro il documento. Serve "
-    + "quando arrivi da un altro programma: si scrive una volta, e da lì in avanti lo gestisce "
+    + "a chi arriva da un altro programma: si scrive una volta, e da lì in avanti lo gestisce "
     + "l'applicazione. Si può spostare in avanti in qualsiasi momento, indietro no — un progressivo "
     + "già uscito viene rifiutato come duplicato.",
   contiTitle: "Conti correnti",
   contiNote: "Il conto predefinito entra da sé nei documenti nuovi. L'IBAN resta modificabile sul "
     + "singolo documento, per gli incassi che vanno altrove.",
-  contiEmpty: "I conti che aggiungi compaiono qui.",
+  contiEmpty: "Qui compaiono i conti correnti dell'azienda.",
   contiNew: "Aggiungi un conto",
   contiDefault: "Predefinito",
   contiRemove: "Togli il conto",
@@ -672,7 +727,7 @@ const IT = {
   settingsSpace: "Spazio usato",
   settingsPersistYes: "Questo browser ha promesso di non svuotare da sé l'archivio dell'applicazione.",
   settingsPersistNo: "Questo browser non ha ancora promesso di conservare l'archivio: in caso di "
-    + "pulizia dello spazio può rimuoverlo. L'applicazione lo richiede da sé mentre la usi; nel "
+    + "pulizia dello spazio può rimuoverlo. L'applicazione lo richiede da sé mentre è in uso; nel "
     + "frattempo, la copia che conta è quella nella cartella collegata o l'archivio esportato.",
   settingsPersistUnknown: "Questo browser non dice se conserva l'archivio in modo permanente.",
 
@@ -820,8 +875,8 @@ const IT = {
   // I tipi cessione ammessi al rimborso monofase, dal manuale dell'Ufficio Tributario (giugno 2026).
   docTipoCessione: "Tipo cessione",
   tcNessuno: "— nessuno",
-  tcNota: "Serve solo se chiedi il rimborso monofase. Il rimborso lo crea l'Ufficio Tributario da "
-    + "sé, raggruppando le fatture con lo stesso codice.",
+  tcNota: "Serve solo se si chiede il rimborso monofase. Il rimborso lo crea l'Ufficio Tributario "
+    + "da sé, raggruppando le fatture con lo stesso codice.",
   tc1: "B.S. Veicoli",
   tc2: "B.S. Veicolo usato 8,5%",
   tc5: "Ricambi con o senza manutenzione verso lo Stato",
@@ -886,7 +941,7 @@ const IT = {
   docNoXml: "Il preventivo e il documento di trasporto restano qui: si stampano, e quando il "
     + "cliente conferma diventano una fattura. È la fattura che produce il file.",
   docIssueAskPreventivo: "Una volta emesso, il preventivo prende un numero e non si modifica più. "
-    + "Se il cliente chiede una variante, ne fai un altro. Emetto?",
+    + "Se il cliente chiede una variante, se ne emette un altro. Emetto?",
   docIssueAskTD04: "Una volta emessa, la nota di credito prende un numero e non si modifica più. Emetto?",
   docIssueAskDdt: "Una volta emesso, il documento di trasporto prende un numero e non si modifica "
     + "più. Emetto?",
@@ -1015,7 +1070,6 @@ const IT = {
   f_data: "data",
   f_numero: "numero",
   f_causale: "causale",
-  f_categoria: "categoria",
   f_tipoCessione: "tipo cessione",
   f_nonRimborsabile: "non rimborsabile",
   f_variazioniContrattuali: "variazione contrattuale",
@@ -1025,7 +1079,7 @@ const IT = {
     + "alla fattura non finisce nel file.",
   nonRimbNota: "Spunta le righe che restano fuori dal rimborso monofase.",
   causaleHint: "di cosa si tratta — es. «Rifacimento porta d'ingresso»",
-  ibanHint: "aggiungi un conto in Azienda e lo trovi già qui",
+  ibanHint: "aggiungi un conto in Azienda, e comparirà già qui",
   f_denominazioneCliente: "ragione sociale, o nome e cognome",
   f_righe: "righe",
   f_riepiloghi: "riepilogo",
@@ -1106,7 +1160,7 @@ const IT = {
     + "sul vostro computer.",
   vDateShape: "deve essere nella forma AAAA-MM-GG",
   vDateFix: "Per esempio {esempio}.",
-  vNumberOnIssueFix: "Il numero si assegna quando emetti: una bozza non ne ha uno.",
+  vNumberOnIssueFix: "Il numero si assegna all'emissione: una bozza non ne ha uno.",
   vNumberTooLongFix: "Accorcia la numerazione: la serie può stare in una sigla.",
   vCausaleTooLongFix: "Accorcia, o sposta il testo nella descrizione di una riga.",
   vRegimeFix: "L'app scrive {elenco}: ordinario e forfettario.",
@@ -1114,7 +1168,7 @@ const IT = {
   vDestinatarioFix: "Sette lettere o cifre. Senza codice l'app scrive 0000000 e la fattura arriva "
     + "nel cassetto fiscale del cliente.",
   vCreditNoteLink: "una nota di credito deve dire che cosa storna",
-  vCreditNoteLinkFix: "Indica numero e data della fattura che stai stornando.",
+  vCreditNoteLinkFix: "Indica numero e data della fattura da stornare.",
   vQuoteValidity: "il preventivo deve dire fino a quando vale",
   vQuoteValidityFix: "Scrivi una data: un prezzo senza scadenza resta valido finché il cliente lo "
     + "trova.",
@@ -1322,7 +1376,7 @@ const IT = {
   f_telefono: "telefono",
   f_sito: "sito web",
   companyWhere: "Dove sei",
-  companyNumbering: "Come numeri",
+  companyNumbering: "Numerazione",
   companyDefaultsTitle: "Le righe nuove",
   companyDefaultsNote: "Quello che l'app scrive da sé su ogni riga nuova: l'aliquota, e se è zero "
     + "la natura e il codice TM. Per chi fattura senza IVA è quasi ogni riga: scritto qui una "
@@ -1338,7 +1392,6 @@ const IT = {
   docsSearchHint: "numero, cliente, causale",
   docsYear: "Anno",
   docsAllYears: "Tutti gli anni",
-  docsState: "Stato",
   // Come sta l'incasso. Non è uno stato del documento: è la somma degli incassi, e si dice accanto
   // allo stato invece che dentro.
   settleDone: "saldata",
@@ -1373,8 +1426,8 @@ const IT = {
 
   // ---- messaggi
   errIntro: "Il documento non è ancora completo:",
-  loadFailed: "Non è possibile aprire l'archivio dei dati. Se stai navigando in incognito, il browser lo "
-    + "impedisce.",
+  loadFailed: "Non è possibile aprire l'archivio dei dati. In una finestra in incognito il browser "
+    + "lo impedisce.",
 };
 
 const EN = {
@@ -1680,10 +1733,8 @@ const EN = {
   projectsUntitled: "Untitled",
   projectsNote: "The plan of a job, beside what you quoted, invoiced and collected. A project can "
     + "also start from an accepted quote, with one phase per line.",
-  projectsEmpty: "The jobs you follow show up here.",
+  projectsEmpty: "The jobs in progress show up here.",
   projectNeedsName: "The project needs a name.",
-  projectDeleteAsk: "Delete this project? The invoices and quotes linked to it stay where they "
-    + "are. You can take it back from the bin within thirty days.",
   projectPhases: "Phases",
   projectPhasesCount: "{fatte} of {tutte}",
   projectToBill: "To invoice",
@@ -1701,13 +1752,12 @@ const EN = {
   projPhasesNote: "Tick a phase when it is done. A phase with an amount becomes an invoice line "
     + "once it is done: that is why the plan lives here and not in a separate program. "
     + "A phase amount is net of VAT: the invoice adds it.",
-  projPhasesEmpty: "The phases you add show up here.",
+  projPhasesEmpty: "The phases of the job show up here, one per row.",
   projDone: "done",
   projPhase: "phase",
   projAmount: "amount",
   projPhaseAdd: "Add the phase",
   projPhaseNeedsTitle: "Write what it is, even just two words.",
-  projPhaseDeleteAsk: "Delete this phase?",
   projPhaseBilled: "invoiced",
   projPhaseDrafted: "in a draft",
   projInvoiceDone: "Invoice the finished phases",
@@ -1720,11 +1770,77 @@ const EN = {
   docMakeProject: "Create the project",
   docInProject: "Project: {nome}",
 
+  // ---- the list: star, search, archive, bin
+  custProjectArchived: "{nome} · archived",
+  projectsSearch: "Search",
+  projectsSearchHint: "Project or customer name",
+  projectsNoMatch: "No project with this name or this customer.",
+  projectsShowArchived: "Archived · {n}",
+  projectsHideArchived: "Hide the archived ones",
+  projectsArchivedTitle: "Archived",
+  projectsArchivedNote: "Finished jobs, taken off the list without touching anything in them. Their "
+    + "amounts still count in the totals on Home.",
+  projectsShowBin: "Bin · {n}",
+  projectsHideBin: "Close the bin",
+  projectsBinTitle: "Bin",
+  projectsBinNote: "Deleted projects, pages and phases stay here for thirty days, then they are gone. "
+    + "A restored project comes back with its pages and its phases.",
+  binKind_project: "Project",
+  binKind_page: "Page",
+  binKind_task: "Phase",
+  binSince: "in the bin since {data}",
+  binIn: "in «{nome}»",
+  binRestore: "Restore",
+  pinAdd: "Pin to the top",
+  pinRemove: "Unpin",
+  undo: "Undo",
+
+  // ---- archive, and the strip after a deletion
+  projArchive: "Archive",
+  projUnarchive: "Unarchive",
+  projArchivedNote: "Archived on {data}. It does not appear in the list of projects, but its amounts "
+    + "still count in the totals on Home.",
+  projArchiveAsk: "Something is still open on this project. Once archived, it will no longer appear "
+    + "in the list:",
+  projArchiveToBill: "{importo} to invoice",
+  projArchiveToCollect: "{importo} invoiced and not yet collected",
+  snackProjectBinned: "Project «{nome}» moved to the bin.",
+  snackPageBinned: "Page «{nome}» moved to the bin.",
+  snackPhaseBinned: "Phase «{nome}» moved to the bin.",
+  snackArchived: "Project «{nome}» archived.",
+  snackUnarchived: "Project «{nome}» back among the projects.",
+  snackRestored: "«{nome}» is back in its place.",
+  snackUndone: "Put back as it was.",
+
+  // ---- page templates, and the people named with «@»
+  projPageFromTemplate: "From a template…",
+  pageTplAsk: "Which template?",
+  pageTpl_visit: "Site visit report",
+  pageTplNote_visit: "Who was there, what was seen, the measurements, what is still open",
+  pageTplBody_visit: "## Present\n\n- \n\n## What was seen\n\n- \n\n## Measurements\n\n"
+    + "| Point | Measurement |\n| --- | --- |\n|  |  |\n\n## Still to define\n\n- [ ] \n",
+  pageTpl_spec: "Supply specification",
+  pageTplNote_spec: "Scope, requirements, materials, exclusions, acceptance criteria",
+  pageTplBody_spec: "## Scope\n\nOne sentence: what is delivered.\n\n## Requirements\n\n- \n\n"
+    + "## Materials and products\n\n- \n\n## What is excluded\n\n- \n\n## Acceptance criteria\n\n- [ ] \n",
+  pageTpl_delivery: "Delivery checklist",
+  pageTplNote_delivery: "Before, at and after delivery, up to the invoice",
+  pageTplBody_delivery: "## Before delivery\n\n- [ ] \n\n## At delivery\n\n"
+    + "- [ ] Delivery report signed by the customer\n\n## After delivery\n\n"
+    + "- [ ] Invoice the finished phases\n",
+  pageTpl_minutes: "Meeting minutes",
+  pageTplNote_minutes: "Present, points discussed, decisions, next steps",
+  pageTplBody_minutes: "## Present\n\n- \n\n## Points discussed\n\n- \n\n## Decisions\n\n- \n\n"
+    + "## Next steps\n\n- [ ] \n",
+  menuPeople: "Who?",
+  projPersonUnknown: "«{nome}» is not among the customer's contacts. Contacts are added on the "
+    + "customer's page, and from there they can be named in every page of the project.",
+
   // ---- a project's pages, and the words of the shared editor
   projPagesTitle: "Pages",
   projPagesNote: "The specification, the notes from a site visit, the measurements taken on site. "
-    + "They live in the project, and travel with it when you export it.",
-  projPagesEmpty: "The pages you add show up here.",
+    + "They live in the project, and travel with it when it is exported.",
+  projPagesEmpty: "The pages of the project show up here.",
   projPageNew: "New page",
   projPageImage: "Image",
   projPageFile: "Attachment",
@@ -1739,8 +1855,6 @@ const EN = {
   projPageSubAsk: "What is the sub-page called?",
   projPageTooDeep: "Sub-pages go four levels deep, and this one is already at the bottom. When you "
     + "need another step, one more page beside it usually reads better.",
-  projPageDeleteAsk: "Delete this page? Its sub-pages stay, and move up one level. You can take it "
-    + "back from the bin within thirty days.",
   addBlock: "Add a block",
   dragHandle: "Drag to move, click to turn into — with a keyboard, Alt and the arrows",
   taskDone: "Done",
@@ -1759,12 +1873,6 @@ const EN = {
   blockParagraph: "Text",
   blockHeading1: "Large heading",
   blockHeading2: "Medium heading",
-  blockHeading3: "Small heading",
-  blockHeading1: "Large heading",
-  blockHeading2: "Medium heading",
-  blockHeading3: "Small heading",
-  blockHeading2: "Medium heading",
-  blockHeading3: "Small heading",
   blockHeading3: "Small heading",
   blockList: "Bulleted list",
   blockOrdered: "Numbered list",
@@ -2348,7 +2456,6 @@ const EN = {
   f_data: "date",
   f_numero: "number",
   f_causale: "reason",
-  f_categoria: "category",
   f_tipoCessione: "cession type",
   f_nonRimborsabile: "not refundable",
   f_variazioniContrattuali: "contractual variation",
@@ -2653,7 +2760,6 @@ const EN = {
   docsSearchHint: "number, customer, subject",
   docsYear: "Year",
   docsAllYears: "All years",
-  docsState: "State",
   settleDone: "settled",
   settleLeft: "{importo} still due",
   settleOverdue: "overdue · {importo} still due",

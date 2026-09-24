@@ -96,6 +96,24 @@ Nelle schermate **non si calcola**. `doc.js` lo dichiara in cima e vale per tutt
 `totals.js`, le regole sono `model.js`, i controlli sono `validate.js`. Una schermata legge campi e
 disegna risultati.
 
+### I progetti: elenco, archivio, cestino
+
+L'elenco mostra `openProjects()` — cioè `plainProjects()` del modello, con quelli in evidenza in
+cima — e non tutti i progetti vivi. **I conti invece usano `projects()`**, che tiene anche gli
+archiviati: un lavoro concluso con una fase ancora da fatturare resta nel «da fatturare» della
+Situazione, mentre esce dai ritardi (`projectRows`). L'agenda di Plan Scope non è un lavoro, e
+resta fuori da tutti e due.
+
+Pagine, fasi e progetti **si eliminano senza domande**: vanno nel cestino del modello, la striscia
+di `snack.js` offre «Annulla» con il passo che il modello ha restituito (`undoStep`, mai `undo`), e
+sotto l'elenco «Cestino · n» li riporta indietro per trenta giorni. Le domande di `ask.js` restano
+per quello che non si annulla. Archiviare chiede solo se sul progetto resta denaro aperto
+(`openMoney`).
+
+I modelli di pagina sono `PAGE_TEMPLATES` in `project.js`, diversi da quelli di Plan Scope: le due
+app condividono modello ed editore, non il tipo di lavoro. Con «@» si nominano le persone di
+riferimento del cliente del progetto; il nome porta alla scheda del cliente.
+
 ### La libreria condivisa
 
 Passa dalla import map (`gg/` → `../../_lib/`), mai da un import relativo. Questa app usa

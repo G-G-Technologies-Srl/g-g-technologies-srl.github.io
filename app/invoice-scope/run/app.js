@@ -1564,6 +1564,9 @@ async function main() {
   // incassata mezz'ora fa — e la segnerebbe come detta, quindi senza più modo di correggersi.
   window.addEventListener("pagehide", () => { doc.flush(); progetti.flush(); alarms.refresh(db); });
   document.addEventListener("visibilitychange", () => {
+    // Back after a while: a repeating meeting written in Plan Scope may have passed meanwhile, and
+    // its next one is due. The queue writes it; nothing on screen needs to move for it.
+    if (document.visibilityState === "visible") progetti.roll();
     if (document.visibilityState === "hidden") {
       doc.flush();
       progetti.flush();

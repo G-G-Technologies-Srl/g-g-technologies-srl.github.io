@@ -129,7 +129,9 @@ export function figures(docs, owed, { today = new Date().toISOString().slice(0, 
     ? Math.max(...scadute.map((row) => _days(today, row.scadenza)))
     : 0;
 
-  const aperti = plan.liveProjects();
+  // Archived projects count here: money still to invoice does not stop existing because the job
+  // left the list. The agenda of Plan Scope is not a job, and stays out.
+  const aperti = progetti.projects();
   const fasi = aperti.flatMap((record) => progetti.billable(record.id));
   const daFatturare = aperti.reduce((sum, record) => sum + progetti.billableTotal(record.id), 0n);
 
@@ -458,7 +460,9 @@ export function topParties(owedRows, { limit = ROWS } = {}) {
  * di più; poi per prossima scadenza; poi chi non ne ha.
  */
 export function projectRows({ today = new Date().toISOString().slice(0, 10), limit = ROWS } = {}) {
-  const rows = plan.liveProjects().map((record) => {
+  // The projects on the shelf, and not the archived ones: an archived project is finished by the
+  // person's own say, and listing it among the late ones would contradict them.
+  const rows = plan.plainProjects().map((record) => {
     const done = (record.columns || []).find((column) => column.done);
     const aperte = plan.tasksOf(record.id).filter((task) => !done || task.status !== done.id);
     const conData = aperte.filter((task) => task.end).map((task) => String(task.end).slice(0, 10));

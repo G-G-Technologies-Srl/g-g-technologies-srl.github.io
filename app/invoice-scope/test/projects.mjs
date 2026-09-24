@@ -376,4 +376,131 @@ await prova("senza nessun progetto le figure restano dove sono", async (db) => {
   assert.equal((await list(db, "assets")).length, 1);
 });
 
+// -----------------------------------------------------------------------------------------------------------------
+//  s h e l f ,   a r c h i v e ,   b i n
+// -----------------------------------------------------------------------------------------------------------------
+
+const { figures: homeFigures, projectRows } = await import("../run/home.js");
+
+await prova("in elenco: prima i progetti in evidenza, fuori gli archiviati e l'agenda", async () => {
+  const primo = progetti.create({ name: "Capannone" });
+  const secondo = progetti.create({ name: "Uffici" });
+  const finito = progetti.create({ name: "Magazzino" });
+  const agenda = progetti.create({ name: "Agenda" });
+  // The agenda of Plan Scope can only arrive inside a package; here it is marked by hand.
+  plan.updateProject(agenda.id, { kind: "agenda" });
+  progetti.setPinned(primo.id, true);
+  progetti.setArchived(finito.id, true);
+
+  const elenco = progetti.openProjects().map((one) => one.name);
+  assert.equal(elenco[0], "Capannone", "quello in evidenza sta in cima");
+  assert.deepEqual([...elenco].sort(), ["Capannone", "Uffici"]);
+  assert.deepEqual(progetti.archivedProjects().map((one) => one.name), ["Magazzino"]);
+  // The list for money and history keeps the archived one, and never the agenda.
+  assert.deepEqual(progetti.projects().map((one) => one.name).sort(), ["Capannone", "Magazzino", "Uffici"]);
+  assert.ok(secondo.id);
+});
+
+await prova("archiviare toglie la stella, e un passo indietro rimette tutto com'era", async () => {
+  const lavoro = progetti.create({ name: "Capannone" });
+  progetti.setPinned(lavoro.id, true);
+  const step = progetti.setArchived(lavoro.id, true);
+  assert.ok(progetti.project(lavoro.id).archivedAt);
+  assert.equal(progetti.project(lavoro.id).favourite, false, "archiviato e in cima non stanno insieme");
+  plan.undoStep(step);
+  assert.equal(progetti.project(lavoro.id).archivedAt, null);
+  assert.equal(progetti.project(lavoro.id).favourite, true);
+});
+
+await prova("un progetto archiviato conta ancora nel «da fatturare», non fra i ritardi", async () => {
+  const lavoro = progetti.create({ name: "Capannone" });
+  const fase = progetti.addTask(lavoro.id, { title: "Collaudo", importo: "500.00", end: "2026-01-10" });
+  const altra = progetti.addTask(lavoro.id, { title: "Consegna", end: "2026-01-12" });
+  plan.moveTask(fase.id, progetti.project(lavoro.id).columns.find((one) => one.done).id);
+  assert.ok(altra.id);
+  assert.equal(projectRows({ today: "2026-09-24" }).length, 1, "prima di archiviarlo è in ritardo");
+
+  progetti.setArchived(lavoro.id, true);
+  assert.equal(projectRows({ today: "2026-09-24" }).length, 0, "archiviato, non è più fra i ritardi");
+  const n = homeFigures([], { rows: [], overdue: [], total: 0n }, { today: "2026-09-24" });
+  assert.equal(soldi(n.daFatturare), "500.00", "il denaro da fatturare non sparisce con l'archivio");
+});
+
+await prova("quello che resta aperto: fasi da fatturare, e fatturato non incassato", async (db) => {
+  const lavoro = progetti.create({ name: "Capannone", partyId: "p1" });
+  const fase = progetti.addTask(lavoro.id, { title: "Acconto", importo: "1000.00" });
+  const altra = progetti.addTask(lavoro.id, { title: "Saldo", importo: "400.00" });
+  const finale = progetti.project(lavoro.id).columns.find((one) => one.done).id;
+  plan.moveTask(fase.id, finale);
+  const bozza = await progetti.invoiceDone(db, lavoro.id, {});
+  await issue(db, bozza, CONTEXT);
+  plan.moveTask(altra.id, finale);
+
+  const aperto = await progetti.openMoney(db, lavoro.id);
+  assert.equal(soldi(aperto.daFatturare), "400.00");
+  assert.equal(soldi(aperto.daIncassare), "1220.00", "la fattura emessa, IVA compresa, non ancora incassata");
+});
+
+await prova("la ricerca trova per nome o per cliente, senza badare agli accenti", async () => {
+  const lavoro = progetti.create({ name: "Ristrutturazione Città" });
+  assert.equal(progetti.matches(lavoro, "citta"), true);
+  assert.equal(progetti.matches(lavoro, "RISTRUTT"), true);
+  assert.equal(progetti.matches(lavoro, "rossi"), false);
+  assert.equal(progetti.matches(lavoro, "rossi", "Rossi Impianti S.r.l."), true);
+  assert.equal(progetti.matches(lavoro, "   "), true, "una ricerca vuota trova tutto");
+});
+
+await prova("nel cestino: il progetto, e le pagine e le fasi eliminate da sole", async () => {
+  const vivo = progetti.create({ name: "Capannone" });
+  const pagina = plan.createPage(vivo.id, { title: "Verbale" });
+  const fase = progetti.addTask(vivo.id, { title: "Acconto" });
+  plan.trashPage(pagina.id);
+  plan.trashTask(fase.id);
+
+  const via = progetti.create({ name: "Uffici" });
+  plan.createPage(via.id, { title: "Capitolato" });
+  progetti.addTask(via.id, { title: "Saldo" });
+  plan.trashProject(via.id);
+
+  const dentro = progetti.binned().map((entry) => `${entry.kind}:${entry.record.title || entry.record.name}`).sort();
+  // The pages and phases of a binned project come back with it, so they are not listed one by one.
+  assert.deepEqual(dentro, ["page:Verbale", "project:Uffici", "task:Acconto"]);
+
+  progetti.restore("project", via.id);
+  assert.equal(plan.pagesOf(via.id).length, 1, "il progetto torna con la sua pagina");
+  assert.equal(progetti.tasksOf(via.id).length, 1, "e con la sua fase");
+  progetti.restore("page", pagina.id);
+  progetti.restore("task", fase.id);
+  assert.deepEqual(progetti.binned(), []);
+});
+
+await prova("un documento cancellato libera anche le fasi di un progetto nel cestino", async (db) => {
+  // Without this a project restored later came back with a phase «invoiced» on a document that no
+  // longer exists, and that phase could never be invoiced again.
+  const lavoro = progetti.create({ name: "Capannone", partyId: "p1" });
+  const fase = progetti.addTask(lavoro.id, { title: "Acconto", importo: "1000.00" });
+  plan.moveTask(fase.id, progetti.project(lavoro.id).columns.find((one) => one.done).id);
+  const bozza = await progetti.invoiceDone(db, lavoro.id, {});
+  plan.trashProject(lavoro.id);
+
+  progetti.forgetDoc(bozza.id);
+  progetti.restore("project", lavoro.id);
+  assert.equal(plan.task(fase.id).docId, null);
+  assert.deepEqual(progetti.project(lavoro.id).docIds, []);
+});
+
+await prova("una riunione che si ripete, scritta in Plan Scope, nasce di nuovo anche qui", async (db) => {
+  const lavoro = progetti.create({ name: "Capannone" });
+  const lunedi = plan.createPage(lavoro.id, { title: "Riunione di cantiere" });
+  plan.setMarkdown(lunedi.id, "---\ntipo: incontro\ndata: 2020-01-06\nripete: ogni settimana\n---\nAppunti.\n");
+  await progetti.flush();
+
+  // `setup` is what runs at every start: the next meeting is the first one still ahead.
+  await progetti.setup(db);
+  const incontri = plan.meetingsOf(lavoro.id);
+  assert.equal(incontri.length, 2);
+  assert.ok(incontri[1].date >= new Date().toISOString().slice(0, 10), "la nuova è davanti, non arretrata");
+  assert.equal((await list(db, "pages")).length, 2, "e finisce sul disco");
+});
+
 console.log(`projects: ${passed} prove passate`);

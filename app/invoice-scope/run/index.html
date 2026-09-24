@@ -914,15 +914,46 @@
       <input type="file" id="projectImportFile" accept=".zip,.json,application/zip,application/json" hidden>
     </div>
     <p class="note" data-t="projectsNote"></p>
+    <!-- The search appears from eight projects, like the filters over the documents: under that the
+         list fits on one screen and a search box finds nothing to hide. -->
+    <div class="form docs-filters" id="projectsFilters" hidden>
+      <label class="wide"><span data-t="projectsSearch"></span><input type="search" id="projectsSearch" autocomplete="off"></label>
+    </div>
     <p class="empty" id="projectsEmpty" data-t="projectsEmpty"></p>
+    <p class="empty" id="projectsNoMatch" data-t="projectsNoMatch" hidden></p>
     <div class="table-scroll">
       <table class="rows" id="projectsTable" hidden>
         <thead><tr>
-          <th data-t="projectsName"></th><th data-t="docsParty"></th>
-          <th data-t="projectPhases"></th><th class="right" data-t="projectToBill"></th><th></th>
+          <th class="pin-col"></th><th data-t="projectsName"></th><th data-t="docsParty"></th>
+          <th data-t="projectPhases"></th><th class="right" data-t="projectToBill"></th>
         </tr></thead>
         <tbody id="projectsBody"></tbody>
       </table>
+    </div>
+
+    <!-- The two drawers under the list: the finished projects and the bin. Each button appears only
+         when there is something behind it, and says how much. -->
+    <div class="head-tools shelf-tools">
+      <button type="button" class="button ghost small" id="projectsArchivedToggle" hidden></button>
+      <button type="button" class="button ghost small" id="projectsBinToggle" hidden></button>
+    </div>
+    <div id="projectsArchived" hidden>
+      <h2 data-t="projectsArchivedTitle"></h2>
+      <p class="note" data-t="projectsArchivedNote"></p>
+      <div class="table-scroll">
+        <table class="rows">
+          <thead><tr>
+            <th data-t="projectsName"></th><th data-t="docsParty"></th>
+            <th data-t="projectPhases"></th><th class="right" data-t="projectToBill"></th>
+          </tr></thead>
+          <tbody id="projectsArchivedBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="projectsBin" hidden>
+      <h2 data-t="projectsBinTitle"></h2>
+      <p class="note" data-t="projectsBinNote"></p>
+      <ul class="bin-list" id="projectsBinList"></ul>
     </div>
   </section>
 
@@ -931,11 +962,16 @@
     <a class="back-link" href="#/progetti" data-t="projectBack"></a>
     <div class="doc-head">
       <h1 class="titled"><span class="ico" aria-hidden="true"><svg><use href="#ico-projects"/></svg></span><span id="projName"></span></h1>
-      <button type="button" class="button ghost" id="projEdit" data-t="projectEditData"></button>
-      <button type="button" class="button ghost" id="projExport" data-t="projectExport"></button>
-      <button type="button" class="button ghost danger-text" id="projDelete" data-t="del"></button>
+      <!-- The four commands wrap together: one by one, «Delete» ended up alone on a second row. -->
+      <div class="head-tools">
+        <button type="button" class="button ghost" id="projEdit" data-t="projectEditData"></button>
+        <button type="button" class="button ghost" id="projExport" data-t="projectExport"></button>
+        <button type="button" class="button ghost" id="projArchive" data-t="projArchive"></button>
+        <button type="button" class="button ghost danger-text" id="projDelete" data-t="del"></button>
+      </div>
     </div>
     <p class="note" id="projMeta"></p>
+    <p class="note archived-note" id="projArchivedNote" hidden></p>
 
     <div class="figures">
       <div class="figure"><span class="label" data-t="projQuoted"></span><span class="value" id="projQuoted">—</span></div>
@@ -982,6 +1018,7 @@
            esiste, ed è già scritta nel foglio di stile. -->
       <div class="head-tools">
         <button type="button" class="button ghost" id="projPageNew" data-t="projPageNew"></button>
+        <button type="button" class="button ghost" id="projPageTemplate" data-t="projPageFromTemplate"></button>
         <!-- L'immagine e il file entrano nella pagina aperta. La finestra che sceglie il file è del
              sistema — una delle tre eccezioni scritte in app/CLAUDE.md — e tutto il resto è nostro:
              il pulsante, il limite dichiarato, e la riga che dice com'è andata. -->
@@ -1764,6 +1801,21 @@
     <button type="button" id="promptOk" class="button" data-t="ok"></button>
   </div>
 </dialog>
+
+<!-- A choice among a few options, one button each: the page templates. -->
+<dialog id="choose">
+  <p id="chooseText"></p>
+  <div class="choose-list" id="chooseList"></div>
+  <div class="actions">
+    <button type="button" id="chooseCancel" class="button ghost" data-t="cancel"></button>
+  </div>
+</dialog>
+
+<!-- What just happened, and the way back: after something went to the bin or was archived. -->
+<div class="snack" id="snack" role="status" aria-live="polite" hidden>
+  <span id="snackText"></span>
+  <button type="button" class="button ghost small" id="snackAction" data-t="undo"></button>
+</div>
 
 <dialog id="ask">
   <p id="askText"></p>

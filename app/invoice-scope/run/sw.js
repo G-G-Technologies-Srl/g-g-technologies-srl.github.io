@@ -12,7 +12,7 @@
 //    a running app means changing the code while somebody is halfway through an invoice, and
 //    saving them one reload is not worth that — here least of all.
 
-const VERSION = '0.63.13';
+const VERSION = '0.64.2';
 const CACHE = `invoice-scope-v${VERSION}`;
 
 // La cache dei promemoria, e **l'unica che sopravvive a un aggiornamento**. Il nome non porta la
@@ -79,6 +79,7 @@ const ASSETS = [
   './reading.js',
   './schedule.js',
   './sheet.js',
+  './snack.js',
   './states.js',
   './terms.js',
   './timeline.js',

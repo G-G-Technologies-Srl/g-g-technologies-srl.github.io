@@ -253,3 +253,71 @@ export function askText(message, { value = "", okLabel = null } = {}) {
     field.select();
   });
 }
+
+// -----------------------------------------------------------------------------------------------------------------
+//  a   c h o i c e
+// -----------------------------------------------------------------------------------------------------------------
+
+let _chooseDialog = null;
+let _chooseResolve = null;
+
+function _chooseSettle(answer) {
+  const done = _chooseResolve;
+  _chooseResolve = null;
+  try {
+    if (_chooseDialog && _chooseDialog.open) _chooseDialog.close();
+  } catch (ignored) {
+    // Already closed: the promise is settled either way.
+  }
+  if (done) done(answer);
+}
+
+/**
+ * Pick one of a few options: `[{ value, label, note? }]`. Resolves to the value, or null.
+ *
+ * One button per option rather than a menu and an «OK»: the choice is the click, and a list of
+ * three is read at a glance. The late `close` event is guarded as in the other two dialogs — a
+ * choice is usually followed straight away by a question for a name.
+ */
+export function askChoice(message, options = []) {
+  if (!_chooseDialog) {
+    _chooseDialog = document.getElementById("choose");
+    document.getElementById("chooseCancel").addEventListener("click", () => _chooseSettle(null));
+    _chooseDialog.addEventListener("cancel", () => _chooseSettle(null));
+    _chooseDialog.addEventListener("close", () => { if (!_chooseDialog.open) _chooseSettle(null); });
+  }
+  document.getElementById("chooseText").textContent = message;
+  const list = document.getElementById("chooseList");
+  list.textContent = "";
+  for (const option of options) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "choice";
+    const name = document.createElement("span");
+    name.className = "choice-name";
+    name.textContent = option.label;
+    button.append(name);
+    if (option.note) {
+      const note = document.createElement("span");
+      note.className = "choice-note";
+      note.textContent = option.note;
+      button.append(note);
+    }
+    button.addEventListener("click", () => _chooseSettle(option.value));
+    list.append(button);
+  }
+
+  return new Promise((resolve) => {
+    if (_chooseResolve) _chooseResolve(null);
+    _chooseResolve = resolve;
+    try {
+      if (!_chooseDialog.open) _chooseDialog.showModal();
+    } catch (ignored) {
+      _chooseResolve = null;
+      resolve(null);
+      return;
+    }
+    const first = list.children[0];
+    if (first && typeof first.focus === "function") first.focus();
+  });
+}
