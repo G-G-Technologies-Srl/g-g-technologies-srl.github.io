@@ -1407,7 +1407,9 @@ html[data-theme="light"] { --high: #b42318; --decide: #6b3fb3; --wait: #3d5c99; 
 .next-when { display: flex; align-items: baseline; gap: 10px; }
 .next-when b { font-size: 15px; font-weight: 600; color: var(--accent-text); }
 .next-when .meta { color: var(--faint); font-size: 12.5px; }
-.next-title { display: block; margin-top: 4px; font-family: var(--font-display); font-size: 19px; color: var(--text); }
+/* Scoped to the panel: a bare `.next-title` also matched the line under each project card in the
+   archive, and the next task there came out in 19 px serif, larger than the project's own name. */
+.next-box .next-title { display: block; margin-top: 4px; font-family: var(--font-display); font-size: 19px; color: var(--text); }
 .next-box > .meta { color: var(--muted); font-size: 12.5px; margin-top: 3px; }
 
 .next-talk {
