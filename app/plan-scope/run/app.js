@@ -884,28 +884,29 @@ function _openPerson(id) {
 }
 
 /**
- * I due recapiti come comandi, ridisegnati mentre si scrivono.
+ * The two contact details as commands, redrawn as they are typed.
  *
- * Si ridipinge a ogni tasto sui due campi e non solo all'apertura: chi compila una scheda nuova
- * scrive il numero e poi chiama, e un pulsante che compare solo la volta dopo non c'è quando serve.
+ * Repainted on every key of the two fields and not only on opening: whoever fills in a new card
+ * types the number and then calls, and a symbol that appears only the next time is not there when
+ * it is needed. The name of each says the whole action — "Scrivere a anna@…" — for the tooltip and
+ * for a screen reader, since the symbol alone says it only to whoever already knows it.
  */
 function _paintReach(person) {
-  const reach = [];
-  if (person.email) reach.push(_reachLink(`mailto:${person.email}`, t("personWrite"), person.email));
-  if (person.phone) {
-    reach.push(_reachLink(`tel:${String(person.phone).replace(/[^+\d]/g, "")}`, t("personCall"), person.phone));
-  }
-  el("personReach").hidden = reach.length === 0;
-  fill(el("personReach"), reach);
+  const mail = el("personMailGo");
+  const call = el("personCallGo");
+  const email = String(person.email || "").trim();
+  const phone = String(person.phone || "").trim();
+  mail.hidden = !email;
+  call.hidden = !phone;
+  if (email) _reachLink(mail, `mailto:${email}`, tf("personWriteTo", { who: email }));
+  if (phone) _reachLink(call, `tel:${phone.replace(/[^+\d]/g, "")}`, tf("personCallTo", { who: phone }));
 }
 
-/** Un recapito da usare: il verbo si legge, l'indirizzo sta sotto il dito. */
-function _reachLink(href, label, said) {
-  const link = node("a", "reach");
+/** One contact command: where it goes, and what it does, said. */
+function _reachLink(link, href, said) {
   link.href = href;
-  link.textContent = label;
-  link.setAttribute("aria-label", `${label} ${said}`);
-  return link;
+  link.title = said;
+  link.setAttribute("aria-label", said);
 }
 
 function _paintPerson() {

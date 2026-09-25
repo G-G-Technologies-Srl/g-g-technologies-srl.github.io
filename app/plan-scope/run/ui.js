@@ -19,9 +19,30 @@ import { t, tf, lang, num } from "./i18n.js";
 // chi importa questo file e **non** crea un legame qui dentro: `snack` e `ask`, che chiamano `el` e
 // `node` due righe più sotto, sono morte con «el is not defined». Trovato aprendo Plan Scope in un
 // browser vero — nessun test lo copriva, perché `ui.js` è tutto DOM.
-import { el, node, button, fill } from "gg/dom.js";
+import { el, node, button as _domButton, fill } from "gg/dom.js";
 
-export { el, node, button, fill };
+export { el, node, fill };
+
+/**
+ * A button, as `gg/dom.js` makes it — plus, when what is drawn on it is a symbol and not a word
+ * (✕, ↗, ☆, ⋯), its name as a tooltip. The name was already there for a screen reader; somebody
+ * with a mouse, looking at a ↗, had nothing to go on but trying it.
+ */
+/**
+ * Whether a button shows a symbol rather than a word: one or two characters, or an "icon" button
+ * drawn with an SVG. A tick box is neither — it is empty, and its name ("Fatto") on hover would
+ * read as a state instead of as the action.
+ */
+function _isSymbol(element) {
+  const text = element.textContent.trim();
+  return (text.length > 0 && text.length <= 2) || element.classList.contains("icon");
+}
+
+export function button(className, text, onClick, options = {}) {
+  const element = _domButton(className, text, onClick, options);
+  if (options.label && _isSymbol(element)) element.title = options.label;
+  return element;
+}
 
 // Eight seconds. Long enough to notice and reach it, short enough not to sit over the interface.
 const SNACK_MS = 8000;
@@ -45,6 +66,10 @@ export function applyText(root = document) {
   }
   for (const node of root.querySelectorAll("[data-t-label]")) {
     node.setAttribute("aria-label", t(node.dataset.tLabel));
+    // A command drawn as a symbol — ⋯, +, a magnifier — shows its name on hover as well.
+    if (node.tagName === "BUTTON" && !node.dataset.tTitle && _isSymbol(node)) {
+      node.setAttribute("title", t(node.dataset.tLabel));
+    }
   }
   for (const node of root.querySelectorAll("[data-t-placeholder]")) {
     node.setAttribute("placeholder", t(node.dataset.tPlaceholder));

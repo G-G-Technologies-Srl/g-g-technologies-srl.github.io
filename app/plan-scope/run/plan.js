@@ -386,7 +386,7 @@ function _taskCard(task, today) {
   // The mark beside the title, before the tick is pressed: this one comes back.
   if (task.repeat) {
     const mark = node("span", "repeat-mark", "↻");
-    mark.title = t(`repeatShort_${task.repeat}`);
+    mark.title = tf("hintRepeat", { every: t(`repeatShort_${task.repeat}`) });
     mark.setAttribute("role", "img");
     mark.setAttribute("aria-label", t("seriesRepeats"));
     head.append(mark);
@@ -414,7 +414,9 @@ function _taskCard(task, today) {
     const words = [t(`repeatShort_${task.repeat}`)];
     if (series.next) words.push(tf("seriesThen", { date: shortDate(series.next) }));
     else words.push(t("seriesLast"));
-    meta.append(node("span", "who repeat-pill", `↻ ${words.join(" · ")}`));
+    const pill = node("span", "who repeat-pill", `↻ ${words.join(" · ")}`);
+    pill.title = tf("hintRepeat", { every: t(`repeatShort_${task.repeat}`) });
+    meta.append(pill);
   }
   // Il documento si vede da fuori, e ci si arriva da fuori: la carta dice che questa attività ha
   // una procedura dietro, e il clic la apre senza passare dalla scheda. Un'attività con un

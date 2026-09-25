@@ -795,13 +795,31 @@ function _sign(name, label = "") {
     svg.setAttribute("role", "img");
     svg.setAttribute("aria-label", label);
   }
+  // What the mark means, on hover: an SVG takes its tooltip from a <title> child, not an attribute.
+  const hint = SIGN_HINTS[name];
+  if (hint) {
+    const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+    title.textContent = t(hint);
+    svg.prepend(title);
+  }
   return svg;
 }
+
+// The explanation each mark carries as a tooltip. The legend under the weeks says the same in a
+// word; this says what it means for the person reading it.
+const SIGN_HINTS = {
+  flag: "hintHigh",
+  lock: "hintBlocked",
+  decide: "hintDecide",
+  pen: "hintNotes",
+  clock: "hintWaiting",
+  meeting: "hintMeeting",
+};
 
 /** "↻", beside the title of a task that comes back: said, and named for a screen reader. */
 function _repeatMark(task) {
   const mark = node("span", "repeat-mark", "↻");
-  mark.title = t(`repeatShort_${task.repeat}`);
+  mark.title = tf("hintRepeat", { every: t(`repeatShort_${task.repeat}`) });
   mark.setAttribute("role", "img");
   mark.setAttribute("aria-label", t("seriesRepeats"));
   return mark;
@@ -812,7 +830,15 @@ function _lateRing() {
   const ring = node("span", "late-ring");
   ring.setAttribute("role", "img");
   ring.setAttribute("aria-label", t("dueLate"));
+  ring.title = t("hintLate");
   return ring;
+}
+
+/** The milestone's diamond, with what a milestone is on hover. */
+function _diamond() {
+  const mark = node("span", "diamond");
+  mark.title = t("hintMilestone");
+  return mark;
 }
 
 /** The meeting whose boxes a task was born in, by the task's `uid`: "dall'Incontro con Giulia". */
@@ -985,7 +1011,7 @@ function _paintPlan(id, today) {
   line.hidden = !milestone;
   if (milestone) {
     fill(line, [
-      node("span", "diamond"),
+      _diamond(),
       node("span", "meta", t("planMilestone")),
       button("link", milestone.task.title || t("taskUntitled"), () => on.openTask(milestone.task.id)),
       node("span", milestone.task.end < today ? "meta late" : "meta",
@@ -1120,7 +1146,7 @@ function _paintWeeks(id, today) {
         blocked: () => _sign("lock"),
         decide: () => _sign("decide"),
         meeting: () => _sign("meeting"),
-        milestone: () => node("span", "diamond"),
+        milestone: () => _diamond(),
         task: () => node("span", "dot"),
       }[item.kind];
       mark.append(shape());
@@ -1142,7 +1168,7 @@ function _paintWeeks(id, today) {
     ["high", () => _sign("flag"), "nowHigh"],
     ["decide", () => _sign("decide"), "nowDecide"],
     ["blocked", () => _sign("lock"), "nowBlocked"],
-    ["milestone", () => node("span", "diamond"), "weeksMilestone"],
+    ["milestone", () => _diamond(), "weeksMilestone"],
     ["meeting", () => _sign("meeting"), "weeksMeeting"],
   ];
   fill(el("weeksLegend"), legend.map(([kind, draw, key]) => {

@@ -1617,20 +1617,28 @@ html[data-theme="light"] { --high: #b42318; --decide: #6b3fb3; --wait: #3d5c99; 
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
 .task-card.is-meeting a.where { color: var(--accent-text); }
 
-/* I due recapiti, sotto i campi della scheda: bersagli veri, non due parole in mezzo al testo. */
-.person-reach { gap: 8px; margin: 10px 0 0; }
-.person-reach .reach {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 6px 12px;
-  min-height: 34px;
+/* A field with its command beside it: the address and the mail, the number and the call. The
+   command is a real target — 38 px, the height of the field — and the symbol is drawn, in the
+   accent, so it reads the same in both themes and on every system. */
+.field-action { display: flex; align-items: center; gap: 8px; }
+/* The field keeps the width the card gives it — the address as long as the name, the number
+   shorter — and the command sits right after it, not at the far edge of the card. */
+.field-action input { flex: 0 1 auto; min-width: 0; }
+.icon-action {
+  flex: none;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
   color: var(--accent-text);
-  text-decoration: none;
-  font-size: 13px;
 }
-.person-reach .reach:hover { border-color: var(--accent); }
+.icon-action[hidden] { display: none; }
+.icon-action:hover, .icon-action:focus-visible { border-color: var(--accent); background: var(--accent-soft); }
+.icon-action svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.5;
+  stroke-linecap: round; stroke-linejoin: round; }
 
 .task-card.is-meeting .meet-x {
   flex: none;
