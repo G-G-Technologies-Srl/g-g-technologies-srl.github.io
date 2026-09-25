@@ -815,21 +815,18 @@ export function toggleDone(id) {
   const finish = project.columns.find((column) => column.done) || project.columns.at(-1);
   const first = project.columns[0];
   const wasDone = task.status === finish.id;
-  const step = updateTask(id, { status: wasDone ? first.id : finish.id });
-  if (!step) return null;
   // A task that repeats: finishing it makes the next one, dated a period on from this one's
   // deadline — or from today, when it had none. The finished one stays where it is, as the record
-  // of having been done; the new one starts the cycle again. Undoing the tick takes the new one
-  // away with it, so that a slip of the finger leaves nothing behind.
-  if (!wasDone && task.repeat) {
-    const next = _nextOccurrence(task, first.id);
+  // of having been done, **and gives its rhythm to the new one**: kept on both, a tick taken back
+  // and given again made a third copy, and the card in «Fatto» still said «ogni giorno». Undoing
+  // the tick restores the rhythm and takes the new one away, so a slip of the finger leaves nothing.
+  const repeats = !wasDone && Boolean(task.repeat);
+  const step = updateTask(id, { status: wasDone ? first.id : finish.id, ...(repeats ? { repeat: null } : {}) });
+  if (!step) return null;
+  if (repeats) {
+    const next = _nextOnce(task, first.id);
     if (next) {
-      const undoTick = step.undo;
-      step.undo = () => {
-        undoTick();
-        tasks.delete(next.id);
-        port.drop("task", next.id);
-      };
+      _chainUndo(step, next);
       return { step, done: true, next };
     }
   }
@@ -844,6 +841,31 @@ export function nextDate(iso, repeat) {
   if (repeat === "biweekly") return addDays(iso, 14);
   if (repeat === "monthly") return addMonths(iso, 1);
   return null;
+}
+
+/**
+ * The next occurrence, unless it is already there.
+ *
+ * Tasks finished before the rhythm moved to the new occurrence still carry it, so ticking one of
+ * those again — after taking the tick back — would make a second "next" beside the one that
+ * exists. The same title, the same rhythm, open, on the day the rhythm gives: that one is it.
+ */
+function _nextOnce(task, status) {
+  const from = task.end || todayISO();
+  const due = nextDate(from, task.repeat);
+  const twin = tasksOf(task.projectId).find((one) => one.id !== task.id && !isDone(one)
+    && one.title === task.title && one.repeat === task.repeat && one.end === due);
+  return twin ? null : _nextOccurrence(task, status);
+}
+
+/** The undo of a finishing step also takes away the occurrence it made. */
+function _chainUndo(step, next) {
+  const undoFinish = step.undo;
+  step.undo = () => {
+    undoFinish();
+    tasks.delete(next.id);
+    port.drop("task", next.id);
+  };
 }
 
 function _nextOccurrence(task, status) {
@@ -907,15 +929,28 @@ export function moveTask(id, status, at = null) {
   // the state the comment above `moveTask` promised could not exist.
   const before = column.map((one) => _copy(tasks.get(one.id)));
 
+  // Carried into the finishing column, a task that repeats does what a tick does: it hands its
+  // rhythm to the next occurrence. Before, a drag into «Fatto» stopped the series without a word.
+  const project = projects.get(task.projectId);
+  const finish = project ? project.columns.find((column) => column.done) : null;
+  const repeats = Boolean(finish && task.repeat && status === finish.id && task.status !== finish.id);
+
   const stamp = _now();
   column.forEach((one, index) => {
     const current = tasks.get(one.id);
     if (!current) return;
-    if (current.id === id) _put("task", { ...current, status, order: index, updated: stamp });
-    else if (current.order !== index) _put("task", { ...current, order: index });
+    if (current.id === id) {
+      _put("task", { ...current, status, order: index, updated: stamp, ...(repeats ? { repeat: null } : {}) });
+    } else if (current.order !== index) _put("task", { ...current, order: index });
   });
+  const next = repeats ? _nextOnce(task, project.columns[0].id) : null;
   _touch(task.projectId);
-  return _step("task", () => { for (const record of before) _put("task", _copy(record)); });
+  const step = _step("task", () => { for (const record of before) _put("task", _copy(record)); });
+  if (next) {
+    _chainUndo(step, next);
+    step.next = next;
+  }
+  return step;
 }
 
 /**

@@ -895,6 +895,67 @@ test("senza data la prossima parte da oggi, e togliere la spunta non ne fa un'al
   assert.equal(model.tasksOf(one.id).length, 2);
 });
 
+test("spuntata, togliere la spunta e rispuntarla non fa nascere una seconda copia", () => {
+  // The bug seen on the board: "Sentire Diego", every day. Ticked, it went to Fatto and the next
+  // one appeared in Da fare — right — but the finished one kept its rhythm, so a second tick after
+  // an untick made a third copy, and the card in Fatto still said "ogni giorno".
+  const one = project();
+  const task = model.createTask(one.id, { title: "Sentire Diego", end: "2026-09-25" });
+  model.updateTask(task.id, { repeat: "daily" });
+  const first = model.toggleDone(task.id);
+  assert.equal(model.task(task.id).repeat, null, "quella fatta non si ripete più: il ritmo è passato alla nuova");
+  assert.equal(first.next.repeat, "daily");
+  assert.equal(first.next.end, "2026-09-26");
+  model.toggleDone(task.id);
+  model.toggleDone(task.id);
+  assert.equal(model.tasksOf(one.id).length, 2, "sempre due: la fatta e la prossima");
+  // The undo of the first tick gives the rhythm back to the task that had it.
+  model.hydrate({});
+  const again = project();
+  const daily = model.createTask(again.id, { title: "Backup", end: "2026-09-25" });
+  model.updateTask(daily.id, { repeat: "daily" });
+  model.toggleDone(daily.id);
+  model.undo();
+  assert.equal(model.task(daily.id).repeat, "daily");
+  assert.equal(model.tasksOf(again.id).length, 1);
+});
+
+test("i dati di prima: una fatta che ha ancora il ritmo non raddoppia la prossima", () => {
+  // Tasks finished before the fix kept `repeat`. If the next one already exists — same title,
+  // same rhythm, the day the rhythm says — ticking the old one again adds nothing.
+  const one = project();
+  const cols = model.project(one.id).columns;
+  const old = model.createTask(one.id, { title: "Sentire Diego", end: "2026-09-25", status: cols.at(-1).id });
+  model.updateTask(old.id, { repeat: "daily" });
+  const next = model.createTask(one.id, { title: "Sentire Diego", end: "2026-09-26" });
+  model.updateTask(next.id, { repeat: "daily" });
+  model.toggleDone(old.id);                      // back to Da fare
+  const outcome = model.toggleDone(old.id);      // and done again
+  assert.equal(outcome.next, undefined);
+  assert.equal(model.tasksOf(one.id).length, 2);
+  assert.equal(model.task(old.id).repeat, null);
+});
+
+test("trascinata in «Fatto», un'attività che si ripete fa nascere la prossima come con la spunta", () => {
+  const one = project();
+  const cols = model.project(one.id).columns;
+  const task = model.createTask(one.id, { title: "Report", end: "2026-09-25" });
+  model.updateTask(task.id, { repeat: "weekly" });
+  const step = model.moveTask(task.id, cols.at(-1).id);
+  assert.ok(step.next, "la prossima occorrenza");
+  assert.equal(step.next.end, "2026-10-02");
+  assert.equal(step.next.status, cols[0].id);
+  assert.equal(model.task(task.id).repeat, null);
+  assert.equal(model.tasksOf(one.id).length, 2);
+  // Moving it between two open columns does nothing of the sort.
+  model.moveTask(step.next.id, cols[1].id);
+  assert.equal(model.tasksOf(one.id).length, 2);
+  model.undoStep(step);
+  assert.equal(model.tasksOf(one.id).filter((t) => !t.trashedAt).length, 1, "l'undo toglie anche la prossima");
+  assert.equal(model.task(task.id).repeat, "weekly");
+  assert.equal(model.isDone(model.task(task.id)), false);
+});
+
 test("più cambiamenti in un passo solo si annullano con un undo", () => {
   const one = project();
   const a = model.createTask(one.id, { title: "A" });

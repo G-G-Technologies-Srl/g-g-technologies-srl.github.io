@@ -830,8 +830,10 @@ function _startDrag(event, task, card) {
       model.updateTask(carried.id, { end: carried.day });
       on.moved();
     } else if (carried.target) {
-      model.moveTask(carried.id, carried.target, carried.at);
+      const step = model.moveTask(carried.id, carried.target, carried.at);
       on.moved();
+      // Dropped into the finishing column, a repeating task made its next one: say so, as a tick does.
+      if (step && step.next) on.ticked(carried.id, { next: step.next });
     }
     on.change();
     paint();
