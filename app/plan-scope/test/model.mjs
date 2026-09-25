@@ -1882,4 +1882,138 @@ test("l'ultimo contatto con una persona è l'ultimo incontro passato, non il pro
   assert.equal(model.lastContact(anna.uid, new Date(2026, 8, 23)), "2026-09-15");
 });
 
+// -----------------------------------------------------------------------------------------------------------------
+//  t h e   p r o j e c t   a t   a   g l a n c e
+// -----------------------------------------------------------------------------------------------------------------
+
+const NOW = new Date(2026, 8, 25, 12, 0);       // venerdì 25 settembre 2026, a mezzogiorno
+
+/** A project with one of each thing the dashboard reads, around NOW. */
+function _busy() {
+  const fiera = model.createProject({ name: "Fiera" });
+  const giulia = model.createContact({ name: "Giulia" });
+  const marco = model.createContact({ name: "Marco" });
+  model.addPerson(fiera.id, giulia.id);
+  model.addPerson(fiera.id, marco.id);
+  const task = (title, end, over = {}) => {
+    const made = model.createTask(fiera.id, { title, end });
+    model.updateTask(made.id, over);
+    return model.task(made.id);
+  };
+  const late = task("Costo del fondo", "2026-09-23");
+  const today = task("Varianti", "2026-09-25", { priority: "high", assigneeUid: giulia.uid });
+  const high = task("Albergo", "2026-09-27", { priority: "high" });
+  const highFar = task("Stand", "2026-10-10", { priority: "high" });
+  const quotes = task("Preventivi", "2026-09-30");
+  const gadgets = task("Gadget", "2026-10-02", { blockedBy: [quotes.id], assigneeUid: marco.uid });
+  const table = task("Misure del tavolo", "2026-09-26", { assigneeUid: marco.uid });
+  const stand = task("Materiale allo stand", "2026-10-17", { milestone: true });
+  const done = task("Fatta", "2026-09-20");
+  model.toggleDone(done.id);
+  const meet = (title, date, time, withName, body = "") => {
+    const page = model.createPage(fiera.id, { title });
+    model.setMarkdown(page.id, `---\ntipo: incontro\ndata: ${date}\nora: ${time}\ncon: ${withName}\n---\n${body}`);
+    return model.page(page.id);
+  };
+  const withGiulia = meet("Incontro con Giulia", "2026-09-25", "09:00", "Giulia",
+    "Visto il volantino.\n\n> [!decisione]\n> Fondo chiaro o scuro\n> entro: 26/9\n\n"
+    + `- [ ] Chiedere il costo [[#${late.uid}]]\n- [x] Mandare le misure\n`);
+  const withSara = meet("Call con Sara", "2026-09-24", "15:00", "Sara");
+  const withMarco = meet("Incontro con Marco", "2026-09-19", "10:00", "Marco",
+    "Misurato lo spazio.\n\n> [!decisione]\n> Chi porta il tavolo\n> scelta: noi\n\n"
+    + `- [ ] Mandargli le misure [[#${table.uid}]]\n- [ ] Chiedere della corrente\n`);
+  const next = meet("Sopralluogo con Marco", "2026-09-29", "10:00", "Marco");
+  const old = meet("Vecchia call", "2026-08-01", "10:00", "Sara");
+  return { fiera, giulia, marco, late, today, high, highFar, quotes, gadgets, table, stand, done,
+    withGiulia, withSara, withMarco, next, old };
+}
+
+test("le decisioni di un progetto: aperte per scadenza, poi prese", () => {
+  const w = _busy();
+  const found = model.decisionsOf(w.fiera.id);
+  assert.deepEqual(found.map((one) => [one.question, one.open, one.by, one.decided]), [
+    ["Fondo chiaro o scuro", true, "2026-09-26", ""],
+    // Scritta a mano senza il giorno: vale il giorno dell'incontro.
+    ["Chi porta il tavolo", false, "", "2026-09-19"],
+  ]);
+  const step = model.setDecision(w.withGiulia.id, 0, "fondo scuro", { day: "2026-09-25" });
+  assert.ok(step);
+  assert.equal(model.decisionsOf(w.fiera.id).filter((one) => one.open).length, 0);
+  model.undoStep(step);
+  assert.equal(model.decisionsOf(w.fiera.id).filter((one) => one.open).length, 1, "si annulla in un passo");
+});
+
+test("cosa serve adesso: l'ordine è fisso, e ogni attività compare una volta sola", () => {
+  const w = _busy();
+  const { items, counts } = model.attentionOf(w.fiera.id, NOW);
+  assert.deepEqual(items.map((one) => one.kind), ["late", "today", "decide", "high", "blocked", "notes"]);
+  assert.equal(items[0].task.id, w.late.id);
+  assert.equal(items[1].task.id, w.today.id);
+  assert.equal(items[1].high, true, "oggi e priorità alta: sta sotto oggi, con la bandierina");
+  assert.equal(items[3].task.id, w.high.id, "l'alta priorità fra dieci giorni non è ancora urgente");
+  assert.equal(items[4].task.id, w.gadgets.id);
+  assert.equal(items[5].meeting.page.id, w.withSara.id,
+    "solo la call senza note e recente: quella di agosto è troppo lontana, quella di oggi ha le note");
+  assert.deepEqual(counts, { late: 1, today: 1, decide: 1, high: 1, blocked: 1, notes: 1 });
+  // «Misure del tavolo» scade domani e non è né alta né bloccata: aspetta il suo giorno.
+  assert.ok(!items.some((one) => one.task && one.task.id === w.table.id));
+});
+
+test("cosa aspettiamo, la prossima milestone, il carico di una persona", () => {
+  const w = _busy();
+  const waiting = model.waitingOn(w.fiera.id);
+  assert.equal(waiting.length, 1);
+  assert.equal(waiting[0].task.id, w.quotes.id);
+  assert.deepEqual(waiting[0].holds.map((one) => one.id), [w.gadgets.id]);
+  const milestone = model.nextMilestone(w.fiera.id);
+  assert.equal(milestone.task.id, w.stand.id);
+  assert.equal(milestone.before, 7, "le attività aperte con una scadenza prima della milestone");
+  const load = model.personLoad(w.fiera.id, w.marco.uid, NOW);
+  assert.deepEqual(load, { open: 2, late: 0, blocked: 1, last: "2026-09-19" });
+  // Chiusi i preventivi, i gadget non aspettano più niente.
+  model.toggleDone(w.quotes.id);
+  assert.equal(model.waitingOn(w.fiera.id).length, 0);
+  assert.equal(model.isBlocked(model.task(w.gadgets.id)), false);
+});
+
+test("gli incontri avuti: cosa se ne è ricavato", () => {
+  const w = _busy();
+  const digest = model.meetingDigest(w.fiera.id, NOW);
+  assert.deepEqual(digest.map((one) => one.meeting.page.id), [w.withGiulia.id, w.withSara.id, w.withMarco.id]);
+  const [giulia, sara, marco] = digest;
+  assert.equal(giulia.excerpt, "Visto il volantino.",
+    "il primo paragrafo, senza la decisione né le caselle");
+  assert.equal(giulia.decisions, 1);
+  assert.deepEqual([giulia.done, giulia.total], [1, 2]);
+  assert.equal(giulia.open[0].task.id, w.late.id, "la casella agganciata porta la sua attività");
+  assert.equal(sara.empty, true);
+  // La casella agganciata legge l'attività: chiusa la scadenza, la casella conta come fatta.
+  model.toggleDone(w.table.id);
+  assert.equal(model.meetingDigest(w.fiera.id, NOW)[2].done, 1);
+});
+
+test("da discutere al prossimo incontro: le sue attività e quello che era rimasto aperto", () => {
+  const w = _busy();
+  const next = model.meetingsAhead(w.fiera.id, NOW)[0];
+  assert.equal(next.page.id, w.next.id);
+  const { items, last } = model.toDiscuss(w.fiera.id, next);
+  assert.deepEqual(items.map((one) => one.text), ["Gadget", "Misure del tavolo", "Chiedere della corrente"],
+    "«Mandargli le misure» è la stessa cosa di «Misure del tavolo», detta una volta");
+  assert.equal(last.page.id, w.withMarco.id);
+  assert.deepEqual(model.toDiscuss(w.fiera.id, null), { items: [], last: null });
+});
+
+test("le ultime modifiche sono i timbri dei record, dal più recente", () => {
+  const fiera = model.createProject({ name: "Fiera" });
+  const a = model.createTask(fiera.id, { title: "A" });
+  const p = model.createPage(fiera.id, { title: "P" });
+  model.updateTask(a.id, { title: "A bis" });
+  const found = model.recentChanges(fiera.id);
+  assert.deepEqual(found.map((one) => one.kind).sort(), ["page", "task"]);
+  assert.ok(found[0].at >= found[1].at);
+  assert.equal(found.find((one) => one.kind === "page").made, true);
+  assert.equal(model.recentChanges(fiera.id, { limit: 1 }).length, 1);
+  assert.ok(p);
+});
+
 console.log(`model: ${passed} prove passate`);

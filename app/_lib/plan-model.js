@@ -27,7 +27,8 @@
 // creation, and travels through every export and import. Two copies of a project on two computers
 // have different ids and the same uids, and that is what `merge` matches on.
 
-import { links, frontmatter, withFrontmatter, mentions, renameMention } from "./plan-markdown.js";
+import { links, frontmatter, withFrontmatter, mentions, renameMention, decisions, withChoice, boxes, parse }
+  from "./plan-markdown.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -1930,7 +1931,10 @@ export function projectOverview(projectId) {
  * hooks to tasks, no blank-line marks. Cut on a word, with an ellipsis when something was cut.
  */
 export function excerptOf(markdown, max = 140) {
-  const body = frontmatter(String(markdown || "")).body || "";
+  // A decision is not what a page says, it is what the page asks: its question and its deadline
+  // read as "Fondo chiaro o scuro entro: 26/9" in the middle of a sentence. It has its own place.
+  const body = (frontmatter(String(markdown || "")).body || "")
+    .replace(/^> ?\[!decisione\][^\n]*(?:\n>[^\n]*)*/gim, "");
   const plain = body
     .replace(/&nbsp;/g, " ")
     .replace(/\[\[#[A-Za-z0-9_-]+\]\]/g, " ")
@@ -1950,6 +1954,263 @@ export function excerptOf(markdown, max = 140) {
   const cut = plain.slice(0, max);
   const edge = cut.lastIndexOf(" ");
   return `${(edge > max * 0.6 ? cut.slice(0, edge) : cut).replace(/[\s,.;:]+$/, "")}…`;
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  t h e   p r o j e c t   a t   a   g l a n c e
+// -----------------------------------------------------------------------------------------------------------------
+
+// How far ahead a decision or a high-priority task starts asking for attention. A week is the
+// horizon of "due soon"; three days is the horizon of "this needs doing now", which is a different
+// question and gets a shorter answer.
+export const NOW_DAYS = 3;
+
+// How far back a meeting without notes is still worth a reminder. Past two weeks nobody remembers
+// what was said, and a reminder to write it down asks for something that can no longer be done.
+export const NOTES_DAYS = 14;
+
+/** Whether a task is held up by another one that is still open. */
+export function isBlocked(taskRecord) {
+  return (taskRecord.blockedBy || []).some((id) => {
+    const other = tasks.get(id);
+    return Boolean(other) && !other.trashedAt && !isDone(other);
+  });
+}
+
+/**
+ * Every decision written in a project, from the "decisione" callouts of its pages.
+ *
+ * The open ones first, the nearest deadline first and those without one last; then the ones made,
+ * the latest first. The day a page is about — a meeting's date — is what a date written without a
+ * year is read against, and it is also the fallback day of a choice written by hand without one.
+ */
+export function decisionsOf(projectId) {
+  const out = [];
+  for (const pageRecord of pagesOf(projectId)) {
+    const props = frontmatter(pageRecord.markdown || "").props || {};
+    const date = String(props.data || props.date || "").trim();
+    const near = isDay(date) ? date : String(pageRecord.updated || "").slice(0, 10);
+    for (const one of decisions(pageRecord.markdown || "", near)) {
+      out.push({ ...one, page: pageRecord, date: isDay(date) ? date : "",
+        decided: one.decided || (one.open ? "" : (isDay(date) ? date : "")) });
+    }
+  }
+  const open = out.filter((one) => one.open)
+    .sort((a, b) => (a.by || "9999").localeCompare(b.by || "9999"));
+  const made = out.filter((one) => !one.open)
+    .sort((a, b) => String(b.decided).localeCompare(String(a.decided)));
+  return [...open, ...made];
+}
+
+/**
+ * A decision made, or reopened with an empty choice. One undo step, like any other change made
+ * from outside the editor. `keys` are the words the interface writes for a callout that has none.
+ */
+export function setDecision(pageId, index, choice, { day = todayISO(), keys } = {}) {
+  const pageRecord = pages.get(pageId);
+  if (!pageRecord) return null;
+  const next = withChoice(pageRecord.markdown || "", index, choice, day, keys);
+  if (next === pageRecord.markdown) return null;
+  return updatePage(pageId, { markdown: next });
+}
+
+/**
+ * What needs doing now, in the order it needs doing.
+ *
+ * The order is fixed and it is the argument: what is late, what is due today, the decisions whose
+ * day is close, the high-priority tasks of the next three days, the tasks held up by another one
+ * within the week, and the meetings of the last two weeks whose notes are still empty. A task
+ * appears once, under the first reason that applies, and carries the others as marks — a late task
+ * that is also blocked is late, with a lock.
+ *
+ * `counts` has one number per kind, so the heading can say how many there are even when the list
+ * on screen shows only the first few.
+ */
+export function attentionOf(projectId, now = new Date()) {
+  const today = todayISO(now);
+  const close = addDays(today, NOW_DAYS);
+  const week = addDays(today, SOON_DAYS);
+  const open = tasksOf(projectId).filter((one) => !isDone(one));
+  const seen = new Set();
+  const groups = { late: [], today: [], decide: [], high: [], blocked: [], notes: [] };
+  const mark = (task) => ({ high: task.priority === "high", blocked: isBlocked(task) });
+
+  const byEnd = (a, b) => String(a.end).localeCompare(String(b.end));
+  for (const task of open.filter((one) => one.end && one.end < today).sort(byEnd)) {
+    groups.late.push({ kind: "late", date: task.end, task, ...mark(task) });
+    seen.add(task.id);
+  }
+  for (const task of open.filter((one) => one.end === today)) {
+    groups.today.push({ kind: "today", date: task.end, task, ...mark(task) });
+    seen.add(task.id);
+  }
+  for (const one of decisionsOf(projectId)) {
+    if (one.open && one.by && one.by <= close) {
+      groups.decide.push({ kind: "decide", date: one.by, decision: one, late: one.by < today });
+    }
+  }
+  for (const task of open.filter((one) => !seen.has(one.id) && one.priority === "high"
+    && one.end && one.end <= close).sort(byEnd)) {
+    groups.high.push({ kind: "high", date: task.end, task, ...mark(task) });
+    seen.add(task.id);
+  }
+  for (const task of open.filter((one) => !seen.has(one.id) && one.end && one.end <= week
+    && isBlocked(one)).sort(byEnd)) {
+    groups.blocked.push({ kind: "blocked", date: task.end, task, ...mark(task) });
+    seen.add(task.id);
+  }
+  const since = addDays(today, -NOTES_DAYS);
+  for (const meeting of [...meetingsOf(projectId)].reverse()) {
+    if (meeting.date < since || meetingAhead(meeting, now)) continue;
+    if (meeting.date > today) continue;
+    if (_bodyOf(meeting.page)) continue;
+    groups.notes.push({ kind: "notes", date: meeting.date, meeting });
+  }
+
+  const counts = {};
+  for (const key of Object.keys(groups)) counts[key] = groups[key].length;
+  return { items: Object.values(groups).flat(), counts };
+}
+
+/**
+ * The first words of a meeting's notes: its opening paragraph, not the whole page flattened. A
+ * page of notes goes on with headings, tables and boxes, and an excerpt that runs into them reads
+ * "Le due strade · Fondo chiaro Fondo scuro In stampa…" — words, but not a sentence.
+ */
+function _leadOf(markdown, max) {
+  const first = parse(frontmatter(String(markdown || "")).body || "")
+    .find((block) => block.type === "paragraph" && String(block.text || "").replace(/&nbsp;/g, "").trim());
+  return first ? excerptOf(first.text, max) : excerptOf(markdown, max);
+}
+
+/** The text of a page below its head, blank-line marks and spaces removed: "" means empty. */
+function _bodyOf(pageRecord) {
+  return (frontmatter(pageRecord.markdown || "").body || "").replace(/&nbsp;/g, " ").trim();
+}
+
+/**
+ * What the project is waiting for: every open task that holds up another open one, with the tasks
+ * it holds up. The nearest deadline first, those without one last. It is the question asked at
+ * every progress meeting — is this ours to do, or are we waiting on somebody — and the board
+ * answers it only card by card.
+ */
+export function waitingOn(projectId) {
+  const open = tasksOf(projectId).filter((one) => !isDone(one));
+  const out = [];
+  for (const blocker of open) {
+    const held = open.filter((one) => (one.blockedBy || []).includes(blocker.id));
+    if (held.length) out.push({ task: blocker, holds: held });
+  }
+  return out.sort((a, b) => String(a.task.end || "9999").localeCompare(String(b.task.end || "9999")));
+}
+
+/**
+ * The next milestone still open, and how many open tasks fall due before it. Null without one.
+ */
+export function nextMilestone(projectId) {
+  const open = tasksOf(projectId).filter((one) => !isDone(one));
+  const milestone = open.filter((one) => one.milestone && one.end)
+    .sort((a, b) => a.end.localeCompare(b.end))[0];
+  if (!milestone) return null;
+  const before = open.filter((one) => !one.milestone && one.end && one.end <= milestone.end).length;
+  return { task: milestone, before };
+}
+
+/**
+ * A person's share of one project: open tasks, how many of those are late, and the last time
+ * something happened with them — across every project, because a call about another job is still
+ * the last time we spoke.
+ */
+export function personLoad(projectId, uid, now = new Date()) {
+  const today = todayISO(now);
+  const theirs = tasksOf(projectId).filter((one) => one.assigneeUid === uid && !isDone(one));
+  return {
+    open: theirs.length,
+    late: theirs.filter((one) => one.end && one.end < today).length,
+    blocked: theirs.filter((one) => isBlocked(one)).length,
+    last: contactByUid(uid) ? lastContact(uid, now) : "",
+  };
+}
+
+/**
+ * The meetings already had, the latest first, each with what came out of it: the first words of
+ * the notes, the boxes ticked over the boxes written, the boxes still open, and the decisions
+ * still open. A box hooked to a task reads the task, which is the one that is kept up to date.
+ */
+export function meetingDigest(projectId, now = new Date(), { limit = 3 } = {}) {
+  const past = meetingsOf(projectId).filter((one) => !meetingAhead(one, now)).reverse().slice(0, limit);
+  return past.map((meeting) => {
+    const markdown = meeting.page.markdown || "";
+    const list = boxes(markdown).map((box) => {
+      const task = box.ref ? taskByUid(box.ref, { projectId }) : null;
+      const live = task && !task.trashedAt ? task : null;
+      return { ...box, task: live, done: live ? isDone(live) : box.done };
+    });
+    return {
+      meeting,
+      excerpt: _leadOf(markdown, 180),
+      empty: !_bodyOf(meeting.page),
+      done: list.filter((one) => one.done).length,
+      total: list.length,
+      open: list.filter((one) => !one.done),
+      decisions: decisions(markdown, meeting.date).filter((one) => one.open).length,
+    };
+  });
+}
+
+/**
+ * What to bring to a meeting: for each person it names, their open tasks in this project and the
+ * boxes left open at the last meeting with them before this one; and that last meeting itself.
+ *
+ * Deduplicated by task: a box hooked to a task that is already on the list is the same thing said
+ * twice. The people are read from the meeting's "con:" line, as everywhere else.
+ */
+export function toDiscuss(projectId, meeting) {
+  if (!meeting) return { items: [], last: null };
+  const names = String(meeting.with || "").split(",").map((one) => one.trim()).filter(Boolean);
+  const items = [];
+  const taken = new Set();
+  let last = null;
+  for (const name of names) {
+    const person = contactByName(name);
+    if (!person) continue;
+    const uid = person.uid || person.id;
+    for (const task of tasksOf(projectId)) {
+      if (task.assigneeUid !== uid || isDone(task) || taken.has(task.id)) continue;
+      taken.add(task.id);
+      items.push({ text: task.title, task, from: null });
+    }
+    const before = pagesAbout(uid).find((one) => one.project.id === projectId
+      && one.page.id !== meeting.page.id && isDay(one.date) && one.date <= meeting.date);
+    if (!before) continue;
+    if (!last || before.date > last.date) last = { page: before.page, date: before.date };
+    for (const box of boxes(before.page.markdown || "")) {
+      const task = box.ref ? taskByUid(box.ref, { projectId }) : null;
+      if (task && (task.trashedAt || isDone(task) || taken.has(task.id))) continue;
+      if (!task && box.done) continue;
+      if (task) taken.add(task.id);
+      items.push({ text: task ? task.title : box.text, task, from: before.page });
+    }
+  }
+  return { items, last: last ? { ...last, excerpt: _leadOf(last.page.markdown, 120) } : null };
+}
+
+/**
+ * The last things touched in a project, newest first: pages and tasks by their `updated` stamp.
+ *
+ * Derived and not logged. A log would be a record of its own to keep, to carry in the export and
+ * to reconcile in the shared folder; the stamps are already there, and they answer the question
+ * this list is for — "where was I" — without a second source that could disagree with the first.
+ */
+export function recentChanges(projectId, { limit = 5 } = {}) {
+  return [
+    ...pagesOf(projectId).map((record) => ({ kind: "page", record })),
+    ...tasksOf(projectId).map((record) => ({ kind: "task", record })),
+  ]
+    .map((one) => ({ ...one, at: String(one.record.updated || one.record.created || ""),
+      made: one.record.updated === one.record.created }))
+    .sort((a, b) => b.at.localeCompare(a.at))
+    .slice(0, limit);
 }
 
 // -----------------------------------------------------------------------------------------------------------------

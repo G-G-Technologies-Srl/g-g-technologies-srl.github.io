@@ -253,8 +253,8 @@
 
   <!-- ------------------------------------------------------------------ one project -->
 
-  <!-- Four panels, and the fourth is the limit rather than the count so far. A fifth is a decision
-       to be argued for, not a thing to be added: past four the dashboard stops being a glance. -->
+  <!-- The dashboard of one project. Every panel answers one question and opens the screen that
+       answers it in full; what needs doing now comes first, and says so in a fixed order. -->
   <section class="screen" id="project" hidden>
     <div class="wrap">
       <!-- The example says it is one, for as long as it exists. The welcome dialog says it once;
@@ -285,102 +285,154 @@
         <datalist id="projectPropKeys"></datalist>
       </div>
 
-      <div class="grid">
-        <!-- Every panel is a way into its screen, not only a report of it: the title on the left,
-             the door on the right. Before this, the only way to a page was clicking one that was
-             already listed — and the deadlines and the ring led nowhere at all. -->
-        <div class="card" id="panelProgress">
-          <div class="panel-head">
-            <h2 data-t="progressTitle"></h2>
-            <span class="spacer"></span>
-            <button type="button" id="progressGo" class="link small" data-t="panelPlan"></button>
-          </div>
-          <div class="ring">
-            <svg viewBox="0 0 120 120" aria-hidden="true">
-              <circle class="ring-back" cx="60" cy="60" r="52"></circle>
-              <circle class="ring-fill" id="ringFill" cx="60" cy="60" r="52"></circle>
-            </svg>
-            <span class="ring-text" id="progressText"></span>
-          </div>
-          <p class="note" id="progressNote"></p>
+      <!-- Two columns and a reading order. The left one answers "what now" and "how far along":
+           what needs doing, the plan, the next four weeks, the meetings had. The right one holds
+           what is looked up: the next meeting, the decisions, what we are waiting for, the people,
+           the documents. On a phone the columns dissolve into one list, in the order the `order`
+           rules in styles.css give it, which is not the order of this markup. -->
+      <div class="project-cols">
+        <div class="project-main">
+
+          <!-- What needs doing now: at most five rows, in a fixed order, then "and n more". -->
+          <section class="card panel-now" id="panelNow">
+            <div class="panel-head">
+              <h2 data-t="nowTitle"></h2>
+              <span class="spacer"></span>
+              <button type="button" id="nowGo" class="link small" data-t="nowGo"></button>
+            </div>
+            <div class="now-sum" id="nowSum"></div>
+            <ul class="list now-list" id="nowList"></ul>
+            <button type="button" id="nowMore" class="link small now-more" hidden></button>
+            <div class="now-quiet" id="nowQuiet" hidden></div>
+          </section>
+
+          <section class="card panel-plan" id="panelPlan">
+            <div class="panel-head">
+              <h2 data-t="planTitle"></h2>
+              <span class="meta" id="planCount"></span>
+              <span class="spacer"></span>
+              <button type="button" id="openPlan" class="link small" data-t="panelPlan"></button>
+            </div>
+            <div class="plan-bar" id="planBar" role="img"></div>
+            <ul class="plan-legend" id="planLegend"></ul>
+            <p class="plan-milestone" id="planMilestone" hidden></p>
+            <p class="note" id="tasksEmpty" data-t="tasksEmpty" hidden></p>
+            <form class="row quick-add" id="newTaskForm">
+              <input type="text" id="taskField" maxlength="160" autocomplete="off">
+              <button type="submit" id="addTask" class="primary" data-t="addTask"></button>
+            </form>
+          </section>
+
+          <section class="card panel-weeks" id="panelWeeks">
+            <div class="panel-head">
+              <h2 id="weeksTitle"></h2>
+              <span class="spacer"></span>
+              <button type="button" id="dueGo" class="link small" data-t="panelCalendar"></button>
+            </div>
+            <div class="weeks" id="weeks"></div>
+            <ul class="weeks-legend" id="weeksLegend"></ul>
+            <p class="note weeks-undated" id="weeksUndated" hidden></p>
+          </section>
+
+          <section class="card panel-met" id="panelMet">
+            <div class="panel-head">
+              <h2 data-t="metTitle"></h2>
+              <span class="spacer"></span>
+              <button type="button" id="metGo" class="link small" data-t="metGo"></button>
+            </div>
+            <ul class="list met-list" id="metList"></ul>
+            <p class="note" id="metEmpty" data-t="metEmpty" hidden></p>
+          </section>
         </div>
 
-        <div class="card">
-          <div class="panel-head">
-            <h2 data-t="dueTitle"></h2>
-            <span class="spacer"></span>
-            <button type="button" id="dueGo" class="link small" data-t="panelCalendar"></button>
-          </div>
-          <ul class="list" id="dueList"></ul>
-          <p class="note" id="dueEmpty" data-t="dueEmpty" hidden></p>
-          <!-- Qui e non fra i documenti. Un appuntamento è una cosa che succederà, e si prende
-               guardando i giorni: metterlo accanto a «aggiungi una pagina» lo faceva sembrare un
-               verbale da scrivere, che è quello che diventa **dopo**. -->
-          <button type="button" id="newMeeting" class="accent wide" data-t="meetNew"></button>
-        </div>
+        <aside class="project-side">
+          <!-- The next meeting, and what to bring to it. -->
+          <section class="card panel-next" id="panelNext">
+            <div class="panel-head">
+              <h2 data-t="nextTitle"></h2>
+              <span class="spacer"></span>
+              <button type="button" id="nextGo" class="link small" data-t="nextGo"></button>
+            </div>
+            <div class="next-box" id="nextBox"></div>
+            <p class="note" id="nextEmpty" data-t="nextEmpty" hidden></p>
+            <!-- Qui e non fra i documenti. Un appuntamento è una cosa che succederà, e si prende
+                 guardando i giorni: metterlo accanto a «aggiungi una pagina» lo faceva sembrare un
+                 verbale da scrivere, che è quello che diventa **dopo**. -->
+            <button type="button" id="newMeeting" class="accent wide" data-t="meetNew"></button>
+          </section>
 
-        <!-- Chi ci lavora, e in che veste. Si riempie anche da solo: assegnare un'attività a
-             qualcuno lo mette qui, perché è vero — se Marco ha un'attività qui, Marco lavora qui —
-             e un elenco che va tenuto allineato a mano è un elenco che smette di essere vero. -->
-        <div class="card" id="panelPeople">
-          <div class="panel-head">
-            <h2 data-t="peopleTitle"></h2>
-            <span class="spacer"></span>
-            <button type="button" id="peopleAll" class="link small" data-t="peopleAll"></button>
-          </div>
-          <p class="note" id="peopleNone" data-t="peopleNone" hidden></p>
-          <ul class="list" id="peopleList"></ul>
-          <form class="row quick-add" id="addPersonForm">
-            <input type="text" id="addPersonName" list="rubricaList" maxlength="120" autocomplete="off"
-                   data-t-placeholder="peopleAdd" data-t-label="peopleAdd">
-            <datalist id="rubricaList"></datalist>
-            <button type="submit" class="primary" data-t="peopleAddDo"></button>
-          </form>
-          <!-- L'elenco della rubrica è agganciato al campo da sempre, e non lo scopriva nessuno:
-               un `datalist` compare solo mentre si scrive, quindi chi non sa che c'è va a cercare
-               i nomi in rubrica e torna indietro a memoria. Detto qui, e solo quando c'è davvero
-               qualcuno da suggerire. -->
-          <p class="note" id="peopleHint" data-t="peopleHint" hidden></p>
-        </div>
+          <section class="card panel-decisions" id="panelDecisions">
+            <div class="panel-head">
+              <h2 data-t="decisionsTitle"></h2>
+            </div>
+            <ul class="list decision-list" id="decisionList"></ul>
+            <p class="note" id="decisionsEmpty" data-t="decisionsEmpty" hidden></p>
+          </section>
 
-        <!-- What the shared folder brought in, and when: the strip says it once and goes; whoever
-             comes back after lunch reads it here. Only on a shared project, only once there is
-             something to read. -->
-        <div class="card" id="panelLog" hidden>
-          <div class="panel-head">
-            <h2 data-t="logTitle"></h2>
-          </div>
-          <ul class="list" id="logList"></ul>
-        </div>
+          <section class="card panel-waiting" id="panelWaiting" hidden>
+            <div class="panel-head">
+              <h2 data-t="waitingTitle"></h2>
+            </div>
+            <ul class="list" id="waitingList"></ul>
+          </section>
 
-        <div class="card">
-          <div class="panel-head">
-            <h2 data-t="docsTitle"></h2>
-            <span class="spacer"></span>
-            <button type="button" id="openPages" class="link small" data-t="panelPages"></button>
-          </div>
-          <ul class="list" id="pageList"></ul>
-          <p class="note" id="pagesEmpty" data-t="pagesEmpty" hidden></p>
-          <form class="row quick-add" id="newPageForm">
-            <input type="text" id="pageField" maxlength="120" autocomplete="off">
-            <button type="submit" id="addPage" class="primary" data-t="addPage"></button>
-          </form>
-        </div>
+          <!-- Chi ci lavora, e in che veste. Si riempie anche da solo: assegnare un'attività a
+               qualcuno lo mette qui, perché è vero — se Marco ha un'attività qui, Marco lavora qui —
+               e un elenco che va tenuto allineato a mano è un elenco che smette di essere vero. -->
+          <section class="card panel-people" id="panelPeople">
+            <div class="panel-head">
+              <h2 data-t="peopleTitle"></h2>
+              <span class="spacer"></span>
+              <button type="button" id="peopleAll" class="link small" data-t="peopleAll"></button>
+            </div>
+            <p class="note" id="peopleNone" data-t="peopleNone" hidden></p>
+            <ul class="list" id="peopleList"></ul>
+            <form class="row quick-add" id="addPersonForm">
+              <input type="text" id="addPersonName" list="rubricaList" maxlength="120" autocomplete="off"
+                     data-t-placeholder="peopleAdd" data-t-label="peopleAdd">
+              <datalist id="rubricaList"></datalist>
+              <button type="submit" class="primary" data-t="peopleAddDo"></button>
+            </form>
+            <!-- L'elenco della rubrica è agganciato al campo da sempre, e non lo scopriva nessuno:
+                 un `datalist` compare solo mentre si scrive, quindi chi non sa che c'è va a cercare
+                 i nomi in rubrica e torna indietro a memoria. Detto qui, e solo quando c'è davvero
+                 qualcuno da suggerire. -->
+            <p class="note" id="peopleHint" data-t="peopleHint" hidden></p>
+          </section>
 
-        <!-- The plan's own panel keeps its full-width button and gains no link in the head: one
-             door, drawn once, at the size of the thing most used on this screen. -->
-        <div class="card">
-          <div class="panel-head">
-            <h2 data-t="planTitle"></h2>
-          </div>
-          <ul class="list" id="taskList"></ul>
-          <p class="note" id="tasksEmpty" data-t="tasksEmpty" hidden></p>
-          <form class="row quick-add" id="newTaskForm">
-            <input type="text" id="taskField" maxlength="160" autocomplete="off">
-            <button type="submit" id="addTask" class="primary" data-t="addTask"></button>
-          </form>
-          <button type="button" id="openPlan" class="accent wide" data-t="openPlan"></button>
-        </div>
+          <section class="card panel-docs" id="panelDocs">
+            <div class="panel-head">
+              <h2 data-t="docsTitle"></h2>
+              <span class="meta" id="docsCount"></span>
+              <span class="spacer"></span>
+              <button type="button" id="openPages" class="link small" data-t="panelPages"></button>
+            </div>
+            <div class="fav-chips" id="favChips" hidden></div>
+            <ul class="list" id="pageList"></ul>
+            <p class="note" id="pagesEmpty" data-t="pagesEmpty" hidden></p>
+            <form class="row quick-add" id="newPageForm">
+              <input type="text" id="pageField" maxlength="120" autocomplete="off">
+              <button type="submit" id="addPage" class="primary" data-t="addPage"></button>
+            </form>
+          </section>
+
+          <section class="card panel-changes" id="panelChanges" hidden>
+            <div class="panel-head">
+              <h2 data-t="changesTitle"></h2>
+            </div>
+            <ul class="list" id="changeList"></ul>
+          </section>
+
+          <!-- What the shared folder brought in, and when: the strip says it once and goes; whoever
+               comes back after lunch reads it here. Only on a shared project, only once there is
+               something to read. -->
+          <section class="card panel-log" id="panelLog" hidden>
+            <div class="panel-head">
+              <h2 data-t="logTitle"></h2>
+            </div>
+            <ul class="list" id="logList"></ul>
+          </section>
+        </aside>
       </div>
 
       <p class="note invite" id="exportInvite" data-t="exportInvite" hidden></p>

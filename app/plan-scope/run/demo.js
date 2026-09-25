@@ -199,20 +199,31 @@ export function build({ t, model, columns }) {
   const MET = [
     { who: "demoWho", title: "demoMeetTitle", body: "demoMeetBody", todo: "demoMeetTodo", when: 0 },
     { who: "demoWho2", title: "demoMeet2Title", body: "demoMeet2Body", todo: "demoMeet2Todo", when: -6 },
+    // A call already had and never written up, and the next appointment: the dashboard has a
+    // reminder for the first and a "to discuss" for the second, and an example without them would
+    // not show either.
+    { who: "demoWho3", title: "demoMeet4Title", when: -1, time: "15:00" },
+    { who: "demoWho2", title: "demoMeet3Title", when: 4, time: "10:00", where: "demoMeet3Where",
+      repeat: "repeat_fortnight" },
   ];
   for (const one of MET) {
+    const head = { [t("propKind")]: t("meetingKind"),
+      [t("propDate")]: model.addDays(today, one.when),
+      ...(one.time ? { [t("propTime")]: one.time } : {}),
+      [t("propWith")]: t(one.who),
+      ...(one.where ? { [t("propWhere")]: t(one.where) } : {}),
+      ...(one.repeat ? { [t("propRepeat")]: t(one.repeat).toLowerCase() } : {}) };
+    // The decision in Giulia's notes is due tomorrow, whenever the example is opened.
+    const body = one.body
+      ? `${t(one.body).replace("{by}", model.addDays(today, 1))}\n- [ ] ${t(one.todo)}\n` : "";
     model.createPage(project.id, {
       title: t(one.title),
-      markdown: withFrontmatter(
-        // Le chiavi nella lingua di chi legge, come i valori: la pagina è un file che una persona
-        // apre anche fuori di qui, e in inglese `tipo` accanto a `time` è metà frase in una lingua
-        // e metà nell'altra. Le stesse chiavi che offre l'editore quando riconosce un incontro.
-        { [t("propKind")]: t("meetingKind"),
-          [t("propDate")]: model.addDays(today, one.when),
-          [t("propWith")]: t(one.who) },
-        // Una riga sola fra il corpo e l'ultima casella: due righe chiuderebbero l'elenco che il
-        // corpo apre, e la casella finirebbe da sola in fondo alla pagina.
-        `${t(one.body)}\n- [ ] ${t(one.todo)}\n`),
+      // Le chiavi nella lingua di chi legge, come i valori: la pagina è un file che una persona
+      // apre anche fuori di qui, e in inglese `tipo` accanto a `time` è metà frase in una lingua
+      // e metà nell'altra. Le stesse chiavi che offre l'editore quando riconosce un incontro.
+      // Una riga sola fra il corpo e l'ultima casella: due righe chiuderebbero l'elenco che il
+      // corpo apre, e la casella finirebbe da sola in fondo alla pagina.
+      markdown: withFrontmatter(head, body),
     });
   }
 

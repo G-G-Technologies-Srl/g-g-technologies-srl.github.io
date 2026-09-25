@@ -139,6 +139,36 @@ Ordinamento (ultima modifica, scadenza, nome) e vista (schede, elenco) sono fatt
 browser: stanno in `localStorage` (`gg.plan-scope.homeSort`, `gg.plan-scope.homeView`), non nei
 dati, e un progetto mandato a qualcuno non se li porta dietro.
 
+### La pagina del progetto
+
+Si legge dall'alto, su due colonne. A sinistra le domande «che cosa adesso» e «a che punto siamo»:
+**Cosa serve adesso**, il piano come una barra per colonna con la prossima milestone, le prossime
+quattro settimane (due su un telefono) e gli incontri avuti. A destra quello che si va a cercare:
+il prossimo incontro con **da discutere**, le **decisioni**, **aspettiamo**, chi ci lavora, i
+documenti, le ultime modifiche. Sotto i 900 px le due colonne diventano una, nell'ordine dato dalle
+regole `order` di `styles.css`, che non è quello del markup.
+
+Tutti i conti stanno in `gg/plan-model.js` e si provano in `test/model.mjs`, senza browser:
+
+- `attentionOf` — in ritardo, oggi, decisioni entro tre giorni, priorità alta entro tre giorni,
+  bloccate entro la settimana, incontri degli ultimi quattordici giorni senza note. **L'ordine è
+  fisso** e un'attività compare una volta sola, sotto la prima ragione; le altre diventano segni
+  (bandierina, lucchetto). La schermata ne mostra cinque, poi «Altre n».
+- `decisionsOf` e `setDecision` — dai riquadri `> [!decisione]` delle pagine: le righe libere sono
+  la domanda, `entro:` il giorno, `scelta:` e `decisa:` la chiusura. Aperta vuol dire «senza
+  scelta», quindi chi la scrive a mano in Obsidian la chiude come il pulsante. Il testo lo leggono
+  e lo scrivono `decisions` e `withChoice` in `gg/plan-markdown.js`; la seconda tocca solo le
+  righe di quel riquadro, e il resto del file torna identico byte per byte.
+- `waitingOn` — le attività aperte che ne fermano un'altra (`blockedBy`).
+- `meetingDigest`, `toDiscuss` — che cosa è uscito da un incontro e che cosa portare al prossimo.
+  Una casella agganciata a un'attività (`[[#uid]]`) legge l'attività, non la casella.
+- `nextMilestone`, `personLoad`, `recentChanges` — l'ultima si ricava dai timbri `updated`, non da
+  un registro: niente da tenere allineato, niente da portare nell'esportazione.
+
+Ogni urgenza ha una forma oltre al colore — anello per il ritardo, bandierina, bivio per le
+decisioni, lucchetto, rombo per la milestone — perché il colore da solo sparisce nel tema chiaro e
+per chi non distingue le tinte. Una spunta dalla pagina del progetto offre «Annulla».
+
 ### Gli appuntamenti che si ripetono
 
 Un appuntamento con `ripete: ogni settimana` (o `ogni 2 settimane`, `ogni mese`, e le stesse

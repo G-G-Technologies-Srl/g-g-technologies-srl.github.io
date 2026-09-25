@@ -104,6 +104,14 @@ const MENU = [
     label: "blockCallout",
     make: (text = "") => ({ type: "callout", kind: "nota", text }),
   },
+  // A decision is a callout with a meaning: its lines are read back by the model — the question,
+  // `entro:` and `scelta:` — and the project's dashboard lists it. See `decisions` in
+  // plan-markdown.js.
+  {
+    key: "decision",
+    label: "blockDecision",
+    make: (text = "") => ({ type: "callout", kind: "decisione", text }),
+  },
   {
     key: "code",
     label: "blockCode",
@@ -146,7 +154,7 @@ let on = { change() {}, openPage() {}, exists: () => true, image() {}, attachmen
  *
  * The keys the app must have: `addBlock`, `dragHandle`, `taskDone`, `taskUndone`, `menuTitle`,
  * `menuChange`, `linkPrompt`, `sampleHeading`, `sampleText`, `sampleItem`, `sampleQuote`,
- * `sampleNote`, the labels of `MENU` and a `callout_<kind>` for each callout.
+ * `sampleNote`, `sampleDecision`, the labels of `MENU` and a `callout_<kind>` for each callout.
  */
 let text = (key) => key;
 
@@ -1392,6 +1400,9 @@ function _sample(key) {
   } else if (key === "callout") {
     box.classList.add("sample-callout");
     box.append(node("span", "sample-text", text("sampleNote")));
+  } else if (key === "decision") {
+    box.classList.add("sample-callout", "sample-decision");
+    box.append(node("span", "sample-text", text("sampleDecision")));
   } else if (key === "code") {
     box.append(node("code", "sample-code", "const a = 1"));
   } else if (key === "divider") {
@@ -1432,6 +1443,7 @@ function _currentKey(block) {
     }
     return block.ordered ? "ordered" : "list";
   }
+  if (block.type === "callout" && block.kind === "decisione") return "decision";
   return block.type;
 }
 

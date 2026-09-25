@@ -32,9 +32,10 @@
 //  c o n s t a n t s
 // -----------------------------------------------------------------------------------------------------------------
 
-// The three kinds of callout, and the words are keys rather than labels: the same file opens in
-// Italian and in English, so what is written in the text cannot be a translated word.
-export const CALLOUTS = ["nota", "attenzione", "fatto"];
+// The kinds of callout, and the words are keys rather than labels: the same file opens in Italian
+// and in English, so what is written in the text cannot be a translated word. "decisione" is the
+// one with a meaning beyond its look: see `decisions` at the end of this file.
+export const CALLOUTS = ["nota", "attenzione", "fatto", "decisione"];
 
 const HEADING = /^(#{1,3}) +(.*)$/;
 const BULLET = /^(\s*)([-*+]) +(.*)$/;
@@ -691,4 +692,162 @@ export function assets(blocks) {
     for (const found of String(text).matchAll(/\[[^\]]+\]\((assets\/[\w.-]+)\)/g)) out.push(found[1]);
   }
   return [...new Set(out)];
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  d e c i s i o n s
+// -----------------------------------------------------------------------------------------------------------------
+
+// The lines a decision callout reads, in the two languages of the apps. Everything else in the
+// callout is the question. Keys and not labels, like the callout kinds: a note written in Italian
+// and opened in English still says `entro:`, and still means it.
+const DECISION_KEYS = {
+  by: ["entro", "by"],
+  choice: ["scelta", "choice"],
+  decided: ["decisa", "decided"],
+};
+const DECISION_LINE = /^\s*([A-Za-z\u00C0-\u017F]+)\s*:\s*(.*)$/;
+
+/** Which of the three keys a word is, or null. */
+function _decisionKey(word) {
+  const low = String(word || "").toLowerCase();
+  return Object.keys(DECISION_KEYS).find((key) => DECISION_KEYS[key].includes(low)) || null;
+}
+
+/**
+ * A day as a person writes it inside a note: `2026-09-26`, `26/9`, `26/09/2026`, `26.9.26`.
+ *
+ * Without a year, the year of `near` — the page's own day, or today — because "entro il 26/9"
+ * written in a September note means this September. Anything else is not a day, and returns "".
+ */
+export function dayOf(value, near = "") {
+  const text = String(value || "").trim();
+  let year;
+  let month;
+  let day;
+  const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(text);
+  const local = /^(\d{1,2})[/.](\d{1,2})(?:[/.](\d{2}|\d{4}))?$/.exec(text);
+  if (iso) [year, month, day] = [Number(iso[1]), Number(iso[2]), Number(iso[3])];
+  else if (local) {
+    day = Number(local[1]);
+    month = Number(local[2]);
+    const fallback = /^\d{4}/.test(near) ? Number(near.slice(0, 4)) : new Date().getFullYear();
+    year = local[3] ? Number(local[3].length === 2 ? `20${local[3]}` : local[3]) : fallback;
+  } else return "";
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return "";
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+/** What one decision callout says: the question, the deadline, the choice and its day. */
+function _decisionOf(text, near) {
+  const said = { question: "", by: "", choice: "", decided: "", english: false };
+  const question = [];
+  for (const line of _lines(text)) {
+    const found = DECISION_LINE.exec(line);
+    const key = found ? _decisionKey(found[1]) : null;
+    if (!key) {
+      if (line.trim()) question.push(line.trim());
+      continue;
+    }
+    if (DECISION_KEYS[key][1] === found[1].toLowerCase()) said.english = true;
+    const value = found[2].trim();
+    said[key] = key === "choice" ? value : dayOf(value, near);
+  }
+  said.question = question.join(" ");
+  return said;
+}
+
+/**
+ * The decisions a document holds, in the order they are written.
+ *
+ * A decision is a callout of kind "decisione": its free lines are the question, `entro:` the day by
+ * which it has to be made, `scelta:` what was chosen and `decisa:` when. **Open is simply "no
+ * choice written"**: no status to keep in step, and whoever writes the choice by hand in Obsidian
+ * closes it exactly as the button does. A callout with no question is a template waiting to be
+ * filled, not an open decision, and it is left out.
+ *
+ * `near` is the day the document is about, used for dates written without a year.
+ */
+export function decisions(markdown, near = "") {
+  const out = [];
+  let index = -1;
+  for (const block of parse(frontmatter(markdown).body)) {
+    if (block.type !== "callout" || block.kind !== "decisione") continue;
+    index += 1;
+    const said = _decisionOf(block.text, near);
+    if (!said.question) continue;
+    out.push({ index, question: said.question, by: said.by, choice: said.choice,
+      decided: said.decided, open: !said.choice });
+  }
+  return out;
+}
+
+/**
+ * The same document with the `index`-th decision given a choice — or reopened, with an empty one.
+ *
+ * The choice and its day are written as two lines at the end of the callout, replacing any that
+ * were there. The keys follow the callout: one written in English gets `choice:`, one in Italian
+ * `scelta:`; a callout with no key yet takes the pair `keys` passes, which is the interface's.
+ */
+export function withChoice(markdown, index, choice, day, keys = { choice: "scelta", decided: "decisa" }) {
+  // Surgery on the lines, not a parse and a serialize: everything outside this one callout — the
+  // head, the blank lines, a table somebody aligned by hand — comes back byte for byte.
+  const lines = _lines(markdown);
+  let fence = null;
+  let seen = -1;
+  for (let at = 0; at < lines.length; at += 1) {
+    const opens = FENCE.exec(lines[at]);
+    if (opens) {
+      if (!fence) fence = opens[2][0];
+      else if (opens[2][0] === fence) fence = null;
+      continue;
+    }
+    if (fence || !/^> ?\[!decisione\]\s*$/i.test(lines[at])) continue;
+    seen += 1;
+    let end = at + 1;
+    while (end < lines.length && QUOTE.test(lines[end])) end += 1;
+    if (seen !== index) {
+      at = end - 1;
+      continue;
+    }
+    const inner = lines.slice(at + 1, end).map((line) => QUOTE.exec(line)[1]);
+    const english = _decisionOf(inner.join("\n")).english;
+    const choiceKey = english ? DECISION_KEYS.choice[1] : (keys.choice || DECISION_KEYS.choice[0]);
+    const decidedKey = english ? DECISION_KEYS.decided[1] : (keys.decided || DECISION_KEYS.decided[0]);
+    const kept = inner.filter((line) => {
+      const found = DECISION_LINE.exec(line);
+      const key = found ? _decisionKey(found[1]) : null;
+      return key !== "choice" && key !== "decided";
+    });
+    while (kept.length && !kept[kept.length - 1].trim()) kept.pop();
+    const clean = String(choice || "").replace(/\s+/g, " ").trim();
+    if (clean) kept.push(`${choiceKey}: ${clean}`, `${decidedKey}: ${day}`);
+    lines.splice(at + 1, end - at - 1, ...kept.map((line) => (line ? `> ${line}` : ">")));
+    return lines.join("\n");
+  }
+  return String(markdown || "");
+}
+
+/**
+ * The boxes of a document: every "- [ ]" and "- [x]" line, with its text as it reads and the task
+ * it is hooked to, if any. Code blocks are not looked into: a box inside one is an example.
+ */
+export function boxes(markdown) {
+  const out = [];
+  let fence = null;
+  for (const line of _lines(frontmatter(markdown).body)) {
+    const opens = FENCE.exec(line);
+    if (opens) {
+      if (!fence) fence = opens[2][0];
+      else if (opens[2][0] === fence) fence = null;
+      continue;
+    }
+    if (fence) continue;
+    const found = /^\s*[-*+]\s+\[([ xX])\]\s+(.*)$/.exec(line);
+    if (!found) continue;
+    const ref = TASK_REF.exec(found[2]);
+    out.push({ done: found[1] !== " ", text: withoutTaskRefs(found[2]), ref: ref ? ref[1] : null });
+  }
+  return out;
 }

@@ -468,6 +468,7 @@ const IT = {
   sampleItem: "Una voce",
   sampleQuote: "Una citazione",
   sampleNote: "Una nota in evidenza",
+  sampleDecision: "Fondo chiaro o scuro? entro: 26/9",
   blockParagraph: "Testo",
   blockHeading1: "Titolo grande",
   blockHeading2: "Titolo medio",
@@ -477,6 +478,7 @@ const IT = {
   blockCheck: "Checklist",
   blockQuote: "Citazione",
   blockCallout: "Riquadro in evidenza",
+  blockDecision: "Decisione",
   blockCode: "Codice",
   blockDivider: "Riga di separazione",
   blockTable: "Tabella",
@@ -485,6 +487,7 @@ const IT = {
   callout_nota: "Nota",
   callout_attenzione: "Attenzione",
   callout_fatto: "Fatto",
+  callout_decisione: "Decisione",
 
   // ---- anagrafiche
   partiesTitle: "Anagrafiche",
@@ -1862,6 +1865,7 @@ const EN = {
   sampleItem: "An item",
   sampleQuote: "A quotation",
   sampleNote: "A highlighted note",
+  sampleDecision: "Light or dark background? by: 26/9",
   blockParagraph: "Text",
   blockHeading1: "Large heading",
   blockHeading2: "Medium heading",
@@ -1871,6 +1875,7 @@ const EN = {
   blockCheck: "Checklist",
   blockQuote: "Quote",
   blockCallout: "Highlighted box",
+  blockDecision: "Decision",
   blockCode: "Code",
   blockDivider: "Divider",
   blockTable: "Table",
@@ -1879,6 +1884,7 @@ const EN = {
   callout_nota: "Note",
   callout_attenzione: "Careful",
   callout_fatto: "Done",
+  callout_decisione: "Decision",
 
   partiesTitle: "Contacts",
   partiesClients: "Customers",

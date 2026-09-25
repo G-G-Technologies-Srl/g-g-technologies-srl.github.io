@@ -1124,36 +1124,330 @@ input.when-field.late { color: var(--late); }
 }
 
 /* ---------------------------------------------------------------------------------------------
-   the progress ring
+   the project dashboard
    --------------------------------------------------------------------------------------------- */
 
-.ring { position: relative; width: 132px; margin: 4px auto 2px; }
+/* Two colours the dashboard adds, and only two: high priority, and what is still to be decided.
+   Late keeps its amber. Each travels with a shape — a flag, a fork — so none of them has to be
+   told apart by colour alone. */
+:root { --high: #f39a8e; --decide: #c4a8f0; --wait: #8fa8d8; }
 
-.ring svg { width: 100%; height: auto; transform: rotate(-90deg); }
+html[data-theme="light"] { --high: #b42318; --decide: #6b3fb3; --wait: #3d5c99; }
 
-.ring circle { fill: none; stroke-width: 9; }
-
-.ring-back { stroke: var(--border-strong); }
-
-.ring-fill {
-  stroke: var(--accent);
-  stroke-linecap: round;
-  transition: stroke-dasharray 320ms ease;
+@media (prefers-color-scheme: light) {
+  html:not([data-theme]) { --high: #b42318; --decide: #6b3fb3; --wait: #3d5c99; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .ring-fill { transition: none; }
+/* The dashboard is wider than the other screens: two columns need the room, and a list of pages
+   does not. */
+#project .wrap { max-width: 1180px; }
+
+.project-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 16px;
+  align-items: start;
 }
 
-.ring-text {
-  position: absolute;
-  inset: 0;
-  display: flex;
+.project-main, .project-side { display: grid; gap: 16px; min-width: 0; }
+
+/* A panel is as wide as its column and no wider. Without these, a field's default width — an input
+   is twenty characters before anybody styles it — became the panel's minimum, and on a phone the
+   whole screen scrolled sideways by twelve pixels. */
+.project-cols, .project-cols .card { min-width: 0; }
+.project-cols .quick-add input, .project-cols .role-field { min-width: 0; }
+
+/* One column on a narrow screen, and in the order a phone is read in: what needs doing, the next
+   meeting, the plan, the decisions — not the whole left column and then the whole right one. The
+   two wrappers step aside (`display: contents`) and the panels line up by `order`. */
+@media (max-width: 900px) {
+  .project-cols { display: flex; flex-direction: column; align-items: stretch; }
+  .project-main, .project-side { display: contents; }
+  .panel-now { order: 1; }
+  .panel-next { order: 2; }
+  .panel-plan { order: 3; }
+  .panel-decisions { order: 4; }
+  .panel-waiting { order: 5; }
+  .panel-weeks { order: 6; }
+  .panel-met { order: 7; }
+  .panel-people { order: 8; }
+  .panel-docs { order: 9; }
+  .panel-changes { order: 10; }
+  .panel-log { order: 11; }
+}
+
+.project-cols .panel-head .meta { color: var(--faint); font-size: 12.5px; }
+.project-cols .row-item .meta { margin-left: 0; text-align: left; }
+.project-cols .card h2 { margin-bottom: 10px; }
+
+.sign { flex: none; }
+.sign-flag { color: var(--high); }
+.sign-lock, .sign-clock { color: var(--wait); }
+.sign-decide { color: var(--decide); }
+.sign-pen { color: var(--muted); }
+.sign-check { color: var(--accent-text); }
+.sign-meeting { color: var(--accent-text); }
+
+/* Late is a ring and not a dot: a shape of its own, for when the amber is not seen. */
+.late-ring {
+  display: inline-block;
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  border: 2px solid var(--late);
+}
+
+.diamond {
+  display: inline-block;
+  flex: none;
+  width: 9px;
+  height: 9px;
+  transform: rotate(45deg);
+  background: var(--accent);
+}
+
+.face.big { width: 30px; height: 30px; font-size: 11.5px; }
+
+/* ---- what needs doing now */
+
+.now-sum { display: flex; flex-wrap: wrap; gap: 6px; margin: -2px 0 6px; }
+
+.pill {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  font-family: var(--font-display);
-  font-size: 19px;
+  gap: 5px;
+  font-size: 11.5px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 1px 9px;
+  color: var(--muted);
 }
+
+.pill.is-late { color: var(--late); border-color: var(--late); }
+.pill.is-today { color: var(--accent-text); border-color: var(--accent); }
+.pill.is-decide { color: var(--decide); border-color: var(--decide); }
+.pill.is-high { color: var(--high); border-color: var(--high); }
+.pill .late-ring { width: 4px; height: 4px; }
+
+.now-row { flex-wrap: nowrap; padding: 7px 0; }
+.tick-space { width: 24px; flex: none; }
+.now-when { width: 96px; flex: none; font-size: 12.5px; color: var(--faint); white-space: nowrap; }
+.now-when.late { color: var(--late); }
+.now-when.today { color: var(--accent-text); font-weight: 600; }
+.now-row.is-decide .now-when { color: var(--decide); }
+.now-row.is-decide .now-when.late { color: var(--late); }
+.now-title { display: flex; align-items: center; gap: 8px; flex: 1 1 auto; min-width: 0; }
+.now-title .title { color: var(--text); }
+.now-ctx { font-size: 12px; color: var(--faint); white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; max-width: 34%; }
+.now-row button.small { flex: none; }
+.now-more { margin-top: 6px; padding: 4px 0; border: 0; background: none; color: var(--muted); }
+
+.now-quiet { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 14px; }
+.now-quiet .meta { color: var(--muted); font-size: 13.5px; }
+.now-start { display: flex; flex-wrap: wrap; gap: 8px; flex: 1 1 100%; }
+
+/* On a phone a row is two lines: the tick and the title, then the day with the command beside it. */
+@media (max-width: 640px) {
+  .now-row { flex-wrap: wrap; row-gap: 4px; }
+  .now-title { flex: 1 1 calc(100% - 40px); }
+  .now-when { order: 3; width: auto; flex: 1 1 auto; padding-left: 33px; }
+  .now-row > button.small { order: 4; }
+  .now-row > .face, .now-ctx { display: none; }
+}
+
+/* ---- the plan */
+
+.plan-bar {
+  display: flex;
+  gap: 2px;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--border-strong);
+}
+
+.plan-bar .seg.done, .swatch.done { background: var(--accent); }
+.plan-bar .seg.mid0, .swatch.mid0 { background: color-mix(in srgb, var(--accent) 50%, transparent); }
+.plan-bar .seg.mid1, .swatch.mid1 { background: var(--wait); }
+.swatch.todo { background: var(--border-strong); }
+
+.plan-legend { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px;
+  font-size: 12.5px; color: var(--muted); }
+.plan-legend li { display: inline-flex; align-items: center; gap: 5px; }
+.plan-legend b { color: var(--text); font-weight: 600; }
+.plan-legend .swatch { width: 9px; height: 9px; border-radius: 2px; }
+
+.plan-milestone {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 12px 0 0;
+  padding-top: 11px;
+  border-top: 1px solid var(--border);
+  font-size: 13.5px;
+}
+
+.plan-milestone .meta { color: var(--muted); font-size: 12.5px; }
+.plan-milestone .meta.late { color: var(--late); }
+.plan-milestone .link { font-weight: 600; color: var(--text); }
+.panel-plan .quick-add { margin-top: 10px; }
+
+/* ---- the weeks */
+
+.weeks { position: relative; overflow: hidden; margin-top: 2px; }
+
+.weeks-weekend { position: absolute; top: 0; bottom: 0; background: rgba(127, 140, 170, 0.06); }
+
+.weeks-week {
+  position: absolute;
+  top: 0;
+  height: 30px;
+  padding: 6px 0 0 5px;
+  box-sizing: border-box;
+  border-left: 1px solid var(--border);
+  font-size: 11.5px;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+.weeks::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 30px;
+  border-top: 1px solid var(--border);
+}
+
+.weeks-today { position: absolute; top: 22px; bottom: 0; width: 2px; background: var(--accent); }
+
+.weeks-today-label {
+  position: absolute;
+  top: 20px;
+  width: 32px;
+  text-align: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 15px;
+  border-radius: 4px;
+  color: var(--btn-text);
+  background: var(--accent);
+}
+
+.weeks-mk {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  max-width: 60%;
+  padding: 0 4px 0 2px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 11.5px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.weeks-mk:hover { background: var(--panel-2); }
+.weeks-mk:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.weeks-label { overflow: hidden; text-overflow: ellipsis; }
+.weeks-mk .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--muted); flex: none; }
+.weeks-mk.is-late { color: var(--late); }
+.weeks-mk.is-decide { color: var(--decide); }
+.weeks-mk.is-meeting .weeks-label { color: var(--text); }
+
+.weeks-mk.is-bar {
+  max-width: none;
+  padding: 0 8px;
+  border: 1px solid var(--accent);
+  background: var(--accent-soft);
+  box-sizing: border-box;
+}
+
+.weeks-legend { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px;
+  font-size: 11.5px; color: var(--faint); }
+.weeks-legend li { display: inline-flex; align-items: center; gap: 5px; }
+.weeks-legend .icon16 { width: 12px; height: 12px; }
+.weeks-undated { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px;
+  padding-top: 10px; border-top: 1px solid var(--border); font-size: 13px; color: var(--muted); }
+.weeks-undated .link { padding: 0; border: 0; background: none; }
+
+/* ---- meetings had, and the next one */
+
+.met-list { gap: 0; }
+.met-item { padding: 12px 0; border-top: 1px solid var(--border); display: grid; gap: 6px; }
+.met-item:first-child { border-top: 0; padding-top: 2px; }
+.met-head { display: flex; align-items: baseline; gap: 10px; }
+.met-when { width: 76px; flex: none; font-size: 12.5px; color: var(--faint); }
+.met-title { font-weight: 600; color: var(--text); }
+.met-body { margin: 0 0 0 86px; }
+.met-body.meta { color: var(--faint); font-size: 12.5px; }
+.met-empty { display: flex; align-items: center; gap: 10px; }
+.met-empty .meta { font-size: 13px; color: var(--faint); }
+.excerpt { font-size: 13px; line-height: 1.5; color: var(--muted); }
+.box-row { display: flex; align-items: center; gap: 8px; font-size: 13.5px; }
+.box-row .title { color: var(--text); }
+.box-row .meta { font-size: 12px; color: var(--faint); }
+.box-row .meta.late { color: var(--late); }
+.box-mark { width: 12px; height: 12px; margin: 0 6px; border: 1.5px solid var(--border-strong); border-radius: 3px; flex: none; }
+
+@media (max-width: 640px) {
+  .met-body { margin-left: 0; }
+}
+
+.next-when { display: flex; align-items: baseline; gap: 10px; }
+.next-when b { font-size: 15px; font-weight: 600; color: var(--accent-text); }
+.next-when .meta { color: var(--faint); font-size: 12.5px; }
+.next-title { display: block; margin-top: 4px; font-family: var(--font-display); font-size: 19px; color: var(--text); }
+.next-box > .meta { color: var(--muted); font-size: 12.5px; margin-top: 3px; }
+
+.next-talk {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.next-talk-head { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); }
+.next-talk .met-body { margin: 0; }
+.next-last { font-size: 12.5px; color: var(--muted); line-height: 1.45; margin-top: 3px; }
+.next-last .link { padding: 0; border: 0; background: none; text-align: left; }
+.next-open { margin-top: 12px; }
+.panel-next .accent.wide { margin-top: 10px; }
+
+/* ---- decisions, waiting, people, documents, changes */
+
+.decision-row, .waiting-row { align-items: flex-start; flex-wrap: nowrap; padding: 8px 0; }
+.decision-row .sign, .waiting-row .sign { margin-top: 3px; }
+.decision-row .meta, .waiting-row .meta { display: block; font-size: 12px; color: var(--muted); }
+.decision-row .meta.late, .waiting-row .late { color: var(--late); }
+.decision-row .title, .waiting-row .title { color: var(--text); }
+.decision-row button.small { flex: none; }
+
+.person-row { align-items: flex-start; flex-wrap: nowrap; padding: 8px 0; }
+.person-who { flex: 1 1 auto; min-width: 0; display: grid; gap: 2px; }
+.person-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.person-name { font-weight: 600; }
+.person-load { font-size: 12px; color: var(--muted); }
+.person-load .late { color: var(--late); }
+.person-row .role-field { font-size: 12.5px; max-width: 170px; }
+
+.fav-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+.fav-chips .chip { color: var(--accent-text); border: 1px solid var(--border); background: none; cursor: pointer; }
+
+.change-row { font-size: 13px; flex-wrap: nowrap; }
+.change-row .when { width: 76px; flex: none; }
+.change-row .link { padding: 0; border: 0; background: none; }
 
 /* ---------------------------------------------------------------------------------------------
    one page

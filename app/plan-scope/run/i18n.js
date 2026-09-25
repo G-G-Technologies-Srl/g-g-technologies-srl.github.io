@@ -99,7 +99,7 @@ const IT = {
   peopleAdd: "Nome di una persona",
   peopleAddDo: "Aggiungi",
   peopleHint: "Scrivendo le prime lettere compaiono le persone già in rubrica.",
-  peopleRole: "Ruolo qui",
+  peopleRole: "Aggiungi il ruolo",
   peopleRemove: "Togli",
   peopleAddToBook: "Aggiungi alla rubrica",
   peopleAdded: "«{name}» lavora a questo progetto.",
@@ -358,7 +358,7 @@ const IT = {
   pageTpl_minutes: "Verbale di riunione",
   pageTpl_brief: "Brief",
   pageTpl_checklist: "Checklist",
-  pageTplBody_minutes: "## Presenti\n\n- \n\n## Punti discussi\n\n- \n\n## Decisioni\n\n- \n\n## Prossimi passi\n\n- [ ] \n",
+  pageTplBody_minutes: "## Presenti\n\n- \n\n## Punti discussi\n\n- \n\n## Decisioni\n\n> [!decisione]\n> entro:\n\n## Prossimi passi\n\n- [ ] \n",
   pageTplBody_brief: "## Obiettivo\n\nUna frase: che cosa deve essere vero alla fine.\n\n## Per chi\n\n- \n\n"
     + "## Vincoli\n\n- \n\n## Che cosa si consegna\n\n- \n",
   pageTplBody_checklist: "## Prima\n\n- [ ] \n\n## Durante\n\n- [ ] \n\n## Dopo\n\n- [ ] \n",
@@ -395,15 +395,93 @@ const IT = {
 
   // project
   projectUntitled: "Progetto senza nome",
-  progressTitle: "Avanzamento",
-  progressNone: "Ancora nessuna attività. Scrivi la prima qui sotto.",
-  dueTitle: "Prossimi impegni",
-  dueEmpty: "Niente in programma questa settimana.",
   dueLate: "in ritardo",
   dueToday: "oggi",
   dueTomorrow: "domani",
   docsTitle: "Documenti",
   planTitle: "Piano",
+  // the project dashboard
+  nowTitle: "Cosa serve adesso",
+  nowGo: "Tutto il piano →",
+  nowHigh: "Priorità alta",
+  nowBlocked: "Bloccata",
+  nowDecide: "Da decidere",
+  byDay: "entro {date}",
+  inDays: "fra {n} giorni",
+  nowNotesEmpty: "{title}: le note sono ancora vuote",
+  nowWaits: "aspetta: {title}",
+  nowFrom: "da: {title}",
+  decideDo: "Segna la scelta",
+  notesWrite: "Scrivi le note",
+  nowCountLate: "{n} in ritardo",
+  nowCountToday: "{n} oggi",
+  nowCountDecide: "{n} da decidere",
+  nowCountHigh: "{n} a priorità alta",
+  nowCountBlockedOne: "1 bloccata",
+  nowCountBlocked: "{n} bloccate",
+  nowCountNotesOne: "1 nota da scrivere",
+  nowCountNotes: "{n} note da scrivere",
+  nowMore: "Altre {n} ↓",
+  nowLess: "Solo le prime ↑",
+  nowStart: "Il progetto è vuoto. Qui compariranno scadenze, ritardi, decisioni e note da scrivere.",
+  nowStartTask: "+ La prima attività",
+  nowStartMeeting: "+ Un appuntamento",
+  nowStartPage: "+ Il brief",
+  nowQuiet: "Tutto in regola.",
+  nowQuietNext: "Prossima scadenza: «{title}», {date}.",
+  planCount: "{done} di {total} fatte",
+  planMilestone: "Prossima milestone",
+  planBeforeOne: "prima, 1 attività aperta",
+  planBefore: "prima, {n} attività aperte",
+  planBeforeNone: "niente di aperto prima",
+  weeksTitle4: "Le prossime quattro settimane",
+  weeksTitle2: "Le prossime due settimane",
+  weeksMilestone: "milestone",
+  weeksMeeting: "incontro",
+  weeksUndatedOne: "1 attività senza data non compare qui.",
+  weeksUndated: "{n} attività senza data non compaiono qui.",
+  metTitle: "Incontri recenti",
+  metGo: "Tutti gli incontri →",
+  metEmpty: "Nessun incontro ancora. Un appuntamento, passato il suo momento, diventa il posto delle note.",
+  metNoNotes: "Nessuna nota.",
+  metDecisionOne: "1 decisione aperta",
+  metDecisions: "{n} decisioni aperte",
+  metBoxes: "come siamo rimasti: {done} di {total} fatte",
+  nextTitle: "Il prossimo incontro",
+  nextGo: "Calendario →",
+  nextEmpty: "Nessun appuntamento in programma.",
+  nextWith: "con {who}",
+  nextTalk: "Da discutere",
+  nextTalkWith: "Da discutere con {who}",
+  nextLast: "L'ultima volta, {date}:",
+  nextOpen: "Apri le note",
+  decisionsTitle: "Decisioni",
+  decisionsEmpty: "Nessuna decisione. In una pagina, «/» e poi «Decisione»: la domanda, e sotto «entro:» con il giorno.",
+  decisionOpen: "Aperta",
+  decisionMade: "Presa",
+  decisionBy: "aperta · entro {date}",
+  decisionChoice: "scelta: {choice}",
+  decisionChoiceKey: "scelta",
+  decisionDecidedKey: "decisa",
+  decidePrompt: "«{question}»: che cosa si è deciso?",
+  decideOk: "Segna",
+  decided: "Decisione presa: {choice}",
+  waitingTitle: "Aspettiamo",
+  waitingHolds: "ferma {titles}",
+  waitingDue: "prevista {date}",
+  changesTitle: "Ultime modifiche",
+  changePage: "Pagina",
+  changePageNew: "Nuova pagina",
+  tickedDone: "«{name}» segnata come fatta",
+  personOpenOne: "1 aperta",
+  personOpen: "{n} aperte",
+  personOpenNone: "nessuna attività aperta",
+  personLate: "{n} in ritardo",
+  personBlockedOne: "1 bloccata",
+  personBlocked: "{n} bloccate",
+  personLastToday: "sentita oggi",
+  personLastYesterday: "sentita ieri",
+  personLast: "ultimo contatto {when}",
   pagePlaceholder: "Titolo della pagina",
   addPage: "Aggiungi",
   pagesEmpty: "Nessuna pagina. Il brief è di solito la prima.",
@@ -443,7 +521,6 @@ const IT = {
   column_todo: "Da fare",
   column_doing: "In corso",
   column_done: "Fatto",
-  openPlan: "Apri il piano",
   viewKanban: "Bacheca",
   viewCalendar: "Calendario",
   viewTimeline: "Timeline",
@@ -616,6 +693,7 @@ const IT = {
   sampleItem: "Una voce",
   sampleQuote: "Una citazione",
   sampleNote: "Una nota in evidenza",
+  sampleDecision: "Fondo chiaro o scuro? entro: 26/9",
   menuEmpty: "Niente con questo nome.",
   menuClose: "Chiudi",
   askOk: "Va bene",
@@ -640,12 +718,14 @@ const IT = {
   taskGoneHint: "Questa attività non c'è più: è stata eliminata dalla bacheca.",
   blockQuote: "Citazione",
   blockCallout: "Riquadro in evidenza",
+  blockDecision: "Decisione",
   blockCode: "Codice",
   blockDivider: "Riga di separazione",
   blockTable: "Tabella",
   callout_nota: "Nota",
   callout_attenzione: "Attenzione",
   callout_fatto: "Fatto",
+  callout_decisione: "Decisione",
   saveSaved: "Salvato",
   saveSaving: "Salvo…",
   saveFailed: "Il salvataggio non è riuscito. Esporta il progetto per non perdere niente.",
@@ -793,7 +873,7 @@ const IT = {
     + "calendario e su una timeline. Sono tre viste della stessa lista.\n\n"
     + "## La bacheca\n\nUna carta per attività. Le colonne sono vostre: si possono rinominare, "
     + "aggiungere e, quando sono vuote, togliere. L'ultima è quella che segna il fatto — "
-    + "l'anello sulla dashboard conta quello.\n\n- Una carta trascinata cambia colonna\n- Il "
+    + "la barra del piano, sulla pagina del progetto, conta quello.\n\n- Una carta trascinata cambia colonna\n- Il "
     + "quadratino la segna fatta\n- Il clic apre la scheda: date, note, chi se ne occupa, "
     + "priorità, tag, checklist, e cosa aspetta\n- Maiusc+clic seleziona più carte: la barra in "
     + "basso le sposta, le assegna, le tagga in una volta\n\n"
@@ -808,7 +888,16 @@ const IT = {
     + "## Le attività in serie\n\nUn elenco scritto altrove — in Word, in una mail, da un "
     + "assistente — entra tutto insieme: menu ⋯ del piano → «Incolla un elenco di attività», "
     + "oppure Ctrl+V sulla bacheca. Una riga, una carta; «@2026-09-20» è la scadenza, «#stampa» "
-    + "un tag.\n\n> [!fatto]\n> Per provare adesso: aprite il piano di questa guida e spostate "
+    + "un tag.\n\n## La pagina del progetto\n\nIn cima, «Cosa serve adesso»: le attività in "
+    + "ritardo, quelle di oggi, le decisioni vicine, le priorità alte dei prossimi tre giorni, "
+    + "quelle bloccate e gli incontri ancora senza note — in quest'ordine, cinque righe al "
+    + "massimo. Sotto, il piano, le prossime settimane e gli incontri avuti; accanto, il prossimo "
+    + "incontro con quello che c'è da discutere, le decisioni, cosa si aspetta e chi ci lavora.\n\n"
+    + "## Le decisioni\n\nIn una pagina, «/» e poi «Decisione»: nel riquadro la domanda, e sotto "
+    + "«entro:» con il giorno. Quando la scelta è fatta, «Segna la scelta» sulla pagina del "
+    + "progetto aggiunge «scelta:» e la data; scriverla a mano fa lo stesso.\n\n"
+    + "> [!decisione]\n> Fondo chiaro o fondo scuro\n> entro: 26/9\n> scelta: fondo scuro\n\n"
+    + "> [!fatto]\n> Per provare adesso: aprite il piano di questa guida e spostate "
     + "«Spostare una carta» nella colonna «Fatto».\n",
   gd_page_share: "Esportare e condividere",
   gd_body_share: "Tutto quello che si scrive resta in questo browser. È il motivo per cui l'app "
@@ -1059,20 +1148,23 @@ const IT = {
   demoTask3: "Ordinare i gadget",
   demoTask4: "Spedire il materiale allo stand",
   demoMeet2Title: "Incontro con Marco",
-  demoMeet2Body: "Misurato lo spazio: tre metri per due, con la presa di corrente sul lato lungo. "
-    + "I pannelli li porta lui, il tavolo lo portiamo noi.",
+  demoMeet2Body: "Misurato lo spazio: tre metri per due, con la presa di corrente sul lato lungo.\n\n"
+    + "> [!decisione]\n> Chi porta i pannelli e il tavolo\n> scelta: i pannelli lui, il tavolo noi\n",
   demoMeet2Todo: "Mandargli le misure del tavolo",
   demoPropState: "stato",
   demoPropStateValue: "in corso",
   demoMeetTitle: "Incontro con Giulia",
+  demoMeet3Title: "Sopralluogo con Marco",
+  demoMeet3Where: "al padiglione",
+  demoMeet4Title: "Call con Sara",
   demoMeetBody: "Visto il volantino. Le va bene il formato, chiede di rivedere i colori del fondo "
     + "prima di mandarlo in stampa.\n\n"
     + "## Le due strade\n\n"
     + "| | Fondo chiaro | Fondo scuro |\n| --- | --- | --- |\n"
     + "| In stampa | il preventivo che abbiamo | circa il 20% in più |\n"
     + "| Allo stand | si legge da lontano | si vede meglio la sera |\n\n"
-    + "> [!nota]\n> Si decide entro venerdì: dopo, lo stampatore non garantisce la consegna "
-    + "prima del montaggio.\n\n"
+    + "> [!decisione]\n> Fondo chiaro o fondo scuro per il volantino\n> entro: {by}\n\n"
+    + "> [!nota]\n> Dopo quel giorno lo stampatore non garantisce la consegna prima del montaggio.\n\n"
     + "## Come siamo rimasti\n\n"
     + "- [x] Mandarle le misure del pannello\n"
     + "- [ ] Chiedere allo stampatore quanto costa il fondo scuro",
@@ -1196,7 +1288,7 @@ const EN = {
   peopleAdd: "Somebody's name",
   peopleAddDo: "Add",
   peopleHint: "Type the first letters and the people already in your address book appear.",
-  peopleRole: "Role here",
+  peopleRole: "Add a role",
   peopleRemove: "Remove",
   peopleAddToBook: "Add to the address book",
   peopleAdded: "“{name}” works on this project.",
@@ -1454,7 +1546,7 @@ const EN = {
   pageTpl_minutes: "Meeting minutes",
   pageTpl_brief: "Brief",
   pageTpl_checklist: "Checklist",
-  pageTplBody_minutes: "## Present\n\n- \n\n## Points discussed\n\n- \n\n## Decisions\n\n- \n\n## Next steps\n\n- [ ] \n",
+  pageTplBody_minutes: "## Present\n\n- \n\n## Points discussed\n\n- \n\n## Decisions\n\n> [!decisione]\n> by:\n\n## Next steps\n\n- [ ] \n",
   pageTplBody_brief: "## Goal\n\nOne sentence: what has to be true at the end.\n\n## For whom\n\n- \n\n"
     + "## Constraints\n\n- \n\n## What is delivered\n\n- \n",
   pageTplBody_checklist: "## Before\n\n- [ ] \n\n## During\n\n- [ ] \n\n## After\n\n- [ ] \n",
@@ -1491,15 +1583,93 @@ const EN = {
 
   // project
   projectUntitled: "Project with no name",
-  progressTitle: "Progress",
-  progressNone: "No tasks yet. Write the first one below.",
-  dueTitle: "Coming up",
-  dueEmpty: "Nothing on this week.",
   dueLate: "late",
   dueToday: "today",
   dueTomorrow: "tomorrow",
   docsTitle: "Documents",
   planTitle: "Plan",
+  // the project dashboard
+  nowTitle: "What needs doing now",
+  nowGo: "The whole plan →",
+  nowHigh: "High priority",
+  nowBlocked: "Blocked",
+  nowDecide: "To decide",
+  byDay: "by {date}",
+  inDays: "in {n} days",
+  nowNotesEmpty: "{title}: the notes are still empty",
+  nowWaits: "waiting for: {title}",
+  nowFrom: "from: {title}",
+  decideDo: "Record the choice",
+  notesWrite: "Write the notes",
+  nowCountLate: "{n} late",
+  nowCountToday: "{n} today",
+  nowCountDecide: "{n} to decide",
+  nowCountHigh: "{n} high priority",
+  nowCountBlockedOne: "1 blocked",
+  nowCountBlocked: "{n} blocked",
+  nowCountNotesOne: "1 note to write",
+  nowCountNotes: "{n} notes to write",
+  nowMore: "{n} more ↓",
+  nowLess: "Only the first ones ↑",
+  nowStart: "The project is empty. Deadlines, delays, decisions and notes to write will show up here.",
+  nowStartTask: "+ The first task",
+  nowStartMeeting: "+ An appointment",
+  nowStartPage: "+ The brief",
+  nowQuiet: "All in order.",
+  nowQuietNext: "Next deadline: \"{title}\", {date}.",
+  planCount: "{done} of {total} done",
+  planMilestone: "Next milestone",
+  planBeforeOne: "before it, 1 open task",
+  planBefore: "before it, {n} open tasks",
+  planBeforeNone: "nothing open before it",
+  weeksTitle4: "The next four weeks",
+  weeksTitle2: "The next two weeks",
+  weeksMilestone: "milestone",
+  weeksMeeting: "meeting",
+  weeksUndatedOne: "1 task without a date is not shown here.",
+  weeksUndated: "{n} tasks without a date are not shown here.",
+  metTitle: "Recent meetings",
+  metGo: "All the meetings →",
+  metEmpty: "No meetings yet. Once its moment has passed, an appointment becomes the place for the notes.",
+  metNoNotes: "No notes.",
+  metDecisionOne: "1 open decision",
+  metDecisions: "{n} open decisions",
+  metBoxes: "where we left it: {done} of {total} done",
+  nextTitle: "The next meeting",
+  nextGo: "Calendar →",
+  nextEmpty: "No appointments coming up.",
+  nextWith: "with {who}",
+  nextTalk: "To discuss",
+  nextTalkWith: "To discuss with {who}",
+  nextLast: "Last time, {date}:",
+  nextOpen: "Open the notes",
+  decisionsTitle: "Decisions",
+  decisionsEmpty: "No decisions. In a page, \"/\" then \"Decision\": the question, and below it \"by:\" with the day.",
+  decisionOpen: "Open",
+  decisionMade: "Made",
+  decisionBy: "open · by {date}",
+  decisionChoice: "choice: {choice}",
+  decisionChoiceKey: "choice",
+  decisionDecidedKey: "decided",
+  decidePrompt: "\"{question}\": what was decided?",
+  decideOk: "Record",
+  decided: "Decision made: {choice}",
+  waitingTitle: "Waiting for",
+  waitingHolds: "holds up {titles}",
+  waitingDue: "expected {date}",
+  changesTitle: "Latest changes",
+  changePage: "Page",
+  changePageNew: "New page",
+  tickedDone: "\"{name}\" marked as done",
+  personOpenOne: "1 open",
+  personOpen: "{n} open",
+  personOpenNone: "no open tasks",
+  personLate: "{n} late",
+  personBlockedOne: "1 blocked",
+  personBlocked: "{n} blocked",
+  personLastToday: "spoken to today",
+  personLastYesterday: "spoken to yesterday",
+  personLast: "last contact {when}",
   pagePlaceholder: "Title of the page",
   addPage: "Add",
   pagesEmpty: "No pages yet. The brief is usually the first one.",
@@ -1538,7 +1708,6 @@ const EN = {
   column_todo: "To do",
   column_doing: "In progress",
   column_done: "Done",
-  openPlan: "Open the plan",
   viewKanban: "Board",
   viewCalendar: "Calendar",
   viewTimeline: "Timeline",
@@ -1708,6 +1877,7 @@ const EN = {
   sampleItem: "An item",
   sampleQuote: "A quotation",
   sampleNote: "A highlighted note",
+  sampleDecision: "Light or dark background? by: 26/9",
   menuEmpty: "Nothing by that name.",
   menuClose: "Close",
   askOk: "OK",
@@ -1732,12 +1902,14 @@ const EN = {
   taskGoneHint: "That task is gone: it was deleted from the board.",
   blockQuote: "Quote",
   blockCallout: "Highlighted box",
+  blockDecision: "Decision",
   blockCode: "Code",
   blockDivider: "Divider",
   blockTable: "Table",
   callout_nota: "Note",
   callout_attenzione: "Careful",
   callout_fatto: "Done",
+  callout_decisione: "Decision",
   saveSaved: "Saved",
   saveSaving: "Saving…",
   saveFailed: "Saving failed. Export the project so nothing is lost.",
@@ -1881,7 +2053,7 @@ const EN = {
   gd_body_plan: "Every project has a **plan**: the tasks, on a board of columns, in a calendar and on "
     + "a timeline. They are three views of the same list.\n\n"
     + "## The board\n\nOne card per task. The columns are yours: rename them, add one, remove the empty "
-    + "ones. The last one marks what is done — the ring on the dashboard counts that.\n\n"
+    + "ones. The last one marks what is done — the plan bar, on the project page, counts that.\n\n"
     + "- Drag a card to change its column\n- The small box marks it done\n"
     + "- A click opens the card: dates, notes, owner, priority, tags, checklist, and what it waits for\n"
     + "- Shift+click picks several cards: the bar at the bottom moves, assigns and tags them at once\n\n"
@@ -1896,6 +2068,15 @@ const EN = {
     + "## Tasks in bulk\n\nA list written elsewhere — in Word, in a mail, by an assistant — comes in all "
     + "at once: the plan's ⋯ menu → “Paste a list of tasks”, or Ctrl+V on the board. One line, one "
     + "card; “@2026-09-20” is the deadline, “#print” a tag.\n\n"
+    + "## The project page\n\nAt the top, “What needs doing now”: the late tasks, today's, the "
+    + "decisions coming up, the high priorities of the next three days, the blocked ones and the "
+    + "meetings still without notes — in that order, five rows at most. Below, the plan, the weeks "
+    + "ahead and the meetings had; beside them, the next meeting with what there is to discuss, the "
+    + "decisions, what we are waiting for and who works on it.\n\n"
+    + "## Decisions\n\nIn a page, “/” then “Decision”: the question in the box, and below it "
+    + "“by:” with the day. Once the choice is made, “Record the choice” on the project page adds "
+    + "“choice:” and the date; writing it by hand does the same.\n\n"
+    + "> [!decisione]\n> Light or dark background\n> by: 26/9\n> choice: dark background\n\n"
     + "> [!fatto]\n> Try it now: open this guide's plan and move “Move a card” into the “Done” "
     + "column.\n",
   gd_page_share: "Exporting and sharing",
@@ -2141,20 +2322,23 @@ const EN = {
   demoTask3: "Order the giveaways",
   demoTask4: "Ship the materials to the stand",
   demoMeet2Title: "Meeting with Marco",
-  demoMeet2Body: "Measured the space: three metres by two, with the power socket on the long side. "
-    + "He brings the panels, we bring the table.",
+  demoMeet2Body: "Measured the space: three metres by two, with the power socket on the long side.\n\n"
+    + "> [!decisione]\n> Who brings the panels and the table\n> choice: he brings the panels, we bring the table\n",
   demoMeet2Todo: "Send him the measurements of the table",
   demoPropState: "status",
   demoPropStateValue: "in progress",
   demoMeetTitle: "Meeting with Giulia",
+  demoMeet3Title: "Site visit with Marco",
+  demoMeet3Where: "at the hall",
+  demoMeet4Title: "Call with Sara",
   demoMeetBody: "Looked at the flyer. She is happy with the format, and asks to revisit the "
     + "background colours before it goes to print.\n\n"
     + "## The two options\n\n"
     + "| | Light background | Dark background |\n| --- | --- | --- |\n"
     + "| In print | the quote we have | about 20% more |\n"
     + "| On the stand | reads from a distance | looks better in the evening |\n\n"
-    + "> [!nota]\n> To be decided by Friday: after that the printer cannot promise delivery "
-    + "before the stand goes up.\n\n"
+    + "> [!decisione]\n> Light or dark background for the flyer\n> by: {by}\n\n"
+    + "> [!nota]\n> After that day the printer cannot promise delivery before the stand goes up.\n\n"
     + "## How we left it\n\n"
     + "- [x] Send her the panel measurements\n"
     + "- [ ] Ask the printer what the dark background costs",

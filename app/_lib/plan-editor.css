@@ -421,6 +421,11 @@ ul.md-list li:not(:has(.tick))::before {
 
 .sample-callout { border-top: 2px solid var(--accent); background: var(--accent-soft); }
 
+/* A decision keeps the panel and changes only its word: the colour of what is still to be decided,
+   which the app defines as `--decide`. An app without it gets the accent, and loses nothing. */
+.callout-decisione .callout-kind { color: var(--decide, var(--accent-text)); }
+.sample-decision { border-top-color: var(--decide, var(--accent)); }
+
 .sample-code { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
 
 .sample-rule { flex: 1 1 auto; height: 1px; background: var(--border-strong); }

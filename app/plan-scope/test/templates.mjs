@@ -149,7 +149,7 @@ test("il progetto dimostrativo arriva già in corso, e già pieno", () => {
   const pages = model.pagesOf(built.id);
   const tasks = model.tasksOf(built.id);
 
-  assert.equal(pages.length, 7, "le quattro del template, quella di benvenuto, e i due incontri");
+  assert.equal(pages.length, 9, "le quattro del template, quella di benvenuto, e i quattro incontri");
   assert.equal(done.total, 20, "le sedici del modello dell'evento, e le quattro che sono di questa fiera");
   assert.ok(done.done > 0, "niente è stato concluso: l'anello sarebbe a zero");
   assert.ok(done.done < done.total, "è tutto concluso: non resterebbe niente da fare");
@@ -185,8 +185,8 @@ test("il progetto dimostrativo arriva già in corso, e già pieno", () => {
     "la scheda dice «i recapiti non escono da questo computer»: con le caselle vuote non difende niente");
   assert.equal(model.pagesAbout(chi.uid || chi.id).length, 1, "e l'incontro la nomina");
   const altro = model.contactByName(t("demoWho2"));
-  assert.equal(model.pagesAbout(altro.uid || altro.id).length, 1,
-    "«cosa vi siete detti» con una riga sola sembra un caso; con due sembra un archivio");
+  assert.equal(model.pagesAbout(altro.uid || altro.id).length, 2,
+    "Marco ha un incontro avuto e il sopralluogo in programma: la scheda li divide");
 
   // La data della fiera è nel futuro, sempre: è calcolata da oggi, non scritta nel file. E sta
   // fra gli attributi, marcata, perché «evento» non è un campo ma un nome che si sceglie.
@@ -230,7 +230,7 @@ test("la testa delle pagine porta un colore e una data dove hanno un senso", () 
   assert.equal(new Set(colours).size, 3, "due pagine dello stesso colore non distinguono niente");
 
   const dates = heads.map((props) => String(props.data || "")).filter((one) => /^\d{4}-\d{2}-\d{2}$/.test(one));
-  assert.equal(dates.length, 3, "il giorno della fiera e i due incontri: le pagine che parlano di un giorno");
+  assert.equal(dates.length, 5, "il giorno della fiera e i quattro incontri: le pagine che parlano di un giorno");
   assert.ok(dates.includes(model.projectDate(built).value),
     "«il giorno» porta la data della fiera, che è di cosa parla");
 

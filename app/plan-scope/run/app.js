@@ -625,6 +625,26 @@ function _boxesFor(page) {
   }).join("\n");
 }
 
+/** Two letters for a round face: the first of the first word and of the last. */
+function _initials(name) {
+  const words = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return "?";
+  return (words[0][0] + (words.length > 1 ? words[words.length - 1][0] : "")).toUpperCase();
+}
+
+/**
+ * A decision made from the dashboard: the choice asked, written into the callout with today's
+ * date, one undo step. The words of the two keys are the interface's when the callout has none.
+ */
+async function _decide(decision) {
+  const choice = await ask(tf("decidePrompt", { question: decision.question }), { value: "", ok: t("decideOk") });
+  if (choice === null || !choice.trim()) return;
+  const step = model.setDecision(decision.page.id, decision.index, choice.trim(),
+    { keys: { choice: t("decisionChoiceKey"), decided: t("decisionDecidedKey") } });
+  await _repaint();
+  _offerUndo(step, tf("decided", { choice: choice.trim() }));
+}
+
 /**
  * Chi lavora a questo progetto, e in che veste.
  *
@@ -637,11 +657,17 @@ function _paintPeople() {
   if (!projectId) return;
   const people = model.peopleOf(projectId);
   el("peopleNone").hidden = people.length > 0;
+  const today = model.todayISO();
   fill(el("peopleList"), people.map((person) => {
-    const row = node("li", "row-item");
+    const row = node("li", "row-item person-row");
     const known = model.contactByUid(person.uid);
-    if (known) row.append(button("link", person.name || t("personNoName"), () => _openPerson(known.id)));
-    else row.append(node("span", "", person.name || t("personNoName")));
+    const face = node("span", "face big", _initials(person.name));
+    face.setAttribute("aria-hidden", "true");
+    row.append(face);
+    const who = node("div", "person-who");
+    const line = node("div", "person-line");
+    if (known) line.append(button("link person-name", person.name || t("personNoName"), () => _openPerson(known.id)));
+    else line.append(node("span", "person-name", person.name || t("personNoName")));
 
     const role = node("input", "role-field");
     role.type = "text";
@@ -650,7 +676,24 @@ function _paintPeople() {
     role.placeholder = t("peopleRole");
     role.setAttribute("aria-label", t("peopleRole"));
     role.addEventListener("input", () => model.setPersonRole(projectId, person.uid, role.value));
-    row.append(role);
+    line.append(role);
+    who.append(line);
+
+    // What they have on in this project, and when we last spoke: the two things asked before
+    // picking up the phone.
+    const load = model.personLoad(projectId, person.uid);
+    const facts = node("div", "meta person-load");
+    facts.append(document.createTextNode(load.open ? count(load.open, "personOpenOne", "personOpen")
+      : t("personOpenNone")));
+    if (load.late) facts.append(node("span", "late", ` · ${tf("personLate", { n: num(load.late, 0) })}`));
+    if (load.blocked) facts.append(document.createTextNode(` · ${count(load.blocked, "personBlockedOne", "personBlocked")}`));
+    if (load.last) {
+      const days = model.daysBetween(load.last, today);
+      facts.append(document.createTextNode(` · ${days === 0 ? t("personLastToday")
+        : days === 1 ? t("personLastYesterday") : tf("personLast", { when: days < 7 ? tf("agoDays", { n: num(days, 0) }) : shortDate(load.last) })}`));
+    }
+    who.append(facts);
+    row.append(who);
 
     // Una persona che il progetto nomina e che qui non ha una scheda: si adotta con il suo `uid`,
     // così da quel momento le due copie parlano della stessa persona.
@@ -2783,10 +2826,12 @@ function _wire() {
     home.addProjectProp(projectId);
   });
   el("openPages").addEventListener("click", () => _openPages(projectId));
-  // The ring counts the tasks, so its door is the board; the deadlines are dates, so theirs is
-  // the calendar. A panel that reports something and cannot be entered is a dead end.
-  el("progressGo").addEventListener("click", () => _openPlan(projectId));
+  // Every panel opens the screen that answers its question in full: what needs doing is the board,
+  // the weeks and the next meeting are the calendar, the meetings had are the pages.
+  el("nowGo").addEventListener("click", () => _openPlan(projectId));
   el("dueGo").addEventListener("click", () => _openPlan(projectId, { view: "calendar" }));
+  el("nextGo").addEventListener("click", () => _openPlan(projectId, { view: "calendar" }));
+  el("metGo").addEventListener("click", () => _openPages(projectId));
 
   // ---- the shared folder
   // ---- chi lavora a un progetto
@@ -3215,8 +3260,14 @@ function _connect() {
       const task = model.task(id);
       if (outcome.done && task && task.milestone) _cheerUp({ big: true });
       else if (outcome.done) { cheer.small(); _cheerUp(); }
-      if (outcome.next) snack(tf("repeated", { date: longDate(outcome.next.end) }));
+      // A tick from a list is a small target on a busy screen, and the row it was on disappears
+      // with it: the strip says what was ticked and offers it back.
+      const said = outcome.next ? tf("repeated", { date: longDate(outcome.next.end) })
+        : outcome.done && task ? tf("tickedDone", { name: task.title || t("taskUntitled") }) : "";
+      if (said) _offerUndo(outcome.step, said);
     },
+    openPlan: () => { if (projectId) _openPlan(projectId); },
+    decide: (decision) => _decide(decision),
     // A deadline on the dashboard opens its card, the same card the board opens: one place to
     // change a task, wherever it was seen. The card repaints the dashboard when it closes.
     openTask: (id) => {

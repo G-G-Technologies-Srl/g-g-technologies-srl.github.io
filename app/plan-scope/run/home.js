@@ -7,17 +7,14 @@
 // from importing each other in a circle, and it is also why this one can be read on its own: what
 // happens when you press something is not hidden in here.
 //
-// The four panels of a project are a limit and not a count. Past four the dashboard stops being
-// something you take in at a glance and becomes something you read, and a fifth panel is a decision
-// to be argued for rather than a thing to be added.
+// A project's dashboard reads from the top: what needs doing now, the plan, the weeks ahead, the
+// meetings had; beside it what is looked up — the next meeting, the decisions, what we wait for.
 
 import * as model from "gg/plan-model.js";
+import { boxes } from "gg/plan-markdown.js";
 import { glance, glanceOf, colorDot, editProps, addProp, isColor } from "./pages.js";
 import { t, tf, num } from "./i18n.js";
-import { el, node, button, fill, shortDate, longDate, bytes, tagHue, count } from "./ui.js";
-
-// The ring is a circle of radius 52 in a 120 box: this is how far round it goes.
-const RING = 2 * Math.PI * 52;
+import { el, node, button, fill, shortDate, longDate, bytes, tagHue, count, locale } from "./ui.js";
 
 /**
  * L'etichetta accesa, in minuscolo, o `null`.
@@ -365,6 +362,13 @@ const ICONS = {
   task: "M3.5 2h9a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 12.5v-9A1.5 1.5 0 0 1 3.5 2z M5 8l2 2 4-4",
   meeting: "M3.5 3h9a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 12.5v-8A1.5 1.5 0 0 1 3.5 3z M2 6.5h12 M5.5 1.5v3 M10.5 1.5v3",
   share: "M6 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0z M14 4a2 2 0 1 1-4 0 2 2 0 0 1 4 0z M14 12a2 2 0 1 1-4 0 2 2 0 0 1 4 0z M5.8 7.1l4.4-2.2 M5.8 8.9l4.4 2.2",
+  // The dashboard's marks: each kind of urgency has a shape as well as a colour.
+  flag: "M3.5 14.5V2 M3.5 2.5h8.5l-2 3.2 2 3.2H3.5",
+  lock: "M4.5 7h7a1.5 1.5 0 0 1 1.5 1.5v4.5a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 3 13V8.5A1.5 1.5 0 0 1 4.5 7z M5.5 7V5a2.5 2.5 0 0 1 5 0v2",
+  decide: "M8 14.5V8.5 M8 8.5L3.5 3.5 M8 8.5l4.5-5 M2.5 3.5h2.5 M11 3.5h2.5",
+  pen: "M10.5 2.5l3 3-8 8h-3v-3z",
+  check: "M14.5 8a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z M5 8.2l2 2 4-4.2",
+  clock: "M14.5 8a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z M8 4.5V8l2.5 1.5",
 };
 
 function _icon(name) {
@@ -595,16 +599,6 @@ function _paintFilters() {
  * lontano, e in un elenco di trenta pagine sono la differenza fra cercare e vedere. Le trova
  * `glance`, con le stesse regole che riconoscono i tipi nell'editore.
  */
-function _pageRow(page, depth = 0) {
-  const row = node("li", `row-item depth-${Math.min(3, depth)}`);
-  const { color, date } = glance(page);
-  if (color) row.append(colorDot(color));
-  row.append(button("link grow", page.title || t("pageUntitled"), () => on.openPage(page.id)));
-  for (const tag of page.tags || []) row.append(node("span", `badge tag ${tagHue(tag)}`, tag));
-  if (date) row.append(node("span", "meta", longDate(date)));
-  return row;
-}
-
 /**
  * La riga di un appuntamento, che **non** è la riga di un'attività travestita.
  *
@@ -728,11 +722,596 @@ export function paintLog(entries) {
 }
 
 // -----------------------------------------------------------------------------------------------------------------
+//  t h e   p r o j e c t   d a s h b o a r d
+// -----------------------------------------------------------------------------------------------------------------
+
+// How many rows "Cosa serve adesso" shows before "and n more". Past five the panel becomes the plan
+// all over again, and on a project in trouble it would push everything else below the fold.
+const NOW_ROWS = 5;
+
+// The weeks panel. Four weeks where there is room; two on a narrow screen, where four would give a
+// day twelve pixels and every label would sit on its neighbour.
+const WEEKS_WIDE = 28;
+const WEEKS_NARROW = 14;
+const WEEKS_NARROW_BELOW = 560;
+const LANE = 30;                        // the height of one row of markers, in pixels
+const WEEKS_HEAD = 30;                  // the row of week labels above them
+
+// Two states of the dashboard, not of the data: whether the long list was opened, and for which
+// project. Opening another project closes it again.
+let nowOpen = false;
+let nowFor = null;
+let weeksFor = null;                    // the project the weeks panel was last drawn for
+
+/** A day with its weekday, the way a diary says it: "lun 29 set". */
+function _dayName(iso) {
+  const [y, m, d] = String(iso).split("-").map(Number);
+  if (!y) return "";
+  return new Date(y, m - 1, d).toLocaleDateString(locale(), { weekday: "short", day: "numeric", month: "short" });
+}
+
+/** How far a day is from today, in words: "oggi", "domani", "fra 4 giorni", "ieri", "3 giorni fa". */
+function _distance(iso, today) {
+  const days = model.daysBetween(today, iso);
+  if (days === null) return "";
+  if (days === 0) return t("dueToday");
+  if (days === 1) return t("dueTomorrow");
+  if (days === -1) return t("agoYesterday");
+  return days > 0 ? tf("inDays", { n: num(days, 0) }) : tf("agoDays", { n: num(-days, 0) });
+}
+
+/** A round face with initials, for a person named on a row. */
+function _face(name) {
+  const face = node("span", "face", _initials(name));
+  face.title = name;
+  return face;
+}
+
+/** A small stroked drawing in a colour of its own, with the name a screen reader says for it. */
+function _sign(name, label = "") {
+  const svg = _icon(name);
+  svg.setAttribute("class", `icon16 sign sign-${name}`);
+  if (label) {
+    svg.removeAttribute("aria-hidden");
+    svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", label);
+  }
+  return svg;
+}
+
+/** The ring that marks something late: a shape as well as a colour, so it reads without the colour. */
+function _lateRing() {
+  const ring = node("span", "late-ring");
+  ring.setAttribute("role", "img");
+  ring.setAttribute("aria-label", t("dueLate"));
+  return ring;
+}
+
+/** The meeting whose boxes a task was born in, by the task's `uid`: "dall'Incontro con Giulia". */
+function _origins(projectId) {
+  const out = new Map();
+  for (const meeting of model.meetingsOf(projectId)) {
+    for (const box of boxes(meeting.page.markdown || "")) {
+      if (box.ref && !out.has(box.ref)) out.set(box.ref, meeting.page);
+    }
+  }
+  return out;
+}
+
+/** The row of "Cosa serve adesso": the tick, the when, the marks, the title, the context. */
+function _nowRow(item, today, origins) {
+  const row = node("li", `row-item now-row is-${item.kind}`);
+  const task = item.task || null;
+  if (task) {
+    const box = button("tick", "", () => on.toggleTask(task.id), { label: t("taskDone") });
+    box.setAttribute("aria-pressed", "false");
+    row.append(box);
+  } else {
+    row.append(node("span", "tick-space"));
+  }
+
+  let when = "";
+  if (item.kind === "late") when = `${shortDate(item.date)} · ${_distance(item.date, today)}`;
+  else if (item.kind === "today") when = t("dueToday");
+  else if (item.kind === "decide") when = tf("byDay", { date: shortDate(item.date) });
+  else if (item.kind === "notes") when = _distance(item.date, today);
+  else when = _dayName(item.date);
+  const lateish = item.kind === "late" || (item.kind === "decide" && item.late);
+  row.append(node("span", `now-when${lateish ? " late" : ""}${item.kind === "today" ? " today" : ""}`, when));
+
+  const title = node("span", "now-title");
+  if (item.kind === "late") title.append(_lateRing());
+  if (task && item.high) title.append(_sign("flag", t("nowHigh")));
+  if (task && item.blocked) title.append(_sign("lock", t("nowBlocked")));
+  if (item.kind === "decide") title.append(_sign("decide", t("nowDecide")));
+  if (item.kind === "notes") title.append(_sign("pen"));
+  if (task) {
+    title.append(button("link title", task.title || t("taskUntitled"), () => on.openTask(task.id)));
+  } else if (item.kind === "decide") {
+    title.append(button("link title", item.decision.question, () => on.openPage(item.decision.page.id)));
+  } else {
+    title.append(button("link title", tf("nowNotesEmpty", { title: item.meeting.page.title || t("pageUntitled") }),
+      () => on.openPage(item.meeting.page.id)));
+  }
+  row.append(title);
+
+  if (task) {
+    const waits = (task.blockedBy || []).map((id) => model.task(id)).filter((one) => one && !model.isDone(one));
+    const from = origins.get(task.uid);
+    if (item.blocked && waits.length) row.append(node("span", "now-ctx", tf("nowWaits", { title: waits[0].title })));
+    else if (from) row.append(node("span", "now-ctx", tf("nowFrom", { title: from.title || t("pageUntitled") })));
+    const who = model.assigneeName(task);
+    if (who) row.append(_face(who));
+  } else if (item.kind === "decide") {
+    row.append(node("span", "now-ctx", tf("nowFrom", { title: item.decision.page.title || t("pageUntitled") })));
+    row.append(button("small", t("decideDo"), () => on.decide(item.decision)));
+  } else {
+    row.append(button("small accent", t("notesWrite"), () => on.openPage(item.meeting.page.id)));
+  }
+  return row;
+}
+
+/** «Cosa serve adesso». */
+function _paintNow(id, today) {
+  if (nowFor !== id) {
+    nowFor = id;
+    nowOpen = false;
+  }
+  const { items, counts } = model.attentionOf(id);
+  const origins = _origins(id);
+
+  const words = {
+    late: () => tf("nowCountLate", { n: num(counts.late, 0) }),
+    today: () => tf("nowCountToday", { n: num(counts.today, 0) }),
+    decide: () => tf("nowCountDecide", { n: num(counts.decide, 0) }),
+    high: () => tf("nowCountHigh", { n: num(counts.high, 0) }),
+    blocked: () => count(counts.blocked, "nowCountBlockedOne", "nowCountBlocked"),
+    notes: () => count(counts.notes, "nowCountNotesOne", "nowCountNotes"),
+  };
+  fill(el("nowSum"), Object.keys(words).filter((key) => counts[key]).map((key) => {
+    const pill = node("span", `pill is-${key}`);
+    if (key === "late") pill.append(_lateRing());
+    pill.append(document.createTextNode(words[key]()));
+    return pill;
+  }));
+
+  const shown = nowOpen ? items : items.slice(0, NOW_ROWS);
+  fill(el("nowList"), shown.map((item) => _nowRow(item, today, origins)));
+  const rest = items.length - shown.length;
+  el("nowMore").hidden = items.length <= NOW_ROWS;
+  el("nowMore").textContent = nowOpen ? t("nowLess") : tf("nowMore", { n: num(rest, 0) });
+  el("nowMore").onclick = () => {
+    nowOpen = !nowOpen;
+    _paintNow(id, today);
+  };
+
+  // Nothing to do now: a line that says so, and where the next thing is. On a project with nothing
+  // in it at all, the three ways to begin instead.
+  const quiet = el("nowQuiet");
+  quiet.hidden = items.length > 0;
+  el("nowSum").hidden = items.length === 0;
+  if (items.length) return;
+  const empty = !model.tasksOf(id).length && !model.pagesOf(id).length;
+  if (empty) {
+    fill(quiet, [
+      node("span", "now-quiet-text", t("nowStart")),
+      node("span", "now-start", ""),
+    ]);
+    fill(quiet.lastChild, [
+      button("accent small", t("nowStartTask"), () => el("taskField").focus()),
+      button("accent small", t("nowStartMeeting"), () => el("newMeeting").click()),
+      button("accent small", t("nowStartPage"), () => el("pageField").focus()),
+    ]);
+    return;
+  }
+  const next = model.nextDue(id);
+  fill(quiet, [
+    _sign("check"),
+    node("span", "now-quiet-text", t("nowQuiet")),
+    ...(next ? [node("span", "meta", tf("nowQuietNext", { title: next.title, date: _dayName(next.end) }))] : []),
+  ]);
+}
+
+/** Piano: the board as one bar, the next milestone, the quick way in. */
+function _paintPlan(id, today) {
+  const overview = model.projectOverview(id);
+  const columns = overview.columns;
+  const total = columns.reduce((sum, one) => sum + one.count, 0);
+  const done = columns.filter((one) => one.done).reduce((sum, one) => sum + one.count, 0);
+  el("planCount").textContent = total ? tf("planCount", { done: num(done, 0), total: num(total, 0) }) : "";
+  el("tasksEmpty").hidden = total > 0;
+
+  // Finished first, then the columns in between from the most advanced back, then the first: the
+  // bar fills from the left the way the work does. The columns in between take turns between two
+  // shades, so that "In corso" and "In attesa" do not become one block.
+  const middle = columns.slice(1).filter((one) => !one.done)
+    .map((one, index) => ({ ...one, shade: `mid${index % 2}` })).reverse();
+  const ordered = [
+    ...columns.filter((one) => one.done).map((one) => ({ ...one, shade: "done" })),
+    ...middle,
+    ...columns.slice(0, 1).filter((one) => !one.done).map((one) => ({ ...one, shade: "todo" })),
+  ];
+  const bar = el("planBar");
+  bar.hidden = total === 0;
+  bar.setAttribute("aria-label", ordered.map((one) => `${num(one.count, 0)} ${one.name}`).join(", "));
+  fill(bar, ordered.filter((one) => one.count && one.shade !== "todo").map((one) => {
+    const piece = node("span", `seg ${one.shade}`);
+    piece.style.width = `${(one.count / (total || 1)) * 100}%`;
+    return piece;
+  }));
+  fill(el("planLegend"), total ? ordered.map((one) => {
+    const item = node("li", "");
+    item.append(node("span", `swatch ${one.shade}`));
+    item.append(node("b", "", num(one.count, 0)));
+    item.append(document.createTextNode(` ${one.name}`));
+    return item;
+  }) : []);
+
+  const milestone = model.nextMilestone(id);
+  const line = el("planMilestone");
+  line.hidden = !milestone;
+  if (milestone) {
+    fill(line, [
+      node("span", "diamond"),
+      node("span", "meta", t("planMilestone")),
+      button("link", milestone.task.title || t("taskUntitled"), () => on.openTask(milestone.task.id)),
+      node("span", milestone.task.end < today ? "meta late" : "meta",
+        `${_dayName(milestone.task.end)} · ${_distance(milestone.task.end, today)}`),
+      node("span", "spacer"),
+      node("span", "meta", milestone.before
+        ? count(milestone.before, "planBeforeOne", "planBefore") : t("planBeforeNone")),
+    ]);
+  }
+}
+
+/** The things that have a day in the window, as markers: what, when, how it is drawn. */
+function _weekItems(id, from, to, today) {
+  const out = [];
+  const inside = (iso) => iso && iso >= from && iso <= to;
+  for (const task of model.tasksOf(id)) {
+    if (model.isDone(task)) continue;
+    const span = model.spanOf(task);
+    if (!span || span.end < from || span.start > to) continue;
+    const late = task.end && task.end < today;
+    const kind = task.milestone ? "milestone" : late ? "late" : model.isBlocked(task) ? "blocked"
+      : task.priority === "high" ? "high" : "task";
+    const long = !task.milestone && span.start < span.end;
+    out.push({
+      kind,
+      from: long ? (span.start < from ? from : span.start) : (task.end || span.end),
+      to: long ? (span.end > to ? to : span.end) : (task.end || span.end),
+      bar: long,
+      label: task.title || t("taskUntitled"),
+      open: () => on.openTask(task.id),
+    });
+  }
+  for (const meeting of model.meetingsOf(id)) {
+    if (!inside(meeting.date)) continue;
+    out.push({ kind: "meeting", from: meeting.date, to: meeting.date, bar: false,
+      label: meeting.time ? `${meeting.time} ${meeting.page.title}` : meeting.page.title,
+      open: () => on.openPage(meeting.page.id) });
+  }
+  for (const decision of model.decisionsOf(id)) {
+    if (!decision.open || !inside(decision.by)) continue;
+    out.push({ kind: "decide", from: decision.by, to: decision.by, bar: false, label: decision.question,
+      open: () => on.openPage(decision.page.id) });
+  }
+  // Only the dated tasks whose day is in the window were kept: a task inside the window with its
+  // `end` outside it (a long one) is a bar, clipped. What is kept is ordered by where it starts.
+  return out.filter((one) => inside(one.from) || inside(one.to))
+    .sort((a, b) => a.from.localeCompare(b.from) || (a.bar ? -1 : 1));
+}
+
+/** Le prossime settimane: from this Monday, one marker per thing, packed into rows. */
+function _paintWeeks(id, today) {
+  weeksFor = id;
+  const box = el("weeks");
+  const width = box.clientWidth || 680;
+  const days = width < WEEKS_NARROW_BELOW ? WEEKS_NARROW : WEEKS_WIDE;
+  const weekday = (model.fromISO(today).getDay() + 6) % 7;         // Monday is 0
+  const from = model.addDays(today, -weekday);
+  const to = model.addDays(from, days - 1);
+  el("weeksTitle").textContent = days === WEEKS_WIDE ? t("weeksTitle4") : t("weeksTitle2");
+
+  const perDay = width / days;
+  const at = (iso) => model.daysBetween(from, iso);
+  const percent = (day) => `${(day / days) * 100}%`;
+
+  // Rows are filled greedily: a marker goes on the first row whose last marker ends before it
+  // begins. The width of a label is guessed from its length — six and a half pixels a character
+  // at this size — which is close enough, and cheaper than measuring every label twice.
+  const lanes = [];
+  const placed = [];
+  for (const item of _weekItems(id, from, to, today)) {
+    const start = at(item.from);
+    const labelDays = (item.label.length * 6.5 + 28) / perDay;
+    const end = item.bar ? at(item.to) + 1 : start + Math.max(1, labelDays);
+    let lane = lanes.findIndex((edge) => edge <= start);
+    if (lane < 0) {
+      lanes.push(0);
+      lane = lanes.length - 1;
+    }
+    lanes[lane] = end + 0.3;
+    placed.push({ ...item, start, lane, span: at(item.to) - start + 1 });
+  }
+
+  const parts = [];
+  for (let day = 0; day < days; day += 1) {
+    const iso = model.addDays(from, day);
+    const dow = model.fromISO(iso).getDay();
+    if (dow === 0 || dow === 6) {
+      const shade = node("span", "weeks-weekend");
+      shade.style.left = percent(day);
+      shade.style.width = percent(1);
+      parts.push(shade);
+    }
+    if (day % 7 === 0) {
+      const head = node("span", "weeks-week", _dayName(iso));
+      head.style.left = percent(day);
+      parts.push(head);
+    }
+  }
+  const now = at(today);
+  const line = node("span", "weeks-today");
+  line.style.left = `calc(${percent(now + 0.5)} - 1px)`;
+  const label = node("span", "weeks-today-label", t("dueToday"));
+  label.style.left = `calc(${percent(now + 0.5)} - 16px)`;
+  parts.push(line, label);
+
+  for (const item of placed) {
+    const mark = node("button", `weeks-mk is-${item.kind}${item.bar ? " is-bar" : ""}`);
+    mark.type = "button";
+    mark.style.left = percent(item.start);
+    mark.style.top = `${WEEKS_HEAD + 8 + item.lane * LANE}px`;
+    if (item.bar) mark.style.width = percent(item.span);
+    else {
+      const shape = {
+        late: () => _lateRing(),
+        high: () => _sign("flag"),
+        blocked: () => _sign("lock"),
+        decide: () => _sign("decide"),
+        meeting: () => _sign("meeting"),
+        milestone: () => node("span", "diamond"),
+        task: () => node("span", "dot"),
+      }[item.kind];
+      mark.append(shape());
+    }
+    mark.append(node("span", "weeks-label", item.label));
+    mark.title = `${_dayName(item.from)} · ${item.label}`;
+    mark.addEventListener("click", item.open);
+    parts.push(mark);
+  }
+  box.style.height = `${WEEKS_HEAD + 12 + Math.max(1, lanes.length) * LANE}px`;
+  fill(box, parts);
+
+  const legend = [
+    ["late", () => _lateRing(), "dueLate"],
+    ["high", () => _sign("flag"), "nowHigh"],
+    ["decide", () => _sign("decide"), "nowDecide"],
+    ["blocked", () => _sign("lock"), "nowBlocked"],
+    ["milestone", () => node("span", "diamond"), "weeksMilestone"],
+    ["meeting", () => _sign("meeting"), "weeksMeeting"],
+  ];
+  fill(el("weeksLegend"), legend.map(([kind, draw, key]) => {
+    const item = node("li", `is-${kind}`);
+    item.append(draw(), document.createTextNode(t(key)));
+    return item;
+  }));
+
+  const undated = model.tasksOf(id).filter((one) => !one.end && !one.start && !model.isDone(one)).length;
+  el("weeksUndated").hidden = undated === 0;
+  if (undated) {
+    fill(el("weeksUndated"), [
+      document.createTextNode(`${count(undated, "weeksUndatedOne", "weeksUndated")} `),
+      button("link small", t("panelPlan"), () => on.openPlan()),
+    ]);
+  }
+}
+
+/** Incontri recenti: what was said, and what is left of it. */
+function _paintMet(id, today) {
+  const digest = model.meetingDigest(id);
+  el("metEmpty").hidden = digest.length > 0;
+  fill(el("metList"), digest.map((one) => {
+    const item = node("li", "met-item");
+    const head = node("div", "met-head");
+    const ago = model.daysBetween(one.meeting.date, today);
+    head.append(node("span", "met-when", ago !== null && ago >= 0 && ago < 7
+      ? _distance(one.meeting.date, today) : shortDate(one.meeting.date)));
+    head.append(button("link met-title", one.meeting.page.title || t("pageUntitled"),
+      () => on.openPage(one.meeting.page.id)));
+    head.append(node("span", "spacer"));
+    for (const name of String(one.meeting.with || "").split(",").map((w) => w.trim()).filter(Boolean)) {
+      head.append(_face(name));
+    }
+    item.append(head);
+    if (one.empty) {
+      const line = node("div", "met-body met-empty");
+      line.append(node("span", "meta", t("metNoNotes")));
+      line.append(button("small accent", t("notesWrite"), () => on.openPage(one.meeting.page.id)));
+      item.append(line);
+      return item;
+    }
+    if (one.excerpt) item.append(node("p", "met-body excerpt", `«${one.excerpt}»`));
+    const facts = [];
+    if (one.decisions) facts.push(count(one.decisions, "metDecisionOne", "metDecisions"));
+    if (one.total) facts.push(tf("metBoxes", { done: num(one.done, 0), total: num(one.total, 0) }));
+    if (facts.length) item.append(node("div", "met-body meta", facts.join(" · ")));
+    for (const box of one.open.slice(0, 2)) item.append(_boxRow(box, today));
+    return item;
+  }));
+}
+
+/** An open box: with its task, a tick and the task's day; without, the text and nothing to press. */
+function _boxRow(box, today) {
+  const row = node("div", "met-body box-row");
+  if (box.task) {
+    const tick = button("tick", "", () => on.toggleTask(box.task.id), { label: t("taskDone") });
+    tick.setAttribute("aria-pressed", "false");
+    row.append(tick);
+    row.append(button("link title", box.task.title || box.text, () => on.openTask(box.task.id)));
+    row.append(node("span", "spacer"));
+    if (box.task.end) {
+      row.append(node("span", box.task.end < today ? "meta late" : "meta", shortDate(box.task.end)));
+    }
+  } else {
+    row.append(node("span", "box-mark"));
+    row.append(node("span", "title", box.text));
+  }
+  return row;
+}
+
+/** Il prossimo incontro, e che cosa portarci. */
+function _paintNext(id, today) {
+  const next = model.meetingsAhead(id)[0] || null;
+  el("nextEmpty").hidden = Boolean(next);
+  const box = el("nextBox");
+  box.hidden = !next;
+  if (!next) {
+    fill(box, []);
+    return;
+  }
+  const parts = [];
+  const when = node("div", "next-when");
+  when.append(node("b", "", next.time ? `${_dayName(next.date)} · ${next.time}` : _dayName(next.date)));
+  when.append(node("span", "meta", _distance(next.date, today)));
+  parts.push(when);
+  parts.push(button("link next-title", next.page.title || t("pageUntitled"), () => on.openPage(next.page.id)));
+  const facts = [];
+  if (next.with) facts.push(tf("nextWith", { who: next.with }));
+  if (next.where) facts.push(next.where);
+  if (next.repeat) facts.push(t(`repeat_${next.repeat}`));
+  if (facts.length) parts.push(node("div", "meta", facts.join(" · ")));
+
+  const { items, last } = model.toDiscuss(id, next);
+  if (items.length || last) {
+    const talk = node("div", "next-talk");
+    talk.append(node("div", "next-talk-head", next.with ? tf("nextTalkWith", { who: next.with }) : t("nextTalk")));
+    for (const one of items.slice(0, 5)) {
+      if (one.task) talk.append(_boxRow({ task: one.task, text: one.text }, today));
+      else talk.append(_boxRow({ task: null, text: one.text }, today));
+    }
+    if (last) {
+      const back = node("div", "next-last");
+      back.append(document.createTextNode(`${tf("nextLast", { date: shortDate(last.date) })} `));
+      back.append(button("link", last.excerpt ? `«${last.excerpt}»` : (last.page.title || t("pageUntitled")),
+        () => on.openPage(last.page.id)));
+      talk.append(back);
+    }
+    parts.push(talk);
+  }
+  parts.push(button("small next-open", t("nextOpen"), () => on.openPage(next.page.id)));
+  fill(box, parts);
+}
+
+/** Le decisioni: the open ones with their day, then the ones made, three of each at most. */
+function _paintDecisions(id, today) {
+  const all = model.decisionsOf(id);
+  const shown = [...all.filter((one) => one.open).slice(0, 3), ...all.filter((one) => !one.open).slice(0, 3)];
+  el("decisionsEmpty").hidden = all.length > 0;
+  fill(el("decisionList"), shown.map((one) => {
+    const row = node("li", `row-item decision-row${one.open ? " is-open" : " is-made"}`);
+    row.append(one.open ? _sign("decide", t("decisionOpen")) : _sign("check", t("decisionMade")));
+    const text = node("div", "grow");
+    text.append(button("link title", one.question, () => on.openPage(one.page.id)));
+    const meta = one.open
+      ? (one.by ? tf("decisionBy", { date: _dayName(one.by) }) : t("decisionOpen"))
+      : tf("decisionChoice", { choice: one.choice });
+    const line = node("div", one.open && one.by && one.by < today ? "meta late" : "meta", meta);
+    if (!one.open && one.decided) line.append(document.createTextNode(` · ${shortDate(one.decided)}`));
+    text.append(line);
+    row.append(text);
+    if (one.open) row.append(button("small", t("decideDo"), () => on.decide(one)));
+    return row;
+  }));
+}
+
+/** Aspettiamo: what holds up something else, and what it holds up. */
+function _paintWaiting(id, today) {
+  const waiting = model.waitingOn(id);
+  el("panelWaiting").hidden = waiting.length === 0;
+  fill(el("waitingList"), waiting.map((one) => {
+    const row = node("li", "row-item waiting-row");
+    row.append(_sign("clock"));
+    const text = node("div", "grow");
+    text.append(button("link title", one.task.title || t("taskUntitled"), () => on.openTask(one.task.id)));
+    const facts = [tf("waitingHolds", { titles: one.holds.map((held) => `«${held.title}»`).join(", ") })];
+    const who = model.assigneeName(one.task);
+    if (who) facts.push(who);
+    const line = node("div", "meta", facts.join(" · "));
+    if (one.task.end) {
+      line.append(node("span", one.task.end < today ? "late" : "",
+        ` · ${tf("waitingDue", { date: shortDate(one.task.end) })}`));
+    }
+    text.append(line);
+    row.append(text);
+    return row;
+  }));
+}
+
+/** Documenti: the favourites as chips, then the pages touched last. Meetings have their own panel. */
+function _paintDocs(id) {
+  const meetings = new Set(model.meetingsOf(id).map((one) => one.page.id));
+  const docs = model.pagesOf(id).filter((one) => !meetings.has(one.id));
+  el("docsCount").textContent = docs.length ? num(docs.length, 0) : "";
+  const favourites = docs.filter((one) => one.favourite);
+  el("favChips").hidden = favourites.length === 0;
+  fill(el("favChips"), favourites.map((page) =>
+    button("chip", `★ ${page.title || t("pageUntitled")}`, () => on.openPage(page.id))));
+  const latest = [...docs].sort((a, b) => String(b.updated || "").localeCompare(String(a.updated || ""))).slice(0, 4);
+  fill(el("pageList"), latest.map((page) => {
+    const row = node("li", "row-item");
+    const { color } = glance(page);
+    if (color) row.append(colorDot(color));
+    row.append(button("link grow", page.title || t("pageUntitled"), () => on.openPage(page.id)));
+    row.append(node("span", "when", _ago(page.updated)));
+    return row;
+  }));
+  el("pagesEmpty").hidden = docs.length > 0;
+}
+
+/** Ultime modifiche: the stamps of the records, newest first. */
+function _paintChanges(id) {
+  const project = model.project(id);
+  const changes = model.recentChanges(id, { limit: 5 });
+  el("panelChanges").hidden = changes.length === 0;
+  fill(el("changeList"), changes.map((one) => {
+    const row = node("li", "row-item change-row");
+    row.append(node("span", "when", _ago(one.at)));
+    const text = node("span", "grow");
+    if (one.kind === "page") {
+      text.append(document.createTextNode(`${t(one.made ? "changePageNew" : "changePage")} `));
+      text.append(button("link", one.record.title || t("pageUntitled"), () => on.openPage(one.record.id)));
+    } else {
+      const column = project.columns.find((c) => c.id === one.record.status);
+      text.append(button("link", one.record.title || t("taskUntitled"), () => on.openTask(one.record.id)));
+      if (column) text.append(document.createTextNode(` · ${column.name}`));
+    }
+    row.append(text);
+    return row;
+  }));
+}
+
+/** Only the weeks panel, again: its width decides how many days it holds. */
+function _repaintWeeks() {
+  const screen = document.getElementById("project");
+  if (!weeksFor || !screen || screen.hidden || !model.project(weeksFor)) return;
+  _paintWeeks(weeksFor, model.todayISO());
+}
+
+// -----------------------------------------------------------------------------------------------------------------
 //  p u b l i c
 // -----------------------------------------------------------------------------------------------------------------
 
 export function connect(handlers) {
   on = handlers;
+  // The weeks panel counts its days from its own width, so a window made narrower or wider asks it
+  // again. Once a frame, and only the one panel: the rest of the dashboard does not depend on it.
+  let pending = 0;
+  window.addEventListener("resize", () => {
+    cancelAnimationFrame(pending);
+    pending = requestAnimationFrame(_repaintWeeks);
+  });
   homeSort = _recall(SORT_KEY, ["recent", "due", "name"], "recent");
   homeView = _recall(VIEW_KEY, ["cards", "list"], "cards");
   for (const one of el("homeSort").querySelectorAll("button")) {
@@ -962,55 +1541,17 @@ export function paintProject(id) {
   paintProjectProps(id);
   _paintProjectWhen(id);
 
-  const { done, total } = model.progressOf(id);
-  const share = total ? done / total : 0;
-  el("ringFill").style.strokeDasharray = `${RING * share} ${RING}`;
-  el("progressText").textContent = total
-    ? tf("projectProgress", { done: num(done, 0), total: num(total, 0) })
-    : "—";
-  el("progressNote").textContent = total ? "" : t("progressNone");
-
-  const due = [
-    ...model.dueSoon(id, { from: today }).map((task) => ({ when: task.end, task })),
-    ...model.meetingsAhead(id, new Date(), { days: model.SOON_DAYS })
-      .map((meeting) => ({ when: meeting.date, meeting })),
-  ].sort((a, b) => a.when.localeCompare(b.when) || (a.meeting ? -1 : 1) - (b.meeting ? -1 : 1));
-  fill(el("dueList"), due.map((one) => (one.meeting
-    ? _meetingRow(one.meeting, today)
-    : _taskRow(one.task, today))));
-  el("dueEmpty").hidden = due.length > 0;
-
-  // The pages in their tree, not in a flat list: a page written *inside* another one is a chapter of
-  // it, and a list that hides that is a list where the same title appears twice for no reason.
   const pages = model.pagesOf(id);
-  const rows = [];
-  const walk = (parentId, depth) => {
-    for (const page of pages.filter((one) => one.parentId === parentId)) {
-      rows.push(_pageRow(page, depth));
-      walk(page.id, depth + 1);
-    }
-  };
-  walk(null, 0);
-  // Anything whose parent is not in this list — it can only come from an import — still shows,
-  // at the top level, rather than vanishing into a tree that has no branch for it.
-  for (const page of pages) {
-    if (page.parentId && !pages.some((one) => one.id === page.parentId)) rows.push(_pageRow(page, 0));
-  }
-  fill(el("pageList"), rows);
-  el("pagesEmpty").hidden = pages.length > 0;
-
-  // The dashboard says how far along the plan is, not what is in it. The board is one press away
-  // and it is where a task gets moved, dated and opened; a second full list here would be the same
-  // thing twice, and the panel is meant to be taken in at a glance.
   const tasks = model.tasksOf(id);
-  fill(el("taskList"), project.columns.map((column) => {
-    const row = node("li", "row-item");
-    row.append(node("span", "grow", column.name || ""));
-    row.append(node("span", "when",
-      num(tasks.filter((task) => task.status === column.id).length, 0)));
-    return row;
-  }));
-  el("tasksEmpty").hidden = tasks.length > 0;
+  _paintNow(id, today);
+  _paintPlan(id, today);
+  _paintWeeks(id, today);
+  _paintMet(id, today);
+  _paintNext(id, today);
+  _paintDecisions(id, today);
+  _paintWaiting(id, today);
+  _paintDocs(id);
+  _paintChanges(id);
 
   // Said once per project and then never again: it is an invitation, and an invitation that
   // repeats is a nag. It goes quiet the moment the project has been exported once.

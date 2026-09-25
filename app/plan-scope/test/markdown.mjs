@@ -16,7 +16,7 @@
 
 import assert from "node:assert/strict";
 
-import { parse, serialize, inlineHtml, images, links, assets, frontmatter, withFrontmatter, setPeople, mentions, mentionNames, renameMention, taskRefs, TASK_REF, withoutTaskRefs } from "gg/plan-markdown.js";
+import { parse, serialize, inlineHtml, images, links, assets, frontmatter, withFrontmatter, setPeople, mentions, mentionNames, renameMention, taskRefs, TASK_REF, withoutTaskRefs, decisions, withChoice, boxes, dayOf } from "gg/plan-markdown.js";
 
 let passed = 0;
 
@@ -435,5 +435,60 @@ test("un nome che si allunga non allunga le menzioni già intere", () => {
   assert.equal(renameMention("@Mario e @Mario Bianchi, poi (@Mario).", "Mario", "Mario Bianchi"),
     "@Mario Bianchi e @Mario Bianchi, poi (@Mario Bianchi).");
 });
+
+// -----------------------------------------------------------------------------------------------------------------
+//  d e c i s i o n s
+// -----------------------------------------------------------------------------------------------------------------
+
+const MINUTES = [
+  "---", "tipo: incontro", "data: 2026-09-25", "---",
+  "Visto il volantino.", "",
+  "> [!decisione]", "> Fondo chiaro o fondo scuro", "> entro: 26/9", "",
+  "> [!nota]", "> Lo stampatore vuole la risposta presto.", "",
+  "> [!decisione]", "> Chi porta il tavolo", "> choice: noi", "",
+  "> [!decisione]", "",
+  "- [ ] Chiedere il costo [[#a1]]", "- [x] Mandare le misure",
+  "```", "- [ ] un esempio", "```", "",
+].join("\n");
+
+test("una decisione si legge dal riquadro: domanda, scadenza, scelta", () => {
+  const found = decisions(MINUTES, "2026-09-25");
+  assert.equal(found.length, 2, "il riquadro vuoto è un modello, non una decisione aperta");
+  assert.deepEqual(found[0], { index: 0, question: "Fondo chiaro o fondo scuro", by: "2026-09-26",
+    choice: "", decided: "", open: true });
+  assert.equal(found[1].index, 1);
+  assert.equal(found[1].choice, "noi");
+  assert.equal(found[1].open, false);
+});
+
+test("segnare la scelta tocca solo quel riquadro, e toglierla lo riporta com'era", () => {
+  const made = withChoice(MINUTES, 0, "  fondo   scuro ", "2026-09-25");
+  assert.ok(made.includes("> entro: 26/9\n> scelta: fondo scuro\n> decisa: 2026-09-25\n\n> [!nota]"));
+  assert.equal(made.replace("> scelta: fondo scuro\n> decisa: 2026-09-25\n", ""), MINUTES,
+    "il resto del documento è identico, byte per byte");
+  assert.equal(decisions(made, "2026-09-25")[0].open, false);
+  assert.equal(withChoice(made, 0, "", "2026-09-25"), MINUTES);
+  // Un riquadro scritto in inglese riceve le chiavi inglesi, qualunque sia la lingua dell'interfaccia.
+  const english = withChoice(MINUTES, 1, "loro", "2026-09-26");
+  assert.ok(english.includes("> Chi porta il tavolo\n> choice: loro\n> decided: 2026-09-26"));
+  assert.equal(withChoice(MINUTES, 7, "x", "2026-09-26"), MINUTES, "un indice che non c'è non cambia niente");
+});
+
+test("il giorno si scrive come lo scrive una persona", () => {
+  assert.equal(dayOf("2026-09-26"), "2026-09-26");
+  assert.equal(dayOf("26/9", "2026-01-10"), "2026-09-26");
+  assert.equal(dayOf("26.09.27"), "2027-09-26");
+  assert.equal(dayOf("31/2", "2026-01-01"), "", "un giorno che non esiste non è un giorno");
+  assert.equal(dayOf("venerdì"), "");
+});
+
+test("le caselle di un documento, con l'aggancio, fuori dai blocchi di codice", () => {
+  assert.deepEqual(boxes(MINUTES), [
+    { done: false, text: "Chiedere il costo", ref: "a1" },
+    { done: true, text: "Mandare le misure", ref: null },
+  ]);
+});
+
+fixed("riquadri di decisione", MINUTES.split("\n").slice(4).join("\n"));
 
 console.log(`markdown: ${passed} prove passate`);
