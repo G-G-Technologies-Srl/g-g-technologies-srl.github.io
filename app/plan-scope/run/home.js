@@ -149,6 +149,30 @@ function _whenLabel(project, today) {
   return tf("eventPast", { n: num(-days, 0) });
 }
 
+// How many next things a card lists before "+ n more".
+const CARD_NEXT = 3;
+
+/** One line of a card's next things: the time or the column, the title, the day, the people. */
+function _cardNextLine(one, today) {
+  if (one.kind === "open") {
+    const line = node("span", "project-card-next is-open");
+    line.append(node("span", "next-label", one.column));
+    line.append(node("span", "next-title", one.task.title || t("taskUntitled")));
+    return line;
+  }
+  const meeting = one.kind === "meeting";
+  const line = node("span", `project-card-next ${_urgency(one.date, today)}${meeting ? " is-meeting" : ""}`);
+  if (meeting && one.time) line.append(node("span", "next-time", one.time));
+  line.append(node("span", "next-title", meeting ? (one.meeting.page.title || t("pageUntitled"))
+    : (one.task.title || t("taskUntitled"))));
+  line.append(node("span", "next-date", shortDate(one.date)));
+  const who = meeting ? one.meeting.with : model.assigneeName(one.task);
+  for (const name of String(who || "").split(",").map((part) => part.trim()).filter(Boolean)) {
+    line.append(node("span", `badge tag next-who ${tagHue(name)}`, name));
+  }
+  return line;
+}
+
 function _projectCard(project, today) {
   // The box holds the frame, the button holds the project, and whatever else can be pressed —
   // tags, favourite pages, the last thing touched, the two first steps of an empty project — sits
@@ -193,35 +217,28 @@ function _projectCard(project, today) {
   if (!empty) card.append(_countsLine(view));
   if (view.tasks) card.append(_columnsBar(view.columns), _columnsLegend(view.columns));
 
-  // The next thing: a date when there is one, otherwise the open task to pick up. A project
-  // without dates still has something to do next, and the card used to keep quiet about it.
-  const next = _nextThing(project.id);
-  if (next) {
-    const line = node("span", `project-card-next ${_urgency(next.date, today)}${next.meeting ? " is-meeting" : ""}`);
-    if (next.time) line.append(node("span", "next-time", next.time));
-    line.append(node("span", "next-title", next.title));
-    line.append(node("span", "next-date", shortDate(next.date)));
-    for (const name of String(next.who || "").split(",").map((one) => one.trim()).filter(Boolean)) {
-      line.append(node("span", `badge tag next-who ${tagHue(name)}`, name));
-    }
-    card.append(line);
-  } else if (view.next) {
-    const line = node("span", "project-card-next is-open");
-    line.append(node("span", "next-label", view.next.column));
-    line.append(node("span", "next-title", view.next.task.title || t("taskUntitled")));
-    card.append(line);
+  // The next few things, not the next one: a card with seven tasks to do that showed a single line
+  // said nothing about whether the other six were due tomorrow or next month. Up to three, late
+  // first, then dates, then the work in hand without a date; the rest counted, not hidden.
+  const { items: nexts, more } = model.nextThingsOf(project.id, { limit: CARD_NEXT });
+  if (nexts.length) {
+    const list = node("span", "project-card-nexts");
+    for (const one of nexts) list.append(_cardNextLine(one, today));
+    if (more) list.append(node("span", "project-card-more", tf("cardMore", { n: num(more, 0) })));
+    card.append(list);
   }
+  const next = nexts.find((one) => one.date) || null;
 
   // Pages and no tasks: the latest page speaks for the project, in its first words.
   if (!view.tasks && view.excerpt) card.append(node("span", "project-card-excerpt", `«${view.excerpt}»`));
   if (empty) card.append(node("span", "project-card-excerpt", t("cardEmpty")));
 
+  // How many are late stays as a badge: the list shows three, and a project with nine late tasks
+  // must not read like one with a single late line. "Due this week" went: the list says it.
   const late = model.lateCount(project.id, { from: today });
-  const soon = model.dueAhead(project.id, { from: today }).length;
-  if (late || soon) {
+  if (late) {
     const marks = node("span", "project-card-marks");
-    if (late) marks.append(node("span", "badge late", tf("projectLate", { n: num(late, 0) })));
-    if (soon) marks.append(node("span", "badge soon", tf("projectDueWeek", { n: num(soon, 0) })));
+    marks.append(node("span", "badge late", tf("projectLate", { n: num(late, 0) })));
     card.append(marks);
   }
 

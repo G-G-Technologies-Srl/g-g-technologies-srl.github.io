@@ -2016,4 +2016,31 @@ test("le ultime modifiche sono i timbri dei record, dal più recente", () => {
   assert.ok(p);
 });
 
+test("le prossime cose di una scheda: ritardi, date, appuntamenti, poi il lavoro senza data", () => {
+  const fiera = model.createProject({ name: "Fiera" });
+  const cols = model.project(fiera.id).columns;
+  const task = (title, end = null, status = null) => model.createTask(fiera.id, { title, end, status });
+  task("Senza data, da fare");
+  task("Senza data, in corso", null, cols[1].id);
+  task("Fra una settimana", "2026-10-02");
+  task("In ritardo", "2026-09-20");
+  task("Domani", "2026-09-26");
+  const done = task("Fatta", "2026-09-21");
+  model.toggleDone(done.id);
+  const page = model.createPage(fiera.id, { title: "Riunione" });
+  model.setMarkdown(page.id, "---\ntipo: incontro\ndata: 2026-09-26\nora: 09:00\n---\n");
+  const now = new Date(2026, 8, 25, 12, 0);
+  const three = model.nextThingsOf(fiera.id, { now });
+  assert.deepEqual(three.items.map((one) => one.task ? one.task.title : one.meeting.page.title),
+    ["In ritardo", "Riunione", "Domani"], "a parità di giorno l'appuntamento viene prima");
+  assert.equal(three.items[0].late, true);
+  assert.equal(three.more, 3, "fra una settimana e le due senza data restano fuori, e si contano");
+  const all = model.nextThingsOf(fiera.id, { now, limit: 10 });
+  assert.deepEqual(all.items.slice(4).map((one) => [one.kind, one.task.title, one.column]),
+    [["open", "Senza data, in corso", cols[1].name], ["open", "Senza data, da fare", cols[0].name]],
+    "senza date, prima quella più avanti sulla bacheca");
+  assert.equal(all.more, 0);
+  assert.deepEqual(model.nextThingsOf("nessuno"), { items: [], more: 0 });
+});
+
 console.log(`model: ${passed} prove passate`);

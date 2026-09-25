@@ -1871,6 +1871,35 @@ export function lateCount(projectId, { from = todayISO() } = {}) {
 
 
 /**
+ * The next few things of a project, for its card in the archive: what is late, then the deadlines
+ * and appointments ahead, nearest first — on the same day the appointment first, since it has an
+ * hour and a place. When the dates run out before `limit`, the open tasks without one fill the
+ * list, those furthest along the board first: a project without dates still has work in hand.
+ *
+ * `more` is how many open things are left out, so the card can say "+ n more" instead of letting
+ * one line stand for seven.
+ */
+export function nextThingsOf(projectId, { now = new Date(), limit = 3 } = {}) {
+  const project = projects.get(projectId);
+  if (!project) return { items: [], more: 0 };
+  const today = todayISO(now);
+  const open = tasksOf(projectId).filter((one) => !isDone(one));
+  const dated = [
+    ...open.filter((one) => one.end).map((task) => ({ kind: "task", date: task.end, task,
+      late: task.end < today, rank: 1 })),
+    ...meetingsAhead(projectId, now).map((meeting) => ({ kind: "meeting", date: meeting.date,
+      time: meeting.time, meeting, late: false, rank: 0 })),
+  ].sort((a, b) => a.date.localeCompare(b.date) || a.rank - b.rank || String(a.time || "").localeCompare(String(b.time || "")));
+  const rank = new Map(project.columns.map((column, index) => [column.id, index]));
+  const undated = open.filter((one) => !one.end)
+    .sort((a, b) => (rank.get(b.status) ?? 0) - (rank.get(a.status) ?? 0))
+    .map((task) => ({ kind: "open", task,
+      column: (project.columns.find((column) => column.id === task.status) || project.columns[0] || {}).name || "" }));
+  const all = [...dated, ...undated];
+  return { items: all.slice(0, limit), more: Math.max(0, all.length - limit) };
+}
+
+/**
  * What a project holds, for its card in the archive — everything that is there without a date.
  *
  * A card used to speak almost only through dates: the project's day, the next deadline, what is
