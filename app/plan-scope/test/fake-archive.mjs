@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // `db.js` and `gg/store.js` without IndexedDB: what the local folder asks of the database, kept in
 // memory. Swapped in by `backup.mjs` through a resolve hook, so that the real `gg/io.js` — the

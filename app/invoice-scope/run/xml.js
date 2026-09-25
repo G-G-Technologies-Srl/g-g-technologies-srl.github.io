@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // A tree of plain objects, out as XML text.
 //

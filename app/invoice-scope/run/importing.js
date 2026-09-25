@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // Bringing an account over from another program.
 //
@@ -192,7 +192,7 @@ function _scarto(dichiarato, ricalcolato) {
 
 /** Every file inside a ZIP that could be an invoice, one level down. */
 async function _dentro(bytes) {
-  const zip = await import("gg/zip.js");
+  const zip = await import("biz/zip.js");
   const entries = await zip.readAny(bytes);
   return entries
     .filter((entry) => DENTRO.test(entry.name) && !entry.name.startsWith("__MACOSX"))

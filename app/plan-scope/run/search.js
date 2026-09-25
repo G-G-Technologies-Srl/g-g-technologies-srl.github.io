@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // Finding a thing by a word, across every project.
 //
@@ -10,7 +10,7 @@
 // The search itself is `model.search`, so that it can be proved without a browser; this file is
 // the box, the list and the keys.
 
-import * as model from "gg/plan-model.js";
+import * as model from "biz/plan-model.js";
 import { t } from "./i18n.js";
 import { el, node, fill } from "./ui.js";
 

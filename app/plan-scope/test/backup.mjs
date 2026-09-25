@@ -1,10 +1,10 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // The local folder, from the app's side: which records go in, which images go beside them, and
 // what comes back out.
 //
 // The policy of the files — the current copy, one a day, thirty of them, and the sweeping — is
-// `gg/folder.js`, proved in `app/invoice-scope/test/backup.mjs`, which is where `writeSnapshot`
+// `biz/folder.js`, proved in `app/invoice-scope/test/backup.mjs`, which is where `writeSnapshot`
 // lives. What is proved here is what only Plan Scope knows, and every one of these is a way the
 // app could lose something without anybody noticing:
 //

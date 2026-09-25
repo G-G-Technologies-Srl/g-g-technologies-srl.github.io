@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // The schema, and the writing behind the interaction. Nothing here knows what a page or a task
 // means — that is `model.js` — and nothing here draws anything.

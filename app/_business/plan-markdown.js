@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // Markdown in, blocks out, and back again without losing anything.
 //
@@ -21,7 +21,7 @@
 // divider — the original is carried in the block and written back. Normalising `*` to `-` would be
 // defensible for our own documents and rude to a file somebody brought with them.
 //
-// **In `_lib/` since two apps use it.** Plan Scope wrote it, Invoice Scope uses it for the plans of
+// **Shared since two apps use it.** Plan Scope wrote it, Invoice Scope uses it for the plans of
 // the projects it invoices: two real uses, and the file names neither the app hosting it nor a
 // store — it moved without touching a line, which is the proof that the line was in the right place.
 //

@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // I promemoria: quando suonano, e cosa il service worker trova da dire.
 //
@@ -10,7 +10,7 @@
 
 import assert from "node:assert/strict";
 
-import * as remind from "gg/remind.js";
+import * as remind from "biz/remind.js";
 
 let passed = 0;
 

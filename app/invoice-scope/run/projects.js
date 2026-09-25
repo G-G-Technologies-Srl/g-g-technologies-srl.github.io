@@ -1,9 +1,9 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // I progetti: il piano di un lavoro, e il denaro che ci gira intorno.
 //
 // **Il modello non è scritto qui.** Progetti, pagine, attività, colonne, cestino e `uid` vengono da
-// `gg/plan-model.js`, che è lo stesso file che usa Plan Scope: due app, un modello, nessuna copia da
+// `biz/plan-model.js`, che è lo stesso file che usa Plan Scope: due app, un modello, nessuna copia da
 // tenere allineata. Questo file è la parte che Plan Scope non può avere — il cliente, i documenti e
 // i quattro numeri — più la porta che scrive nel deposito di Invoice Scope.
 //
@@ -28,7 +28,7 @@
 // `node --import ./app/invoice-scope/test/loader.mjs app/invoice-scope/test/projects.mjs`.
 
 import { get, list, put, remove } from "gg/store.js";
-import * as plan from "gg/plan-model.js";
+import * as plan from "biz/plan-model.js";
 
 import { draft, save as saveDoc, documents, signedTotal } from "./model.js";
 import { kind } from "./kinds.js";

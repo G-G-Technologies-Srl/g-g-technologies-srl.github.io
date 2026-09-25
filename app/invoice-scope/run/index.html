@@ -12,7 +12,7 @@
 <link rel="icon" href="./icon-192.png" sizes="192x192">
 <link rel="apple-touch-icon" href="./icon-192.png">
 <link rel="stylesheet" href="../../_lib/base.css">
-<link rel="stylesheet" href="../../_lib/plan-editor.css">
+<link rel="stylesheet" href="../../_business/plan-editor.css">
 <link rel="stylesheet" href="./styles.css">
 <link rel="stylesheet" href="./print.css" media="print">
 <script>
@@ -29,7 +29,7 @@
   } catch (ignored) {}
 </script>
 <script type="importmap">
-{ "imports": { "gg/": "../../_lib/" } }
+{ "imports": { "gg/": "../../_lib/", "biz/": "../../_business/" } }
 </script>
 <script>
   // `beforeinstallprompt` waits for nobody: on a second visit, with the service worker already
@@ -1012,7 +1012,7 @@
 
     <!-- Le pagine del progetto: gli appunti che stanno intorno al lavoro — il capitolato, il verbale
          di un sopralluogo, le misure prese in cantiere. L'editor è quello di Plan Scope, montato da
-         `gg/plan-editor.js`: stesso componente, stesso formato, quindi un progetto esportato da qui
+         `biz/plan-editor.js`: stesso componente, stesso formato, quindi un progetto esportato da qui
          si riapre lì con le sue pagine. -->
     <div class="section-head">
       <h2 data-t="projPagesTitle"></h2>
@@ -1768,7 +1768,7 @@
   </form>
 </dialog>
 
-<!-- **Il markup che l'editor condiviso pretende.** `gg/plan-editor.js` cerca questi id: la barra che
+<!-- **Il markup che l'editor condiviso pretende.** `biz/plan-editor.js` cerca questi id: la barra che
      segue la selezione e il menù dei blocchi. Sta scritto nel suo commento in testa, e
      `check_apps.py` verifica che ogni `el("…")` esista, quindi una dimenticanza si ferma qui. -->
 <div class="mark-bar" id="markBar" hidden>

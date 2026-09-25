@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // L'azienda che è già lì la prima volta che qualcuno apre `?demo=1`.
 //
@@ -21,7 +21,7 @@
 // arriva e non nel settembre 2026.
 
 import { put } from "gg/store.js";
-import * as plan from "gg/plan-model.js";
+import * as plan from "biz/plan-model.js";
 
 import { t } from "./i18n.js";
 import { draft, save, issue, setState, creditNote } from "./model.js";

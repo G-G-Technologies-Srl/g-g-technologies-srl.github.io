@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // Il piano di importazione, e la sua scrittura.
 //
@@ -11,7 +11,7 @@
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import * as zip from "../../_lib/zip.js";
+import * as zip from "../../_business/zip.js";
 import { plan, apply, lastImport, undoLast } from "../run/importing.js";
 import { draft, issue } from "../run/model.js";
 import { openDatabase } from "../run/db.js";

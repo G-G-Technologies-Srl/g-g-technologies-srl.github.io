@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // What leaves the app as a calendar or a spreadsheet, and what comes back in as pasted text.
 //
@@ -6,7 +6,7 @@
 
 import assert from "node:assert/strict";
 
-import * as ics from "gg/ics.js";
+import * as ics from "biz/ics.js";
 import { SIGN } from "../run/sign.js";
 import * as csv from "../run/csv.js";
 import * as webpage from "../run/webpage.js";
@@ -275,7 +275,7 @@ test("nella vCard il punto e virgola si protegge, e le righe lunghe si spezzano 
 });
 
 // La regola del catalogo: un modulo condiviso non nomina un'app. Il nome della firma sta in
-// `run/sign.js`, e il valore di partenza di `_lib/ics.js` dice solo la società — così un file di
+// `run/sign.js`, e il valore di partenza di `_business/ics.js` dice solo la società — così un file di
 // Invoice non può uscire dichiarandosi Plan Scope perché qualcuno si è dimenticato la firma.
 test("la firma è dell'app, e la libreria condivisa non nomina nessuno", () => {
   assert.equal(SIGN.prodid, "-//G&G Technologies//Plan Scope//IT");

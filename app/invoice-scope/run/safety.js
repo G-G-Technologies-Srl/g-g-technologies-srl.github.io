@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // Quanto è al sicuro quello che c'è qui dentro, e cosa dirne a chi apre la Situazione.
 //
@@ -51,7 +51,7 @@ function _giorni(da, a) {
 /**
  * Cosa dire della sicurezza dell'archivio, o `null` quando non c'è niente da dire.
  *
- * `stato` è quello di `gg/folder.js` — `unavailable`, `none`, `prompt`, `held`, `linked`, con
+ * `stato` è quello di `biz/folder.js` — `unavailable`, `none`, `prompt`, `held`, `linked`, con
  * `folder`, `lastWrite` ed `error`. `ultimoArchivio` è quando è stato esportato un file a mano,
  * `ultimoMovimento` quando i documenti sono cambiati l'ultima volta, `documenti` quanti ce ne sono.
  *

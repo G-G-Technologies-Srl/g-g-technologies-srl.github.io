@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // Gli acquisti: fatture ricevute e spese senza fattura, con quello che si può dire di loro senza
 // un browser — il record, i totali, lo stato, lo scadenzario passivo, l'imposta del periodo.

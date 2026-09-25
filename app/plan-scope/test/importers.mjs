@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // What comes out of a Trello board and a Notion export, as the app's own payload.
 //
@@ -7,7 +7,7 @@
 import assert from "node:assert/strict";
 
 import * as importers from "../run/importers.js";
-import * as pack from "gg/plan-pack.js";
+import * as pack from "biz/plan-pack.js";
 
 let passed = 0;
 

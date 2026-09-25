@@ -1,4 +1,4 @@
-/* Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0 */
+/* Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0 */
 
 /* What this app adds to gg/base.css, and nothing that base.css already says.
    The vocabulary is the site's: panel over border, the 2px accent filament, square bullets, and
@@ -1086,7 +1086,7 @@ dialog li::before {
 /* ----- le pagine di un progetto ----- */
 
 /* L'elenco delle pagine e l'editor, affiancati. L'editor si porta il proprio foglio da
-   `_lib/plan-editor.css`: qui c'è solo dove sta nella schermata e quanto è alto — la disposizione è
+   `_business/plan-editor.css`: qui c'è solo dove sta nella schermata e quanto è alto — la disposizione è
    dell'app, il componente no. */
 .pages-split {
   display: grid;

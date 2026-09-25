@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // What leaves a page or a plan for people who do not have the app: a web page, a spreadsheet, a
 // calendar, paper, and the text for an assistant.
@@ -8,14 +8,14 @@
 // its own. The files it produces are the work of `webpage.js`, `csv.js` and `ics.js`, which are
 // pure and proved in Node; this is the layer that fetches the images and hands the file over.
 
-import * as model from "gg/plan-model.js";
+import * as model from "biz/plan-model.js";
 import * as db from "./db.js";
-import * as pack from "gg/plan-pack.js";
+import * as pack from "biz/plan-pack.js";
 import * as webpage from "./webpage.js";
 import * as csv from "./csv.js";
-import * as ics from "gg/ics.js";
+import * as ics from "biz/ics.js";
 import { SIGN } from "./sign.js";
-import * as md from "gg/plan-markdown.js";
+import * as md from "biz/plan-markdown.js";
 import { t, tf, lang } from "./i18n.js";
 import { el, snack, longDate } from "./ui.js";
 
@@ -153,7 +153,7 @@ export function exportContactsVcf() {
 /**
  * Every dated task of the project as a calendar file, plus the event itself.
  *
- * Con il promemoria dentro, se è acceso: `alarm` sono le impostazioni di `gg/remind.js`, e da qui
+ * Con il promemoria dentro, se è acceso: `alarm` sono le impostazioni di `biz/remind.js`, e da qui
  * in poi a suonare è il calendario di chi ha importato — alle nove, ad app chiusa, anche su un
  * telefono dove niente di quello che scriviamo noi potrebbe mai svegliarsi.
  */

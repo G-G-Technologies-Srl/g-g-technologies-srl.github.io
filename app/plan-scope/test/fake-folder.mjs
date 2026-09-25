@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // A `FileSystemDirectoryHandle` over a Map: the picker's answer, without a browser and without a
 // disk. It answers the whole shape the local folder uses — `getFileHandle`, `getDirectoryHandle`,

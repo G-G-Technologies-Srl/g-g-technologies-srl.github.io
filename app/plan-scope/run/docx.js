@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // Un `.docx` letto come testo: quello che c'era scritto, dentro una pagina.
 //
@@ -20,7 +20,7 @@
 // sopravvivere, che è il motivo per cui `clip.js` il parser del browser lo usa eccome — e così
 // questo file si prova con `node`, che è dove le sue duecento decisioni vanno provate.
 
-import { shield } from "gg/plan-markdown.js";
+import { shield } from "biz/plan-markdown.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  l ' X M L

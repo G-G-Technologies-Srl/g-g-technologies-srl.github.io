@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // Il calendario d'insieme: un mese, e dentro tutto quello che ha una data.
 //
@@ -17,7 +17,7 @@
 // Disegna e basta: i comandi tornano in `app.js` attraverso `connect`, come fanno le altre
 // schermate, e per lo stesso motivo — nessun import circolare, e un file che si legge da solo.
 
-import * as model from "gg/plan-model.js";
+import * as model from "biz/plan-model.js";
 import { t, tf, num } from "./i18n.js";
 import { el, node, fill, shortDate, longDate, locale } from "./ui.js";
 

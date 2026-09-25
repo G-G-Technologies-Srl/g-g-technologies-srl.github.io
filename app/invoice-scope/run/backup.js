@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // The backup folder: the whole archive written, on its own, into a folder the person chose.
 //
@@ -6,7 +6,7 @@
 // been the answer, and it is an answer that depends on somebody remembering — which is why the
 // home screen nags from the third document on. This is the same export, written by the app
 // instead, into a folder of the operating system's — very often a Dropbox or iCloud folder, and
-// then it travels by itself. The mechanics are `gg/folder.js`, shared with the other apps; what
+// then it travels by itself. The mechanics are `biz/folder.js`, shared with the other apps; what
 // is here is what only this app knows: which records, under which name, in which store.
 //
 // **One machine writes, the others read.** This is a backup and not Plan Scope's shared folder,
@@ -23,8 +23,8 @@
 
 import { get, put, list, count as countIn } from "gg/store.js";
 import { collect, restore as putBack } from "gg/io.js";
-import { hash, linkFolder, backupWriter, copies as listCopies } from "gg/folder.js";
-import { reference } from "gg/plan-pack.js";
+import { hash, linkFolder, backupWriter, copies as listCopies } from "biz/folder.js";
+import { reference } from "biz/plan-pack.js";
 import { NAME, VERSION, EXPORTED } from "./db.js";
 
 // -----------------------------------------------------------------------------------------------------------------

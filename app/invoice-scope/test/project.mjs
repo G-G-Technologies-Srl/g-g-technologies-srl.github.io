@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // La schermata di un progetto: le fasi, e l'albero delle pagine.
 //
@@ -38,7 +38,7 @@ const PARTY = {
 };
 const CONTEXT = { company: COMPANY, party: PARTY };
 const progetti = await import("../run/projects.js");
-const plan = await import("gg/plan-model.js");
+const plan = await import("biz/plan-model.js");
 const project = await import("../run/project.js");
 
 setLang("it");

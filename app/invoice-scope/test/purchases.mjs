@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // Gli acquisti sullo schermo: l'elenco con gli stati, il foglio che calcola l'imposta, la scheda
 // con i pagamenti in uscita, e la cancellazione che porta via anche quelli.

@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // Gli acquisti sullo schermo: l'elenco, il foglio con cui se ne scrive uno, la scheda di uno solo,
 // e il pagamento che esce.

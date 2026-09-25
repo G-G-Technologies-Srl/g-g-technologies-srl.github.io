@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // What a page carries about itself, and the project's pages as a table.
 //
@@ -11,8 +11,8 @@
 // Split off `app.js` because the head is state of its own, and the file that owns it should be
 // the file that reads and writes it.
 
-import * as model from "gg/plan-model.js";
-import * as md from "gg/plan-markdown.js";
+import * as model from "biz/plan-model.js";
+import * as md from "biz/plan-markdown.js";
 import { t, tf, num } from "./i18n.js";
 import { el, node, button, fill, shortDate, longDate, tagHue } from "./ui.js";
 

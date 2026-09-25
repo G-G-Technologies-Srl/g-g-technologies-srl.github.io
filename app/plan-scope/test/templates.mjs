@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // The templates and the demo project, built without a browser.
 //
@@ -24,8 +24,8 @@ import { dirname, join } from "node:path";
 
 import * as templates from "../run/templates.js";
 import * as demo from "../run/demo.js";
-import * as model from "gg/plan-model.js";
-import { frontmatter, parse, serialize } from "gg/plan-markdown.js";
+import * as model from "biz/plan-model.js";
+import { frontmatter, parse, serialize } from "biz/plan-markdown.js";
 
 let passed = 0;
 

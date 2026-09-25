@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // Two people, one folder: what the shared folder does between Giulia's browser and Marco's,
 // without a browser and without a disk.
@@ -26,16 +26,22 @@ import { pathToFileURL } from "node:url";
 //  w o r l d s
 // -----------------------------------------------------------------------------------------------------------------
 
+// Le due radici sono fisse, non ricavate da chi importa: `_business/plan-editor.js` importa
+// `gg/dom.js`, e una base relativa al chiamante lo manderebbe una cartella troppo in su.
+const LIB = new URL("../../_lib/", import.meta.url).href;
+const BIZ = new URL("../../_business/", import.meta.url).href;
+
 register("data:text/javascript," + encodeURIComponent(`
   export async function resolve(specifier, context, next) {
     const parent = context.parentURL ? new URL(context.parentURL) : null;
     const who = parent ? parent.searchParams.get("w") : null;
-    if (specifier.startsWith("gg/")) {
-      // Il modello sta in _lib da quando lo usano due app, e qui va tenuto separato per persona
-      // come tutto il resto: senza il ?w= le due scrivanie condividerebbero un'istanza sola, e la
-      // prova sui conflitti proverebbe due copie che sono lo stesso oggetto.
-      const base = new URL("../../_lib/", context.parentURL.split("?")[0]);
-      const url = new URL(specifier.slice(3), base);
+    const shared = specifier.startsWith("gg/") ? [3, ${JSON.stringify(LIB)}]
+      : specifier.startsWith("biz/") ? [4, ${JSON.stringify(BIZ)}] : null;
+    if (shared) {
+      // Il modello sta in _business da quando lo usano due app, e qui va tenuto separato per
+      // persona come tutto il resto: senza il ?w= le due scrivanie condividerebbero un'istanza sola,
+      // e la prova sui conflitti proverebbe due copie che sono lo stesso oggetto.
+      const url = new URL(specifier.slice(shared[0]), shared[1]);
       if (who) url.search = "?w=" + who;
       return next(url.href, context);
     }
@@ -51,7 +57,7 @@ register("data:text/javascript," + encodeURIComponent(`
 
 /** One person's app: model, sync and their memory, wired the way `app.js` wires them. */
 async function world(who, folder, { open = true } = {}) {
-  const model = await import(new URL(`../../_lib/plan-model.js?w=${who}`, import.meta.url));
+  const model = await import(new URL(`../../_business/plan-model.js?w=${who}`, import.meta.url));
   const sync = await import(new URL(`../run/sync.js?w=${who}`, import.meta.url));
   const folders = await import(new URL(`../run/folders.js?w=${who}`, import.meta.url));
   const db = await import(new URL(`../test/fake-db.mjs?w=${who}`, import.meta.url));

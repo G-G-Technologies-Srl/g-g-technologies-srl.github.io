@@ -162,7 +162,7 @@
 
     <!-- La cartella di backup: i risultati scritti da soli in una cartella scelta — di solito una
          di Dropbox o iCloud, che poi viaggia da sé. Sta qui accanto a «Esporta» perché è la stessa
-         cosa fatta dall'app invece che da chi si ricorda. La meccanica è `gg/folder.js`. -->
+         cosa fatta dall'app invece che da chi si ricorda. La meccanica è `biz/folder.js`. -->
     <details class="saved-backup" id="backupSection">
       <summary id="backupSummary"></summary>
       <p class="small" id="backupNote"></p>
@@ -539,11 +539,13 @@
   <span>Apache-2.0</span>
 </footer>
 
-<!-- Every import into the shared library goes through here, never up the tree. Both forms work
+<!-- Every import into the shared libraries goes through here, never up the tree. Both forms work
      identically today; the difference arrives the day _lib/ takes a version number, and it is one
-     line per app instead of every import in every file. check_apps.py rejects the relative form. -->
+     line per app instead of every import in every file. check_apps.py rejects the relative form.
+     Two prefixes, two licences: gg/ is the library every app shares, under Apache-2.0; biz/ is the
+     one only the business apps use, under PolyForm Shield, like the apps themselves. -->
 <script type="importmap">
-{ "imports": { "gg/": "../../_lib/" } }
+{ "imports": { "gg/": "../../_lib/", "biz/": "../../_business/" } }
 </script>
 <script type="module" src="./app.js"></script>
 </body>

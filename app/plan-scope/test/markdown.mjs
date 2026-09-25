@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // The round trip of a document, and it is written before the editor on purpose.
 //
@@ -16,7 +16,7 @@
 
 import assert from "node:assert/strict";
 
-import { parse, serialize, inlineHtml, images, links, assets, frontmatter, withFrontmatter, setPeople, mentions, mentionNames, renameMention, taskRefs, TASK_REF, withoutTaskRefs, decisions, withChoice, boxes, dayOf } from "gg/plan-markdown.js";
+import { parse, serialize, inlineHtml, images, links, assets, frontmatter, withFrontmatter, setPeople, mentions, mentionNames, renameMention, taskRefs, TASK_REF, withoutTaskRefs, decisions, withChoice, boxes, dayOf } from "biz/plan-markdown.js";
 
 let passed = 0;
 

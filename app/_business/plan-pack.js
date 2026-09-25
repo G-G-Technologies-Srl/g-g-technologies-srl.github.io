@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // A project leaving and coming back.
 //
@@ -17,7 +17,7 @@
 // Everything except `save` is free of the DOM, so `node app/plan-scope/test/pack.mjs` can take a
 // project out, cut it up and put it back without a browser.
 
-// Inside `_lib/` a module calls its neighbours by relative path, as `io.js` does with `store.js`:
+// Inside a library a module calls its neighbours by relative path, as `io.js` does with `store.js`:
 // the `gg/` import map belongs to the page, and here we would already be at the destination.
 import * as zip from "./zip.js";
 

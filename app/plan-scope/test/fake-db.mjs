@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // `db.js` without IndexedDB: what `sync.js` asks of the database, kept in memory. One instance
 // per world — `sync.mjs` loads it with a query string per person, so that Giulia's marks and

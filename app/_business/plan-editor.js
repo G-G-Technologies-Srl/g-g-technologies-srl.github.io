@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // The block editor: one small editable field per block, and the model as the only truth.
 //
@@ -23,7 +23,7 @@
 
 import * as md from "./plan-markdown.js";
 import * as clip from "./clip.js";
-import { el, node, button, fill } from "./dom.js";
+import { el, node, button, fill } from "gg/dom.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s

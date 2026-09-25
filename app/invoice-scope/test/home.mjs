@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // I conti della Situazione: quattro numeri, i mesi, chi deve di più, i progetti in ritardo, i
 // preventivi in attesa, le bozze. Sono funzioni che ricevono dati e restituiscono numeri, e si
@@ -11,7 +11,7 @@ import assert from "node:assert/strict";
 import { openDatabase } from "../run/db.js";
 import { toString, from } from "../run/decimal.js";
 import * as progetti from "../run/projects.js";
-import * as plan from "gg/plan-model.js";
+import * as plan from "biz/plan-model.js";
 import {
   figures, byMonth, byYear, topParties, projectRows, openQuotes, drafts, taxFigures,
   aging, cashByMonth, payers, mix,

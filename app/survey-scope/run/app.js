@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // Wiring only: which screen is up, which question is on it, and what gets written down.
 //
@@ -27,7 +27,7 @@ import { setup as setupInstall, isInstalled, system } from "gg/install.js";
 import * as update from "gg/update.js";
 import * as store from "gg/store.js";
 import { download, restore, collect } from "gg/io.js";
-import { hash, linkFolder, backupWriter } from "gg/folder.js";
+import { hash, linkFolder, backupWriter } from "biz/folder.js";
 
 const el = (id) => document.getElementById(id);
 
@@ -311,7 +311,7 @@ async function _openQuestionnaire(key) {
  */
 /**
  * The backup folder: the saved results written by themselves into a folder the person chose —
- * the same file as «Esporta», with one dated copy a day. The mechanics are `gg/folder.js`,
+ * the same file as «Esporta», with one dated copy a day. The mechanics are `biz/folder.js`,
  * shared with Invoice Scope; what is here is which records, under which name, in which store.
  * Results only, as the export: a loaded questionnaire is a file that can be loaded again.
  */

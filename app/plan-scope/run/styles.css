@@ -1,4 +1,4 @@
-/* Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0 */
+/* Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0 */
 
 /* Only what this app shapes differently. The palette, the buttons, the app bar, the error box and
    the footer come from ../../_lib/base.css, which is loaded first.
@@ -2235,7 +2235,7 @@ html[data-theme="light"] { --high: #b42318; --decide: #6b3fb3; --wait: #3d5c99; 
   .page-tree { display: none; }
 }
 
-/* L'editor a blocchi ha il suo foglio in `_lib/plan-editor.css`, caricato dalla pagina: da quando
+/* L'editor a blocchi ha il suo foglio in `_business/plan-editor.css`, caricato dalla pagina: da quando
    lo usa anche Invoice Scope, il disegno del componente sta con il componente. Qui resta la
    disposizione intorno — la colonna delle pagine, e quanto spazio prende l'editor nella finestra. */
 

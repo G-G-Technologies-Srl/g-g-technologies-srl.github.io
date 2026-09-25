@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // Wiring: which screen is up, what a command does, and where the two halves meet.
 //
@@ -17,11 +17,11 @@
 //    does the thing it looks like it does — which matters more once the app is installed and that
 //    button is not there at all.
 
-import * as model from "gg/plan-model.js";
+import * as model from "biz/plan-model.js";
 import * as db from "./db.js";
 import * as home from "./home.js";
-import * as pack from "gg/plan-pack.js";
-import * as editor from "gg/plan-editor.js";
+import * as pack from "biz/plan-pack.js";
+import * as editor from "biz/plan-editor.js";
 import * as plan from "./plan.js";
 import * as templates from "./templates.js";
 import * as demo from "./demo.js";
@@ -30,11 +30,11 @@ import * as search from "./search.js";
 import * as agenda from "./agenda.js";
 import * as outputs from "./outputs.js";
 import * as csv from "./csv.js";
-import * as md from "gg/plan-markdown.js";
+import * as md from "biz/plan-markdown.js";
 import * as versions from "./versions.js";
 import * as pages from "./pages.js";
 import * as importing from "./importing.js";
-import * as zip from "gg/zip.js";
+import * as zip from "biz/zip.js";
 import * as docx from "./docx.js";
 import * as sync from "./sync.js";
 import * as folders from "./folders.js";
@@ -43,7 +43,7 @@ import * as theme from "gg/theme.js";
 import * as io from "gg/io.js";
 import { setup as setupInstall, isInstalled, system } from "gg/install.js";
 import * as update from "gg/update.js";
-import * as remind from "gg/remind.js";
+import * as remind from "biz/remind.js";
 import { t, tf, num, otherLang, setLang, resolveLang, missingKeys } from "./i18n.js";
 import { el, node, button, fill, applyText, snack, hideSnack, shortDate, longDate, bytes, ask, tagHue, count } from "./ui.js";
 
@@ -1825,7 +1825,7 @@ function _badge() {
 //  i   p r o m e m o r i a
 // -----------------------------------------------------------------------------------------------------------------
 
-// Tre strati, e `gg/remind.js` spiega perché sono tre. Qui c'è quello che solo questa app sa: quali
+// Tre strati, e `biz/remind.js` spiega perché sono tre. Qui c'è quello che solo questa app sa: quali
 // sono le sue scadenze, e come si dicono in una riga.
 
 /** Il registro del worker, tenuto da parte: `periodicSync` si registra su quello. */

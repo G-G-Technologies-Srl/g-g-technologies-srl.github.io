@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // Taking the result out, in the two formats the contract names.
 //
@@ -26,7 +26,7 @@ import { QUESTIONNAIRE, COMPLIANCE, DEEPDIVE } from "./content.js";
 // basta, e il ramo che avrebbe letto i file vecchi non è mai stato scritto.
 const SCHEMA = "1.2";
 const TOOL = "survey-scope";
-export const TOOL_VERSION = "1.30.5";
+export const TOOL_VERSION = "1.31.0";
 
 // The byte-order mark the CSV opens with, built from its code point rather than typed as itself.
 // It is what makes an Italian Excel open the file with the accents intact, and writing it as a

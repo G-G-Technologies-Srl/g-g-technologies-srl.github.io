@@ -1,25 +1,58 @@
 Survey Scope
 Copyright 2026 G&G Technologies S.r.l.
 
-This product includes software developed by G&G Technologies S.r.l.
-(https://ggtechnologies.sm).
+Required Notice: Copyright 2026 G&G Technologies S.r.l. (https://ggtechnologies.sm)
+Required Notice: Survey Scope is a work of G&G Technologies S.r.l. — https://ggtechnologies.sm/app/survey-scope/
+Licensor Line of Business: Survey Scope, self-assessment questionnaire software (https://ggtechnologies.sm/app/survey-scope/)
 
-Licensed under the Apache License, Version 2.0. See the LICENSE file in this
-directory for the full text.
+Licensed under the PolyForm Shield License 1.0.0. See the LICENSE file in this
+directory for the full text, or https://polyformproject.org/licenses/shield/1.0.0
 
-This licence covers the contents of this directory only — including the JSON
-files under run/, one folder per questionnaire, which hold the questions, the
-report texts and, where a questionnaire has them, the compliance checklist and
-the deep-dive modules. They are covered on purpose: an assessment nobody may
-adapt is an assessment nobody may check.
+What the licence allows, in short — the LICENSE file is the one that counts:
 
-The rest of the repository — the pages of ggtechnologies.sm, the articles under
-/insights, the brand and its marks — is not covered and remains all rights
-reserved.
+- reading the code, running it, changing it and sharing it;
+- using the app, changed or not, for any work of your own, commercial work
+  included;
+- building on it something that does a different job.
+
+What it asks in return: every copy of any part of this code, changed or not,
+travels with the licence (or its address) and with the lines above that begin
+with "Required Notice:". That is how the authors stay named.
+
+What it does not allow is providing a product that competes with the software,
+or with any product G&G Technologies provides using it: an application or a
+service that does the same job, sold or free, extended or not, with or without
+a backend of its own. That use needs a commercial licence, which G&G
+Technologies grants on request: info@ggtechnologies.sm. When it is needed,
+when it is not, and on what terms: COMMERCIAL-LICENSE.md in this directory.
+
+The licence covers copyright and patents. It grants no right to the names
+Survey Scope and G&G Technologies, nor to the marks and logos of G&G Technologies.
+
+Versions up to 1.30.5 were published under the Apache License 2.0, and
+copies of those versions keep that licence. Every later version is under the
+licence above.
+
+This licence covers the code in this directory. The page index.html at the top
+of this directory is part of the website, and like the rest of the repository —
+the pages of ggtechnologies.sm, the articles under /insights, the brand and its
+marks — it is not covered and remains all rights reserved.
+
+The questionnaires are the exception, and a deliberate one. The JSON files
+under run/, one folder per questionnaire — the questions, the report texts and,
+where a questionnaire has them, the compliance checklist and the deep-dive
+modules — stay under the Apache License 2.0, whose full text is in
+LICENSE-QUESTIONNAIRES in this directory. An assessment nobody may adapt is an
+assessment nobody may check: anyone may change, translate or trim them, in
+commercial work too, keeping the copyright notice above.
 
 The compliance checklist cites European legislation and links to its published
 sources; the citations are not part of this work and carry no licence of ours.
-Nothing in run/compliance-1.json is legal advice.
+Nothing in run/*/compliance-1.json is legal advice.
 
-No third-party code is bundled: the app has no dependencies and loads nothing
-from outside its own directory.
+The app also loads two libraries from outside this directory, both ours:
+/app/_lib/, shared by every app and under the Apache License 2.0, and
+/app/_business/, shared by the business apps and under this same licence. Each
+carries its own LICENSE and NOTICE.
+
+No third-party code is bundled: the app has no dependencies.

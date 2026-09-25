@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // The editor's pure pieces, proved without a browser: what an editable element reads back as,
 // which marker makes which block, what a block's words are when it is turned into another.
@@ -10,7 +10,7 @@ import assert from "node:assert/strict";
 import { install, elem, text } from "./dom.mjs";
 
 install();
-const { __test: editor } = await import("gg/plan-editor.js");
+const { __test: editor } = await import("biz/plan-editor.js");
 
 let passed = 0;
 

@@ -1,6 +1,6 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
-// The backup folder, the half that decides which files exist — `writeSnapshot` in `gg/folder.js`,
+// The backup folder, the half that decides which files exist — `writeSnapshot` in `biz/folder.js`,
 // tested from here because this is the app that put it in the library.
 //
 // A `FileSystemDirectoryHandle` is a browser object, so the folder here is a fake with the four
@@ -16,7 +16,7 @@
 //     node --import ./app/invoice-scope/test/loader.mjs app/invoice-scope/test/backup.mjs
 
 import assert from "node:assert/strict";
-import { writeSnapshot, copies, backupWriter, KEEP_DAYS } from "gg/folder.js";
+import { writeSnapshot, copies, backupWriter, KEEP_DAYS } from "biz/folder.js";
 
 const LATEST = "invoice-scope.json";
 const writeInto = (dir, text, options) => writeSnapshot(dir, text, { prefix: "invoice-scope", ...options });

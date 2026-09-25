@@ -12,7 +12,7 @@
 <link rel="icon" href="./icon-192.png" sizes="192x192">
 <link rel="apple-touch-icon" href="./icon-192.png">
 <link rel="stylesheet" href="../../_lib/base.css">
-<link rel="stylesheet" href="../../_lib/plan-editor.css">
+<link rel="stylesheet" href="../../_business/plan-editor.css">
 <link rel="stylesheet" href="./styles.css">
 <script>
   // Before the first paint, on purpose. Applied from a module it would run after the stylesheet,
@@ -1302,11 +1302,13 @@
   <span>Apache-2.0</span>
 </footer>
 
-<!-- Every import into the shared library goes through here, never up the tree. Both forms work
+<!-- Every import into the shared libraries goes through here, never up the tree. Both forms work
      identically today; the difference arrives the day _lib/ takes a version number, and it is one
-     line per app instead of every import in every file. check_apps.py rejects the relative form. -->
+     line per app instead of every import in every file. check_apps.py rejects the relative form.
+     Two prefixes, two licences: gg/ is the library every app shares, under Apache-2.0; biz/ is the
+     one only the business apps use, under PolyForm Shield, like the apps themselves. -->
 <script type="importmap">
-{ "imports": { "gg/": "../../_lib/" } }
+{ "imports": { "gg/": "../../_lib/", "biz/": "../../_business/" } }
 </script>
 <script type="module" src="./app.js"></script>
 </body>

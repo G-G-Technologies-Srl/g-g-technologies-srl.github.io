@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // Le due schermate dei progetti: l'elenco, e il progetto con dentro le sue fasi.
 //
@@ -13,15 +13,15 @@
 // guarda il piano invece dei documenti, ed è quello che dice cosa fare adesso — infatti il comando
 // che lo svuota gli sta accanto.
 //
-// Il modello è `gg/plan-model.js`, condiviso con Plan Scope; il denaro e i documenti li mette
+// Il modello è `biz/plan-model.js`, condiviso con Plan Scope; il denaro e i documenti li mette
 // `projects.js`. Qui non c'è nessuna regola: solo il disegno e i comandi.
 
 import { get } from "gg/store.js";
-import * as plan from "gg/plan-model.js";
+import * as plan from "biz/plan-model.js";
 
-import * as editor from "gg/plan-editor.js";
-import * as pack from "gg/plan-pack.js";
-import * as md from "gg/plan-markdown.js";
+import * as editor from "biz/plan-editor.js";
+import * as pack from "biz/plan-pack.js";
+import * as md from "biz/plan-markdown.js";
 
 import { t, tf } from "./i18n.js";
 import { ask, tell, askText, askChoice } from "./ask.js";
@@ -907,7 +907,7 @@ async function _saveSheet() {
 /**
  * Il progetto come file: lo stesso pacchetto che apre e scrive Plan Scope.
  *
- * Il formato sta in `gg/plan-pack.js`, condiviso, e il marcatore dentro è `gg-plan` — del formato,
+ * Il formato sta in `biz/plan-pack.js`, condiviso, e il marcatore dentro è `gg-plan` — del formato,
  * non dell'app. Quello che esce da qui si apre lì, e viceversa: è la ragione per cui il modello è in
  * comune, e senza questi due pulsanti resterebbe una promessa.
  *

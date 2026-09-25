@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // The third view: the same tasks laid along the days.
 //
@@ -20,7 +20,7 @@
 // would be a view where a task can disappear by not having been scheduled yet — which is exactly
 // the moment it most needs to be seen.
 
-import * as model from "gg/plan-model.js";
+import * as model from "biz/plan-model.js";
 import { t, tf, num } from "./i18n.js";
 import { el, node, button, fill, shortDate, locale } from "./ui.js";
 

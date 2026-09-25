@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // La Situazione: quello che si guarda aprendo l'app, in una schermata sola.
 //
@@ -17,7 +17,7 @@
 // scritta in `app/CLAUDE.md`, e il tema chiaro li ridisegna da solo perché i colori sono variabili
 // CSS e non numeri dentro il file.
 
-import * as plan from "gg/plan-model.js";
+import * as plan from "biz/plan-model.js";
 
 import { t, tf } from "./i18n.js";
 import { kind, numero as shownNumber } from "./kinds.js";

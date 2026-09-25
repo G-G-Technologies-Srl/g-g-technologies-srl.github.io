@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // Il service worker, provato senza browser.
 //
@@ -108,7 +108,7 @@ function load(source, caches) {
 const here = dirname(fileURLToPath(import.meta.url));
 
 // **Tutt'e due i worker, con la stessa prova.** Le righe che decidono cosa dire stanno in
-// `_lib/remind-sw.js` da quando erano scritte due volte; il senso di averle unite è che una prova
+// `_business/remind-sw.js` da quando erano scritte due volte; il senso di averle unite è che una prova
 // sola le copra entrambe, quindi ogni caso qui sotto gira per Plan e per Invoice.
 const APPS = [
   { key: "plan-scope", title: "Plan Scope" },

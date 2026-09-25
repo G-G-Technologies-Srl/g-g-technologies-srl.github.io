@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // Le categorie del fatturato: l'etichetta con cui l'azienda divide i propri documenti, e il foglio
 // per metterla su quelli che ci sono già.

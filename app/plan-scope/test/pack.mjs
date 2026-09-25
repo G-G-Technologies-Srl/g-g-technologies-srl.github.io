@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // A project goes out, gets cut up, and comes back.
 //
@@ -16,8 +16,8 @@
 
 import assert from "node:assert/strict";
 
-import * as zip from "../../_lib/zip.js";
-import * as pack from "gg/plan-pack.js";
+import * as zip from "../../_business/zip.js";
+import * as pack from "biz/plan-pack.js";
 
 let passed = 0;
 

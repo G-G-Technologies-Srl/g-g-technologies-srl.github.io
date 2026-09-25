@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // What comes in through the one door: a project of the app's own, a backup of everything, a
 // Trello board, a Notion export.
@@ -11,10 +11,10 @@
 // Split off `app.js` with the state it needs — the parsed file waiting for a choice — and the few
 // things it asks the app to do afterwards, handed in through `setup`.
 
-import * as model from "gg/plan-model.js";
+import * as model from "biz/plan-model.js";
 import * as db from "./db.js";
-import * as pack from "gg/plan-pack.js";
-import * as zip from "gg/zip.js";
+import * as pack from "biz/plan-pack.js";
+import * as zip from "biz/zip.js";
 import * as importers from "./importers.js";
 import * as versions from "./versions.js";
 import * as io from "gg/io.js";

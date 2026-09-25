@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // La scheda di un cliente: chi è, chi ci parla, cosa ci siamo detti, cosa gli abbiamo fatturato.
 //
@@ -35,7 +35,7 @@ import { documents, signedTotal } from "./model.js";
 import { summary } from "./schedule.js";
 import { saveParty, openParty } from "./parties.js";
 import * as progetti from "./projects.js";
-import { progressOf } from "gg/plan-model.js";
+import { progressOf } from "biz/plan-model.js";
 import {
   ACTIVITY_KINDS, ACTIVITY_MAX, activitiesOf, contactsOf, removeActivity, saveActivity,
   withContact, withoutContact,

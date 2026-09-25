@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // Il colpo d'occhio di una pagina: le due proprietà che le liste mostrano accanto al titolo, e il
 // setaccio che il colore deve passare prima di finire dentro uno `style`.

@@ -79,10 +79,10 @@
     "image": "https://ggtechnologies.sm/assets/og-app-survey-scope-en.jpg",
     "applicationCategory": "BusinessApplication",
     "operatingSystem": "Any (web browser)",
-    "softwareVersion": "1.30.5",
+    "softwareVersion": "1.31.0",
     "datePublished": "2026-08-28",
-    "dateModified": "2026-09-24",
-    "license": "https://www.apache.org/licenses/LICENSE-2.0",
+    "dateModified": "2026-09-25",
+    "license": "https://polyformproject.org/licenses/shield/1.0.0/",
     "description": "Self-assessment questionnaires on AI maturity and NIS2, to hand to each unit and collect in one list. It runs in the browser: the answers stay local.",
     "inLanguage": "en",
     "isAccessibleForFree": true,
@@ -153,7 +153,7 @@
       <div class="container">
         <div>
           <nav class="breadcrumb" aria-label="Breadcrumb"><ol><li><a href="/en/">Home</a></li><li><a href="/en/app/">Apps</a></li><li aria-current="page">Survey Scope</li></ol></nav>
-          <div class="kicker">Free and open source</div>
+          <div class="kicker">Free app, public source code</div>
           <h1>The <span class="grad-text">questionnaires</span> you hand to every unit you assess.</h1>
           <p class="hero-sub">Today there are two: artificial intelligence maturity, and a NIS2 check. Departments, offices, members, portfolio companies: each one picks the questionnaire, answers twenty-two questions on its own computer and exports a file. You collect them into a single list, and every run carries its own score across six dimensions and its own three things to do first.</p>
           <p class="article-tags"><span class="tag-label">Category</span><a class="tag" href="/en/app/?tag=gestionale">Business</a></p>
@@ -301,7 +301,7 @@
             <span class="f-dot" aria-hidden="true"></span>
             <div>
               <h4>Licence</h4>
-              <p>Apache-2.0, and the questions themselves are JSON files inside the app: anyone who wants to adapt them may, commercial work included.</p>
+              <p>PolyForm Shield 1.0.0 for the code: a competing product needs a commercial licence. The questions are JSON files inside the app, under Apache-2.0: anyone who wants to adapt them may, commercial work included.</p>
             </div>
           </div>
           <div class="fact">
@@ -312,7 +312,7 @@
             </div>
           </div>
         </div>
-        <p class="app-meta"><span><b>Version</b> 1.30.5</span><span><b>Updated</b> 24 September 2026</span><span><b>Licence</b> Apache-2.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/survey-scope" rel="noopener">Source code</a></p>
+        <p class="app-meta"><span><b>Version</b> 1.31.0</span><span><b>Updated</b> 25 September 2026</span><span><b>Licence</b> PolyForm-Shield-1.0.0</span><a href="https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/survey-scope" rel="noopener">Source code</a></p>
       </div>
     </section>
 
@@ -344,6 +344,10 @@
           <details class="faq-item reveal">
             <summary>How do I check the answers stay on my computer?</summary>
             <p>You can watch it yourself. Open your browser's developer tools, the «Network» tab, and fill the questionnaire in: after the page has loaded, no request appears — except one, now and then: the browser re-reads https://ggtechnologies.sm/app/survey-scope/run/sw.js, a file of the app itself, to know whether a new version exists. It is a read from our site, and it carries nothing of yours. The code is public, so you can also read what it does.</p>
+          </details>
+          <details class="faq-item reveal">
+            <summary>Can I use the code in a product of my own?</summary>
+            <p>Yes, for your own work and for products that do a different job. The licence is PolyForm Shield 1.0.0: the code can be read, changed and used, commercial work included, on two conditions. Every copy carries the licence and the «Required Notice» lines, which name G&amp;G Technologies as the author. A product that does the same job as the app, sold or free, extended or with a server of its own, needs a commercial licence, which can be requested at <a href="mailto:info@ggtechnologies.sm">info@ggtechnologies.sm</a>.</p>
           </details>
           <details class="faq-item reveal">
             <summary>Why do the questions ask what happened instead of what there is?</summary>

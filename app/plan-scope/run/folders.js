@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // The folders a project can be shared into, remembered — the «mother» folders.
 //
@@ -35,7 +35,7 @@
 //
 //     node app/plan-scope/test/folders.mjs
 
-import { available as folderAvailable } from "gg/folder.js";
+import { available as folderAvailable } from "biz/folder.js";
 import * as db from "./db.js";
 import { PROJECT_FILE } from "./vault.js";
 

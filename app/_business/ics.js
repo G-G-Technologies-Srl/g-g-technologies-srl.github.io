@@ -1,8 +1,8 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // Deadlines as a calendar file, and as a link that opens Google Calendar already filled in.
 //
-// **In `_lib/` since there have been two apps with deadlines.** Plan Scope exports a project's
+// **Shared since there have been two apps with deadlines.** Plan Scope exports a project's
 // tasks, Invoice Scope its schedule of due dates; the file is the same format and the same
 // arithmetic, and the only thing that changes is who signs it. That is why `PRODID` and the domain
 // of the `UID`s are passed in from outside instead of being written here: a file exported by
@@ -26,7 +26,7 @@
 //
 // Pure: strings in, strings out, and it runs in Node for the tests.
 
-// Inside `_lib/` neighbours are called by name: the `gg/` map belongs to the page, and the test
+// Inside a library neighbours are called by name: the `gg/` map belongs to the page, and the test
 // loader resolves it relative to the importer. `plan-model.js` already does this with
 // `plan-markdown.js`.
 import * as remind from "./remind.js";

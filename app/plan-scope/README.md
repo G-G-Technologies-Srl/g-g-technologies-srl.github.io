@@ -52,13 +52,13 @@ le due o tre cose che si scrivono su un foglietto.
 
 È la struttura da capire prima di tutto il resto:
 
-- **`gg/plan-model.js`** sa cos'è un progetto, una pagina, un'attività — e **niente di un browser**.
+- **`biz/plan-model.js`** sa cos'è un progetto, una pagina, un'attività — e **niente di un browser**.
   La persistenza gli arriva come porta, `connect({save, drop})`, detta nelle sue parole.
 - **`db.js`** sa di IndexedDB e **niente di progetti**: store, indici, la coda di scrittura.
 - **I due non si importano fra loro.** `app.js` è l'unico posto che conosce entrambi, e li presenta
   l'uno all'altro all'avvio.
 
-`gg/plan-model.js` sta in `_lib/` perché lo usano due app: **Plan Scope e Invoice Scope**. Un progetto
+`biz/plan-model.js` sta in `_lib/` perché lo usano due app: **Plan Scope e Invoice Scope**. Un progetto
 esportato da una si apre nell'altra.
 
 ### Il nucleo: nessuno di questi file sa cosa sia un browser
@@ -67,9 +67,9 @@ Si provano sotto Node, e sono il posto giusto per una regola.
 
 | File | Cosa decide | Il confine |
 |---|---|---|
-| `gg/plan-model.js` | progetti, pagine, attività, colonne, cestino, undo, ricerca, `uid` | condiviso con Invoice Scope |
-| `gg/plan-markdown.js` | Markdown ↔ blocchi, `parse`/`serialize` come punto fisso | il testo è la verità, i blocchi sono la lettura |
-| `gg/plan-pack.js` | un progetto che esce e rientra: lo zip con le immagini | |
+| `biz/plan-model.js` | progetti, pagine, attività, colonne, cestino, undo, ricerca, `uid` | condiviso con Invoice Scope |
+| `biz/plan-markdown.js` | Markdown ↔ blocchi, `parse`/`serialize` come punto fisso | il testo è la verità, i blocchi sono la lettura |
+| `biz/plan-pack.js` | un progetto che esce e rientra: lo zip con le immagini | |
 | `vault.js` | un progetto come **cartella di file**: `project.json`, `pages/`, `assets/` | l'identità è l'`uid`, mai il nome del file |
 | `diff.js` | cosa è cambiato fra due versioni, paragrafo per paragrafo | non disegna |
 | `ics.js` · `csv.js` · `webpage.js` | calendario, foglio di calcolo, pagina HTML autosufficiente | puri: stringhe dentro, stringhe fuori |
@@ -120,7 +120,7 @@ spostarne una lì vorrebbe dire ripianificare un progetto senza averlo davanti.
 ### Le schede dei progetti, in archivio
 
 Una scheda parla anche senza date. Quello che mostra viene da `projectOverview` in
-`gg/plan-model.js`, che non guarda il calendario: quante pagine, attività e incontri (gli incontri
+`biz/plan-model.js`, che non guarda il calendario: quante pagine, attività e incontri (gli incontri
 non sono pagine), le colonne della bacheca con i loro conteggi — la barra ne disegna uno spezzone
 per colonna —, l'attività aperta da riprendere (quella più avanti sulla bacheca), le pagine
 preferite, l'ultima cosa toccata e le prime parole dell'ultima pagina (`excerptOf`). Il piede è
@@ -148,7 +148,7 @@ il prossimo incontro con **da discutere**, le **decisioni**, **aspettiamo**, chi
 documenti, le ultime modifiche. Sotto i 900 px le due colonne diventano una, nell'ordine dato dalle
 regole `order` di `styles.css`, che non è quello del markup.
 
-Tutti i conti stanno in `gg/plan-model.js` e si provano in `test/model.mjs`, senza browser:
+Tutti i conti stanno in `biz/plan-model.js` e si provano in `test/model.mjs`, senza browser:
 
 - `attentionOf` — in ritardo, oggi, decisioni entro tre giorni, priorità alta entro tre giorni,
   bloccate entro la settimana, incontri degli ultimi quattordici giorni senza note. **L'ordine è
@@ -157,7 +157,7 @@ Tutti i conti stanno in `gg/plan-model.js` e si provano in `test/model.mjs`, sen
 - `decisionsOf` e `setDecision` — dai riquadri `> [!decisione]` delle pagine: le righe libere sono
   la domanda, `entro:` il giorno, `scelta:` e `decisa:` la chiusura. Aperta vuol dire «senza
   scelta», quindi chi la scrive a mano in Obsidian la chiude come il pulsante. Il testo lo leggono
-  e lo scrivono `decisions` e `withChoice` in `gg/plan-markdown.js`; la seconda tocca solo le
+  e lo scrivono `decisions` e `withChoice` in `biz/plan-markdown.js`; la seconda tocca solo le
   righe di quel riquadro, e il resto del file torna identico byte per byte.
 - `waitingOn` — le attività aperte che ne fermano un'altra (`blockedBy`).
 - `meetingDigest`, `toDiscuss` — che cosa è uscito da un incontro e che cosa portare al prossimo.
@@ -172,7 +172,7 @@ per chi non distingue le tinte. Una spunta dalla pagina del progetto offre «Ann
 ### Gli appuntamenti che si ripetono
 
 Un appuntamento con `ripete: ogni settimana` (o `ogni 2 settimane`, `ogni mese`, e le stesse
-parole in inglese: `REPEAT_KEYS` e `repeatOf` in `gg/plan-model.js`) nasce di nuovo quando il suo
+parole in inglese: `REPEAT_KEYS` e `repeatOf` in `biz/plan-model.js`) nasce di nuovo quando il suo
 momento passa, come un'attività che si ripete nasce di nuovo quando la si spunta: qui la spunta è
 l'orologio. `rollMeetings` gira a ogni caricamento dei dati e quando la finestra torna in primo
 piano; la pagina passata resta com'è, senza il ritmo, e la nuova porta la testa con la data
@@ -229,7 +229,7 @@ L'editore tiene un paragrafo vuoto in fondo al documento (`_keepTail`, chiamato 
 file non c'è — `serialize` non scrive i paragrafi vuoti in fondo — quindi ricompare a ogni apertura.
 
 Le righe vuote **in mezzo** al testo si salvano come `&nbsp;` su una riga sua (`BLANK_LINE` in
-`gg/plan-markdown.js`): il Markdown legge qualunque serie di righe vuote come un separatore solo, e
+`biz/plan-markdown.js`): il Markdown legge qualunque serie di righe vuote come un separatore solo, e
 senza un segno la riga spariva alla riapertura. `&nbsp;` è quello che Obsidian e ogni visualizzatore
 mostrano come una riga vuota, e `parse` lo rilegge come un paragrafo vuoto.
 
@@ -309,11 +309,11 @@ schermata si prova sopra un DOM finto, non aprendo la pagina.
 
 | Per | Si tocca | E poi |
 |---|---|---|
-| un campo nuovo su progetto, pagina o attività | `gg/plan-model.js` | **è condiviso con Invoice Scope**: si gira la versione di tutte e due |
+| un campo nuovo su progetto, pagina o attività | `biz/plan-model.js` | **è condiviso con Invoice Scope**: si gira la versione di tutte e due |
 | una vista nuova del piano | un file accanto a `plan.js`/`timeline.js`, che legge le stesse attività | non una seconda copia dei dati: non c'è niente da sincronizzare |
 | un formato in ingresso | una funzione in `importers.js` che restituisce `{project, pages, tasks, assets}` | da lì in poi è codice che esiste già ed è già provato |
 | un formato in uscita | un modulo puro (come `ics.js`), più una riga in `outputs.js` | `test/exchange.mjs` |
-| qualcosa nel file Markdown di una pagina | `gg/plan-markdown.js` | `parse(serialize(x)) == x` deve restare vero |
+| qualcosa nel file Markdown di una pagina | `biz/plan-markdown.js` | `parse(serialize(x)) == x` deve restare vero |
 | qualcosa nella cartella condivisa | `vault.js` per il formato, `sync.js` per la fusione | una cartella scritta da una versione vecchia deve restare leggibile |
 | un traguardo | `cheer.js` | prima si legge cosa quel file tiene fuori, e perché — gli incontri non sono pagine scritte, l'agenda non è un progetto |
 | un elenco di progetti da mostrare o da contare | `plainProjects()`, non `liveProjects()` | l'agenda sta nella seconda e non nella prima |
@@ -321,7 +321,7 @@ schermata si prova sopra un DOM finto, non aprendo la pagina.
 | un file nuovo in `run/` | il file + l'elenco `ASSETS` in `sw.js` | e si gira la versione |
 
 **Ogni file nuovo comincia con l'intestazione di licenza** (`// Copyright 2026 G&G Technologies
-S.r.l. — SPDX-License-Identifier: Apache-2.0`) e con il commento che dice perché esiste.
+S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0`) e con il commento che dice perché esiste.
 
 ---
 

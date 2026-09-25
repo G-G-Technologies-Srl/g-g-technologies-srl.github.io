@@ -1,8 +1,8 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // What a project, a page and a task are, and every change that can be made to one.
 //
-// **In `_lib/` since two apps use it**, and it got there without changes: persistence reaches it
+// **Shared since two apps use it**, and it got there without changes: persistence reaches it
 // as a port — `connect({save, drop})` — spoken in its own words, `project | page | task`, and not
 // in store names. Plan Scope uses it for its plans, Invoice Scope for the projects it invoices,
 // and neither of the two appears in here. The flip side to remember: **there is only one state per

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 #
 # The one check Node cannot make: the sample invoices against the official XSD.
 #

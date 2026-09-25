@@ -1,8 +1,8 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // I promemoria dello scadenzario: cosa scade, quando dirlo, e in quanti modi.
 //
-// I tre strati e il perché sono tre stanno in `gg/remind.js`, che è lo stesso modulo di Plan Scope.
+// I tre strati e il perché sono tre stanno in `biz/remind.js`, che è lo stesso modulo di Plan Scope.
 // Qui c'è solo quello che questa app sa e l'altra no: **le sue scadenze sono due versi.** Quello
 // che deve entrare — una fattura emessa e non incassata — e quello che deve uscire — un acquisto
 // non saldato. Un promemoria che ne dicesse uno solo risponderebbe a metà della domanda per cui lo
@@ -13,8 +13,8 @@
 // promemoria.
 
 import { get, put } from "gg/store.js";
-import * as remind from "gg/remind.js";
-import * as ics from "gg/ics.js";
+import * as remind from "biz/remind.js";
+import * as ics from "biz/ics.js";
 
 import { t, tf, num } from "./i18n.js";
 import { isDemo } from "./db.js";
@@ -159,7 +159,7 @@ export async function save(db, wanted) {
  * Il digest che il service worker troverà pronto: il momento già calcolato, la frase già scritta.
  *
  * Lo rifà l'app, perché è l'app ad avere il database e la lingua. Al worker restano due stringhe da
- * confrontare — la ragione sta scritta per esteso in `gg/remind.js`.
+ * confrontare — la ragione sta scritta per esteso in `biz/remind.js`.
  */
 export async function digest(db) {
   // Il dimostrativo resta fuori: le sue scadenze sono inventate, e `?demo=1` è un indirizzo

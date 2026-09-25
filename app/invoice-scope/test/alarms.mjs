@@ -1,8 +1,8 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // Lo scadenzario che esce come calendario, e cosa ci mette dentro.
 //
-// I conti della sveglia stanno in `gg/remind.js` e sono provati là; qui si prova quello che è di
+// I conti della sveglia stanno in `biz/remind.js` e sono provati là; qui si prova quello che è di
 // questa app: **i due versi**. Una fattura da incassare e un acquisto da pagare sono due scadenze
 // diverse, e un calendario che ne portasse uno solo risponderebbe a metà della domanda per cui lo
 // scadenzario esiste.

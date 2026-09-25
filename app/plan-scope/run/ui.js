@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // The small pieces of interface every screen uses: the strip that offers to undo, the labels that
 // come from the dictionary, and the handful of formats a date or a size takes on screen.

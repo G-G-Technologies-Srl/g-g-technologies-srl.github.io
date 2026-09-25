@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // A stand-in for the few pieces of the DOM the editor's pure functions touch: nodes with a type,
 // a tag, children and attributes. Not a browser, and not trying to be one — enough to build the

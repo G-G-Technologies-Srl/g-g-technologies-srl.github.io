@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // The rules of the model, proved without a browser.
 //
@@ -11,7 +11,7 @@
 
 import assert from "node:assert/strict";
 
-import * as model from "gg/plan-model.js";
+import * as model from "biz/plan-model.js";
 
 let passed = 0;
 

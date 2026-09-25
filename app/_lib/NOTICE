@@ -11,6 +11,10 @@ This directory holds the modules shared by the apps under /app/. It carries its
 own copy of the licence because the modules are licensed with it: when a file
 moves here, its copyright header and its licence come along.
 
+The modules used only by the business apps — Plan Scope, Invoice Scope and
+Survey Scope — are in /app/_business/, under the PolyForm Shield License 1.0.0
+like those apps.
+
 This licence covers the contents of this directory only. The rest of the
 repository — the pages of ggtechnologies.sm, the articles under /insights, the
 brand and its marks — is not covered and remains all rights reserved.

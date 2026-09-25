@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // The plan: a board, a calendar, and one card for one task.
 //
@@ -16,11 +16,11 @@
 // to both there is a way out — "move it to tomorrow" — because a deadline that has moved is not a
 // fault somebody committed.
 
-import * as model from "gg/plan-model.js";
+import * as model from "biz/plan-model.js";
 import * as timeline from "./timeline.js";
-import * as ics from "gg/ics.js";
+import * as ics from "biz/ics.js";
 import { SIGN } from "./sign.js";
-import * as pack from "gg/plan-pack.js";
+import * as pack from "biz/plan-pack.js";
 import * as csv from "./csv.js";
 import { t, tf, num } from "./i18n.js";
 import { el, node, button, fill, shortDate, locale, ask, tagHue } from "./ui.js";

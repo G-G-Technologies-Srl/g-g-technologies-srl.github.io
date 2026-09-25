@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // The shared folder: projects written as files into a folder the person chose, and read back
 // when somebody else's copy changed them.
@@ -43,14 +43,14 @@
 // each. A folder waiting for its permission stops that project and nothing else. Everything the
 // browser cannot do is reported, not hidden. Two tabs of the same browser take turns through a Web
 // Lock, and read the marks afresh each time. Handles and permissions are `folders.js`; the hash and
-// the lock are `gg/folder.js`, shared with the apps that write a plain backup; the reading and the
+// the lock are `biz/folder.js`, shared with the apps that write a plain backup; the reading and the
 // merging above them are this file's, and nobody else's.
 
-import * as model from "gg/plan-model.js";
+import * as model from "biz/plan-model.js";
 import * as db from "./db.js";
 import * as vault from "./vault.js";
 import * as folders from "./folders.js";
-import { hash as _hash, withLock } from "gg/folder.js";
+import { hash as _hash, withLock } from "biz/folder.js";
 import { t, tf } from "./i18n.js";
 
 // -----------------------------------------------------------------------------------------------------------------

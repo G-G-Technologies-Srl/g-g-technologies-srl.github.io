@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // I costi ricorrenti e gli attesi: i periodi in cui cadono, quelli già coperti, la forma delle
 // righe, l'aggancio all'acquisto vero.

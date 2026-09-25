@@ -1,8 +1,8 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // I progetti: la porta verso il deposito, i quattro numeri, e il giro preventivo → fasi → fattura.
 //
-// Il modello è quello condiviso — `gg/plan-model.js`, lo stesso file di Plan Scope — e ha già le sue
+// Il modello è quello condiviso — `biz/plan-model.js`, lo stesso file di Plan Scope — e ha già le sue
 // cinquantadue prove là. Qui si prova quello che è di questa app: che le modifiche arrivino su
 // disco, che i tre campi in più sopravvivano, che i conti siano quelli giusti e che una fase fatta
 // finisca in fattura una volta sola.
@@ -16,8 +16,8 @@ import { draft, save as saveDoc, issue, creditNote, discard } from "../run/model
 import { recordPayment } from "../run/schedule.js";
 import { toString } from "../run/decimal.js";
 import * as progetti from "../run/projects.js";
-import * as plan from "gg/plan-model.js";
-import * as pack from "gg/plan-pack.js";
+import * as plan from "biz/plan-model.js";
+import * as pack from "biz/plan-pack.js";
 import { list, put } from "gg/store.js";
 import { reset } from "./fake-store.mjs";
 
@@ -276,7 +276,7 @@ await prova("con l'aliquota a zero la bozza porta natura e codice TM dell'aziend
 // -----------------------------------------------------------------------------------------------------------------
 
 await prova("un progetto esce come pacchetto e rientra, con i campi di questa app", async (db) => {
-  // Il pacchetto è quello di Plan Scope — `gg/plan-pack.js`, marcatore «gg-plan» — e i tre campi che
+  // Il pacchetto è quello di Plan Scope — `biz/plan-pack.js`, marcatore «gg-plan» — e i tre campi che
   // solo Invoice Scope usa (cliente, documenti, importo della fase) viaggiano come campi qualunque:
   // l'altra app se li porta dietro senza saperli leggere, e tornando qui sono ancora lì. È la
   // condizione perché un progetto possa fare avanti e indietro senza perdere il suo denaro.

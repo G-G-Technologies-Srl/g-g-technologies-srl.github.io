@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // La scheda di un cliente, disegnata davvero: `customer.js` sopra il DOM finto di `fake-dom.mjs` e
 // il deposito finto di `fake-store.mjs`.

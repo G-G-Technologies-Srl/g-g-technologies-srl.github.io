@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // The store, and the one place that knows the shape of it.
 //
@@ -69,7 +69,7 @@ export const STORES = {
   // ogni volta che compare in un menù. Le persone di riferimento invece stanno nel record del
   // cliente, in `contatti`: sono cinque, e senza la loro azienda non significano niente.
   activities: { keyPath: "id", indexes: { party: "partyId", date: "data" } },
-  // I progetti, e il piano che ci sta dentro. Le tre forme sono quelle di `gg/plan-model.js`, che è
+  // I progetti, e il piano che ci sta dentro. Le tre forme sono quelle di `biz/plan-model.js`, che è
   // lo stesso modello di Plan Scope: un progetto esportato da qui si apre lì, e viceversa. Gli
   // indici sono quelli che servono a leggere per progetto, come nell'altra app.
   projects: { keyPath: "id", indexes: { updated: "updated" } },

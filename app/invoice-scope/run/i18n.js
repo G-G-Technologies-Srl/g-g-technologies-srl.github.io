@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // Every visible string of this app, in one file, two objects with the same keys. Text written
 // inline in the markup or inside a function is how one language quietly falls behind the other.
@@ -432,7 +432,7 @@ const IT = {
 
   // ---- le pagine di un progetto, e le parole dell'editor condiviso
   //
-  // **Le stesse chiavi che ha Plan Scope**, perché `gg/plan-editor.js` le cerca con la funzione che
+  // **Le stesse chiavi che ha Plan Scope**, perché `biz/plan-editor.js` le cerca con la funzione che
   // gli passa l'app: ogni app tiene le proprie parole — è la regola — e `check_apps.py` verifica che
   // le due lingue di ognuna coincidano. Copiate una volta; se una cambia lì, qui resta com'è, ed è
   // giusto così: sono le parole di questa app.

@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // Start-up, routing, and the three screens that belong to nobody else.
 //
@@ -14,7 +14,7 @@
 
 import { setup as setupInstall, isInstalled, system } from "gg/install.js";
 import * as update from "gg/update.js";
-import * as remind from "gg/remind.js";
+import * as remind from "biz/remind.js";
 import { apply as applyTheme, initial as initialTheme, toggle as toggleTheme } from "gg/theme.js";
 import { download, restore } from "gg/io.js";
 import { get, put, list, persist } from "gg/store.js";
@@ -1453,7 +1453,7 @@ async function main() {
   });
   // ---- i promemoria ----------------------------------------------------------------------------
   //
-  // Tre strati, e `gg/remind.js` dice perché sono tre. Qui ci sono i tre comandi: il modulo che li
+  // Tre strati, e `biz/remind.js` dice perché sono tre. Qui ci sono i tre comandi: il modulo che li
   // accende, il permesso che si chiede solo da un clic, e lo scadenzario che esce come calendario.
 
   const paintRemind = async () => {

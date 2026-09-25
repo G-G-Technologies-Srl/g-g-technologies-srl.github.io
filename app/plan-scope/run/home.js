@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // Painting the four screens: the archive, one project, one page, and the bin.
 //
@@ -10,8 +10,8 @@
 // A project's dashboard reads from the top: what needs doing now, the plan, the weeks ahead, the
 // meetings had; beside it what is looked up — the next meeting, the decisions, what we wait for.
 
-import * as model from "gg/plan-model.js";
-import { boxes } from "gg/plan-markdown.js";
+import * as model from "biz/plan-model.js";
+import { boxes } from "biz/plan-markdown.js";
 import { glance, glanceOf, colorDot, editProps, addProp, isColor } from "./pages.js";
 import { t, tf, num } from "./i18n.js";
 import { el, node, button, fill, shortDate, longDate, bytes, tagHue, count, locale } from "./ui.js";

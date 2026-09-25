@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // A page, or a board, as one self-contained HTML file for somebody who does not have the app.
 //
@@ -10,7 +10,7 @@
 // carries handles, rails and `contenteditable`, none of which belongs in a document. This is the
 // static reading of the same Markdown, and it is pure: strings in, one string out.
 
-import * as md from "gg/plan-markdown.js";
+import * as md from "biz/plan-markdown.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s

@@ -1,9 +1,9 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // An `.xlsx` in, rows of strings out.
 //
 // **An `.xlsx` is a ZIP of XML files**, which is why this is thirty lines of logic and not a
-// library: `gg/zip.js` already opens the archive — it learned to inflate for the Notion exports
+// library: `biz/zip.js` already opens the archive — it learned to inflate for the Notion exports
 // Plan Scope reads — and `xmlread.js` already reads XML somebody else wrote. What is left is the
 // three conventions of the format, and each of them is a trap:
 //
@@ -27,7 +27,7 @@
 //
 // No DOM: `node --import ./app/invoice-scope/test/loader.mjs app/invoice-scope/test/sheet.mjs`.
 
-import * as zip from "gg/zip.js";
+import * as zip from "biz/zip.js";
 import * as x from "./xmlread.js";
 
 // -----------------------------------------------------------------------------------------------------------------

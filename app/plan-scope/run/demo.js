@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // The project that is already there the first time somebody opens the app.
 //
@@ -17,7 +17,7 @@
 // The dates are relative to today, worked out when it is created, so «3 due this week» is true on
 // the day somebody arrives rather than true in September 2026.
 
-import { withFrontmatter } from "gg/plan-markdown.js";
+import { withFrontmatter } from "biz/plan-markdown.js";
 
 import * as templates from "./templates.js";
 

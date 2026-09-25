@@ -1,8 +1,8 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // L'editor a blocchi, sostituito per le prove di questa app.
 //
-// **Non è l'editor la cosa in prova qui.** `gg/plan-editor.js` costruisce un documento
+// **Non è l'editor la cosa in prova qui.** `biz/plan-editor.js` costruisce un documento
 // `contenteditable` vero — `dataset`, `closest`, la selezione, i nodi di testo — e riprodurre tutto
 // questo nel DOM finto vorrebbe dire scrivere un browser per provare una colonna di titoli. L'editor
 // ha le sue prove dove è nato: `node --import ./app/plan-scope/test/loader.mjs

@@ -1,9 +1,9 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // The local folder: everything the app holds, written by itself into a folder the person chose.
 //
 // **Without a server there is one copy, and it lives in a browser.** Invoice Scope answered this
-// first, and the mechanics are shared — `gg/folder.js`, two layers, the archive written when its
+// first, and the mechanics are shared — `biz/folder.js`, two layers, the archive written when its
 // fingerprint changes plus one dated copy a day for thirty days. What is here is what only Plan
 // Scope knows: which records, which images, and how an image finds its way back.
 //
@@ -17,7 +17,7 @@
 // a photograph is a Blob, and a Blob in JSON becomes base64 — an archive of a few hundred
 // kilobytes would arrive at megabytes, and thirty dated copies of it at a gigabyte. So the text
 // goes into `plan-scope.json` and the pictures go beside it in `assets/`, named by their id, once
-// each: the thirty copies share one set of pictures. `gg/folder.js` sweeps a picture only when no
+// each: the thirty copies share one set of pictures. `biz/folder.js` sweeps a picture only when no
 // copy left in the folder names it any more, which is what makes a copy from three weeks ago
 // worth having.
 //
@@ -30,8 +30,8 @@
 // holding a folder that does not exist.
 
 import * as io from "gg/io.js";
-import { reference } from "gg/plan-pack.js";
-import { hash, available, linkFolder, backupWriter, copies as listCopies } from "gg/folder.js";
+import { reference } from "biz/plan-pack.js";
+import { hash, available, linkFolder, backupWriter, copies as listCopies } from "biz/folder.js";
 import * as db from "./db.js";
 
 // -----------------------------------------------------------------------------------------------------------------

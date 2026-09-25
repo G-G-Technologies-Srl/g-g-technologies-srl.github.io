@@ -1,4 +1,4 @@
-// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
 // Reading an `.xlsx`.
 //
@@ -16,7 +16,7 @@
 //     node --import ./app/invoice-scope/test/loader.mjs app/invoice-scope/test/sheet.mjs
 
 import assert from "node:assert/strict";
-import * as zip from "../../_lib/zip.js";
+import * as zip from "../../_business/zip.js";
 import * as sheet from "../run/sheet.js";
 
 let passed = 0;

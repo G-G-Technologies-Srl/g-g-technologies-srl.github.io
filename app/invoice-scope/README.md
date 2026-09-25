@@ -231,7 +231,7 @@ Tre pezzi di impalcatura, e vale la pena sapere che ci sono:
 | un file nuovo in `run/` | il file + l'elenco `ASSETS` in `sw.js` | e gira la versione |
 
 **Ogni file nuovo comincia con l'intestazione di licenza** (`// Copyright 2026 G&G Technologies
-S.r.l. — SPDX-License-Identifier: Apache-2.0`) e con il commento che dice perché esiste.
+S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0`) e con il commento che dice perché esiste.
 
 ---
 
