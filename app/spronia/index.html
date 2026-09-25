@@ -21,6 +21,7 @@
   <meta property="og:image" content="https://ggtechnologies.sm/assets/og-app-spronia-it.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="SPRONIA — giostra in volo nel browser | G&amp;G Technologies">
   <meta property="og:locale" content="it_IT">
   <meta property="og:locale:alternate" content="en_GB">
   <!-- Twitter / X -->
@@ -28,6 +29,7 @@
   <meta name="twitter:title" content="SPRONIA — giostra in volo nel browser | G&amp;G Technologies">
   <meta name="twitter:description" content="Si vola battendo le ali e vince chi al contatto è più in alto. Gira nel browser: niente account, niente server, la classifica resta su questo computer.">
   <meta name="twitter:image" content="https://ggtechnologies.sm/assets/og-app-spronia-it.jpg">
+  <meta name="twitter:image:alt" content="SPRONIA — giostra in volo nel browser | G&amp;G Technologies">
   <!-- Favicon -->
   <link rel="apple-touch-icon" sizes="180x180" href="../../assets/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="../../assets/favicon-32.png">
@@ -47,10 +49,35 @@
 [
   {
     "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://ggtechnologies.sm/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "App",
+        "item": "https://ggtechnologies.sm/app/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "SPRONIA",
+        "item": "https://ggtechnologies.sm/app/spronia/"
+      }
+    ]
+  },
+  {
+    "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "SPRONIA",
     "url": "https://ggtechnologies.sm/app/spronia/",
-    "applicationCategory": "UtilitiesApplication",
+    "image": "https://ggtechnologies.sm/assets/og-app-spronia-it.jpg",
+    "applicationCategory": "GameApplication",
     "operatingSystem": "Any (web browser)",
     "softwareVersion": "1.8.4",
     "datePublished": "2026-08-14",

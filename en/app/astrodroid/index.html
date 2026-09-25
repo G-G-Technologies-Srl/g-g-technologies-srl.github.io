@@ -21,6 +21,7 @@
   <meta property="og:image" content="https://ggtechnologies.sm/assets/og-app-astrodroid-en.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="AstroDroid — a vector game in the browser | G&amp;G Technologies">
   <meta property="og:locale" content="en_GB">
   <meta property="og:locale:alternate" content="it_IT">
   <!-- Twitter / X -->
@@ -28,6 +29,7 @@
   <meta name="twitter:title" content="AstroDroid — a vector game in the browser | G&amp;G Technologies">
   <meta name="twitter:description" content="Asteroids to break apart and a score to beat, in the browser. A token and a high score table as an arcade had them, with no account and no server.">
   <meta name="twitter:image" content="https://ggtechnologies.sm/assets/og-app-astrodroid-en.jpg">
+  <meta name="twitter:image:alt" content="AstroDroid — a vector game in the browser | G&amp;G Technologies">
   <!-- Favicon -->
   <link rel="apple-touch-icon" sizes="180x180" href="../../../assets/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="../../../assets/favicon-32.png">
@@ -47,10 +49,35 @@
 [
   {
     "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://ggtechnologies.sm/en/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Apps",
+        "item": "https://ggtechnologies.sm/en/app/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "AstroDroid",
+        "item": "https://ggtechnologies.sm/en/app/astrodroid/"
+      }
+    ]
+  },
+  {
+    "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "AstroDroid",
     "url": "https://ggtechnologies.sm/en/app/astrodroid/",
-    "applicationCategory": "UtilitiesApplication",
+    "image": "https://ggtechnologies.sm/assets/og-app-astrodroid-en.jpg",
+    "applicationCategory": "GameApplication",
     "operatingSystem": "Any (web browser)",
     "softwareVersion": "0.3.13",
     "datePublished": "2026-08-13",

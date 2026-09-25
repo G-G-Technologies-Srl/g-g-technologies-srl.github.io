@@ -21,6 +21,7 @@
   <meta property="og:image" content="https://ggtechnologies.sm/assets/og-app-plan-scope-it.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Plan Scope — progetti e scadenze nel browser | G&amp;G Technologies">
   <meta property="og:locale" content="it_IT">
   <meta property="og:locale:alternate" content="en_GB">
   <!-- Twitter / X -->
@@ -28,6 +29,7 @@
   <meta name="twitter:title" content="Plan Scope — progetti e scadenze nel browser | G&amp;G Technologies">
   <meta name="twitter:description" content="Per organizzare progetti, eventi e campagne: pagine scritte, attività e scadenze in un posto solo. Gira nel browser e i dati restano sul vostro computer.">
   <meta name="twitter:image" content="https://ggtechnologies.sm/assets/og-app-plan-scope-it.jpg">
+  <meta name="twitter:image:alt" content="Plan Scope — progetti e scadenze nel browser | G&amp;G Technologies">
   <!-- Favicon -->
   <link rel="apple-touch-icon" sizes="180x180" href="../../assets/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="../../assets/favicon-32.png">
@@ -47,10 +49,35 @@
 [
   {
     "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://ggtechnologies.sm/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "App",
+        "item": "https://ggtechnologies.sm/app/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Plan Scope",
+        "item": "https://ggtechnologies.sm/app/plan-scope/"
+      }
+    ]
+  },
+  {
+    "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "Plan Scope",
     "url": "https://ggtechnologies.sm/app/plan-scope/",
-    "applicationCategory": "UtilitiesApplication",
+    "image": "https://ggtechnologies.sm/assets/og-app-plan-scope-it.jpg",
+    "applicationCategory": "BusinessApplication",
     "operatingSystem": "Any (web browser)",
     "softwareVersion": "4.49.1",
     "datePublished": "2026-09-01",
