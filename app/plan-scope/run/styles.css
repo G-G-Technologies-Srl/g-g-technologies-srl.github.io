@@ -2842,3 +2842,19 @@ a.attachment:hover { border-color: var(--border-strong); }
 
 /* The month with nothing in it, under the grid it belongs to. */
 .cal-empty { margin: 0 14px 16px; }
+
+/* ---------------------------------------------------------------------------------------------
+   repeating tasks
+   --------------------------------------------------------------------------------------------- */
+
+/* The mark of a task that comes back: beside its title, in the accent, before anybody ticks it. */
+.repeat-mark { flex: none; color: var(--accent-text); font-size: 13px; line-height: 1; }
+.task-head .repeat-mark { margin-left: 4px; }
+.repeat-pill { color: var(--accent-text); }
+
+/* The series line on the card: the rhythm and the way to stop it, side by side. */
+.card-series { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 4px 0 0;
+  color: var(--muted); }
+.card-series button { margin-left: auto; }
+
+#snackSecond { margin-left: 4px; }

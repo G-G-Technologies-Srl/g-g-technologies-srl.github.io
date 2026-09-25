@@ -956,6 +956,43 @@ test("trascinata in «Fatto», un'attività che si ripete fa nascere la prossima
   assert.equal(model.isDone(model.task(task.id)), false);
 });
 
+test("una serie: le occorrenze sono legate, si contano, e finiscono il giorno scritto", () => {
+  const one = project();
+  const task = model.createTask(one.id, { title: "Report", end: "2026-09-07" });
+  model.updateTask(task.id, { repeat: "weekly", repeatUntil: "2026-09-20" });
+  assert.deepEqual(model.seriesOf(model.task(task.id)), { count: 1, index: 1, next: "2026-09-14", until: "2026-09-20" });
+  const second = model.toggleDone(task.id).next;
+  assert.equal(second.series, task.uid, "la seconda porta il `uid` della prima");
+  assert.equal(second.repeatUntil, "2026-09-20");
+  assert.deepEqual(model.seriesOf(second), { count: 2, index: 2, next: null, until: "2026-09-20" },
+    "il 21 cadrebbe oltre il 20: questa è l'ultima");
+  const last = model.toggleDone(second.id);
+  assert.equal(last.next, undefined, "oltre il giorno scritto non nasce niente");
+  assert.equal(model.tasksOf(one.id).length, 2);
+});
+
+test("«Termina la serie» toglie il ritmo, e dopo una spunta toglie anche la prossima", () => {
+  const one = project();
+  const task = model.createTask(one.id, { title: "Sentire Diego", end: "2026-09-25" });
+  model.updateTask(task.id, { repeat: "daily" });
+  // From the card: the task stays, without its rhythm.
+  const step = model.endSeries(task.id);
+  assert.ok(step);
+  assert.equal(model.task(task.id).repeat, null);
+  model.undoStep(step);
+  assert.equal(model.task(task.id).repeat, "daily");
+  // From the strip after a tick: the new occurrence goes to the bin, in one undoable step.
+  const outcome = model.toggleDone(task.id);
+  const closed = model.endSeriesAfter(task.id, outcome.next.id);
+  assert.equal(model.tasksOf(one.id).length, 1, "resta solo quella fatta");
+  assert.ok(model.isDone(model.task(task.id)));
+  assert.equal(model.tasksOf(one.id).some((t) => t.repeat), false);
+  model.undoStep(closed);
+  assert.equal(model.tasksOf(one.id).length, 2);
+  assert.equal(model.task(outcome.next.id).repeat, "daily");
+  assert.equal(model.endSeries(model.createTask(one.id, { title: "Semplice" }).id), null, "niente da chiudere");
+});
+
 test("più cambiamenti in un passo solo si annullano con un undo", () => {
   const one = project();
   const a = model.createTask(one.id, { title: "A" });

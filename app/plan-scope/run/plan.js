@@ -175,6 +175,18 @@ function _fillCard() {
     return option;
   }));
   repeat.value = task.repeat || "";
+  el("cardRepeatUntil").value = task.repeatUntil || "";
+
+  // The series, in the open part of the card.
+  const series = task.repeat ? model.seriesOf(task) : null;
+  el("cardSeries").hidden = !series;
+  if (series) {
+    const said = [tf("seriesEvery", { every: t(`repeatShort_${task.repeat}`) })];
+    said.push(series.next ? tf("seriesNext", { date: shortDate(series.next) }) : t("seriesLast"));
+    if (series.until) said.push(tf("seriesUntil", { date: shortDate(series.until) }));
+    if (series.count > 1) said.push(tf("seriesNth", { n: num(series.index, 0) }));
+    el("cardSeriesText").textContent = said.join(" · ");
+  }
 
   // What it waits for: one task, from this project, never itself. A list rather than a graph — the
   // plan says so, and the reason is that anything richer asks somebody to maintain a model of their
@@ -318,6 +330,8 @@ function _saveCard() {
     milestone: el("cardMilestone").checked,
     priority: el("cardPriority").value || null,
     repeat: el("cardRepeat").value || null,
+    // An end without a rhythm means nothing: it goes with it.
+    repeatUntil: (el("cardRepeat").value && el("cardRepeatUntil").value) || null,
     tags,
     blockedBy: blocked ? [blocked] : [],
   };
@@ -369,6 +383,14 @@ function _taskCard(task, today) {
     { label: model.isDone(task) ? t("taskUndone") : t("taskDone") });
   head.append(box);
   head.append(node("span", model.isDone(task) ? "title struck" : "title", task.title));
+  // The mark beside the title, before the tick is pressed: this one comes back.
+  if (task.repeat) {
+    const mark = node("span", "repeat-mark", "↻");
+    mark.title = t(`repeatShort_${task.repeat}`);
+    mark.setAttribute("role", "img");
+    mark.setAttribute("aria-label", t("seriesRepeats"));
+    head.append(mark);
+  }
   card.append(head);
 
   const meta = node("div", "task-meta");
@@ -385,7 +407,15 @@ function _taskCard(task, today) {
   // bassa smorzata, perché il senso di segnarla è togliere urgenza, non aggiungerne.
   if (task.priority === "high") meta.append(node("span", "badge prio-high", t("priorityHigh")));
   else if (task.priority === "low") meta.append(node("span", "badge prio-low", t("priorityLow")));
-  if (task.repeat) meta.append(node("span", "who", `↻ ${t(`repeatShort_${task.repeat}`)}`));
+  // How often, and when it comes back: «↻ ogni giorno · poi 27 set». The last one of a series with
+  // an end says so instead, so nobody expects a next one that will not come.
+  if (task.repeat) {
+    const series = model.seriesOf(task);
+    const words = [t(`repeatShort_${task.repeat}`)];
+    if (series.next) words.push(tf("seriesThen", { date: shortDate(series.next) }));
+    else words.push(t("seriesLast"));
+    meta.append(node("span", "who repeat-pill", `↻ ${words.join(" · ")}`));
+  }
   // Il documento si vede da fuori, e ci si arriva da fuori: la carta dice che questa attività ha
   // una procedura dietro, e il clic la apre senza passare dalla scheda. Un'attività con un
   // documento invisibile finché non la si apre è un documento che nessuno legge.
@@ -833,7 +863,7 @@ function _startDrag(event, task, card) {
       const step = model.moveTask(carried.id, carried.target, carried.at);
       on.moved();
       // Dropped into the finishing column, a repeating task made its next one: say so, as a tick does.
-      if (step && step.next) on.ticked(carried.id, { next: step.next });
+      if (step && step.next) on.ticked(carried.id, { next: step.next, step });
     }
     on.change();
     paint();
@@ -1078,6 +1108,14 @@ export function connect(handlers) {
   });
 
 
+  el("cardSeriesEnd").addEventListener("click", () => {
+    _saveCard();
+    const step = model.endSeries(cardId);
+    _fillCard();
+    on.change();
+    paint();
+    if (step) on.batched(step, t("seriesEnded"));
+  });
   el("cardMore").addEventListener("click", () => {
     // **Si scrive prima di ridisegnare**, come ogni altra azione della carta. `_fillCard()` rilegge
     // gli `input` dal modello, e la carta scrive alla chiusura: senza questa riga, aprire «Mostra

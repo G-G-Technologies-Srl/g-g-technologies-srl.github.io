@@ -605,9 +605,20 @@ const IT = {
   priorityNone: "Nessuna",
   priorityLow: "Bassa",
   priorityHigh: "Alta",
+  seriesRepeats: "Si ripete",
+  seriesClose: "Chiudi la serie",
+  seriesEnd: "Termina la serie",
+  seriesEnded: "Serie chiusa: non ne nascono altre",
+  seriesThen: "poi {date}",
+  seriesLast: "l'ultima",
+  seriesEvery: "Si ripete {every}",
+  seriesNext: "la prossima il {date}",
+  seriesUntil: "fino al {date}",
+  seriesNth: "{n}ª volta",
+  fieldRepeatUntil: "Fino al (facoltativo)",
   fieldRepeat: "Si ripete",
-  fieldRepeatHint: "Una volta spuntata, resta fatta e ne nasce una nuova, un periodo dopo. Non "
-    + "è una serie: sul calendario e sulla linea del tempo si vede sempre e solo la prossima.",
+  fieldRepeatHint: "Una volta spuntata, resta fatta e ne nasce una nuova, un periodo dopo: sul "
+    + "calendario e sulla linea del tempo si vede sempre e solo la prossima. Per smettere, «Termina la serie».",
   repeatNever: "Mai",
   repeatDaily: "Ogni giorno",
   repeatWeekly: "Ogni settimana",
@@ -883,8 +894,10 @@ const IT = {
     + "## Sottoattività e checklist\n\nNella scheda, «Sottoattività» sono attività vere — con "
     + "data e responsabile — appese a questa, e compaiono rientrate sotto la carta. La "
     + "**checklist** è per le cose piccole; una voce che cresce ha «Diventa attività».\n\n"
-    + "## Quello che si ripete\n\n«Si ripete», nella scheda sotto «Mostra altro»: spuntata una, "
-    + "nasce la prossima con la data avanzata.\n\n## Le date\n\n"
+    + "## Quello che si ripete\n\n«Si ripete», nella scheda sotto «Mostra altro», con un «Fino al» "
+    + "facoltativo: spuntata una, nasce la prossima con la data avanzata. Sulla carta la riconosce "
+    + "il segno ↻ accanto al titolo. Per smettere: «Chiudi la serie» nel messaggio che compare "
+    + "dopo la spunta, oppure «Termina la serie» nella scheda.\n\n## Le date\n\n"
     + "Una scadenza è un giorno, non un'ora. Nel calendario e nella timeline le attività si "
     + "spostano e si allungano trascinandole. Dalla scheda, «Aggiungi al calendario» porta la "
     + "scadenza nel vostro calendario, come copia.\n\n"
@@ -1791,9 +1804,20 @@ const EN = {
   priorityNone: "None",
   priorityLow: "Low",
   priorityHigh: "High",
+  seriesRepeats: "Repeats",
+  seriesClose: "Close the series",
+  seriesEnd: "End the series",
+  seriesEnded: "Series closed: no more will appear",
+  seriesThen: "then {date}",
+  seriesLast: "the last one",
+  seriesEvery: "Repeats {every}",
+  seriesNext: "next on {date}",
+  seriesUntil: "until {date}",
+  seriesNth: "occurrence {n}",
+  fieldRepeatUntil: "Until (optional)",
   fieldRepeat: "Repeats",
-  fieldRepeatHint: "Once ticked, it stays done and a new one appears, a period later. It is not "
-    + "a series: the calendar and the timeline only ever show the next one.",
+  fieldRepeatHint: "Once ticked, it stays done and a new one appears, a period later: the calendar "
+    + "and the timeline only ever show the next one. To stop it, “End the series”.",
   repeatNever: "Never",
   repeatDaily: "Every day",
   repeatWeekly: "Every week",
@@ -2066,8 +2090,10 @@ const EN = {
     + "## Sub-tasks and checklists\n\nOn the card, “Sub-tasks” are real tasks — with a date and an "
     + "owner — hanging from this one, and they show indented under the card. The **checklist** is for "
     + "the small things; an item that grows has “Make it a task”.\n\n"
-    + "## What repeats\n\n“Repeats”, on the card under “Show more”: tick one, and the next is born "
-    + "with the date moved on.\n\n"
+    + "## What repeats\n\n“Repeats”, on the card under “Show more”, with an optional “Until”: tick "
+    + "one, and the next is born with the date moved on. On the board it has the ↻ mark beside its "
+    + "title. To stop it: “Close the series” in the message that appears after the tick, or “End the "
+    + "series” on the card.\n\n"
     + "## Dates\n\nA deadline is a day, not an hour. In the calendar and on the timeline, tasks move and "
     + "stretch by dragging. From the card, “Add to calendar” takes the deadline into your own "
     + "calendar, as a copy.\n\n"

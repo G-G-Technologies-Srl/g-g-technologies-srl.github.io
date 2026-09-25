@@ -64,10 +64,20 @@ export function applyText(root = document) {
  * `action` is optional: without it the strip is only a statement, which is what an import or an
  * export gets. With it, the button is the undo.
  */
-export function snack(text, { action = null, onAction = null } = {}) {
+export function snack(text, { action = null, onAction = null, second = null, onSecond = null } = {}) {
   const strip = el("snack");
   const button = el("snackAction");
   el("snackText").textContent = text;
+
+  // The second command is the other way out of what just happened — "Chiudi la serie" beside
+  // "Annulla" after a repeating task is ticked. Absent, it is hidden, and the strip is as before.
+  const other = el("snackSecond");
+  other.hidden = !second;
+  other.textContent = second || "";
+  other.onclick = second ? () => {
+    hideSnack();
+    if (onSecond) onSecond();
+  } : null;
 
   button.hidden = !action;
   if (action) {

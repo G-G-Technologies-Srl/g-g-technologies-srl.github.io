@@ -165,6 +165,7 @@ function _cardNextLine(one, today) {
   if (meeting && one.time) line.append(node("span", "next-time", one.time));
   line.append(node("span", "next-title", meeting ? (one.meeting.page.title || t("pageUntitled"))
     : (one.task.title || t("taskUntitled"))));
+  if (!meeting && one.task.repeat) line.append(_repeatMark(one.task));
   line.append(node("span", "next-date", shortDate(one.date)));
   const who = meeting ? one.meeting.with : model.assigneeName(one.task);
   for (const name of String(who || "").split(",").map((part) => part.trim()).filter(Boolean)) {
@@ -672,6 +673,7 @@ function _taskRow(task, today, { project = null, day = "label" } = {}) {
   // free, none of which a `<li>` pretending to be one gets right.
   row.append(button(done ? "link title struck" : "link title", task.title,
     () => on.openTask(task.id)));
+  if (task.repeat) row.append(_repeatMark(task));
   // On the cross-project list the row says which project it belongs to; on a project's own
   // dashboard that would be the title repeated on every line.
   if (project) row.append(_projectPill(project));
@@ -796,6 +798,15 @@ function _sign(name, label = "") {
   return svg;
 }
 
+/** "↻", beside the title of a task that comes back: said, and named for a screen reader. */
+function _repeatMark(task) {
+  const mark = node("span", "repeat-mark", "↻");
+  mark.title = t(`repeatShort_${task.repeat}`);
+  mark.setAttribute("role", "img");
+  mark.setAttribute("aria-label", t("seriesRepeats"));
+  return mark;
+}
+
 /** The ring that marks something late: a shape as well as a colour, so it reads without the colour. */
 function _lateRing() {
   const ring = node("span", "late-ring");
@@ -839,6 +850,7 @@ function _nowRow(item, today, origins) {
   const title = node("span", "now-title");
   if (item.kind === "late") title.append(_lateRing());
   if (task && item.high) title.append(_sign("flag", t("nowHigh")));
+  if (task && task.repeat) title.append(_repeatMark(task));
   if (task && item.blocked) title.append(_sign("lock", t("nowBlocked")));
   if (item.kind === "decide") title.append(_sign("decide", t("nowDecide")));
   if (item.kind === "notes") title.append(_sign("pen"));

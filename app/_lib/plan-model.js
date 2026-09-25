@@ -786,6 +786,12 @@ export function createTask(projectId, { title = "", status = null, end = null,
     blockedBy: [],
     milestone,
     repeat: null,
+    // The last day a repeating task may fall on, or null: "ogni lunedì fino alla fiera".
+    repeatUntil: null,
+    // The `uid` of the first occurrence of a series, carried by every one after it; null on the
+    // first itself and on anything that does not repeat. A `uid` and not an `id`, so the link
+    // survives an export and the shared folder, like `pageUid`.
+    series: null,
     // Last in its column: one past the highest order there, not the count. Imported and older
     // tasks can all sit at zero, and a count would put the new one among them instead of after.
     order: _nextOrder(tasksOf(projectId).filter((one) => one.status === column)),
@@ -853,6 +859,8 @@ export function nextDate(iso, repeat) {
 function _nextOnce(task, status) {
   const from = task.end || todayISO();
   const due = nextDate(from, task.repeat);
+  // Past its last day the series ends here, and this was the last one.
+  if (!due || (task.repeatUntil && due > task.repeatUntil)) return null;
   const twin = tasksOf(task.projectId).find((one) => one.id !== task.id && !isDone(one)
     && one.title === task.title && one.repeat === task.repeat && one.end === due);
   return twin ? null : _nextOccurrence(task, status);
@@ -879,6 +887,7 @@ function _nextOccurrence(task, status) {
     ...task,
     id,
     uid: id,
+    series: task.series || task.uid,
     status,
     start: task.start ? addDays(task.start, shift) : null,
     end,
@@ -888,6 +897,56 @@ function _nextOccurrence(task, status) {
     updated: stamp,
     trashedAt: null,
     trashedWith: null,
+  });
+}
+
+/**
+ * A repeating task's place in its series: how many occurrences there have been, which one this is,
+ * and the day the next would fall on — null when the series ends with this one.
+ *
+ * Tasks made before occurrences were linked have no `series`; each of those is a series of one,
+ * and the card simply does not say "3ª volta".
+ */
+export function seriesOf(taskRecord) {
+  if (!taskRecord) return null;
+  const key = taskRecord.series || taskRecord.uid;
+  const members = tasksOf(taskRecord.projectId)
+    .filter((one) => (one.series || one.uid) === key)
+    .sort((a, b) => String(a.end || "").localeCompare(String(b.end || "")) || String(a.created).localeCompare(String(b.created)));
+  const from = taskRecord.end || todayISO();
+  const next = taskRecord.repeat ? nextDate(from, taskRecord.repeat) : null;
+  return {
+    count: members.length,
+    index: members.findIndex((one) => one.id === taskRecord.id) + 1,
+    next: next && (!taskRecord.repeatUntil || next <= taskRecord.repeatUntil) ? next : null,
+    until: taskRecord.repeatUntil || null,
+  };
+}
+
+/**
+ * The series stops: every open occurrence of it keeps its date and loses its rhythm. One step.
+ * Nothing is removed — the task that is there is still a task to do, just the last one.
+ */
+export function endSeries(taskId) {
+  const task = tasks.get(taskId);
+  if (!task) return null;
+  const key = task.series || task.uid;
+  const open = tasksOf(task.projectId)
+    .filter((one) => (one.series || one.uid) === key && (one.repeat || one.repeatUntil));
+  if (!open.length) return null;
+  return batch(() => {
+    for (const one of open) updateTask(one.id, { repeat: null, repeatUntil: null });
+  });
+}
+
+/**
+ * "Chiudi la serie" right after a tick: the occurrence the tick made goes to the bin, and the
+ * series stops. One step, so «Annulla» brings back both.
+ */
+export function endSeriesAfter(doneId, nextId) {
+  return batch(() => {
+    if (nextId && tasks.get(nextId)) trashTask(nextId);
+    endSeries(doneId);
   });
 }
 

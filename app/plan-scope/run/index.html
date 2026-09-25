@@ -943,6 +943,7 @@
 <div class="snack" id="snack" role="status" aria-live="polite" hidden>
   <span id="snackText"></span>
   <button type="button" id="snackAction"></button>
+  <button type="button" id="snackSecond" hidden></button>
 </div>
 
 <dialog id="importDialog">
@@ -997,6 +998,14 @@
       <input type="date" id="cardEnd">
     </div>
   </div>
+
+  <!-- Under the dates, where a deadline is read: a task that repeats says so here, not only in the
+       drawer below — how often, when the next one falls, which occurrence this is, and how to
+       stop it. -->
+  <p class="note card-series" id="cardSeries" hidden>
+    <span id="cardSeriesText"></span>
+    <button type="button" id="cardSeriesEnd" class="ghost small" data-t="seriesEnd"></button>
+  </p>
 
   <!-- Le etichette e chi ci lavora stanno qui, in chiaro e non dietro «Mostra altro»: sono le due
        cose che la bacheca già mostra sulla carta, e nasconderle nella maschera che le riempie
@@ -1060,9 +1069,10 @@
   <div id="cardExtra" hidden>
     <label for="cardRepeat" id="cardRepeatLabel"></label>
     <select id="cardRepeat"></select>
-    <!-- «Si ripete» fa pensare a una serie, e una serie non c'è: di attività ne esiste una alla
-         volta, e la prossima nasce quando spunti questa. Chi si aspetta di vedere le ricorrenze
-         sul calendario va detto adesso, non quando non le trova. -->
+    <label for="cardRepeatUntil" id="cardRepeatUntilLabel" data-t="fieldRepeatUntil"></label>
+    <input type="date" id="cardRepeatUntil">
+    <!-- One occurrence exists at a time, and the next is made when this one is ticked: whoever
+         expects to see them all on the calendar is told here, not when they do not find them. -->
     <p class="note check-note" id="cardRepeatHint"></p>
 
     <label for="cardBlocked" id="cardBlockedLabel"></label>

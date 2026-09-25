@@ -625,6 +625,22 @@ function _boxesFor(page) {
   }).join("\n");
 }
 
+/**
+ * The strip after a repeating task is ticked. The moment somebody finds out a task repeats is the
+ * moment they ticked it, so the way to stop it is offered there: «Chiudi la serie» bins the new
+ * occurrence and stops the rhythm, in one step that «Annulla» takes back.
+ */
+function _offerSeries(id, outcome) {
+  _offerUndo(outcome.step, tf("repeated", { date: longDate(outcome.next.end) }), {
+    second: t("seriesClose"),
+    onSecond: async () => {
+      const step = model.endSeriesAfter(id, outcome.next.id);
+      await _repaint();
+      _offerUndo(step, t("seriesEnded"));
+    },
+  });
+}
+
 /** Two letters for a round face: the first of the first word and of the last. */
 function _initials(name) {
   const words = String(name || "").trim().split(/\s+/).filter(Boolean);
@@ -2010,9 +2026,11 @@ async function _repaint() {
  *
  * The step carries a translation key rather than a sentence, because `model.js` has no language.
  */
-async function _offerUndo(step, message, { also = null } = {}) {
+async function _offerUndo(step, message, { also = null, second = null, onSecond = null } = {}) {
   if (!step) return;
   snack(message, {
+    second,
+    onSecond,
     action: t("undo"),
     onAction: async () => {
       // *This* step and not the latest: eight seconds is long enough to tick something else, and
@@ -3262,8 +3280,8 @@ function _connect() {
       else if (outcome.done) { cheer.small(); _cheerUp(); }
       // A tick from a list is a small target on a busy screen, and the row it was on disappears
       // with it: the strip says what was ticked and offers it back.
-      const said = outcome.next ? tf("repeated", { date: longDate(outcome.next.end) })
-        : outcome.done && task ? tf("tickedDone", { name: task.title || t("taskUntitled") }) : "";
+      if (outcome.next) return _offerSeries(id, outcome);
+      const said = outcome.done && task ? tf("tickedDone", { name: task.title || t("taskUntitled") }) : "";
       if (said) _offerUndo(outcome.step, said);
     },
     openPlan: () => { if (projectId) _openPlan(projectId); },
@@ -3359,8 +3377,9 @@ function _connect() {
       if (!task || !model.isDone(task)) return;
       if (task.milestone) _cheerUp({ big: true });
       else { cheer.small(); _cheerUp(); }
-      // A task that repeats says when the next one is due, in the same breath as the tick.
-      if (outcome && outcome.next) snack(tf("repeated", { date: longDate(outcome.next.end) }));
+      // A task that repeats says when the next one is due, in the same breath as the tick, and
+      // offers the two ways out: take the tick back, or close the series here.
+      if (outcome && outcome.next) _offerSeries(id, outcome);
     },
     batched: (step, message) => _offerUndo(step, message),
     trashed: async (id, task) => {
