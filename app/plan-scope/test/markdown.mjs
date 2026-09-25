@@ -489,6 +489,23 @@ test("le caselle di un documento, con l'aggancio, fuori dai blocchi di codice", 
   ]);
 });
 
+test("un «[!decisione]» dentro una citazione non sposta gli indici", () => {
+  // The third line of a quotation is text of that quotation, for `parse` and for `withChoice`:
+  // before, the second counted it and wrote the choice into the quotation.
+  const text = "> una citazione\n> [!decisione]\n> non è un riquadro\n\n> [!decisione]\n> Domanda vera\n";
+  assert.deepEqual(decisions(text).map((one) => [one.index, one.question]), [[0, "Domanda vera"]]);
+  const made = withChoice(text, 0, "sì", "2026-09-25");
+  assert.ok(made.startsWith("> una citazione\n> [!decisione]\n> non è un riquadro\n\n"), "la citazione resta com'era");
+  assert.equal(decisions(made)[0].choice, "sì");
+});
+
+test("un file scritto con CRLF resta con CRLF", () => {
+  const text = "Testo\r\n\r\n> [!decisione]\r\n> Domanda\r\n> entro: 3/10\r\n";
+  const made = withChoice(text, 0, "no", "2026-09-25");
+  assert.equal(made, "Testo\r\n\r\n> [!decisione]\r\n> Domanda\r\n> entro: 3/10\r\n> scelta: no\r\n> decisa: 2026-09-25\r\n");
+  assert.equal(withChoice(made, 0, "", "2026-09-25"), text);
+});
+
 fixed("riquadri di decisione", MINUTES.split("\n").slice(4).join("\n"));
 
 console.log(`markdown: ${passed} prove passate`);

@@ -2096,11 +2096,16 @@ function _bodyOf(pageRecord) {
  */
 export function waitingOn(projectId) {
   const open = tasksOf(projectId).filter((one) => !isDone(one));
-  const out = [];
-  for (const blocker of open) {
-    const held = open.filter((one) => (one.blockedBy || []).includes(blocker.id));
-    if (held.length) out.push({ task: blocker, holds: held });
+  // One pass over the arrows, not one per task: a board of a thousand cards asked a million
+  // questions to answer this.
+  const held = new Map();
+  for (const one of open) {
+    for (const id of one.blockedBy || []) {
+      if (!held.has(id)) held.set(id, []);
+      held.get(id).push(one);
+    }
   }
+  const out = open.filter((one) => held.has(one.id)).map((one) => ({ task: one, holds: held.get(one.id) }));
   return out.sort((a, b) => String(a.task.end || "9999").localeCompare(String(b.task.end || "9999")));
 }
 

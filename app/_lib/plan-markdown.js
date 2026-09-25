@@ -792,18 +792,25 @@ export function decisions(markdown, near = "") {
  */
 export function withChoice(markdown, index, choice, day, keys = { choice: "scelta", decided: "decisa" }) {
   // Surgery on the lines, not a parse and a serialize: everything outside this one callout — the
-  // head, the blank lines, a table somebody aligned by hand — comes back byte for byte.
-  const lines = _lines(markdown);
+  // head, the blank lines, a table somebody aligned by hand — comes back byte for byte, line ends
+  // included: a file written on Windows keeps its CRLF.
+  const text = String(markdown || "");
+  const eol = text.includes("\r\n") ? "\r\n" : "\n";
+  const lines = _lines(text);
   let fence = null;
   let seen = -1;
   for (let at = 0; at < lines.length; at += 1) {
-    const opens = FENCE.exec(lines[at]);
-    if (opens) {
-      if (!fence) fence = opens[2][0];
-      else if (opens[2][0] === fence) fence = null;
+    const fenced = FENCE.exec(lines[at]);
+    if (fenced) {
+      if (!fence) fence = fenced[2][0];
+      else if (fenced[2][0] === fence) fence = null;
       continue;
     }
-    if (fence || !/^> ?\[!decisione\]\s*$/i.test(lines[at])) continue;
+    // Only a callout that opens its quote counts, as in `parse`: a "[!decisione]" on the third line
+    // of a quotation is text of that quotation, and counting it would shift every index after it —
+    // the choice would land in the wrong box.
+    const opens = at === 0 || !QUOTE.test(lines[at - 1]);
+    if (fence || !opens || !/^> ?\[!decisione\]\s*$/i.test(lines[at])) continue;
     seen += 1;
     let end = at + 1;
     while (end < lines.length && QUOTE.test(lines[end])) end += 1;
@@ -824,9 +831,9 @@ export function withChoice(markdown, index, choice, day, keys = { choice: "scelt
     const clean = String(choice || "").replace(/\s+/g, " ").trim();
     if (clean) kept.push(`${choiceKey}: ${clean}`, `${decidedKey}: ${day}`);
     lines.splice(at + 1, end - at - 1, ...kept.map((line) => (line ? `> ${line}` : ">")));
-    return lines.join("\n");
+    return lines.join(eol);
   }
-  return String(markdown || "");
+  return text;
 }
 
 /**

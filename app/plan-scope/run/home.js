@@ -900,7 +900,11 @@ function _paintNow(id, today) {
     fill(quiet.lastChild, [
       button("accent small", t("nowStartTask"), () => el("taskField").focus()),
       button("accent small", t("nowStartMeeting"), () => el("newMeeting").click()),
-      button("accent small", t("nowStartPage"), () => el("pageField").focus()),
+      // "Il brief" makes the brief, as it says: the same form as the documents panel, filled in.
+      button("accent small", t("nowStartPage"), () => {
+        el("pageField").value = t("nowBriefTitle");
+        el("newPageForm").requestSubmit();
+      }),
     ]);
     return;
   }
@@ -1006,7 +1010,12 @@ function _weekItems(id, from, to, today) {
 function _paintWeeks(id, today) {
   weeksFor = id;
   const box = el("weeks");
-  const width = box.clientWidth || 680;
+  // The panel may be drawn while its screen is still hidden, and a hidden box is zero pixels wide.
+  // Guessing 680 there put four weeks on a phone; the guess now comes from the window, and the
+  // panel asks again on the next frame, when the screen is on and the box has its real width.
+  const measured = box.clientWidth;
+  const width = measured || Math.max(280, Math.min(window.innerWidth - 60, 720));
+  if (!measured) requestAnimationFrame(_repaintWeeks);
   const days = width < WEEKS_NARROW_BELOW ? WEEKS_NARROW : WEEKS_WIDE;
   const weekday = (model.fromISO(today).getDay() + 6) % 7;         // Monday is 0
   const from = model.addDays(today, -weekday);
@@ -1022,17 +1031,26 @@ function _paintWeeks(id, today) {
   // at this size — which is close enough, and cheaper than measuring every label twice.
   const lanes = [];
   const placed = [];
-  for (const item of _weekItems(id, from, to, today)) {
+  const items = _weekItems(id, from, to, today);
+  for (const item of items) {
     const start = at(item.from);
     const labelDays = (item.label.length * 6.5 + 28) / perDay;
-    const end = item.bar ? at(item.to) + 1 : start + Math.max(1, labelDays);
-    let lane = lanes.findIndex((edge) => edge <= start);
+    // A label that would run past the right edge is written to the left of its mark instead: the
+    // mark stays on its day, and the words stay inside the panel.
+    // When neither side has room for all of it, the wider side wins and the label is cut there.
+    const roomRight = days - start;
+    const roomLeft = start + 1;
+    const flip = !item.bar && labelDays > roomRight && roomLeft > roomRight;
+    const room = flip ? roomLeft : roomRight;
+    const begin = flip ? Math.max(0, start + 1 - labelDays) : start;
+    const end = item.bar ? at(item.to) + 1 : flip ? start + 1 : start + Math.min(room, Math.max(1, labelDays));
+    let lane = lanes.findIndex((edge) => edge <= begin);
     if (lane < 0) {
       lanes.push(0);
       lane = lanes.length - 1;
     }
     lanes[lane] = end + 0.3;
-    placed.push({ ...item, start, lane, span: at(item.to) - start + 1 });
+    placed.push({ ...item, start, lane, flip, room, span: at(item.to) - start + 1 });
   }
 
   const parts = [];
@@ -1059,9 +1077,11 @@ function _paintWeeks(id, today) {
   parts.push(line, label);
 
   for (const item of placed) {
-    const mark = node("button", `weeks-mk is-${item.kind}${item.bar ? " is-bar" : ""}`);
+    const mark = node("button", `weeks-mk is-${item.kind}${item.bar ? " is-bar" : ""}${item.flip ? " is-flip" : ""}`);
     mark.type = "button";
-    mark.style.left = percent(item.start);
+    if (item.flip) mark.style.right = percent(days - item.start - 1);
+    else mark.style.left = percent(item.start);
+    if (!item.bar) mark.style.maxWidth = percent(item.room);
     mark.style.top = `${WEEKS_HEAD + 8 + item.lane * LANE}px`;
     if (item.bar) mark.style.width = percent(item.span);
     else {
@@ -1083,6 +1103,10 @@ function _paintWeeks(id, today) {
   }
   box.style.height = `${WEEKS_HEAD + 12 + Math.max(1, lanes.length) * LANE}px`;
   fill(box, parts);
+  // Nothing in the window: a sentence, not an empty grid with a legend for marks that are not there.
+  box.hidden = items.length === 0;
+  el("weeksLegend").hidden = items.length === 0;
+  el("weeksEmpty").hidden = items.length > 0;
 
   const legend = [
     ["late", () => _lateRing(), "dueLate"],
@@ -1180,7 +1204,7 @@ function _paintNext(id, today) {
   const facts = [];
   if (next.with) facts.push(tf("nextWith", { who: next.with }));
   if (next.where) facts.push(next.where);
-  if (next.repeat) facts.push(t(`repeat_${next.repeat}`));
+  if (next.repeat) facts.push(t(`repeat_${next.repeat}`).toLowerCase());
   if (facts.length) parts.push(node("div", "meta", facts.join(" · ")));
 
   const { items, last } = model.toDiscuss(id, next);
