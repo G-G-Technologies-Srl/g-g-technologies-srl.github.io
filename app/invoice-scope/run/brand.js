@@ -13,7 +13,7 @@
 // `logo/svg/gg-logo-horizontal-light.svg` in the brand repository — the variant for a light
 // ground, because paper is white whatever theme the screen was in — with the glyph coordinates
 // rounded to three decimals, which is why it is thirty kilobytes and not forty. The image is the
-// trade mark of G&G Technologies S.r.l. and is not covered by the Apache licence of the code.
+// trade mark of G&G Technologies S.r.l. and is not covered by the licence of the code.
 
 /** The default letterhead logo, as a data URL. */
 export const LOGO = "data:image/svg+xml;base64," +

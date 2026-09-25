@@ -937,28 +937,6 @@ select:hover, select:focus { border-color: var(--border-strong); }
   border: 1px solid var(--tint, var(--border));
 }
 
-/* La pastiglia del progetto accanto a una scadenza: la tinta che il progetto si è dato negli
-   attributi — la stessa del pallino sulla sua scheda — e in mancanza l'indaco.
-
-   **Non il verde dell'app**, che su queste righe è già occupato: è il colore del titolo che si
-   clicca, e una pastiglia verde accanto a un titolo verde direbbe che sono la stessa cosa.
-   L'indaco viene dalla scala delle tinte delle etichette (`--h3`), che l'app tiene apposta per i
-   fondi pieni con il testo bianco sopra, e non porta nessun altro significato: il verde vuol dire
-   «nostro», l'ambra «in ritardo», e l'indaco era libero.
-
-   Con una tinta scelta, `--tint-ink` arriva dalla riga e non da qui: il bianco fisso sparirebbe
-   su un giallo. Due classi come `.badge.tag`, così non dipende da chi è scritta prima. */
-.badge.project-pill {
-  background: var(--tint, var(--h3));
-  color: var(--tint-ink, #fff);
-  border-color: transparent;
-  font-size: 11px;
-  padding: 0 8px;
-  max-width: 14em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 
 /* Accesa: un anello intorno, perché il fondo è già occupato dalla tinta. Si vede che è quella a
    filtrare senza cambiarle colore, che sarebbe come rinominarla mentre la si guarda. */
@@ -2957,4 +2935,74 @@ a.attachment:hover { border-color: var(--border-strong); }
 
 @media print {
   .tip { display: none; }
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Rows in two lines (home.js, `_taskRow` and `_meetingRow`): what on top, where underneath, who
+   and when on the right. The project is a place — a dot of its colour and its name — not a filled
+   pill, which read as one more tag; the person is a face with the first name, as on the project's
+   page.
+   --------------------------------------------------------------------------------------------- */
+
+/* `min-width: 0` because `.list` is a grid: a grid item is as wide as its content by default, and a
+   line that does not wrap pushed the day out of the card on a phone. */
+.row-item.row-two { flex-wrap: nowrap; align-items: center; padding: 7px 0; min-width: 0; }
+.row-two .row-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.row-two .row-line { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.row-two .row-line .title { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; }
+.row-two .row-line > :not(.title) { flex: none; }
+
+.row-sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--faint);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.row-sub > span { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.row-sub > .row-sep { flex: none; }
+
+.row-item button.link.row-project {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.row-item button.link.row-project:hover { color: var(--accent-text); }
+.row-project-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 18em; }
+
+.row-project-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--tint, var(--accent));
+}
+
+.row-who, .project-card-next .row-who {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.project-card-next .row-who .face { width: 18px; height: 18px; font-size: 9px; }
+.row-two > .face { flex: none; }
+.row-two .when { flex: none; min-width: 44px; text-align: right; }
+
+@media (max-width: 560px) {
+  .row-who-name { display: none; }
+  .row-project-name { max-width: 12em; }
 }

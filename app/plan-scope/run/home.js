@@ -92,45 +92,6 @@ function _urgency(iso, today) {
   return "far";
 }
 
-/**
- * La pastiglia di un progetto, accanto a una sua scadenza.
- *
- * Il nome del progetto era testo grigio come il resto della riga, e in un elenco che attraversa
- * tutti i progetti è proprio il pezzo che si cerca per primo — «di chi è questa scadenza». La
- * tinta è quella che il progetto si è dato negli attributi, la stessa del pallino sulla sua
- * scheda; senza tinta, il verde dell'app, che è il colore di quello che è nostro.
- */
-function _projectPill(project) {
-  const pill = node("span", "badge project-pill", project.name || t("projectUntitled"));
-  const { color } = glanceOf(project.props);
-  if (color) {
-    pill.style.setProperty("--tint", color);
-    pill.style.setProperty("--tint-ink", _ink(color));
-  }
-  return pill;
-}
-
-/**
- * L'inchiostro che si legge su una tinta scelta da qualcun altro.
- *
- * Il bianco fisso è la strada facile e sbaglia sui colori chiari: giallo e ciano se lo mangiano.
- * Il conto è quello vero del contrasto — luminanza relativa secondo WCAG — e la soglia è il punto
- * in cui bianco e scuro pareggiano, non un numero a occhio.
- */
-function _ink(color) {
-  const found = /^#([0-9a-f]{6})$/i.exec(String(color || "").trim());
-  if (!found) return "#fff";
-  const packed = parseInt(found[1], 16);
-  const channel = (one) => {
-    const value = one / 255;
-    return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
-  };
-  const light = 0.2126 * channel((packed >> 16) & 255)
-    + 0.7152 * channel((packed >> 8) & 255)
-    + 0.0722 * channel(packed & 255);
-  return light > 0.197 ? "#0d1220" : "#fff";
-}
-
 /** Le iniziali di un nome: una per «Giulia», due per «Marco Rossi». */
 function _initials(name) {
   const words = String(name || "").trim().split(/\s+/).filter(Boolean);
@@ -169,8 +130,9 @@ function _cardNextLine(one, today) {
   if (!meeting && one.task.repeat) line.append(_repeatMark(one.task, false));
   line.append(node("span", "next-date", shortDate(one.date)));
   const who = meeting ? one.meeting.with : model.assigneeName(one.task);
-  for (const name of String(who || "").split(",").map((part) => part.trim()).filter(Boolean)) {
-    line.append(node("span", `badge tag next-who ${tagHue(name)}`, name));
+  // People as faces, the same as on the project's page: a coloured badge read as one more tag.
+  for (const name of String(who || "").split(",").map((part) => part.trim()).filter(Boolean).slice(0, 2)) {
+    line.append(_who(name));
   }
   return line;
 }
@@ -629,14 +591,66 @@ function _paintFilters() {
  * Nella stessa lista delle scadenze, però: la domanda «cosa mi aspetta» è una sola, e due elenchi
  * accanto costringerebbero a leggerne due per rispondersi.
  */
+// A row of the lists that cross projects reads in two lines: what, on top, with the marks that
+// change how it is read (↻, the flag, the lock) and, on the right, who and when; underneath, where —
+// the project as a place with its colour, the task it is part of, the column it has reached. The
+// single line before put the project in a coloured pill that read as one more tag, and said nothing
+// of who the task was on: exactly the two questions somebody asks of a list like this first.
+
+/** The project a row belongs to: its colour, its name, and the way into it. */
+function _projectTag(project) {
+  const name = project.name || t("projectUntitled");
+  const tag = button("link row-project", "", () => on.openProject(project.id),
+    { label: tf("rowOpenProject", { name }) });
+  const dot = node("span", "row-project-dot");
+  const { color } = glanceOf(project.props);
+  if (color) dot.style.setProperty("--tint", color);
+  tag.append(dot, node("span", "row-project-name", name));
+  return tag;
+}
+
+/** Who a row is on: the face, and the first name beside it where there is room. */
+function _who(name) {
+  const chip = node("span", "row-who");
+  chip.append(_face(name), node("span", "row-who-name", String(name).trim().split(/\s+/)[0]));
+  chip.title = name;
+  return chip;
+}
+
+/** The second line of a row: the parts that are there, with a dot between them. */
+function _rowSub(parts) {
+  const shown = parts.filter(Boolean);
+  if (!shown.length) return null;
+  const line = node("div", "row-sub");
+  shown.forEach((part, index) => {
+    if (index) line.append(node("span", "row-sep", "·"));
+    line.append(typeof part === "string" ? node("span", "", part) : part);
+  });
+  return line;
+}
+
+/** The column a task has reached, when that says something: not the first, not the finish. */
+function _stage(task) {
+  const project = model.project(task.projectId);
+  if (!project || model.isDone(task)) return "";
+  const at = project.columns.findIndex((column) => column.id === task.status);
+  return at > 0 ? project.columns[at].name : "";
+}
+
 function _meetingRow(meeting, today, { project = null, day = "label" } = {}) {
-  const row = node("li", "row-item opens is-meeting");
+  const row = node("li", "row-item row-two opens is-meeting");
   row.append(node("span", "meet-mark", meeting.time || "·"));
-  row.append(button("link title", meeting.page.title || t("pageUntitled"),
+  const main = node("div", "row-main");
+  const top = node("div", "row-line");
+  top.append(button("link title", meeting.page.title || t("pageUntitled"),
     () => on.openPage(meeting.page.id)));
-  if (project) row.append(_projectPill(project));
-  if (meeting.with) row.append(node("span", "meta from", meeting.with));
-  row.append(node("span", "spacer"));
+  main.append(top);
+  const names = String(meeting.with || "").split(",").map((one) => one.trim()).filter(Boolean);
+  const sub = _rowSub([project ? _projectTag(project) : null,
+    names.length ? tf("nextWith", { who: names.join(", ") }) : ""]);
+  if (sub) main.append(sub);
+  row.append(main);
+  for (const name of names.slice(0, 3)) row.append(_face(name));
   // Niente `late`: un appuntamento passato è passato, e dirgli «in ritardo» sarebbe rimproverare
   // qualcuno per una cosa che non si poteva finire in tempo, perché non era da finire.
   // Mai «in ritardo»: `_dueLabel` quella parola la dice, ed è giusta per una scadenza. Un
@@ -648,14 +662,14 @@ function _meetingRow(meeting, today, { project = null, day = "label" } = {}) {
       : node("span", "when", _dueLabel(meeting.date, today)));
   }
   row.addEventListener("click", (event) => {
-    if (event.target.closest("button")) return;
+    if (event.target.closest("button") || event.target.closest(".has-tip")) return;
     on.openPage(meeting.page.id);
   });
   return row;
 }
 
 function _taskRow(task, today, { project = null, day = "label" } = {}) {
-  const row = node("li", "row-item opens");
+  const row = node("li", "row-item row-two opens");
   const done = model.isDone(task);
 
   // The box is a button and not a checkbox input on purpose: it carries its own tick, animates on
@@ -665,24 +679,28 @@ function _taskRow(task, today, { project = null, day = "label" } = {}) {
   box.setAttribute("aria-pressed", done ? "true" : "false");
   row.append(box);
 
-  // The title takes the width of its own text and no more, and a spacer pushes the rest right.
-  // With `flex: 1` on the title the struck line — which is a background the width of the element —
-  // ran two hundred pixels past the last letter, through the empty half of the row. It read as a
-  // rule across the list rather than as a line through a finished thing.
-  //
-  // A real button and not a row with a `tabIndex`: it has a name, a role, and Enter and Space for
-  // free, none of which a `<li>` pretending to be one gets right.
-  row.append(button(done ? "link title struck" : "link title", task.title,
+  // The title takes the width of its own text and no more: with `flex: 1` the struck line — a
+  // background the width of the element — ran past the last letter and read as a rule across the
+  // list. A real button, not a row with a `tabIndex`: it has a name, a role, and Enter and Space.
+  const main = node("div", "row-main");
+  const top = node("div", "row-line");
+  top.append(button(done ? "link title struck" : "link title", task.title || t("taskUntitled"),
     () => on.openTask(task.id)));
-  if (task.repeat) row.append(_repeatMark(task));
-  // On the cross-project list the row says which project it belongs to; on a project's own
-  // dashboard that would be the title repeated on every line.
-  if (project) row.append(_projectPill(project));
-  // A sub-task in a list of deadlines says whose part it is: «Testi» alone is a word, «Testi ·
-  // Materiali» is a place.
+  if (!done && task.priority === "high") top.append(_flagMark(task));
+  if (task.repeat) top.append(_repeatMark(task));
+  if (!done && model.isBlocked(task)) top.append(_lockMark(task));
+  main.append(top);
+
+  // Where it is: the project on the lists that cross projects (on one project's own page it would
+  // be the title repeated on every line), the task it is part of, the column it has reached.
   const parent = model.parentOf(task);
-  if (parent) row.append(node("span", "meta from", parent.title));
-  row.append(node("span", "spacer"));
+  const sub = _rowSub([project ? _projectTag(project) : null,
+    parent ? `↳ ${parent.title || t("taskUntitled")}` : "", _stage(task)]);
+  if (sub) main.append(sub);
+  row.append(main);
+
+  const who = model.assigneeName(task);
+  if (who) row.append(_who(who));
 
   // Il giorno, detto come distanza — «oggi», «domani» — oppure come data, oppure taciuto. Sotto un
   // titolo che dice già «Oggi», una riga che ripete «oggi» è una colonna di parole uguali; sotto
@@ -694,11 +712,9 @@ function _taskRow(task, today, { project = null, day = "label" } = {}) {
   }
 
   // The row opens the task. What can be done to it — the date, the owner, the bin — is on its
-  // card, where the person can see what they are doing to it. There used to be a ✕ at the end of
-  // every row here and in the list of pages: small, grey, and still wrong, because a list somebody
-  // reads to find something is not the place for the control that removes it.
+  // card, where the person can see what they are doing to it.
   row.addEventListener("click", (event) => {
-    if (event.target.closest("button")) return;
+    if (event.target.closest("button") || event.target.closest(".has-tip")) return;
     on.openTask(task.id);
   });
   return row;
@@ -784,6 +800,8 @@ function _distance(iso, today) {
 function _face(name) {
   const face = node("span", "face", _initials(name));
   face.title = name;
+  face.setAttribute("role", "img");
+  face.setAttribute("aria-label", name);
   return face;
 }
 

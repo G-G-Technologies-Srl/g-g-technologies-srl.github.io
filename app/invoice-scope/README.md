@@ -1,254 +1,181 @@
-# Invoice Scope — come si modifica
+# Invoice Scope
 
-Questo file è per chi apre questa cartella senza averci mai lavorato, persona o modello che sia.
-Dice **dove passano i confini**, **cosa non si può rompere** e **cosa toccare** per il tipo di
-modifica che si fa più spesso.
+**Fatture elettroniche per Italia e San Marino, preparate sul proprio computer.**
 
-Non ripete le regole del catalogo. Quelle stanno in `app/CLAUDE.md` e valgono qui senza eccezioni:
-niente passo di build, niente richieste di rete dopo il caricamento, due lingue a runtime, due temi,
-PWA installabile, export e import, anagrafica in `_src/apps.py`.
+[Scheda dell'app](https://ggtechnologies.sm/app/invoice-scope/) ·
+[Apri l'app](https://ggtechnologies.sm/app/invoice-scope/run/) ·
+[Prova con dati d'esempio](https://ggtechnologies.sm/app/invoice-scope/run/?demo=1) ·
+[Licenza](#licenza) ·
+[English](#english)
 
----
-
-## Ordine di lettura, prima di scrivere una riga
-
-1. `app/CLAUDE.md` — le regole del catalogo. È lungo: si legge l'indice e si aprono le sezioni che
-   toccano la modifica in corso.
-2. Questo file.
-3. **Il commento in cima al modulo che stai per toccare.** Ogni file di `run/` si apre con dieci-venti
-   righe che dicono cosa fa, cosa deliberatamente non fa, e quale difetto ha già prodotto la scelta
-   che ci trovi dentro. Sono la documentazione vera: qui sotto c'è la mappa, lì c'è il perché.
-
-Nessuno di questi tre passi è facoltativo. Le decisioni di questo programma sono quasi tutte
-**pagate** — esistono perché una versione precedente aveva sbagliato — e riscriverle senza leggere
-il commento significa ripagarle.
+Invoice Scope è un'applicazione web di [G&G Technologies S.r.l.](https://ggtechnologies.sm) per la
+fatturazione di una piccola impresa: prepara fatture, note di credito, preventivi e documenti di
+trasporto, e scrive il file XML FatturaPA da trasmettere. Gira nel browser, si installa come app e
+funziona anche senza rete. Non ha un server né account: anagrafica dei clienti, prezzi e importi
+restano sul computer di chi la usa.
 
 ---
 
-## Cos'è, e cosa non è
+## Funzioni
 
-Fatturazione elettronica per una piccola impresa, **interamente nel browser**: documenti emessi,
-clienti, listino, progetti, incassi, acquisti, scadenzario, e l'XML FatturaPA in uscita e in
-ingresso. Nessun server, nessun account, i dati in IndexedDB e l'archivio in una cartella scelta
-dalla persona.
+- **Documenti** — fatture (TD01), fatture differite (TD24), note di credito (TD04), preventivi e
+  documenti di trasporto, ciascuno con la sua numerazione e i suoi stati; più aliquote sullo stesso
+  documento. Un preventivo accettato diventa fattura, i DDT di un cliente una fattura differita.
+- **File FatturaPA** — un XML per documento, per le sei direzioni che una fattura può prendere fra
+  Italia, San Marino ed estero, e una copia di cortesia su carta intestata da stampare o salvare in
+  PDF.
+- **Situazione** — fatturato dell'anno e confronto con il precedente, crediti da incassare e da
+  quanto tempo, lavoro svolto e non ancora fatturato, preventivi in attesa, bozze.
+- **Scadenzario e incassi** — le rate di ogni documento, quelle scadute, gli incassi registrati;
+  promemoria esportabili nel calendario.
+- **Clienti e listino** — una scheda per cliente con persone di riferimento, diario dei contatti,
+  fatturato e documenti; conti correnti dell'azienda.
+- **Progetti** — fasi con importi e scadenze, pagine di appunti, documenti collegati; nello stesso
+  formato di [Plan Scope](../plan-scope/).
+- **Acquisti** — le fatture ricevute, lette dall'XML di chi le ha emesse, e le spese attese.
+- **Importazione** — clienti, listino e documenti da Fatture in Cloud (anche `.xls`) e dagli XML del
+  backup, con un riepilogo prima di scrivere.
 
-**Non è** contabilità in partita doppia: niente piano dei conti, niente prima nota, niente bilancio.
-`run/costs.js` lo scrive in cima e vale per tutto il programma — quello che c'è è il registro di
-quanto si è speso e di quando va pagato, non il libro giornale.
+## Cosa non fa
 
----
+- Non trasmette il file al Sistema di Interscambio né all'HUB dell'Ufficio Tributario di San Marino:
+  serve un canale accreditato. L'app prepara il file; l'invio resta a chi la usa.
+- Non esegue la conservazione a norma e non firma digitalmente: non copre le fatture verso la
+  pubblica amministrazione.
+- Non tiene la contabilità: niente registri IVA, liquidazioni o prima nota.
+- Non gestisce ancora l'inversione contabile né la scissione dei pagamenti.
 
-## La mappa, e i confini
+## Dati e riservatezza
 
-`index.html` nella cartella dell'app **è generato da `build.py`**: non si tocca a mano. L'app vera è
-`run/`, scritta a mano, `noindex`, fuori dalla sitemap.
+- I dati stanno in IndexedDB, nel browser di chi usa l'app. Dopo il caricamento l'app non fa
+  richieste di rete, con un'eccezione dichiarata: il browser rilegge `run/sw.js` dal sito per sapere
+  se c'è una versione nuova. Si verifica dagli strumenti per sviluppatori, scheda «Rete».
+- Con una cartella collegata l'app vi scrive l'archivio a ogni modifica e ne tiene una copia al
+  giorno; la Situazione dice sempre se la copia è al sicuro. Senza cartella, l'archivio si esporta
+  a mano.
+- Gli importi non passano mai da numeri in virgola mobile: l'aritmetica è decimale esatta, con
+  l'ordine di arrotondamento del tracciato ministeriale.
+- Nessuna analitica e nessuna telemetria.
 
-### Il nucleo: nessuno di questi file sa cosa sia un browser
+## Requisiti
 
-Si provano sotto Node, e sono il posto giusto per una regola.
+Un browser recente: Chrome, Edge, Firefox o Safari, su computer o telefono. La cartella collegata
+richiede Chrome o Edge su computer.
 
-| File | Cosa decide | Il confine |
-|---|---|---|
-| `decimal.js` | l'aritmetica esatta, `BigInt` scalato a 8 decimali | non formatta e non legge: stringhe e BigInt |
-| `totals.js` | righe → totali, **nell'ordine di arrotondamento che concorda con l'SdI** | non conosce documenti, solo righe |
-| `model.js` | le regole di un documento, e quelle irreversibili: emissione, numerazione, stati | non disegna, non valida il tracciato |
-| `kinds.js` | cosa cambia fra i cinque tipi: preventivo, DDT, fattura (TD01), fattura differita (TD24), nota di credito (TD04) — e la **sequenza** da cui esce il numero di ciascuno | è una tabella: cinque tipi, una riga per tipo |
-| `validate.js` | se un documento può uscire | **non ha parole**: restituisce chiavi, mai frasi |
-| `schedule.js` | cosa è dovuto e quando — derivato, mai salvato; e se un documento è saldato (`ledger`, `settlementOf`) | non incassa: legge |
-| `recurring.js` | le ricorrenze e gli acquisti attesi | un atteso è calcolato, non scritto in nessuno store |
-| `fatturapa.js` · `xml.js` | il documento come file FatturaPA | `xml.js` emette coppie ordinate, non oggetti |
-| `xmlread.js` · `reading.js` | l'XML **scritto da altri**, e i documenti che ne escono | prefissi ignorati, totali ricalcolati |
-| `sheet.js` · `xls.js` · `fic.js` · `parse.js` | i formati in ingresso: `.xlsx`, il `.xls` del 1997, le tre esportazioni di Fatture in Cloud | nessuno di loro scrive nel deposito |
-| `format.js` | numeri e date come una persona li legge e li scrive | l'unico posto che formatta, in tutta l'app |
-| `safety.js` | se l'unica copia è al sicuro, e cosa dirne nella Situazione | conosce lo stato della cartella, non il DOM |
-| `archive.js` | cosa tiene una copia della cartella, e in che cosa differisce da adesso | conta i record, non li legge |
-| `address.js` | l'intestatario in righe: indirizzo, COE o partita IVA, recapito elettronico | le stesse righe per la carta e per la schermata, o divergono |
-| `problems.js` | le chiavi di `validate.js` come frasi | un passo dal dialogo, e niente altro |
+## Eseguire in locale
 
-### Il deposito
-
-`db.js` è l'unico che conosce la forma dello schema: quindici store, e **ogni versione dichiara lo
-schema intero**, mai la differenza dalla precedente. L'indice unico `numero_unico` su `docs` si crea
-qui, sulla transazione grezza, perché `gg/store.js` crea solo indici non unici.
-
-`memory.js` è un deposito in memoria che parla come IndexedDB, e serve a una cosa sola: `?demo=1`.
-Quello che un visitatore apre per curiosità non finisce insieme alle sue fatture.
-
-### Le schermate
-
-Otto rotte fisse più quattro con un parametro, tutte a hash (`app.js`): in finestra installata non
-c'è il tasto «indietro» del browser, e la via del ritorno deve stare nell'app.
-
-| File | Schermata |
-|---|---|
-| `home.js` | la Situazione: i quattro numeri, le scadenze, il fatturato per mese, progetti e preventivi in attesa |
-| `doc.js` | il documento, le sue righe, il riepilogo IVA sempre in vista |
-| `due.js` · `payments.js` · `states.js` | scadenzario, incassi, il controllo che cambia stato |
-| `parties.js` · `customer.js` · `crm.js` | clienti e listino, la scheda cliente, le persone e il diario |
-| `projects.js` · `project.js` | i progetti e le fasi, con il modello condiviso di Plan Scope |
-| `purchases.js` · `costs.js` · `expected.js` | gli acquisti, i loro conti, gli attesi |
-| `importing.js` | l'importazione da un altro programma: `plan` legge e decide, `apply` scrive |
-| `print.js` · `brand.js` | il foglio stampato, e il logo di cortesia |
-| `timeline.js` | lo scadenzario come figura |
-| `ask.js` | l'unico dialogo con cui questa app fa domande |
-
-Nelle schermate **non si calcola**. `doc.js` lo dichiara in cima e vale per tutte: l'aritmetica è
-`totals.js`, le regole sono `model.js`, i controlli sono `validate.js`. Una schermata legge campi e
-disegna risultati.
-
-### I progetti: elenco, archivio, cestino
-
-L'elenco mostra `openProjects()` — cioè `plainProjects()` del modello, con quelli in evidenza in
-cima — e non tutti i progetti vivi. **I conti invece usano `projects()`**, che tiene anche gli
-archiviati: un lavoro concluso con una fase ancora da fatturare resta nel «da fatturare» della
-Situazione, mentre esce dai ritardi (`projectRows`). L'agenda di Plan Scope non è un lavoro, e
-resta fuori da tutti e due.
-
-Pagine, fasi e progetti **si eliminano senza domande**: vanno nel cestino del modello, la striscia
-di `snack.js` offre «Annulla» con il passo che il modello ha restituito (`undoStep`, mai `undo`), e
-sotto l'elenco «Cestino · n» li riporta indietro per trenta giorni. Le domande di `ask.js` restano
-per quello che non si annulla. Archiviare chiede solo se sul progetto resta denaro aperto
-(`openMoney`).
-
-I modelli di pagina sono `PAGE_TEMPLATES` in `project.js`, diversi da quelli di Plan Scope: le due
-app condividono modello ed editore, non il tipo di lavoro. Con «@» si nominano le persone di
-riferimento del cliente del progetto; il nome porta alla scheda del cliente.
-
-### La libreria condivisa
-
-Passa dalla import map (`gg/` → `../../_lib/`), mai da un import relativo. Questa app usa
-`store.js`, `io.js`, `zip.js`, `folder.js`, `theme.js`, `install.js`, `update.js`, e — insieme a
-Plan Scope — `plan-model.js`, `plan-editor.js`, `plan-pack.js`.
-
-> **Toccare `_lib/plan-*.js` tocca anche Plan Scope.** Sono lo stesso file, e ogni service worker se
-> lo mette nella propria cache. Una modifica lì obbliga a girare la versione di **entrambe** le app:
-> `check_apps.py` non se ne accorge, è una regola umana (`app/CLAUDE.md`, «Toccare `_lib/`…»).
-
----
-
-## Le nove cose che non si rompono
-
-1. **Nessun importo passa da un float.** `0.1 + 0.2` su una fattura non è una curiosità, è un numero
-   sbagliato depositato all'Agenzia. Tutto passa da `decimal.js`, che sta a otto decimali perché il
-   tracciato ne ammette otto su `PrezzoUnitario` e `Quantita`.
-2. **L'ordine degli arrotondamenti in `totals.js` non è negoziabile**: riga, riepilogo, imposta
-   (sul riepilogo, mai per riga), documento. Cambiarlo significa un file che l'SdI rifiuta.
-3. **Il contatore è un record e sale soltanto.** `max() + 1` sembra equivalente e non lo è: si
-   cancella l'ultima fattura di dicembre e la numerazione torna indietro. Un documento emesso non si
-   rinumera e non si dis-emette.
-   **E il contatore è per sequenza, non per tipo** (`counterKey` in `db.js`, `sequenza` in
-   `kinds.js`): una fattura differita è una fattura e sta nella stessa sequenza, una nota di credito
-   ha la sua e lo dichiara con la sigla «NC». Con un contatore per tipo uscivano tutte e tre come
-   «2026/0001» — il deposito le accettava, perché la chiave unica contiene il tipo, e per il cliente
-   erano tre documenti con lo stesso numero. Chi tocca la numerazione guarda anche
-   `legacyCounterKeys`: un archivio scritto prima delle sequenze ha un contatore per tipo, e
-   ripartire da uno vuol dire riusare numeri già in mano a qualcuno.
-4. **`validate.js` resta senza parole.** Il giorno in cui importa un dizionario importa anche una
-   lingua corrente, che è roba da schermata. Chiavi fuori, frasi in `problems.js`.
-5. **Saldato non è uno stato.** Gli stati dicono dov'è il documento rispetto al Sistema di
-   Interscambio — emesso, inviato, accettato, scartato — e i soldi sono un altro asse: una fattura
-   accettata e mai pagata è la normalità, una pagata e poi scartata succede. Quanto resta è la somma
-   degli incassi, chiesta a `schedule.js` e mai scritta sul documento: scritta, un incasso cancellato
-   per sbaglio lascerebbe «saldata» per sempre — che è il difetto che il registro importato da un
-   altro programma portava con sé.
-6. **Le differenze fra tipi stanno in `kinds.js`.** Allargare una lista alla volta in `schedule.js` o
-   in `validate.js` produce un preventivo accettato che compare nello scadenzario: è già successo.
-7. **Niente `confirm()` e niente `alert()`.** Li rifiuta `check_apps.py`, e su iOS in finestra
-   installata alcuni non compaiono affatto — su un'app di fatturazione vuol dire una conferma che
-   nessuno vede prima che un numero sia assegnato per sempre. Si usa `ask.js`.
-8. **Quello che sta solo qui va detto.** Senza server la copia è una, e questa è l'app in cui
-   perderla costa di più. Tre stati sembrano «cartella collegata» e non scrivono niente —
-   trattenuta, permesso scaduto, ultima scrittura fallita — e si dicono sempre, anche con un
-   documento solo (`safety.js`). Dove la cartella non esiste (Firefox, Safari, telefono) il
-   promemoria dell'archivio a mano **torna**: vale finché il lavoro fatto dopo non è al sicuro, non
-   una volta sola. E il ripristino passa da `gg/io.js`, che valida il file intero prima di scrivere
-   un record: mezzo ripristino è l'unico esito senza ritorno.
-9. **Nessuna richiesta di rete a app aperta**, con l'unica eccezione dichiarata nella scheda:
-   `gg/update.js` fa rileggere `sw.js`. Una seconda chiamata va scritta nella scheda **prima** che
-   nel codice.
-
----
-
-## Le prove
-
-Girano con Node, dalla radice del repository, e stanno **fuori da `run/`** perché `check_apps.py`
-esige che ogni file dentro `run/` sia nell'elenco di precache.
-
-```bash
-# Foglie: girano da sole.
-node app/invoice-scope/test/fic.mjs
-node app/invoice-scope/test/xmlread.mjs
-node app/invoice-scope/test/parse.mjs
-
-# Tutte le altre passano da `gg/`, quindi vogliono il loader.
-I="--import ./app/invoice-scope/test/loader.mjs"
-node $I app/invoice-scope/test/decimal.mjs   node $I app/invoice-scope/test/totals.mjs
-node $I app/invoice-scope/test/model.mjs     node $I app/invoice-scope/test/validate.mjs
-node $I app/invoice-scope/test/kinds.mjs     node $I app/invoice-scope/test/schedule.mjs
-node $I app/invoice-scope/test/fatturapa.mjs node $I app/invoice-scope/test/reading.mjs
-node $I app/invoice-scope/test/format.mjs    node $I app/invoice-scope/test/sheet.mjs
-node $I app/invoice-scope/test/xls.mjs       node $I app/invoice-scope/test/importing.mjs
-node $I app/invoice-scope/test/backup.mjs    node $I app/invoice-scope/test/update.mjs
-node $I app/invoice-scope/test/install.mjs   node $I app/invoice-scope/test/memory.mjs
-node $I app/invoice-scope/test/crm.mjs       node $I app/invoice-scope/test/customer.mjs
-node $I app/invoice-scope/test/projects.mjs  node $I app/invoice-scope/test/project.mjs
-node $I app/invoice-scope/test/home.mjs      node $I app/invoice-scope/test/reset.mjs
-node $I app/invoice-scope/test/costs.mjs     node $I app/invoice-scope/test/purchases.mjs
-node $I app/invoice-scope/test/recurring.mjs node $I app/invoice-scope/test/problems.mjs
-node $I app/invoice-scope/test/address.mjs   node $I app/invoice-scope/test/restore.mjs
-node $I app/invoice-scope/test/safety.mjs    node $I app/invoice-scope/test/archive.mjs
-node $I app/invoice-scope/test/timeline.mjs
-```
-
-L'elenco aggiornato, con la riga che dice cosa prova ciascuno, sta nel `CLAUDE.md` alla radice del
+Non c'è un passo di build: i file serviti sono il sorgente. Basta un server statico alla radice del
 repository.
 
-Tre pezzi di impalcatura, e vale la pena sapere che ci sono:
+```bash
+git clone https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io.git
+cd g-g-technologies-srl.github.io
+python3 -m http.server 8000
+# http://127.0.0.1:8000/app/invoice-scope/run/
+```
 
-- `test/loader.mjs` — Node non ha una import map. Il hook manda `gg/` a `_lib/`, **e solo
-  `gg/store.js` al deposito finto**: una impalcatura che sostituisce più del necessario finisce per
-  provare sé stessa.
-- `test/fake-dom.mjs` — il DOM finto su cui si provano le schermate. Una schermata si prova così, non
-  aprendo la pagina.
-- `test/xsd.sh` — valida i documenti di prova contro lo schema ufficiale, che **non sta nel
-  repository**: le istruzioni in `test/schema/README.md`.
+L'app registra un service worker, che tiene in cache i file: dopo una modifica al codice va
+aggiornato dagli strumenti per sviluppatori («Application» → «Service workers»).
 
----
+## Prove
 
-## Ricette
+Le prove girano con Node 20.6 o successivo, dalla radice del repository, senza dipendenze da
+installare. I totali attesi sono scritti a mano, non prodotti dal codice che viene provato.
 
-| Vuoi | Tocchi | E poi |
+```bash
+node --import ./app/invoice-scope/test/loader.mjs app/invoice-scope/test/totals.mjs
+```
+
+Ogni file di `test/` che non comincia con `fake-` ed è diverso da `loader.mjs` è una suite a sé.
+`test/xsd.sh` valida i documenti di prova contro lo schema ufficiale FatturaPA, che non è
+ridistribuito qui: come procurarlo è spiegato in `test/schema/README.md`.
+
+## Struttura
+
+| Percorso | Contenuto | Licenza |
 |---|---|---|
-| un campo nuovo sul documento | `model.js` (forma) → `doc.js` (campo) → `validate.js` se è obbligatorio → `fatturapa.js` se esce nell'XML | chiavi `f_` in `i18n.js`, nelle due lingue |
-| un tipo di documento nuovo | **solo `kinds.js`**, se il tipo è una riga di quella tabella | se non basta, la domanda è se il tipo esiste davvero |
-| un controllo nuovo | `validate.js` (chiave) → `problems.js` (frase) → `i18n.js` (due lingue) | `test/validate.mjs` |
-| un formato in ingresso | un modulo nuovo accanto a `sheet.js`/`xls.js`, che restituisce righe di stringhe | provalo **con file veri**, non con file inventati |
-| una schermata nuova | una rotta in `app.js` + un file suo | i conti li fa un modulo senza DOM, provato a parte |
-| un dato del cliente che si vede sul documento | `address.js` | lo prendono la carta (`print.js`) e la schermata (`doc.js`): una riga sola, due posti |
-| mostrare quanto resta da incassare | `ledger` in `schedule.js`, mai un conto nuovo nella schermata | elenco, documento e scadenzario devono dire lo stesso numero |
-| una serie o una numerazione | `kinds.js` (`serie`, `sequenza`) | e il numero per esteso esce anche nell'XML: `fatturapa.js` scrive `shownNumber`, non `doc.numero` |
-| una parola | `i18n.js`, **entrambe le lingue nella stessa modifica** | `check_apps.py` confronta le chiavi |
-| un file nuovo in `run/` | il file + l'elenco `ASSETS` in `sw.js` | e gira la versione |
+| `run/` | l'applicazione | PolyForm Shield 1.0.0 |
+| `test/` | le prove sotto Node | PolyForm Shield 1.0.0 |
+| [`../_business/`](../_business/) | modello dei progetti, editor e formati condivisi con le altre app gestionali | PolyForm Shield 1.0.0 |
+| [`../_lib/`](../_lib/) | archivio, lingua, tema, installazione, aggiornamento: comuni a tutte le app | Apache-2.0 |
+| `index.html` | la scheda dell'app sul sito, generata | non coperta: tutti i diritti riservati |
 
-**Ogni file nuovo comincia con l'intestazione di licenza** (`// Copyright 2026 G&G Technologies
-S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0`) e con il commento che dice perché esiste.
+Chi vuole modificare il codice parte da [DEVELOPING.md](DEVELOPING.md): i confini fra i moduli, le
+regole da non rompere e le ricette per le modifiche più frequenti.
+
+## Licenza
+
+Copyright © 2026 G&G Technologies S.r.l. Il codice di questa cartella è distribuito con la
+**[PolyForm Shield License 1.0.0](LICENSE)** (SPDX: `PolyForm-Shield-1.0.0`). Il riassunto che segue
+non sostituisce il testo della licenza, che è l'unico a fare fede.
+
+**È consentito** leggere il codice, eseguirlo, modificarlo e distribuirlo, e usare l'app — modificata
+o no — per qualunque lavoro proprio, anche commerciale, compreso costruirci sopra un prodotto che
+svolge un compito diverso.
+
+**È richiesto** che ogni copia di qualunque parte del codice, modificata o no, porti con sé la
+licenza (o il suo indirizzo) e le righe `Required Notice` del file [NOTICE](NOTICE):
+
+```
+Required Notice: Copyright 2026 G&G Technologies S.r.l. (https://ggtechnologies.sm)
+Required Notice: Invoice Scope is a work of G&G Technologies S.r.l. — https://ggtechnologies.sm/app/invoice-scope/
+```
+
+**Non è consentito senza una licenza commerciale** offrire un prodotto che faccia concorrenza al
+software o a un prodotto che G&G Technologies offre con esso: un'applicazione o un servizio che
+svolge lo stesso compito, a pagamento o gratuito, esteso o no, con o senza un proprio server. Quando
+serve e a quali condizioni lo dice [COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md); la richiesta va a
+[info@ggtechnologies.sm](mailto:info@ggtechnologies.sm).
+
+Da sapere, inoltre:
+
+- **Versioni precedenti.** Le versioni fino alla 0.64.8 sono state pubblicate con la licenza
+  Apache 2.0, e le copie di quelle versioni la conservano. Ogni versione successiva è sotto la
+  licenza sopra.
+- **Librerie.** `app/_business/` è sotto la stessa licenza; `app/_lib/` è sotto Apache-2.0. Ciascuna
+  ha i propri `LICENSE` e `NOTICE`. L'app non include codice di terze parti.
+- **Formato FatturaPA.** Il tracciato è pubblicato dall'Agenzia delle Entrate; lo schema non è
+  ridistribuito qui. Scrittura e lettura dell'XML (`run/fatturapa.js`, `run/reading.js`) sono
+  un'implementazione propria della specifica pubblicata.
+- **Marchi.** La licenza copre diritto d'autore e brevetti, e non concede alcun diritto sui nomi
+  «Invoice Scope» e «G&G Technologies», né sui marchi e sui loghi di G&G Technologies, compreso il
+  logo usato come carta intestata predefinita.
+- **Cosa non è coperto.** La scheda `index.html` in questa cartella, le pagine del sito, gli
+  articoli e il marchio non hanno licenza: tutti i diritti riservati.
+- **Codice pubblico, non open source.** La PolyForm Shield non è una licenza approvata dalla Open
+  Source Initiative: il codice è pubblico e riusabile alle condizioni sopra.
+- **I dati sono vostri.** Clienti, prezzi e documenti appartengono a chi li scrive, ed escono come
+  XML e JSON leggibili senza l'app.
+
+L'app non è una consulenza fiscale: la correttezza dei dati inseriti e gli adempimenti restano a chi
+emette il documento e ai suoi consulenti.
+
+## Contatti
+
+G&G Technologies S.r.l. — Repubblica di San Marino ·
+[ggtechnologies.sm](https://ggtechnologies.sm) ·
+[info@ggtechnologies.sm](mailto:info@ggtechnologies.sm)
 
 ---
 
-## Prima di chiudere
+## English
 
-- [ ] **Versione girata** in `sw.js`: è l'unico meccanismo di aggiornamento che l'app ha. Numero
-      fermo e contenuto cambiato significa che chi ha già aperto l'app continua a ricevere la copia
-      vecchia, senza errori e per sempre. `_check_version_moved` lo verifica
-- [ ] `ASSETS` in `sw.js` elenca esattamente quello che l'app importa, `_lib/` compreso
-- [ ] Le chiavi italiane e inglesi di `i18n.js` coincidono
-- [ ] `python3 _src/check_apps.py` passa; se hai toccato la scheda, anche `build.py` e `check_site.py`
-- [ ] Le prove sopra passano — in particolare `totals`, `model`, `validate` e `fatturapa` se hai
-      toccato i conti o il tracciato
-- [ ] Provata **davvero**: nelle due lingue, nei due temi (con il chiaro impostato *prima* di
-      aprirla), installata in finestra `standalone`, e su un telefono vero
-- [ ] Nessuna richiesta di rete nel pannello di rete, a scheda aperta
-- [ ] Se hai toccato `_lib/`: girata anche la versione di **Plan Scope**
+**Invoice Scope** prepares invoices, credit notes, quotes and delivery notes for a small business in
+Italy or San Marino, and writes the FatturaPA XML file to be sent, entirely in the browser. It
+also keeps customers, price list, payment schedule, purchases and projects. It does not transmit
+the file, sign it or keep the legal archive. There is no server and no account; the data stays on
+the user's computer, and after loading the app makes no network request other than re-reading its
+own `sw.js` to check for updates.
+[App page](https://ggtechnologies.sm/en/app/invoice-scope/) ·
+[Open the app](https://ggtechnologies.sm/app/invoice-scope/run/)
 
-La lista completa, con le voci che riguardano la scheda e il sito, è in «Prima di pubblicare un'app»
-dentro `app/CLAUDE.md`.
+**Licence.** Copyright © 2026 G&G Technologies S.r.l. The code in this directory is licensed under
+the [PolyForm Shield License 1.0.0](LICENSE). You may read, run, modify and distribute it, and use it
+for any work of your own, commercial work included. Every copy must carry the licence and the
+`Required Notice` lines in [NOTICE](NOTICE). Providing a product that competes with the software —
+sold or free, extended or not, with or without a backend — requires a commercial licence: see
+[COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md) and write to
+[info@ggtechnologies.sm](mailto:info@ggtechnologies.sm). Versions up to 0.64.8 were published under
+the Apache License 2.0 and keep it. `app/_lib/` is Apache-2.0; `app/_business/` is PolyForm Shield.
+No rights are granted to the names and marks of G&G Technologies. The page `index.html`, the website
+and its articles are not covered: all rights reserved.

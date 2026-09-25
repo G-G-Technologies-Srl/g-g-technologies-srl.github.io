@@ -98,8 +98,10 @@ export function build({ t, model, columns }) {
   // calendario aveva un mese con sei cose dentro. Due di queste cadono apposta nello stesso giorno
   // di un'altra, perché in un calendario vero due cose nello stesso giorno capitano.
   const EXTRA = [
-    { title: "demoTask1", ends: 2 },
-    { title: "demoTask2", ends: 5, lasts: 7, tags: ["demoTag2"] },
+    // Two of them have somebody on them, so that the lists that cross projects show who as well
+    // as what: an example where nothing is anybody's would not show that part at all.
+    { title: "demoTask1", ends: 2, who: "demoWho3" },
+    { title: "demoTask2", ends: 5, lasts: 7, tags: ["demoTag2"], who: "demoWho2" },
     { title: "demoTask3", ends: 7, waits: "ev_quotes", tags: ["demoTag2"] },
     { title: "demoTask4", ends: 30, lasts: 3, tags: ["demoTag2"], who: "demoWho2" },
   ];
