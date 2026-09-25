@@ -344,6 +344,24 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://ggtechnologies.sm/servizi/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/servizi/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/services/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/servizi/"/>
+    <lastmod>2026-09-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/en/services/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/servizi/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/services/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/servizi/"/>
+    <lastmod>2026-09-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://ggtechnologies.sm/app/</loc>
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/app/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/app/"/>

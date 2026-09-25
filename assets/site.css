@@ -1464,6 +1464,8 @@ section.tinted {
 }
 
 .related-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
+/* An about-text standing alone, outside .about-grid: the reading width the grid would give it. */
+.about-text.solo { max-width: 720px; }
 .related-card {
   display: block;
   border: 1px solid var(--border);
