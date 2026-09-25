@@ -2265,6 +2265,9 @@ html[data-theme="light"] { --high: #b42318; --decide: #6b3fb3; --wait: #3d5c99; 
   display: flex;
   align-items: center;
   gap: 14px;
+  /* Its own width, not what is left right of the middle: with `left: 50%` a phone squeezed the
+     text into a column of one word per line. */
+  width: max-content;
   max-width: calc(100vw - 28px);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
@@ -2866,3 +2869,92 @@ a.attachment:hover { border-color: var(--border-strong); }
 .card-series button { margin-left: auto; }
 
 #snackSecond { margin-left: 4px; }
+
+/* ---------------------------------------------------------------------------------------------
+   The bubble a mark opens (tip.js). The site's panel, small: the same gradient, the hairline, the
+   green filament on top, and an arrow pointing at the mark it speaks for. The mark itself takes a
+   ring of its own colour while its bubble is open, so the eye knows which of five marks on a row
+   is talking.
+   --------------------------------------------------------------------------------------------- */
+
+.has-tip { cursor: help; border-radius: 4px; }
+.has-tip:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.has-tip.is-tipping { outline: 2px solid currentColor; outline-offset: 2px; }
+.late-ring.has-tip { color: var(--late); border-radius: 999px; }
+.diamond.has-tip { color: var(--accent); border-radius: 0; }
+
+.tip {
+  position: fixed;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  width: max-content;
+  max-width: min(300px, calc(100vw - 16px));
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: linear-gradient(170deg, var(--panel-2), var(--panel) 70%);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+  padding: 11px 14px 12px;
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.4;
+  text-align: left;
+  font-weight: 400;
+  text-decoration: none;
+  white-space: normal;
+  animation: tip-in 120ms ease-out;
+}
+
+.tip::before {
+  content: "";
+  position: absolute;
+  inset: 0 12px auto 12px;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-text));
+}
+
+/* The arrow: a square turned on its corner, the colour of the bubble's edge it leaves from. */
+.tip::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--arrow-x, 50%) - 6px);
+  width: 10px;
+  height: 10px;
+  transform: rotate(45deg);
+  border: 1px solid var(--border-strong);
+}
+
+.tip[data-side="top"]::after {
+  bottom: -6px;
+  background: var(--panel);
+  border-top: 0;
+  border-left: 0;
+}
+
+.tip[data-side="bottom"]::after {
+  top: -6px;
+  background: var(--panel-2);
+  border-bottom: 0;
+  border-right: 0;
+}
+
+.tip-head { font-weight: 600; font-size: 14px; }
+.tip-detail { color: var(--muted); }
+.tip-action { margin-top: 7px; }
+.tip[hidden] { display: none; }
+
+@keyframes tip-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tip { animation: none; }
+}
+
+@media print {
+  .tip { display: none; }
+}

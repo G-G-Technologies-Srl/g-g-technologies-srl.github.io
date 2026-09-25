@@ -15,6 +15,7 @@ import { boxes } from "biz/plan-markdown.js";
 import { glance, glanceOf, colorDot, editProps, addProp, isColor } from "./pages.js";
 import { t, tf, num } from "./i18n.js";
 import { el, node, button, fill, shortDate, longDate, bytes, tagHue, count, locale } from "./ui.js";
+import { tip } from "./tip.js";
 
 /**
  * L'etichetta accesa, in minuscolo, o `null`.
@@ -165,7 +166,7 @@ function _cardNextLine(one, today) {
   if (meeting && one.time) line.append(node("span", "next-time", one.time));
   line.append(node("span", "next-title", meeting ? (one.meeting.page.title || t("pageUntitled"))
     : (one.task.title || t("taskUntitled"))));
-  if (!meeting && one.task.repeat) line.append(_repeatMark(one.task));
+  if (!meeting && one.task.repeat) line.append(_repeatMark(one.task, false));
   line.append(node("span", "next-date", shortDate(one.date)));
   const who = meeting ? one.meeting.with : model.assigneeName(one.task);
   for (const name of String(who || "").split(",").map((part) => part.trim()).filter(Boolean)) {
@@ -795,50 +796,130 @@ function _sign(name, label = "") {
     svg.setAttribute("role", "img");
     svg.setAttribute("aria-label", label);
   }
-  // What the mark means, on hover: an SVG takes its tooltip from a <title> child, not an attribute.
-  const hint = SIGN_HINTS[name];
-  if (hint) {
-    const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
-    title.textContent = t(hint);
-    svg.prepend(title);
-  }
   return svg;
 }
 
-// The explanation each mark carries as a tooltip. The legend under the weeks says the same in a
-// word; this says what it means for the person reading it.
-const SIGN_HINTS = {
-  flag: "hintHigh",
-  lock: "hintBlocked",
-  decide: "hintDecide",
-  pen: "hintNotes",
-  clock: "hintWaiting",
-  meeting: "hintMeeting",
-};
+// Where a mark stands alone on a row it opens a bubble that says what it means there (tip.js).
+// Where it stands inside something pressable — a weeks marker, a project card — or beside the word
+// that names it, as in the legend, it stays a drawing: a bubble inside a button would be a button
+// inside a button, and a bubble repeating the word beside it says nothing.
 
-/** "↻", beside the title of a task that comes back: said, and named for a screen reader. */
-function _repeatMark(task) {
-  const mark = node("span", "repeat-mark", "↻");
-  mark.title = tf("hintRepeat", { every: t(`repeatShort_${task.repeat}`) });
-  mark.setAttribute("role", "img");
-  mark.setAttribute("aria-label", t("seriesRepeats"));
-  return mark;
+/** A title short enough for a button in a bubble. */
+function _short(text) {
+  const words = String(text || t("taskUntitled"));
+  return words.length > 32 ? `${words.slice(0, 31).trimEnd()}…` : words;
 }
 
-/** The ring that marks something late: a shape as well as a colour, so it reads without the colour. */
-function _lateRing() {
+/** "↻", beside the title of a task that comes back. With `bubble`, it says until when, and ends it. */
+function _repeatMark(task, bubble = true) {
+  const mark = node("span", "repeat-mark", "↻");
+  mark.setAttribute("role", "img");
+  mark.setAttribute("aria-label", t("seriesRepeats"));
+  if (!bubble) {
+    mark.title = tf("hintRepeat", { every: t(`repeatShort_${task.repeat}`) });
+    return mark;
+  }
+  return tip(mark, () => {
+    // The task as it is now, not as it was when the row was drawn.
+    const now = model.task(task.id);
+    if (!now || !now.repeat) return null;
+    const series = model.seriesOf(now);
+    let detail = t("tipRepeatLast");
+    if (series.next && series.until) {
+      detail = tf("tipRepeatUntil", { date: shortDate(series.next), until: shortDate(series.until) });
+    } else if (series.next) {
+      detail = tf("tipRepeatNext", { date: shortDate(series.next) });
+    }
+    return {
+      head: tf("tipRepeat", { every: t(`repeatShort_${now.repeat}`) }),
+      detail,
+      action: { label: t("seriesEnd"), run: () => on.endSeries(now.id) },
+    };
+  });
+}
+
+/** The ring that marks something late: a shape as well as a colour. Given the day, it says by how much. */
+function _lateRing(date = "") {
   const ring = node("span", "late-ring");
   ring.setAttribute("role", "img");
   ring.setAttribute("aria-label", t("dueLate"));
-  ring.title = t("hintLate");
-  return ring;
+  if (!date) return ring;
+  return tip(ring, () => {
+    const days = -model.daysBetween(model.todayISO(), date);
+    return {
+      head: days === 1 ? t("tipLateOne") : tf("tipLate", { n: num(days, 0) }),
+      detail: tf("tipLateWas", { date: shortDate(date) }),
+    };
+  });
 }
 
-/** The milestone's diamond, with what a milestone is on hover. */
-function _diamond() {
+/** The milestone's diamond. Given what comes before it, it says so. */
+function _diamond(before = null) {
   const mark = node("span", "diamond");
-  mark.title = t("hintMilestone");
-  return mark;
+  if (before === null) return mark;
+  mark.setAttribute("role", "img");
+  mark.setAttribute("aria-label", t("tipMilestone"));
+  return tip(mark, () => ({
+    head: t("tipMilestone"),
+    detail: before ? count(before, "planBeforeOne", "planBefore") : t("planBeforeNone"),
+  }));
+}
+
+/** The flag of a task that comes first: by when. */
+function _flagMark(task) {
+  return tip(_sign("flag", t("nowHigh")), () => ({
+    head: t("tipHigh"),
+    detail: task.end ? tf("tipHighBy", { date: shortDate(task.end) }) : t("tipHighNone"),
+  }));
+}
+
+/** The lock of a blocked task: waiting for what, and the way to it. */
+function _lockMark(task) {
+  return tip(_sign("lock", t("nowBlocked")), () => {
+    const waits = (task.blockedBy || []).map((id) => model.task(id)).filter((one) => one && !model.isDone(one));
+    if (!waits.length) return { head: t("tipBlocked") };
+    const first = waits[0];
+    return {
+      head: t("tipBlocked"),
+      detail: waits.length > 1
+        ? tf("tipBlockedMore", { title: first.title || t("taskUntitled"), n: num(waits.length - 1, 0) })
+        : tf("tipBlockedBy", { title: first.title || t("taskUntitled") }),
+      action: { label: tf("tipOpen", { title: _short(first.title) }), run: () => on.openTask(first.id) },
+    };
+  });
+}
+
+/** The fork of a decision still open: by when, where the question is, and the way to answer it. */
+function _decideMark(decision) {
+  return tip(_sign("decide", t("nowDecide")), () => {
+    const today = model.todayISO();
+    let head = t("tipDecide");
+    if (decision.by && decision.by < today) head = tf("tipDecideLate", { date: shortDate(decision.by) });
+    else if (decision.by) head = tf("tipDecideBy", { date: shortDate(decision.by) });
+    return {
+      head,
+      detail: tf("tipDecideIn", { title: decision.page.title || t("pageUntitled") }),
+      action: { label: t("decideDo"), run: () => on.decide(decision) },
+    };
+  });
+}
+
+/** The pen of a meeting held without notes: which one, when, and the way to write them. */
+function _penMark(meeting, date) {
+  return tip(_sign("pen", t("tipNotes")), () => ({
+    head: t("tipNotes"),
+    detail: tf("tipNotesDetail", { title: meeting.page.title || t("pageUntitled"), when: _distance(date, model.todayISO()) }),
+    action: { label: t("notesWrite"), run: () => on.openPage(meeting.page.id) },
+  }));
+}
+
+/** The clock of a task others wait for: how many, and which. */
+function _clockMark(holds) {
+  const head = holds.length === 1 ? t("tipWaitingOne") : tf("tipWaiting", { n: num(holds.length, 0) });
+  return tip(_sign("clock", head), () => ({
+    head,
+    detail: holds.map((held) => `«${held.title || t("taskUntitled")}»`).join(", "),
+  }));
 }
 
 /** The meeting whose boxes a task was born in, by the task's `uid`: "dall'Incontro con Giulia". */
@@ -874,12 +955,12 @@ function _nowRow(item, today, origins) {
   row.append(node("span", `now-when${lateish ? " late" : ""}${item.kind === "today" ? " today" : ""}`, when));
 
   const title = node("span", "now-title");
-  if (item.kind === "late") title.append(_lateRing());
-  if (task && item.high) title.append(_sign("flag", t("nowHigh")));
+  if (item.kind === "late") title.append(_lateRing(item.date));
+  if (task && item.high) title.append(_flagMark(task));
   if (task && task.repeat) title.append(_repeatMark(task));
-  if (task && item.blocked) title.append(_sign("lock", t("nowBlocked")));
-  if (item.kind === "decide") title.append(_sign("decide", t("nowDecide")));
-  if (item.kind === "notes") title.append(_sign("pen"));
+  if (task && item.blocked) title.append(_lockMark(task));
+  if (item.kind === "decide") title.append(_decideMark(item.decision));
+  if (item.kind === "notes") title.append(_penMark(item.meeting, item.date));
   if (task) {
     title.append(button("link title", task.title || t("taskUntitled"), () => on.openTask(task.id)));
   } else if (item.kind === "decide") {
@@ -1011,7 +1092,7 @@ function _paintPlan(id, today) {
   line.hidden = !milestone;
   if (milestone) {
     fill(line, [
-      _diamond(),
+      _diamond(milestone.before),
       node("span", "meta", t("planMilestone")),
       button("link", milestone.task.title || t("taskUntitled"), () => on.openTask(milestone.task.id)),
       node("span", milestone.task.end < today ? "meta late" : "meta",
@@ -1290,7 +1371,7 @@ function _paintDecisions(id, today) {
   el("decisionsEmpty").hidden = all.length > 0;
   fill(el("decisionList"), shown.map((one) => {
     const row = node("li", `row-item decision-row${one.open ? " is-open" : " is-made"}`);
-    row.append(one.open ? _sign("decide", t("decisionOpen")) : _sign("check", t("decisionMade")));
+    row.append(one.open ? _decideMark(one) : _sign("check", t("decisionMade")));
     const text = node("div", "grow");
     text.append(button("link title", one.question, () => on.openPage(one.page.id)));
     const meta = one.open
@@ -1311,7 +1392,7 @@ function _paintWaiting(id, today) {
   el("panelWaiting").hidden = waiting.length === 0;
   fill(el("waitingList"), waiting.map((one) => {
     const row = node("li", "row-item waiting-row");
-    row.append(_sign("clock"));
+    row.append(_clockMark(one.holds));
     const text = node("div", "grow");
     text.append(button("link title", one.task.title || t("taskUntitled"), () => on.openTask(one.task.id)));
     const facts = [tf("waitingHolds", { titles: one.holds.map((held) => `«${held.title}»`).join(", ") })];

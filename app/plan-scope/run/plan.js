@@ -24,6 +24,7 @@ import * as pack from "biz/plan-pack.js";
 import * as csv from "./csv.js";
 import { t, tf, num } from "./i18n.js";
 import { el, node, button, fill, shortDate, locale, ask, tagHue } from "./ui.js";
+import { tip } from "./tip.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  s t a t e
@@ -386,10 +387,32 @@ function _taskCard(task, today) {
   // The mark beside the title, before the tick is pressed: this one comes back.
   if (task.repeat) {
     const mark = node("span", "repeat-mark", "↻");
-    mark.title = tf("hintRepeat", { every: t(`repeatShort_${task.repeat}`) });
-    mark.setAttribute("role", "img");
     mark.setAttribute("aria-label", t("seriesRepeats"));
-    head.append(mark);
+    // The bubble says how often and until when, and ends the series without opening the card.
+    head.append(tip(mark, () => {
+      const now = model.task(task.id);
+      if (!now || !now.repeat) return null;
+      const series = model.seriesOf(now);
+      let detail = t("tipRepeatLast");
+      if (series.next && series.until) {
+        detail = tf("tipRepeatUntil", { date: shortDate(series.next), until: shortDate(series.until) });
+      } else if (series.next) {
+        detail = tf("tipRepeatNext", { date: shortDate(series.next) });
+      }
+      return {
+        head: tf("tipRepeat", { every: t(`repeatShort_${now.repeat}`) }),
+        detail,
+        action: {
+          label: t("seriesEnd"),
+          run: () => {
+            const step = model.endSeries(now.id);
+            on.change();
+            paint();
+            if (step) on.batched(step, t("seriesEnded"));
+          },
+        },
+      };
+    }));
   }
   card.append(head);
 

@@ -3287,6 +3287,12 @@ function _connect() {
     },
     openPlan: () => { if (projectId) _openPlan(projectId); },
     decide: (decision) => _decide(decision),
+    // «Termina la serie» from the bubble on ↻: the same end as the card's, with the same way back.
+    endSeries: async (id) => {
+      const step = model.endSeries(id);
+      await _repaint();
+      _offerUndo(step, t("seriesEnded"));
+    },
     // A deadline on the dashboard opens its card, the same card the board opens: one place to
     // change a task, wherever it was seen. The card repaints the dashboard when it closes.
     openTask: (id) => {
