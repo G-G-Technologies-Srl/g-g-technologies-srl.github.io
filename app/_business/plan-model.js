@@ -712,6 +712,31 @@ export function taskOfPage(pageId) {
 }
 
 /**
+ * A task born from a line of a page, tied to that page.
+ *
+ * A page belongs to one task at most. If it already is the document of a task, the new one becomes
+ * its sub-task: what is written in that page is part of that work, and the board shows it under it.
+ * If the page is nobody's document yet, it becomes the document of the new task — unless
+ * `document` is false, which is the case of a meeting page bringing its boxes into the plan: there
+ * the first box is no more "the" task of the meeting than the others.
+ *
+ * One undo step for the task and the thread, because it is one gesture.
+ */
+export function createTaskFromPage(pageId, { title = "", end = null, document = true } = {}) {
+  const pageRecord = pages.get(pageId);
+  if (!pageRecord || pageRecord.trashedAt) return { task: null, parent: null, step: null };
+  const owner = taskOfPage(pageId);
+  let task = null;
+  const step = batch(() => {
+    task = createTask(pageRecord.projectId, { title, end, parentId: owner ? owner.id : null });
+    if (!owner && document) setTaskPage(task.id, pageId);
+  });
+  // The parent the model actually chose: a sub-task's page hangs its new tasks on the top one.
+  const parent = task.parentId ? tasks.get(task.parentId) : null;
+  return { task: tasks.get(task.id), parent, step };
+}
+
+/**
  * The live pages of the task's project that name it with a "[[#uid]]" line.
  *
  * The page a task was born from — the «/» menu, «Porta le caselle nel piano» — and any page that

@@ -572,7 +572,10 @@ function _boxesToPlan() {
       if (!csv.openBoxes(line) || md.TASK_REF.test(line)) return;
       const one = csv.parseTaskList(line, { people })[0];
       if (!one) return;
-      const task = model.createTask(page.projectId, { title: one.title, end: one.end });
+      // Se la pagina è il documento di un'attività, le caselle ne diventano sottoattività; se non
+      // lo è, restano attività sciolte e la pagina non diventa il documento di nessuna.
+      const { task } = model.createTaskFromPage(page.id, { title: one.title, end: one.end, document: false });
+      if (!task) return;
       if (one.tags.length || one.priority) model.updateTask(task.id, { tags: one.tags, priority: one.priority });
       // A chi la riga nomina con «@», altrimenti a chi era presente: il primo nome, perché
       // un'attività ha un assegnatario e non un elenco.
@@ -3487,9 +3490,13 @@ function _connect() {
       if (!page) return null;
       const title = String(await ask(t("taskAsk"), { value: said }) || "").trim();
       if (!title) return null;
-      const task = model.createTask(page.projectId, { title });
+      // La pagina è il documento dell'attività che nasce, o — se è già il documento di un'altra —
+      // la nuova ne diventa una sottoattività. Vedi `createTaskFromPage`.
+      const { task, parent } = model.createTaskFromPage(page.id, { title });
+      if (!task) return null;
       await _repaint();
-      snack(tf("taskMade", { name: title }));
+      snack(parent ? tf("taskMadeSub", { name: title, parent: parent.title || t("taskUntitled") })
+        : tf("taskMade", { name: title }));
       return { uid: task.uid || task.id, title };
     },
     // Com'è messa: aperta, fatta, o non c'è più. La pastiglia lo dice con una parola.

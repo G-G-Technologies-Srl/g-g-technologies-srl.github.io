@@ -1773,6 +1773,41 @@ test("un'attività ritrova le pagine che la nominano con «[[#uid]]», e solo qu
   assert.deepEqual(model.pagesNamingTask(null), []);
 });
 
+test("la prima attività nata da una pagina la prende come documento, le altre le stanno sotto", () => {
+  const one = model.createProject({ name: "Sito" });
+  const page = model.createPage(one.id, { title: "Fiera" });
+  const prima = model.createTaskFromPage(page.id, { title: "Preparare la fiera" });
+  assert.equal(prima.parent, null);
+  assert.equal(model.pageOfTask(prima.task).id, page.id);
+  assert.equal(model.taskOfPage(page.id).id, prima.task.id);
+  const seconda = model.createTaskFromPage(page.id, { title: "Prenotare lo stand" });
+  assert.equal(seconda.parent.id, prima.task.id);
+  assert.equal(seconda.task.parentId, prima.task.id);
+  assert.equal(model.pageOfTask(seconda.task), null, "il documento resta alla prima");
+  assert.equal(model.taskOfPage(page.id).id, prima.task.id);
+  model.undoStep(prima.step);
+  assert.equal(model.taskOfPage(page.id), null, "l'undo toglie attività e filo insieme");
+});
+
+test("la pagina di una sottoattività appende le nuove all'attività principale", () => {
+  const one = model.createProject({ name: "Sito" });
+  const capo = model.createTask(one.id, { title: "Fiera" });
+  const sotto = model.createTask(one.id, { title: "Stand", parentId: capo.id });
+  const page = model.createPage(one.id, { title: "Come si monta" });
+  model.setTaskPage(sotto.id, page.id);
+  const nuova = model.createTaskFromPage(page.id, { title: "Comprare le viti" });
+  assert.equal(nuova.task.parentId, capo.id);
+  assert.equal(nuova.parent.id, capo.id);
+});
+
+test("le caselle di un verbale non fanno del verbale il documento di nessuno", () => {
+  const one = model.createProject({ name: "Sito" });
+  const page = model.createPage(one.id, { title: "Verbale" });
+  const made = model.createTaskFromPage(page.id, { title: "Chiamare Rossi", document: false });
+  assert.equal(made.parent, null);
+  assert.equal(model.taskOfPage(page.id), null);
+});
+
 test("il filo si stacca, e senza filo le due parti non si conoscono", () => {
   const one = model.createProject({ name: "Sito" });
   const task = model.createTask(one.id, { title: "Montare lo stand" });
