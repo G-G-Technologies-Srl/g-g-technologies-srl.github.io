@@ -1759,6 +1759,20 @@ test("un'attività porta al suo documento, e il documento riporta all'attività"
   assert.equal(model.taskOfPage(page.id).id, task.id);
 });
 
+test("un'attività ritrova le pagine che la nominano con «[[#uid]]», e solo quelle vive", () => {
+  const one = model.createProject({ name: "Sito" });
+  const task = model.createTask(one.id, { title: "Prenotare lo stand" });
+  const other = model.createTask(one.id, { title: "Stampare i cataloghi" });
+  const verbale = model.createPage(one.id, { title: "Verbale" });
+  const appunti = model.createPage(one.id, { title: "Appunti" });
+  model.setMarkdown(verbale.id, `- [ ] Prenotare lo stand [[#${task.uid}]]\n- [ ] Stampare [[#${other.uid}]]\n`);
+  model.setMarkdown(appunti.id, "Lo stand, se ne parla lunedì.\n");
+  assert.deepEqual(model.pagesNamingTask(model.task(task.id)).map((x) => x.title), ["Verbale"]);
+  model.trashPage(verbale.id);
+  assert.deepEqual(model.pagesNamingTask(model.task(task.id)), [], "una pagina nel cestino non conta");
+  assert.deepEqual(model.pagesNamingTask(null), []);
+});
+
 test("il filo si stacca, e senza filo le due parti non si conoscono", () => {
   const one = model.createProject({ name: "Sito" });
   const task = model.createTask(one.id, { title: "Montare lo stand" });

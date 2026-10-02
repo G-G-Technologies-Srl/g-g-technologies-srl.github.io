@@ -27,7 +27,8 @@
 // creation, and travels through every export and import. Two copies of a project on two computers
 // have different ids and the same uids, and that is what `merge` matches on.
 
-import { links, frontmatter, withFrontmatter, mentions, renameMention, decisions, withChoice, boxes, parse }
+import { links, frontmatter, withFrontmatter, mentions, renameMention, decisions, withChoice, boxes, parse,
+  taskRefs }
   from "./plan-markdown.js";
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -708,6 +709,20 @@ export function taskOfPage(pageId) {
   if (!pageRecord || pageRecord.trashedAt) return null;
   const wanted = pageRecord.uid || pageRecord.id;
   return tasksOf(pageRecord.projectId).find((one) => one.pageUid === wanted) || null;
+}
+
+/**
+ * The live pages of the task's project that name it with a "[[#uid]]" line.
+ *
+ * The page a task was born from — the «/» menu, «Porta le caselle nel piano» — and any page that
+ * hooked it later. Not stored on the task: the line in the page is the thread, so it is read by
+ * searching, like `taskOfPage`. A field would be a second truth, and the first line deleted from
+ * the page would leave the card pointing at a page that no longer names it.
+ */
+export function pagesNamingTask(task) {
+  if (!task) return [];
+  const wanted = String(task.uid || task.id);
+  return pagesOf(task.projectId).filter((one) => taskRefs(one.markdown || "").includes(wanted));
 }
 
 /**

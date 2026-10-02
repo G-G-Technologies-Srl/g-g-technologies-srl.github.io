@@ -550,32 +550,44 @@ function _newMeeting(target, said = {}, { title = null } = {}) {
  *
  * Le caselle già spuntate restano dove sono: portarle nel piano come «da fare» sarebbe riaprire
  * quello che l'incontro aveva chiuso.
+ *
+ * Ogni riga portata riceve il suo aggancio «[[#uid]]», come quelle scritte dal menù «/»: la scheda
+ * dell'attività torna così alla pagina da cui è nata, la casella si spunta con la bacheca, e un
+ * secondo clic non fa doppioni. Testo e attività stanno nello stesso passo di undo.
  */
 function _boxesToPlan() {
   const page = pageId ? model.page(pageId) : null;
   if (!page) return undefined;
-  const text = page.markdown || "";
-  // Le righe che già nominano un'attività restano fuori: portarle vorrebbe dire farne una seconda,
-  // con lo stesso titolo e nessun legame con la riga.
-  const open = csv.openBoxes(text).split("\n").filter((line) => !md.TASK_REF.test(line)).join("\n");
-  const found = csv.parseTaskList(open, { people: _mentionable() });
-  if (!found.length) return snack(t("boxesNone"));
-
-  const props = md.frontmatter(text).props || {};
+  const lines = (page.markdown || "").split("\n");
+  const props = md.frontmatter(page.markdown || "").props || {};
   const named = String(props[t("propWith")] || props.con || props.with || "")
     .split(",").map((one) => one.trim()).filter(Boolean);
+  const people = _mentionable();
 
+  let count = 0;
   const step = model.batch(() => {
-    for (const one of found) {
+    lines.forEach((line, at) => {
+      // Le righe che già nominano un'attività restano fuori: portarle vorrebbe dire farne una
+      // seconda, con lo stesso titolo.
+      if (!csv.openBoxes(line) || md.TASK_REF.test(line)) return;
+      const one = csv.parseTaskList(line, { people })[0];
+      if (!one) return;
       const task = model.createTask(page.projectId, { title: one.title, end: one.end });
       if (one.tags.length || one.priority) model.updateTask(task.id, { tags: one.tags, priority: one.priority });
       // A chi la riga nomina con «@», altrimenti a chi era presente: il primo nome, perché
       // un'attività ha un assegnatario e non un elenco.
       if (one.assignee || named[0]) model.assignByName(task.id, one.assignee || named[0]);
-    }
+      lines[at] = `${line.replace(/\s+$/, "")} [[#${task.uid || task.id}]]`;
+      count += 1;
+    });
+    if (count) model.updatePage(page.id, { markdown: lines.join("\n") });
   });
-  const words = found.length === 1 ? t("boxesDoneOne") : tf("boxesDone", { n: num(found.length, 0) });
-  _offerUndo(step, words);
+  if (!count) return snack(t("boxesNone"));
+  _reloadPage();
+  const words = count === 1 ? t("boxesDoneOne") : tf("boxesDone", { n: num(count, 0) });
+  // L'undo riporta anche il testo, quindi l'editore va riletto: altrimenti mostrerebbe gli
+  // agganci di attività che non ci sono più.
+  _offerUndo(step, words, { also: () => { if (pageId === page.id) _reloadPage(); } });
   return undefined;
 }
 

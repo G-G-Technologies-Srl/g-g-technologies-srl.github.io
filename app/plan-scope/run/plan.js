@@ -252,6 +252,17 @@ function _fillCard() {
   el("cardDocMake").hidden = Boolean(doc);
   el("cardDocHint").hidden = Boolean(doc);
 
+  // Le pagine che la nominano, il documento escluso perché ha già la sua riga sopra. Il clic chiude
+  // la scheda e apre la pagina, come fa il documento.
+  const naming = model.pagesNamingTask(task).filter((one) => !doc || one.id !== doc.id);
+  el("cardFromLabel").hidden = !naming.length;
+  el("cardFrom").hidden = !naming.length;
+  fill(el("cardFrom"), naming.map((page) => button("ghost", page.title || t("pageUntitled"), () => {
+    _saveCard();
+    el("taskCard").close();
+    on.openPage(page.id);
+  }, { label: t("cardFromOpen") })));
+
   // Whose this is, when it is a sub-task; and its own sub-tasks, when it is a parent. Never both:
   // one level, by the model's rule, so a sub-task's card has no list of its own.
   const parent = model.parentOf(task);
