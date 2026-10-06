@@ -54,7 +54,7 @@ Questa app fa la parte che pesa — i conti, il tracciato, i controlli — e la 
 - Importa da Fatture in Cloud clienti, listino e documenti, dai fogli dell'esportazione così come si scaricano — anche il .xls — con il dettaglio delle righe se si esporta anche quello, e le fatture intere dagli XML del backup. Prima di scrivere mostra cosa ha letto — quanti entrano, quali sono già lì, cosa ha lasciato fuori — e scrive solo dopo la conferma.
 - Conosce le sei direzioni che una fattura può prendere — dall'Italia verso l'Italia, verso San Marino e verso l'estero; da San Marino verso l'Italia, verso un altro sammarinese e verso l'estero — e per ciascuna scrive il file che quel canale accetta. La direzione la decidono il paese dell'azienda e quello del cliente, che sono già in anagrafica.
 - Fa le fatture interne fra operatori sammarinesi, obbligatorie dal 1° gennaio 2027: imposta monofase, codice destinatario a sette zeri, tipo merce su ogni riga, autofattura del cessionario, nota di debito e acconto.
-- Il tipo merce lo chiede una volta per documento — «questa fattura contiene: servizi, beni, lavorazione con materiale» — e dice lì che cosa comporta: se serve il documento di trasporto, e da quale data si conta il termine. Le righe lo prendono da lì, e i codici hanno le parole accanto.
+- Il tipo merce lo chiede una volta per documento — «questa fattura contiene: servizi, beni, lavorazione con materiale» — e dice lì che cosa comporta: se serve il documento di trasporto, e da quale data si conta il termine. Le righe lo prendono da lì, e i codici hanno le parole accanto. Il DDT fatto a mano o da un altro programma si scrive sulla fattura, con le righe che ha consegnato.
 - Calcola il termine entro cui il documento va trasmesso, che non è la scadenza dell'incasso: lo mostra sul documento e nella Situazione, con la conseguenza del ritardo, che nei due canali sammarinesi non è la stessa.
 - Verso un paese dove la fattura elettronica non è prevista non produce un file e spiega perché: quel documento si stampa, e fingere un adempimento sarebbe peggio che non averlo.
 - Calcola l'IVA sul riepilogo per aliquota, che è il modo in cui la ricalcola il Sistema di Interscambio.
@@ -146,7 +146,7 @@ PolyForm Shield 1.0.0. Il codice è pubblico: si legge, si modifica e si usa anc
 
 Gratuita.
 
-**Versione** 0.66.0 · **Aggiornata il** 6 ottobre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
+**Versione** 0.67.0 · **Aggiornata il** 6 ottobre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
 
 *FAQ*
 

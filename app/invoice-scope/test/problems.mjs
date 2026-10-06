@@ -158,6 +158,11 @@ const CASI = [
   // il canale non accetta, una nota datata prima della fattura, un riepilogo che si annulla.
   [{ ...DOC, righe: [{ ...RIGA, tm: "4" }], ddt: [{ numero: "D1", data: "2026-08-01" }] }, CTX_INTERNA],
   [{ ...DOC, righe: [{ ...RIGA, tm: "3" }] }, CTX_SM],
+  // Un DDT scritto a mano e lasciato a metà, e due DDT che non dicono quali righe hanno portato.
+  [{ ...DOC, righe: [{ ...RIGA, aliquota: "0", natura: "N4", tm: "4" }],
+    ddt: [{ numero: "", data: "20/08/2026" }] }, CTX_INTERNA],
+  [{ ...DOC, righe: [{ ...RIGA, aliquota: "0", natura: "N4", tm: "4" }],
+    ddt: [{ numero: "D1", data: "2026-08-01" }, { numero: "D2", data: "2026-08-02" }] }, CTX_INTERNA],
   [{ ...DOC, tipo: "TD29", righe: [{ ...RIGA, aliquota: "0", natura: "N3.1", tm: "3" }] }, CTX_SM],
   [{
     ...DOC,

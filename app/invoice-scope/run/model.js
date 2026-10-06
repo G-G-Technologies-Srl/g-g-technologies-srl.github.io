@@ -490,7 +490,17 @@ export function convertMany(docs) {
     // resto — ma è l'id che permette di sapere, guardando le fatture, quali consegne sono già
     // state fatturate. Il numero da solo cambierebbe significato il giorno in cui una serie viene
     // riusata in un altro anno.
-    fields.ddt = lista.map((doc) => ({ numero: shownNumber(doc), data: doc.data, id: doc.id }));
+    //
+    // With more than one delivery note each says which lines it brought: the lines are copied in
+    // the order of `lista`, so the numbers are known here and nowhere later.
+    let primaRiga = 1;
+    fields.ddt = lista.map((doc) => {
+      const quante = (doc.righe || []).length;
+      const ref = { numero: shownNumber(doc), data: doc.data, id: doc.id };
+      if (lista.length > 1) ref.righe = Array.from({ length: quante }, (_, k) => primaRiga + k);
+      primaRiga += quante;
+      return ref;
+    });
   } else {
     fields.daPreventivo = { numero: shownNumber(primo), data: primo.data, id: primo.id };
   }

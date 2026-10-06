@@ -596,7 +596,7 @@ const IT = {
   autofatturaRowLate: "{fornitore} · {importo} · spesa del {data} · termine scaduto il {scadenza}",
   autofatturaMake: "Prepara l'autofattura",
   autofatturaSkip: "Non è dovuta",
-  autofatturaSkipAsk: "Confermi che per questa spesa l'autofattura non è dovuta? La spesa non "
+  autofatturaSkipAsk: "Segno che per questa spesa l'autofattura non è dovuta? La spesa non "
     + "comparirà più in questo elenco. È il caso, per esempio, di un fornitore non soggetto "
     + "all'obbligo di fatturazione elettronica.",
   autofatturaDone: "Autofattura preparata come bozza. Indica che cosa contiene — servizi, beni o "
@@ -932,6 +932,16 @@ const IT = {
   docLinked: "Storna il documento",
   docFromQuote: "Dal preventivo",
   docFromDdt: "Dai documenti di trasporto",
+  docDdtTitle: "Documenti di trasporto",
+  docDdtAdd: "Aggiungi DDT",
+  docDdtNote: "Il DDT fatto fuori dall'app — a mano, o da un altro programma — si scrive qui con "
+    + "il numero e la data che porta. Con più DDT, ognuno indica le righe che ha consegnato.",
+  docDdtNumero: "Numero DDT",
+  docDdtData: "Data DDT",
+  docDdtRighe: "Righe",
+  docDdtRighePh: "1, 2, 3",
+  docDdtRemove: "Togli il DDT",
+  docDdtFromApp: "creato nell'app",
   docAlreadyInvoiced: "Già fatturato con",
   docSaveFirst: "Salvato.",
   docXml: "Scarica l'XML",
@@ -1106,6 +1116,7 @@ const IT = {
   f_porto: "porto",
   f_vettore: "vettore",
   f_fattureCollegate: "fattura collegata",
+  f_ddt: "documento di trasporto",
   f_paese: "paese",
   f_pec: "PEC",
   paeseIT: "Italia",
@@ -1209,7 +1220,13 @@ const IT = {
     + "Qui ci sono {elenco}: servono documenti separati.",
   vDdtRequired: "manca il documento di trasporto",
   vDdtRequiredFix: "Per questi tipi merce il DDT è obbligatorio, e da lì si contano i termini di "
-    + "trasmissione. Indica numero e data.",
+    + "trasmissione. Numero e data vanno in «Documenti di trasporto», sotto le righe.",
+  vDdtNumberFix: "È il numero scritto sul documento di trasporto, al massimo 20 caratteri.",
+  vDdtDate: "la data del documento di trasporto non è valida",
+  vDdtDateFix: "Serve la data scritta sul documento di trasporto, per esempio {esempio}.",
+  vDdtLines: "non dice a quali righe si riferisce",
+  vDdtLinesFix: "Con più documenti di trasporto ognuno indica le sue righe: per il DDT {numero} "
+    + "scrivi i numeri delle righe che ha consegnato, separati da virgole. Il documento ne ha {quante}.",
   vTypeChannel: "questo tipo di documento il canale non lo accetta",
   vTypeChannelFix: "Su questa direzione passano {elenco}. Il documento è {valore}.",
   vNotaPrimaDellaFattura: "la nota porta una data precedente alla fattura che rettifica",
@@ -1993,7 +2010,7 @@ const EN = {
   autofatturaRowLate: "{fornitore} · {importo} · expense of {data} · deadline passed on {scadenza}",
   autofatturaMake: "Prepare the self-billed invoice",
   autofatturaSkip: "Not required",
-  autofatturaSkipAsk: "Do you confirm that no self-billed invoice is required for this expense? "
+  autofatturaSkipAsk: "Mark this expense as not requiring a self-billed invoice? "
     + "The expense will no longer appear in this list. This is the case, for example, of a "
     + "supplier not subject to electronic invoicing.",
   autofatturaDone: "The self-billed invoice is ready as a draft. Choose what it contains — "
@@ -2320,6 +2337,16 @@ const EN = {
   docLinked: "Reverses document",
   docFromQuote: "From quote",
   docFromDdt: "From delivery notes",
+  docDdtTitle: "Delivery notes",
+  docDdtAdd: "Add delivery note",
+  docDdtNote: "A delivery note made outside the app — by hand, or by another program — goes here "
+    + "with the number and date it carries. With more than one, each lists the lines it delivered.",
+  docDdtNumero: "Delivery note number",
+  docDdtData: "Delivery note date",
+  docDdtRighe: "Lines",
+  docDdtRighePh: "1, 2, 3",
+  docDdtRemove: "Remove the delivery note",
+  docDdtFromApp: "made in the app",
   docAlreadyInvoiced: "Already invoiced on",
   docSaveFirst: "Saved.",
   docXml: "Download the XML",
@@ -2492,6 +2519,7 @@ const EN = {
   f_porto: "carriage",
   f_vettore: "carrier",
   f_fattureCollegate: "linked invoice",
+  f_ddt: "delivery note",
   f_paese: "country",
   f_pec: "certified email",
   paeseIT: "Italy",
@@ -2590,7 +2618,13 @@ const EN = {
     + "This one has {elenco}: they need separate documents.",
   vDdtRequired: "the delivery note is missing",
   vDdtRequiredFix: "For these goods types a delivery note is required, and the transmission "
-    + "deadline is counted from it. Give its number and date.",
+    + "deadline is counted from it. Number and date go under «Delivery notes», below the lines.",
+  vDdtNumberFix: "It is the number written on the delivery note, 20 characters at most.",
+  vDdtDate: "the delivery note date is not valid",
+  vDdtDateFix: "Use the date written on the delivery note, for example {esempio}.",
+  vDdtLines: "does not say which lines it covers",
+  vDdtLinesFix: "With more than one delivery note each lists its own lines: for delivery note "
+    + "{numero} write the numbers of the lines it delivered, separated by commas. The document has {quante}.",
   vTypeChannel: "this channel does not accept this kind of document",
   vTypeChannelFix: "This direction takes {elenco}. The document is {valore}.",
   vNotaPrimaDellaFattura: "the note is dated before the invoice it corrects",

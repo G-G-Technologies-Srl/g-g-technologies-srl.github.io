@@ -526,6 +526,57 @@ test("il DDT è obbligatorio per i tipi merce che lo prevedono", () => {
   assert.deepEqual(validate(nota, { company: SM, party: SM_CLIENTE }), []);
 });
 
+test("anche l'autofattura di beni nomina il suo DDT", () => {
+  // TD29 documenta una cessione come le altre: la merce ha viaggiato con il DDT del fornitore.
+  const autofattura = { ...INTERNA, tipo: "TD29", ddt: [] };
+  assert.ok(validate(autofattura, { company: SM, party: SM_CLIENTE }).map((p) => p.campo)
+    .includes("ddt"), "ha lasciato passare un'autofattura di beni senza DDT");
+  const conDdt = { ...autofattura, ddt: INTERNA.ddt };
+  assert.ok(!validate(conDdt, { company: SM, party: SM_CLIENTE }).map((p) => p.campo)
+    .includes("ddt"));
+});
+
+test("un DDT scritto a mano porta numero e data validi", () => {
+  const meta = { ...INTERNA, ddt: [{ numero: "", data: "" }] };
+  const campi = validate(meta, { company: SM, party: SM_CLIENTE }).map((p) => p.campo);
+  assert.ok(campi.includes("ddt[1].numero"), campi.join(" | "));
+  assert.ok(campi.includes("ddt[1].data"), campi.join(" | "));
+  // Oltre i 20 caratteri il NumeroDDT non entra nel tracciato.
+  const lungo = { ...INTERNA, ddt: [{ numero: "X".repeat(21), data: "2026-08-20" }] };
+  assert.ok(validate(lungo, { company: SM, party: SM_CLIENTE }).map((p) => p.campo)
+    .includes("ddt[1].numero"));
+  // E il problema si legge con le parole dell'app, non con il percorso interno.
+  const frasi = describe(validate(meta, { company: SM, party: SM_CLIENTE }));
+  assert.ok(frasi.some((f) => f.startsWith("documento di trasporto 1")), frasi.join(" | "));
+});
+
+test("con più DDT, a San Marino ognuno indica le sue righe", () => {
+  const righe = [INTERNA.righe[0], { ...INTERNA.righe[0], descrizione: "Filtri" }];
+  const due = {
+    ...INTERNA,
+    righe,
+    ddt: [{ numero: "DDT 1", data: "2026-08-20" }, { numero: "DDT 2", data: "2026-08-22" }],
+  };
+  const campi = validate(due, { company: SM, party: SM_CLIENTE }).map((p) => p.campo);
+  assert.ok(campi.includes("ddt[1].righe") && campi.includes("ddt[2].righe"), campi.join(" | "));
+  const indicate = {
+    ...due,
+    ddt: [{ ...due.ddt[0], righe: [1] }, { ...due.ddt[1], righe: [2] }],
+  };
+  assert.deepEqual(validate(indicate, { company: SM, party: SM_CLIENTE }), []);
+  // Una riga che sul documento non c'è viene segnalata.
+  const fuori = { ...due, ddt: [{ ...due.ddt[0], righe: [1] }, { ...due.ddt[1], righe: [3] }] };
+  assert.ok(validate(fuori, { company: SM, party: SM_CLIENTE }).map((p) => p.campo)
+    .includes("ddt[2].righe"));
+  // Nel tracciato italiano il riferimento alle righe resta facoltativo.
+  const italia = {
+    ...DOC,
+    tipo: "TD24",
+    ddt: [{ numero: "DDT 1", data: "2026-08-20" }, { numero: "DDT 2", data: "2026-08-22" }],
+  };
+  assert.deepEqual(validate(italia, context), []);
+});
+
 test("verso un paese diverso dall'Italia la fattura si emette, ma non diventa un file", () => {
   // **Trovato provando sui dati veri.** Il controllo diceva «verso questo paese non esiste la
   // fattura elettronica» come se fosse un difetto del documento, e `issue()` si rifiutava di

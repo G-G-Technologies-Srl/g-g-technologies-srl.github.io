@@ -311,11 +311,40 @@ function _merce(problems, doc, profile) {
       { elenco: [...new Set(codici)].sort().join(", ") }));
   }
 
-  const accompagna = ["TD01", "TD24", "TD02"].includes(doc.tipo || "TD01");
+  // TD29 is on the list too: the self-billed invoice documents a sale of goods like any other, and
+  // the goods still travelled with a delivery note — the supplier's, which is why it is typed in.
+  const accompagna = ["TD01", "TD24", "TD02", "TD29"].includes(doc.tipo || "TD01");
   const serve = codici.some((codice) => MERCE_CON_DDT.has(codice));
   if (accompagna && serve && !(doc.ddt || []).length) {
     problems.push(_problem("ddt", "vDdtRequired", "vDdtRequiredFix"));
   }
+}
+
+/**
+ * The delivery notes the document names, one by one.
+ *
+ * **Each reference ends up in `DatiDDT`**, where the number is a 20-character string and the date
+ * an ISO date: a reference typed by hand and left half-written would become a rejected file. With
+ * more than one delivery note the San Marino rules also want each of them to say which lines it
+ * covers (`RiferimentoNumeroLinea`), and the numbers have to exist on the document.
+ */
+function _ddt(problems, doc, profile) {
+  const refs = doc.ddt || [];
+  const quante = (doc.righe || []).length;
+  refs.forEach((ref, i) => {
+    const campo = `ddt[${i + 1}]`;
+    _text(problems, ref.numero, `${campo}.numero`, MAX.numero, "vDdtNumberFix");
+    if (!DATE.test(String(ref.data || ""))) {
+      problems.push(_problem(`${campo}.data`, "vDdtDate", "vDdtDateFix", { esempio: "2026-09-03" }));
+    }
+    if (!profile.tmObbligatorio || refs.length < 2) return;
+    const righe = ref.righe || [];
+    const fuori = righe.filter((n) => !Number.isInteger(n) || n < 1 || n > quante);
+    if (!righe.length || fuori.length) {
+      problems.push(_problem(`${campo}.righe`, "vDdtLines", "vDdtLinesFix",
+        { numero: ref.numero || String(i + 1), quante }));
+    }
+  });
 }
 
 /**
@@ -437,6 +466,7 @@ export function validate(doc, {
 
   _righe(problems, doc, profile);
   _merce(problems, doc, profile);
+  if (fiscale) _ddt(problems, doc, profile);
 
   // **Il tipo cessione, dove un rimborso può esistere.** Il manuale dell'Ufficio Tributario lo lega
   // ai tipi merce 1 e 2: altrove il codice non produce niente, e lasciarlo scritto su una fattura

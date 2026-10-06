@@ -693,6 +693,27 @@
          si comporta come un campo libero, che è quello che serve adesso. -->
     <p class="note" id="docAddLineHint" data-t="docAddLineHint"></p>
 
+    <!-- **The delivery notes the invoice names.** The ones converted inside the app arrive filled
+         in and stay read-only; the ones made elsewhere — on paper, by another program — had no
+         place to be written, and a San Marino goods invoice without one cannot be issued. The box
+         sits under the lines because, with more than one delivery note, each names its lines. -->
+    <div id="docDdtBox" hidden>
+      <div class="section-head">
+        <h3 data-t="docDdtTitle"></h3>
+        <button type="button" class="button ghost" id="docDdtAdd" data-t="docDdtAdd"></button>
+      </div>
+      <div class="table-scroll">
+        <table class="rows ddt-rows" id="docDdtTable" hidden>
+          <thead><tr>
+            <th data-t="docDdtNumero"></th><th data-t="docDdtData"></th>
+            <th class="col-ddt-righe" data-t="docDdtRighe"></th><th></th>
+          </tr></thead>
+          <tbody id="docDdtBody"></tbody>
+        </table>
+      </div>
+      <p class="note" data-t="docDdtNote"></p>
+    </div>
+
     <!-- Un contenitore, perché il documento di trasporto non ha un riepilogo IVA: accompagna la
          merce, non la fattura. Le righe restano, il riepilogo e i totali no. -->
     <div id="docSummarySection">

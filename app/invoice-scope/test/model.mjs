@@ -736,6 +736,8 @@ await test("tre consegne dello stesso cliente diventano una fattura differita so
     ["Prima consegna", "Seconda consegna", "Terza consegna"]);
   assert.deepEqual(fattura.ddt.map((r) => r.numero),
     ["DDT 2026/0001", "DDT 2026/0002", "DDT 2026/0003"]);
+  // E ognuno dice quali righe ha portato: con più DDT a San Marino è obbligatorio.
+  assert.deepEqual(fattura.ddt.map((r) => r.righe), [[1], [2], [3]]);
 });
 
 await test("documenti di clienti diversi non finiscono nella stessa fattura", async () => {

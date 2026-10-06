@@ -38,6 +38,7 @@ import { isCustomer, parties, items, party as getParty, openNewParty } from "./p
 import { TIPI, KINDS, kind, has, numero as shownNumber, convertibile } from "./kinds.js";
 import {
   profileFor, ambitoDi, ambitoDoc, applicaAmbito, rimborsabile, AMBITI_MERCE, TIPI_CESSIONE,
+  MERCE_CON_DDT,
 } from "./fatturapa.js";
 import { stato as termState } from "./terms.js";
 import { control as statoControl } from "./states.js";
@@ -180,6 +181,9 @@ function _codiciAmmessi() {
  * due direbbero cose diverse. Quello che si vede qui è l'ambito *letto* dalle righe.
  */
 function _drawAmbito() {
+  // The delivery notes depend on the same answer — goods travel with one, services do not — so
+  // they are redrawn whenever the goods type may have changed.
+  _drawDdt();
   const box = el("docAmbitoBox");
   const gestionale = Boolean(profileFor(company, party).datiGestionali);
   box.hidden = !gestionale || !kind(current).fiscale;
@@ -212,6 +216,147 @@ function _drawAmbito() {
 
   _drawCessione();
   _drawVariazioni();
+}
+
+/** The document types that go with the goods, and so may name a delivery note. */
+const DDT_TIPI = ["TD01", "TD24", "TD02", "TD29"];
+
+/**
+ * The delivery notes the document names.
+ *
+ * **Shown where a delivery note can be asked for**: a deferred invoice, a San Marino goods
+ * invoice, or a document that already names one. A delivery note converted inside the app is
+ * read-only here — its id is what tells the list it has been invoiced — while one made elsewhere is
+ * typed in, number and date as they are on the paper. With more than one, each lists its lines.
+ */
+function _drawDdt() {
+  const box = el("docDdtBox");
+  const refs = current.ddt || [];
+  const tipo = current.tipo || "TD01";
+  const canEdit = editable(current);
+  const merce = (current.righe || []).some((line) => MERCE_CON_DDT.has(String(line.tm || "")));
+  const serve = tipo === "TD24" || (profileFor(company, party).tmObbligatorio && merce);
+  box.hidden = !kind(current).fiscale || !DDT_TIPI.includes(tipo)
+    || (refs.length === 0 && (!serve || !canEdit));
+  if (box.hidden) return;
+
+  el("docDdtAdd").hidden = !canEdit;
+  const table = el("docDdtTable");
+  table.hidden = refs.length === 0;
+  table.classList.toggle("single", refs.length < 2);
+
+  const body = el("docDdtBody");
+  body.textContent = "";
+  refs.forEach((ref, index) => {
+    const tr = document.createElement("tr");
+    const manuale = !ref.id;
+
+    const numberCell = document.createElement("td");
+    numberCell.dataset.label = t("docDdtNumero");
+    if (manuale) {
+      const input = document.createElement("input");
+      input.type = "text";
+      input.maxLength = 20;
+      input.value = ref.numero || "";
+      input.disabled = !canEdit;
+      input.setAttribute("aria-label", `${t("docDdtNumero")} ${index + 1}`);
+      input.addEventListener("input", () => { ref.numero = input.value.trim(); _touch(); });
+      numberCell.append(input);
+    } else {
+      numberCell.textContent = ref.numero || "—";
+      const marker = document.createElement("span");
+      marker.className = "ddt-app";
+      marker.textContent = t("docDdtFromApp");
+      numberCell.append(marker);
+    }
+
+    const dateCell = document.createElement("td");
+    dateCell.dataset.label = t("docDdtData");
+    if (manuale) {
+      const input = document.createElement("input");
+      input.type = "date";
+      input.value = ref.data || "";
+      input.disabled = !canEdit;
+      input.setAttribute("aria-label", `${t("docDdtData")} ${index + 1}`);
+      input.addEventListener("input", () => { ref.data = input.value; _touch(); });
+      dateCell.append(input);
+    } else {
+      dateCell.textContent = ref.data ? date(ref.data) : "—";
+    }
+
+    const linesCell = document.createElement("td");
+    linesCell.className = "col-ddt-righe";
+    linesCell.dataset.label = t("docDdtRighe");
+    const lines = document.createElement("input");
+    lines.type = "text";
+    lines.inputMode = "numeric";
+    lines.className = "ddt-righe";
+    lines.placeholder = t("docDdtRighePh");
+    lines.value = (ref.righe || []).join(", ");
+    lines.disabled = !canEdit;
+    lines.setAttribute("aria-label", `${t("docDdtRighe")} — ${t("f_ddt")} ${index + 1}`);
+    lines.addEventListener("input", () => {
+      const righe = _parseLineNumbers(lines.value);
+      if (righe.length) ref.righe = righe;
+      else delete ref.righe;
+      _touch();
+    });
+    linesCell.append(lines);
+
+    const actions = document.createElement("td");
+    actions.className = "right";
+    if (canEdit && manuale) {
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "ghost small";
+      remove.textContent = "\u00d7";
+      remove.setAttribute("aria-label", `${t("docDdtRemove")} ${index + 1}`);
+      remove.addEventListener("click", () => {
+        current.ddt.splice(index, 1);
+        if (!current.ddt.length) delete current.ddt;
+        _drawDdt();
+        _touch();
+      });
+      actions.append(remove);
+    }
+
+    tr.append(numberCell, dateCell, linesCell, actions);
+    body.append(tr);
+  });
+}
+
+/**
+ * Line numbers as a person writes them: `1, 2, 5` or `1-3, 5`.
+ *
+ * A token that is not a number is kept as `0` rather than dropped, so the check before issuing
+ * points at it instead of the document quietly naming fewer lines than were typed.
+ */
+function _parseLineNumbers(text) {
+  const out = [];
+  for (const token of String(text).split(/[\s,;]+/).filter(Boolean)) {
+    const range = /^(\d+)\s*[-–]\s*(\d+)$/.exec(token);
+    if (range) {
+      const from = Number(range[1]);
+      const to = Number(range[2]);
+      for (let n = Math.min(from, to); n <= Math.max(from, to) && out.length < 1000; n += 1) out.push(n);
+    } else {
+      out.push(/^\d+$/.test(token) ? Number(token) : 0);
+    }
+  }
+  return out;
+}
+
+/**
+ * The delivery notes' line numbers after line `index` (zero-based) is removed: that line is
+ * dropped from every list and the ones after it move up by one, as they do on the document.
+ */
+function _shiftDdtLines(index) {
+  const removed = index + 1;
+  for (const ref of current.ddt || []) {
+    if (!ref.righe) continue;
+    ref.righe = ref.righe.filter((n) => n !== removed).map((n) => (n > removed ? n - 1 : n));
+    if (!ref.righe.length) delete ref.righe;
+  }
 }
 
 /**
@@ -305,6 +450,15 @@ function _cell(line, field, {
   }
   if (mode === "check") input.checked = Boolean(line[field]);
   else input.value = line[field] ?? "";
+  if (options && input.value !== String(line[field] ?? "")) {
+    // A stored `0.00` is the rate `0` the list offers: written differently, the same number. The
+    // select shows the matching option and the line keeps what it holds until somebody changes it.
+    const stored = Number(line[field]);
+    const match = options.find((value) => value !== "" && Number(value) === stored);
+    if (line[field] !== "" && line[field] != null && !Number.isNaN(stored) && match !== undefined) {
+      input.value = match;
+    }
+  }
   input.className = width;
   input.disabled = !editable(current);
   input.addEventListener(mode === "check" ? "change" : "input", () => {
@@ -370,7 +524,9 @@ function _addLine(focus = false) {
  * per il codice TM, così intestazione e celle spariscono insieme.
  */
 function _toggleNatura() {
-  const serve = (current.righe || []).some((line) => String(line.aliquota) === "0" || line.natura);
+  // `0.00` counts as zero: it is how a self-billed invoice and an imported file write the rate.
+  const zero = (value) => value !== undefined && value !== null && value !== "" && Number(value) === 0;
+  const serve = (current.righe || []).some((line) => zero(line.aliquota) || line.natura);
   el("docLinesTable").classList.toggle("no-natura", !serve);
 }
 
@@ -484,6 +640,7 @@ function _drawLines() {
       remove.setAttribute("aria-label", `${t("docRemoveLine")} ${index + 1}`);
       remove.addEventListener("click", () => {
         current.righe.splice(index, 1);
+        _shiftDdtLines(index);
         _drawLines();
         _drawSummary();
         _touch();
@@ -1123,8 +1280,10 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
     ? `${t("docAlreadyInvoiced")} ${shownNumber(fatturaChiLoPorta) || t("stateBozza").toLowerCase()}`
     : (current.daPreventivo
       ? `${t("docFromQuote")} ${current.daPreventivo.numero}`
-      : ((current.ddt || []).length
-        ? `${t("docFromDdt")} ${current.ddt.map((ref) => ref.numero).join(", ")}`
+      // Only the delivery notes converted in the app: the ones typed by hand are listed in their own
+      // box, and naming them here as well would say it twice.
+      : ((current.ddt || []).some((ref) => ref.id)
+        ? `${t("docFromDdt")} ${current.ddt.filter((ref) => ref.id).map((ref) => ref.numero).join(", ")}`
         // Un'autofattura nasce da una spesa rimasta senza fattura, e da lì si torna al denaro
         // uscito: senza questa riga il documento non direbbe di quale operazione parla.
         : (current.daAcquisto
@@ -1234,6 +1393,14 @@ export function connect(db) {
     _touch();
   });
 
+  el("docDdtAdd").addEventListener("click", () => {
+    current.ddt = [...(current.ddt || []), { numero: "", data: "" }];
+    _drawDdt();
+    _touch();
+    const inputs = el("docDdtBody").querySelectorAll("input[type=text]:not(.ddt-righe)");
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  });
+
   el("docTipoCessione").addEventListener("change", (event) => {
     current.tipoCessione = event.target.value || null;
     _touch();
@@ -1289,6 +1456,7 @@ export function connect(db) {
     setType(current, el("docType").value);
     if (!current.numero) el("docTitle").textContent = tf("docNewTitle", { tipo: t(kind(current).label) });
     _drawSections();
+    _drawDdt();
     _drawSummary();
     _touch();
   });

@@ -54,7 +54,7 @@ This app does the heavy part — the arithmetic, the format, the checks — and 
 - Imports customers, price list and documents from Fatture in Cloud, from the export sheets as you download them — the .xls included — with the line detail if you export that too, and whole invoices from the XML files in the backup. Before anything is written it shows what it read — how many arrive, which are already here, what it left out — and writes only once you confirm.
 - Knows the six directions an invoice can take — from Italy to Italy, to San Marino and abroad; from San Marino to Italy, to another San Marino operator and abroad — and for each writes the file that channel accepts. The direction is decided by your country and the customer's, and both are already on file.
 - Handles invoices between San Marino operators, compulsory from 1 January 2027: single-stage tax, seven-zero recipient code, goods type on every line, self-billed invoice, debit note and advance invoice.
-- Asks for the goods type once per document — «this invoice contains: services, goods, subcontracting with materials» — and says right there what follows: whether a delivery note is needed, and which date the deadline runs from. The lines take it from there, and the codes come with words.
+- Asks for the goods type once per document — «this invoice contains: services, goods, subcontracting with materials» — and says right there what follows: whether a delivery note is needed, and which date the deadline runs from. The lines take it from there, and the codes come with words. A delivery note made by hand or by another program is written on the invoice, with the lines it delivered.
 - Works out the deadline for transmitting the document, which is not the payment due date: it shows it on the document and in the overview, with what being late costs, which is not the same on the two San Marino channels.
 - Towards a country without e-invoicing it produces no file and says why: that document is printed, and faking an obligation would be worse than not having one.
 - Works out the VAT on the summary per rate, which is how the Italian exchange system recomputes it.
@@ -146,7 +146,7 @@ PolyForm Shield 1.0.0. The code is public: it can be read, changed and used, com
 
 Free.
 
-**Version** 0.66.0 · **Updated** 6 October 2026 · **Licence** PolyForm-Shield-1.0.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
+**Version** 0.67.0 · **Updated** 6 October 2026 · **Licence** PolyForm-Shield-1.0.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
 
 *FAQ*
 

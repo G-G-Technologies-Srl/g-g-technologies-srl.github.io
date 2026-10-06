@@ -1435,3 +1435,11 @@ dialog li::before {
 @media (prefers-reduced-motion: reduce) {
   .snack { animation: none; }
 }
+
+/* The delivery notes under the lines: a short table, and the lines column only when there is more
+   than one delivery note to tell apart. */
+.ddt-rows input[type="text"] { max-width: 200px; }
+.ddt-rows input.ddt-righe { max-width: 140px; }
+.ddt-rows input[type="date"] { max-width: 180px; }
+.ddt-rows.single .col-ddt-righe { display: none; }
+.ddt-rows .ddt-app { color: var(--muted); font-size: 0.85rem; margin-left: 0.4rem; }
