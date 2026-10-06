@@ -1,0 +1,119 @@
+# G&G Technologies
+
+> Progettiamo wearable medicali, robotica industriale e intelligenza artificiale on-premise. A San Marino dal 1997, sul nostro framework DigiSense®.
+>
+> We design medical wearables, industrial robotics and on-premise AI. Based in San Marino since 1997, on our own DigiSense® framework.
+
+Il sito è in italiano e in inglese, con un URL per lingua. Ogni pagina è disponibile anche in Markdown, all'indirizzo della pagina seguito da `index.md`.
+
+The site is in Italian and English, with one URL per language. Every page is also available as Markdown, at the address of the page followed by `index.md`.
+
+Contatti / Contact: info@ggtechnologies.sm
+
+## Azienda (italiano)
+
+- [Software, robotica e AI su misura](https://ggtechnologies.sm/index.md): Progettiamo wearable medicali, robotica industriale e intelligenza artificiale on-premise. A San Marino dal 1997, sul nostro framework DigiSense®.
+- [Chi siamo](https://ggtechnologies.sm/chi-siamo/index.md): Chi c'è dietro G&G Technologies: cosa facciamo, il percorso, la rete di collaboratori e partner, e le prove che si controllano da fuori.
+
+## Prodotti (italiano)
+
+- [DigiSense® — il framework di G&G Technologies](https://ggtechnologies.sm/digisense/index.md): DigiSense® è il framework registrato di G&G Technologies: la base tecnologica di ogni nostra implementazione con AI, sensori e robot.
+- [Podz.AI: l'AI che resta sul vostro computer](https://ggtechnologies.sm/podz-ai/index.md): Podz.AI è la workstation AI personale sviluppata da G&G Technologies: l'AI lavora sul computer di chi ha dati riservati. Costruita sul framework DigiSense®.
+
+## Servizi e progetti (italiano)
+
+- [Servizi: wearable medicali, robotica e AI](https://ggtechnologies.sm/servizi/index.md): I servizi di G&G Technologies: wearable medicali, robotica e automazione industriale, intelligenza artificiale on-premise e agenti AI, da San Marino.
+- [Robot per l'assistenza agli anziani in casa](https://ggtechnologies.sm/progetti/robot-assistenza-domiciliare/index.md): Prototipo di robot che assiste anziani e persone fragili in casa: voce, telecamera e sensori, con l'intelligenza artificiale che gira a bordo.
+- [AI on-premise: modelli sui vostri server](https://ggtechnologies.sm/servizi/ai-on-premise/index.md): AI on-premise e LLM self-hosted: i modelli girano sui vostri server e i documenti non lasciano l'infrastruttura. Progettazione europea, da San Marino.
+- [AI per la sicurezza: il perimetro di un agente](https://ggtechnologies.sm/servizi/ai-sicurezza/index.md): Sicurezza degli agenti AI: un perimetro di azioni definito, accessi ridotti al necessario e approvazione umana. Revisione degli strumenti AI già in uso.
+- [AI per lo sviluppo del software](https://ggtechnologies.sm/servizi/ai-sviluppo-software/index.md): Sviluppo del software con agenti AI dentro il vostro processo: modelli e infrastruttura scelti da voi, costi stimati prima, revisione umana.
+- [Consulenza AI per aziende: agenti e processi](https://ggtechnologies.sm/servizi/intelligenza-artificiale/index.md): Consulenza e sviluppo AI per aziende: agenti e LLM integrati nei processi, ricerca semantica (RAG) sui documenti e integrazione con ERP e gestionali.
+- [Robotica e automazione industriale](https://ggtechnologies.sm/servizi/robotica-automazione/index.md): Robotica e automazione industriale: celle robotizzate, integrazione con i gestionali in uso e misura di fermi e scarti, dal bordo macchina alla linea.
+- [Wearable medicali e telemonitoraggio](https://ggtechnologies.sm/servizi/wearable-medicale/index.md): Wearable medicali e telemonitoraggio: progettiamo a San Marino dispositivi indossabili per pazienti e anziani, con elettronica, firmware e piattaforma dati.
+
+## Formazione (italiano)
+
+- [Corsi di intelligenza artificiale per imprese](https://ggtechnologies.sm/formazione/index.md): Corsi di intelligenza artificiale per imprese e professionisti, quattro ore in due incontri: online, oppure in sede a San Marino e in provincia di Rimini.
+- [Corso: AI per clienti e amministrazione](https://ggtechnologies.sm/formazione/clienti-amministrazione/index.md): Corso pratico di quattro ore: schede cliente, corrispondenza, fatture, scadenze e pratiche amministrative ricorrenti con un assistente AI.
+- [Corso: AI per contratti e accordi commerciali](https://ggtechnologies.sm/formazione/contratti-accordi/index.md): Corso pratico di quattro ore: analisi di clausole e scadenze, confronto fra versioni e redazione di accordi commerciali con un assistente AI.
+- [Corso: modelli AI americani, cinesi e locali](https://ggtechnologies.sm/formazione/modelli-ai-locali/index.md): Corso pratico di quattro ore: giurisdizione dei dati, licenze e modelli a pesi aperti eseguiti sul proprio computer con LM Studio od Ollama.
+- [Corso: AI per produzione e qualità](https://ggtechnologies.sm/formazione/produzione-qualita/index.md): Corso pratico di quattro ore: analisi dei dati di macchine e reparti con un assistente AI, rapporti periodici e regole di segnalazione.
+- [Corso: sviluppo software con Claude Code](https://ggtechnologies.sm/formazione/sviluppo-software-claude-code/index.md): Corso pratico di quattro ore per sviluppatori: Claude Code su un progetto esistente, file di istruzioni, test, permessi e revisione.
+- [Corso: uso professionale dell'AI e dei dati](https://ggtechnologies.sm/formazione/uso-professionale-ai/index.md): Corso pratico di quattro ore per imprese e professionisti: criteri per l'uso degli assistenti AI, trattamento dei dati, assistente dedicato.
+
+## App (italiano)
+
+- [App gratuite con codice pubblico, nel browser](https://ggtechnologies.sm/app/index.md): App gratuite con il codice pubblico, che girano interamente nel browser. I file aperti restano sul vostro computer: non c'è un server a cui mandarli.
+- [AstroDroid — gioco vettoriale nel browser](https://ggtechnologies.sm/app/astrodroid/index.md): Asteroidi da spezzare e un punteggio da battere, nel browser. Gettone e classifica come in sala giochi, senza account e senza server.
+- [CSV Scope — leggere un CSV nel browser](https://ggtechnologies.sm/app/csv-scope/index.md): Apre un file CSV, lo mostra in tabella e ne disegna i canali numerici. Gira nel browser: il file resta sul vostro computer.
+- [Invoice Scope — fattura elettronica Italia e San Marino](https://ggtechnologies.sm/app/invoice-scope/index.md): Fattura elettronica gratuita per Italia e San Marino: fatture, note di credito e preventivi in XML. Gira nel browser e i dati dei clienti restano in locale.
+- [Plan Scope — progetti e scadenze nel browser](https://ggtechnologies.sm/app/plan-scope/index.md): Per organizzare progetti, eventi e campagne: pagine scritte, attività e scadenze in un posto solo. Gira nel browser e i dati restano sul vostro computer.
+- [Recinto — gioco vettoriale nel browser](https://ggtechnologies.sm/app/recinto/index.md): Un recinto da chiudere attorno al terreno da conquistare, lontano da quello che ci gira dentro. Gettone e classifica come in sala giochi, nel browser.
+- [SPRONIA — giostra in volo nel browser](https://ggtechnologies.sm/app/spronia/index.md): Si vola battendo le ali e vince chi al contatto è più in alto. Gira nel browser: niente account, niente server, la classifica resta su questo computer.
+- [Survey Scope — questionari NIS2 e maturità AI](https://ggtechnologies.sm/app/survey-scope/index.md): Questionari di autovalutazione su maturità AI e NIS2, da distribuire alle unità e raccogliere in un elenco. Gira nel browser: le risposte restano in locale.
+
+## Articoli (italiano)
+
+- [Insights: tecnologia, norme e software](https://ggtechnologies.sm/insights/index.md): Analisi tecniche su wearable medicali, robotica, intelligenza artificiale e software gestionale, dalla norma al codice, con fonti verificabili.
+- [Fatturazione elettronica interna a San Marino](https://ggtechnologies.sm/insights/fattura-elettronica-san-marino/index.md): Dal 2027 la fatturazione elettronica interna è obbligatoria a San Marino sopra i 100.000 € di ricavi: chi, come, entro quando, e cosa preparare.
+- [Pianificazione dei progetti: perché le stime slittano](https://ggtechnologies.sm/insights/pianificazione-progetti/index.md): Perché le stime di un progetto sono quasi sempre ottimiste, cosa ha misurato la ricerca, e sette abitudini di pianificazione per piccole aziende e studi.
+- [Un numero non è una misura: incertezza e schede tecniche](https://ggtechnologies.sm/insights/numero-o-misura/index.md): Che cosa distingue davvero un indicatore da una misura, perché anche il misuratore a bracciale stima, e cosa cercare in una scheda tecnica prima di firmare.
+- [Il manuale d'impianto invecchia prima della macchina](https://ggtechnologies.sm/insights/documentazione-che-non-invecchia/index.md): Perché un manuale d'impianto diventa falso in una riga sola, e come si monta un documento che regge: la procedura da una parte, i valori che scadono dall'altra.
+- [Prompt injection: prima di dare le chiavi a un agente AI](https://ggtechnologies.sm/insights/agenti-autonomi-perimetro/index.md): Per un agente AI il contenuto che legge e le istruzioni che riceve sono lo stesso testo: è la prompt injection. Tre domande prima di collegarlo alla posta.
+- [Lo smartphone come sensore in un progetto pilota](https://ggtechnologies.sm/insights/telefono-come-sensore/index.md): Prima di comprare hardware per un pilota: cosa uno smartphone dismesso misura già, e i cinque confini oltre i quali smette di bastare.
+- [Ecodesign e diritto alla riparazione per l'hardware](https://ggtechnologies.sm/insights/durabilita-per-progetto/index.md): Ecodesign, diritto alla riparazione e regolamento batterie si sommano: cosa cambia per chi progetta hardware e cosa decidere prima dell'architettura.
+- [AI Act e GDPR: l'AI sui dati dei clienti](https://ggtechnologies.sm/insights/ai-act-dati-clienti/index.md): Cosa rischia davvero uno studio che usa l'AI sui dati dei clienti, fra AI Act, GDPR e legge 132/2025, e cosa può fare da lunedì mattina.
+
+## Company (English)
+
+- [Medical wearable, robotics and AI development](https://ggtechnologies.sm/en/index.md): We design medical wearables, industrial robotics and on-premise AI. Based in San Marino since 1997, on our own DigiSense® framework.
+- [About us](https://ggtechnologies.sm/en/about/index.md): Who is behind G&G Technologies: what we do, the track record, the network of collaborators and partners, and the proof you can check from outside.
+
+## Products (English)
+
+- [DigiSense® — the G&G Technologies framework](https://ggtechnologies.sm/en/digisense/index.md): DigiSense® is the registered G&G Technologies framework: the technology base under every implementation we build with AI, sensors and robots.
+- [Podz.AI: the AI that stays on your computer](https://ggtechnologies.sm/en/podz-ai/index.md): Podz.AI is the personal AI workstation by G&G Technologies: AI that works on the computer of people with confidential data. Built on the DigiSense® framework.
+
+## Services and projects (English)
+
+- [Services: medical wearables, robotics and AI](https://ggtechnologies.sm/en/services/index.md): G&G Technologies services: medical wearables, industrial robotics and automation, on-premise artificial intelligence and AI agents, from San Marino.
+- [Robot for elderly care at home](https://ggtechnologies.sm/en/projects/home-care-robot/index.md): A prototype robot that helps elderly and frail people at home: voice, camera and sensors, with the artificial intelligence running on board.
+- [AI security: the scope of an agent](https://ggtechnologies.sm/en/services/ai-security/index.md): AI agent security: a defined scope of action, access limited to what is needed and human approval. A review of the AI tools already in use.
+- [AI for software development](https://ggtechnologies.sm/en/services/ai-software-development/index.md): Software development with AI agents inside your own process: models and infrastructure of your choosing, costs estimated first, human review.
+- [AI consulting and custom AI development](https://ggtechnologies.sm/en/services/artificial-intelligence/index.md): AI consulting and development for companies: agents and LLMs integrated into your processes, RAG over your documents and integration with your ERP.
+- [Wearable medical device development](https://ggtechnologies.sm/en/services/medical-wearables/index.md): Wearable devices for remote vital-signs monitoring, designed in San Marino: custom electronics, firmware and remote patient monitoring platforms.
+- [On-premise AI: self-hosted LLM on your servers](https://ggtechnologies.sm/en/services/on-premise-ai/index.md): On-premise AI and self-hosted LLMs: models run on your own servers and documents never leave your infrastructure. Built in Europe, from San Marino.
+- [Industrial robotics and automation](https://ggtechnologies.sm/en/services/robotics-automation/index.md): Industrial robotics and automation: robotic cells, integration with the systems you already run, and measurement of downtime and scrap, from machine to line.
+
+## Training (English)
+
+- [Artificial intelligence courses for companies](https://ggtechnologies.sm/en/training/index.md): Artificial intelligence courses for companies and professionals, four hours in two sessions: online, or on site in San Marino and the province of Rimini.
+- [Course: American, Chinese and local AI models](https://ggtechnologies.sm/en/training/ai-models-local/index.md): A practical four-hour course: data jurisdiction, licences, and open-weight models run on your own computer with LM Studio or Ollama.
+- [Course: AI for contracts and agreements](https://ggtechnologies.sm/en/training/contracts-agreements/index.md): A practical four-hour course: analysing clauses and deadlines, comparing versions and drafting commercial agreements with AI.
+- [Course: AI for customers and administration](https://ggtechnologies.sm/en/training/customers-administration/index.md): A practical four-hour course: customer records, correspondence, invoices, deadlines and recurring admin tasks with an AI assistant.
+- [Course: AI for production and quality](https://ggtechnologies.sm/en/training/production-quality/index.md): A practical four-hour course: analysing machine and department data with an AI assistant, periodic reports and alert rules.
+- [Course: professional use of AI and data](https://ggtechnologies.sm/en/training/professional-ai-use/index.md): A practical four-hour course for companies and professionals: rules for using AI assistants, data handling, and a dedicated assistant.
+- [Course: software development with Claude Code](https://ggtechnologies.sm/en/training/software-development-claude-code/index.md): A practical four-hour course for developers: Claude Code on an existing project, instruction files, tests, permissions and review.
+
+## Apps (English)
+
+- [Free apps with public source, in the browser](https://ggtechnologies.sm/en/app/index.md): Free apps with public source code that run entirely in the browser. The files you open stay on your computer: there is no server to send them to.
+- [AstroDroid — a vector game in the browser](https://ggtechnologies.sm/en/app/astrodroid/index.md): Asteroids to break apart and a score to beat, in the browser. A token and a high score table as an arcade had them, with no account and no server.
+- [CSV Scope — read a CSV in the browser](https://ggtechnologies.sm/en/app/csv-scope/index.md): Open a CSV, read it as a table and plot the numeric columns. It runs in the browser: the file stays on your computer and is never uploaded anywhere.
+- [Invoice Scope — e-invoicing for Italy and San Marino](https://ggtechnologies.sm/en/app/invoice-scope/index.md): Free e-invoicing for Italy and San Marino: invoices, credit notes and quotes, with the FatturaPA XML file. Customer data stays on your computer.
+- [Plan Scope — projects and deadlines in the browser](https://ggtechnologies.sm/en/app/plan-scope/index.md): Organise projects, events and campaigns: written pages, tasks and deadlines in one place. It runs in the browser and the data stays on your computer.
+- [Recinto — a vector game in your browser](https://ggtechnologies.sm/en/app/recinto/index.md): Close the fence around what you want to keep, and stay away from what is moving inside it. A coin and a high score table as in an arcade, in the browser.
+- [SPRONIA — an aerial duel in the browser](https://ggtechnologies.sm/en/app/spronia/index.md): You fly by flapping, and on contact the higher rider wins. It runs in the browser: no account, no server, and the high score table stays on this computer.
+- [Survey Scope — NIS2 and AI maturity questionnaires](https://ggtechnologies.sm/en/app/survey-scope/index.md): Self-assessment questionnaires on AI maturity and NIS2, to hand to each unit and collect in one list. It runs in the browser: the answers stay local.
+
+## Articles (English)
+
+- [Insights: technology, regulation and software](https://ggtechnologies.sm/en/insights/index.md): Technical analysis on medical wearables, robotics, artificial intelligence and management software, from regulation to code, with verifiable sources.
+- [Domestic e-invoicing in San Marino](https://ggtechnologies.sm/en/insights/san-marino-e-invoicing/index.md): From 2027 domestic e-invoicing is mandatory in San Marino above €100,000 in revenue: who, how, by when, and what to prepare.
+- [Project planning: why estimates slip](https://ggtechnologies.sm/en/insights/project-planning/index.md): Why project estimates are almost always optimistic, what research has measured, and seven planning habits for small companies and professional firms.
+- [A number is not a measurement: uncertainty and datasheets](https://ggtechnologies.sm/en/insights/number-or-measurement/index.md): What really separates an indicator from a measurement, why even a cuff monitor is estimating, and what to look for in a datasheet before you sign.
+- [A plant manual ages before the machine](https://ggtechnologies.sm/en/insights/documentation-that-ages-well/index.md): Why a plant manual goes wrong in a single line, and how to assemble one that holds: the procedure on one side, the values that expire on the other.
+- [Prompt injection: before you give an AI agent the keys](https://ggtechnologies.sm/en/insights/autonomous-agents-boundaries/index.md): To an AI agent, the content it reads and the instructions it receives are the same text: that is prompt injection. Three questions to ask first.
+- [Using a smartphone as a sensor in a pilot project](https://ggtechnologies.sm/en/insights/phone-as-a-sensor/index.md): Before buying hardware for a pilot: what a retired smartphone already measures, and the five boundaries where it stops being enough.
+- [Ecodesign and the right to repair for hardware](https://ggtechnologies.sm/en/insights/durability-by-design/index.md): Ecodesign, the right to repair and the battery regulation stack up: what changes for hardware designers, and what to decide before the architecture.
+- [AI Act and GDPR: using AI on client data](https://ggtechnologies.sm/en/insights/ai-act-client-data/index.md): What a firm using AI on client data actually risks, between the AI Act, the GDPR and Italian Law 132/2025, and what to do from Monday morning.
