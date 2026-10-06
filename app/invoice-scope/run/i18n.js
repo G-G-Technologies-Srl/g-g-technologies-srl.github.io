@@ -599,7 +599,8 @@ const IT = {
   autofatturaSkipAsk: "Confermi che per questa spesa l'autofattura non è dovuta? La spesa non "
     + "comparirà più in questo elenco. È il caso, per esempio, di un fornitore non soggetto "
     + "all'obbligo di fatturazione elettronica.",
-  autofatturaDone: "Autofattura preparata come bozza: verificala e poi emettila.",
+  autofatturaDone: "Autofattura preparata come bozza. Indica che cosa contiene — servizi, beni o "
+    + "lavorazione con materiale: la spesa non lo dice — poi verificala ed emettila.",
   autofatturaCausale: "Autofattura ex art. 7 DD 133/2026 per fattura non pervenuta da {fornitore}, "
     + "operazione del {data}",
   autofatturaLine: "Operazione del {data} documentata in assenza della fattura di {fornitore}",
@@ -1995,7 +1996,9 @@ const EN = {
   autofatturaSkipAsk: "Do you confirm that no self-billed invoice is required for this expense? "
     + "The expense will no longer appear in this list. This is the case, for example, of a "
     + "supplier not subject to electronic invoicing.",
-  autofatturaDone: "The self-billed invoice is ready as a draft: check it, then issue it.",
+  autofatturaDone: "The self-billed invoice is ready as a draft. Choose what it contains — "
+    + "services, goods or processing with material: the expense does not say — then check it "
+    + "and issue it.",
   autofatturaCausale: "Self-billed invoice under art. 7 DD 133/2026 for an invoice not received "
     + "from {fornitore}, transaction of {data}",
   autofatturaLine: "Transaction of {data} documented in the absence of {fornitore}'s invoice",

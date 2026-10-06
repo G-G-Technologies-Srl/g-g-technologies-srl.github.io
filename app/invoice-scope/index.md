@@ -66,7 +66,7 @@ Questa app fa la parte che pesa — i conti, il tracciato, i controlli — e la 
 - Tiene la numerazione per anno e per serie: le fatture hanno la loro, le note di credito la loro, i preventivi la loro. Due documenti non possono uscire con lo stesso numero, e i contatori di una numerazione cominciata altrove si riprendono da dove erano.
 - Esporta e reimporta tutto in un file JSON, che si apre e si legge senza questa app. Scelta una cartella, lo scrive lì da sola a ogni modifica, con una copia al giorno: dentro Dropbox o iCloud, il backup viaggia da sé. E se una cartella non c'è, lo segnala: senza server quella è l'unica copia che esiste, e un avviso che torna vale più di una spiegazione letta una volta.
 - Registra anche gli acquisti: le fatture ricevute — dal loro file XML, o a mano — e le spese senza fattura, con il fornitore, la categoria, l'imposta e la scadenza, e i pagamenti effettuati; una nota di credito ricevuta toglie da sola. Lo scadenzario prende i due versi, con il saldo in cima; la Situazione mostra il margine dell'anno, ricavi e costi mese per mese, i fornitori a cui si deve di più, e l'IVA del trimestre e dell'anno — sulle vendite, sugli acquisti, da versare — con finalità di controllo. Per un'azienda sammarinese l'imposta monofase sugli acquisti si registra come costo, con la sua aliquota.
-- Per un'azienda sammarinese, quando la fattura di un fornitore della Repubblica non arriva, l'app lo rileva dagli acquisti e propone l'autofattura elettronica con il termine entro cui va trasmessa: è l'adempimento che l'articolo 7 del Decreto Delegato 133/2026 mette in capo al cliente. La bozza nasce già con il fornitore, l'importo e la causale.
+- Per un'azienda sammarinese, quando la fattura di un fornitore della Repubblica non arriva, l'app lo rileva dagli acquisti e propone l'autofattura elettronica con il termine entro cui va trasmessa: è l'adempimento che l'articolo 7 del Decreto Delegato 133/2026 mette in capo al cliente. La bozza nasce già con il fornitore, l'importo e la causale; il tipo merce lo chiede, perché una spesa non dice se si sono acquistati beni o servizi.
 - Conosce i costi che tornano: il canone, l'affitto o l'assicurazione si scrivono una volta, con la cadenza, e l'app li aspetta mese per mese fino a fine anno. La Situazione mostra i costi dell'anno come finiranno, lo scadenzario quello che uscirà; quando la fattura arriva, una conferma e la riga attesa sparisce. Una fattura dello stesso fornitore nello stesso mese si aggancia da sola all'importazione.
 - Le fatture che tornano ogni mese si scrivono una volta — il canone, il monte ore fisso, l'abbonamento — e in fondo ai Documenti compare quello che c'è da emettere, con il comando che ne prepara la bozza: cliente, riga, importi e scadenza già dentro. Bozza e non fattura, perché numerare è l'atto di emettere.
 - Prepara il testo del sollecito per le fatture scadute di un cliente — le fatture, i giorni di ritardo, il totale, le coordinate — da copiare in una email. Uno per cliente, non uno per fattura.
@@ -146,7 +146,7 @@ PolyForm Shield 1.0.0. Il codice è pubblico: si legge, si modifica e si usa anc
 
 Gratuita.
 
-**Versione** 0.65.1 · **Aggiornata il** 25 settembre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
+**Versione** 0.66.0 · **Aggiornata il** 6 ottobre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
 
 *FAQ*
 

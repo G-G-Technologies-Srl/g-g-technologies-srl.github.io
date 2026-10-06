@@ -265,7 +265,10 @@ function _applyDefaults(line) {
   // ragione — N3.2 intracomunitaria, N3.3 San Marino — e non quella di chi emette.
   if (!line.natura && party && party.naturaPredefinita) line.natura = party.naturaPredefinita;
   if (!line.natura && company.naturaPredefinita) line.natura = company.naturaPredefinita;
-  if (!line.tm && company.tmPredefinito && profileFor(company, party).datiGestionali) {
+  // Not on a self-billed invoice: there the lines describe what the supplier sold, and the
+  // company's default would answer a question about the company (see `autofatturaDa`).
+  if (!line.tm && company.tmPredefinito && profileFor(company, party).datiGestionali
+    && !kind(current).autofattura) {
     line.tm = company.tmPredefinito;
   }
   return line;

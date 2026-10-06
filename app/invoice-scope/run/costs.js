@@ -312,9 +312,14 @@ export function autofatturaDa(record, { company, party, oggi = new Date().toISOS
       aliquota: profile.aliquotaFissa ?? record.aliquota,
     }],
   });
-  // La stessa regola dell'importazione: natura dove il canale ne ammette una sola, tipo merce dal
-  // predefinito dell'azienda. Scritta in un posto solo, in `fatturapa.js`.
-  completaRighe(doc, company, party);
+  // Same rule as the import for the nature: where the channel admits one, it is written.
+  //
+  // **The goods type is asked, not guessed.** The company's default describes what the company
+  // sells; this document describes what the supplier sold, and an expense does not say whether
+  // that was goods or a service. A default here put «services» on a purchase of material, with no
+  // delivery note asked and the wrong deadline. Left empty, the document's «this invoice contains»
+  // choice shows «to choose», and the checks refuse to issue until it is made.
+  completaRighe(doc, company, party, { tipoMerce: false });
   // Da quale spesa viene: è quello che toglie la spesa dall'elenco delle autofatture da fare, e che
   // permette di risalire dal documento al denaro uscito.
   doc.daAcquisto = { costId: record.id, data: record.data, importo: record.totale };

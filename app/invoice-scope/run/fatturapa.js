@@ -768,10 +768,13 @@ export function destinatario(party, profile = IT_SDI) {
  * file e quelle dell'autofattura costruita da un acquisto hanno lo stesso buco da riempire, e due
  * copie della stessa regola divergono il giorno in cui un canale cambia.
  */
-export function completaRighe(doc, company, party) {
+export function completaRighe(doc, company, party, { tipoMerce = true } = {}) {
   const profile = profileFor(company, party);
   const natura = (profile.nature || []).length === 1 ? profile.nature[0] : null;
-  const tm = profile.tmObbligatorio ? (company || {}).tmPredefinito : null;
+  // The company's default goods type answers "what do we sell". A caller documenting what
+  // somebody else sold — the self-billed invoice — asks with `tipoMerce: false`, and the field
+  // stays empty so that the document asks the question before it can be issued.
+  const tm = tipoMerce && profile.tmObbligatorio ? (company || {}).tmPredefinito : null;
   for (const line of doc.righe || []) {
     const zero = String(line.aliquota ?? "") === "0" || Number(line.aliquota) === 0;
     if (zero && !line.natura && natura) line.natura = natura;

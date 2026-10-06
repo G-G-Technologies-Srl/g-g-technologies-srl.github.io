@@ -12,6 +12,7 @@ import {
   costRecord, problems, taxKind, defaultRate, taxOn, paidOf, owedOn, state, payable, periodTotals,
   taxBalance, MONOFASE, costOf, signedTotal, daAutofatturare, autofatturaDa,
 } from "../run/costs.js";
+import { validate } from "../run/validate.js";
 
 let passed = 0;
 function prova(nome, fn) {
@@ -201,9 +202,21 @@ prova("l'autofattura porta l'imponibile della spesa, e l'aliquota del canale", (
   // L'imposta monofase della spesa non entra nel documento: sull'interna l'IVA non si espone.
   assert.equal(doc.righe[0].aliquota, "0.00");
   assert.equal(doc.righe[0].natura, "N4");
-  assert.equal(doc.righe[0].tm, "3", "il tipo merce predefinito dell'azienda");
+  // The goods type is left to choose: the company default describes what it sells, not what the
+  // supplier sold, and the checks refuse to issue until somebody says which it was.
+  assert.equal(doc.righe[0].tm, undefined, "il tipo merce si chiede, non si prende dal predefinito");
   assert.equal(doc.daAcquisto.costId, "s6");
   assert.ok(doc.causale.includes("Titano Servizi S.A."));
+});
+
+prova("l'autofattura non si emette finché non si dice che cosa contiene", () => {
+  const record = spesa({ id: "s7", data: "2026-01-10", imponibile: "380", aliquota: "17" });
+  const doc = autofatturaDa(record, { company: AZIENDA_SM, party: FORNITORE_SM, oggi: "2026-05-10" });
+  const regole = (d) => validate(d, { company: AZIENDA_SM, party: FORNITORE_SM }).map((p) => p.regola);
+  assert.ok(regole(doc).includes("vTmRequired"), "senza tipo merce i controlli lo chiedono");
+  // Once the contents are chosen — goods, here — the request goes away.
+  doc.righe[0].tm = "4";
+  assert.ok(!regole(doc).includes("vTmRequired"));
 });
 
 console.log(`costs: ${passed} prove passate`);
