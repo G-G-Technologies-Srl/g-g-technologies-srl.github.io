@@ -65,18 +65,18 @@ Il metodo di lavoro con gli agenti e i quattro ruoli. Dal brief aziendale al bra
 
 ### Secondo incontro · Motori di ricerca e blog
 
-Search Console e statistiche senza cookie, parole chiave per pagina, dati strutturati e anteprime per i social. Mappa fra parole chiave, servizi e articoli, primo articolo e controllo mensile pianificato.
+Search Console e statistiche senza cookie, parole chiave per pagina, dati strutturati e anteprime per i social. Mappa fra parole chiave, servizi e articoli, primo articolo e controllo periodico pianificato.
 
 - SEO tecnica, dati strutturati e anteprime per i social
 - Piano editoriale e primo articolo del blog
-- **Risultato:** Il primo articolo pubblicato e il controllo mensile attivo
+- **Risultato:** Il primo articolo pubblicato e il controllo periodico attivo
 
 ### Al termine
 
 I materiali prodotti nei due incontri si esportano in file del partecipante, consultabili con qualsiasi programma e utilizzabili in autonomia.
 
 - Il sito pubblicato, il brandbook e le istruzioni dei ruoli
-- Il primo articolo pubblicato e il controllo mensile attivo
+- Il primo articolo pubblicato e il controllo periodico attivo
 - Il materiale didattico del corso
 
 *Come si svolge*

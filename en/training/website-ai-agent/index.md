@@ -65,18 +65,18 @@ Working with agents and the four roles. From the company brief to the brand book
 
 ### Second session · Search engines and blog
 
-Search Console and cookie-free statistics, keywords for each page, structured data and social previews. A map linking keywords, services and articles, a first article and a scheduled monthly check.
+Search Console and cookie-free statistics, keywords for each page, structured data and social previews. A map linking keywords, services and articles, a first article and a scheduled periodic check.
 
 - Technical SEO, structured data and social previews
 - Editorial plan and the first blog article
-- **Result:** The first article published and the monthly check running
+- **Result:** The first article published and the periodic check running
 
 ### At the end
 
 The materials produced in the two sessions are exported to the participant's own files, which open in any program and can be used independently.
 
 - The published website, the brand book and the role instructions
-- The first article published and the monthly check running
+- The first article published and the periodic check running
 - The course materials
 
 *How it works*
