@@ -380,6 +380,24 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://ggtechnologies.sm/privacy/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/privacy/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/privacy/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/privacy/"/>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/en/privacy/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/privacy/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/privacy/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/privacy/"/>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://ggtechnologies.sm/app/plan-scope/</loc>
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/app/plan-scope/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/app/plan-scope/"/>

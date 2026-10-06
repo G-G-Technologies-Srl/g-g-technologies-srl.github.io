@@ -1321,6 +1321,10 @@ section.tinted {
    24 + 30 + 16 is the same rhythm without the gap. The space inside the drawing stays as it is:
    it belongs to the composition, and the three other articles share it. */
 .article-hero { padding-bottom: 24px; }
+/* The hero is a flex box, and its container shrinks to the content: an article title is long
+   enough to fill the column, the short h1 of the privacy notice is not, and its hero drifted to
+   the right of the text below. Full width keeps the two columns aligned on every page. */
+.article-hero .container { width: 100%; }
 .article-body { padding-top: 16px; }
 /* Same width as .prose: the banner belongs to the article, and one wider than the column it
    introduces reads as a separate object sitting above the text. */
