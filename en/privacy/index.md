@@ -19,12 +19,12 @@ This notice describes how G&G Technologies S.r.l. processes the personal data of
 
 ## Data controller
 
-G&G Technologies S.r.l., Via Marino Moretti 23, 47899 Serravalle, Republic of San Marino — C.O.E. 29141. Email [info@ggtechnologies.sm](mailto:info@ggtechnologies.sm), certified email (PEC) [ggtechnologies@pec-legal.it](mailto:ggtechnologies@pec-legal.it).
+G&G Technologies S.r.l., Via Marino Moretti 23, 47899 Serravalle, Republic of San Marino — C.O.E. 29141. Email [info@ggtechnologies.sm](mailto:info@ggtechnologies.sm).
 
 ## Data processed, purposes and legal bases
 
 - **Browsing.** GitHub, which hosts the website, logs the IP address of visitors and the technical data of the request for the security of the service. Legal basis: legitimate interest in the security of the website. G&G Technologies does not receive these data, which GitHub keeps according to its own [privacy statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement).
-- **Enquiries.** Name, contact details and content of the messages sent by email, certified email or telephone, processed to reply and, if requested, to prepare a quotation. Legal basis: pre-contractual steps requested by the sender and legitimate interest in replying. Retention: 12 months from the last exchange, if no business relationship follows.
+- **Enquiries.** Name, contact details and content of the messages sent by email or telephone, processed to reply and, if requested, to prepare a quotation. Legal basis: pre-contractual steps requested by the sender and legitimate interest in replying. Retention: 12 months from the last exchange, if no business relationship follows.
 - **Clients and course participants.** Identification and billing data, contact details, payment references and correspondence, processed to perform the contract and comply with accounting and tax obligations. Legal bases: performance of the contract and legal obligation. Retention: for the duration of the relationship and, afterwards, for the period required by tax and civil law.
 
 Providing the data is optional for enquiries and necessary to conclude and perform a contract: without the data it is not possible to reply or to follow up the relationship.
@@ -59,7 +59,7 @@ Under Articles 15 to 22 of Law no. 171/2018 and of the GDPR you may request at a
 - portability of the data provided;
 - objection to processing based on legitimate interest.
 
-Requests are sent to [info@ggtechnologies.sm](mailto:info@ggtechnologies.sm) or to the certified email address [ggtechnologies@pec-legal.it](mailto:ggtechnologies@pec-legal.it).
+Requests are sent to [info@ggtechnologies.sm](mailto:info@ggtechnologies.sm).
 
 ## Complaints to the supervisory authority
 

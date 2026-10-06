@@ -19,12 +19,12 @@ Questa informativa descrive come G&G Technologies S.r.l. tratta i dati personali
 
 ## Titolare del trattamento
 
-G&G Technologies S.r.l., Via Marino Moretti 23, 47899 Serravalle, Repubblica di San Marino — C.O.E. 29141. Email [info@ggtechnologies.sm](mailto:info@ggtechnologies.sm), PEC [ggtechnologies@pec-legal.it](mailto:ggtechnologies@pec-legal.it).
+G&G Technologies S.r.l., Via Marino Moretti 23, 47899 Serravalle, Repubblica di San Marino — C.O.E. 29141. Email [info@ggtechnologies.sm](mailto:info@ggtechnologies.sm).
 
 ## Dati trattati, finalità e basi giuridiche
 
 - **Navigazione.** GitHub, che ospita il sito, registra l'indirizzo IP dei visitatori e i dati tecnici della richiesta per la sicurezza del servizio. Base giuridica: legittimo interesse alla sicurezza del sito. G&G Technologies non riceve questi dati, che GitHub conserva secondo la propria [informativa privacy](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement).
-- **Richieste di contatto.** Nome, recapiti e contenuto dei messaggi inviati per email, PEC o telefono, trattati per rispondere e, se richiesto, per preparare un'offerta. Base giuridica: misure precontrattuali richieste da chi scrive e legittimo interesse a rispondere. Conservazione: 12 mesi dall'ultimo scambio, se non segue un rapporto commerciale.
+- **Richieste di contatto.** Nome, recapiti e contenuto dei messaggi inviati per email o telefono, trattati per rispondere e, se richiesto, per preparare un'offerta. Base giuridica: misure precontrattuali richieste da chi scrive e legittimo interesse a rispondere. Conservazione: 12 mesi dall'ultimo scambio, se non segue un rapporto commerciale.
 - **Clienti e partecipanti ai corsi.** Dati anagrafici e di fatturazione, recapiti, estremi dei pagamenti e corrispondenza, trattati per eseguire il contratto e adempiere agli obblighi contabili e fiscali. Basi giuridiche: esecuzione del contratto e obbligo di legge. Conservazione: per la durata del rapporto e, in seguito, per il periodo previsto dalla normativa fiscale e civilistica.
 
 Il conferimento dei dati è facoltativo per le richieste di contatto e necessario per concludere ed eseguire un contratto: senza i dati non è possibile rispondere o dare seguito al rapporto.
@@ -59,7 +59,7 @@ Secondo gli articoli da 15 a 22 della Legge n. 171/2018 e del GDPR potete chiede
 - la portabilità dei dati forniti;
 - l'opposizione ai trattamenti basati sul legittimo interesse.
 
-Le richieste si inviano a [info@ggtechnologies.sm](mailto:info@ggtechnologies.sm) o alla PEC [ggtechnologies@pec-legal.it](mailto:ggtechnologies@pec-legal.it).
+Le richieste si inviano a [info@ggtechnologies.sm](mailto:info@ggtechnologies.sm).
 
 ## Reclamo all'autorità di controllo
 
