@@ -26,7 +26,7 @@ Il titolare del trattamento, cioè il soggetto che stabilisce perché e come i d
 - **PEC:** [ggtechnologies@pec-legal.it](mailto:ggtechnologies@pec-legal.it)
 - **Telefono:** +378 0549 900824
 
-G&G Technologies non ha nominato un responsabile della protezione dei dati (DPO): ogni richiesta relativa alla privacy si invia ai recapiti indicati sopra.
+Ogni richiesta relativa alla privacy si invia ai recapiti indicati sopra.
 
 ## In sintesi
 

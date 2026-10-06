@@ -26,7 +26,7 @@ The data controller, that is, the party that decides why and how the data are pr
 - **Certified email (PEC):** [ggtechnologies@pec-legal.it](mailto:ggtechnologies@pec-legal.it)
 - **Telephone:** +378 0549 900824
 
-G&G Technologies has not appointed a data protection officer (DPO): any request concerning privacy is sent to the contact details above.
+Any request concerning privacy is sent to the contact details above.
 
 ## Summary
 

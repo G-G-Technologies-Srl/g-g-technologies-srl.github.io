@@ -19,7 +19,7 @@ Or write to us: [info@ggtechnologies.sm](mailto:info@ggtechnologies.sm)
 
 - **4** hours per course
 - **2** two-hour sessions
-- **6** catalogue courses
+- **7** catalogue courses
 
 *The method*
 
@@ -31,7 +31,7 @@ Each session produces a tool that can be used the next day: verified requests, a
 
 At the end, everything produced is exported to the participant's own files, which open in any program. The account remains the participant's, with everything configured in it.
 
-The tools are Claude Pro, which we recommend, or ChatGPT Plus. Four courses out of six run entirely in the browser, so they work on centrally managed company computers.
+The tools are Claude Pro, which we recommend, or ChatGPT Plus; two courses require Claude Pro. Four courses out of seven run entirely in the browser, so they work on centrally managed company computers.
 
 #### Duration
 
@@ -39,7 +39,7 @@ The tools are Claude Pro, which we recommend, or ChatGPT Plus. Four courses out 
 
 #### Format
 
-Online, or on site at your organisation.
+Online, or on site at your organisation. The website course is online only.
 
 #### Participants
 
@@ -63,7 +63,7 @@ He is a co-author of two peer-reviewed studies published in “Sensors”, descr
 
 *The courses*
 
-## Six courses in two areas: foundations, and agents by business function.
+## Seven courses in two areas: foundations, and agents by business function.
 
 ### Professional AI use
 
@@ -112,6 +112,14 @@ Analysing clauses and deadlines, comparing versions, drafting.
 - Agents by function
 - In the browser
 - [Course programme](https://ggtechnologies.sm/en/training/contracts-agreements/)
+
+### Website with an AI agent
+
+Static website, brand book, SEO and blog with Claude Cowork, published on GitHub Pages.
+
+- Agents by function
+- Online only, with an installation
+- [Course programme](https://ggtechnologies.sm/en/training/website-ai-agent/)
 
 *Fees*
 
@@ -174,11 +182,11 @@ With the course on professional AI use, if assistants are still little used in t
 
 ### Do I need to know how to program?
 
-No, for five courses out of six. The software development course is for people who write code.
+No, for six courses out of seven. The software development course is for people who write code.
 
 ### Can I use ChatGPT instead of Claude?
 
-Yes, for five courses out of six. The exercises are built on Claude, which we recommend. The software development course requires Claude Pro, which includes Claude Code.
+Yes, for five courses out of seven. The exercises are built on Claude, which we recommend. The software development course requires Claude Pro, which includes Claude Code; the website course requires Claude Pro, which includes Claude Cowork.
 
 ### Can I enrol on my own?
 
@@ -186,7 +194,7 @@ Yes. Online courses start once 5 people have enrolled, including from different 
 
 ### My company computer does not allow installing software. Can I attend?
 
-Yes, the four courses that run entirely in the browser. The course on local models and the software development course require an installation: it is advisable to check it beforehand with the IT manager.
+Yes, the four courses that run entirely in the browser. The course on local models, the software development course and the website course require an installation: it is advisable to check it beforehand with the IT manager.
 
 ### Do you run courses for a single organisation?
 

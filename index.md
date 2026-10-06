@@ -94,7 +94,7 @@ L'AI legge, propone, prepara. La decisione resta a chi ne risponde: lo progettia
 
 ## Corsi pratici di AI, per imprese e professionisti.
 
-Sei corsi a programma definito, di quattro ore in due incontri, online o in sede: dall'uso professionale degli assistenti ai modelli in locale, dallo sviluppo software ai contratti.
+Sette corsi a programma definito, di quattro ore in due incontri: dall'uso professionale degli assistenti ai modelli in locale, dallo sviluppo software ai contratti, fino al sito web gestito con un agente AI.
 
 - [Consultate i corsi](https://ggtechnologies.sm/formazione/)
 

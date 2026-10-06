@@ -59,9 +59,9 @@ Progettiamo e realizziamo soluzioni di intelligenza artificiale per imprese e st
 
 ### La formazione, prima di ogni progetto.
 
-Ogni progetto comincia dalle persone che useranno gli strumenti. I corsi sono pratici e a programma definito, per la direzione, i professionisti e i singoli reparti: uso professionale dell'AI, modelli AI in locale, sviluppo software, produzione e qualità, clienti e amministrazione, contratti.
+Ogni progetto comincia dalle persone che useranno gli strumenti. I corsi sono pratici e a programma definito, per la direzione, i professionisti e i singoli reparti: uso professionale dell'AI, modelli AI in locale, sviluppo software, produzione e qualità, clienti e amministrazione, contratti, sito web e SEO con un agente AI.
 
-Ogni corso dura quattro ore, in due incontri, online o in sede. Il percorso resta documentato, ed è la prova delle misure che l'art. 4 dell'AI Act chiede alle imprese: sviluppare le competenze sull'AI di chi la usa.
+Ogni corso dura quattro ore, in due incontri, online oppure in sede; il corso sul sito web si svolge solo online. Il percorso resta documentato, ed è la prova delle misure che l'art. 4 dell'AI Act chiede alle imprese: sviluppare le competenze sull'AI di chi la usa.
 
 [Il catalogo dei corsi →](https://ggtechnologies.sm/formazione/)
 

@@ -125,9 +125,9 @@ By writing to info@ggtechnologies.sm with the format and the number of participa
 
 ## Where to go next
 
-### [Professional AI use](https://ggtechnologies.sm/en/training/professional-ai-use/)
+### [Website with an AI agent](https://ggtechnologies.sm/en/training/website-ai-agent/)
 
-Rules of use, data handling and a configured assistant. The foundation course.
+Website, SEO and blog run by a group of agents, at almost no running cost.
 
 ### [Training](https://ggtechnologies.sm/en/training/)
 

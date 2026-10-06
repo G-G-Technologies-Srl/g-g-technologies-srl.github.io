@@ -59,9 +59,9 @@ We design and build artificial intelligence solutions for companies and professi
 
 ### Training, before any project.
 
-Every project begins with the people who will use the tools. The courses are practical, with a fixed programme, for management, professionals and individual departments: professional use of AI, local AI models, software development, production and quality, customers and administration, contracts.
+Every project begins with the people who will use the tools. The courses are practical, with a fixed programme, for management, professionals and individual departments: professional use of AI, local AI models, software development, production and quality, customers and administration, contracts, website and SEO with an AI agent.
 
-Each course lasts four hours over two sessions, online or on site. The programme is documented, and that is the evidence of the measures Article 4 of the AI Act asks of companies: building AI skills in the people who use it.
+Each course lasts four hours over two sessions, online or on site; the website course is online only. The programme is documented, and that is the evidence of the measures Article 4 of the AI Act asks of companies: building AI skills in the people who use it.
 
 [The course catalogue →](https://ggtechnologies.sm/en/training/)
 

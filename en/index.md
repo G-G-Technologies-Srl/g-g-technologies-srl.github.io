@@ -94,7 +94,7 @@ AI reads, proposes, prepares. The decision stays with whoever answers for it: we
 
 ## Practical AI courses, for companies and professionals.
 
-Six courses with a set programme, four hours in two sessions, online or on site: from professional use of assistants to local models, from software development to contracts.
+Seven courses with a set programme, four hours in two sessions: from professional use of assistants to local models, from software development to contracts and a website run with an AI agent.
 
 - [See the courses](https://ggtechnologies.sm/en/training/)
 

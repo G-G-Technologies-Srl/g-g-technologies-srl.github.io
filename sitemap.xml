@@ -326,6 +326,24 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://ggtechnologies.sm/formazione/sito-web-agente-ai/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/formazione/sito-web-agente-ai/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/training/website-ai-agent/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/formazione/sito-web-agente-ai/"/>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/en/training/website-ai-agent/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/formazione/sito-web-agente-ai/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/training/website-ai-agent/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/formazione/sito-web-agente-ai/"/>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://ggtechnologies.sm/insights/</loc>
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/"/>

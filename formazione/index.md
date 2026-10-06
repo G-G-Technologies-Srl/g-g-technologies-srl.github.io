@@ -19,7 +19,7 @@ Oppure scriveteci: [info@ggtechnologies.sm](mailto:info@ggtechnologies.sm)
 
 - **4** ore per corso
 - **2** incontri da 2 ore
-- **6** corsi a catalogo
+- **7** corsi a catalogo
 
 *Il metodo*
 
@@ -31,7 +31,7 @@ Ciascun incontro produce uno strumento utilizzabile dal giorno successivo: richi
 
 Al termine, quanto prodotto viene esportato in file del partecipante, consultabili con qualsiasi programma. L'account resta suo, con tutto quanto vi è stato configurato.
 
-Gli strumenti sono Claude Pro, che consigliamo, oppure ChatGPT Plus. Quattro corsi su sei si svolgono interamente dal browser, e sono quindi compatibili con i computer aziendali gestiti centralmente.
+Gli strumenti sono Claude Pro, che consigliamo, oppure ChatGPT Plus; due corsi richiedono Claude Pro. Quattro corsi su sette si svolgono interamente dal browser, e sono quindi compatibili con i computer aziendali gestiti centralmente.
 
 #### Durata
 
@@ -39,7 +39,7 @@ Gli strumenti sono Claude Pro, che consigliamo, oppure ChatGPT Plus. Quattro cor
 
 #### Modalità
 
-Online, oppure in sede presso l'azienda.
+Online, oppure in sede presso l'azienda. Il corso sul sito web si svolge solo online.
 
 #### Partecipanti
 
@@ -63,7 +63,7 @@ Amministratore delegato di G&G Technologies. Ha completato il programma europeo 
 
 *I corsi*
 
-## Sei corsi in due aree: i fondamenti e gli agenti per funzione aziendale.
+## Sette corsi in due aree: i fondamenti e gli agenti per funzione aziendale.
 
 ### Uso professionale dell'AI
 
@@ -112,6 +112,14 @@ Analisi di clausole e scadenze, confronto fra versioni, redazione.
 - Agenti per funzione
 - Dal browser
 - [Programma del corso](https://ggtechnologies.sm/formazione/contratti-accordi/)
+
+### Sito web con un agente AI
+
+Sito statico, brandbook, SEO e blog con Claude Cowork, pubblicati su GitHub Pages.
+
+- Agenti per funzione
+- Solo online, con un'installazione
+- [Programma del corso](https://ggtechnologies.sm/formazione/sito-web-agente-ai/)
 
 *Quote*
 
@@ -174,11 +182,11 @@ Dal corso sull'uso professionale dell'AI, se in azienda gli assistenti sono anco
 
 ### Devo saper programmare?
 
-No, per cinque corsi su sei. Il corso sullo sviluppo software è rivolto a chi scrive codice.
+No, per sei corsi su sette. Il corso sullo sviluppo software è rivolto a chi scrive codice.
 
 ### Posso usare ChatGPT invece di Claude?
 
-Sì, per cinque corsi su sei. Le esercitazioni sono costruite su Claude, che consigliamo. Il corso sullo sviluppo software richiede Claude Pro, che include Claude Code.
+Sì, per cinque corsi su sette. Le esercitazioni sono costruite su Claude, che consigliamo. Il corso sullo sviluppo software richiede Claude Pro, che include Claude Code; quello sul sito web richiede Claude Pro, che include Claude Cowork.
 
 ### Posso iscrivermi da solo?
 
@@ -186,7 +194,7 @@ Sì. I corsi online si attivano al raggiungimento di 5 iscritti, anche di aziend
 
 ### Il mio computer aziendale non consente di installare programmi. Posso partecipare?
 
-Sì, ai quattro corsi che si svolgono interamente dal browser. Il corso sui modelli in locale e quello sullo sviluppo software richiedono un'installazione: è opportuno verificarla prima con il responsabile dei sistemi informativi.
+Sì, ai quattro corsi che si svolgono interamente dal browser. Il corso sui modelli in locale, quello sullo sviluppo software e quello sul sito web richiedono un'installazione: è opportuno verificarla prima con il responsabile dei sistemi informativi.
 
 ### Organizzate corsi riservati a una sola azienda?
 

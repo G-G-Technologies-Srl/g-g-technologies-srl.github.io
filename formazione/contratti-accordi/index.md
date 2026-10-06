@@ -125,9 +125,9 @@ Scrivendo a info@ggtechnologies.sm con la modalità e il numero di partecipanti.
 
 ## Per approfondire
 
-### [Uso professionale dell'AI](https://ggtechnologies.sm/formazione/uso-professionale-ai/)
+### [Sito web con un agente AI](https://ggtechnologies.sm/formazione/sito-web-agente-ai/)
 
-Criteri d'uso, trattamento dei dati e un assistente configurato. Il corso di base.
+Sito, SEO e blog gestiti da un gruppo di agenti, con costi di gestione quasi azzerati.
 
 ### [Formazione](https://ggtechnologies.sm/formazione/)
 
