@@ -1,31 +1,37 @@
 ---
 title: "Corso: sito web, SEO e blog con un agente AI — G&G Technologies"
-description: "Corso online di quattro ore: un sito statico costruito e gestito con Claude Cowork, dal brandbook alla SEO e al blog, con costi di gestione quasi nulli."
+description: "Corso online di quattro ore: quattro agenti AI in Claude Cowork costruiscono e gestiscono il vostro sito web, dal brandbook alla SEO e al blog."
 publisher: "G&G Technologies"
 lang: it
 canonical: https://ggtechnologies.sm/formazione/sito-web-agente-ai/
 translation: https://ggtechnologies.sm/en/training/website-ai-agent/index.md
 ---
 
-# Sito web, SEO e blog gestiti con un agente AI.
+# Il sito web lo gestite voi, con un gruppo di agenti AI.
 
 *Corso · Agenti per funzione*
 
-Un sito statico costruito e mantenuto con Claude Cowork, con costi di gestione ridotti quasi a zero: dal brandbook alla pubblicazione, dalla SEO al blog.
+Webmaster, designer, redattore e specialista SEO: quattro agenti in Claude Cowork costruiscono, aggiornano e posizionano il sito secondo le vostre regole, con costi di gestione quasi azzerati.
 
 - [Contattateci](mailto:info@ggtechnologies.sm?subject=Richiesta%20informazioni)
 
 Oppure scriveteci: [info@ggtechnologies.sm](mailto:info@ggtechnologies.sm)
 
+- **4** ruoli nel gruppo
 - **4** ore di corso
-- **2** incontri da 2 ore
-- **5** persone al minimo
+- **2** incontri online
 
 *Il corso*
 
-## Un gruppo di lavoro per il sito web, diretto da voi.
+## Un sito web vostro, aggiornato da voi, a costi quasi nulli.
 
-Con agenti impostati per ruolo — webmaster, designer, redattore e specialista SEO — il sito web si costruisce, si aggiorna e si posiziona secondo regole scritte. Il sito è statico, cioè composto da pagine già pronte, e si pubblica gratuitamente su GitHub Pages; una modifica si chiede e va online nella stessa ora. Il partecipante decide, rilegge e pubblica.
+Il corso insegna a impostare in Claude Cowork un gruppo di agenti che costruisce il sito web, lo aggiorna e lo posiziona secondo regole scritte. Il sito è statico, cioè composto da pagine già pronte, e si pubblica su GitHub Pages: alla fine del primo incontro è già online.
+
+**Risparmio.** Hosting e statistiche gratuiti; una pagina nuova o un articolo non richiedono interventi esterni a pagamento. Restano l'abbonamento Claude Pro e, se lo desiderate, il dominio.
+
+**Rapidità.** Una modifica si chiede e va online nella stessa ora.
+
+**Precisione.** La modifica la descrive chi conosce l'azienda, e arriva sul sito così come è stata pensata.
 
 **A chi è rivolto.** Titolari, professionisti e responsabili della comunicazione. Non è richiesta esperienza di programmazione.
 
@@ -49,7 +55,37 @@ Claude Pro, che include Claude Cowork, con l'app desktop; GitHub Desktop; accoun
 
 ### Il metodo, sul nostro sito.
 
-Il sito ggtechnologies.sm è realizzato e mantenuto con questo metodo: pagine generate in locale, controlli automatici prima di ogni pubblicazione e una verifica SEO mensile pianificata. Il ragionamento sui permessi degli agenti è nell'articolo [Prima di dare le chiavi a un agente AI](https://ggtechnologies.sm/insights/agenti-autonomi-perimetro/).
+Il sito ggtechnologies.sm è realizzato e mantenuto con questo metodo: pagine generate in locale, controlli automatici prima di ogni pubblicazione e una verifica SEO mensile pianificata. Lo potete consultare prima di iscrivervi: è il risultato che il corso insegna a ottenere.
+
+*Il gruppo di lavoro*
+
+## Quattro ruoli al lavoro sul sito, una persona che decide.
+
+Ogni ruolo è una skill di Claude: istruzioni scritte che l'agente segue a ogni sessione. Restano vostre e si affinano nel tempo, perché una correzione chiesta due volte diventa una regola.
+
+*Il responsabile*
+
+### Voi decidete, gli agenti eseguono.
+
+Gli agenti propongono, preparano e verificano; voi rileggete e pubblicate con GitHub Desktop. Le credenziali di pubblicazione restano sul vostro computer, e ogni modifica è registrata nella cronologia del sito.
+
+[Il perimetro di un agente AI →](https://ggtechnologies.sm/insights/agenti-autonomi-perimetro/)
+
+### Webmaster
+
+Costruisce il sito con un motore di build in Python, lo verifica con controlli automatici e prepara ogni pubblicazione.
+
+### Designer
+
+Ricava dal brief il brandbook — colori, caratteri, marchio, tono di voce — e prepara le anteprime per i social.
+
+### Redattore
+
+Scrive pagine e articoli nel vostro tono di voce, con i dati che fornite e fonti verificate.
+
+### Specialista SEO
+
+Sceglie una ricerca per ogni pagina, cura dati strutturati e Search Console, pianifica gli articoli del blog.
 
 *Il programma*
 
@@ -150,4 +186,4 @@ Agenti che leggono documenti e interrogano i sistemi aziendali, con la misura de
 Indicate il numero di partecipanti. Rispondiamo entro un giorno lavorativo con le date disponibili.
 
 - [Tutti i corsi](https://ggtechnologies.sm/formazione/)
-- [Scriveteci](mailto:info@ggtechnologies.sm?subject=Iscrizione%20al%20corso%3A%20Sito%20web%20con%20un%20agente%20AI)
+- [Scriveteci](mailto:info@ggtechnologies.sm?subject=Iscrizione%20al%20corso%3A%20Sito%20web%2C%20SEO%20e%20blog%20con%20l%27AI)

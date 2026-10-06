@@ -39,7 +39,7 @@ Contatti / Contact: info@ggtechnologies.sm
 - [Corso: AI per contratti e accordi commerciali](https://ggtechnologies.sm/formazione/contratti-accordi/index.md): Corso pratico di quattro ore: analisi di clausole e scadenze, confronto fra versioni e redazione di accordi commerciali con un assistente AI.
 - [Corso: modelli AI americani, cinesi e locali](https://ggtechnologies.sm/formazione/modelli-ai-locali/index.md): Corso pratico di quattro ore: giurisdizione dei dati, licenze e modelli a pesi aperti eseguiti sul proprio computer con LM Studio od Ollama.
 - [Corso: AI per produzione e qualità](https://ggtechnologies.sm/formazione/produzione-qualita/index.md): Corso pratico di quattro ore: analisi dei dati di macchine e reparti con un assistente AI, rapporti periodici e regole di segnalazione.
-- [Corso: sito web, SEO e blog con un agente AI](https://ggtechnologies.sm/formazione/sito-web-agente-ai/index.md): Corso online di quattro ore: un sito statico costruito e gestito con Claude Cowork, dal brandbook alla SEO e al blog, con costi di gestione quasi nulli.
+- [Corso: sito web, SEO e blog con un agente AI](https://ggtechnologies.sm/formazione/sito-web-agente-ai/index.md): Corso online di quattro ore: quattro agenti AI in Claude Cowork costruiscono e gestiscono il vostro sito web, dal brandbook alla SEO e al blog.
 - [Corso: sviluppo software con Claude Code](https://ggtechnologies.sm/formazione/sviluppo-software-claude-code/index.md): Corso pratico di quattro ore per sviluppatori: Claude Code su un progetto esistente, file di istruzioni, test, permessi e revisione.
 - [Corso: uso professionale dell'AI e dei dati](https://ggtechnologies.sm/formazione/uso-professionale-ai/index.md): Corso pratico di quattro ore per imprese e professionisti: criteri per l'uso degli assistenti AI, trattamento dei dati, assistente dedicato.
 
@@ -97,7 +97,7 @@ Contatti / Contact: info@ggtechnologies.sm
 - [Course: AI for production and quality](https://ggtechnologies.sm/en/training/production-quality/index.md): A practical four-hour course: analysing machine and department data with an AI assistant, periodic reports and alert rules.
 - [Course: professional use of AI and data](https://ggtechnologies.sm/en/training/professional-ai-use/index.md): A practical four-hour course for companies and professionals: rules for using AI assistants, data handling, and a dedicated assistant.
 - [Course: software development with Claude Code](https://ggtechnologies.sm/en/training/software-development-claude-code/index.md): A practical four-hour course for developers: Claude Code on an existing project, instruction files, tests, permissions and review.
-- [Course: website, SEO and blog with an AI agent](https://ggtechnologies.sm/en/training/website-ai-agent/index.md): A four-hour online course: a static website built and run with Claude Cowork, from the brand book to SEO and the blog, at almost no running cost.
+- [Course: website, SEO and blog with an AI agent](https://ggtechnologies.sm/en/training/website-ai-agent/index.md): A four-hour online course: four AI agents in Claude Cowork build and run your website, from the brand book to SEO and the blog.
 
 ## Apps (English)
 

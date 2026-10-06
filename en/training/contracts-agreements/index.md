@@ -125,9 +125,9 @@ By writing to info@ggtechnologies.sm with the format and the number of participa
 
 ## Where to go next
 
-### [Website with an AI agent](https://ggtechnologies.sm/en/training/website-ai-agent/)
+### [Website, SEO and blog with AI](https://ggtechnologies.sm/en/training/website-ai-agent/)
 
-Website, SEO and blog run by a group of agents, at almost no running cost.
+A group of AI agents for website, SEO and blog, at almost no running cost.
 
 ### [Training](https://ggtechnologies.sm/en/training/)
 

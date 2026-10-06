@@ -113,12 +113,12 @@ Analisi di clausole e scadenze, confronto fra versioni, redazione.
 - Dal browser
 - [Programma del corso](https://ggtechnologies.sm/formazione/contratti-accordi/)
 
-### Sito web con un agente AI
+### Sito web, SEO e blog con l'AI
 
-Sito statico, brandbook, SEO e blog con Claude Cowork, pubblicati su GitHub Pages.
+Quattro agenti — webmaster, designer, redattore e specialista SEO — costruiscono e curano il vostro sito. Hosting gratuito, modifiche pubblicate in giornata.
 
 - Agenti per funzione
-- Solo online, con un'installazione
+- Online · app Claude desktop
 - [Programma del corso](https://ggtechnologies.sm/formazione/sito-web-agente-ai/)
 
 *Quote*

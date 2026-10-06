@@ -1,31 +1,37 @@
 ---
 title: "Course: website, SEO and blog with an AI agent — G&G Technologies"
-description: "A four-hour online course: a static website built and run with Claude Cowork, from the brand book to SEO and the blog, at almost no running cost."
+description: "A four-hour online course: four AI agents in Claude Cowork build and run your website, from the brand book to SEO and the blog."
 publisher: "G&G Technologies"
 lang: en
 canonical: https://ggtechnologies.sm/en/training/website-ai-agent/
 translation: https://ggtechnologies.sm/formazione/sito-web-agente-ai/index.md
 ---
 
-# Website, SEO and blog run with an AI agent.
+# You run the website, with a group of AI agents.
 
 *Course · Agents by function*
 
-A static website built and maintained with Claude Cowork, at almost no running cost: from the brand book to publication, from SEO to the blog.
+Webmaster, designer, copywriter and SEO specialist: four agents in Claude Cowork build, update and position the website according to your rules, at almost no running cost.
 
 - [Talk to us](mailto:info@ggtechnologies.sm?subject=Information%20request)
 
 Or write to us: [info@ggtechnologies.sm](mailto:info@ggtechnologies.sm)
 
+- **4** roles in the group
 - **4** hours of training
-- **2** two-hour sessions
-- **5** people minimum
+- **2** online sessions
 
 *The course*
 
-## A working group for your website, led by you.
+## A website of your own, updated by you, at almost no cost.
 
-With agents set up by role — webmaster, designer, copywriter and SEO specialist — the website is built, updated and positioned according to written rules. The site is static, that is, made of ready-made pages, and is published free of charge on GitHub Pages; a change is requested and goes live within the same hour. The participant decides, reviews and publishes.
+The course teaches how to set up, in Claude Cowork, a group of agents that builds the website, updates it and positions it according to written rules. The site is static, that is, made of ready-made pages, and is published on GitHub Pages: by the end of the first session it is already online.
+
+**Savings.** Hosting and statistics are free; a new page or an article needs no paid outside work. What remains is the Claude Pro subscription and, if you wish, the domain.
+
+**Speed.** A change is requested and goes live within the same hour.
+
+**Precision.** The change is described by the person who knows the business, and reaches the website exactly as it was intended.
 
 **Who it is for.** Owners, professionals and communication managers. No programming experience is required.
 
@@ -49,7 +55,37 @@ Claude Pro, which includes Claude Cowork, with the desktop app; GitHub Desktop; 
 
 ### The method, on our own website.
 
-The ggtechnologies.sm website is built and maintained with this method: pages generated locally, automatic checks before every publication and a scheduled monthly SEO review. The reasoning on agent permissions is in the article [Before giving an AI agent the keys](https://ggtechnologies.sm/en/insights/autonomous-agents-boundaries/).
+The ggtechnologies.sm website is built and maintained with this method: pages generated locally, automatic checks before every publication and a scheduled monthly SEO review. You can look at it before enrolling: it is the result the course teaches you to achieve.
+
+*The working group*
+
+## Four roles working on the website, one person who decides.
+
+Each role is a Claude skill: written instructions the agent follows in every session. They remain yours and improve over time, because a correction requested twice becomes a rule.
+
+*The person in charge*
+
+### You decide, the agents carry out.
+
+The agents propose, prepare and check; you review and publish with GitHub Desktop. Publishing credentials stay on your computer, and every change is recorded in the history of the website.
+
+[An AI agent's boundary →](https://ggtechnologies.sm/en/insights/autonomous-agents-boundaries/)
+
+### Webmaster
+
+Builds the website with a build engine in Python, checks it with automatic tests and prepares every publication.
+
+### Designer
+
+Turns the brief into the brand book — colours, typefaces, mark, tone of voice — and prepares the social previews.
+
+### Copywriter
+
+Writes pages and articles in your tone of voice, with the data you provide and verified sources.
+
+### SEO specialist
+
+Chooses one search for each page, looks after structured data and Search Console, and plans the blog articles.
 
 *The programme*
 
@@ -150,4 +186,4 @@ Agents that read documents and query your systems, with the measure agreed first
 Tell us the number of participants. We reply within one working day with the available dates.
 
 - [All courses](https://ggtechnologies.sm/en/training/)
-- [Email us](mailto:info@ggtechnologies.sm?subject=Course%20enrolment%3A%20Website%20with%20an%20AI%20agent)
+- [Email us](mailto:info@ggtechnologies.sm?subject=Course%20enrolment%3A%20Website%2C%20SEO%20and%20blog%20with%20AI)

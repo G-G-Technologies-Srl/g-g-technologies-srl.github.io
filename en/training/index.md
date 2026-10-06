@@ -113,12 +113,12 @@ Analysing clauses and deadlines, comparing versions, drafting.
 - In the browser
 - [Course programme](https://ggtechnologies.sm/en/training/contracts-agreements/)
 
-### Website with an AI agent
+### Website, SEO and blog with AI
 
-Static website, brand book, SEO and blog with Claude Cowork, published on GitHub Pages.
+Four agents — webmaster, designer, copywriter and SEO specialist — build and look after your website. Free hosting, changes published the same day.
 
 - Agents by function
-- Online only, with an installation
+- Online · Claude desktop app
 - [Course programme](https://ggtechnologies.sm/en/training/website-ai-agent/)
 
 *Fees*

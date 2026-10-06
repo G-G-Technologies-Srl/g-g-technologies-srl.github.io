@@ -125,9 +125,9 @@ Scrivendo a info@ggtechnologies.sm con la modalità e il numero di partecipanti.
 
 ## Per approfondire
 
-### [Sito web con un agente AI](https://ggtechnologies.sm/formazione/sito-web-agente-ai/)
+### [Sito web, SEO e blog con l'AI](https://ggtechnologies.sm/formazione/sito-web-agente-ai/)
 
-Sito, SEO e blog gestiti da un gruppo di agenti, con costi di gestione quasi azzerati.
+Un gruppo di agenti AI per sito, SEO e blog, con costi di gestione quasi azzerati.
 
 ### [Formazione](https://ggtechnologies.sm/formazione/)
 
