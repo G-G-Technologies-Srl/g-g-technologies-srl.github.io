@@ -126,7 +126,9 @@ const digest = (over = {}) => ({
   heading: "Scadenze",
   items: [
     { key: "a|2026-09-14", when: "2026-09-12T07:00:00.000Z", text: "Scrivere la scaletta — fra 2 giorni" },
-    { key: "b|2026-09-30", when: "2026-09-29T07:00:00.000Z", text: "Mandare in stampa — fra 18 giorni" },
+    // Matura in un futuro che non arriva: il test gira con l'orologio vero, e con una data vicina
+    // la «seconda non ancora matura» lo diventava davvero il 29 settembre 2026.
+    { key: "b|2026-09-30", when: "2099-09-29T07:00:00.000Z", text: "Mandare in stampa — fra 18 giorni" },
   ],
   said: [],
   ...over,

@@ -846,6 +846,43 @@ export function createTask(projectId, { title = "", status = null, end = null,
 export function updateTask(id, changes) {
   const task = tasks.get(id);
   if (!task) return null;
+  // A new title travels to the lines that name the task in a page: the line said what the task
+  // was called, and a page that keeps the old name next to the hook says something false. Same
+  // undo step, so taking the rename back takes it back from the pages too.
+  const before = String(task.title || "").trim();
+  const after = typeof changes.title === "string" ? changes.title.trim() : before;
+  if (before && after && after !== before) {
+    const uid = String(task.uid || task.id);
+    const touched = pagesOf(task.projectId).map((one) => ({
+      page: one, markdown: _retitleLines(one.markdown || "", uid, before, after),
+    })).filter((one) => one.markdown !== (one.page.markdown || ""));
+    if (touched.length) {
+      return batch(() => {
+        _updateTask(id, changes);
+        for (const one of touched) updatePage(one.page.id, { markdown: one.markdown });
+      });
+    }
+  }
+  return _updateTask(id, changes);
+}
+
+/** The lines hooked to `uid`, with the old title replaced by the new one where it is written. */
+function _retitleLines(markdown, uid, before, after) {
+  const hook = `[[#${uid}]]`;
+  return markdown.split("\n").map((line) => {
+    const end = line.indexOf(hook);
+    if (end < 0) return line;
+    // Only in the text before the hook: what the line says of the task, not what follows it.
+    const at = line.lastIndexOf(before, end);
+    if (at < 0 || at + before.length > end) return line;
+    // Already the new title — "stand" inside "stand B12" — when the page arrived renamed first.
+    if (line.startsWith(after, at)) return line;
+    return line.slice(0, at) + after + line.slice(at + before.length);
+  }).join("\n");
+}
+
+function _updateTask(id, changes) {
+  const task = tasks.get(id);
   const before = _copy(task);
   _put("task", { ...task, ...changes, updated: _now() });
   _touch(task.projectId);

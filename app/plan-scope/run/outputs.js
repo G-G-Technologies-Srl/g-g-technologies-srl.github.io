@@ -222,12 +222,25 @@ export function print({ pageId = null, projectId = null } = {}) {
 
 // ---- the bridge to an assistant: text out through the clipboard, tasks back in through a paste
 
+/**
+ * The page's text with each "[[#uid]]" said in words: an assistant reading «[[#k3j2…]]» learns
+ * nothing, and might copy the code back as if it meant something. Whether the task is open, done
+ * or gone is what the hook stands for.
+ */
+function _readableHooks(page) {
+  return String(page.markdown || "").replace(new RegExp(md.TASK_REF.source, "g"), (whole, uid) => {
+    const task = model.taskByUid(uid, { projectId: page.projectId });
+    if (!task || task.trashedAt) return t("copyTaskGone");
+    return model.isDone(task) ? t("copyTaskDone") : t("copyTaskOpen");
+  });
+}
+
 export async function copyFor(kind, { pageId = null, projectId = null } = {}) {
   let text = "";
   if (kind === "page") {
     const page = model.page(pageId);
     if (!page) return;
-    text = `${t("copyPageLead")}\n\n---\n\n# ${page.title || t("pageUntitled")}\n\n${page.markdown}`;
+    text = `${t("copyPageLead")}\n\n---\n\n# ${page.title || t("pageUntitled")}\n\n${_readableHooks(page)}`;
   } else {
     const project = model.project(projectId);
     if (!project) return;

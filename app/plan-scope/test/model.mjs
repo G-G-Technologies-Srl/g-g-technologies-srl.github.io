@@ -1808,6 +1808,24 @@ test("le caselle di un verbale non fanno del verbale il documento di nessuno", (
   assert.equal(model.taskOfPage(page.id), null);
 });
 
+test("rinominare un'attività rinomina le righe che la agganciano, e l'undo le rimette", () => {
+  const one = model.createProject({ name: "Sito" });
+  const page = model.createPage(one.id, { title: "Verbale" });
+  const task = model.createTask(one.id, { title: "Prenotare lo stand" });
+  const altra = model.createTask(one.id, { title: "Prenotare lo stand" });
+  const text = `- [ ] Prenotare lo stand @Giulia [[#${task.uid}]] entro venerdì\n`
+    + `- [ ] Prenotare lo stand [[#${altra.uid}]]\n\nPrenotare lo stand, ne parliamo.\n`;
+  model.setMarkdown(page.id, text);
+  const step = model.updateTask(task.id, { title: "Prenotare lo stand B12" });
+  const now = model.page(page.id).markdown.split("\n");
+  assert.equal(now[0], `- [ ] Prenotare lo stand B12 @Giulia [[#${task.uid}]] entro venerdì`);
+  assert.equal(now[1], `- [ ] Prenotare lo stand [[#${altra.uid}]]`, "l'altra attività non si tocca");
+  assert.equal(now[3], "Prenotare lo stand, ne parliamo.", "il testo libero non si tocca");
+  model.undoStep(step);
+  assert.equal(model.page(page.id).markdown, text);
+  assert.equal(model.task(task.id).title, "Prenotare lo stand");
+});
+
 test("il filo si stacca, e senza filo le due parti non si conoscono", () => {
   const one = model.createProject({ name: "Sito" });
   const task = model.createTask(one.id, { title: "Montare lo stand" });

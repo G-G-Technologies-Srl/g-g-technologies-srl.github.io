@@ -245,23 +245,44 @@ function _fillCard() {
 
   // Il documento: il titolo se c'è, e allora si apre e si stacca; l'invito a farne uno se non c'è.
   // La spiegazione sta sotto finché non c'è, e sparisce quando il documento parla da sé.
-  const doc = model.pageOfTask(task);
+  // Una sottoattività senza documento suo mostra quello dell'attività principale: è nata lì, o lì
+  // sta il lavoro di cui fa parte. Non si stacca, perché non è suo; se ne aggiunge uno proprio.
+  const { page: doc, inherited } = _cardDoc(task);
   el("cardDocOpen").hidden = !doc;
   el("cardDocOpen").textContent = doc ? (doc.title || t("pageUntitled")) : "";
-  el("cardDocOff").hidden = !doc;
-  el("cardDocMake").hidden = Boolean(doc);
-  el("cardDocHint").hidden = Boolean(doc);
+  el("cardDocOff").hidden = !doc || inherited;
+  el("cardDocMake").hidden = Boolean(doc) && !inherited;
+  el("cardDocMake").textContent = inherited ? t("cardDocOwn") : t("cardDocMake");
+  el("cardDocMake").className = inherited ? "ghost small" : "accent";
+  el("cardDocHint").hidden = Boolean(doc) && !inherited;
+  el("cardDocHint").textContent = inherited
+    ? tf("cardDocInherited", { name: model.parentOf(task).title || t("taskUntitled") })
+    : t("cardDocHint");
 
   // Le pagine che la nominano, il documento escluso perché ha già la sua riga sopra. Il clic chiude
-  // la scheda e apre la pagina, come fa il documento.
+  // la scheda e apre la pagina, come fa il documento. Se l'attività non ha un documento suo e la
+  // pagina non è di nessuno, accanto c'è il gesto per farla diventare il suo documento: è il caso
+  // delle attività nate da una pagina prima che la pagina diventasse il loro documento da sé.
+  const own = inherited ? null : doc;
   const naming = model.pagesNamingTask(task).filter((one) => !doc || one.id !== doc.id);
   el("cardFromLabel").hidden = !naming.length;
   el("cardFrom").hidden = !naming.length;
-  fill(el("cardFrom"), naming.map((page) => button("ghost", page.title || t("pageUntitled"), () => {
-    _saveCard();
-    el("taskCard").close();
-    on.openPage(page.id);
-  }, { label: t("cardFromOpen") })));
+  fill(el("cardFrom"), naming.flatMap((page) => {
+    const open = button("ghost", page.title || t("pageUntitled"), () => {
+      _saveCard();
+      el("taskCard").close();
+      on.openPage(page.id);
+    }, { label: t("cardFromOpen") });
+    if (own || model.taskOfPage(page.id)) return [open];
+    return [open, button("ghost small", t("cardFromUse"), () => {
+      _saveCard();
+      const step = model.setTaskPage(cardId, page.id);
+      _fillCard();
+      on.change();
+      paint();
+      if (step) on.batched(step, tf("cardDocLinked", { name: page.title || t("pageUntitled") }));
+    })];
+  }));
 
   // Whose this is, when it is a sub-task; and its own sub-tasks, when it is a parent. Never both:
   // one level, by the model's rule, so a sub-task's card has no list of its own.
@@ -294,6 +315,18 @@ function _fillCard() {
 
   el("cardExtra").hidden = !extraOpen;
   el("cardMore").textContent = extraOpen ? t("showLess") : t("showMore");
+}
+
+/**
+ * Il documento che la scheda mostra: quello dell'attività, o — per una sottoattività che non ne ha
+ * uno suo — quello dell'attività principale, segnato come ereditato.
+ */
+function _cardDoc(task) {
+  const own = task ? model.pageOfTask(task) : null;
+  if (own || !task) return { page: own, inherited: false };
+  const parent = model.parentOf(task);
+  const theirs = parent ? model.pageOfTask(parent) : null;
+  return { page: theirs, inherited: Boolean(theirs) };
 }
 
 /**
@@ -1220,7 +1253,7 @@ export function connect(handlers) {
   // Il documento, dalla scheda: aprirlo, aggiungerlo, staccarlo.
   el("cardDocOpen").addEventListener("click", () => {
     _saveCard();
-    const doc = model.pageOfTask(model.task(cardId));
+    const doc = _cardDoc(model.task(cardId)).page;
     if (!doc) return;
     el("taskCard").close();
     on.openPage(doc.id);

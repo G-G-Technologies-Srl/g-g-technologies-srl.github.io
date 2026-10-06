@@ -565,8 +565,18 @@ function _boxesToPlan() {
   const people = _mentionable();
 
   let count = 0;
+  // Dentro un blocco di codice una casella è testo da mostrare, non una cosa da fare: lì non nasce
+  // un'attività, e soprattutto non si scrive un aggancio dentro il codice di qualcun altro.
+  let fence = null;
   const step = model.batch(() => {
     lines.forEach((line, at) => {
+      const mark = /^\s*(`{3,}|~{3,})/.exec(line);
+      if (mark) {
+        if (!fence) fence = mark[1];
+        else if (mark[1][0] === fence[0] && mark[1].length >= fence.length) fence = null;
+        return;
+      }
+      if (fence) return;
       // Le righe che già nominano un'attività restano fuori: portarle vorrebbe dire farne una
       // seconda, con lo stesso titolo.
       if (!csv.openBoxes(line) || md.TASK_REF.test(line)) return;
