@@ -168,7 +168,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/chi-siamo/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/about/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/chi-siamo/"/>
-    <lastmod>2026-09-25</lastmod>
+    <lastmod>2026-10-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -177,7 +177,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/chi-siamo/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/about/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/chi-siamo/"/>
-    <lastmod>2026-09-25</lastmod>
+    <lastmod>2026-10-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -330,7 +330,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/"/>
-    <lastmod>2026-09-25</lastmod>
+    <lastmod>2026-10-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -339,7 +339,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/"/>
-    <lastmod>2026-09-25</lastmod>
+    <lastmod>2026-10-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -600,7 +600,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/numero-o-misura/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/number-or-measurement/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/numero-o-misura/"/>
-    <lastmod>2026-09-25</lastmod>
+    <lastmod>2026-10-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -609,7 +609,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/numero-o-misura/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/number-or-measurement/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/numero-o-misura/"/>
-    <lastmod>2026-09-25</lastmod>
+    <lastmod>2026-10-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -628,6 +628,24 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/project-planning/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/pianificazione-progetti/"/>
     <lastmod>2026-09-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/insights/fattura-elettronica-san-marino/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/fattura-elettronica-san-marino/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/san-marino-e-invoicing/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/fattura-elettronica-san-marino/"/>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/en/insights/san-marino-e-invoicing/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/fattura-elettronica-san-marino/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/san-marino-e-invoicing/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/fattura-elettronica-san-marino/"/>
+    <lastmod>2026-10-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
