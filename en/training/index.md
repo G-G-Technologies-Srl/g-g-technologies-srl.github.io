@@ -115,7 +115,7 @@ Analysing clauses and deadlines, comparing versions, drafting.
 
 ### Website, SEO and blog with AI
 
-Four agents — webmaster, designer, copywriter and SEO specialist — build and look after your website. Free hosting, changes published the same day.
+Your website online in two sessions, with a group of AI agents to look after it: brand book, SEO, blog and statistics, with free hosting.
 
 - Agents by function
 - Online · Claude desktop app

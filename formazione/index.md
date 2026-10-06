@@ -115,7 +115,7 @@ Analisi di clausole e scadenze, confronto fra versioni, redazione.
 
 ### Sito web, SEO e blog con l'AI
 
-Quattro agenti — webmaster, designer, redattore e specialista SEO — costruiscono e curano il vostro sito. Hosting gratuito, modifiche pubblicate in giornata.
+Il vostro sito online in due incontri, con un gruppo di agenti AI che lo cura: brandbook, SEO, blog e statistiche, con hosting gratuito.
 
 - Agenti per funzione
 - Online · app Claude desktop

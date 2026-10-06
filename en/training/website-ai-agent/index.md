@@ -7,19 +7,85 @@ canonical: https://ggtechnologies.sm/en/training/website-ai-agent/
 translation: https://ggtechnologies.sm/formazione/sito-web-agente-ai/index.md
 ---
 
-# You run the website, with a group of AI agents.
+# Your website online in two sessions, and a group of agents to look after it.
 
 *Course · Agents by function*
 
-Webmaster, designer, copywriter and SEO specialist: four agents in Claude Cowork build, update and position the website according to your rules, at almost no running cost.
+By the first session the website is published, by the second it is ready for search engines and for the blog. Then you run it, with a webmaster, a designer, a copywriter and an SEO specialist set up in Claude Cowork.
 
 - [Talk to us](mailto:info@ggtechnologies.sm?subject=Information%20request)
 
 Or write to us: [info@ggtechnologies.sm](mailto:info@ggtechnologies.sm)
 
-- **4** roles in the group
 - **4** hours of training
-- **2** online sessions
+- **4** roles in the group
+- **7** results you keep
+
+*What you keep*
+
+## At the end of the course, the website is yours and it works.
+
+Every session ends with a result you can see, and everything stays on your own accounts: GitHub, Google, Claude. With the course materials — brief, service guide, checklists — every step can be repeated independently.
+
+*The main result*
+
+### Your website, online and on your own domain.
+
+Home, services, about, contact and blog, with your design and your copy, published on GitHub Pages. If you have a domain, the website answers at your address, over HTTPS. Code, copy and images are yours.
+
+### The brand book
+
+Colours, typefaces, mark and tone of voice, written as rules every role follows.
+
+### The group of agents
+
+The four skills installed in your Claude account and the project's instruction file.
+
+### The engine and the checks
+
+The script that generates the pages on your computer and the checks that stop an error before publication.
+
+### SEO in place
+
+One keyword per page, structured data, social previews and a verified Search Console property.
+
+### Statistics
+
+GoatCounter running and the privacy notice updated: aggregate data, no cookies.
+
+### The blog under way
+
+The editorial plan for the quarter, the first article published and a scheduled weekly check.
+
+*The working group*
+
+## Four roles working on the website, one person who decides.
+
+Each role is a Claude skill: written instructions the agent follows in every session. They remain yours and improve over time, because a correction requested twice becomes a rule.
+
+*The person in charge*
+
+### You decide, the agents carry out.
+
+The agents propose, prepare and check; you review and publish with GitHub Desktop. Publishing credentials stay on your computer, and every change is recorded in the history of the website.
+
+[An AI agent's boundary →](https://ggtechnologies.sm/en/insights/autonomous-agents-boundaries/)
+
+### Webmaster
+
+Builds the website with a build engine in Python, checks it with automatic tests and prepares every publication.
+
+### Designer
+
+Turns the brief into the brand book — colours, typefaces, mark, tone of voice — and prepares the social previews.
+
+### Copywriter
+
+Writes pages and articles in your tone of voice, with the data you provide and verified sources.
+
+### SEO specialist
+
+Chooses one search for each page, looks after structured data and Search Console, and plans the blog articles.
 
 *The course*
 
@@ -57,36 +123,6 @@ Claude Pro, which includes Claude Cowork, with the desktop app; GitHub Desktop; 
 
 The ggtechnologies.sm website is built and maintained with this method: pages generated locally, automatic checks before every publication and a scheduled monthly SEO review. You can look at it before enrolling: it is the result the course teaches you to achieve.
 
-*The working group*
-
-## Four roles working on the website, one person who decides.
-
-Each role is a Claude skill: written instructions the agent follows in every session. They remain yours and improve over time, because a correction requested twice becomes a rule.
-
-*The person in charge*
-
-### You decide, the agents carry out.
-
-The agents propose, prepare and check; you review and publish with GitHub Desktop. Publishing credentials stay on your computer, and every change is recorded in the history of the website.
-
-[An AI agent's boundary →](https://ggtechnologies.sm/en/insights/autonomous-agents-boundaries/)
-
-### Webmaster
-
-Builds the website with a build engine in Python, checks it with automatic tests and prepares every publication.
-
-### Designer
-
-Turns the brief into the brand book — colours, typefaces, mark, tone of voice — and prepares the social previews.
-
-### Copywriter
-
-Writes pages and articles in your tone of voice, with the data you provide and verified sources.
-
-### SEO specialist
-
-Chooses one search for each page, looks after structured data and Search Console, and plans the blog articles.
-
 *The programme*
 
 ## Two sessions, each with a result ready for use.
@@ -107,45 +143,50 @@ Search Console and cookie-free statistics, keywords for each page, structured da
 - Editorial plan and the first blog article
 - **Result:** The first article published and the periodic check running
 
-### At the end
+### Between the two sessions
 
-The materials produced in the two sessions are exported to the participant's own files, which open in any program and can be used independently.
+About half an hour, with the step-by-step guide, so that the second session works on real data.
 
-- The published website, the brand book and the role instructions
-- The first article published and the periodic check running
-- The course materials
+- Search Console verified and sitemap submitted
+- GoatCounter running
+- Domain connected, if planned
+- A first change made independently
 
-*How it works*
+*After the course*
 
-## From enrolment to the second session, in four steps.
+## A change to the website, from request to publication.
 
 01
 
-### Enrolment
+### The request
 
-Enrolment is completed by paying the fee in advance. Instructions for activating access to the tools follow.
+You write in Cowork what to change: opening hours, a new service, an article. As you would to a colleague.
 
 02
 
-### First session
+### The roles at work
 
-Two hours of explanation and guided exercises. The session ends with the first result, ready for use.
+The copywriter writes, the designer prepares the image, the SEO specialist checks title and keywords, the webmaster generates the pages.
 
 03
 
-### Application
+### The checks
 
-Between the two sessions, a short application of what was learned to day-to-day work, from thirty to sixty minutes.
+The build verifies links, titles, metadata and sitemap; you look at the preview.
 
 04
 
-### Second session
+### Publication
 
-It opens by reviewing that application and continues with the second module. At the end, the materials produced are exported to the participant's own files.
+One click in GitHub Desktop. A few minutes later the change is online.
 
 *FAQ*
 
 ## Frequently asked questions
+
+### What do I keep at the end of the course?
+
+The published website, on your own domain if you have one; the brand book; the four skills and the instruction file in your account; SEO in place with Search Console; GoatCounter statistics; the editorial plan and the first article. Everything stays on your own accounts.
 
 ### Is Claude Pro enough?
 
@@ -181,7 +222,7 @@ Practical four-hour courses on artificial intelligence, for companies and profes
 
 Agents that read documents and query your systems, with the measure agreed first.
 
-## Would you like to enrol on this course?
+## Your website online, in two sessions.
 
 Tell us the number of participants. We reply within one working day with the available dates.
 

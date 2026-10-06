@@ -7,19 +7,85 @@ canonical: https://ggtechnologies.sm/formazione/sito-web-agente-ai/
 translation: https://ggtechnologies.sm/en/training/website-ai-agent/index.md
 ---
 
-# Il sito web lo gestite voi, con un gruppo di agenti AI.
+# Il vostro sito online in due incontri, e un gruppo di agenti che lo cura.
 
 *Corso · Agenti per funzione*
 
-Webmaster, designer, redattore e specialista SEO: quattro agenti in Claude Cowork costruiscono, aggiornano e posizionano il sito secondo le vostre regole, con costi di gestione quasi azzerati.
+Al primo incontro il sito è pubblicato, al secondo è pronto per i motori di ricerca e per il blog. Poi lo gestite voi, con un webmaster, un designer, un redattore e uno specialista SEO impostati in Claude Cowork.
 
 - [Contattateci](mailto:info@ggtechnologies.sm?subject=Richiesta%20informazioni)
 
 Oppure scriveteci: [info@ggtechnologies.sm](mailto:info@ggtechnologies.sm)
 
-- **4** ruoli nel gruppo
 - **4** ore di corso
-- **2** incontri online
+- **4** ruoli nel gruppo
+- **7** risultati che restano
+
+*Cosa vi resta*
+
+## Alla fine del corso, il sito è vostro e funziona.
+
+Ogni incontro si chiude con un risultato che si vede, e tutto resta sui vostri account: GitHub, Google, Claude. Con i materiali del corso — brief, guida ai servizi, liste di controllo — ogni passaggio si può ripetere in autonomia.
+
+*Il risultato principale*
+
+### Il vostro sito, online e sul vostro dominio.
+
+Home, servizi, chi siamo, contatti e blog, con la vostra grafica e i vostri testi, pubblicati su GitHub Pages. Se avete un dominio, il sito risponde al vostro indirizzo, con HTTPS. Codice, testi e immagini sono vostri.
+
+### Il brandbook
+
+Colori, caratteri, marchio e tono di voce, scritti come regole che ogni ruolo rispetta.
+
+### Il gruppo di agenti
+
+Le quattro skill installate nel vostro account Claude e il file di istruzioni del progetto.
+
+### Il motore e i controlli
+
+Lo script che genera le pagine sul vostro computer e i controlli che fermano un errore prima della pubblicazione.
+
+### La SEO impostata
+
+Una parola chiave per pagina, dati strutturati, anteprime per i social e Search Console verificata.
+
+### Le statistiche
+
+GoatCounter attivo e informativa privacy aggiornata: dati aggregati, nessun cookie.
+
+### Il blog avviato
+
+Il piano editoriale del trimestre, il primo articolo pubblicato e un controllo settimanale pianificato.
+
+*Il gruppo di lavoro*
+
+## Quattro ruoli al lavoro sul sito, una persona che decide.
+
+Ogni ruolo è una skill di Claude: istruzioni scritte che l'agente segue a ogni sessione. Restano vostre e si affinano nel tempo, perché una correzione chiesta due volte diventa una regola.
+
+*Il responsabile*
+
+### Voi decidete, gli agenti eseguono.
+
+Gli agenti propongono, preparano e verificano; voi rileggete e pubblicate con GitHub Desktop. Le credenziali di pubblicazione restano sul vostro computer, e ogni modifica è registrata nella cronologia del sito.
+
+[Il perimetro di un agente AI →](https://ggtechnologies.sm/insights/agenti-autonomi-perimetro/)
+
+### Webmaster
+
+Costruisce il sito con un motore di build in Python, lo verifica con controlli automatici e prepara ogni pubblicazione.
+
+### Designer
+
+Ricava dal brief il brandbook — colori, caratteri, marchio, tono di voce — e prepara le anteprime per i social.
+
+### Redattore
+
+Scrive pagine e articoli nel vostro tono di voce, con i dati che fornite e fonti verificate.
+
+### Specialista SEO
+
+Sceglie una ricerca per ogni pagina, cura dati strutturati e Search Console, pianifica gli articoli del blog.
 
 *Il corso*
 
@@ -57,36 +123,6 @@ Claude Pro, che include Claude Cowork, con l'app desktop; GitHub Desktop; accoun
 
 Il sito ggtechnologies.sm è realizzato e mantenuto con questo metodo: pagine generate in locale, controlli automatici prima di ogni pubblicazione e una verifica SEO mensile pianificata. Lo potete consultare prima di iscrivervi: è il risultato che il corso insegna a ottenere.
 
-*Il gruppo di lavoro*
-
-## Quattro ruoli al lavoro sul sito, una persona che decide.
-
-Ogni ruolo è una skill di Claude: istruzioni scritte che l'agente segue a ogni sessione. Restano vostre e si affinano nel tempo, perché una correzione chiesta due volte diventa una regola.
-
-*Il responsabile*
-
-### Voi decidete, gli agenti eseguono.
-
-Gli agenti propongono, preparano e verificano; voi rileggete e pubblicate con GitHub Desktop. Le credenziali di pubblicazione restano sul vostro computer, e ogni modifica è registrata nella cronologia del sito.
-
-[Il perimetro di un agente AI →](https://ggtechnologies.sm/insights/agenti-autonomi-perimetro/)
-
-### Webmaster
-
-Costruisce il sito con un motore di build in Python, lo verifica con controlli automatici e prepara ogni pubblicazione.
-
-### Designer
-
-Ricava dal brief il brandbook — colori, caratteri, marchio, tono di voce — e prepara le anteprime per i social.
-
-### Redattore
-
-Scrive pagine e articoli nel vostro tono di voce, con i dati che fornite e fonti verificate.
-
-### Specialista SEO
-
-Sceglie una ricerca per ogni pagina, cura dati strutturati e Search Console, pianifica gli articoli del blog.
-
 *Il programma*
 
 ## Due incontri, ciascuno con un risultato pronto per l'uso.
@@ -107,45 +143,50 @@ Search Console e statistiche senza cookie, parole chiave per pagina, dati strutt
 - Piano editoriale e primo articolo del blog
 - **Risultato:** Il primo articolo pubblicato e il controllo periodico attivo
 
-### Al termine
+### Fra i due incontri
 
-I materiali prodotti nei due incontri si esportano in file del partecipante, consultabili con qualsiasi programma e utilizzabili in autonomia.
+Circa mezz'ora, con la guida passo per passo, perché il secondo incontro lavori su dati veri.
 
-- Il sito pubblicato, il brandbook e le istruzioni dei ruoli
-- Il primo articolo pubblicato e il controllo periodico attivo
-- Il materiale didattico del corso
+- Search Console verificata e sitemap inviata
+- GoatCounter attivo
+- Dominio collegato, se previsto
+- Una prima modifica fatta in autonomia
 
-*Come si svolge*
+*Dopo il corso*
 
-## Dall'iscrizione al secondo incontro, in quattro passaggi.
+## Una modifica al sito, dalla richiesta alla pubblicazione.
 
 01
 
-### Iscrizione
+### La richiesta
 
-L'iscrizione si perfeziona con il pagamento anticipato della quota. Seguono le istruzioni per attivare gli accessi agli strumenti.
+Scrivete in Cowork che cosa cambiare: un orario, un servizio nuovo, un articolo. Come a un collaboratore.
 
 02
 
-### Primo incontro
+### Il lavoro dei ruoli
 
-Due ore di spiegazione ed esercitazione guidata. L'incontro si chiude con il primo risultato, pronto per l'uso.
+Il redattore scrive, il designer prepara l'immagine, lo specialista SEO controlla titolo e parole chiave, il webmaster genera le pagine.
 
 03
 
-### Applicazione
+### I controlli
 
-Fra i due incontri, una breve applicazione di quanto appreso alle attività quotidiane, da trenta a sessanta minuti.
+Il build verifica collegamenti, titoli, metadati e sitemap; voi guardate l'anteprima.
 
 04
 
-### Secondo incontro
+### La pubblicazione
 
-Si apre con la verifica dell'applicazione e prosegue con il secondo modulo. Al termine, i materiali prodotti si esportano in file del partecipante.
+Un clic in GitHub Desktop. Dopo qualche minuto la modifica è online.
 
 *FAQ*
 
 ## Domande frequenti
+
+### Che cosa mi resta alla fine del corso?
+
+Il sito pubblicato, sul vostro dominio se lo avete; il brandbook; le quattro skill e il file di istruzioni nel vostro account; la SEO impostata con Search Console; le statistiche GoatCounter; il piano editoriale e il primo articolo. Tutto resta sui vostri account.
 
 ### Basta Claude Pro?
 
@@ -181,7 +222,7 @@ Corsi pratici di quattro ore sull'intelligenza artificiale, per imprese e profes
 
 Agenti che leggono documenti e interrogano i sistemi aziendali, con la misura decisa prima.
 
-## Desiderate iscrivervi a questo corso?
+## Il vostro sito online, in due incontri.
 
 Indicate il numero di partecipanti. Rispondiamo entro un giorno lavorativo con le date disponibili.
 
