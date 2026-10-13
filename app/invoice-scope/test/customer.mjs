@@ -443,4 +443,20 @@ await prova("dal diario si pianifica un incontro col cliente già scelto", async
   assert.match(dom.byId("custDiary").at(0).allText, /Incontro.*Offerta di rinnovo/s);
 });
 
+// The sheet of the fiscal data opens with every field it fills: moving a field in the markup — the
+// country before the VAT number, the delivery code after the address — must not lose one. On
+// 13 October 2026 a reorder put the delivery code into the company form instead, and the sheet
+// died on its first line with «cannot set value of undefined».
+await prova("«Modifica i dati» apre il foglio del cliente con tutti i suoi campi", async (db) => {
+  await saveParty(db, CLIENTE);
+  await customer.render(db, "p1");
+  await dom.byId("custEdit").fire("click");
+  assert.equal(dom.byId("partyDialog").open, true);
+  const form = dom.byId("partyForm").elements;
+  assert.equal(form.denominazione.value, "Rossi Impianti S.r.l.");
+  assert.equal(form.codiceDestinatario.value, "M5UXCR1");
+  assert.equal(form.partitaIva.value, "01335577993");
+  await dom.byId("partyCancel").fire("click");
+});
+
 console.log(`customer: ${passed} prove passate`);

@@ -224,7 +224,8 @@ async function _openSheet(record) {
   fillDatalist(el("planCategories"), await documents(database));
   await _drawClienti();
   _open(el("planDialog"));
-  form.elements.descrizione.focus();
+  // The sheet begins with who: a new one starts there, one already filled starts on what it is.
+  (form.elements.partyId.value ? form.elements.descrizione : form.elements.partyId).focus();
 }
 
 async function _saveSheet() {

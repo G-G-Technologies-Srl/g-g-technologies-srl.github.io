@@ -1486,6 +1486,8 @@ dialog li::before {
   border: 1px solid var(--border);
   background: var(--accent-soft);
   color: var(--accent-text);
+  font-family: var(--font);
+  font-weight: 500;
   font-size: 0.75rem;
   vertical-align: middle;
   margin-left: 8px;
@@ -1525,3 +1527,11 @@ dialog li::before {
 
 /* One filter alone does not need the whole width. */
 #crmFilters label { flex: 0 1 320px; }
+
+/* A date is as wide as a date: alone on its row — the customer's address sits above it — it
+   would stretch across the sheet, and the validity of a quote would drop to the next line. */
+.form label.date { flex: 0 1 220px; }
+
+/* The stamp duty is one box between the withholding and the summary: a little air says it is a
+   section of its own and not the last line of the withholding. */
+#docBolloSection { margin-top: 18px; }

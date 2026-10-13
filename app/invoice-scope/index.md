@@ -51,7 +51,7 @@ Questa app fa la parte che pesa — i conti, il tracciato, i controlli — e la 
 - Dà a ogni cliente una scheda sua: le persone di riferimento, con email e telefono, e un diario di telefonate, email e incontri. Accanto ci sono il fatturato, quello che resta da incassare e i suoi documenti.
 - Raccoglie nella voce CRM gli incontri con tutti i clienti: quelli in programma, quelli di cui manca l'esito e quelli conclusi, ognuno con ora, luogo e persone, e il file da aprire nel calendario.
 - Tiene i conti correnti bancari dell'azienda, in Anagrafiche › Banche, con banca, BIC e il controllo delle cifre dell'IBAN, e mette il predefinito nei documenti nuovi: l'IBAN si scrive una volta invece che su ogni fattura. Un cliente può avere la sua aliquota e il suo conto: si scrivono nella sua scheda, e i suoi documenti nascono già compilati.
-- Tiene lo scadenzario: le rate di ogni documento, quelle scadute e quanto resta da incassare, e gli incassi registrati con data, importo, conto e la ricevuta del bonifico.
+- Tiene lo scadenzario: le rate di ogni documento, quelle scadute e quanto resta da incassare, e gli incassi registrati con data, importo, conto e la ricevuta del bonifico. Ogni conto ha i suoi movimenti, incassi e pagamenti, con le ricevute accanto.
 - Importa da Fatture in Cloud clienti, listino e documenti, dai fogli dell'esportazione così come si scaricano — anche il .xls — con il dettaglio delle righe se si esporta anche quello, e le fatture intere dagli XML del backup. Prima di scrivere mostra cosa ha letto — quanti entrano, quali sono già lì, cosa ha lasciato fuori — e scrive solo dopo la conferma.
 - Conosce le sei direzioni che una fattura può prendere — dall'Italia verso l'Italia, verso San Marino e verso l'estero; da San Marino verso l'Italia, verso un altro sammarinese e verso l'estero — e per ciascuna scrive il file che quel canale accetta. La direzione la decidono il paese dell'azienda e quello del cliente, che sono già in anagrafica.
 - Fa le fatture interne fra operatori sammarinesi, obbligatorie dal 1° gennaio 2027: imposta monofase, codice destinatario a sette zeri, tipo merce su ogni riga, autofattura del cessionario, nota di debito e acconto.
@@ -147,7 +147,7 @@ PolyForm Shield 1.0.0. Il codice è pubblico: si legge, si modifica e si usa anc
 
 Gratuita.
 
-**Versione** 0.68.0 · **Aggiornata il** 13 ottobre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
+**Versione** 0.69.0 · **Aggiornata il** 13 ottobre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
 
 *FAQ*
 

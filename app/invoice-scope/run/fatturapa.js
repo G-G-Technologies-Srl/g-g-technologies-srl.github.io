@@ -546,14 +546,27 @@ function _pagamento(doc, computed) {
   const quotePari = mancanti > 0 ? rate(resto, mancanti) : [];
   let next = 0;
 
-  const dettagli = quote.map((quota) => ["DettaglioPagamento", [
-    ["ModalitaPagamento", quota.modalita || doc.pagamento.modalita || "MP05"],
-    ["DataScadenzaPagamento", quota.scadenza],
-    ["ImportoPagamento", _amount(quota.importo === undefined
-      ? quotePari[next++]
-      : from(quota.importo))],
-    ["IBAN", quota.iban || doc.pagamento.iban],
-  ]]);
+  // The bank beside the IBAN — name, ABI, CAB, BIC — as the draft took it from the company's
+  // accounts (`bankFields` in banks.js). Only on an instalment paid into that same IBAN: one with
+  // an IBAN of its own, read from somebody else's file, says nothing about this bank.
+  const banca = doc.pagamento;
+  const dettagli = quote.map((quota) => {
+    const iban = quota.iban || banca.iban;
+    const stessa = iban && iban === banca.iban;
+    return ["DettaglioPagamento", [
+      ["ModalitaPagamento", quota.modalita || banca.modalita || "MP05"],
+      ["DataScadenzaPagamento", quota.scadenza],
+      ["ImportoPagamento", _amount(quota.importo === undefined
+        ? quotePari[next++]
+        : from(quota.importo))],
+      // The order is the schema's: IstitutoFinanziario before the IBAN, ABI, CAB and BIC after it.
+      ["IstitutoFinanziario", stessa ? banca.istituto : null],
+      ["IBAN", iban],
+      ["ABI", stessa ? banca.abi : null],
+      ["CAB", stessa ? banca.cab : null],
+      ["BIC", stessa ? banca.bic : null],
+    ]];
+  });
 
   // Two instalments and "payable in full" cannot both be true. The terms follow the count rather
   // than a field somebody has to remember to change.

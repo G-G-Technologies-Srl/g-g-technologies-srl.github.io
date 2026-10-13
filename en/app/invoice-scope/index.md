@@ -51,7 +51,7 @@ This app does the heavy part — the arithmetic, the format, the checks — and 
 - Gives every customer a screen of their own: the contact people, with email and phone, and a diary of calls, emails and meetings. Beside them sit what you have invoiced, what is still owed and their documents.
 - Gathers the meetings with all your customers under CRM: those coming up, those with no outcome written yet and those held, each with its time, place and people, and the file to open in your calendar.
 - Keeps your bank accounts, under Contacts › Banks, with bank, BIC and a check of the IBAN's check digits, and puts the default one on new documents: the IBAN is written once instead of on every invoice. A customer can have their own VAT rate and account: you write them on their record, and their documents start out already filled in.
-- Keeps the payment schedule: each document's instalments, the overdue ones and what is still owed, and the payments you record with date, amount, account and the transfer receipt.
+- Keeps the payment schedule: each document's instalments, the overdue ones and what is still owed, and the payments you record with date, amount, account and the transfer receipt. Each account has its movements, in and out, with the receipts beside them.
 - Imports customers, price list and documents from Fatture in Cloud, from the export sheets as you download them — the .xls included — with the line detail if you export that too, and whole invoices from the XML files in the backup. Before anything is written it shows what it read — how many arrive, which are already here, what it left out — and writes only once you confirm.
 - Knows the six directions an invoice can take — from Italy to Italy, to San Marino and abroad; from San Marino to Italy, to another San Marino operator and abroad — and for each writes the file that channel accepts. The direction is decided by your country and the customer's, and both are already on file.
 - Handles invoices between San Marino operators, compulsory from 1 January 2027: single-stage tax, seven-zero recipient code, goods type on every line, self-billed invoice, debit note and advance invoice.
@@ -147,7 +147,7 @@ PolyForm Shield 1.0.0. The code is public: it can be read, changed and used, com
 
 Free.
 
-**Version** 0.68.0 · **Updated** 13 October 2026 · **Licence** PolyForm-Shield-1.0.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
+**Version** 0.69.0 · **Updated** 13 October 2026 · **Licence** PolyForm-Shield-1.0.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
 
 *FAQ*
 

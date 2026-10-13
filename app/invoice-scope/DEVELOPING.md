@@ -63,6 +63,8 @@ Si provano sotto Node, e sono il posto giusto per una regola.
 | `format.js` | numeri e date come una persona li legge e li scrive | l'unico posto che formatta, in tutta l'app |
 | `safety.js` | se l'unica copia è al sicuro, e cosa dirne nella Situazione | conosce lo stato della cartella, non il DOM |
 | `archive.js` | cosa tiene una copia della cartella, e in che cosa differisce da adesso | conta i record, non li legge |
+| `bundle.js` | l'archivio con i suoi file: il JSON più `assets/` e `ricevute/`, in uno zip, e il ritorno | la forma è quella della cartella di backup, e `backup.js` prende da qui payload e manifest |
+| `attachments.js` | la ricevuta di un pagamento: i byte in `attachments`, l'etichetta `ricevuta` sul pagamento | il deposito lo legge dal pagamento (`docId` o `costId`), non da chi chiama |
 | `address.js` | l'intestatario in righe: indirizzo, COE o partita IVA, recapito elettronico | le stesse righe per la carta e per la schermata, o divergono |
 | `problems.js` | le chiavi di `validate.js` come frasi | un passo dal dialogo, e niente altro |
 
@@ -82,13 +84,13 @@ c'è il tasto «indietro» del browser, e la via del ritorno deve stare nell'app
 
 | File | Schermata |
 |---|---|
-| `home.js` | la Situazione: i quattro numeri, le scadenze, il fatturato per mese, progetti e preventivi in attesa |
+| `home.js` | la Situazione: i quattro numeri, le scadenze, il fatturato per mese, gli incontri della settimana (`meetingRows`), progetti e preventivi in attesa |
 | `doc.js` | il documento, le sue righe, il riepilogo IVA sempre in vista |
 | `due.js` · `payments.js` · `states.js` | scadenzario, incassi, il controllo che cambia stato |
 | `parties.js` · `customer.js` · `crm.js` | clienti (`render`) e listino (`renderItems`), la scheda cliente, le persone e il diario |
-| `banks.js` | Anagrafiche › Banche: i conti dell'azienda, che restano `conti` nel record `company` — sei file li leggono da lì |
+| `banks.js` | Anagrafiche › Banche: i conti dell'azienda, che restano `conti` nel record `company` — sei file li leggono da lì; la schermata del conto con i suoi movimenti (`movements`, `#/anagrafiche/banche/<id>`); `bankFields`, i dati della banca che una bozza copia accanto all'IBAN |
 | `meetings.js` | il CRM: gli incontri di tutti i clienti, che sono voci del diario con `ora`, `luogo`, `persone`, `esito`; i gruppi li decide `agenda` in `crm.js` |
-| `attachments.js` | la ricevuta di un pagamento: i byte nello store `attachments`, l'etichetta `ricevuta` sul pagamento. Chi cancella un pagamento chiama `forget` nella stessa transazione |
+| `alarms.js` | i promemoria: le scadenze dei due versi e gli incontri in programma, nel digest del service worker e nel file `.ics` |
 | `projects.js` · `project.js` | i progetti e le fasi, con il modello condiviso di Plan Scope |
 | `purchases.js` · `costs.js` · `expected.js` | gli acquisti, i loro conti, gli attesi |
 | `importing.js` | l'importazione da un altro programma: `plan` legge e decide, `apply` scrive |
@@ -134,7 +136,7 @@ Passano dalla import map, mai da un import relativo, e hanno due licenze diverse
 
 ---
 
-## Le nove cose che non si rompono
+## Le dodici cose che non si rompono
 
 1. **Nessun importo passa da un float.** `0.1 + 0.2` su una fattura non è una curiosità, è un numero
    sbagliato depositato all'Agenzia. Tutto passa da `decimal.js`, che sta a otto decimali perché il
@@ -174,6 +176,23 @@ Passano dalla import map, mai da un import relativo, e hanno due licenze diverse
 9. **Nessuna richiesta di rete a app aperta**, con l'unica eccezione dichiarata nella scheda:
    `gg/update.js` fa rileggere `sw.js`. Una seconda chiamata va scritta nella scheda **prima** che
    nel codice.
+10. **Una ricevuta esce in tre modi, e nessuno dei tre si perde.** La cartella di copia la scrive in
+    `ricevute/`, lo zip «Esporta tutto, con ricevute e immagini» la porta dentro, l'archivio JSON ne
+    porta solo l'etichetta. Chi cancella un pagamento — `removePayment`, `removeOutlay`, `removeCost`
+    — chiama `forget` di `attachments.js` **nella stessa transazione**; la zona di cancellazione
+    chiama `sweep`, perché `clear()` svuota uno store senza guardare chi lo nominava.
+11. **Quello che esce nell'XML si congela sulla bozza.** Banca, ABI, CAB e BIC accanto all'IBAN si
+    copiano sul documento al salvataggio (`bankFields`), come l'IBAN; `fatturapa.js` scrive quello
+    che il documento porta e non rilegge i conti. Un conto rinominato l'anno dopo non deve cambiare un
+    file che qualcuno ha già ricevuto. L'ordine dei campi nel `DettaglioPagamento` è quello dello
+    schema — `IstitutoFinanziario` prima dell'IBAN, `ABI`, `CAB`, `BIC` dopo — e il campione
+    `14-dati-della-banca` lo mette davanti allo schema vero.
+12. **Il voi vale per pronomi, possessivi e verbi all'indicativo; l'imperativo resta singolare.**
+    È la decisione del 22 settembre 2026, scritta in `app/CLAUDE.md` (§ *Voce*): «Esporta tutto»,
+    «Scrivi la via.», «Scegli un cliente, o compila i dati dell'azienda» vanno bene; «paghi
+    l'imposta», «finché non la togli», «se lo addebiti», «Chi sei» no. Il 13 ottobre 2026 una
+    revisione ha portato al voi una cinquantina di imperativi e la decisione ha detto di no: sono
+    tornati com'erano. Prima di «correggere» un imperativo, rileggere quella sezione.
 
 ---
 
@@ -207,7 +226,16 @@ node $I app/invoice-scope/test/address.mjs   node $I app/invoice-scope/test/rest
 node $I app/invoice-scope/test/safety.mjs    node $I app/invoice-scope/test/archive.mjs
 node $I app/invoice-scope/test/timeline.mjs    node $I app/invoice-scope/test/attachments.mjs
 node $I app/invoice-scope/test/banks.mjs       node $I app/invoice-scope/test/meetings.mjs
+node $I app/invoice-scope/test/bundle.mjs      node $I app/invoice-scope/test/alarms.mjs
 ```
+
+**Una prova non legge l'orologio.** Se quello che prova dipende da oggi — gli attesi delle
+ricorrenze partono dal mese scorso, il CRM divide gli incontri sulla data, la Situazione mostra i
+prossimi sette giorni — il giorno si passa come parametro (`oggi`, `today`) e la prova lo fissa. Il 1°
+ottobre 2026 una prova scritta il 9 settembre ha cominciato a fallire senza che il codice fosse
+cambiato: `plan` di `importing.js` non accettava il giorno, e adesso lo accetta. Una data relativa
+(«fra tre giorni») va bene per quello che resta vero ogni giorno; una data scritta va bene solo con il
+giorno fissato accanto.
 
 L'elenco aggiornato, con la riga che dice cosa prova ciascuno, sta nel `CLAUDE.md` alla radice del
 repository.
@@ -239,6 +267,9 @@ Tre pezzi di impalcatura, e vale la pena sapere che ci sono:
 | una serie o una numerazione | `kinds.js` (`serie`, `sequenza`) | e il numero per esteso esce anche nell'XML: `fatturapa.js` scrive `shownNumber`, non `doc.numero` |
 | una parola | `i18n.js`, **entrambe le lingue nella stessa modifica** | `check_apps.py` confronta le chiavi |
 | un file nuovo in `run/` | il file + l'elenco `ASSETS` in `sw.js` | e gira la versione |
+| un tipo di byte nuovo da conservare | uno store a parte, fuori da `EXPORTED` (`BINARY` in `db.js`) | e nel manifest di `bundle.js`: così lo portano la cartella e lo zip, e il ripristino lo rimette |
+| un promemoria nuovo | una riga in `_rows` di `alarms.js`, con `time` se ha un orario | `biz/remind.js` misura la sveglia da lì: `before` minuti prima, non il giorno prima |
+| un campo in una maschera | nel punto che la sequenza gli assegna: **chi → quando → cosa → come si paga**; nel documento, i totali nell'ordine della somma; nel cliente, il paese prima della partita IVA e il recapito dopo l'indirizzo. Etichette in minuscolo, il maiuscolo è delle intestazioni di colonna | `test/customer.mjs` apre il foglio del cliente con tutti i campi: un `name` finito nel modulo sbagliato (è successo il 13 ottobre, con il codice destinatario nell'Azienda) lo ferma lì |
 
 **Ogni file nuovo comincia con l'intestazione di licenza** (`// Copyright 2026 G&G Technologies
 S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0`) e con il commento che dice perché esiste.
@@ -250,6 +281,10 @@ S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0`) e con il commento ch
 - [ ] **Versione girata** in `sw.js`: è l'unico meccanismo di aggiornamento che l'app ha. Numero
       fermo e contenuto cambiato significa che chi ha già aperto l'app continua a ricevere la copia
       vecchia, senza errori e per sempre. `_check_version_moved` lo verifica
+- [ ] **Una versione già pubblicata non si riusa.** Prima di lavorare, `git log origin/main` dice se
+      il numero in `sw.js` è già uscito: se sì, la modifica va in quello successivo. Il 13 ottobre
+      2026 la 0.68.0 è stata pubblicata a metà giornata e le modifiche del pomeriggio stavano per
+      finirci dentro — per chi l'aveva già aperta non sarebbero mai arrivate
 - [ ] `ASSETS` in `sw.js` elenca esattamente quello che l'app importa, `_lib/` e `_business/` compresi
 - [ ] Le chiavi italiane e inglesi di `i18n.js` coincidono
 - [ ] `python3 _src/check_apps.py` passa; se hai toccato la scheda, anche `build.py` e `check_site.py`

@@ -24,12 +24,22 @@
 // modulo 97). An IBAN with one wrong character fails that check in all but a vanishing number of
 // cases, and it is the one field where a typo sends the money to a stranger.
 //
-// The rules are pure and exported, so they run in Node; the screen is below them.
+// **Each account has its movements** (`#/anagrafiche/banche/<id>`): the money received and paid out
+// on it, from the payments the app already records, with their receipts. It is not a ledger and not
+// a balance — there is no opening balance here, and the bank's own fees never pass through the app —
+// so the figure at the top is the difference of the movements, and says so. What it is for is the
+// question asked with the bank statement open: «did this transfer arrive, and where is its receipt?».
+//
+// The rules are pure and exported, so they run in Node; the screens are below them.
 
-import { get, put } from "gg/store.js";
+import { get, put, list } from "gg/store.js";
 
-import { t } from "./i18n.js";
+import { t, tf } from "./i18n.js";
 import { ask } from "./ask.js";
+import { from, add, sub, ZERO } from "./decimal.js";
+import { money, date as shownDate } from "./format.js";
+import { numero as shownNumber } from "./kinds.js";
+import { receiptCell } from "./payments.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -126,6 +136,88 @@ export function abiCab(value) {
   return { abi: iban.slice(5, 10), cab: iban.slice(10, 15) };
 }
 
+/**
+ * What a document's payment carries about the bank, besides the IBAN: `{istituto, abi, cab, bic}`,
+ * only the fields there are. Empty when the IBAN is none of the company's accounts.
+ *
+ * **Copied onto the document, not looked up when the file is written.** The XML of an issued
+ * document has to come out the same every time it is downloaded; an account renamed or removed next
+ * year must not change a file somebody already received. So the draft takes these at save time,
+ * the way it takes the IBAN, and `fatturapa.js` writes what the document carries.
+ *
+ * `IstitutoFinanziario` is at most eighty characters in the specification; ABI and CAB come from an
+ * Italian or Sammarinese IBAN; the BIC only when it has its shape — a wrong one in the file is a
+ * rejection, and a missing one is nothing.
+ */
+export function bankFields(accounts, iban) {
+  const wanted = cleanIban(iban);
+  if (!wanted) return {};
+  const conto = (Array.isArray(accounts) ? accounts : []).find((one) => cleanIban(one.iban) === wanted);
+  if (!conto) return {};
+  const out = {};
+  const istituto = _text(conto.istituto).slice(0, 80);
+  if (istituto) out.istituto = istituto;
+  const codes = abiCab(wanted);
+  if (codes) Object.assign(out, codes);
+  const bic = _text(conto.bic).replace(/\s/g, "").toUpperCase();
+  if (BIC.test(bic)) out.bic = bic;
+  return out;
+}
+
+/** Whether a payment arrived on this account: by its id, or by its IBAN for one recorded without. */
+function _onAccount(conto, payment) {
+  const where = payment && payment.conto;
+  if (!where) return false;
+  if (where.id && conto.id) return where.id === conto.id;
+  return Boolean(where.iban) && cleanIban(where.iban) === cleanIban(conto.iban);
+}
+
+function _amount(value) {
+  try {
+    return from(value || "0");
+  } catch (ignored) {
+    return ZERO;
+  }
+}
+
+/**
+ * The movements of one account: money received (`payments`) and paid out (`outlays`), newest first,
+ * with what each one was for. `anno` keeps one year; empty keeps them all. Answers the years that
+ * have movements too, for the menu.
+ *
+ * A payment keeps a snapshot of its account (`schedule.js`): matched by id, so renaming the account
+ * keeps its history, and by IBAN for a snapshot without an id.
+ */
+export function movements(conto, { payments = [], outlays = [], docs = [], costs = [], parties = [] } = {}, { anno = "" } = {}) {
+  const docById = new Map(docs.map((one) => [one.id, one]));
+  const costById = new Map(costs.map((one) => [one.id, one]));
+  const name = new Map(parties.map((one) => [one.id, one.denominazione || ""]));
+  const all = [];
+  for (const one of payments) {
+    if (!_onAccount(conto, one)) continue;
+    const doc = docById.get(one.docId) || {};
+    all.push({ verso: "in", record: one, data: one.data || "", importo: _amount(one.importo),
+      riferimento: shownNumber(doc) || "", party: name.get(doc.partyId) || "", href: `#/documento/${one.docId}` });
+  }
+  for (const one of outlays) {
+    if (!_onAccount(conto, one)) continue;
+    const cost = costById.get(one.costId) || {};
+    all.push({ verso: "out", record: one, data: one.data || "", importo: _amount(one.importo),
+      riferimento: cost.numero || cost.categoria || "", party: name.get(cost.partyId) || "", href: `#/acquisto/${one.costId}` });
+  }
+  const anni = [...new Set(all.map((row) => String(row.data).slice(0, 4)).filter(Boolean))].sort().reverse();
+  const rows = all
+    .filter((row) => !anno || String(row.data).startsWith(anno))
+    .sort((a, b) => String(b.data).localeCompare(String(a.data)) || (a.verso === b.verso ? 0 : a.verso === "in" ? -1 : 1));
+  let entrate = ZERO;
+  let uscite = ZERO;
+  for (const row of rows) {
+    if (row.verso === "in") entrate = add(entrate, row.importo);
+    else uscite = add(uscite, row.importo);
+  }
+  return { rows, entrate, uscite, differenza: sub(entrate, uscite), anni };
+}
+
 /** The record an account becomes: trimmed, normalised, with a label that is never empty if it can help it. */
 export function accountRecord(fields) {
   const record = { id: fields.id || _id() };
@@ -216,7 +308,9 @@ export async function render(db, afterChange = null) {
     tr.className = "clickable";
     tr.tabIndex = 0;
     tr.setAttribute("aria-label", conto.etichetta || conto.iban);
-    const apri = () => _openSheet(conto);
+    // The row opens the account — its movements — and the sheet is one of the things done there,
+    // as a customer's row opens the customer and not its form.
+    const apri = () => { location.hash = `#/anagrafiche/banche/${encodeURIComponent(conto.id)}`; };
     tr.addEventListener("click", apri);
     tr.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
@@ -304,7 +398,8 @@ async function _save() {
   await saveAccounts(database, withAccount(await accounts(database), record));
   _close(el("bankDialog"));
   editing = null;
-  await render(database, onChange);
+  if (aperto && aperto.id === record.id && !el("screenBank").hidden) await renderAccount(database, record.id, onChange);
+  else await render(database, onChange);
   if (onChange) await onChange();
 }
 
@@ -315,8 +410,101 @@ async function _save() {
 async function _remove(record) {
   if (!(await ask(t("bankDeleteAsk"), { okLabel: t("del"), danger: true }))) return false;
   await saveAccounts(database, withoutAccount(await accounts(database), record.id));
+  // Removed from its own screen, back to the list: staying would show an account that is not there.
+  if (location.hash.startsWith("#/anagrafiche/banche/")) location.hash = "#/anagrafiche/banche";
   await render(database, onChange);
   if (onChange) await onChange();
+  return true;
+}
+
+/** The account open on its screen, and the year its movements are filtered on. */
+let aperto = null;
+let anno = String(new Date().getFullYear());
+
+/**
+ * The screen of one account: what it is, the year's money in and out, every movement with its
+ * receipt. Resolves `false` when the account does not exist, so the caller goes back to the list.
+ */
+export async function renderAccount(db, id, afterChange = null) {
+  database = db;
+  onChange = afterChange;
+  const conto = (await accounts(db)).find((one) => one.id === id);
+  if (!conto) return false;
+  if (!aperto || aperto.id !== conto.id) anno = String(new Date().getFullYear());
+  aperto = conto;
+
+  el("bankName").textContent = conto.etichetta || conto.iban || "—";
+  el("bankDefault").hidden = !conto.predefinito;
+  const codes = abiCab(conto.iban);
+  el("bankMeta").textContent = [
+    [conto.istituto, conto.filiale].filter(Boolean).join(" · "),
+    conto.iban,
+    conto.bic ? `BIC ${conto.bic}` : "",
+    codes ? `ABI ${codes.abi} · CAB ${codes.cab}` : "",
+  ].filter(Boolean).join(" · ");
+
+  const dati = {
+    payments: await list(db, "payments"),
+    outlays: await list(db, "outlays"),
+    docs: await list(db, "docs"),
+    costs: await list(db, "costs"),
+    parties: await list(db, "parties"),
+  };
+  const tutti = movements(conto, dati);
+  // A year with no movements is not offered; the current one is, so the screen opens on it.
+  if (anno && !tutti.anni.includes(anno) && tutti.anni.length) anno = tutti.anni[0];
+  const select = el("bankYear");
+  select.textContent = "";
+  const ogni = document.createElement("option");
+  ogni.value = "";
+  ogni.textContent = t("bankAllYears");
+  select.append(ogni);
+  for (const year of tutti.anni) {
+    const option = document.createElement("option");
+    option.value = year;
+    option.textContent = year;
+    select.append(option);
+  }
+  select.value = anno;
+  el("bankYearField").hidden = tutti.anni.length < 2;
+
+  const n = movements(conto, dati, { anno });
+  el("bankIn").textContent = money(n.entrate);
+  el("bankOut").textContent = money(n.uscite);
+  el("bankDiff").textContent = money(n.differenza);
+  el("bankMovesEmpty").hidden = n.rows.length > 0;
+  el("bankMovesTable").hidden = n.rows.length === 0;
+  const body = el("bankMovesBody");
+  body.textContent = "";
+  for (const row of n.rows) {
+    const tr = document.createElement("tr");
+    const cell = (text, className = "") => {
+      const td = document.createElement("td");
+      td.textContent = text || "—";
+      if (className) td.className = className;
+      return td;
+    };
+    const cosa = document.createElement("td");
+    // One line, and the table scrolls: on a phone a number and a company name wrapped over four
+    // lines made every row four times as tall.
+    cosa.className = "nowrap";
+    const link = document.createElement("a");
+    link.href = row.href;
+    link.textContent = [row.riferimento, row.party].filter(Boolean).join(" · ") || "—";
+    cosa.append(link);
+    tr.append(
+      cell(row.data ? shownDate(row.data) : "", "nowrap"),
+      cell(t(row.verso === "in" ? "bankMoveIn" : "bankMoveOut"), row.verso === "in" ? "nowrap" : "nowrap meta"),
+      cosa,
+      cell(row.record.nota || "", "meta"),
+      receiptCell(db, row.record, { onChange: () => renderAccount(database, conto.id, onChange) }),
+      cell(`${row.verso === "in" ? "+" : "−"} ${money(row.importo)}`, "right nowrap"),
+    );
+    body.append(tr);
+  }
+  el("bankMovesNote").textContent = n.rows.length
+    ? tf("bankMovesCount", { n: String(n.rows.length) })
+    : "";
   return true;
 }
 
@@ -325,6 +513,11 @@ export function connect(db, afterChange = null) {
   database = db;
   onChange = afterChange;
   el("bankNew").addEventListener("click", () => _openSheet(null));
+  el("bankEdit").addEventListener("click", () => { if (aperto) _openSheet(aperto); });
+  el("bankYear").addEventListener("change", async (event) => {
+    anno = event.target.value;
+    if (aperto) await renderAccount(database, aperto.id, onChange);
+  });
   el("bankForm").elements.iban.addEventListener("input", _drawCodes);
   el("bankSave").addEventListener("click", _save);
   el("bankCancel").addEventListener("click", () => {

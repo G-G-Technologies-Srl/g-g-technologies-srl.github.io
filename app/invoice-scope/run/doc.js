@@ -43,6 +43,7 @@ import {
 import { stato as termState } from "./terms.js";
 import { control as statoControl } from "./states.js";
 import { openSheet, render as renderPayments } from "./payments.js";
+import { bankFields } from "./banks.js";
 import { render as renderSheet } from "./print.js";
 import * as progetti from "./projects.js";
 
@@ -821,10 +822,14 @@ function _readHeader() {
 
   if (has(current, "pagamento")) {
     const rate = (current.pagamento || {}).rate || [];
+    const iban = el("payIban").value.replace(/\s/g, "").toUpperCase() || null;
     current.pagamento = {
       condizioni: el("payCondizioni").value,
       modalita: el("payModalita").value,
-      iban: el("payIban").value.replace(/\s/g, "").toUpperCase() || null,
+      iban,
+      // The bank of the account, when the IBAN is one of the company's: bank name, ABI, CAB, BIC
+      // go into the file beside the IBAN. Taken now, on the draft, and frozen with it — `banks.js`.
+      ...bankFields(company.conti, iban),
       rate,
     };
   } else {

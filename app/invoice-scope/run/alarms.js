@@ -8,6 +8,11 @@
 // non saldato. Un promemoria che ne dicesse uno solo risponderebbe a metà della domanda per cui lo
 // scadenzario esiste.
 //
+// **And the meetings with the customers**, from the CRM: one planned for tomorrow is exactly the
+// thing a reminder is for. They carry their time, so they ring `before` minutes ahead of it — the
+// setting the app already keeps — and not at the hour of the day before, which is for deadlines.
+// Only the ones still to come: a past meeting is something to write up, and the CRM says so.
+//
 // Gli attesi delle ricorrenze restano fuori: sono righe calcolate, non un debito, e svegliare
 // qualcuno per una bolletta che nessuno ha ancora mandato è il modo più veloce di far spegnere i
 // promemoria.
@@ -22,6 +27,7 @@ import { money, date as shownDate } from "./format.js";
 import { summary } from "./schedule.js";
 import { allCosts, allOutlays, payable } from "./costs.js";
 import { parties } from "./parties.js";
+import { activities, agenda } from "./crm.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -102,12 +108,27 @@ async function _rows(db) {
     });
   }
 
+  for (const one of agenda(await activities(db), { oggi: today }).upcoming) {
+    out.push({
+      id: `meet:${one.id}`,
+      date: one.data,
+      time: one.ora || null,
+      place: one.luogo || "",
+      title: t("remindMeeting"),
+      party: who.get(one.partyId) || "",
+      amount: null,
+      meeting: true,
+    });
+  }
+
   return out.sort((a, b) => String(a.date).localeCompare(String(b.date)));
 }
 
 /** La cosa, senza tempo attaccato: chi, cosa, quanto. */
 function _label(row) {
   const who = row.party ? `${row.title} · ${row.party}` : row.title;
+  // A meeting has no amount: its time and place say what an amount says for a deadline.
+  if (row.meeting) return [who, row.place].filter(Boolean).join(" · ");
   return `${who} · ${money(row.amount)}`;
 }
 
@@ -118,12 +139,12 @@ function _label(row) {
  * congelato lì dentro sarebbe un numero sbagliato nel momento in cui suona.
  */
 function _line(row) {
-  return `${_label(row)} — ${shownDate(row.date)}`;
+  return `${_label(row)} — ${shownDate(row.date)}${row.time ? ` ${row.time}` : ""}`;
 }
 
 /** E quella che mostra la **pagina**, dove il tempo relativo si scrive e si legge nello stesso istante. */
 function _near(row, today) {
-  return `${_label(row)} — ${_when(row.date, today)}`;
+  return `${_label(row)} — ${_when(row.date, today)}${row.time ? ` ${row.time}` : ""}`;
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -170,6 +191,8 @@ export async function digest(db) {
   const items = (await _rows(db)).map((row) => ({
     id: row.id,
     date: row.date,
+    // With a time, `biz/remind.js` measures the alarm from it: `before` minutes ahead.
+    ...(row.time ? { time: row.time } : {}),
     label: _label(row),
     text: _line(row),
   }));
@@ -205,7 +228,9 @@ export async function onOpen(db) {
 export async function badge(db) {
   if (!navigator.setAppBadge || !db || isDemo()) return;
   const today = _today();
-  const late = (await _rows(db)).filter((row) => row.date < today).length;
+  // Deadlines only: a meeting is never «late» on the icon — it has happened, and the CRM asks for
+  // its outcome.
+  const late = (await _rows(db)).filter((row) => !row.meeting && row.date < today).length;
   const call = late ? navigator.setAppBadge(late) : navigator.clearAppBadge();
   if (call && call.catch) call.catch(() => {});
 }
@@ -254,6 +279,10 @@ export async function calendar(db) {
     title: _label(row),
     date: row.date,
     description: row.party,
+    // A meeting sits at its time, for an hour, with its place: `biz/ics.js` then puts the alarm
+    // `before` minutes ahead of it instead of the evening before.
+    ...(row.time ? { time: row.time, minutes: 60 } : {}),
+    ...(row.place ? { place: row.place } : {}),
   }));
   if (!events.length) return null;
   return ics.calendar(events, { name: t("remindHeading"), alarm: one, sign: SIGN });

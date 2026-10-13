@@ -724,4 +724,36 @@ test("scegliere l'ambito allinea le righe, e non cancella le differenze volute",
   assert.equal(ambitoDoc({ righe: beni }), "beni");
 });
 
+// The bank beside the IBAN, in the schema's order: IstitutoFinanziario before, ABI, CAB, BIC after.
+// Without the fields on the document nothing is added — the files written so far stay as they were.
+test("i dati della banca stanno accanto all'IBAN, nell'ordine dello schema", () => {
+  const conBanca = build({
+    ...DOC,
+    pagamento: { ...DOC.pagamento, istituto: "Banca di Esempio S.p.A.", abi: "05428", cab: "11101", bic: "BPMOIT22XXX" },
+  }, { company: COMPANY, party: PARTY });
+  const dettaglio = names(xml.parse(conBanca.text).children).filter((name) =>
+    ["ModalitaPagamento", "DataScadenzaPagamento", "ImportoPagamento", "IstitutoFinanziario", "IBAN", "ABI", "CAB", "BIC"].includes(name));
+  assert.deepEqual(dettaglio, ["ModalitaPagamento", "DataScadenzaPagamento", "ImportoPagamento",
+    "IstitutoFinanziario", "IBAN", "ABI", "CAB", "BIC"]);
+  assert.ok(conBanca.text.includes("<IstitutoFinanziario>Banca di Esempio S.p.A.</IstitutoFinanziario>"));
+  // Senza i campi il file è quello di sempre.
+  assert.ok(!built.text.includes("IstitutoFinanziario"));
+  assert.ok(!built.text.includes("<ABI>"));
+});
+
+test("una rata con un IBAN suo non prende la banca del documento", () => {
+  const due = build({
+    ...DOC,
+    pagamento: {
+      ...DOC.pagamento, condizioni: "TP01", istituto: "Banca di Esempio S.p.A.", abi: "05428", cab: "11101",
+      rate: [{ scadenza: "2026-10-03", importo: "400.00" },
+        { scadenza: "2026-11-03", importo: "576.00", iban: "DE89370400440532013000" }],
+    },
+  }, { company: COMPANY, party: PARTY });
+  const blocchi = due.text.split("<DettaglioPagamento>").slice(1);
+  assert.ok(blocchi[0].includes("<ABI>05428</ABI>"));
+  assert.ok(!blocchi[1].includes("<ABI>"), "l'IBAN tedesco non ha la banca italiana accanto");
+  assert.ok(!blocchi[1].includes("IstitutoFinanziario"));
+});
+
 console.log(`fatturapa: ${passed} prove passate`);

@@ -11,6 +11,7 @@
 import assert from "node:assert/strict";
 
 import * as remind from "biz/remind.js";
+import * as ics from "biz/ics.js";
 
 let passed = 0;
 
@@ -215,6 +216,22 @@ test("con i promemoria spenti non matura niente, per quanto tardi sia", () => {
 test("un digest che non c'è non fa rumore", () => {
   assert.deepEqual(remind.ripe(null, {}), []);
   assert.deepEqual(remind.ripe({ on: true }, {}), []);
+});
+
+// An appointment rings `before` minutes ahead of its time, not at the hour of the day before:
+// measured from midnight, a 3 p.m. meeting with «the day before at nine» rang at midnight.
+test("un appuntamento suona i minuti prima della sua ora, non a mezzanotte", () => {
+  assert.deepEqual(remind.alarmAt({ before: 30 }, "Incontro").slice(0, 3),
+    ["BEGIN:VALARM", "ACTION:DISPLAY", "TRIGGER:-PT30M"]);
+  assert.equal(remind.alarmAt({ before: 0 }, "x")[2], "TRIGGER:PT0S");
+  const settings = { on: true, days: 1, hour: 9, before: 45 };
+  const timed = ics.calendar([{ uid: "m1", title: "Incontro", date: "2026-10-20", time: "15:00" }],
+    { alarm: settings, now: new Date("2026-10-13T08:00:00Z") });
+  assert.ok(timed.includes("TRIGGER:-PT45M"), timed);
+  assert.ok(!timed.includes("TRIGGER:-PT900M"));
+  const allDay = ics.calendar([{ uid: "d1", title: "Scadenza", date: "2026-10-20" }],
+    { alarm: settings, now: new Date("2026-10-13T08:00:00Z") });
+  assert.ok(allDay.includes("TRIGGER:-PT900M"), "una giornata intera resta il giorno prima alle nove");
 });
 
 console.log(`remind: ${passed} prove passate`);

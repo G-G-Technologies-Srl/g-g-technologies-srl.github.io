@@ -293,7 +293,7 @@ const IT = {
   rGapsInForce: "Già in vigore",
   rGapsAhead: "Da qui in avanti",
   rGapEnforced: "sanzionabile dal {date}",
-  rDeepTitle: "Come ci sei arrivato",
+  rDeepTitle: "Come ci siete arrivati",
   rEdition: "Questionario edizione {edition}, revisione {revision}. Impronta {digest}.",
   // «Copri» era lo stesso verbo della metafora, e prometteva anche che dopo saresti a posto.
   // «Prendi in mano» dice il gesto — qualcuno se ne occupa — senza promettere l'esito.

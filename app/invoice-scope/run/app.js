@@ -53,6 +53,7 @@ import { money, date as shownDate } from "./format.js";
 import { wire as wireImport, refresh as refreshImport } from "./importing.js";
 import { LOGO as BRAND_LOGO } from "./brand.js";
 import * as backup from "./backup.js";
+import { bundle, bundleName, hasFiles, isZip, restoreBundle } from "./bundle.js";
 import { advice, SOGLIA_DOCUMENTI } from "./safety.js";
 import { inventory, compare } from "./archive.js";
 import * as alarms from "./alarms.js";
@@ -102,6 +103,9 @@ const PROJECT_ROUTE = /^#\/progetto\/([^?]+)$/;
 
 /** La scheda di un acquisto: `#/acquisto/<id>`. */
 const COST_ROUTE = /^#\/acquisto\/([^?]+)$/;
+
+/** Il conto di una banca: `#/anagrafiche/banche/<id>`, con i suoi movimenti. */
+const BANK_ROUTE = /^#\/anagrafiche\/banche\/([^?/]+)$/;
 
 // **`paese` and `regimeFiscale` are fields, not constants.** They were hard-coded to IT and RF01,
 // which quietly excluded the two cases this app was written for: a company on the flat-rate scheme,
@@ -220,13 +224,15 @@ async function _route() {
   const person = PARTY_ROUTE.exec(hash);
   const lavoro = PROJECT_ROUTE.exec(hash);
   const acquisto = COST_ROUTE.exec(hash);
+  const banca = BANK_ROUTE.exec(hash);
   const screen = document_ ? "screenDoc"
     : person ? "screenCustomer"
       : lavoro ? "screenProject"
         : acquisto ? "screenCost"
-          : (ROUTES[hash] ? ROUTES[hash] : "screenHome");
+          : banca ? "screenBank"
+            : (ROUTES[hash] ? ROUTES[hash] : "screenHome");
 
-  for (const id of [...Object.values(ROUTES), "screenDoc", "screenCustomer", "screenProject", "screenCost"]) {
+  for (const id of [...Object.values(ROUTES), "screenDoc", "screenCustomer", "screenProject", "screenCost", "screenBank"]) {
     el(id).hidden = id !== screen;
   }
   // The document screen is reached from the list, so it lights the list's tab: a tab that lights
@@ -235,7 +241,8 @@ async function _route() {
   const target = document_ ? "#/documenti"
     : person ? "#/anagrafiche"
       : lavoro ? "#/progetti"
-        : acquisto ? "#/acquisti" : hash;
+        : acquisto ? "#/acquisti"
+          : banca ? "#/anagrafiche/banche" : hash;
   // **Anagrafiche lights for its three screens**, and the sub-entry for its own: the parent says
   // which part of the app you are in, the sub-entry which register.
   const inParties = target === "#/anagrafiche" || target.startsWith("#/anagrafiche/");
@@ -279,6 +286,12 @@ async function _route() {
   if (acquisto) {
     if (!(await purchases.render(db, acquisto[1], { afterChange: _refresh }))) {
       location.hash = "#/acquisti";
+      return;
+    }
+  }
+  if (banca) {
+    if (!(await banks.renderAccount(db, decodeURIComponent(banca[1]), _refresh))) {
+      location.hash = "#/anagrafiche/banche";
       return;
     }
   }
@@ -381,7 +394,9 @@ async function _refresh() {
   // Gli incassi: la Situazione ne fa due cose che le scadenze non fanno — il grafico di quanto è
   // entrato mese per mese, e la media dei giorni con cui ogni cliente salda.
   const payments = db ? await list(db, "payments") : [];
-  home.render({ docs, owed, byParty, payments, costs, outlays, recurring, company });
+  // Il diario intero: la Situazione ne mostra gli incontri della settimana e quelli da annotare.
+  const diario = db ? await list(db, "activities") : [];
+  home.render({ docs, owed, byParty, payments, costs, outlays, recurring, activities: diario, company });
   // Il sollecito si offre dove c'è qualcosa da sollecitare, e in due posti: accanto all'insoluto
   // nella Situazione e nello scadenzario, che sono i due schermi da cui viene la domanda.
   const daSollecitare = solleciti.quanti(owed.rows) > 0;
@@ -1180,6 +1195,26 @@ async function _export() {
 }
 
 /**
+ * The archive with its files, as a zip: the receipts of the payments and the pictures of the
+ * projects beside the text. Where no backup folder can be linked — Safari, Firefox, a phone — this is
+ * the only way a receipt leaves the browser.
+ */
+async function _exportBundle() {
+  const bytes = await bundle(db);
+  const url = URL.createObjectURL(new Blob([bytes], { type: "application/zip" }));
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = bundleName();
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  // Revoked on a later turn: revoking at once cancels the download in Safari.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  localStorage.setItem(BACKUP_KEY, new Date().toISOString());
+  await _refresh();
+}
+
+/**
  * Una cancellazione dalla zona in fondo alle impostazioni.
  *
  * Tre passi, nell'ordine in cui proteggono: il conto di quello che sparirebbe — e se è zero non
@@ -1193,7 +1228,10 @@ async function _reset(group) {
     return;
   }
   if (await ask(t("dangerExportFirst"), { okLabel: t("dangerExportYes"), cancelLabel: t("dangerExportNo") })) {
-    await _export();
+    // With receipts or pictures in the store the copy taken before a wipe is the zip: the JSON
+    // would leave behind exactly the files the wipe is about to take.
+    if (await hasFiles(db)) await _exportBundle();
+    else await _export();
   }
   const pezzi = [
     ["docs", "dangerCountDocs"], ["payments", "dangerCountPayments"], ["costs", "dangerCountCosts"],
@@ -1233,7 +1271,11 @@ async function _import(event) {
     // «Archivio importato» anche a chi aveva scelto il file sbagliato, e la persona andava a cercare
     // dei dati che non erano stati scritti. Trovato rileggendo, non provando: è il tipo di difetto
     // che si vede solo sbagliando di proposito.
-    const esito = await restore(db, await file.text(), { app: NAME, stores: EXPORTED });
+    // A zip is the archive with its files; anything else is read as the JSON it has always been.
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const esito = isZip(bytes)
+      ? await restoreBundle(db, bytes)
+      : await restore(db, new TextDecoder().decode(bytes), { app: NAME, stores: EXPORTED });
     if (!esito || !esito.ok) {
       await tell(t("settingsImportBad"));
       return;
@@ -1352,6 +1394,7 @@ async function main() {
   // L'archivio si esporta anche dal pannello della Situazione: dove la cartella non esiste è
   // l'unica copia che si può fare, e farla partire da lì toglie il viaggio fino alle impostazioni.
   el("backupNoteExport").addEventListener("click", _export);
+  el("exportBundle").addEventListener("click", _exportBundle);
   el("importAll").addEventListener("click", () => el("importFile").click());
   el("importFile").addEventListener("change", _import);
   for (const [id, group] of [["resetDocs", "docs"], ["resetCosts", "costs"], ["resetParties", "parties"], ["resetProjects", "projects"], ["resetAll", "all"]]) {
@@ -1423,8 +1466,9 @@ async function main() {
   el("remindOn").checked = settings.on;
   el("remindDays").value = String(settings.days);
   el("remindHour").value = String(settings.hour);
+  el("remindBefore").value = String(settings.before);
   await paintRemind();
-  for (const id of ["remindOn", "remindDays", "remindHour"]) {
+  for (const id of ["remindOn", "remindDays", "remindHour", "remindBefore"]) {
     el(id).addEventListener("input", () => paintRemind());
     el(id).addEventListener("change", () => paintRemind());
   }
@@ -1549,12 +1593,13 @@ async function main() {
   }
 }
 
-/** I tre campi del blocco Promemoria, letti insieme e rimessi nei limiti. */
+/** I campi del blocco Promemoria, letti insieme e rimessi nei limiti. `before` vale per gli incontri. */
 function _remindReading() {
   return remind.clean({
     on: el("remindOn").checked,
     days: el("remindDays").value,
     hour: el("remindHour").value,
+    before: el("remindBefore").value,
   });
 }
 

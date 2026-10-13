@@ -150,6 +150,11 @@ const IT = {
   homeProjectLate: "in ritardo di {giorni} giorni",
   homeProjectNext: "prossima il {data}",
   homeProjectNoDate: "senza scadenze",
+  homeMeetings: "Incontri della settimana",
+  homeMeetingsNone: "Nessun incontro in programma nei prossimi sette giorni.",
+  homeMeetingsToWrite: "{quanti} incontri già avvenuti aspettano l'esito",
+  homeMeetingsToWriteOne: "Un incontro già avvenuto aspetta l'esito",
+  homeMeetingToday: "Oggi",
   homeQuotes: "Preventivi in attesa",
   homeQuoteExpiring: "scade fra {giorni} giorni",
   homeQuoteExpired: "scaduto",
@@ -182,11 +187,13 @@ const IT = {
   // I promemoria dello scadenzario. Le stesse parole di Plan Scope dove la cosa è la stessa: le due
   // app stanno sulla stessa scrivania, e due nomi per la stessa funzione sono due funzioni.
   remindTitle: "Promemoria",
-  remindLead: "Quando una scadenza si avvicina, l'app lo ricorda in tre modi — e quale funziona "
+  remindLead: "Quando una scadenza o un incontro si avvicina, l'app lo ricorda in tre modi — e quale funziona "
     + "dipende da dove siete.",
-  remindOn: "Ricordami le scadenze",
+  remindOn: "Ricordami scadenze e incontri",
   remindDays: "Giorni prima",
   remindHour: "alle ore",
+  remindBefore: "Incontri con un orario:",
+  remindBeforeUnit: "minuti prima",
   remindSave: "Salva",
   remindAsk: "Permetti le notifiche",
   remindSays: "Una scadenza del {date} viene annunciata {when}.",
@@ -208,16 +215,17 @@ const IT = {
   remindStateSleeps: "Notifiche permesse. Questo browser però non sveglia l'app da solo: le "
     + "notifiche compaiono all'apertura, e le scadenze restano nel calendario esportato.",
   remindSavedNote: "Salvato.",
-  remindHeading: "Scadenze",
+  remindHeading: "Scadenze e incontri",
   remindIn: "Fattura",
   remindOut: "Acquisto",
+  remindMeeting: "Incontro",
   remindMore: "{first} e altre {n}",
   remindWhenToday: "oggi",
   remindWhenTomorrow: "domani",
   remindWhenLate: "in ritardo",
   remindWhenDays: "fra {n} giorni",
   remindSee: "Apri lo scadenzario",
-  remindNote: "Mentre non c'eri: {what}",
+  remindNote: "Nel frattempo: {what}",
   dueIcs: "Esporta come calendario (.ics)",
   dueIcsNone: "Non c'è niente da mettere in calendario.",
   dueIcsAlarm: "Con il promemoria dentro: lo farà suonare il vostro calendario.",
@@ -560,7 +568,9 @@ const IT = {
   costTaxIva: "IVA",
   costTaxMonofase: "monofase",
   costTaxNoteIt: "L'IVA sugli acquisti è a credito: la liquidazione del periodo la toglie da quella dovuta sulle vendite.",
-  costTaxNoteSm: "Sugli acquisti dall'Italia paghi l'imposta monofase all'Ufficio Tributario: è un costo, e qui lo registri con l'aliquota giusta. Ordinaria 17%, ridotte per merci particolari, 1% sui beni strumentali.",
+  costTaxNoteSm: "Sugli acquisti dall'Italia l'imposta monofase si paga all'Ufficio Tributario: è un "
+    + "costo, e qui si registra con l'aliquota giusta. Ordinaria 17%, ridotte per merci "
+    + "particolari, 1% sui beni strumentali.",
   costNoTax: "senza imposta",
   costScadenzaHint: "Vuota, l'acquisto è da pagare subito.",
   costNeedsParty: "Manca il fornitore.",
@@ -618,7 +628,8 @@ const IT = {
   recurringEdit: "Modifica la ricorrenza",
   recurringDeleteAsk: "Togliere questa ricorrenza? Gli acquisti già confermati restano.",
   recurringEvery: "{cadenza}, il {giorno}",
-  recurringHint: "Il giorno è quello in cui di solito arriva la fattura; se il mese è più corto vale l'ultimo. «Fino al mese» vuoto: finché non la togli.",
+  recurringHint: "Il giorno è quello in cui di solito arriva la fattura; se il mese è più corto vale "
+    + "l'ultimo. «Fino al mese» vuoto: finché la ricorrenza non viene tolta.",
   recNeedsDescription: "Manca la descrizione.",
   colDescription: "Descrizione",
   f_giorniScadenza: "giorni per il pagamento",
@@ -718,13 +729,18 @@ const IT = {
   meetingPeople: "Persone del cliente",
   meetingPeopleEmpty: "Il cliente non ha ancora persone di riferimento: si aggiungono dalla sua scheda.",
   meetingSubject: "Argomento",
-  meetingOutcome: "Esito, da scrivere dopo l'incontro",
+  meetingOutcome: "esito, da scrivere dopo l'incontro",
+  // The sheet labels are lower case like every other field; the capitalised ones above head columns.
+  meetingSubjectField: "argomento",
+  meetingTimeField: "ora",
+  meetingPlaceField: "luogo",
+  meetingPeopleField: "persone del cliente",
   meetingOutcomeShort: "Esito",
   meetingNeedsParty: "Scegliete il cliente.",
   meetingNeedsSubject: "Scrivete l'argomento, anche solo due parole.",
   meetingDeleteAsk: "Elimino questo incontro? Sparisce anche dal diario del cliente.",
   meetingCalendar: "Calendario",
-  meetingCalendarLabel: "Scarica l'incontro come file per il calendario",
+  meetingCalendarLabel: "Scarica l'incontro per il calendario",
   meetingWrite: "Aggiungi l'esito",
   meetingIcsTitle: "Incontro con {cliente}",
 
@@ -734,14 +750,14 @@ const IT = {
   receiptAttachShort: "Allega",
   receiptChange: "Cambia file",
   receiptClear: "Togli il file scelto",
-  receiptNote: "PDF o immagine, fino a 10 MB. Resta in questo browser e nella cartella della copia "
-    + "automatica; l'archivio esportato a mano ne riporta solo il nome.",
+  receiptNote: "PDF o immagine, fino a 10 MB. Resta in questo browser, nella cartella della copia "
+    + "automatica e nello zip «Esporta tutto, con ricevute e immagini».",
   receiptOpen: "Apri la ricevuta",
   receiptRemove: "Togli la ricevuta",
   receiptRemoveAsk: "Tolgo la ricevuta da questo pagamento? Il pagamento resta registrato.",
   receiptMissing: "Il file della ricevuta non è in questo browser: l'archivio da cui provengono i dati "
-    + "ne riportava solo il nome. Se la cartella della copia automatica è collegata, il ripristino da "
-    + "lì riporta anche le ricevute.",
+    + "ne riportava solo il nome. Il ripristino dalla cartella della copia automatica, o dallo zip "
+    + "«Esporta tutto, con ricevute e immagini», riporta anche le ricevute.",
   receiptNotSaved: "Il pagamento è registrato, ma la ricevuta non è stata salvata. Si può allegare di "
     + "nuovo dalla riga del pagamento.",
   receiptNone: "Nessun file scelto.",
@@ -764,6 +780,22 @@ const IT = {
     + "se c'è, 3 della filiale.",
   bankDeleteAsk: "Elimino questo conto? I documenti già emessi e i pagamenti già registrati lo "
     + "conservano com'era.",
+  bankBack: "Tutte le banche",
+  bankInLabel: "Entrate",
+  bankOutLabel: "Uscite",
+  bankDiffLabel: "Differenza",
+  bankDiffNote: "Entrate e uscite sono gli incassi e i pagamenti registrati nell'applicazione su "
+    + "questo conto. La differenza non è il saldo: il saldo dipende anche dal saldo iniziale e dai "
+    + "movimenti che l'applicazione non conosce, come commissioni e stipendi.",
+  bankMovesTitle: "Movimenti",
+  bankMovesEmpty: "Qui compaiono gli incassi e i pagamenti registrati su questo conto.",
+  bankMovesCount: "{n} movimenti",
+  bankYearLabel: "Anno",
+  bankAllYears: "Tutti gli anni",
+  bankMoveKind: "Movimento",
+  bankMoveFor: "Documento",
+  bankMoveIn: "Incasso",
+  bankMoveOut: "Pagamento",
   companyBanksLink: "I conti correnti dell'azienda si gestiscono in Anagrafiche › Banche.",
 
   // ---- azienda
@@ -790,6 +822,11 @@ const IT = {
     + "è il modo più semplice per avere sempre una copia.",
   settingsExport: "Esporta tutto",
   settingsImport: "Importa un archivio",
+  settingsExportBundle: "Esporta tutto, con ricevute e immagini",
+  settingsExportBundleNote: "«Esporta tutto» scrive un file di testo con i dati. Il secondo pulsante "
+    + "scrive uno zip che contiene anche le ricevute dei pagamenti e le immagini dei progetti: è la "
+    + "copia da fare dove la cartella automatica non è disponibile. Tutti e due si reimportano con "
+    + "«Importa un archivio».",
   settingsImportAsk: "L'importazione sostituisce quello che c'è adesso. Vado avanti?",
   settingsImportDone: "Archivio importato.",
   settingsImportBad: "Questo file non è un archivio di Invoice Scope.",
@@ -802,12 +839,12 @@ const IT = {
   settingsPersistUnknown: "Questo browser non dice se conserva l'archivio in modo permanente.",
 
   backupTitle: "Copia automatica in una cartella",
-  backupNote: "Scegli una cartella e l'app ci scrive da sola l'archivio a ogni modifica — lo stesso "
-    + "file di «Esporta tutto». Se la cartella è dentro Dropbox o iCloud, la copia arriva da sé sugli "
-    + "altri vostri computer. Tiene anche una copia al giorno degli ultimi trenta giorni. Da qui "
-    + "scrive un computer solo: sull'altro l'archivio si apre con «Importa un archivio». L'archivio "
-    + "porta il testo: le immagini dentro le pagine dei progetti viaggiano nel pacchetto del progetto, "
-    + "che è uno zip.",
+  backupNote: "Scegli una cartella e l'app ci scrive da sola l'archivio a ogni modifica — lo "
+    + "stesso file di «Esporta tutto». Se la cartella è dentro Dropbox o iCloud, la copia arriva da "
+    + "sé sugli altri vostri computer. Tiene anche una copia al giorno degli ultimi trenta giorni. "
+    + "Da qui scrive un computer solo: sull'altro l'archivio si apre con «Importa un archivio». "
+    + "Accanto all'archivio, nella stessa cartella, finiscono le immagini dei progetti e le "
+    + "ricevute dei pagamenti.",
   backupPick: "Scegli la cartella…",
   backupResume: "Riprendi la cartella",
   backupUnlink: "Scollega la cartella",
@@ -985,7 +1022,7 @@ const IT = {
   docImposta: "Imposta",
   docTotale: "Totale",
   docBollo: "Addebita il bollo di 2,00 €",
-  docBolloDue: "Sopra i 77,47 € senza IVA il bollo è dovuto. Se lo addebiti al cliente, spuntalo.",
+  docBolloDue: "Sopra i 77,47 € senza IVA il bollo è dovuto. Se viene addebitato al cliente, spuntalo.",
   docIssue: "Emetti",
   docIssueAsk: "Una volta emessa, la fattura non si modifica più: si storna con una nota di "
     + "credito. Emetto?",
@@ -1194,6 +1231,8 @@ const IT = {
   regimeRF01: "Ordinario",
   regimeRF19: "Forfettario",
   f_ritenuta: "ritenuta",
+  f_percipiente: "percipiente",
+  f_aliquotaRitenuta: "aliquota della ritenuta",
   f_totale: "totale",
 
   // ---- i controlli: che cosa dice la regola, e che cosa fare
@@ -1453,7 +1492,7 @@ const IT = {
   naturaN7: "IVA assolta in altro Stato UE",
 
   // ---- valori predefiniti dell'azienda per le righe a IVA zero
-  companyWho: "Chi sei",
+  companyWho: "Chi siete",
   companyLetterhead: "Carta intestata",
   companyLetterheadNote: "Quello che sta in testa a ogni documento stampato. Finché non ne viene "
     + "scelto uno, il logo è quello di G&G Technologies: il vostro entra come immagine — PNG, JPG o "
@@ -1465,7 +1504,7 @@ const IT = {
   f_email: "email",
   f_telefono: "telefono",
   f_sito: "sito web",
-  companyWhere: "Dove sei",
+  companyWhere: "Dove siete",
   companyNumbering: "Numerazione",
   companyDefaultsTitle: "Le righe nuove",
   companyDefaultsNote: "Quello che l'app scrive da sé su ogni riga nuova: l'aliquota, e se è zero "
@@ -1652,6 +1691,11 @@ const EN = {
   homeProjectLate: "{giorni} days late",
   homeProjectNext: "next on {data}",
   homeProjectNoDate: "no deadlines",
+  homeMeetings: "This week's meetings",
+  homeMeetingsNone: "No meetings planned in the next seven days.",
+  homeMeetingsToWrite: "{quanti} meetings already held are waiting for their outcome",
+  homeMeetingsToWriteOne: "One meeting already held is waiting for its outcome",
+  homeMeetingToday: "Today",
   homeQuotes: "Quotes awaiting an answer",
   homeQuoteExpiring: "expires in {giorni} days",
   homeQuoteExpired: "expired",
@@ -1679,11 +1723,13 @@ const EN = {
 
   navDue: "Payments",
   remindTitle: "Reminders",
-  remindLead: "When a deadline comes close the app reminds you in three ways — and which one works "
+  remindLead: "When a deadline or a meeting comes close the app reminds you in three ways — and which one works "
     + "depends on where you are.",
-  remindOn: "Remind me about deadlines",
+  remindOn: "Remind me about deadlines and meetings",
   remindDays: "Days before",
   remindHour: "at",
+  remindBefore: "Meetings with a time:",
+  remindBeforeUnit: "minutes before",
   remindSave: "Save",
   remindAsk: "Allow notifications",
   remindSays: "A deadline on {date} is announced {when}.",
@@ -1705,9 +1751,10 @@ const EN = {
   remindStateSleeps: "Notifications allowed. This browser does not wake the app on its own, "
     + "though: you will see them when you open it, and in the calendar you export.",
   remindSavedNote: "Saved.",
-  remindHeading: "Deadlines",
+  remindHeading: "Deadlines and meetings",
   remindIn: "Invoice",
   remindOut: "Purchase",
+  remindMeeting: "Meeting",
   remindMore: "{first} and {n} more",
   remindWhenToday: "today",
   remindWhenTomorrow: "tomorrow",
@@ -2206,7 +2253,11 @@ const EN = {
   meetingPeople: "The customer's people",
   meetingPeopleEmpty: "This customer has no contacts yet: add them from the customer's page.",
   meetingSubject: "Subject",
-  meetingOutcome: "Outcome, to write after the meeting",
+  meetingOutcome: "outcome, to write after the meeting",
+  meetingSubjectField: "subject",
+  meetingTimeField: "time",
+  meetingPlaceField: "place",
+  meetingPeopleField: "the customer's people",
   meetingOutcomeShort: "Outcome",
   meetingNeedsParty: "Choose the customer.",
   meetingNeedsSubject: "Write the subject, even just two words.",
@@ -2221,14 +2272,14 @@ const EN = {
   receiptAttachShort: "Attach",
   receiptChange: "Change file",
   receiptClear: "Remove the chosen file",
-  receiptNote: "PDF or image, up to 10 MB. It stays in this browser and in the automatic backup "
-    + "folder; an archive exported by hand carries only its name.",
+  receiptNote: "PDF or image, up to 10 MB. It stays in this browser, in the automatic backup folder "
+    + "and in the zip «Export everything, with receipts and images».",
   receiptOpen: "Open the receipt",
   receiptRemove: "Remove the receipt",
   receiptRemoveAsk: "Remove the receipt from this payment? The payment stays recorded.",
   receiptMissing: "The receipt file is not in this browser: the archive these data came from carried "
-    + "only its name. If the automatic backup folder is linked, restoring from there brings the "
-    + "receipts back too.",
+    + "only its name. Restoring from the automatic backup folder, or from the zip «Export everything, "
+    + "with receipts and images», brings the receipts back too.",
   receiptNotSaved: "The payment is recorded, but the receipt was not saved. You can attach it again "
     + "from the payment's row.",
   receiptNone: "No file chosen.",
@@ -2250,6 +2301,22 @@ const EN = {
     + "location and, if present, 3 for the branch.",
   bankDeleteAsk: "Delete this account? Documents already issued and payments already recorded keep it "
     + "as it was.",
+  bankBack: "All banks",
+  bankInLabel: "In",
+  bankOutLabel: "Out",
+  bankDiffLabel: "Difference",
+  bankDiffNote: "In and out are the payments received and made that the application recorded on "
+    + "this account. The difference is not the balance: the balance also depends on the opening "
+    + "balance and on movements the application does not know about, such as fees and salaries.",
+  bankMovesTitle: "Movements",
+  bankMovesEmpty: "The payments received and made on this account show up here.",
+  bankMovesCount: "{n} movements",
+  bankYearLabel: "Year",
+  bankAllYears: "All years",
+  bankMoveKind: "Movement",
+  bankMoveFor: "Document",
+  bankMoveIn: "Received",
+  bankMoveOut: "Paid out",
   companyBanksLink: "The company's bank accounts are managed under Contacts › Banks.",
 
   companyTitle: "Your company",
@@ -2273,6 +2340,11 @@ const EN = {
     + "simplest way to always have a copy.",
   settingsExport: "Export everything",
   settingsImport: "Import an archive",
+  settingsExportBundle: "Export everything, with receipts and images",
+  settingsExportBundleNote: "«Export everything» writes a text file with the data. The second button "
+    + "writes a zip that also holds the payment receipts and the project images: it is the copy to "
+    + "take where the automatic folder is not available. Both come back in through «Import an "
+    + "archive».",
   settingsImportAsk: "Importing replaces what is here now. Shall I go ahead?",
   settingsImportDone: "Archive imported.",
   settingsImportBad: "This file is not an Invoice Scope archive.",
@@ -2668,6 +2740,8 @@ const EN = {
   regimeRF01: "Standard",
   regimeRF19: "Flat rate",
   f_ritenuta: "withholding",
+  f_percipiente: "payee",
+  f_aliquotaRitenuta: "withholding rate",
   f_totale: "total",
 
   vRequired: "is a required field",

@@ -156,7 +156,9 @@ export function event({ uid, title, date, end = null, description = "",
     ...(place ? [`LOCATION:${_escape(place)}`] : []),
     ...(description ? [`DESCRIPTION:${_escape(description)}`] : []),
     // The alarm sits **inside** the event and before its end, which is where the specification wants it.
-    ...(alarm && alarm.on ? remind.alarm(alarm, title) : []),
+    // An appointment rings `before` minutes ahead of its time; a whole day, at the hour of the
+    // day before that the settings say. One rule for both was an alarm at midnight for a 3 p.m. meeting.
+    ...(alarm && alarm.on ? (_isTime(time) ? remind.alarmAt(alarm, title) : remind.alarm(alarm, title)) : []),
     "END:VEVENT",
   ];
 }

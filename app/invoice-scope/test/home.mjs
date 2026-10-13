@@ -20,6 +20,7 @@ import { categorie } from "../run/categories.js";
 import { recurringRecord, expected } from "../run/recurring.js";
 import { costRecord } from "../run/costs.js";
 import { reset } from "./fake-store.mjs";
+import { meetingRows, MEETING_DAYS } from "../run/home.js";
 
 let passed = 0;
 async function prova(nome, fn) {
@@ -390,6 +391,26 @@ await prova("le categorie già usate si propongono una volta sola, nella grafia 
     { categoria: "" }, {}, { categoria: "  " },
   ];
   assert.deepEqual(categorie(docs), ["Assistenza", "Sviluppo"]);
+});
+
+await prova("gli incontri della settimana, e quanti aspettano l'esito", async () => {
+  const oggi = "2026-10-13";
+  const voci = [
+    { id: "oggi", tipo: "incontro", data: oggi, ora: "09:00" },
+    { id: "fra-sei", tipo: "incontro", data: "2026-10-19" },
+    { id: "fra-sette", tipo: "incontro", data: "2026-10-20", ora: "15:00" },
+    { id: "fra-otto", tipo: "incontro", data: "2026-10-21" },
+    { id: "ieri", tipo: "incontro", data: "2026-10-12" },
+    { id: "ieri-annotato", tipo: "incontro", data: "2026-10-12", esito: "Firmato" },
+    { id: "nota", tipo: "nota", data: "2026-10-14" },
+  ];
+  const n = meetingRows(voci, { today: oggi });
+  assert.equal(MEETING_DAYS, 7);
+  assert.deepEqual(n.prossimi.map((m) => m.id), ["oggi", "fra-sei", "fra-sette"], "sette giorni, l'ottavo no");
+  assert.equal(n.quanti, 3);
+  assert.equal(n.daAnnotare, 1, "solo quello senza esito");
+  const vuoto = meetingRows([], { today: oggi });
+  assert.deepEqual([vuoto.quanti, vuoto.daAnnotare], [0, 0]);
 });
 
 console.log(`home: ${passed} prove passate`);

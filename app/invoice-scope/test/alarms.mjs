@@ -99,4 +99,30 @@ await test("le impostazioni restano scritte, e rientrano nei limiti", async () =
   assert.deepEqual(await settings(db), { on: true, days: 30, hour: 23, before: 30 });
 });
 
+await test("gli incontri in programma entrano nel calendario alla loro ora, quelli passati no", async () => {
+  const db = await pieno();
+  await put(db, "activities", { id: "m1", partyId: "p1", tipo: "incontro", data: "2099-03-10", ora: "15:00",
+    luogo: "Officina", testo: "Collaudo", created: "2026-10-13T08:00:00.000Z" });
+  await put(db, "activities", { id: "m2", partyId: "p2", tipo: "incontro", data: "2099-03-11", ora: "",
+    testo: "Sopralluogo", created: "2026-10-13T08:00:00.000Z" });
+  await put(db, "activities", { id: "m3", partyId: "p1", tipo: "incontro", data: "2020-01-10", ora: "10:00",
+    testo: "Vecchio", created: "2020-01-10T08:00:00.000Z" });
+  await put(db, "activities", { id: "m4", partyId: "p1", tipo: "incontro", data: "2099-03-12", ora: "09:00",
+    testo: "Già annotato", esito: "Fatto", created: "2026-10-13T08:00:00.000Z" });
+  await save(db, { on: true, days: 1, hour: 9, before: 30 });
+  const text = calendar ? await calendar(db) : "";
+  // The meeting with a time: an hour at three, its place, and the alarm half an hour before.
+  assert.match(text, /DTSTART:20990310T150000/);
+  assert.match(text, /LOCATION:Officina/);
+  assert.match(text, /SUMMARY:Incontro · Studio Bianchi · Officina/);
+  const evento = text.split("BEGIN:VEVENT").find((one) => one.includes("20990310T150000"));
+  assert.match(evento, /TRIGGER:-PT30M/, "i minuti prima, non il giorno prima alle nove");
+  // Without a time it is the whole day, like a deadline.
+  assert.match(text, /DTSTART;VALUE=DATE:20990311/);
+  assert.doesNotMatch(text, /2020011/, "un incontro passato non suona");
+  assert.doesNotMatch(text, /DTSTART:20990312T090000/, "uno con l'esito è concluso");
+  // The deadlines are still there beside them.
+  assert.match(text, /Fattura/);
+});
+
 console.log(`alarms: ${passed} prove passate`);

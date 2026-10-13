@@ -129,6 +129,25 @@ export function alarm({ days, hour }, description = "") {
 }
 
 /**
+ * The `VALARM` for an appointment: `before` minutes ahead of its start.
+ *
+ * **Not `alarm()`**, which measures from midnight: an all-day event starts there, an appointment
+ * does not. With «the day before at nine» a meeting at three in the afternoon got its alarm fifteen
+ * hours earlier — at midnight — which is the hour this whole module exists to avoid. Found on
+ * 13 October 2026, when meetings with a time started going into Invoice Scope's calendar file.
+ */
+export function alarmAt({ before }, description = "") {
+  const minutes = clean({ on: true, before }).before;
+  return [
+    "BEGIN:VALARM",
+    "ACTION:DISPLAY",
+    `TRIGGER:${minutes > 0 ? `-PT${minutes}M` : "PT0S"}`,
+    `DESCRIPTION:${String(description || "").replace(/([,;\\])/g, "\\$1").replace(/\r?\n/g, "\\n")}`,
+    "END:VALARM",
+  ];
+}
+
+/**
  * The moment a deadline's reminder rings, as a real instant.
  *
  * Built from the pieces of the local date and not from `new Date(iso)`: a date without a time, read

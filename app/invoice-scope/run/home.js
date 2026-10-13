@@ -10,7 +10,7 @@
 // silenzio.
 //
 // **I conti stanno da una parte, il disegno dall'altra.** Le funzioni `figures`, `byMonth`,
-// `topParties`, `projectRows`, `openQuotes` e `drafts` ricevono dati e restituiscono numeri: si
+// `topParties`, `projectRows`, `openQuotes`, `drafts` e `meetingRows` ricevono dati e restituiscono numeri: si
 // provano in Node senza un browser. Il disegno le chiama e basta.
 //
 // **I grafici sono SVG scritti a mano**, con i colori del tema: niente librerie, per la ragione
@@ -27,6 +27,7 @@ import { money, date as shownDate } from "./format.js";
 import * as progetti from "./projects.js";
 import { costOf, payable, taxBalance, signedTotal as costTotal } from "./costs.js";
 import { expected } from "./recurring.js";
+import { agenda } from "./crm.js";
 import { from } from "./decimal.js";
 
 /** Quante righe mostra ogni riquadro. Cinque è quello che si legge senza scorrere. */
@@ -507,6 +508,24 @@ export function openQuotes(docs, { today = new Date().toISOString().slice(0, 10)
     .slice(0, limit);
 }
 
+/** The meetings the home screen announces: from today to this many days ahead. */
+export const MEETING_DAYS = 7;
+
+/**
+ * The meetings of the coming week, soonest first, and how many past ones still have no outcome.
+ *
+ * The CRM is worth what is written in it, and it is written only if somebody opens it: the home
+ * screen is the one opened every morning, so this is where a meeting tomorrow, or one from last week
+ * with nothing written, is said. The groups are `agenda`'s — the same rule as the CRM screen.
+ */
+export function meetingRows(activities, { today = new Date().toISOString().slice(0, 10), days = MEETING_DAYS, limit = ROWS } = {}) {
+  const gruppi = agenda(activities || [], { oggi: today });
+  const limite = new Date(Date.UTC(...today.split("-").map((x, i) => Number(x) - (i === 1 ? 1 : 0))) + days * 86400000)
+    .toISOString().slice(0, 10);
+  const prossimi = gruppi.upcoming.filter((one) => String(one.data) <= limite);
+  return { prossimi: prossimi.slice(0, limit), quanti: prossimi.length, daAnnotare: gruppi.toWrite.length };
+}
+
 /** Le bozze, dalla più recente: quello che si è lasciato a metà. */
 export function drafts(docs, { limit = ROWS } = {}) {
   return docs
@@ -667,7 +686,7 @@ export function drawBuckets(container, rows) {
  * Disegna tutto. `docs` sono i documenti dal più recente, `owed` è `summary(db)`, `byParty` i
  * nomi dei clienti per id.
  */
-export function render({ docs, owed, byParty, payments = [], costs = [], outlays = [], recurring = [], company = null, today = new Date().toISOString().slice(0, 10) }) {
+export function render({ docs, owed, byParty, payments = [], costs = [], outlays = [], recurring = [], activities = [], company = null, today = new Date().toISOString().slice(0, 10) }) {
   const attesi = expected(recurring, costs, { today, company });
   const n = figures(docs, owed, { today, costs, outlays, attesi });
 
@@ -874,6 +893,27 @@ export function render({ docs, owed, byParty, payments = [], costs = [], outlays
       [row.daFatturare > 0n ? money(row.daFatturare) : "—", "right"],
     ], `#/progetto/${row.id}`));
   }
+
+  // The meetings: this week's, and the ones still to be written up. The widget shows when either
+  // has something to say, and the line under the rows only when there is something to write.
+  const incontri = meetingRows(activities, { today });
+  el("wMeetings").hidden = incontri.quanti === 0 && incontri.daAnnotare === 0;
+  const meetBody = el("homeMeetingsBody");
+  meetBody.textContent = "";
+  el("homeMeetingsTable").hidden = incontri.prossimi.length === 0;
+  for (const one of incontri.prossimi) {
+    const quando = one.data === today ? t("homeMeetingToday") : shownDate(one.data);
+    meetBody.append(_row([
+      [one.ora ? `${quando} · ${one.ora}` : quando, one.data === today ? "nowrap overdue" : "nowrap"],
+      [byParty.get(one.partyId) || "—", "nowrap"],
+      [String(one.testo || "").split("\n")[0], "meta"],
+    ], "#/crm"));
+  }
+  el("homeMeetingsNone").hidden = incontri.prossimi.length > 0;
+  const annota = el("homeMeetingsToWrite");
+  annota.hidden = incontri.daAnnotare === 0;
+  annota.textContent = incontri.daAnnotare === 1 ? t("homeMeetingsToWriteOne")
+    : tf("homeMeetingsToWrite", { quanti: incontri.daAnnotare });
 
   // I preventivi in attesa.
   const attesa = openQuotes(docs, { today });

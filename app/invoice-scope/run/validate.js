@@ -525,7 +525,9 @@ export function validate(doc, {
   }
 
   if (doc.ritenuta && !RITENUTE.includes(doc.ritenuta.tipo || "RT01")) {
-    problems.push(_problem("ritenuta.tipo", "vOutsideSubset", "vRitenutaFix",
+    // The segment names the field as the sheet does — «percipiente» — and not as the record does:
+    // `f_tipo` is «tipo di documento», and the message read as if the document type were wrong.
+    problems.push(_problem("ritenuta.percipiente", "vOutsideSubset", "vRitenutaFix",
       { valore: doc.ritenuta.tipo, elenco: RITENUTE.join(", ") }));
   }
 

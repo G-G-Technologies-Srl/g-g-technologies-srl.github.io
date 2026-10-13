@@ -195,7 +195,8 @@ async function _openSheet(record) {
 
   await _drawSuppliers();
   _open(el("recurringDialog"));
-  form.elements.descrizione.focus();
+  // The sheet begins with who: a new one starts there, one already filled starts on what it is.
+  (form.elements.partyId.value ? form.elements.descrizione : form.elements.partyId).focus();
 }
 
 async function _saveSheet() {

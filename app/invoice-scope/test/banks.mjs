@@ -25,10 +25,11 @@ const dom = install(html);
 const { openDatabase } = await import("../run/db.js");
 const { setLang } = await import("../run/i18n.js");
 const { get, put } = await import("gg/store.js");
+const { from, toString } = await import("../run/decimal.js");
 const banks = await import("../run/banks.js");
 const {
-  abiCab, accountProblems, accountRecord, accounts, cleanIban, ibanChecks, saveAccounts, withAccount,
-  withoutAccount,
+  abiCab, accountProblems, accountRecord, accounts, bankFields, cleanIban, ibanChecks, movements,
+  saveAccounts, withAccount, withoutAccount,
 } = banks;
 
 setLang("it");
@@ -54,6 +55,7 @@ async function dicendoSi(azione) {
   return done;
 }
 
+const leggibile = (testo) => String(testo).replace(/\u00a0| /g, " ");
 const IT = "IT60X0542811101000000123456";
 const SM = "SM86U0322509800000000270100";
 
@@ -125,6 +127,20 @@ await prova("senza un'azienda salvata, il record nasce con i soli conti", async 
   assert.equal((await accounts(db)).length, 1);
 });
 
+await prova("il documento prende la banca del conto che ha l'IBAN uguale, e nient'altro", async () => {
+  const conti = [
+    accountRecord({ id: "a", etichetta: "Principale", istituto: "Banca di Esempio S.p.A.", iban: IT, bic: "BPMOIT22XXX" }),
+    accountRecord({ id: "b", etichetta: "Estero", iban: "DE89370400440532013000", bic: "NONVALIDO" }),
+  ];
+  assert.deepEqual(bankFields(conti, "it60 x054 2811 1010 0000 0123 456"),
+    { istituto: "Banca di Esempio S.p.A.", abi: "05428", cab: "11101", bic: "BPMOIT22XXX" });
+  assert.deepEqual(bankFields(conti, "DE89370400440532013000"), {}, "senza banca né BIC valido, e senza ABI");
+  assert.deepEqual(bankFields(conti, "IT02L1234512345123456789012"), {}, "un IBAN che non è dell'azienda");
+  assert.deepEqual(bankFields(conti, ""), {});
+  const lungo = accountRecord({ istituto: "X".repeat(120), iban: IT });
+  assert.equal(bankFields([lungo], IT).istituto.length, 80, "il tracciato ne ammette ottanta");
+});
+
 // -----------------------------------------------------------------------------------------------------------------
 //  t h e   s c r e e n
 // -----------------------------------------------------------------------------------------------------------------
@@ -171,13 +187,17 @@ await prova("un IBAN sbagliato resta nel foglio, con la ragione scritta sotto", 
   await dom.byId("bankCancel").fire("click");
 });
 
-await prova("dalla riga si apre il conto, si corregge, si elimina", async (db) => {
+await prova("dalla riga si apre il conto, dal conto si corregge, dall'elenco si elimina", async (db) => {
   await saveAccounts(db, withAccount(withAccount([], accountRecord({ id: "a", etichetta: "A", iban: IT })),
     accountRecord({ id: "b", etichetta: "B", iban: SM })));
   await banks.render(db);
   assert.equal(dom.count("banksBody"), 2);
 
+  // The row opens the account's own screen, with its movements; the sheet is opened from there.
   await dom.byId("banksBody").at(1).fire("click");
+  assert.equal(location.hash, "#/anagrafiche/banche/b");
+  assert.equal(await banks.renderAccount(db, "b"), true);
+  await dom.byId("bankEdit").fire("click");
   const form = dom.byId("bankForm").elements;
   assert.equal(form.etichetta.value, "B");
   assert.equal(dom.byId("bankDelete").hidden, false);
@@ -188,10 +208,81 @@ await prova("dalla riga si apre il conto, si corregge, si elimina", async (db) =
   assert.equal(conti.find((c) => c.id === "b").filiale, "Serravalle");
   assert.deepEqual(conti.map((c) => c.predefinito), [false, true]);
 
+  await banks.render(db);
   await dicendoSi(() => dom.byId("banksBody").at(1).at(4).at(0).fire("click"));
   conti = await accounts(db);
   assert.deepEqual(conti.map((c) => [c.id, c.predefinito]), [["a", true]]);
   assert.equal(dom.count("banksBody"), 1);
+});
+
+// -----------------------------------------------------------------------------------------------------------------
+//  t h e   m o v e m e n t s
+// -----------------------------------------------------------------------------------------------------------------
+
+const euro = (value) => toString(value, 2);
+
+function dati() {
+  const conto = { id: "a", etichetta: "Principale", iban: IT };
+  return {
+    conto,
+    payments: [
+      { id: "p1", docId: "d1", importo: "1220.00", data: "2026-03-10", conto: { id: "a", etichetta: "Vecchio nome", iban: IT } },
+      { id: "p2", docId: "d1", importo: "100.00", data: "2025-12-20", conto: { etichetta: "", iban: "IT60 X054 2811 1010 0000 0123 456" } },
+      { id: "p3", docId: "d1", importo: "999.00", data: "2026-03-11", conto: { id: "b", iban: SM } },
+      { id: "p4", docId: "d1", importo: "50.00", data: "2026-03-12", conto: null },
+    ],
+    outlays: [
+      { id: "o1", costId: "c1", importo: "300.00", data: "2026-04-01", conto: { id: "a", iban: IT } },
+    ],
+    docs: [{ id: "d1", tipo: "TD01", numero: "12", data: "2026-03-01", partyId: "x" }],
+    costs: [{ id: "c1", numero: "H-1", partyId: "y" }],
+    parties: [{ id: "x", denominazione: "Rossi Impianti S.r.l." }, { id: "y", denominazione: "Hosting S.p.A." }],
+  };
+}
+
+await prova("i movimenti di un conto: per id anche se rinominato, per IBAN se l'id manca", async () => {
+  const { conto, ...resto } = dati();
+  const n = movements(conto, resto);
+  assert.deepEqual(n.rows.map((r) => r.record.id), ["o1", "p1", "p2"], "dal più recente, e solo i suoi");
+  assert.equal(euro(n.entrate), "1320.00");
+  assert.equal(euro(n.uscite), "300.00");
+  assert.equal(euro(n.differenza), "1020.00");
+  assert.deepEqual(n.anni, ["2026", "2025"]);
+  const incasso = n.rows.find((r) => r.record.id === "p1");
+  assert.equal(incasso.party, "Rossi Impianti S.r.l.");
+  assert.equal(incasso.href, "#/documento/d1");
+  assert.equal(n.rows[0].href, "#/acquisto/c1");
+});
+
+await prova("filtrati per anno, i conti tornano sull'anno", async () => {
+  const { conto, ...resto } = dati();
+  const n = movements(conto, resto, { anno: "2025" });
+  assert.deepEqual(n.rows.map((r) => r.record.id), ["p2"]);
+  assert.equal(euro(n.differenza), "100.00");
+});
+
+await prova("la schermata del conto: i tre numeri, le righe, e torna all'elenco se il conto non c'è", async (db) => {
+  const { conto } = dati();
+  await saveAccounts(db, [accountRecord({ ...conto, istituto: "Banca di Esempio", bic: "BPMOIT22XXX" })]);
+  const tutto = dati();
+  for (const one of tutto.payments) await put(db, "payments", one);
+  for (const one of tutto.outlays) await put(db, "outlays", one);
+  for (const one of tutto.docs) await put(db, "docs", one);
+  for (const one of tutto.costs) await put(db, "costs", one);
+  for (const one of tutto.parties) await put(db, "parties", one);
+
+  assert.equal(await banks.renderAccount(db, "a"), true);
+  assert.equal(dom.text("bankName"), "Principale");
+  assert.match(dom.text("bankMeta"), /Banca di Esempio.*ABI 05428 · CAB 11101/);
+  // L'anno corrente, se ha movimenti; altrimenti il più recente che ne ha.
+  const anno = dom.byId("bankYear").value;
+  assert.ok(["2026", String(new Date().getFullYear())].includes(anno));
+  dom.byId("bankYear").value = "";
+  await dom.byId("bankYear").fire("change", { target: { value: "" } });
+  assert.equal(dom.count("bankMovesBody"), 3);
+  assert.match(dom.byId("bankMovesBody").at(0).allText, /Pagamento.*H-1 · Hosting/s);
+  assert.match(leggibile(dom.text("bankDiff")), /1\.020,00/);
+  assert.equal(await banks.renderAccount(db, "non-esiste"), false);
 });
 
 console.log(`banks: ${passed} prove passate`);

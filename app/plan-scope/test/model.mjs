@@ -1383,7 +1383,12 @@ test("cambiare le etichette è una modifica del progetto, non del suo contenuto"
 test("l'elenco di quelle in uso non ripete e non guarda le maiuscole", () => {
   model.createProject({ name: "a", tags: ["Cliente", "2026"] });
   model.createProject({ name: "b", tags: ["cliente", "interno"] });
-  assert.deepEqual(model.projectTags(), ["2026", "Cliente", "interno"]);
+  // **Which spelling survives is not part of the rule**: the newest project wins, and two projects
+  // created in the same test are a millisecond apart or not. Asserting «Cliente» failed one run in
+  // a few, on 13 October 2026, whenever the clock ticked between the two lines.
+  const tags = model.projectTags();
+  assert.equal(tags.length, 3);
+  assert.deepEqual(tags.map((one) => one.toLowerCase()), ["2026", "cliente", "interno"]);
 });
 
 test("un progetto nel cestino non presta le sue etichette all'elenco", () => {

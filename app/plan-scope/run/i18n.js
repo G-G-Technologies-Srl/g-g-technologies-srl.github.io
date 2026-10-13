@@ -24,7 +24,7 @@ const IT = {
   // chrome
   tagline: "Progetti e scadenze, sul vostro computer",
   goHome: "Progetti",
-  crumbsLabel: "Dove sei",
+  crumbsLabel: "Percorso",
   viewsLabel: "Come guardare il progetto",
   appMoreLabel: "Archivio e comandi",
   placesTitle: "Cartelle e copie",
@@ -1264,7 +1264,7 @@ const EN = {
   // chrome
   tagline: "Projects and deadlines, on your computer",
   goHome: "Projects",
-  crumbsLabel: "Where you are",
+  crumbsLabel: "Path",
   viewsLabel: "How to look at the project",
   appMoreLabel: "Archive and commands",
   placesTitle: "Folders and copies",

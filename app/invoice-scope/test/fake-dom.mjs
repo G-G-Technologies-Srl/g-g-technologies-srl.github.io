@@ -30,7 +30,12 @@ function _fromHtml(html) {
   for (const match of html.matchAll(/<form[^>]*\sid="([^"]+)"([\s\S]*?)<\/form>/g)) {
     forms.set(match[1], [...match[2].matchAll(/\sname="([^"]+)"/g)].map((m) => m[1]));
   }
-  return { ids, forms };
+  // The options of a named <select>, so code that looks a value up among them finds what the page has.
+  const options = new Map();
+  for (const match of html.matchAll(/<select[^>]*\sname="([^"]+)"[^>]*>([\s\S]*?)<\/select>/g)) {
+    options.set(match[1], [...match[2].matchAll(/<option[^>]*\svalue="([^"]*)"/g)].map((m) => ({ value: m[1] })));
+  }
+  return { ids, forms, options };
 }
 
 function _classList(node) {
@@ -58,7 +63,7 @@ function _classList(node) {
  * capo fra due scenari.
  */
 export function install(html) {
-  const { ids, forms } = _fromHtml(html);
+  const { ids, forms, options } = _fromHtml(html);
   const nodes = new Map();
 
   const make = (tag, id = null) => {
@@ -144,7 +149,10 @@ export function install(html) {
     node.classList = _classList(node);
     if (forms.has(id)) {
       node.elements = {};
-      for (const name of forms.get(id)) node.elements[name] = make("input");
+      for (const name of forms.get(id)) {
+        node.elements[name] = make(options.has(name) ? "select" : "input");
+        if (options.has(name)) node.elements[name].options = options.get(name);
+      }
     }
     return node;
   };

@@ -278,6 +278,18 @@
         <div class="hbars" id="chartSuppliers"></div>
       </div>
 
+      <!-- The meetings of the week and the ones still to write up: the CRM said where it is seen
+           every morning, so that an outcome is written while it is still remembered. -->
+      <div class="widget" id="wMeetings" hidden>
+        <div class="section-head">
+          <h2 data-t="homeMeetings"></h2>
+          <a href="#/crm" data-t="homeSeeAll"></a>
+        </div>
+        <table class="rows compact" id="homeMeetingsTable"><tbody id="homeMeetingsBody"></tbody></table>
+        <p class="note" id="homeMeetingsNone" data-t="homeMeetingsNone" hidden></p>
+        <p class="note"><a href="#/crm" id="homeMeetingsToWrite" hidden></a></p>
+      </div>
+
       <div class="widget" id="wProjects" hidden>
         <div class="section-head">
           <h2 data-t="homeProjects"></h2>
@@ -614,7 +626,6 @@
       <label><span data-t="f_tipo"></span>
         <select id="docType"></select>
       </label>
-      <label><span data-t="f_data"></span><input type="date" id="docDate"></label>
       <label class="required"><span data-t="docParty"></span>
         <select id="docPartySelect" required></select>
         <!-- **Il cliente si crea da qui, senza uscire dal documento.** Prima bisognava lasciare la
@@ -628,7 +639,10 @@
            nessuno — l'identificativo fiscale è quello che il file porta al SdI e la prima cosa che
            chi riceve controlla. Lo riempie `_drawParty` in `doc.js`; vuoto, sparisce. -->
       <div class="party-detail" id="docPartyDetail" hidden></div>
-      <label id="docValiditaField" class="required" hidden><span data-t="f_validoFino"></span>
+      <!-- Who, then when: the customer is chosen first, as on every other sheet of the app, and the
+           validity of a quote sits beside its date — they are two ends of the same span. -->
+      <label class="date"><span data-t="f_data"></span><input type="date" id="docDate"></label>
+      <label id="docValiditaField" class="required date" hidden><span data-t="f_validoFino"></span>
         <input type="date" id="docValidoFino" required>
       </label>
       <label class="wide"><span data-t="f_causale"></span><input id="docCausale"></label>
@@ -724,36 +738,15 @@
       <p class="note" data-t="docDdtNote"></p>
     </div>
 
-    <!-- Un contenitore, perché il documento di trasporto non ha un riepilogo IVA: accompagna la
-         merce, non la fattura. Le righe restano, il riepilogo e i totali no. -->
-    <div id="docSummarySection">
-    <h2 data-t="docSummary"></h2>
-    <div class="table-scroll">
-    <table class="rows" id="docSummaryTable">
-        <thead><tr>
-          <th data-t="f_aliquota"></th><th data-t="f_natura"></th>
-          <th class="right" data-t="docImponibile"></th><th class="right" data-t="docImposta"></th>
-        </tr></thead>
-        <tbody id="docSummaryBody"></tbody>
-      </table>
-    </div>
-
-    <div class="panel" id="docTotals">
-      <p class="figure-line"><span data-t="docImponibile"></span><strong id="sumImponibile">—</strong></p>
-      <p class="figure-line"><span data-t="docImposta"></span><strong id="sumImposta">—</strong></p>
-      <p class="figure-line total"><span data-t="docTotale"></span><strong id="sumTotale">—</strong></p>
-    </div>
-    </div>
 
     <!-- Le sezioni che seguono compaiono per tipo di documento, e l'elenco di quali valgono per
          quale sta in `kinds.js`: un documento di trasporto non ha una ritenuta d'acconto, e un
          preventivo non ha un bollo perché non è ancora un documento fiscale. -->
-    <div id="docBolloSection">
-      <p class="note" id="bolloNote" data-t="docBolloDue" hidden></p>
-      <label class="check" id="docBolloField"><input type="checkbox" id="docBollo"><span data-t="docBollo"></span></label>
-      <p class="note" id="docBolloCharged" data-t="docBolloCharged" hidden></p>
-    </div>
-
+    <!-- **The order is the order of the sum.** What describes the goods first — transport, which a
+         delivery note needs and the money does not — then what changes the totals: discount,
+         withholding, stamp duty; and only then the summary and the totals, so that a figure typed
+         above shows its effect below and not out of sight up the page. Payment and due dates
+         close it, because they split the total that is now final. -->
     <div id="docTrasportoSection" hidden>
       <h2 data-t="trasportoTitle"></h2>
       <div class="form">
@@ -786,6 +779,8 @@
       <p class="note" data-t="trasportoNote"></p>
     </div>
 
+
+
     <!-- **Su un documento chiuso le sezioni vuote sono una riga.** Un campo sconto disabilitato con
          dentro uno zero e la sua spiegazione, seguito da una ritenuta non applicata con i suoi tre
          campi grigi, è mezza schermata di moduli per dire «niente». Chi apre una fattura emessa
@@ -804,17 +799,45 @@
       <p class="note" id="docRitenutaNone" data-t="docNoWithholding" hidden></p>
       <label class="check" id="ritApplyField"><input type="checkbox" id="ritApply"><span data-t="ritApply"></span></label>
       <div class="form" id="ritFields" hidden>
-        <label class="narrow"><span data-t="f_tipo"></span>
+        <label class="narrow"><span data-t="f_percipiente"></span>
           <select id="ritType">
             <option value="RT01"></option>
             <option value="RT02"></option>
           </select>
         </label>
-        <label class="narrow"><span data-t="f_aliquota"></span><input id="ritRate" inputmode="decimal" value="20"></label>
+        <label class="narrow"><span data-t="f_aliquotaRitenuta"></span><input id="ritRate" inputmode="decimal" value="20"></label>
         <label class="narrow"><span data-t="ritCausale"></span><input id="ritCausale" maxlength="2" value="A"></label>
       </div>
       <p class="note" id="docRitenutaNote" data-t="ritNote"></p>
     </div>
+
+    <div id="docBolloSection">
+      <p class="note" id="bolloNote" data-t="docBolloDue" hidden></p>
+      <label class="check" id="docBolloField"><input type="checkbox" id="docBollo"><span data-t="docBollo"></span></label>
+      <p class="note" id="docBolloCharged" data-t="docBolloCharged" hidden></p>
+    </div>
+
+    <!-- Un contenitore, perché il documento di trasporto non ha un riepilogo IVA: accompagna la
+         merce, non la fattura. Le righe restano, il riepilogo e i totali no. -->
+    <div id="docSummarySection">
+    <h2 data-t="docSummary"></h2>
+    <div class="table-scroll">
+    <table class="rows" id="docSummaryTable">
+        <thead><tr>
+          <th data-t="f_aliquota"></th><th data-t="f_natura"></th>
+          <th class="right" data-t="docImponibile"></th><th class="right" data-t="docImposta"></th>
+        </tr></thead>
+        <tbody id="docSummaryBody"></tbody>
+      </table>
+    </div>
+
+    <div class="panel" id="docTotals">
+      <p class="figure-line"><span data-t="docImponibile"></span><strong id="sumImponibile">—</strong></p>
+      <p class="figure-line"><span data-t="docImposta"></span><strong id="sumImposta">—</strong></p>
+      <p class="figure-line total"><span data-t="docTotale"></span><strong id="sumTotale">—</strong></p>
+    </div>
+    </div>
+
 
     <div id="docPagamentoSection">
       <h2 data-t="payTitle"></h2>
@@ -957,6 +980,42 @@
         <tbody id="banksBody"></tbody>
       </table>
     </div>
+  </section>
+
+  <!-- One account: what it is, and the money that went through it as the app recorded it — the
+       payments received and paid out, with their receipts. Not a balance: the note says why. -->
+  <section id="screenBank" class="screen wide" hidden>
+    <a class="back-link" href="#/anagrafiche/banche" data-t="bankBack"></a>
+    <div class="doc-head">
+      <h1 class="titled"><span class="ico" aria-hidden="true"><svg><use href="#ico-parties"/></svg></span><span id="bankName"></span><span class="badge" id="bankDefault" data-t="contiDefault" hidden></span></h1>
+      <button type="button" class="button ghost" id="bankEdit" data-t="custEditData"></button>
+    </div>
+    <p class="note" id="bankMeta"></p>
+
+    <div class="figures">
+      <div class="figure"><span class="label" data-t="bankInLabel"></span><span class="value" id="bankIn">—</span></div>
+      <div class="figure"><span class="label" data-t="bankOutLabel"></span><span class="value" id="bankOut">—</span></div>
+      <div class="figure"><span class="label" data-t="bankDiffLabel"></span><span class="value" id="bankDiff">—</span></div>
+    </div>
+    <p class="note" data-t="bankDiffNote"></p>
+
+    <div class="section-head">
+      <h2 data-t="bankMovesTitle"></h2>
+    </div>
+    <div class="form docs-filters" id="bankYearField" hidden>
+      <label><span data-t="bankYearLabel"></span><select id="bankYear"></select></label>
+    </div>
+    <p class="empty" id="bankMovesEmpty" data-t="bankMovesEmpty"></p>
+    <div class="table-scroll">
+      <table class="rows" id="bankMovesTable" hidden>
+        <thead><tr>
+          <th data-t="docsDate"></th><th data-t="bankMoveKind"></th><th data-t="bankMoveFor"></th>
+          <th data-t="incassiNote"></th><th data-t="receiptLabel"></th><th class="right" data-t="incassiAmount"></th>
+        </tr></thead>
+        <tbody id="bankMovesBody"></tbody>
+      </table>
+    </div>
+    <p class="note" id="bankMovesNote"></p>
   </section>
 
   <!-- CRM: the meetings with the customers, across all of them. They are entries of the customers'
@@ -1365,10 +1424,12 @@
     <p class="note" data-t="settingsDataNote"></p>
     <div class="actions">
       <button type="button" class="button" id="exportAll" data-t="settingsExport"></button>
+      <button type="button" class="button ghost" id="exportBundle" data-t="settingsExportBundle"></button>
       <button type="button" class="button ghost" id="importAll" data-t="settingsImport"></button>
       <button type="button" class="button ghost" id="exportCsv" data-t="settingsCsv"></button>
-      <input type="file" id="importFile" accept="application/json,.json" hidden>
+      <input type="file" id="importFile" accept="application/json,.json,application/zip,.zip" hidden>
     </div>
+    <p class="note" data-t="settingsExportBundleNote"></p>
     <p class="note"><span data-t="settingsSpace"></span>: <span id="space">—</span></p>
     <!-- Se il browser ha promesso di non svuotare da sé questo archivio. È una promessa che si
          chiede, non si impone, e senza la quale una pulizia dello spazio può portare via tutto:
@@ -1388,6 +1449,13 @@
         <input type="number" class="tiny" id="remindDays" min="0" max="30" step="1" inputmode="numeric">
         <label for="remindHour" data-t="remindHour"></label>
         <input type="number" class="tiny" id="remindHour" min="0" max="23" step="1" inputmode="numeric">
+      </div>
+      <!-- The meetings of the CRM have a time, and ring that many minutes before it: the day before
+           at nine is for deadlines, which are a day and not an hour. -->
+      <div class="actions remind-when">
+        <label for="remindBefore" data-t="remindBefore"></label>
+        <input type="number" class="tiny" id="remindBefore" min="0" max="1440" step="5" inputmode="numeric">
+        <span class="meta" data-t="remindBeforeUnit"></span>
       </div>
       <p class="note" id="remindSays"></p>
       <div class="actions">
@@ -1544,13 +1612,6 @@
           <option value="entrambi" data-t="ruoloEntrambi"></option>
         </select>
       </label>
-      <label><span data-t="f_partitaIva"></span><input name="partitaIva" inputmode="numeric"></label>
-      <label><span data-t="f_codiceFiscale"></span><input name="codiceFiscale"></label>
-      <label><span data-t="f_codiceDestinatario"></span><input name="codiceDestinatario" maxlength="7"></label>
-      <label><span data-t="f_pec"></span><input name="pec" type="email" autocomplete="email"></label>
-      <!-- A chi non lo sa: sono i due modi in cui la fattura elettronica arriva al cliente, e ne
-           basta uno. Senza questa riga i due campi sembrano burocrazia da riempire tutta. -->
-      <p class="note wide" data-t="partyDeliveryNote"></p>
       <!-- **Il paese mancava del tutto**, e senza si poteva registrare solo un cliente italiano.
            Un menù con i nomi, non una casella per la sigla: chi non sa che la Svizzera è «CH» non
            deve saperlo. L'ultima voce apre una casella per i paesi che non sono nell'elenco. -->
@@ -1576,11 +1637,22 @@
       <label class="narrow" id="partyPaeseAltro" hidden><span data-t="f_paeseSigla"></span>
         <input name="paese" maxlength="2" placeholder="XX" autocomplete="off">
       </label>
+      <!-- The identifiers after the country, which decides what they are called — a COE for San
+           Marino, a VAT number for Italy — as on the company's own sheet. -->
+      <label><span data-t="f_partitaIva"></span><input name="partitaIva" inputmode="numeric"></label>
+      <label><span data-t="f_codiceFiscale"></span><input name="codiceFiscale"></label>
       <label class="wide"><span data-t="f_indirizzo"></span><input name="indirizzo"></label>
       <label class="narrow"><span data-t="f_numeroCivico"></span><input name="numeroCivico"></label>
       <label class="narrow"><span data-t="f_cap"></span><input name="cap" inputmode="numeric" maxlength="5"></label>
       <label><span data-t="f_comune"></span><input name="comune"></label>
       <label class="narrow"><span data-t="f_provincia"></span><input name="provincia" maxlength="2"></label>
+      <!-- Where the electronic invoice arrives, after where the customer is: the two belong to the
+           invoice, not to the identity. -->
+      <label><span data-t="f_codiceDestinatario"></span><input name="codiceDestinatario" maxlength="7"></label>
+      <label><span data-t="f_pec"></span><input name="pec" type="email" autocomplete="email"></label>
+      <!-- A chi non lo sa: sono i due modi in cui la fattura elettronica arriva al cliente, e ne
+           basta uno. Senza questa riga i due campi sembrano burocrazia da riempire tutta. -->
+      <p class="note wide" data-t="partyDeliveryNote"></p>
 
       <!-- Quello che questo cliente porta nei suoi documenti: l'aliquota sulle righe nuove e il conto
            su cui paga. Vuoti, valgono quelli dell'azienda — il suggerimento nel campo lo dice.
@@ -1678,10 +1750,10 @@
     <div class="form">
       <label><span data-t="f_etichetta"></span><input name="etichetta" autocomplete="off"></label>
       <label><span data-t="f_istituto"></span><input name="istituto" autocomplete="off"></label>
+      <label><span data-t="f_filiale"></span><input name="filiale" autocomplete="off"></label>
       <label class="wide"><span data-t="f_iban"></span><input name="iban" class="iban" autocomplete="off" spellcheck="false"></label>
       <p class="note wide bank-codes" id="bankCodes"></p>
       <label><span data-t="f_bic"></span><input name="bic" autocomplete="off" spellcheck="false" maxlength="14"></label>
-      <label><span data-t="f_filiale"></span><input name="filiale" autocomplete="off"></label>
       <label class="wide"><span data-t="f_noteConto"></span><input name="note" autocomplete="off"></label>
       <label class="check wide"><input type="checkbox" name="predefinito"><span data-t="contiDefaultCheck"></span></label>
     </div>
@@ -1702,19 +1774,19 @@
   <form method="dialog" id="meetingForm">
     <h2 id="meetingDialogTitle"></h2>
     <div class="form">
-      <label class="wide"><span data-t="docsParty"></span>
+      <label class="wide required"><span data-t="f_cliente"></span>
         <select name="partyId" required></select>
         <button type="button" class="link-button" id="meetingPartyNew" data-t="partiesNew"></button>
       </label>
+      <label class="wide required"><span data-t="meetingSubjectField"></span><textarea name="testo" rows="2"></textarea></label>
       <label class="narrow"><span data-t="f_data"></span><input type="date" name="data" required></label>
-      <label class="narrow"><span data-t="meetingTime"></span><input type="time" name="ora"></label>
-      <label><span data-t="meetingPlace"></span><input name="luogo" autocomplete="off"></label>
+      <label class="narrow"><span data-t="meetingTimeField"></span><input type="time" name="ora"></label>
+      <label><span data-t="meetingPlaceField"></span><input name="luogo" autocomplete="off"></label>
       <fieldset class="wide meeting-people">
-        <legend data-t="meetingPeople"></legend>
+        <legend data-t="meetingPeopleField"></legend>
         <div class="meeting-people-list" id="meetingPeople"></div>
         <p class="note" id="meetingPeopleEmpty" data-t="meetingPeopleEmpty" hidden></p>
       </fieldset>
-      <label class="wide required"><span data-t="meetingSubject"></span><textarea name="testo" rows="2"></textarea></label>
       <label class="wide"><span data-t="meetingOutcome"></span><textarea name="esito" rows="3"></textarea></label>
     </div>
     <ul class="sheet-problems" id="meetingProblems" hidden></ul>
@@ -1831,17 +1903,18 @@
   <form method="dialog" id="planForm">
     <h2 id="planDialogTitle"></h2>
     <div class="form">
-      <label class="wide"><span data-t="f_descrizione"></span><input name="descrizione" autocomplete="off" required></label>
+      <!-- Who first, as on every sheet; then the line, the document, the calendar. -->
       <label class="required"><span data-t="f_cliente"></span>
         <select name="partyId" required></select>
         <button type="button" class="link-button" id="planPartyNew" data-t="partiesNew"></button>
       </label>
+      <label class="wide"><span data-t="f_descrizione"></span><input name="descrizione" autocomplete="off" required></label>
       <label class="narrow"><span data-t="f_quantita"></span><input name="quantita" inputmode="decimal"></label>
       <label class="narrow"><span data-t="f_prezzoUnitario"></span><input name="prezzoUnitario" inputmode="decimal" required></label>
       <label class="narrow"><span data-t="f_aliquota"></span><input name="aliquota" inputmode="decimal"></label>
+      <label class="wide"><span data-t="f_causale"></span><input name="causale" autocomplete="off"></label>
       <label class="narrow"><span data-t="f_categoria"></span><input name="categoria" list="planCategories" autocomplete="off" maxlength="40"></label>
       <datalist id="planCategories"></datalist>
-      <label class="wide"><span data-t="f_causale"></span><input name="causale" autocomplete="off"></label>
       <label class="narrow"><span data-t="f_cadenza"></span>
         <select name="cadenza">
           <option value="mensile" data-t="cadMensile"></option>
@@ -1850,9 +1923,9 @@
         </select>
       </label>
       <label class="narrow"><span data-t="f_giorno"></span><input name="giorno" type="number" min="1" max="31" inputmode="numeric"></label>
-      <label class="narrow"><span data-t="f_giorniScadenza"></span><input name="giorniScadenza" type="number" min="0" max="365" inputmode="numeric"></label>
       <label class="narrow"><span data-t="f_da"></span><input name="da" type="month" required></label>
       <label class="narrow"><span data-t="f_a"></span><input name="a" type="month"></label>
+      <label class="narrow"><span data-t="f_giorniScadenza"></span><input name="giorniScadenza" type="number" min="0" max="365" inputmode="numeric"></label>
       <p class="note wide" data-t="plansHint"></p>
     </div>
     <ul class="sheet-problems" id="planProblems" hidden></ul>
@@ -1869,11 +1942,11 @@
   <form method="dialog" id="recurringForm">
     <h2 id="recurringDialogTitle"></h2>
     <div class="form">
-      <label class="wide"><span data-t="f_descrizione"></span><input name="descrizione" autocomplete="off" required></label>
       <label class="required"><span data-t="f_fornitore"></span>
         <select name="partyId" required></select>
         <button type="button" class="link-button" id="recurringPartyNew" data-t="costPartyNew"></button>
       </label>
+      <label class="wide"><span data-t="f_descrizione"></span><input name="descrizione" autocomplete="off" required></label>
       <label class="narrow"><span data-t="f_categoria"></span><input name="categoria" list="recurringCategories" autocomplete="off"></label>
       <datalist id="recurringCategories"></datalist>
       <label class="narrow"><span data-t="f_imponibile"></span><input name="imponibile" inputmode="decimal" required></label>

@@ -25,12 +25,14 @@ restano sul computer di chi la usa.
   Italia, San Marino ed estero, e una copia di cortesia su carta intestata da stampare o salvare in
   PDF.
 - **Situazione** — fatturato dell'anno e confronto con il precedente, crediti da incassare e da
-  quanto tempo, lavoro svolto e non ancora fatturato, preventivi in attesa, bozze.
+  quanto tempo, lavoro svolto e non ancora fatturato, incontri della settimana, preventivi in attesa,
+  bozze.
 - **Scadenzario e incassi** — le rate di ogni documento, quelle scadute, gli incassi registrati con
-  la ricevuta del bonifico allegata; promemoria esportabili nel calendario.
+  la ricevuta del bonifico allegata; promemoria di scadenze e incontri, anche nel calendario.
 - **Anagrafiche** — tre voci: clienti e fornitori, con una scheda per cliente (persone di
   riferimento, diario dei contatti, fatturato e documenti); listino; banche, cioè i conti correnti
-  dell'azienda con banca, BIC e il controllo delle cifre dell'IBAN.
+  dell'azienda con banca, BIC e il controllo delle cifre dell'IBAN, ognuno con i suoi movimenti.
+  Banca, ABI, CAB e BIC entrano nel file FatturaPA accanto all'IBAN.
 - **CRM** — gli incontri con tutti i clienti: in programma, da annotare, conclusi, con ora, luogo,
   persone ed esito, e il file `.ics` per il calendario.
 - **Progetti** — fasi con importi e scadenze, pagine di appunti, documenti collegati; nello stesso
@@ -56,7 +58,9 @@ restano sul computer di chi la usa.
 - Con una cartella collegata l'app vi scrive l'archivio a ogni modifica e ne tiene una copia al
   giorno; la Situazione dice sempre se la copia è al sicuro. Le immagini dei progetti e le ricevute
   dei pagamenti stanno accanto al testo, in `assets/` e `ricevute/`. Senza cartella, l'archivio si
-  esporta a mano, e porta il nome delle ricevute ma non i file.
+  esporta a mano: «Esporta tutto» scrive il JSON, che porta il nome delle ricevute ma non i file;
+  «Esporta tutto, con ricevute e immagini» scrive uno zip con tutto, nella stessa forma della
+  cartella. Tutti e due si reimportano.
 - Gli importi non passano mai da numeri in virgola mobile: l'aritmetica è decimale esatta, con
   l'ordine di arrotondamento del tracciato ministeriale.
 - Nessuna analitica e nessuna telemetria.

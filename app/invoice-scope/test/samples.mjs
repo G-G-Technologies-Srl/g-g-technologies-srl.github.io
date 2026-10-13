@@ -282,6 +282,21 @@ const CASES = [
       pagamento: null,
     },
   },
+  {
+    // The bank beside the IBAN: name, ABI, CAB and BIC, as a draft takes them from the company's
+    // accounts. The schema wants IstitutoFinanziario before the IBAN and the three codes after it,
+    // and this sample is what puts that order in front of the real XSD.
+    name: "14-dati-della-banca",
+    doc: {
+      ...BASE, numero: "2026/000014",
+      righe: [{ descrizione: "Manutenzione annuale", quantita: "1", prezzoUnitario: "500.00", aliquota: "22" }],
+      pagamento: {
+        condizioni: "TP02", modalita: "MP05", iban: "IT60X0542811101000000123456",
+        istituto: "Banca di Esempio S.p.A.", abi: "05428", cab: "11101", bic: "BPMOIT22XXX",
+        rate: [{ scadenza: "2026-10-03" }],
+      },
+    },
+  },
 ];
 
 // -----------------------------------------------------------------------------------------------------------------
