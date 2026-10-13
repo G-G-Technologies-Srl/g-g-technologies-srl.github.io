@@ -19,13 +19,14 @@
 // In fondo c'è anche quello che legge e scrive il deposito — acquisti e pagamenti in uscita —
 // perché la schermata non debba sapere che esiste uno store `outlays`.
 
-import { list, get, put, remove, tx } from "gg/store.js";
+import { list, get, put, tx } from "gg/store.js";
 
 import { from, add, sub, cmp, sum, ZERO, toString, percent } from "./decimal.js";
 import { parseAmount, parseOptional } from "./parse.js";
 import { profileFor, completaRighe } from "./fatturapa.js";
 import { autofattura as terminiAutofattura } from "./terms.js";
 import { draft } from "./model.js";
+import { forget as forgetReceipts } from "./attachments.js";
 import { tf } from "./i18n.js";
 import { date as shownDate } from "./format.js";
 
@@ -400,9 +401,11 @@ export async function saveCost(db, fields, { company = null } = {}) {
  */
 export async function removeCost(db, id) {
   const suoi = await outlaysOf(db, id);
-  await tx(db, ["costs", "outlays"], async (scope) => {
+  // The receipts of its payments go too: they prove payments that no longer exist.
+  await tx(db, ["costs", "outlays", "attachments"], async (scope) => {
     await scope.remove("costs", id);
     for (const one of suoi) await scope.remove("outlays", one.id);
+    await forgetReceipts(scope, suoi);
   });
 }
 
@@ -429,7 +432,11 @@ export async function recordOutlay(db, cost, { importo, data, conto = null, nota
 
 /** Togli un pagamento registrato per sbaglio: si cancella, non si storna, come un incasso. */
 export async function removeOutlay(db, id) {
-  await remove(db, "outlays", id);
+  const record = await get(db, "outlays", id);
+  await tx(db, ["outlays", "attachments"], async (scope) => {
+    await scope.remove("outlays", id);
+    if (record) await forgetReceipts(scope, [record]);
+  });
 }
 
 /** Un acquisto per id, o `null`. */

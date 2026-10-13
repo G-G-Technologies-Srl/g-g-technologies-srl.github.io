@@ -29,6 +29,11 @@ export const NAME = "invoice-scope";
 /**
  * The schema's version, and the one number that must move when a store is added.
  *
+ * 7 → 8: `attachments`, the files that ride on a payment — today the receipt of a bank transfer,
+ * on money received (`payments`) as on money paid out (`outlays`). A store of its own because they
+ * are bytes: a payment that carried its PDF inside would make every read of the schedule load it.
+ * The payment keeps only `ricevuta: {id, name, type, size}`, which is what the lists draw.
+ *
  * 6 → 7: `recurringDocs`, le fatture che si ripetono — il canone, il monte ore fisso — da cui
  * nascono le bozze da emettere. Store a parte da `recurring` e non un campo dentro: una fattura
  * ricorrente porta cose che un costo non ha (la natura, il tipo merce, i termini di pagamento del
@@ -48,7 +53,7 @@ export const NAME = "invoice-scope";
  * opens once a quarter that is not the previous one. Nothing is migrated: a customer without a diary
  * simply has none, which is the state every existing one starts from.
  */
-export const VERSION = 7;
+export const VERSION = 8;
 
 /**
  * The stores, as `gg/store.js` describes them.
@@ -96,12 +101,15 @@ export const STORES = {
   // persona decide di emettere, e un'app che numerasse da sola scriverebbe numeri su fatture che
   // nessuno ha ancora guardato. Schema 6 → 7: solo questo store.
   recurringDocs: { keyPath: "id", indexes: { party: "partyId" } },
+  // The receipts of the payments, as bytes. `ownerId` is the payment or the outlay, `store` says
+  // which of the two. Schema 7 → 8: only this store.
+  attachments: { keyPath: "id", indexes: { owner: "ownerId" } },
   counters: { keyPath: "key" },
   meta: { keyPath: "key" },
 };
 
 /**
- * The stores an export carries: every one but `meta` and `assets`.
+ * The stores an export carries: every one but `meta`, `assets` and `attachments`.
  *
  * `meta` is this browser's own state — today the handle of the backup folder — and it is not
  * data: a directory handle serialised to JSON is `{}`, and restoring `{}` into another machine's
@@ -113,9 +121,15 @@ export const STORES = {
  * lo riscriverebbe intero a ogni modifica. Le immagini viaggiano nel pacchetto del progetto, che è
  * uno zip ed è fatto per portarle — la stessa divisione che fa Plan Scope. Va detto dove conta:
  * l'archivio salva il testo, il pacchetto salva anche le figure.
+ *
+ * **`attachments` stays out for the same reason.** The receipts are PDFs and photos: the backup
+ * folder writes them beside the text, in `ricevute/`, and the payment in the archive keeps their
+ * name, so a hand-made export says which receipt existed even where it cannot carry it.
  */
+export const BINARY = ["assets", "attachments"];
+
 export const EXPORTED = Object.keys(STORES)
-  .filter((store) => store !== "meta" && store !== "assets");
+  .filter((store) => store !== "meta" && !BINARY.includes(store));
 
 /**
  * The one index that has to refuse duplicates, and the fields it is built from.

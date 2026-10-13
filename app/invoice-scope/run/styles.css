@@ -103,6 +103,29 @@
 .navbar a.here svg, .navbar a:hover svg { opacity: 1; }
 .navbar a.here svg { color: var(--accent-text); }
 
+/* The sub-entries of Anagrafiche: under their parent, indented to where its text starts, smaller and
+   without icons, on a thin rule that says whose they are. The parent keeps its filament for the
+   section; the sub-entry shows which register is open with the text colour and the background. */
+.nav-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0 0 4px 21px;
+  padding-left: 8px;
+  border-left: 1px solid var(--border);
+}
+.navbar .nav-sub a {
+  padding: 6px 10px;
+  font-size: 0.86rem;
+  border-left: none;
+  border-radius: var(--radius);
+}
+.navbar .nav-sub a.here {
+  border-left: none;
+  border-radius: var(--radius);
+  color: var(--accent-text);
+}
+
 /* La stessa icona accanto al titolo della schermata, in un cerchio: fondo nell'accento tenue,
    segno nell'accento pieno. Dice a colpo d'occhio dove si è, prima ancora di leggere. */
 .titled { display: flex; align-items: center; gap: 12px; }
@@ -159,6 +182,14 @@
     border-radius: 0;
     background: none;
   }
+
+  /* In the strip the sub-entries join the row only inside Anagrafiche, right after their parent:
+     three more tabs on every screen would push the rest of the menu off the edge. */
+  .nav-sub { display: none; }
+  .navbar.in-parties .nav-sub { display: contents; }
+  .navbar .nav-sub a { font-size: 0.86rem; padding: 9px 10px; border-radius: 0; }
+  .navbar .nav-sub a.here { border-bottom: 2px solid var(--accent); border-radius: 0; }
+  .navbar.in-parties #navParties { border-bottom-color: transparent; color: var(--faint); }
 }
 
 /* ----- the page grows with its content ----- */
@@ -1443,3 +1474,54 @@ dialog li::before {
 .ddt-rows input[type="date"] { max-width: 180px; }
 .ddt-rows.single .col-ddt-righe { display: none; }
 .ddt-rows .ddt-app { color: var(--muted); font-size: 0.85rem; margin-left: 0.4rem; }
+
+/* ----- registers, receipts, meetings ----- */
+
+/* A small mark beside a name — «Predefinito» on the default account. Accent ground, as the icon
+   circle beside the titles, so it reads as the app's own colour and not as a warning. */
+.badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 0.75rem;
+  vertical-align: middle;
+  margin-left: 8px;
+}
+
+.mono { font-family: var(--font-mono); font-size: 0.9rem; }
+.form input.iban { font-family: var(--font-mono); }
+.form label.check { flex-direction: row; align-items: center; }
+.form label.check span { color: var(--text); font-size: 0.92rem; }
+.bank-codes { min-height: 1.2em; margin: -6px 0 0; font-family: var(--font-mono); font-size: 0.85rem; }
+
+/* The receipt in the payment sheet: a label like the fields', then our button and the chosen name. */
+.receipt-row { flex: 1 1 100%; display: flex; flex-direction: column; gap: 6px; }
+.receipt-label { color: var(--faint); font-size: 0.82rem; }
+.receipt-pick { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-height: 34px; }
+.receipt-pick input[type="file"][hidden] { display: none; }
+.receipt-row .note { margin: 0; font-size: 0.85rem; }
+
+/* The receipt in a row of payments: the name as a link, cut where the cell ends. */
+.receipt-cell { white-space: nowrap; }
+.receipt-link {
+  display: inline-block;
+  max-width: 18ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  margin: 0 4px 0 0;
+}
+
+/* The customer's people in the meeting sheet: one box per person, wrapping. */
+.meeting-people { flex: 1 1 100%; border: none; padding: 0; margin: 0; min-width: 0; }
+.meeting-people legend { color: var(--faint); font-size: 0.82rem; padding: 0; margin-bottom: 6px; }
+.meeting-people-list { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.meeting-people-list .check { margin: 4px 0; }
+.meeting-people .note { margin: 0; }
+.act-outcome { color: var(--faint); }
+
+/* One filter alone does not need the whole width. */
+#crmFilters label { flex: 0 1 320px; }

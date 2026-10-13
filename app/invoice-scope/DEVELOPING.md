@@ -68,7 +68,7 @@ Si provano sotto Node, e sono il posto giusto per una regola.
 
 ### Il deposito
 
-`db.js` è l'unico che conosce la forma dello schema: quindici store, e **ogni versione dichiara lo
+`db.js` è l'unico che conosce la forma dello schema: diciassette store (schema 8), e **ogni versione dichiara lo
 schema intero**, mai la differenza dalla precedente. L'indice unico `numero_unico` su `docs` si crea
 qui, sulla transazione grezza, perché `gg/store.js` crea solo indici non unici.
 
@@ -85,7 +85,10 @@ c'è il tasto «indietro» del browser, e la via del ritorno deve stare nell'app
 | `home.js` | la Situazione: i quattro numeri, le scadenze, il fatturato per mese, progetti e preventivi in attesa |
 | `doc.js` | il documento, le sue righe, il riepilogo IVA sempre in vista |
 | `due.js` · `payments.js` · `states.js` | scadenzario, incassi, il controllo che cambia stato |
-| `parties.js` · `customer.js` · `crm.js` | clienti e listino, la scheda cliente, le persone e il diario |
+| `parties.js` · `customer.js` · `crm.js` | clienti (`render`) e listino (`renderItems`), la scheda cliente, le persone e il diario |
+| `banks.js` | Anagrafiche › Banche: i conti dell'azienda, che restano `conti` nel record `company` — sei file li leggono da lì |
+| `meetings.js` | il CRM: gli incontri di tutti i clienti, che sono voci del diario con `ora`, `luogo`, `persone`, `esito`; i gruppi li decide `agenda` in `crm.js` |
+| `attachments.js` | la ricevuta di un pagamento: i byte nello store `attachments`, l'etichetta `ricevuta` sul pagamento. Chi cancella un pagamento chiama `forget` nella stessa transazione |
 | `projects.js` · `project.js` | i progetti e le fasi, con il modello condiviso di Plan Scope |
 | `purchases.js` · `costs.js` · `expected.js` | gli acquisti, i loro conti, gli attesi |
 | `importing.js` | l'importazione da un altro programma: `plan` legge e decide, `apply` scrive |
@@ -202,7 +205,8 @@ node $I app/invoice-scope/test/costs.mjs     node $I app/invoice-scope/test/purc
 node $I app/invoice-scope/test/recurring.mjs node $I app/invoice-scope/test/problems.mjs
 node $I app/invoice-scope/test/address.mjs   node $I app/invoice-scope/test/restore.mjs
 node $I app/invoice-scope/test/safety.mjs    node $I app/invoice-scope/test/archive.mjs
-node $I app/invoice-scope/test/timeline.mjs
+node $I app/invoice-scope/test/timeline.mjs    node $I app/invoice-scope/test/attachments.mjs
+node $I app/invoice-scope/test/banks.mjs       node $I app/invoice-scope/test/meetings.mjs
 ```
 
 L'elenco aggiornato, con la riga che dice cosa prova ciascuno, sta nel `CLAUDE.md` alla radice del

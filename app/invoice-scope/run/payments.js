@@ -13,6 +13,11 @@
 // **Il file esiste perché i chiamanti sono due.** Lo scadenzario registra un incasso guardando le
 // scadenze, la scheda del documento lo registra guardando la fattura, e sono lo stesso gesto: due
 // copie divergerebbero il giorno in cui a una si aggiunge un campo.
+//
+// **The receipt of the transfer is chosen in the same sheet**, and attached once the payment
+// exists: the attachment needs the payment's id, and a receipt written before its payment would be a
+// file without an owner if the save failed in between. The rules live in `attachments.js`; here are
+// the button, the name of the chosen file, and the cell that every list of payments draws.
 
 import { get } from "gg/store.js";
 
@@ -23,6 +28,7 @@ import { ask, tell } from "./ask.js";
 import { from, cmp, sub, toString, ZERO } from "./decimal.js";
 import { kind, numero as shownNumber } from "./kinds.js";
 import { recordPayment, removePayment, paymentsOf, received, owedOn } from "./schedule.js";
+import { RECEIPT_ACCEPT, attach, blobOf, detach, refusal } from "./attachments.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
@@ -54,6 +60,58 @@ function _close(dialog) {
   } catch (ignored) {
     dialog.removeAttribute("open");
   }
+}
+
+/** The file chosen in the sheet, until the payment is saved. */
+let ricevutaScelta = null;
+
+/** Who is waiting for the file picker opened from a row: the record, and what to redraw. */
+let attesa = null;
+
+/** The chosen file under the button, or nothing; and the button says which of the two it does. */
+function _drawChosen() {
+  el("payReceiptName").textContent = ricevutaScelta ? ricevutaScelta.name : "";
+  el("payReceiptClear").hidden = !ricevutaScelta;
+  el("payReceiptClear").setAttribute("aria-label", t("receiptClear"));
+  el("payReceiptPick").textContent = t(ricevutaScelta ? "receiptChange" : "receiptAttach");
+}
+
+/** A refusal said under the sheet, in the same list as a wrong amount. */
+function _sheetProblem(key) {
+  const lista = el("payProblems");
+  lista.hidden = false;
+  lista.textContent = "";
+  const riga = document.createElement("li");
+  riga.textContent = t(key);
+  lista.append(riga);
+}
+
+/**
+ * Open the receipt in a tab of its own, or save it where the browser cannot show it.
+ *
+ * A PDF and a picture open in a tab, which is where somebody looks at a receipt; a HEIC photo from
+ * an iPhone does not open in most browsers, so it is downloaded under its own name instead.
+ */
+async function _show(db, record) {
+  const blob = await blobOf(db, record);
+  if (!blob) {
+    await tell(t("receiptMissing"));
+    return;
+  }
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  if (/heic|heif/i.test(record.ricevuta.type || record.ricevuta.name || "")) {
+    link.download = record.ricevuta.name || "ricevuta";
+  } else {
+    link.target = "_blank";
+    link.rel = "noopener";
+  }
+  document.body.append(link);
+  link.click();
+  link.remove();
+  // Revoked later and not now: the tab that opens reads the address after this function returns.
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
 /** I conti dell'azienda, per il menù. Vuoto se non ne è stato registrato nessuno. */
@@ -126,6 +184,8 @@ export async function openMoney(db, { titolo, residuo = ZERO, proposta = ZERO, o
   el("payDialogDoc").textContent = titolo;
   el("payProblems").hidden = true;
   el("payProblems").textContent = "";
+  ricevutaScelta = null;
+  _drawChosen();
 
   _open(el("payDialog"));
   form.elements.importo.focus();
@@ -162,12 +222,24 @@ export async function openMoney(db, { titolo, residuo = ZERO, proposta = ZERO, o
       }
 
       const conto = conti.find((uno) => uno.id === form.elements.conto.value) || null;
-      await save({
+      const record = await save({
         importo: toString(importo, 2),
         data: form.elements.data.value || _oggi(),
         conto,
         nota: form.elements.nota.value.trim() || null,
       });
+      // **The payment first, then its receipt.** If the file fails — the disk is full, the browser
+      // refuses — the payment is recorded anyway, which is the part that changes the money, and the
+      // receipt can be attached from the row afterwards. Saying so beats losing both.
+      let ricevutaPersa = false;
+      if (ricevutaScelta && record) {
+        try {
+          await attach(db, record, ricevutaScelta);
+        } catch (ignored) {
+          ricevutaPersa = true;
+        }
+      }
+      ricevutaScelta = null;
 
       chiudi(true);
       // **Prima si ridisegna, poi si parla.** La lista si aggiornava solo dopo che qualcuno aveva
@@ -175,6 +247,7 @@ export async function openMoney(db, { titolo, residuo = ZERO, proposta = ZERO, o
       // aperta, con l'importo di prima, e la parola «registrato» sopra. E il dialogo nel caso normale
       // non serve: la riga che cambia sotto gli occhi *è* la conferma.
       if (onDone) await onDone();
+      if (ricevutaPersa) await tell(t("receiptNotSaved"));
       // **Il di più si registra e si dice, non si rifiuta.** Un cliente che arrotonda per eccesso,
       // o che paga due fatture con un bonifico solo, esiste; rifiutare l'importo lascerebbe chi
       // registra davanti a una casella che non accetta quello che è successo davvero.
@@ -219,6 +292,13 @@ export async function render(db, doc, { onChange = null } = {}) {
     quanto.className = "right";
     quanto.textContent = _money(from(incasso.importo || "0"));
 
+    const prova = receiptCell(db, incasso, {
+      onChange: async () => {
+        await render(db, doc, { onChange });
+        if (onChange) await onChange();
+      },
+    });
+
     const azioni = document.createElement("td");
     azioni.className = "right";
     const togli = document.createElement("button");
@@ -234,7 +314,7 @@ export async function render(db, doc, { onChange = null } = {}) {
     });
     azioni.append(togli);
 
-    tr.append(quando, dove, nota, quanto, azioni);
+    tr.append(quando, dove, nota, prova, quanto, azioni);
     body.append(tr);
   }
 
@@ -243,4 +323,92 @@ export async function render(db, doc, { onChange = null } = {}) {
   el("incassiTotals").textContent = incassi.length
     ? `${t("incassiTotal")}: ${_money(incassato)} · ${t("dueLeft")}: ${_money(residuo)}`
     : "";
+}
+
+/**
+ * The receipt of a payment, as a table cell: a link to open it and a cross to take it off, or a
+ * button to attach one.
+ *
+ * Every list of payments draws this same cell — the incassi on a document, the payments of a
+ * purchase — so a receipt is reached the same way wherever its payment is shown.
+ */
+export function receiptCell(db, record, { onChange = null } = {}) {
+  const td = document.createElement("td");
+  td.className = "receipt-cell";
+  if (record.ricevuta) {
+    const apri = document.createElement("button");
+    apri.type = "button";
+    apri.className = "link-button receipt-link";
+    apri.textContent = record.ricevuta.name || t("receiptLabel");
+    apri.title = t("receiptOpen");
+    apri.addEventListener("click", () => _show(db, record));
+    const togli = document.createElement("button");
+    togli.type = "button";
+    togli.className = "ghost small";
+    togli.textContent = "×";
+    togli.setAttribute("aria-label", `${t("receiptRemove")} — ${record.ricevuta.name || ""}`);
+    togli.addEventListener("click", async () => {
+      if (!(await ask(t("receiptRemoveAsk"), { okLabel: t("del"), danger: true }))) return;
+      await detach(db, record);
+      if (onChange) await onChange();
+    });
+    td.append(apri, togli);
+    return td;
+  }
+  const allega = document.createElement("button");
+  allega.type = "button";
+  allega.className = "ghost small";
+  allega.textContent = t("receiptAttachShort");
+  allega.setAttribute("aria-label", t("receiptAttach"));
+  allega.addEventListener("click", () => {
+    attesa = { db, record, onChange };
+    el("receiptPick").value = "";
+    el("receiptPick").click();
+  });
+  td.append(allega);
+  return td;
+}
+
+/** Wire the sheet's file button and the picker the rows share. Called once, at start-up. */
+export function connect() {
+  el("payReceiptFile").accept = RECEIPT_ACCEPT;
+  el("receiptPick").accept = RECEIPT_ACCEPT;
+  el("payReceiptPick").addEventListener("click", () => {
+    el("payReceiptFile").value = "";
+    el("payReceiptFile").click();
+  });
+  el("payReceiptFile").addEventListener("change", () => {
+    const file = el("payReceiptFile").files && el("payReceiptFile").files[0];
+    if (!file) return;
+    const why = refusal(file);
+    if (why) {
+      _sheetProblem(why);
+      return;
+    }
+    el("payProblems").hidden = true;
+    ricevutaScelta = file;
+    _drawChosen();
+  });
+  el("payReceiptClear").addEventListener("click", () => {
+    ricevutaScelta = null;
+    _drawChosen();
+  });
+  el("receiptPick").addEventListener("change", async () => {
+    const file = el("receiptPick").files && el("receiptPick").files[0];
+    const chi = attesa;
+    attesa = null;
+    if (!file || !chi) return;
+    const why = refusal(file);
+    if (why) {
+      await tell(t(why));
+      return;
+    }
+    try {
+      await attach(chi.db, chi.record, file);
+    } catch (ignored) {
+      await tell(t("receiptNotSaved"));
+      return;
+    }
+    if (chi.onChange) await chi.onChange();
+  });
 }

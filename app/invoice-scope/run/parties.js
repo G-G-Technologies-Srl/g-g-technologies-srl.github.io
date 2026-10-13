@@ -1,6 +1,7 @@
 // Copyright 2026 G&G Technologies S.r.l. — SPDX-License-Identifier: PolyForm-Shield-1.0.0
 
-// Customers and the price list: the two things you type once and use every time.
+// Customers and the price list: the two things you type once and use every time. Two screens under
+// Anagrafiche — `render` and `renderItems` — with the banks as the third, in `banks.js`.
 //
 // **A list, and a sheet to fill in.** The first version put a nine-field form permanently under the
 // list and had no way to edit anything: you could add a customer and delete one, and a wrong
@@ -392,7 +393,7 @@ async function _saveItem() {
   await saveItem(database, { ...flat, id: editing?.id });
   _close(el("itemDialog"));
   editing = null;
-  await render(database, onChange);
+  await renderItems(database, onChange);
   if (onChange) onChange();
 }
 
@@ -560,13 +561,19 @@ async function _drawDuplicati(db, people) {
   }
 }
 
-export async function render(db, afterChange = null) {
-  database = db;
-  onChange = afterChange;
+/** What the two sheets propose from the company: the usual rate, nature and TM, and the accounts. */
+async function _companyDefaults(db) {
   const company = await get(db, "company", "company");
   aliquotaNuova = (company && company.aliquotaPredefinita) || "22";
   predefiniti = { natura: (company || {}).naturaPredefinita || "", tm: (company || {}).tmPredefinito || "" };
   conti = ((company || {}).conti || []).filter((conto) => conto.iban);
+}
+
+/** Customers and suppliers: the first of the three registers under Anagrafiche. */
+export async function render(db, afterChange = null) {
+  database = db;
+  onChange = afterChange;
+  await _companyDefaults(db);
 
   const people = await parties(db);
   await _drawDuplicati(db, people);
@@ -603,6 +610,16 @@ export async function render(db, afterChange = null) {
     ));
   }
 
+}
+
+/**
+ * The price list, on its own screen since Anagrafiche became three. Drawn apart from the customers
+ * so that opening one register does not read the other.
+ */
+export async function renderItems(db, afterChange = null) {
+  database = db;
+  onChange = afterChange;
+  await _companyDefaults(db);
   const listino = await items(db);
   el("itemsEmpty").hidden = listino.length > 0;
   el("itemsTable").hidden = listino.length === 0;
@@ -624,7 +641,7 @@ export async function render(db, afterChange = null) {
         onDelete: async () => {
           if (!(await ask(t("itemDeleteAsk"), { okLabel: t("del"), danger: true }))) return;
           await remove(db, "items", item.id);
-          await render(db, onChange);
+          await renderItems(db, onChange);
           if (onChange) onChange();
         },
       },
@@ -713,7 +730,7 @@ export function connect(db, afterChange = null) {
     _close(el("itemDialog"));
     editing = null;
     await remove(database, "items", record.id);
-    await render(database, onChange);
+    await renderItems(database, onChange);
     if (onChange) onChange();
   });
 

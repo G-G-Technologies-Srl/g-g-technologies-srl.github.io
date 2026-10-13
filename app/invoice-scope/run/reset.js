@@ -19,6 +19,8 @@
 
 import { count, clear } from "gg/store.js";
 
+import { sweep as sweepReceipts } from "./attachments.js";
+
 /** I gruppi, con gli store che ognuno svuota. L'ordine è quello della schermata. */
 export const GROUPS = {
   // Le fatture ricorrenti stanno con i documenti, come i costi ricorrenti stanno con gli acquisti:
@@ -29,7 +31,7 @@ export const GROUPS = {
   parties: ["parties", "items", "activities"],
   projects: ["projects", "pages", "tasks", "assets"],
   all: ["docs", "payments", "counters", "recurringDocs", "costs", "outlays", "recurring", "parties",
-    "items", "activities", "projects", "pages", "tasks", "assets", "company"],
+    "items", "activities", "projects", "pages", "tasks", "assets", "attachments", "company"],
 };
 
 /** Gli store che finiscono nel riepilogo della domanda: gli altri sono di corredo. */
@@ -56,4 +58,7 @@ export async function wipe(db, group) {
   const stores = GROUPS[group];
   if (!stores) throw new Error(`gruppo sconosciuto: ${group}`);
   for (const store of stores) await clear(db, store);
+  // The receipts belong to payments of both groups, so they cannot simply be cleared with one of
+  // them: what no payment names any more goes, the rest stays.
+  if (stores.includes("payments") || stores.includes("outlays")) await sweepReceipts(db);
 }

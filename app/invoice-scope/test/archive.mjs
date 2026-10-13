@@ -104,4 +104,16 @@ prova("i documenti aprono l'elenco, il resto segue nell'ordine in cui si pensa",
   assert.deepEqual(esito.righe.map((r) => r.store), ["docs", "parties", "activities"]);
 });
 
+await prova("le ricevute dei pagamenti si contano come le immagini: accanto al testo", async () => {
+  const testo = JSON.stringify({
+    app: "invoice-scope", exported: "2026-10-13T08:00:00.000Z", schema: 8,
+    data: { payments: [{ id: "p1" }] },
+    attachments: [{ id: "r1", path: "ricevute/r1.pdf" }],
+  });
+  const letto = inventory(testo);
+  assert.equal(letto.counts.attachments, 1);
+  assert.equal(compare(letto.counts, { payments: 1, attachments: 1 }).same, true);
+  assert.equal(compare(letto.counts, { payments: 1, attachments: 0 }).same, false);
+});
+
 console.log(`archive: ${passed} prove passate`);

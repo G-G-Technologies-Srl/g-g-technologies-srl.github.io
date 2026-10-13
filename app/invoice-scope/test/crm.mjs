@@ -22,6 +22,7 @@ import { campiMancanti, partyRecord, saveParty } from "../run/parties.js";
 import {
   ACTIVITY_KINDS, ACTIVITY_MAX, activitiesOf, activities, contactRecord, contactsOf,
   lastContactByParty, removeActivity, removeParty, saveActivity, withContact, withoutContact,
+  MEETING, activityRecord, agenda, meetingEvent, meetingsOf, peopleOf,
 } from "../run/crm.js";
 import { collect, restore } from "gg/io.js";
 import { get, list } from "gg/store.js";
@@ -284,6 +285,78 @@ await prova("quello che manca sempre resta quello di prima", async () => {
   assert.deepEqual(campiMancanti(tedesco, { paese: "SM" }), []);
   // E senza azienda in anagrafica — la prima apertura dell'app — la domanda non esplode.
   assert.deepEqual(campiMancanti(tedesco), []);
+});
+
+// -----------------------------------------------------------------------------------------------------------------
+//  g l i   i n c o n t r i
+// -----------------------------------------------------------------------------------------------------------------
+
+await prova("un incontro porta ora, luogo, persone ed esito; una nota no", async () => {
+  const incontro = activityRecord({ partyId: "p1", tipo: MEETING, data: "2026-10-20", ora: "10:30",
+    luogo: "Sede del cliente", persone: ["c1", "c2", "c1", ""], testo: "Offerta", esito: "" });
+  assert.equal(incontro.ora, "10:30");
+  assert.equal(incontro.luogo, "Sede del cliente");
+  assert.deepEqual(incontro.persone, ["c1", "c2"], "senza doppioni e senza vuoti");
+  assert.equal(incontro.esito, "");
+  const nota = activityRecord({ partyId: "p1", tipo: "nota", data: "2026-10-20", ora: "10:30", testo: "x" });
+  assert.equal("ora" in nota, false, "una nota non ha un'ora");
+  // «10.30» ordinerebbe dopo ogni «10:30» mai scritto: un'ora che non è un'ora non entra.
+  assert.equal(activityRecord({ partyId: "p1", tipo: MEETING, ora: "10.30", testo: "x" }).ora, "");
+});
+
+await prova("i tre gruppi li decide l'esito, non l'orologio", async () => {
+  const oggi = "2026-10-13";
+  const voci = [
+    { id: "domani", tipo: MEETING, data: "2026-10-14", ora: "09:00" },
+    { id: "oggi-sera", tipo: MEETING, data: oggi, ora: "17:00" },
+    { id: "oggi-senza-ora", tipo: MEETING, data: oggi, ora: "" },
+    { id: "oggi-mattina", tipo: MEETING, data: oggi, ora: "09:00" },
+    { id: "stamattina-annotato", tipo: MEETING, data: oggi, ora: "08:00", esito: "Firmato" },
+    { id: "ieri", tipo: MEETING, data: "2026-10-12" },
+    { id: "settimana-scorsa", tipo: MEETING, data: "2026-10-06" },
+    { id: "mese-scorso", tipo: MEETING, data: "2026-09-10", esito: "Rimandato" },
+    { id: "telefonata", tipo: "chiamata", data: "2026-10-14" },
+  ];
+  const gruppi = agenda(voci, { oggi });
+  assert.deepEqual(gruppi.upcoming.map((m) => m.id), ["oggi-mattina", "oggi-sera", "oggi-senza-ora", "domani"]);
+  assert.deepEqual(gruppi.toWrite.map((m) => m.id), ["ieri", "settimana-scorsa"], "il più recente in cima");
+  assert.deepEqual(gruppi.done.map((m) => m.id), ["stamattina-annotato", "mese-scorso"]);
+  assert.equal(meetingsOf(voci).length, 8, "la telefonata non è un incontro");
+});
+
+await prova("le persone si leggono dal cliente; chi non c'è più semplicemente non si nomina", async () => {
+  const cliente = { contatti: [{ id: "c1", nome: "Chiara Rossi" }, { id: "c2", nome: "Ivan Baldi" }] };
+  assert.deepEqual(peopleOf({ persone: ["c2", "tolto", "c1"] }, cliente), ["Ivan Baldi", "Chiara Rossi"]);
+  assert.deepEqual(peopleOf({}, cliente), []);
+});
+
+await prova("l'evento per il calendario sta alla sua ora, o occupa il giorno se l'ora non c'è", async () => {
+  const conOra = meetingEvent({ id: "m1", data: "2026-10-20", ora: "15:00", luogo: "Rimini" }, { title: "Incontro" });
+  assert.deepEqual(conOra, { uid: "meeting-m1", title: "Incontro", date: "2026-10-20", time: "15:00",
+    minutes: 60, place: "Rimini", description: "" });
+  assert.equal(meetingEvent({ id: "m2", data: "2026-10-20" }, { title: "x" }).time, null);
+});
+
+await prova("salvato dal diario, un incontro torna con tutti i suoi campi", async (db) => {
+  const salvato = await saveActivity(db, { partyId: "p1", tipo: MEETING, data: "2026-10-20", ora: "11:00",
+    luogo: "Studio", persone: ["c1"], testo: "Rinnovo", esito: "Confermato" });
+  const letto = (await activitiesOf(db, "p1"))[0];
+  assert.deepEqual(
+    { ora: letto.ora, luogo: letto.luogo, persone: letto.persone, esito: letto.esito },
+    { ora: "11:00", luogo: "Studio", persone: ["c1"], esito: "Confermato" },
+  );
+  assert.equal(letto.id, salvato.id);
+});
+
+await prova("un incontro in programma non è un ultimo contatto", async () => {
+  const voci = [
+    { partyId: "p1", tipo: "chiamata", data: "2026-10-01" },
+    { partyId: "p1", tipo: MEETING, data: "2026-10-20" },
+    { partyId: "p2", tipo: MEETING, data: "2026-11-02" },
+  ];
+  const ultimo = lastContactByParty(voci, { oggi: "2026-10-13" });
+  assert.equal(ultimo.get("p1"), "2026-10-01");
+  assert.equal(ultimo.has("p2"), false, "solo incontri futuri: nessun contatto ancora");
 });
 
 console.log(`crm: ${passed} prove passate`);

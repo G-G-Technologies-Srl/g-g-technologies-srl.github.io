@@ -23,9 +23,12 @@ const { put, list } = await import("gg/store.js");
 const { saveParty, isCustomer, isSupplier } = await import("../run/parties.js");
 const { saveCost, recordOutlay, outlaysOf, cost: getCost } = await import("../run/costs.js");
 const purchases = await import("../run/purchases.js");
+const payments = await import("../run/payments.js");
 
 setLang("it");
 purchases.connect(await openDatabase());
+// The receipt's button in the payment sheet, and the picker the rows share: wired once, like the page.
+payments.connect();
 
 let passed = 0;
 async function prova(nome, fn) {
@@ -270,7 +273,7 @@ await prova("togliere un pagamento riapre l'acquisto", async (db) => {
   await popola(db);
   await purchases.render(db, "a1");
   assert.equal(dom.text("costFigOwedSub"), "Pagato");
-  const togli = dom.byId("costOutlaysBody").at(0).at(4).at(0);
+  const togli = dom.byId("costOutlaysBody").at(0).at(5).at(0);
   await dicendoSi(() => togli.fire("click"));
   assert.equal(dom.count("costOutlaysBody"), 0);
   assert.equal(leggibile(dom.text("costFigOwed")), "122,00 €");
@@ -419,6 +422,74 @@ await prova("una ricorrenza dal foglio: compare nell'elenco, e gli attesi fino a
   assert.equal((await list(db, "recurring")).length, 0);
   assert.equal(dom.byId("expectedSection").hidden, true);
   assert.ok((await list(db, "costs")).find((c) => c.numero === "H-2026-09"));
+});
+
+// -----------------------------------------------------------------------------------------------------------------
+//  l a   r i c e v u t a   d e l   b o n i f i c o
+// -----------------------------------------------------------------------------------------------------------------
+
+/** A file as the picker hands it over. */
+function pdf(name, text = "%PDF contabile") {
+  const blob = new Blob([text], { type: "application/pdf" });
+  blob.name = name;
+  return blob;
+}
+
+await prova("la ricevuta scelta nel foglio entra con il pagamento, e la riga la mostra", async (db) => {
+  await popola(db);
+  await purchases.render(db, "a2");
+  const done = dom.byId("costPay").fire("click");
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(dom.text("payReceiptPick"), "Allega la ricevuta del bonifico");
+  // The button opens the system's picker; what comes back is a "change" with a file in it.
+  await dom.byId("payReceiptPick").fire("click");
+  dom.byId("payReceiptFile").files = [pdf("contabile-bonifico.pdf")];
+  await dom.byId("payReceiptFile").fire("change");
+  assert.equal(dom.text("payReceiptName"), "contabile-bonifico.pdf");
+  assert.equal(dom.byId("payReceiptClear").hidden, false);
+  await dom.byId("paySave").onclick();
+  await done;
+
+  const [uscita] = await outlaysOf(db, "a2");
+  assert.equal(uscita.ricevuta.name, "contabile-bonifico.pdf");
+  assert.equal((await list(db, "attachments")).length, 1);
+  assert.match(dom.byId("costOutlaysBody").at(0).at(3).allText, /contabile-bonifico\.pdf/);
+});
+
+await prova("un foglio di calcolo non è una ricevuta: il foglio lo dice e non lo tiene", async (db) => {
+  await popola(db);
+  await purchases.render(db, "a2");
+  const done = dom.byId("costPay").fire("click");
+  await new Promise((r) => setTimeout(r, 0));
+  const foglio = new Blob(["x"], { type: "application/vnd.ms-excel" });
+  foglio.name = "estratto.xls";
+  dom.byId("payReceiptFile").files = [foglio];
+  await dom.byId("payReceiptFile").fire("change");
+  assert.equal(dom.byId("payProblems").hidden, false);
+  assert.match(dom.text("payProblems"), /PDF o un'immagine/);
+  assert.equal(dom.text("payReceiptName"), "");
+  await dom.byId("paySave").onclick();
+  await done;
+  assert.equal((await outlaysOf(db, "a2"))[0].ricevuta, undefined);
+});
+
+await prova("dalla riga si allega dopo, e si toglie", async (db) => {
+  await popola(db);
+  await purchases.render(db, "a1");
+  const cella = dom.byId("costOutlaysBody").at(0).at(3);
+  assert.equal(cella.allText, "Allega");
+  dom.byId("receiptPick").files = [pdf("arrivata-dopo.pdf")];
+  await cella.at(0).fire("click");
+  await dom.byId("receiptPick").fire("change");
+  const [uscita] = await outlaysOf(db, "a1");
+  assert.equal(uscita.ricevuta.name, "arrivata-dopo.pdf");
+  const dopo = dom.byId("costOutlaysBody").at(0).at(3);
+  assert.match(dopo.allText, /arrivata-dopo\.pdf/);
+
+  await dicendoSi(() => dopo.at(1).fire("click"));
+  assert.equal((await outlaysOf(db, "a1"))[0].ricevuta, undefined, "tolta la ricevuta, il pagamento resta");
+  assert.equal((await list(db, "attachments")).length, 0);
+  assert.equal(dom.byId("costOutlaysBody").at(0).at(3).allText, "Allega");
 });
 
 console.log(`purchases: ${passed} prove passate`);

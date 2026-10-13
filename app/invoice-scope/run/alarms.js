@@ -28,7 +28,7 @@ import { parties } from "./parties.js";
 // -----------------------------------------------------------------------------------------------------------------
 
 /** Chi firma l'`.ics` che esce di qui. Il file di Invoice non si dichiara Plan Scope. */
-const SIGN = {
+export const SIGN = {
   prodid: "-//G&G Technologies//Invoice Scope//IT",
   domain: "invoice-scope.ggtechnologies.sm",
 };

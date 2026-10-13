@@ -14,10 +14,11 @@
 //
 // No DOM in here: `node --import ./test/loader.mjs test/schedule.mjs` runs it against a fake store.
 
-import { list, put, remove } from "gg/store.js";
+import { get, list, put, tx } from "gg/store.js";
 
 import { from, add, sub, sum, cmp, round, toString, ZERO } from "./decimal.js";
 import { kind } from "./kinds.js";
+import { forget as forgetReceipts } from "./attachments.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -311,9 +312,16 @@ export async function paymentsOf(db, docId) {
  * è uscito e qualcun altro ne ha una copia; un incasso non è uscito da nessuna parte, è un appunto
  * su quello che è arrivato in banca. Un importo negativo qui vorrebbe dire due righe da leggere
  * insieme per capire che non è successo niente.
+ *
+ * The receipt goes with it, in the same transaction: a file that no payment names is a file nobody
+ * can open and every backup keeps copying.
  */
 export async function removePayment(db, id) {
-  await remove(db, "payments", id);
+  const record = await get(db, "payments", id);
+  await tx(db, ["payments", "attachments"], async (scope) => {
+    await scope.remove("payments", id);
+    if (record) await forgetReceipts(scope, [record]);
+  });
 }
 
 /** Quanto è stato incassato in tutto su un documento. */

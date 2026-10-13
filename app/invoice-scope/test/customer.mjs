@@ -36,6 +36,7 @@ const { saveParty } = await import("../run/parties.js");
 const { saveActivity, activitiesOf, contactsOf } = await import("../run/crm.js");
 const { get } = await import("gg/store.js");
 const customer = await import("../run/customer.js");
+const meetings = await import("../run/meetings.js");
 const progetti = await import("../run/projects.js");
 
 setLang("it");
@@ -44,6 +45,7 @@ setLang("it");
 // ascoltatori, e chiamarla in ogni prova ne accumulerebbe una pila — un click salverebbe la stessa
 // voce quattro volte. Il deposito su cui lavorano lo aggiorna `render`, a ogni prova.
 customer.connect(await openDatabase());
+meetings.connect(await openDatabase());
 
 let passed = 0;
 async function prova(nome, fn) {
@@ -403,6 +405,42 @@ await prova("i progetti del cliente compaiono sulla sua scheda, e solo se ce ne 
   assert.equal(dom.byId("custProjects").hidden, false);
   assert.equal(dom.count("custProjectsBody"), 1, "solo i suoi");
   assert.equal(dom.byId("custProjectsBody").at(0).at(0).allText, "Capannone");
+});
+
+await prova("un incontro nel diario dice ora, luogo, persone ed esito, e si modifica nel suo foglio", async (db) => {
+  const party = await saveParty(db, CLIENTE);
+  const chiara = contactsOf(party)[0];
+  await saveActivity(db, { id: "m1", partyId: "p1", tipo: "incontro", data: "2026-03-05", ora: "10:30",
+    luogo: "Officina", persone: [chiara.id], testo: "Revisione dell'impianto", esito: "Da rifare il quadro" });
+  await customer.render(db, "p1");
+  const voce = dom.byId("custDiary").at(0);
+  assert.match(voce.allText, /10:30 · Officina · Chiara Rossi/);
+  assert.match(voce.allText, /Esito: Da rifare il quadro/);
+
+  // «Modifica» su un incontro apre il foglio dell'incontro, non la riga in cima.
+  await voce.at(0).at(3).at(0).fire("click");
+  assert.equal(dom.byId("meetingDialog").open, true);
+  const form = dom.byId("meetingForm").elements;
+  assert.equal(form.luogo.value, "Officina");
+  form.esito.value = "Quadro rifatto";
+  await dom.byId("meetingSave").fire("click");
+  const [letto] = await activitiesOf(db, "p1");
+  assert.equal(letto.esito, "Quadro rifatto");
+  assert.equal(letto.ora, "10:30", "e il resto è com'era");
+  assert.deepEqual(letto.persone, [chiara.id]);
+  assert.match(dom.byId("custDiary").at(0).allText, /Esito: Quadro rifatto/);
+});
+
+await prova("dal diario si pianifica un incontro col cliente già scelto", async (db) => {
+  await saveParty(db, CLIENTE);
+  await customer.render(db, "p1");
+  await dom.byId("custMeetingNew").fire("click");
+  const form = dom.byId("meetingForm").elements;
+  assert.equal(form.partyId.value, "p1");
+  form.testo.value = "Offerta di rinnovo";
+  await dom.byId("meetingSave").fire("click");
+  assert.equal(dom.count("custDiary"), 1);
+  assert.match(dom.byId("custDiary").at(0).allText, /Incontro.*Offerta di rinnovo/s);
 });
 
 console.log(`customer: ${passed} prove passate`);

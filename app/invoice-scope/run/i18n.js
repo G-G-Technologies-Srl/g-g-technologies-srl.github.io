@@ -23,6 +23,10 @@ const IT = {
   navHome: "Situazione",
   navDocs: "Documenti",
   navParties: "Anagrafiche",
+  navPartiesClients: "Clienti e fornitori",
+  navPartiesItems: "Listino",
+  navPartiesBanks: "Banche",
+  navCrm: "CRM",
   navCompany: "Azienda",
   navSettings: "Impostazioni",
 
@@ -490,9 +494,6 @@ const IT = {
   callout_decisione: "Decisione",
 
   // ---- anagrafiche
-  partiesTitle: "Anagrafiche",
-  partiesClients: "Clienti",
-  partiesItems: "Listino",
   partiesEmpty: "Qui compaiono i clienti in anagrafica.",
   partiesNew: "Nuovo cliente",
   partiesEdit: "Modifica cliente",
@@ -696,6 +697,75 @@ const IT = {
   actNotSaved: "Questa voce non è stata salvata. Riprova.",
   actDeleteAsk: "Elimino questa voce del diario?",
 
+  // ---- crm: gli incontri
+  crmTitle: "CRM",
+  crmNote: "Gli incontri con i clienti: quelli in programma, quelli da annotare, quelli conclusi. "
+    + "Ogni incontro compare anche nel diario del cliente.",
+  crmFilterParty: "Cliente",
+  crmAllParties: "Tutti i clienti",
+  crmChooseParty: "Scegliete un cliente",
+  crmEmpty: "Qui compaiono gli incontri con i clienti, in programma e conclusi.",
+  crmNoMatch: "Con questo cliente non ci sono incontri.",
+  crmUpcoming: "In programma",
+  crmToWrite: "Da annotare",
+  crmToWriteNote: "Incontri già avvenuti di cui manca l'esito. Due righe scritte adesso evitano di "
+    + "doverlo ricostruire fra un mese.",
+  crmDone: "Conclusi",
+  meetingNew: "Nuovo incontro",
+  meetingEdit: "Modifica l'incontro",
+  meetingTime: "Ora",
+  meetingPlace: "Luogo",
+  meetingPeople: "Persone del cliente",
+  meetingPeopleEmpty: "Il cliente non ha ancora persone di riferimento: si aggiungono dalla sua scheda.",
+  meetingSubject: "Argomento",
+  meetingOutcome: "Esito, da scrivere dopo l'incontro",
+  meetingOutcomeShort: "Esito",
+  meetingNeedsParty: "Scegliete il cliente.",
+  meetingNeedsSubject: "Scrivete l'argomento, anche solo due parole.",
+  meetingDeleteAsk: "Elimino questo incontro? Sparisce anche dal diario del cliente.",
+  meetingCalendar: "Calendario",
+  meetingCalendarLabel: "Scarica l'incontro come file per il calendario",
+  meetingWrite: "Aggiungi l'esito",
+  meetingIcsTitle: "Incontro con {cliente}",
+
+  // ---- la ricevuta di un pagamento
+  receiptLabel: "Ricevuta",
+  receiptAttach: "Allega la ricevuta del bonifico",
+  receiptAttachShort: "Allega",
+  receiptChange: "Cambia file",
+  receiptClear: "Togli il file scelto",
+  receiptNote: "PDF o immagine, fino a 10 MB. Resta in questo browser e nella cartella della copia "
+    + "automatica; l'archivio esportato a mano ne riporta solo il nome.",
+  receiptOpen: "Apri la ricevuta",
+  receiptRemove: "Togli la ricevuta",
+  receiptRemoveAsk: "Tolgo la ricevuta da questo pagamento? Il pagamento resta registrato.",
+  receiptMissing: "Il file della ricevuta non è in questo browser: l'archivio da cui provengono i dati "
+    + "ne riportava solo il nome. Se la cartella della copia automatica è collegata, il ripristino da "
+    + "lì riporta anche le ricevute.",
+  receiptNotSaved: "Il pagamento è registrato, ma la ricevuta non è stata salvata. Si può allegare di "
+    + "nuovo dalla riga del pagamento.",
+  receiptNone: "Nessun file scelto.",
+  receiptEmpty: "Il file è vuoto.",
+  receiptTooBig: "Il file supera i 10 MB. La ricevuta in PDF scaricata dalla banca occupa molto meno "
+    + "di una fotografia.",
+  receiptBadType: "Come ricevuta si allega un PDF o un'immagine: PNG, JPEG, WebP o HEIC.",
+
+  // ---- banche
+  f_istituto: "banca",
+  f_filiale: "filiale",
+  f_bic: "BIC / SWIFT",
+  f_noteConto: "nota",
+  contiDefaultCheck: "Conto predefinito, proposto nei documenti nuovi",
+  bankEdit: "Modifica il conto",
+  bankNeedsName: "Serve almeno il nome del conto o l'IBAN.",
+  bankIbanCheck: "Le cifre di controllo dell'IBAN non corrispondono: c'è un carattere sbagliato o "
+    + "mancante. Conviene ricopiarlo dall'estratto conto.",
+  bankBicShape: "Il BIC ha 8 o 11 caratteri: 4 lettere della banca, 2 del paese, 2 della località e, "
+    + "se c'è, 3 della filiale.",
+  bankDeleteAsk: "Elimino questo conto? I documenti già emessi e i pagamenti già registrati lo "
+    + "conservano com'era.",
+  companyBanksLink: "I conti correnti dell'azienda si gestiscono in Anagrafiche › Banche.",
+
   // ---- azienda
   companyTitle: "La vostra azienda",
   companyNote: "Sono i dati che finiscono nell'intestazione di ogni documento. Si compilano una "
@@ -711,7 +781,6 @@ const IT = {
   contiEmpty: "Qui compaiono i conti correnti dell'azienda.",
   contiNew: "Aggiungi un conto",
   contiDefault: "Predefinito",
-  contiRemove: "Togli il conto",
 
   // ---- impostazioni
   settingsTitle: "Impostazioni",
@@ -773,6 +842,7 @@ const IT = {
   archiveCompany: "schede azienda",
   archiveCounters: "contatori",
   archiveAssets: "immagini",
+  archiveAttachments: "ricevute",
   backupCopiesTitle: "Le copie nella cartella",
   backupCopiesNote: "La copia corrente è quella di adesso; le altre sono una al giorno, e "
     + "arrivano fino a trenta giorni indietro. Servono per il giorno in cui quello che c'è adesso "
@@ -1088,7 +1158,7 @@ const IT = {
     + "alla fattura non finisce nel file.",
   nonRimbNota: "Nella colonna «NR» si spuntano le righe che restano fuori dal rimborso monofase.",
   causaleHint: "di cosa si tratta — es. «Rifacimento porta d'ingresso»",
-  ibanHint: "aggiungi un conto in Azienda, e comparirà già qui",
+  ibanHint: "aggiungete un conto in Anagrafiche › Banche, e comparirà già qui",
   f_denominazioneCliente: "ragione sociale, o nome e cognome",
   f_righe: "righe",
   f_riepiloghi: "riepilogo",
@@ -1255,6 +1325,10 @@ const IT = {
     + "il preventivo è più alto del primo.",
   demoActEmail: "Mandato il preventivo, con lo sconto del 5% concordato a voce.",
   demoActNote: "Decide Marta, il figlio guarda solo i tempi di consegna.",
+  demoMeetingOutcome: "Telaio da rinforzare: rifacciamo il preventivo con la piastra in più.",
+  demoMeetingNext: "Collaudo della prima linea e date della seconda.",
+  demoMeetingPlace: "Officina del cliente",
+  demoMeetingVisit: "Sopralluogo per il nuovo banco di lavoro.",
   demoCatSoftware: "software",
   demoCatMateriali: "materiali",
   demoCostHosting: "Canone hosting mensile",
@@ -1452,6 +1526,10 @@ const EN = {
   navHome: "Home",
   navDocs: "Documents",
   navParties: "Contacts",
+  navPartiesClients: "Customers and suppliers",
+  navPartiesItems: "Price list",
+  navPartiesBanks: "Banks",
+  navCrm: "CRM",
   navCompany: "Company",
   navSettings: "Settings",
 
@@ -1904,9 +1982,6 @@ const EN = {
   callout_fatto: "Done",
   callout_decisione: "Decision",
 
-  partiesTitle: "Contacts",
-  partiesClients: "Customers",
-  partiesItems: "Price list",
   partiesEmpty: "The customers you add show up here.",
   partiesNew: "New customer",
   partiesEdit: "Edit customer",
@@ -2111,6 +2186,72 @@ const EN = {
   actNotSaved: "This entry was not saved. Try again.",
   actDeleteAsk: "Delete this diary entry?",
 
+  crmTitle: "CRM",
+  crmNote: "Your meetings with customers: coming up, waiting for an outcome, and held. Every "
+    + "meeting also appears in the customer's diary.",
+  crmFilterParty: "Customer",
+  crmAllParties: "All customers",
+  crmChooseParty: "Choose a customer",
+  crmEmpty: "Your meetings with customers show up here, upcoming and held.",
+  crmNoMatch: "There are no meetings with this customer.",
+  crmUpcoming: "Coming up",
+  crmToWrite: "To write up",
+  crmToWriteNote: "Meetings that have taken place with no outcome written. Two lines now save "
+    + "reconstructing it a month from now.",
+  crmDone: "Held",
+  meetingNew: "New meeting",
+  meetingEdit: "Edit the meeting",
+  meetingTime: "Time",
+  meetingPlace: "Place",
+  meetingPeople: "The customer's people",
+  meetingPeopleEmpty: "This customer has no contacts yet: add them from the customer's page.",
+  meetingSubject: "Subject",
+  meetingOutcome: "Outcome, to write after the meeting",
+  meetingOutcomeShort: "Outcome",
+  meetingNeedsParty: "Choose the customer.",
+  meetingNeedsSubject: "Write the subject, even just two words.",
+  meetingDeleteAsk: "Delete this meeting? It also leaves the customer's diary.",
+  meetingCalendar: "Calendar",
+  meetingCalendarLabel: "Download the meeting as a calendar file",
+  meetingWrite: "Add the outcome",
+  meetingIcsTitle: "Meeting with {cliente}",
+
+  receiptLabel: "Receipt",
+  receiptAttach: "Attach the transfer receipt",
+  receiptAttachShort: "Attach",
+  receiptChange: "Change file",
+  receiptClear: "Remove the chosen file",
+  receiptNote: "PDF or image, up to 10 MB. It stays in this browser and in the automatic backup "
+    + "folder; an archive exported by hand carries only its name.",
+  receiptOpen: "Open the receipt",
+  receiptRemove: "Remove the receipt",
+  receiptRemoveAsk: "Remove the receipt from this payment? The payment stays recorded.",
+  receiptMissing: "The receipt file is not in this browser: the archive these data came from carried "
+    + "only its name. If the automatic backup folder is linked, restoring from there brings the "
+    + "receipts back too.",
+  receiptNotSaved: "The payment is recorded, but the receipt was not saved. You can attach it again "
+    + "from the payment's row.",
+  receiptNone: "No file chosen.",
+  receiptEmpty: "The file is empty.",
+  receiptTooBig: "The file is over 10 MB. The PDF receipt downloaded from the bank takes far less "
+    + "room than a photo.",
+  receiptBadType: "A receipt is a PDF or an image: PNG, JPEG, WebP or HEIC.",
+
+  f_istituto: "bank",
+  f_filiale: "branch",
+  f_bic: "BIC / SWIFT",
+  f_noteConto: "note",
+  contiDefaultCheck: "Default account, proposed on new documents",
+  bankEdit: "Edit the account",
+  bankNeedsName: "An account needs at least a name or an IBAN.",
+  bankIbanCheck: "The IBAN's check digits do not match: a character is wrong or missing. Copy it "
+    + "again from the bank statement.",
+  bankBicShape: "A BIC has 8 or 11 characters: 4 letters for the bank, 2 for the country, 2 for the "
+    + "location and, if present, 3 for the branch.",
+  bankDeleteAsk: "Delete this account? Documents already issued and payments already recorded keep it "
+    + "as it was.",
+  companyBanksLink: "The company's bank accounts are managed under Contacts › Banks.",
+
   companyTitle: "Your company",
   companyNote: "These are the details that head every document. You fill them in once.",
   companySaved: "Company details saved.",
@@ -2124,7 +2265,6 @@ const EN = {
   contiEmpty: "The accounts you add show up here.",
   contiNew: "Add an account",
   contiDefault: "Default",
-  contiRemove: "Remove the account",
 
   settingsTitle: "Settings",
   settingsData: "Your data",
@@ -2172,6 +2312,7 @@ const EN = {
   archiveCompany: "company records",
   archiveCounters: "counters",
   archiveAssets: "images",
+  archiveAttachments: "receipts",
   backupCopiesTitle: "The copies in the folder",
   backupCopiesNote: "The current copy is how things are now; the others are one a day, going back "
     + "thirty days. They are there for the day what you have now is wrong: bringing a copy back "
@@ -2491,7 +2632,7 @@ const EN = {
     + "reference to the invoice stays out of the file.",
   nonRimbNota: "In the «NR» column, tick the lines that stay out of the single-stage refund.",
   causaleHint: "what it is about — e.g. “Front door replacement”",
-  ibanHint: "add an account under Company and it shows up here by itself",
+  ibanHint: "add an account under Contacts › Banks and it shows up here by itself",
   f_denominazioneCliente: "company name, or first and last name",
   f_righe: "lines",
   f_riepiloghi: "summary",
@@ -2652,6 +2793,10 @@ const EN = {
     + "this quote is higher than the first one.",
   demoActEmail: "Quote sent, with the 5% discount agreed on the phone.",
   demoActNote: "Marta decides; her son only looks at the delivery dates.",
+  demoMeetingOutcome: "The frame needs reinforcing: the quote is redone with the extra plate.",
+  demoMeetingNext: "Testing of the first line, and dates for the second.",
+  demoMeetingPlace: "The customer's workshop",
+  demoMeetingVisit: "Site visit for the new workbench.",
   demoCatSoftware: "software",
   demoCatMateriali: "materials",
   demoCostHosting: "Monthly hosting fee",

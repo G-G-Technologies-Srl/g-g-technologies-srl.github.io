@@ -19,6 +19,12 @@
 //  - **An activity is a record of its own**, in `activities`, because there will be thousands and
 //    they are read by date. `{partyId, tipo, data, testo}` — a note, a call, an email, a meeting.
 //
+// **A meeting is an activity with four more fields**: `ora`, `luogo`, `persone` (ids of the
+// customer's contacts) and `esito`, the outcome written afterwards. Not a store of its own, because a
+// meeting *is* an entry of the diary — the CRM screen (`meetings.js`) and the customer's diary show
+// the same records, and two stores would be two diaries. The fields exist only on `incontro`: a call
+// has no place, and a note turned into a call drops what no longer applies.
+//
 // **No DOM in here**, so the rules can be exercised without a browser:
 // `node --import ./app/invoice-scope/test/loader.mjs app/invoice-scope/test/crm.mjs`.
 
@@ -41,6 +47,11 @@ const CONTACT_FIELDS = ["nome", "ruolo", "email", "telefono", "note"];
 
 /** As long as a paragraph, not as long as a document: what does not fit here is a document. */
 export const ACTIVITY_MAX = 2000;
+
+/** The kind that carries a time, a place, people and an outcome. */
+export const MEETING = "incontro";
+
+const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
@@ -121,7 +132,7 @@ export function withoutContact(party, id) {
  */
 export function activityRecord(fields) {
   const now = new Date().toISOString();
-  return {
+  const record = {
     id: fields.id || _id("attivita"),
     partyId: _text(fields.partyId),
     tipo: ACTIVITY_KINDS.includes(fields.tipo) ? fields.tipo : ACTIVITY_KINDS[0],
@@ -130,6 +141,18 @@ export function activityRecord(fields) {
     created: fields.created || now,
     updated: now,
   };
+  if (record.tipo === MEETING) {
+    // A time that is not one is dropped rather than kept: it is what the agenda sorts on within a
+    // day, and «10.30» would sort after every «10:30» ever written.
+    const ora = _text(fields.ora);
+    record.ora = TIME.test(ora) ? ora : "";
+    record.luogo = _text(fields.luogo).slice(0, 200);
+    record.persone = Array.isArray(fields.persone)
+      ? [...new Set(fields.persone.map(_text).filter(Boolean))]
+      : [];
+    record.esito = _text(fields.esito).slice(0, ACTIVITY_MAX);
+  }
+  return record;
 }
 
 /**
@@ -174,13 +197,16 @@ function _byNewest(a, b) {
 /**
  * The day of the last entry, per customer: `Map<partyId, data>`.
  *
- * What the list of customers shows in its last column. From one read of the store and not one per
- * row — a query per customer over a register of two hundred is two hundred transactions to draw a
+ * What the list of customers shows in its last column — up to today: a planned meeting is not a
+ * contact. From one read of the store and not one per row — a query per customer over a register of two hundred is two hundred transactions to draw a
  * table.
  */
-export function lastContactByParty(all) {
+export function lastContactByParty(all, { oggi = _today() } = {}) {
   const out = new Map();
   for (const one of all) {
+    // A meeting booked for next week is not a contact yet: the column would say «17/10» about a
+    // customer nobody has spoken to since the summer.
+    if (String(one.data) > oggi) continue;
     const before = out.get(one.partyId);
     if (!before || String(one.data) > before) out.set(one.partyId, String(one.data));
   }
@@ -201,4 +227,70 @@ export async function removeParty(db, partyId) {
     await scope.remove("parties", partyId);
     for (const one of mine) await scope.remove("activities", one.id);
   });
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  p u b l i c   —   m e e t i n g s
+// -----------------------------------------------------------------------------------------------------------------
+
+/** The meetings among the diary's entries. */
+export function meetingsOf(all) {
+  return (Array.isArray(all) ? all : []).filter((one) => one && one.tipo === MEETING);
+}
+
+function _moment(one) {
+  return `${one.data || ""} ${one.ora || "99:99"}`;
+}
+
+/**
+ * The meetings in the three groups the CRM screen shows, each in the order it is read.
+ *
+ *  - **upcoming**: from today on, with no outcome yet — soonest first, a time-less one after the
+ *    timed ones of its day;
+ *  - **toWrite**: already past and with no outcome — most recent first, because yesterday's is the
+ *    one still remembered;
+ *  - **done**: with an outcome — most recent first, like the diary.
+ *
+ * **The outcome decides, not the clock.** A meeting held this morning and written up at lunch is
+ * done, though its date is today; one from last week with nothing written is not, though it is
+ * past. `oggi` is passed in so that the rule can be tried on any day.
+ */
+export function agenda(all, { oggi = _today() } = {}) {
+  const out = { upcoming: [], toWrite: [], done: [] };
+  for (const one of meetingsOf(all)) {
+    if (_text(one.esito)) out.done.push(one);
+    else if (String(one.data) >= oggi) out.upcoming.push(one);
+    else out.toWrite.push(one);
+  }
+  out.upcoming.sort((a, b) => _moment(a).localeCompare(_moment(b)));
+  out.toWrite.sort((a, b) => _moment(b).localeCompare(_moment(a)));
+  out.done.sort((a, b) => _moment(b).localeCompare(_moment(a)));
+  return out;
+}
+
+/**
+ * The names of the people of a meeting, from the customer's contacts.
+ *
+ * A contact removed from the customer since is simply not named: the meeting keeps the id, and if
+ * the person comes back under the same id they reappear. Nothing to repair, nothing to warn about.
+ */
+export function peopleOf(meeting, party) {
+  const byId = new Map(contactsOf(party).map((one) => [one.id, one]));
+  return (meeting.persone || []).map((id) => byId.get(id)).filter(Boolean).map((one) => one.nome);
+}
+
+/**
+ * A meeting as an event for `biz/ics.js`: at its time for an hour, or as the whole day when it has
+ * no time. The title and the description come from the caller, already in the person's language.
+ */
+export function meetingEvent(meeting, { title, description = "" }) {
+  return {
+    uid: `meeting-${meeting.id}`,
+    title,
+    date: meeting.data,
+    time: meeting.ora || null,
+    minutes: 60,
+    place: meeting.luogo || "",
+    description,
+  };
 }

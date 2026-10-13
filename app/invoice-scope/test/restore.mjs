@@ -360,4 +360,60 @@ await prova("una foto incollata fa riscrivere la copia, anche se il testo non si
   assert.equal(JSON.parse(dopo).assets.length, 2);
 });
 
+// -----------------------------------------------------------------------------------------------------------------
+//  l e   r i c e v u t e   d e i   p a g a m e n t i
+// -----------------------------------------------------------------------------------------------------------------
+
+function ricevuta(id, ownerId) {
+  const bytes = new TextEncoder().encode(`%PDF ${id}`);
+  return {
+    id, ownerId, store: "payments", name: "contabile.pdf", type: "application/pdf", size: bytes.length,
+    blob: new Blob([bytes], { type: "application/pdf" }),
+  };
+}
+
+await prova("le ricevute dei bonifici finiscono in ricevute/, accanto al testo", async () => {
+  const db = await openDatabase();
+  await archivio(db);
+  const incasso = await get(db, "payments", "inc-1");
+  await put(db, "attachments", ricevuta("r1", "inc-1"));
+  await put(db, "payments", { ...incasso, ricevuta: { id: "r1", name: "contabile.pdf", type: "application/pdf", size: 9 } });
+
+  const dir = fakeFolder();
+  await collega(db, dir);
+  const scritto = JSON.parse(dir.files.get("invoice-scope.json"));
+  assert.deepEqual(scritto.attachments.map((one) => one.path), ["ricevute/r1.pdf"]);
+  assert.ok(!("attachments" in scritto.data), "i byte non stanno nel testo");
+  assert.ok(dir.subs.get("ricevute").files.has("r1.pdf"));
+});
+
+await prova("perso il browser, tornano anche le ricevute, e il pagamento le ritrova", async () => {
+  const primo = await openDatabase();
+  await archivio(primo);
+  const incasso = await get(primo, "payments", "inc-1");
+  await put(primo, "attachments", ricevuta("r1", "inc-1"));
+  await put(primo, "payments", { ...incasso, ricevuta: { id: "r1", name: "contabile.pdf", type: "application/pdf", size: 9 } });
+  const dir = fakeFolder();
+  await collega(primo, dir);
+
+  resetStore();
+  const nuovo = await openDatabase();
+  await collega(nuovo, dir);
+  const messo = await backup.restore();
+  assert.equal(messo.ok, true, messo.reason || "");
+  assert.equal(messo.ricevute, 1);
+  const { blobOf } = await import("../run/attachments.js");
+  const tornato = await get(nuovo, "payments", "inc-1");
+  assert.equal(await (await blobOf(nuovo, tornato)).text(), "%PDF r1");
+});
+
+await prova("il confronto con una copia conta anche immagini e ricevute", async () => {
+  const db = await openDatabase();
+  await archivio(db);
+  await put(db, "attachments", ricevuta("r1", "inc-1"));
+  const adesso = await backup.counts();
+  assert.equal(adesso.attachments, 1);
+  assert.equal(adesso.assets, 0);
+});
+
 console.log(`restore: ${passed} prove passate`);

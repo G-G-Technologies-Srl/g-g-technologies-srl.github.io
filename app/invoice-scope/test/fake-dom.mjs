@@ -109,6 +109,12 @@ export function install(html) {
       select() {},
       blur() { if (document.activeElement === this) document.activeElement = null; },
       reset() { for (const field of Object.values(this.elements || {})) field.value = ""; },
+      // A click from code — the hidden file input a button opens — is a "click" event, nothing more.
+      click() { return this.fire("click"); },
+      remove() {
+        if (this.parent) this.parent.children = this.parent.children.filter((kid) => kid !== this);
+        this.parent = null;
+      },
       showModal() { this.open = true; },
       close() { this.open = false; },
       querySelector() { return null; },
@@ -154,6 +160,8 @@ export function install(html) {
       return nodes.get(id);
     },
     createElement(tag) { return make(tag); },
+    // Where a download link is put for the moment of its click.
+    body: make("body"),
     contains() { return true; },
     querySelectorAll() { return []; },
     addEventListener() {},

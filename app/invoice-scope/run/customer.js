@@ -37,9 +37,10 @@ import { saveParty, openParty } from "./parties.js";
 import * as progetti from "./projects.js";
 import { progressOf } from "biz/plan-model.js";
 import {
-  ACTIVITY_KINDS, ACTIVITY_MAX, activitiesOf, contactsOf, removeActivity, saveActivity,
+  ACTIVITY_KINDS, ACTIVITY_MAX, MEETING, activitiesOf, contactsOf, peopleOf, removeActivity, saveActivity,
   withContact, withoutContact,
 } from "./crm.js";
+import * as meetings from "./meetings.js";
 import { PAESI_CON_CAP } from "./fatturapa.js";
 import { allCosts, allOutlays, owedOn as costOwed, state as costState, signedTotal as costTotal } from "./costs.js";
 
@@ -271,6 +272,9 @@ async function _saveActivity() {
   }
   try {
     await saveActivity(database, {
+      // What the row does not show is carried over, not dropped: a meeting's time, place, people
+      // and outcome are written in its sheet, and correcting its text here must not erase them.
+      ...(modificando || {}),
       id: modificando?.id,
       created: modificando?.created,
       partyId: cliente.id,
@@ -291,6 +295,11 @@ async function _saveActivity() {
 }
 
 async function _edit(record) {
+  // A meeting has more than a row can hold: it opens in its own sheet, the same one as the CRM.
+  if (record.tipo === MEETING) {
+    await meetings.openSheet(database, { meeting: record, afterSave: _afterMeeting });
+    return;
+  }
   modificando = record;
   tipoScelto = ACTIVITY_KINDS.includes(record.tipo) ? record.tipo : ACTIVITY_KINDS[0];
   el("custDate").value = record.data || _today();
@@ -303,6 +312,12 @@ async function _edit(record) {
   // cima e nell'elenco resta identico a prima — sembra una voce nuova, e se ne salva una seconda.
   await _drawDiary();
   el("custText").focus();
+}
+
+/** After the meeting sheet wrote or deleted something: the diary, and whoever else is listening. */
+async function _afterMeeting() {
+  await _drawDiary();
+  if (onChange) await onChange();
 }
 
 /** Torna alla voce nuova, e spegni la voce accesa nell'elenco. */
@@ -330,6 +345,17 @@ async function _drawDiary() {
     tipo.className = "act-kind";
     tipo.textContent = _kindLabel(voce.tipo);
     testa.append(quando, tipo);
+    // A meeting says when and where beside its kind, and who was there: the three things one
+    // looks for when going back over it.
+    if (voce.tipo === MEETING) {
+      const dettagli = [voce.ora, voce.luogo, ...peopleOf(voce, cliente)].filter(Boolean).join(" · ");
+      if (dettagli) {
+        const dove = document.createElement("span");
+        dove.className = "act-when";
+        dove.textContent = dettagli;
+        testa.append(dove);
+      }
+    }
 
     const azioni = document.createElement("span");
     azioni.className = "act-tools";
@@ -360,6 +386,12 @@ async function _drawDiary() {
     testo.textContent = voce.testo;
 
     item.append(testa, testo);
+    if (voce.tipo === MEETING && voce.esito) {
+      const esito = document.createElement("p");
+      esito.className = "act-text act-outcome";
+      esito.textContent = `${t("meetingOutcomeShort")}: ${voce.esito}`;
+      item.append(esito);
+    }
     list_.append(item);
   }
 }
@@ -593,6 +625,10 @@ export function connect(db, { afterChange = null } = {}) {
   });
 
   el("custContactNew").addEventListener("click", () => _openContact(null));
+  el("custMeetingNew").addEventListener("click", async () => {
+    if (!cliente) return;
+    await meetings.openSheet(database, { partyId: cliente.id, afterSave: _afterMeeting });
+  });
   el("contactSave").addEventListener("click", _saveContact);
   el("contactCancel").addEventListener("click", () => {
     _close(el("contactDialog"));

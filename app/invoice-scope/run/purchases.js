@@ -26,7 +26,7 @@ import { from, cmp, toString, ZERO } from "./decimal.js";
 import { parseAmount } from "./parse.js";
 import { parties, openNewParty, isSupplier } from "./parties.js";
 import { save as saveDoc } from "./model.js";
-import { openMoney } from "./payments.js";
+import { openMoney, receiptCell } from "./payments.js";
 import * as attesi from "./expected.js";
 import {
   TIPI, MONOFASE, IVA, CATEGORIE, taxKind, defaultRate, taxOn, costRecord, problems,
@@ -329,6 +329,12 @@ async function _drawOutlays(record) {
       _td(uscita.data ? shownDate(uscita.data) : "—", "nowrap"),
       _td(uscita.conto ? (uscita.conto.etichetta || uscita.conto.iban || "—") : "—"),
       _td(uscita.nota || "", "meta"),
+      receiptCell(database, uscita, {
+        onChange: async () => {
+          await render(database, record.id, { afterChange: onChange });
+          if (onChange) await onChange();
+        },
+      }),
       _td(money(_amount(uscita.importo)), "right"),
     );
     const azioni = document.createElement("td");

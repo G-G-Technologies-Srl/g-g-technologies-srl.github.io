@@ -986,13 +986,23 @@ await prova("una fattura ricevuta aggancia l'atteso della ricorrenza dello stess
   const { saveParty } = await import("../run/parties.js");
   const fornitore = await saveParty(db, { denominazione: "Hosting Cloud S.p.A.", partitaIva: "09876543210", paese: "IT", ruolo: "fornitore" });
   ricorrenza.partyId = fornitore.id;
+  // **The day is fixed, not taken from the clock.** The fixture is an August invoice, and the
+  // expected purchases start from last month: read on 9 September, August is still expected. Left
+  // to the clock this test passed until 30 September and failed from 1 October.
+  const parties = await list(db, "parties");
   const piano = await plan([xml("hc.xml", RICEVUTA)], {
-    company: AZIENDA, parties: await list(db, "parties"), recurring: [ricorrenza],
+    company: AZIENDA, parties, recurring: [ricorrenza], oggi: "2026-09-09",
   });
   assert.equal(piano.costi[0].ricorrenzaId, "r1");
   assert.equal(piano.costi[0].periodo, "2026-08");
+  // Read in October the August period has left the window — on purpose: `expected` does not reach
+  // back past last month — so the same invoice arrives without a link, and nothing is lost by it.
+  const ottobre = await plan([xml("hc.xml", RICEVUTA)], {
+    company: AZIENDA, parties, recurring: [ricorrenza], oggi: "2026-10-13",
+  });
+  assert.equal(ottobre.costi[0].ricorrenzaId, undefined);
   // Un fornitore senza ricorrenze non prende niente.
-  const altro = await plan([xml("hc.xml", RICEVUTA)], { company: AZIENDA, recurring: [ricorrenza] });
+  const altro = await plan([xml("hc.xml", RICEVUTA)], { company: AZIENDA, recurring: [ricorrenza], oggi: "2026-09-09" });
   assert.equal(altro.costi[0].ricorrenzaId, undefined);
 });
 

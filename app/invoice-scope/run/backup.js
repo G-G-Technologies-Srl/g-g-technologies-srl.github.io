@@ -26,6 +26,7 @@ import { collect, restore as putBack } from "gg/io.js";
 import { hash, linkFolder, backupWriter, copies as listCopies } from "biz/folder.js";
 import { reference } from "biz/plan-pack.js";
 import { NAME, VERSION, EXPORTED } from "./db.js";
+import { RECEIPTS_DIR, pathOf as receiptPath } from "./attachments.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
@@ -55,13 +56,26 @@ function _manifest(assets) {
   }));
 }
 
-/** Nomi e dimensioni già in `assets/`: quello che la cartella ha, per non riscriverlo. */
-async function _onDisk() {
+/** The receipts as the archive names them: where each one is in the folder, and whose it is. */
+function _receiptManifest(attachments) {
+  return attachments.map((one) => ({
+    id: one.id,
+    ownerId: one.ownerId || null,
+    store: one.store || null,
+    name: one.name,
+    type: one.type,
+    size: one.size,
+    path: receiptPath(one),
+  }));
+}
+
+/** Nomi e dimensioni già in una cartella dell'archivio: quello che c'è, per non riscriverlo. */
+async function _onDisk(name = ASSETS_DIR) {
   const sizes = new Map();
   if (!folder || !folder.handle) return sizes;
   let dir = null;
   try {
-    dir = await folder.handle.getDirectoryHandle(ASSETS_DIR);
+    dir = await folder.handle.getDirectoryHandle(name);
   } catch (ignored) {
     return sizes;                       // lì non è stato scritto ancora niente
   }
@@ -103,9 +117,22 @@ async function _snapshot() {
     if (sizes.get(path.slice(`${ASSETS_DIR}/`.length)) === asset.size) continue;
     files.push({ path, bytes: new Uint8Array(await asset.blob.arrayBuffer()) });
   }
+
+  // **The receipts of the payments, the same way**: beside the text in `ricevute/`, named in the
+  // archive, written once each. A receipt is exactly what one looks for the day the browser is gone.
+  const attachments = await list(db, "attachments");
+  const receipts = _receiptManifest(attachments);
+  payload.attachments = receipts;
+  const already = await _onDisk(RECEIPTS_DIR);
+  for (const one of attachments) {
+    if (!one.blob) continue;
+    const path = receiptPath(one);
+    if (already.get(path.slice(`${RECEIPTS_DIR}/`.length)) === one.size) continue;
+    files.push({ path, bytes: new Uint8Array(await one.blob.arrayBuffer()) });
+  }
   return {
     text: JSON.stringify(payload, null, 2),
-    fingerprint: hash(`${JSON.stringify(payload.data)}|${JSON.stringify(manifest)}`),
+    fingerprint: hash(`${JSON.stringify(payload.data)}|${JSON.stringify(manifest)}|${JSON.stringify(receipts)}`),
     files,
   };
 }
@@ -113,7 +140,8 @@ async function _snapshot() {
 /** Quali immagini nomina una copia dell'archivio. Quello che non si legge non ne nomina nessuna. */
 function _referenced(text) {
   try {
-    return (JSON.parse(text).assets || []).map((asset) => asset.path).filter(Boolean);
+    const payload = JSON.parse(text);
+    return [...(payload.assets || []), ...(payload.attachments || [])].map((one) => one.path).filter(Boolean);
   } catch (ignored) {
     return [];
   }
@@ -156,6 +184,43 @@ async function _restoreAssets(manifest) {
   return back;
 }
 
+/**
+ * The receipts a restored archive names, back in the store: only those missing, only those the
+ * folder still has. A payment whose file is gone keeps its label, and the screen says the file is
+ * not in this browser — better than a restore that stops halfway.
+ */
+async function _restoreReceipts(manifest) {
+  if (!folder || !folder.handle || !manifest.length) return 0;
+  let dir = null;
+  try {
+    dir = await folder.handle.getDirectoryHandle(RECEIPTS_DIR);
+  } catch (ignored) {
+    return 0;
+  }
+  let back = 0;
+  for (const one of manifest) {
+    if (!one.path || (await get(db, "attachments", one.id))) continue;
+    let file = null;
+    try {
+      file = await (await dir.getFileHandle(one.path.slice(`${RECEIPTS_DIR}/`.length))).getFile();
+    } catch (ignored) {
+      continue;
+    }
+    await put(db, "attachments", {
+      id: one.id,
+      ownerId: one.ownerId || null,
+      store: one.store || null,
+      name: one.name,
+      type: one.type,
+      size: one.size,
+      blob: new Blob([await file.arrayBuffer()], { type: one.type || "" }),
+      created: new Date().toISOString(),
+    });
+    back += 1;
+  }
+  return back;
+}
+
 // -----------------------------------------------------------------------------------------------------------------
 //  p u b l i c
 // -----------------------------------------------------------------------------------------------------------------
@@ -170,7 +235,7 @@ export async function setup(database, { status = () => {} } = {}) {
     snapshot: _snapshot,
     prefix: NAME,
     referenced: _referenced,
-    folders: [ASSETS_DIR],
+    folders: [ASSETS_DIR, RECEIPTS_DIR],
     load,
     save,
     onStatus: status,
@@ -225,6 +290,10 @@ export async function counts() {
   if (!db) return {};
   const out = {};
   for (const store of EXPORTED) out[store] = await countIn(db, store);
+  // The two that travel beside the text are counted too: without them a copy with pictures or
+  // receipts was compared against a zero here, and never read as «in line».
+  out.assets = await countIn(db, "assets");
+  out.attachments = await countIn(db, "attachments");
   return out;
 }
 
@@ -250,8 +319,11 @@ export async function restore(name = `${NAME}.json`) {
   // Le immagini dopo i record, e solo quelle che mancano. Se qui va storto qualcosa i record sono
   // tornati comunque, che è la parte che conta.
   let immagini = 0;
+  let ricevute = 0;
   try {
-    immagini = await _restoreAssets(JSON.parse(text).assets || []);
+    const payload = JSON.parse(text);
+    immagini = await _restoreAssets(payload.assets || []);
+    ricevute = await _restoreReceipts(payload.attachments || []);
   } catch (ignored) { /* i record sono a posto */ }
-  return { ...esito, immagini };
+  return { ...esito, immagini, ricevute };
 }

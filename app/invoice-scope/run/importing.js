@@ -339,7 +339,15 @@ export async function plan(sorgenti, contesto = {}) {
   const costiEsistenti = new Set((contesto.costs || []).map(costKey));
   // Gli attesi delle ricorrenze: una fattura ricevuta dello stesso fornitore nello stesso mese
   // è quella, e si aggancia — così l'atteso sparisce senza che qualcuno lo confermi a mano.
-  const attesi = expectedCosts(contesto.recurring || [], contesto.costs || [], { company: contesto.company || null });
+  //
+  // **The day the expected purchases are counted from is a parameter.** `expected` opens its window
+  // at last month, measured from today: a test written on 9 September around an August invoice
+  // passed until 30 September and failed from 1 October, with nothing changed in the code. The app
+  // leaves `oggi` out and gets today; a test passes the day its fixture belongs to.
+  const attesi = expectedCosts(contesto.recurring || [], contesto.costs || [], {
+    company: contesto.company || null,
+    ...(contesto.oggi ? { today: contesto.oggi } : {}),
+  });
 
   /**
    * Un documento letto dall'XML come acquisto: i totali dalle righe, l'aliquota quella che pesa di

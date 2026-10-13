@@ -26,10 +26,13 @@ restano sul computer di chi la usa.
   PDF.
 - **Situazione** — fatturato dell'anno e confronto con il precedente, crediti da incassare e da
   quanto tempo, lavoro svolto e non ancora fatturato, preventivi in attesa, bozze.
-- **Scadenzario e incassi** — le rate di ogni documento, quelle scadute, gli incassi registrati;
-  promemoria esportabili nel calendario.
-- **Clienti e listino** — una scheda per cliente con persone di riferimento, diario dei contatti,
-  fatturato e documenti; conti correnti dell'azienda.
+- **Scadenzario e incassi** — le rate di ogni documento, quelle scadute, gli incassi registrati con
+  la ricevuta del bonifico allegata; promemoria esportabili nel calendario.
+- **Anagrafiche** — tre voci: clienti e fornitori, con una scheda per cliente (persone di
+  riferimento, diario dei contatti, fatturato e documenti); listino; banche, cioè i conti correnti
+  dell'azienda con banca, BIC e il controllo delle cifre dell'IBAN.
+- **CRM** — gli incontri con tutti i clienti: in programma, da annotare, conclusi, con ora, luogo,
+  persone ed esito, e il file `.ics` per il calendario.
 - **Progetti** — fasi con importi e scadenze, pagine di appunti, documenti collegati; nello stesso
   formato di [Plan Scope](../plan-scope/).
 - **Acquisti** — le fatture ricevute, lette dall'XML di chi le ha emesse, e le spese attese.
@@ -51,8 +54,9 @@ restano sul computer di chi la usa.
   richieste di rete, con un'eccezione dichiarata: il browser rilegge `run/sw.js` dal sito per sapere
   se c'è una versione nuova. Si verifica dagli strumenti per sviluppatori, scheda «Rete».
 - Con una cartella collegata l'app vi scrive l'archivio a ogni modifica e ne tiene una copia al
-  giorno; la Situazione dice sempre se la copia è al sicuro. Senza cartella, l'archivio si esporta
-  a mano.
+  giorno; la Situazione dice sempre se la copia è al sicuro. Le immagini dei progetti e le ricevute
+  dei pagamenti stanno accanto al testo, in `assets/` e `ricevute/`. Senza cartella, l'archivio si
+  esporta a mano, e porta il nome delle ricevute ma non i file.
 - Gli importi non passano mai da numeri in virgola mobile: l'aritmetica è decimale esatta, con
   l'ordine di arrotondamento del tracciato ministeriale.
 - Nessuna analitica e nessuna telemetria.

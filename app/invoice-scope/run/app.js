@@ -31,6 +31,9 @@ import { stato as termState } from "./terms.js";
 import { NATURE } from "./validate.js";
 import { toString } from "./decimal.js";
 import * as parties from "./parties.js";
+import * as banks from "./banks.js";
+import * as meetings from "./meetings.js";
+import * as payments from "./payments.js";
 import * as categorie from "./categories.js";
 import * as solleciti from "./reminders.js";
 import * as piani from "./plans.js";
@@ -68,6 +71,9 @@ const ROUTES = {
   "#/progetti": "screenProjects",
   "#/scadenzario": "screenDue",
   "#/anagrafiche": "screenParties",
+  "#/anagrafiche/listino": "screenItems",
+  "#/anagrafiche/banche": "screenBanks",
+  "#/crm": "screenCrm",
   "#/acquisti": "screenPurchases",
   "#/azienda": "screenCompany",
   "#/impostazioni": "screenSettings",
@@ -112,17 +118,6 @@ const SEDE_FIELDS = ["indirizzo", "numeroCivico", "cap", "comune", "provincia"];
 let db = null;
 /** Il registro del service worker: `periodicSync` si registra su quello. */
 let worker = null;
-
-/**
- * The company's bank accounts, while the screen is open.
- *
- * **More than one, because a company has more than one.** The IBAN used to be a field on the
- * document and nowhere else, so it was retyped — or pasted from somewhere — on every invoice, which
- * is the one field where a single wrong character sends the money to a stranger. Kept here as an
- * array rather than in the form, because the rows are added and removed and a form has no shape for
- * that; `_saveCompany` writes them with the rest.
- */
-let conti = [];
 
 /**
  * The logo, while the company screen is open: a data URL, or `null`.
@@ -234,15 +229,30 @@ async function _route() {
   for (const id of [...Object.values(ROUTES), "screenDoc", "screenCustomer", "screenProject", "screenCost"]) {
     el(id).hidden = id !== screen;
   }
+  // The document screen is reached from the list, so it lights the list's tab: a tab that lights
+  // nothing while you are inside it makes the app feel as if you have left it. A customer's own
+  // screen lights Anagrafiche for the same reason.
+  const target = document_ ? "#/documenti"
+    : person ? "#/anagrafiche"
+      : lavoro ? "#/progetti"
+        : acquisto ? "#/acquisti" : hash;
+  // **Anagrafiche lights for its three screens**, and the sub-entry for its own: the parent says
+  // which part of the app you are in, the sub-entry which register.
+  const inParties = target === "#/anagrafiche" || target.startsWith("#/anagrafiche/");
   for (const link of window.document.querySelectorAll("#navbar a")) {
-    // The document screen is reached from the list, so it lights the list's tab: a tab that lights
-    // nothing while you are inside it makes the app feel as if you have left it. A customer's own
-    // screen lights Anagrafiche for the same reason.
-    const target = document_ ? "#/documenti"
-      : person ? "#/anagrafiche"
-        : lavoro ? "#/progetti"
-          : acquisto ? "#/acquisti" : hash;
-    link.classList.toggle("here", link.getAttribute("href") === target);
+    const href = link.getAttribute("href");
+    const here = link.id === "navParties" ? inParties : href === target;
+    link.classList.toggle("here", here);
+    if (here) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
+  }
+  el("navbar").classList.toggle("in-parties", inParties);
+  // On a phone the menu is a strip that scrolls sideways: the entry just opened is brought into
+  // view, or the sub-entries of Anagrafiche appear off the right edge where nobody sees them.
+  const nav = el("navbar");
+  if (nav.scrollWidth > nav.clientWidth) {
+    const here = [...window.document.querySelectorAll("#navbar a.here")].pop();
+    if (here && here.scrollIntoView) here.scrollIntoView({ block: "nearest", inline: "nearest" });
   }
 
   if (document_) {
@@ -275,6 +285,9 @@ async function _route() {
   if (screen === "screenPurchases") await purchases.renderList(db, { afterChange: _refresh });
   if (screen === "screenProjects") await project.renderList(db, { afterChange: _refresh });
   if (screen === "screenParties") await parties.render(db, _refresh);
+  if (screen === "screenItems") await parties.renderItems(db, _refresh);
+  if (screen === "screenBanks") await banks.render(db, _refresh);
+  if (screen === "screenCrm") await meetings.render(db, _refresh);
   if (screen === "screenDue") await due.render(db, _refresh);
   // **La sezione della cartella si ridisegna entrando, non solo quando la si tocca.** Disegnata una
   // volta all'avvio, tornando qui mostrava il confronto di allora: una copia che nel frattempo era
@@ -321,6 +334,9 @@ async function _demoView(db) {
     case "scadenzario": return "#/scadenzario";
     case "acquisti": return "#/acquisti";
     case "anagrafiche": return "#/anagrafiche";
+    case "listino": return "#/anagrafiche/listino";
+    case "banche": return "#/anagrafiche/banche";
+    case "crm": return "#/crm";
     case "progetti": return "#/progetti";
     case "azienda": return "#/azienda";
     case "cliente": return "#/cliente/demo-1";
@@ -732,79 +748,6 @@ async function _showSpace() {
   }
 }
 
-/** An id that survives an export and an import somewhere else, like every other id in the app. */
-function _contoId() {
-  return globalThis.crypto?.randomUUID?.()
-    || `conto-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
-
-/** The accounts, as rows that are edited where they are read. */
-function _drawConti() {
-  el("contiEmpty").hidden = conti.length > 0;
-  el("contiTable").hidden = conti.length === 0;
-
-  const body = el("contiBody");
-  body.textContent = "";
-  conti.forEach((conto, index) => {
-    const tr = document.createElement("tr");
-
-    const nome = document.createElement("td");
-    const etichetta = document.createElement("input");
-    etichetta.value = conto.etichetta || "";
-    etichetta.setAttribute("aria-label", `${t("f_etichetta")} ${index + 1}`);
-    etichetta.addEventListener("input", () => { conto.etichetta = etichetta.value; });
-    nome.append(etichetta);
-
-    const numero = document.createElement("td");
-    const iban = document.createElement("input");
-    iban.value = conto.iban || "";
-    iban.autocomplete = "off";
-    iban.setAttribute("aria-label", `${t("f_iban")} ${index + 1}`);
-    // Un IBAN è lungo ventisette caratteri: la casella deve mostrarli tutti, o il controllo a
-    // occhio — che è l'unico che c'è — si fa su metà numero.
-    iban.className = "iban";
-    // Normalised on the way into the record and not on the way onto the screen: rewriting the input
-    // while somebody types moves the caret to the end, which makes a correction in the middle of an
-    // IBAN impossible. So you type it with spaces, and it is stored without.
-    iban.addEventListener("input", () => {
-      conto.iban = iban.value.replace(/\s/g, "").toUpperCase();
-    });
-    numero.append(iban);
-
-    const scelta = document.createElement("td");
-    const radio = document.createElement("input");
-    radio.type = "radio";
-    radio.name = "contoDefault";
-    radio.checked = Boolean(conto.predefinito);
-    radio.setAttribute("aria-label", `${t("contiDefault")} ${index + 1}`);
-    // The radio group enforces one choice on the screen; this enforces it in the data, which is the
-    // copy that gets exported and read back on another machine.
-    radio.addEventListener("change", () => {
-      for (const altro of conti) altro.predefinito = altro === conto;
-    });
-    scelta.append(radio);
-
-    const azioni = document.createElement("td");
-    azioni.className = "right";
-    const togli = document.createElement("button");
-    togli.type = "button";
-    togli.className = "ghost small";
-    togli.textContent = "×";
-    togli.setAttribute("aria-label", `${t("contiRemove")} ${index + 1}`);
-    togli.addEventListener("click", () => {
-      conti.splice(index, 1);
-      // Removing the default leaves none, and a list of accounts where none is the default puts the
-      // choice back on every single document.
-      if (conti.length && !conti.some((c) => c.predefinito)) conti[0].predefinito = true;
-      _drawConti();
-    });
-    azioni.append(togli);
-
-    tr.append(nome, numero, scelta, azioni);
-    body.append(tr);
-  });
-}
-
 async function _loadCompany() {
   const company = (db ? await get(db, "company", COMPANY_ID) : null) || {};
   const form = el("companyForm");
@@ -835,10 +778,6 @@ async function _loadCompany() {
   form.elements.formatoNumero.value = company.formatoNumero || "anno";
   for (const name of SEDE_FIELDS) form.elements[name].value = (company.sede || {})[name] || "";
 
-  // Copied rather than referenced: the rows are edited in place, and editing the stored record
-  // before anybody pressed Salva would make «Salva» a word with nothing behind it.
-  conti = (company.conti || []).map((conto) => ({ ...conto }));
-  _drawConti();
   // No `logo` key at all means the record predates the letterhead, or is new: the default logo.
   // `null` is a choice — «Togli il logo» — and stays one.
   logo = "logo" in company ? company.logo : BRAND_LOGO;
@@ -975,15 +914,12 @@ async function _saveCompany(event) {
   record.codiceFiscale = fiscalCode(record.codiceFiscale, record.paese);
   record.sede.provincia = record.sede.provincia.toUpperCase().replace(/^R\.?S\.?M\.?$/, "SM");
 
-  // Una riga vuota è una riga che qualcuno ha aggiunto e non ha compilato: si scarta invece di
-  // salvarla, o comparirebbe per sempre nel menù dei conti senza dire niente.
   record.logo = logo || null;
-  record.conti = conti.filter((conto) => (conto.iban || "").trim() || (conto.etichetta || "").trim());
-  if (record.conti.length && !record.conti.some((conto) => conto.predefinito)) {
-    record.conti[0].predefinito = true;
-  }
-  conti = record.conti.map((conto) => ({ ...conto }));
-  _drawConti();
+  // **The accounts are kept as they are stored.** They are written by Anagrafiche › Banche now, and
+  // this form no longer shows them: building the record from the form alone would wipe them at
+  // every «Salva» of the company.
+  const stored = (await get(db, "company", COMPANY_ID)) || {};
+  record.conti = Array.isArray(stored.conti) ? stored.conti : [];
 
   await put(db, "company", record);
 
@@ -1391,14 +1327,6 @@ async function main() {
       await _drawDocuments(await documents(db));
     });
   }
-  el("contoNew").addEventListener("click", () => {
-    conti.push({ id: _contoId(), etichetta: "", iban: "", predefinito: conti.length === 0 });
-    _drawConti();
-    // Il campo appena nato prende il fuoco: aggiungere una riga e poi doverla cercare col mouse è
-    // il modo in cui un elenco che si allunga diventa fastidioso.
-    const ultimo = el("contiBody").lastElementChild;
-    if (ultimo) ultimo.querySelector("input").focus();
-  });
   el("exportAll").addEventListener("click", _export);
   el("backupPick").addEventListener("click", async () => {
     // Da trattenuta il pulsante non ricollega niente: riapre la domanda rimasta senza risposta.
@@ -1540,6 +1468,9 @@ async function main() {
   });
 
   parties.connect(db, _refresh);
+  banks.connect(db, _refresh);
+  meetings.connect(db, _refresh);
+  payments.connect();
   categorie.connect(db, _refresh);
   solleciti.connect(db);
   piani.connect(db, _refresh);

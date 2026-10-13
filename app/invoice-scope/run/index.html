@@ -69,7 +69,7 @@
      tutte: i dati sono inventati e non escono dalla memoria. -->
 <p class="demo-note" id="demoNote" data-t="demoNote" hidden></p>
 
-<!-- Le sette icone, una volta sola: il menù e i titoli delle schermate le richiamano con `<use>`.
+<!-- Le icone, una volta sola: il menù e i titoli delle schermate le richiamano con `<use>`.
      Disegnate a mano sulla griglia di 24, in `currentColor`: nessun file da scaricare, e seguono il
      colore del tema. -->
 <svg hidden aria-hidden="true">
@@ -79,6 +79,7 @@
   <symbol id="ico-projects" viewBox="0 0 24 24"><circle cx="6" cy="7" r="2"/><circle cx="6" cy="17" r="2"/><path d="M11 7h9.5M11 17h9.5M6 9v6"/></symbol>
   <symbol id="ico-due" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="1.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="M8 14h3v3H8z"/></symbol>
   <symbol id="ico-parties" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="1.5"/><circle cx="9" cy="11" r="2.2"/><path d="M5.8 16.2c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14.5 10h3M14.5 13.5h3"/></symbol>
+  <symbol id="ico-crm" viewBox="0 0 24 24"><circle cx="8.5" cy="8.5" r="3"/><circle cx="16.5" cy="9.5" r="2.5"/><path d="M3 19.5c.7-3 2.8-4.7 5.5-4.7s4.8 1.7 5.5 4.7"/><path d="M14.5 14.6c.6-.2 1.3-.3 2-.3 2.2 0 3.9 1.4 4.5 3.9"/></symbol>
   <symbol id="ico-company" viewBox="0 0 24 24"><path d="M4.5 20.5v-15l7.5-3 7.5 3v15"/><path d="M3 20.5h18"/><path d="M9 9.5h1.5M13.5 9.5H15M9 13h1.5M13.5 13H15M10.5 20.5v-4h3v4"/></symbol>
   <symbol id="ico-settings" viewBox="0 0 24 24"><path d="M4 7h2.5M11.5 7H20M4 12h8.5M17.5 12H20M4 17h1.5M10.5 17H20"/><circle cx="9" cy="7" r="2.5"/><circle cx="15" cy="12" r="2.5"/><circle cx="8" cy="17" r="2.5"/></symbol>
 </svg>
@@ -92,7 +93,16 @@
     <a href="#/acquisti" id="navPurchases"><svg aria-hidden="true"><use href="#ico-purchases"/></svg><span data-t="navPurchases"></span></a>
     <a href="#/progetti" id="navProjects"><svg aria-hidden="true"><use href="#ico-projects"/></svg><span data-t="navProjects"></span></a>
     <a href="#/scadenzario" id="navDue"><svg aria-hidden="true"><use href="#ico-due"/></svg><span data-t="navDue"></span></a>
+    <a href="#/crm" id="navCrm"><svg aria-hidden="true"><use href="#ico-crm"/></svg><span data-t="navCrm"></span></a>
     <a href="#/anagrafiche" id="navParties"><svg aria-hidden="true"><use href="#ico-parties"/></svg><span data-t="navParties"></span></a>
+    <!-- The sub-entries of Anagrafiche. In the column they are always there, under their parent, so
+         that «the banks» are found by reading the menu; on a phone, where the menu is a strip, they
+         join it only while one of the three screens is open. -->
+    <div class="nav-sub" id="navPartiesSub">
+      <a href="#/anagrafiche" id="navPartiesClients" data-sub="1"><span data-t="navPartiesClients"></span></a>
+      <a href="#/anagrafiche/listino" id="navPartiesItems" data-sub="1"><span data-t="navPartiesItems"></span></a>
+      <a href="#/anagrafiche/banche" id="navPartiesBanks" data-sub="1"><span data-t="navPartiesBanks"></span></a>
+    </div>
     <a href="#/azienda" id="navCompany"><svg aria-hidden="true"><use href="#ico-company"/></svg><span data-t="navCompany"></span></a>
     <a href="#/impostazioni" id="navSettings"><svg aria-hidden="true"><use href="#ico-settings"/></svg><span data-t="navSettings"></span></a>
   </nav>
@@ -543,7 +553,7 @@
       <table class="rows" id="costOutlaysTable" hidden>
         <thead><tr>
           <th data-t="f_data"></th><th data-t="payConto"></th><th data-t="incassiNote"></th>
-          <th class="right" data-t="incassiAmount"></th><th></th>
+          <th data-t="receiptLabel"></th><th class="right" data-t="incassiAmount"></th><th></th>
         </tr></thead>
         <tbody id="costOutlaysBody"></tbody>
       </table>
@@ -863,7 +873,7 @@
         <table class="rows" id="incassiTable" hidden>
           <thead><tr>
             <th data-t="f_data"></th><th data-t="payConto"></th><th data-t="incassiNote"></th>
-            <th class="right" data-t="incassiAmount"></th><th></th>
+            <th data-t="receiptLabel"></th><th class="right" data-t="incassiAmount"></th><th></th>
           </tr></thead>
           <tbody id="incassiBody"></tbody>
         </table>
@@ -881,9 +891,14 @@
     </div>
   </section>
 
-  <!-- Anagrafiche -->
+  <!-- Anagrafiche: three registers, three screens, one entry in the menu with its sub-entries.
+       They shared one screen while they were two short lists; with the banks a third arrived, and a
+       register somebody looks for has to be where its name is, not below two others. -->
   <section id="screenParties" class="screen" hidden>
-    <h1 class="titled"><span class="ico" aria-hidden="true"><svg><use href="#ico-parties"/></svg></span><span data-t="partiesTitle"></span></h1>
+    <div class="doc-head">
+      <h1 class="titled"><span class="ico" aria-hidden="true"><svg><use href="#ico-parties"/></svg></span><span data-t="navPartiesClients"></span></h1>
+      <button type="button" class="button ghost" id="partyNew" data-t="partiesNew"></button>
+    </div>
 
     <!-- Lo stesso soggetto fiscale su due schede. Sta in cima e non dentro la tabella perché non
          è una riga sbagliata: sono due righe giuste che insieme sono un errore, e si vede solo
@@ -893,10 +908,6 @@
       <div id="dupNoteList"></div>
     </div>
 
-    <div class="section-head">
-      <h2 data-t="partiesClients"></h2>
-      <button type="button" class="button ghost" id="partyNew" data-t="partiesNew"></button>
-    </div>
     <p class="empty" id="partiesEmpty"><span data-t="partiesEmpty"></span> <a href="#/impostazioni" data-t="emptyImport"></a></p>
     <div class="table-scroll">
     <table class="rows" id="partiesTable" hidden>
@@ -907,9 +918,12 @@
         <tbody id="partiesBody"></tbody>
       </table>
     </div>
+  </section>
 
-    <div class="section-head">
-      <h2 data-t="partiesItems"></h2>
+  <!-- Il listino -->
+  <section id="screenItems" class="screen" hidden>
+    <div class="doc-head">
+      <h1 class="titled"><span class="ico" aria-hidden="true"><svg><use href="#ico-parties"/></svg></span><span data-t="navPartiesItems"></span></h1>
       <button type="button" class="button ghost" id="itemNew" data-t="itemsNew"></button>
     </div>
     <p class="empty" id="itemsEmpty" data-t="itemsEmpty"></p>
@@ -921,6 +935,82 @@
         </tr></thead>
         <tbody id="itemsBody"></tbody>
       </table>
+    </div>
+  </section>
+
+  <!-- The banks: the company's accounts, which used to sit at the bottom of the company form where
+       nobody looked for them. The record is the same — `conti` in the company — and so is every
+       menu that offers them. -->
+  <section id="screenBanks" class="screen" hidden>
+    <div class="doc-head">
+      <h1 class="titled"><span class="ico" aria-hidden="true"><svg><use href="#ico-parties"/></svg></span><span data-t="navPartiesBanks"></span></h1>
+      <button type="button" class="button ghost" id="bankNew" data-t="contiNew"></button>
+    </div>
+    <p class="note" data-t="contiNote"></p>
+    <p class="empty" id="banksEmpty" data-t="contiEmpty"></p>
+    <div class="table-scroll">
+      <table class="rows" id="banksTable" hidden>
+        <thead><tr>
+          <th data-t="f_etichetta"></th><th data-t="f_istituto"></th><th data-t="f_iban"></th>
+          <th data-t="f_bic"></th><th></th>
+        </tr></thead>
+        <tbody id="banksBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- CRM: the meetings with the customers, across all of them. They are entries of the customers'
+       diaries — the same records — seen from the calendar's side: what is coming, what happened and
+       still has no outcome written, what is done. -->
+  <section id="screenCrm" class="screen wide" hidden>
+    <div class="doc-head">
+      <h1 class="titled"><span class="ico" aria-hidden="true"><svg><use href="#ico-crm"/></svg></span><span data-t="crmTitle"></span></h1>
+      <button type="button" class="button" id="meetingNew" data-t="meetingNew"></button>
+    </div>
+    <p class="note" data-t="crmNote"></p>
+    <div class="form docs-filters" id="crmFilters" hidden>
+      <label><span data-t="crmFilterParty"></span><select id="crmParty"></select></label>
+    </div>
+    <p class="empty" id="crmEmpty" data-t="crmEmpty"></p>
+    <p class="empty" id="crmNoMatch" data-t="crmNoMatch" hidden></p>
+
+    <div id="crmUpcoming" hidden>
+      <div class="section-head"><h2 data-t="crmUpcoming"></h2></div>
+      <div class="table-scroll">
+        <table class="rows">
+          <thead><tr>
+            <th data-t="docsDate"></th><th data-t="meetingTime"></th><th data-t="docsParty"></th>
+            <th data-t="meetingSubject"></th><th data-t="meetingPlace"></th><th></th>
+          </tr></thead>
+          <tbody id="crmUpcomingBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="crmToWrite" hidden>
+      <div class="section-head"><h2 data-t="crmToWrite"></h2></div>
+      <p class="note" data-t="crmToWriteNote"></p>
+      <div class="table-scroll">
+        <table class="rows">
+          <thead><tr>
+            <th data-t="docsDate"></th><th data-t="docsParty"></th><th data-t="meetingSubject"></th><th></th>
+          </tr></thead>
+          <tbody id="crmToWriteBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="crmDone" hidden>
+      <div class="section-head"><h2 data-t="crmDone"></h2></div>
+      <div class="table-scroll">
+        <table class="rows">
+          <thead><tr>
+            <th data-t="docsDate"></th><th data-t="docsParty"></th><th data-t="meetingSubject"></th>
+            <th data-t="meetingOutcomeShort"></th><th></th>
+          </tr></thead>
+          <tbody id="crmDoneBody"></tbody>
+        </table>
+      </div>
     </div>
   </section>
 
@@ -1110,6 +1200,7 @@
 
     <div class="section-head">
       <h2 data-t="custDiaryTitle"></h2>
+      <button type="button" class="button ghost" id="custMeetingNew" data-t="meetingNew"></button>
     </div>
     <p class="note" data-t="custDiaryNote"></p>
     <!-- Si scrive dove si legge: la riga sta in cima all'elenco, aperta, con la data di oggi già
@@ -1254,27 +1345,10 @@
       </label>
       <p class="note" data-t="progressivoNote"></p>
 
-      <!-- I conti stanno dentro il form dell'azienda, e si salvano con «Salva» insieme al resto:
-           un secondo pulsante che salva solo questo pezzo farebbe chiedere ogni volta quale dei due
-           premere. Le righe si modificano sul posto, come le scadenze del documento — è un gruppo
-           di campi che si ripete, non un elenco di schede. -->
-      <div class="conti">
-        <div class="section-head">
-          <h2 data-t="contiTitle"></h2>
-          <button type="button" class="button ghost" id="contoNew" data-t="contiNew"></button>
-        </div>
-        <p class="note" data-t="contiNote"></p>
-        <p class="empty" id="contiEmpty" data-t="contiEmpty"></p>
-        <div class="table-scroll">
-          <table class="rows" id="contiTable" hidden>
-            <thead><tr>
-              <th data-t="f_etichetta"></th><th data-t="f_iban"></th>
-              <th data-t="contiDefault"></th><th></th>
-            </tr></thead>
-            <tbody id="contiBody"></tbody>
-          </table>
-        </div>
-      </div>
+      <!-- The accounts moved to Anagrafiche › Banche, where a register is looked for. The line stays
+           here because this is where somebody who remembers the old place will look first. -->
+      <h2 class="form-group" data-t="contiTitle"></h2>
+      <p class="note wide"><a href="#/anagrafiche/banche" data-t="companyBanksLink"></a></p>
 
       <div class="actions">
         <button type="submit" class="button" data-t="save"></button>
@@ -1596,6 +1670,64 @@
   </form>
 </dialog>
 
+<!-- One bank account. A sheet like the price list's: an account has a name and an identity, and a
+     row of inputs inside another form was where it used to hide. -->
+<dialog id="bankDialog" class="sheet">
+  <form method="dialog" id="bankForm">
+    <h2 id="bankDialogTitle"></h2>
+    <div class="form">
+      <label><span data-t="f_etichetta"></span><input name="etichetta" autocomplete="off"></label>
+      <label><span data-t="f_istituto"></span><input name="istituto" autocomplete="off"></label>
+      <label class="wide"><span data-t="f_iban"></span><input name="iban" class="iban" autocomplete="off" spellcheck="false"></label>
+      <p class="note wide bank-codes" id="bankCodes"></p>
+      <label><span data-t="f_bic"></span><input name="bic" autocomplete="off" spellcheck="false" maxlength="14"></label>
+      <label><span data-t="f_filiale"></span><input name="filiale" autocomplete="off"></label>
+      <label class="wide"><span data-t="f_noteConto"></span><input name="note" autocomplete="off"></label>
+      <label class="check wide"><input type="checkbox" name="predefinito"><span data-t="contiDefaultCheck"></span></label>
+    </div>
+    <ul class="sheet-problems" id="bankProblems" hidden></ul>
+    <div class="actions sheet-actions">
+      <button type="button" class="button ghost" id="bankCancel" data-t="cancel"></button>
+      <button type="button" class="button ghost danger-text" id="bankDelete" data-t="del" hidden></button>
+      <span class="spacer"></span>
+      <button type="button" class="button" id="bankSave" data-t="save"></button>
+    </div>
+  </form>
+</dialog>
+
+<!-- One meeting with a customer: who, when, where, with whom, about what — and afterwards, how it
+     went. The same record as an entry of the customer's diary, with the fields a meeting has and a
+     note does not. -->
+<dialog id="meetingDialog" class="sheet">
+  <form method="dialog" id="meetingForm">
+    <h2 id="meetingDialogTitle"></h2>
+    <div class="form">
+      <label class="wide"><span data-t="docsParty"></span>
+        <select name="partyId" required></select>
+        <button type="button" class="link-button" id="meetingPartyNew" data-t="partiesNew"></button>
+      </label>
+      <label class="narrow"><span data-t="f_data"></span><input type="date" name="data" required></label>
+      <label class="narrow"><span data-t="meetingTime"></span><input type="time" name="ora"></label>
+      <label><span data-t="meetingPlace"></span><input name="luogo" autocomplete="off"></label>
+      <fieldset class="wide meeting-people">
+        <legend data-t="meetingPeople"></legend>
+        <div class="meeting-people-list" id="meetingPeople"></div>
+        <p class="note" id="meetingPeopleEmpty" data-t="meetingPeopleEmpty" hidden></p>
+      </fieldset>
+      <label class="wide required"><span data-t="meetingSubject"></span><textarea name="testo" rows="2"></textarea></label>
+      <label class="wide"><span data-t="meetingOutcome"></span><textarea name="esito" rows="3"></textarea></label>
+    </div>
+    <ul class="sheet-problems" id="meetingProblems" hidden></ul>
+    <div class="actions sheet-actions">
+      <button type="button" class="button ghost" id="meetingCancel" data-t="cancel"></button>
+      <button type="button" class="button ghost danger-text" id="meetingDelete" data-t="del" hidden></button>
+      <span class="spacer"></span>
+      <button type="button" class="button ghost" id="meetingIcs" data-t="meetingCalendar" hidden></button>
+      <button type="button" class="button" id="meetingSave" data-t="save"></button>
+    </div>
+  </form>
+</dialog>
+
 <!-- Il sollecito: si sceglie il cliente, si legge il testo, si copia. L'applicazione non manda
      niente — non ha un server e non conosce la posta di chi la usa — e il testo resta modificabile
      perché l'ultima parola su che cosa scrivere a un cliente è di chi lo conosce. -->
@@ -1779,6 +1911,19 @@
       <label class="narrow"><span data-t="f_data"></span><input name="data" type="date" required></label>
       <label id="payContoRow"><span data-t="payConto"></span><select name="conto"></select></label>
       <label class="wide"><span data-t="incassiNote"></span><input name="nota" autocomplete="off"></label>
+      <!-- The receipt of the transfer: our button and our line, the system's picker behind them.
+           The input stays hidden because its own face is the one control here that looks like
+           the operating system and not like the app. -->
+      <div class="wide receipt-row">
+        <span class="receipt-label" data-t="receiptLabel"></span>
+        <div class="receipt-pick">
+          <button type="button" class="button ghost small" id="payReceiptPick"></button>
+          <span class="meta" id="payReceiptName"></span>
+          <button type="button" class="ghost small" id="payReceiptClear" hidden>×</button>
+          <input type="file" id="payReceiptFile" hidden>
+        </div>
+        <p class="note" data-t="receiptNote"></p>
+      </div>
     </div>
     <ul class="sheet-problems" id="payProblems" hidden></ul>
     <div class="actions sheet-actions">
@@ -1788,6 +1933,9 @@
     </div>
   </form>
 </dialog>
+
+<!-- The picker a row of payments opens to attach a receipt afterwards: one for every list. -->
+<input type="file" id="receiptPick" hidden>
 
 <!-- **Il markup che l'editor condiviso pretende.** `biz/plan-editor.js` cerca questi id: la barra che
      segue la selezione e il menù dei blocchi. Sta scritto nel suo commento in testa, e

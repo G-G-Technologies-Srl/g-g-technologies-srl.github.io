@@ -335,8 +335,20 @@ export async function seed(db) {
     ["demo-2", "nota", -9, t("demoActNote")],
   ];
   for (const [partyId, tipo, giorno, testo] of diario) {
-    await saveActivity(db, { partyId, tipo, data: _giorno(giorno), testo });
+    // The meeting in the workshop has its outcome written: it is the one the CRM shows as held.
+    const esito = tipo === "incontro" ? t("demoMeetingOutcome") : "";
+    await saveActivity(db, { partyId, tipo, data: _giorno(giorno), testo, esito });
   }
+  // The CRM's other two groups: a meeting coming up, with time, place and people, and one already
+  // held with nothing written yet — the group the screen exists to keep short.
+  await saveActivity(db, {
+    partyId: "demo-1", tipo: "incontro", data: _giorno(4), ora: "10:30", luogo: t("demoMeetingPlace"),
+    persone: ["demo-c1", "demo-c2"], testo: t("demoMeetingNext"),
+  });
+  await saveActivity(db, {
+    partyId: "demo-2", tipo: "incontro", data: _giorno(-2), ora: "15:00", persone: ["demo-c3"],
+    testo: t("demoMeetingVisit"),
+  });
 
   // Il progetto nato dal preventivo accettato: una fase per riga, la prima già fatta e con il suo
   // importo. È il giro che la scheda promette — preventivo, fasi, «fattura le fasi fatte» — e nel

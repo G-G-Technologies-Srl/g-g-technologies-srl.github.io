@@ -48,6 +48,7 @@ export const GRUPPI = [
   ["counters", "archiveCounters"],
   // Accanto al testo, non dentro: l'archivio le nomina e la cartella le tiene.
   ["assets", "archiveAssets"],
+  ["attachments", "archiveAttachments"],
 ];
 
 /** Quelli che si mostrano sempre, se dentro o adesso c'è qualcosa: il resto parla solo se differisce. */
@@ -89,6 +90,11 @@ export function inventory(text, { app = "invoice-scope" } = {}) {
   if (Array.isArray(payload.assets)) {
     counts.assets = payload.assets.length;
     total += payload.assets.length;
+  }
+  // The receipts of the payments, the same: beside the text in `ricevute/`, listed in the archive.
+  if (Array.isArray(payload.attachments)) {
+    counts.attachments = payload.attachments.length;
+    total += payload.attachments.length;
   }
   return { ok: true, exported: payload.exported || null, schema: payload.schema || null, counts, total };
 }
