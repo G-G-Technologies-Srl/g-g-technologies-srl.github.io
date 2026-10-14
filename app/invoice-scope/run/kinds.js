@@ -82,6 +82,24 @@ export const KINDS = {
     sezioni: ["sconto", "pagamento", "validita"],
     converteIn: "TD01",
   },
+  // **La fattura proforma (o di cortesia)**: il documento che anticipa una fattura e chiede il
+  // pagamento o la conferma prima che la fattura esista. Non è fiscale — niente XML, niente
+  // fatturato, niente scadenzario — e ha la sua numerazione «PF». Porta già tutto quello che avrà
+  // la fattura (ritenuta, cassa, bollo, scadenze), e quando il cliente paga o conferma diventa una
+  // fattura con un comando, come il preventivo.
+  proforma: {
+    fiscale: false,
+    deve: false,
+    storna: false,
+    ricavo: false,
+    serie: "PF",
+    sequenza: "proforma",
+    label: "typeProforma",
+    raggruppabile: false,
+    stati: ["inviato", "accettato", "annullato"],
+    sezioni: ["sconto", "ritenuta", "cassa", "ordine", "bollo", "pagamento"],
+    converteIn: "TD01",
+  },
   ddt: {
     fiscale: false,
     deve: false,

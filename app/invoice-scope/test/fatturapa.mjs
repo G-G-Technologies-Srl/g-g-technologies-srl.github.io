@@ -18,7 +18,7 @@ import * as xml from "../run/xml.js";
 import {
   build, progressivo, destinatario, fileName, profileFor, identificativo, tipoDocumento,
   ambitoDi, ambitoDoc, applicaAmbito, AMBITI_MERCE, GRUPPI_MERCE, MERCE_CON_DDT,
-  IT_SDI, IT_PA, SM_EXPORT, SM_INTERNA, SM_ESTERO, TRACCIATO, MAX_BYTE, CASSE, frozen, snapshot,
+  IT_SDI, IT_PA, SM_EXPORT, SM_INTERNA, SM_ESTERO, TRACCIATO, MAX_BYTE, CASSE, frozen, snapshot, trasmissioneElettronica,
 } from "../run/fatturapa.js";
 
 let passed = 0;
@@ -956,6 +956,18 @@ test("le integrazioni: il fornitore è il cedente, sette zeri, CC, nessun pagame
     fattureCollegate: [{ numero: "7", data: "2026-09-03" }] }, { company: COMPANY, party: PARTY });
   assert.ok(td16.text.includes("<RegimeFiscale>RF01</RegimeFiscale>"));
   assert.ok(td16.text.includes("<IdDocumento>7</IdDocumento>"));
+});
+
+test("la fattura interna sammarinese è elettronica solo se l'azienda lo è: dal 2027, o per scelta", () => {
+  const sm = { paese: "SM" };
+  assert.equal(trasmissioneElettronica(sm, SM_INTERNA, "2026-10-14"), false, "prima del 2027 è facoltativa");
+  assert.equal(trasmissioneElettronica(sm, SM_INTERNA, "2027-01-02"), true);
+  assert.equal(trasmissioneElettronica({ ...sm, feInterna: "si" }, SM_INTERNA, "2026-10-14"), true);
+  assert.equal(trasmissioneElettronica({ ...sm, feInterna: "no" }, SM_INTERNA, "2027-05-01"), false, "chi non è soggetto");
+  // Elsewhere the file is the document; with no file, there is nothing to send.
+  assert.equal(trasmissioneElettronica({ ...sm, feInterna: "no" }, SM_EXPORT, "2026-10-14"), true);
+  assert.equal(trasmissioneElettronica(COMPANY, IT_SDI, "2026-10-14"), true);
+  assert.equal(trasmissioneElettronica(sm, SM_ESTERO, "2027-05-01"), false);
 });
 
 console.log(`fatturapa: ${passed} prove passate`);

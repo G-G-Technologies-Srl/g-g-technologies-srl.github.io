@@ -42,7 +42,8 @@ Invoice Scope does the part that takes expertise — the arithmetic, the Fattura
 
 ### What it does
 
-- Issues invoices, deferred invoices, advance invoices, credit and debit notes, with several VAT rates on one document. It also keeps quotes and delivery notes, each with its own numbering, and turns them into invoices without retyping lines, discounts and due dates.
+- Issues invoices, deferred invoices, advance invoices, credit and debit notes, with several VAT rates on one document. It also keeps quotes, pro-forma invoices and delivery notes, each with its own numbering, and turns them into invoices without retyping lines, discounts and due dates. From the list, any document can be duplicated for the same customer and lines.
+- Reopens an issued document for editing, keeping its number, with the warning that a document already transmitted is not corrected but reversed with a credit note.
 - Writes the FatturaPA file for every direction: from Italy to Italy, San Marino and abroad; from San Marino to Italy, abroad and other San Marino operators, with the domestic invoice compulsory from 1 January 2027. The direction follows from your country and the customer's.
 - Checks every document before it is issued and names the field, the rule and the fix. Works out VAT per rate the way the Italian exchange system recomputes it, in exact arithmetic.
 - Invoices public administrations in FPA12 format, with the office's unique code, CIG and CUP, and split payment. Handles withholding tax, professionals' pension contributions, virtual stamp duty and the flat-rate scheme.
@@ -123,7 +124,7 @@ PolyForm Shield 1.0.0. The code is public: it can be read, changed and used, com
 
 Free.
 
-**Version** 0.70.0 · **Updated** 14 October 2026 · **Licence** PolyForm-Shield-1.0.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
+**Version** 0.71.0 · **Updated** 14 October 2026 · **Licence** PolyForm-Shield-1.0.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
 
 *FAQ*
 

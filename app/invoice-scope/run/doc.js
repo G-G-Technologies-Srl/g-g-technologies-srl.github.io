@@ -30,7 +30,7 @@ import { NATURE as ALL_NATURE, validate } from "./validate.js";
 import { describe } from "./problems.js";
 import { fillDatalist } from "./categories.js";
 import {
-  draft, editable, save, issue, reopen, creditNote, convert, discard, markExported, nextProgressivo,
+  draft, editable, save, issue, reopen, modify, creditNote, convert, discard, markExported, nextProgressivo,
   setType, setCategory, documents, invoicedBy,
 } from "./model.js";
 import { build, fileName, MAX_BYTE } from "./fatturapa.js";
@@ -38,7 +38,7 @@ import { isCustomer, isSupplier, parties, items, party as getParty, openNewParty
 import { TIPI, KINDS, kind, has, numero as shownNumber, convertibile } from "./kinds.js";
 import {
   profileFor, ambitoDi, ambitoDoc, applicaAmbito, rimborsabile, AMBITI_MERCE, TIPI_CESSIONE,
-  MERCE_CON_DDT, CASSE,
+  MERCE_CON_DDT, CASSE, trasmissioneElettronica,
 } from "./fatturapa.js";
 import { stato as termState } from "./terms.js";
 import { control as statoControl } from "./states.js";
@@ -86,6 +86,7 @@ const SECTIONS = [
 /** The footer of the printed sheet, per kind. A quote is not a copy of anything. */
 const PRINT_FOOTER = {
   preventivo: "printFooterPreventivo",
+  proforma: "printFooterProforma",
   ddt: "printFooterDdt",
 };
 
@@ -99,6 +100,7 @@ const PRINT_FOOTER = {
  */
 const ISSUE_ASK = {
   preventivo: "docIssueAskPreventivo",
+  proforma: "docIssueAskProforma",
   ddt: "docIssueAskDdt",
   // A credit note asked «si storna con una nota di credito» about itself.
   TD04: "docIssueAskTD04",
@@ -112,6 +114,7 @@ const ISSUE_ASK = {
 
 
 let current = null;
+let azioneInCoda = null;                                 // an action asked from the list, for `open`
 let database = null;
 let onSaved = null;
 let company = {};                                       // read once per open; the defaults come from here
@@ -1359,8 +1362,10 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
   el("docTitle").textContent = current.numero
     ? `${t(profile.label)} ${shownNumber(current)}`
     : tf("docNewTitle", { tipo: t(profile.label) });
+  // A reopened document cannot change kind: its number belongs to that sequence.
+  el("docType").disabled = !canEdit || Boolean(current.riaperta);
   for (const id_ of [
-    "docType", "docDate", "docPartySelect", "docCausale", "docBollo", "docDiscount",
+    "docDate", "docPartySelect", "docCausale", "docBollo", "docDiscount",
     "docValidoFino", "trCausale", "trAspetto", "trColli", "trPorto", "trVettore",
     "ritApply", "ritType", "ritRate", "ritCausale",
     "cassaApply", "cassaTipo", "cassaRate", "cassaIva", "cassaNatura", "cassaRit",
@@ -1400,7 +1405,8 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
   el("docPartyNew").hidden = !canEdit;
   el("docIssue").hidden = !canEdit;
   el("docSave").hidden = !canEdit;
-  el("docDelete").hidden = !canEdit;
+  // A reopened document owns its number: it is issued again, never deleted.
+  el("docDelete").hidden = !canEdit || Boolean(current.numero);
   el("docAddLine").hidden = !canEdit;
   // Su un documento emesso i campi sono bloccati, quindi `Invio` non aggiunge niente: annunciare
   // una scorciatoia che non funziona è peggio che non annunciarla.
@@ -1432,6 +1438,16 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
   // right — not by a credit note, which would credit the supplier for a sale nobody made.
   el("docCredit").hidden = canEdit || !profile.fiscale || current.tipo === "TD04" || Boolean(profile.autofattura);
   el("docReopen").hidden = canEdit || current.stato !== "emesso" || current.esportato;
+  // «Modifica» on every numbered document that is closed: the warning comes before, in the ask.
+  el("docModify").hidden = canEdit || !current.numero || Boolean(current.ricostruito);
+  // The reopened document says what it is: same number, to issue again; and if its file had left,
+  // that the right correction was a credit note.
+  const riaperta = canEdit && current.riaperta && current.numero ? current.riaperta : null;
+  el("docModifyNote").hidden = !riaperta;
+  if (riaperta) {
+    el("docModifyText").textContent = tf(riaperta.esportato ? "docModifyNoteSent" : "docModifyNote",
+      { numero: shownNumber(current) });
+  }
 
   // **Un documento già fatturato non si fattura di nuovo**, e non è un divieto scritto su di lui:
   // si guarda se qualche fattura lo nomina. Buttata via la bozza della fattura, il documento torna
@@ -1471,8 +1487,10 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
   const term = el("docTerm");
   const scadenza = canEdit
     ? null
-    : termState(current, profileFor(company, party),
-      { oggi: currentDay() });
+    // No transmission deadline for a document that is not sent electronically.
+    : (trasmissioneElettronica(company, profileFor(company, party), current.data)
+      ? termState(current, profileFor(company, party), { oggi: currentDay() })
+      : null);
   term.hidden = !scadenza;
   term.className = "doc-term";
   if (scadenza) {
@@ -1524,7 +1542,7 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
     // peggio che dire che è in lavorazione.
     ? `${t("docAlreadyInvoiced")} ${shownNumber(fatturaChiLoPorta) || t("stateBozza").toLowerCase()}`
     : (current.daPreventivo
-      ? `${t("docFromQuote")} ${current.daPreventivo.numero}`
+      ? `${t(current.daPreventivo.tipo === "proforma" ? "docFromProforma" : "docFromQuote")} ${current.daPreventivo.numero}`
       // Only the delivery notes converted in the app: the ones typed by hand are listed in their own
       // box, and naming them here as well would say it twice.
       : ((current.ddt || []).some((ref) => ref.id)
@@ -1546,9 +1564,14 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
   // country other than Italy — there is no original elsewhere: the sheet itself is the document,
   // and calling it a courtesy copy would be a lie printed on every page.
   const tracciato = profileFor(company, party);
+  // **The sheet is a courtesy copy only when a file is really the original.** Between San Marino
+  // operators the e-invoice is voluntary until 2027, and a company outside the obligation never
+  // sends it: there the sheet is the invoice, and calling it a copy would be untrue.
   const fiscalFoot = !tracciato.file
     ? "printFooterOriginale"
-    : (tracciato.paese === "SM" ? "printFooterSm" : "printFooter");
+    : (!trasmissioneElettronica(company, tracciato, current.data)
+      ? "printFooterCartaceo"
+      : (tracciato.paese === "SM" ? "printFooterSm" : "printFooter"));
   el("screenDoc").dataset.printFooter = canEdit
     ? t("printFooterBozza")
     : t(PRINT_FOOTER[current.tipo] || fiscalFoot);
@@ -1565,6 +1588,19 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
   _drawDue();
   _drawSummary();
   _drawSheet();
+
+  // An action asked from the list of documents, carried out here where its rules live: the XML
+  // download has its progressive, its warnings and its messages in one place only.
+  if (azioneInCoda && azioneInCoda.id === current.id) {
+    const { azione } = azioneInCoda;
+    azioneInCoda = null;
+    if (azione === "xml" && !el("docXml").hidden) el("docXml").click();
+  }
+}
+
+/** Ask for an action on a document that is about to open: `xml`, from the list of documents. */
+export function queueAction(id, azione) {
+  azioneInCoda = { id, azione };
 }
 
 /** The printed sheet, from the same totals the screen shows. Cheap, so it is drawn on every open. */
@@ -1823,7 +1859,9 @@ export function connect(db) {
     // Asked before the number is handed out, because that is the step that cannot be taken back.
     // The wording says what follows — a credit note, or another quote — rather than "are you sure",
     // which tells nobody anything they did not already suspect.
-    const domanda = t(ISSUE_ASK[current.tipo] || "docIssueAsk");
+    const domanda = current.riaperta && current.numero
+      ? tf("docIssueAskRiaperta", { numero: shownNumber(current) })
+      : t(ISSUE_ASK[current.tipo] || "docIssueAsk");
     if (!(await ask(domanda, { okLabel: t("docIssue") }))) return;
 
     try {
@@ -1840,7 +1878,9 @@ export function connect(db) {
 
     // Con il numero, il passo dopo: una fattura non è finita finché il file non è partito, e chi
     // emette la prima non sa che il pulsante sta in fondo alla pagina.
-    const seguito = kind(current).fiscale
+    // The next step only where a file is the document: a company that does not send the internal
+    // San Marino e-invoice is not told to upload one.
+    const seguito = kind(current).fiscale && trasmissioneElettronica(company, profileFor(company, party), current.data)
       ? ` ${t(profileFor(company, party).pa ? "docIssuedNextPa"
         : profileFor(company, party).paese === "SM" ? "docIssuedNextSm" : "docIssuedNext")}`
       : "";
@@ -1952,6 +1992,24 @@ export function connect(db) {
     const saved = await save(database, nota);
     if (onSaved) onSaved();
     location.hash = `#/documento/${saved.id}`;
+  });
+
+  el("docModify").addEventListener("click", async () => {
+    _cancelPending();
+    // Two warnings, by what is known: a file already downloaded may have been sent, and a sent
+    // document is reversed with a credit note, not corrected.
+    const chiave = kind(current).fiscale
+      ? (current.esportato || ["inviato", "accettato"].includes(current.stato) ? "docModifyAskSent" : "docModifyAsk")
+      : "docModifyAskPlain";
+    if (!(await ask(tf(chiave, { numero: shownNumber(current) }), { okLabel: t("docModify"), danger: chiave === "docModifyAskSent" }))) return;
+    try {
+      current = await modify(database, current);
+    } catch (error) {
+      await tell(error.message);
+      return;
+    }
+    if (onSaved) onSaved();
+    await open(database, current.id, { afterSave: onSaved });
   });
 
   el("docReopen").addEventListener("click", async () => {

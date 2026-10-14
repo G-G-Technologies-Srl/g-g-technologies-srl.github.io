@@ -335,6 +335,7 @@ const IT = {
   typeTD05: "Nota di debito",
   typeTD24: "Fattura differita",
   typeTD29: "Autofattura",
+  typeProforma: "Fattura proforma",
   typeTD16: "Integrazione reverse charge interno (TD16)",
   typeTD17: "Integrazione servizi dall'estero (TD17)",
   typeTD18: "Integrazione beni intra-UE (TD18)",
@@ -347,6 +348,7 @@ const IT = {
   shortTD04: "Nota di credito",
   shortTD24: "Fatt. differita",
   shortTD02: "Acconto",
+  shortProforma: "Proforma",
   shortTD05: "Nota di debito",
   shortTD29: "Autofattura",
   shortTD16: "Integr. TD16",
@@ -1113,8 +1115,8 @@ const IT = {
   docBollo: "Addebita il bollo di 2,00 €",
   docBolloDue: "Sopra i 77,47 € senza IVA il bollo è dovuto. Se viene addebitato al cliente, spuntalo.",
   docIssue: "Emetti",
-  docIssueAsk: "Una volta emessa, la fattura non si modifica più: si storna con una nota di "
-    + "credito. Emetto?",
+  docIssueAsk: "Emessa, la fattura prende il suo numero. Fino all'invio si può ancora modificare; "
+    + "dopo la trasmissione si storna con una nota di credito. Emetto?",
   docIssued: "Emesso con il numero",
   docIssuedNext: "Adesso scarica l'XML — il pulsante è in cima, accanto al titolo — e mandalo: da "
     + "«Fatture e Corrispettivi» dell'Agenzia delle Entrate, o tramite il vostro commercialista.",
@@ -1152,13 +1154,26 @@ const IT = {
     + "numero viene scartato.",
   docNoXml: "Il preventivo e il documento di trasporto restano qui: si stampano, e quando il "
     + "cliente conferma diventano una fattura. È la fattura che produce il file.",
-  docIssueAskPreventivo: "Una volta emesso, il preventivo prende un numero e non si modifica più. "
-    + "Se il cliente chiede una variante, se ne emette un altro. Emetto?",
-  docIssueAskTD04: "Una volta emessa, la nota di credito prende un numero e non si modifica più. Emetto?",
-  docIssueAskAutofattura: "Una volta emessa, l'autofattura prende un numero e non si modifica più: un errore si corregge con un'altra autofattura. Emetto?",
-  docIssueAskIntegrazione: "Una volta emessa, l'integrazione prende un numero e non si modifica più: un errore si corregge con un'altra integrazione, con importi positivi o negativi. Emetto?",
-  docIssueAskDdt: "Una volta emesso, il documento di trasporto prende un numero e non si modifica "
-    + "più. Emetto?",
+  docIssueAskPreventivo: "Emesso, il preventivo prende il suo numero. Se il cliente chiede una "
+    + "variante, conviene emetterne un altro. Emetto?",
+  docIssueAskTD04: "Emessa, la nota di credito prende il suo numero; dopo la trasmissione non si modifica più. Emetto?",
+  docIssueAskProforma: "Emessa, la proforma prende un numero della sua serie, che non consuma numeri di fattura. La fattura si crea quando il cliente paga o conferma, con «Crea la fattura». Emetto?",
+  docIssueAskRiaperta: "Il documento torna emesso con lo stesso numero, {numero}. Emetto?",
+  docModify: "Modifica",
+  docModifyAsk: "Il documento {numero} torna modificabile e mantiene il suo numero. Se è già stato trasmesso all'Agenzia delle Entrate o all'Ufficio Tributario non va modificato: si emette una nota di credito. Modifico?",
+  docModifyAskSent: "Attenzione: l'XML del documento {numero} è già stato scaricato, o il documento risulta inviato. Se è stato trasmesso all'Agenzia delle Entrate o all'Ufficio Tributario non va modificato: si emette una nota di credito e, se serve, una fattura nuova. Modifico comunque?",
+  docModifyAskPlain: "Il documento {numero} torna modificabile e mantiene il suo numero. Modifico?",
+  docModifyNote: "Documento riaperto per la modifica: mantiene il numero {numero}. Per chiuderlo, emettilo di nuovo.",
+  docModifyNoteSent: "Documento riaperto per la modifica: mantiene il numero {numero}. L'XML era già stato scaricato: se il file è stato trasmesso, la strada giusta è una nota di credito, non questa modifica. Per chiuderlo, emettilo di nuovo e scarica di nuovo l'XML.",
+  docFromProforma: "Dalla fattura proforma",
+  docsActions: "Azioni…",
+  docsActionOpen: "Apri",
+  docsActionXml: "Scarica l'XML",
+  docsActionDuplicate: "Duplica",
+  docsDuplicated: "Creata una bozza uguale a {numero}, con la data di oggi.",
+  docIssueAskAutofattura: "Emessa, l'autofattura prende il suo numero; dopo la trasmissione un errore si corregge con un'altra autofattura. Emetto?",
+  docIssueAskIntegrazione: "Emessa, l'integrazione prende il suo numero; dopo la trasmissione un errore si corregge con un'altra integrazione, con importi positivi o negativi. Emetto?",
+  docIssueAskDdt: "Emesso, il documento di trasporto prende il suo numero. Emetto?",
   printTo: "Destinatario",
   printSupplier: "Fornitore (cedente)",
   printPiva: "P. IVA",
@@ -1183,6 +1198,8 @@ const IT = {
     + "Interscambio. Prodotta con Invoice Scope.",
   printFooterSm: "Copia di cortesia. L'originale fiscale è il file XML trasmesso all'Ufficio Tributario "
     + "della Repubblica di San Marino. Prodotta con Invoice Scope.",
+  printFooterCartaceo: "Documento originale, emesso in forma cartacea o PDF. Prodotto con Invoice Scope.",
+  printFooterProforma: "Fattura proforma. Non è un documento fiscale: la fattura sarà emessa al pagamento o alla conferma del cliente.",
   printFooterOriginale: "Originale. Per questa destinazione non esiste un file da trasmettere: "
     + "il documento fiscale è questo foglio. Prodotto con Invoice Scope.",
   printFooterBozza: "Bozza: non è un documento emesso e non ha un numero. Serve a rileggere prima di emettere.",
@@ -1711,6 +1728,10 @@ const IT = {
   liqLN: "Non in liquidazione",
   liqLS: "In liquidazione",
   f_cassaPredefinita: "cassa a cui siete iscritti",
+  f_feInterna: "fattura elettronica verso operatori sammarinesi",
+  feInterna_auto: "Dal 1° gennaio 2027, quando diventa obbligatoria",
+  feInterna_si: "Sì, l'XML si trasmette già all'Ufficio Tributario",
+  feInterna_no: "No, l'azienda non è soggetta all'obbligo: vale il documento cartaceo o PDF",
   cassaNessuna: "Nessuna",
   companyCassaNote: "Per i professionisti iscritti a una cassa: le fatture nuove partono con il contributo già spuntato, e si toglie dove non serve.",
   companyDefaultsNote: "Quello che l'app scrive da sé su ogni riga nuova: l'aliquota, e se è zero "
@@ -2077,6 +2098,7 @@ const EN = {
   typeTD05: "Debit note",
   typeTD24: "Deferred invoice",
   typeTD29: "Self-billed invoice",
+  typeProforma: "Pro-forma invoice",
   typeTD16: "Domestic reverse-charge integration (TD16)",
   typeTD17: "Integration, services from abroad (TD17)",
   typeTD18: "Integration, intra-EU goods (TD18)",
@@ -2087,6 +2109,7 @@ const EN = {
   shortTD04: "Credit note",
   shortTD24: "Deferred inv.",
   shortTD02: "Advance",
+  shortProforma: "Pro-forma",
   shortTD05: "Debit note",
   shortTD29: "Self-billed",
   shortTD16: "Integr. TD16",
@@ -2832,8 +2855,8 @@ const EN = {
   docBolloDue: "Above 77.47 € without VAT the stamp duty is due. Tick it to charge it to the "
     + "customer.",
   docIssue: "Issue",
-  docIssueAsk: "Once issued, an invoice cannot be changed: it is reversed with a credit note. "
-    + "Shall I issue it?",
+  docIssueAsk: "Once issued, the invoice takes its number. Until it is sent it can still be edited; "
+    + "after transmission it is reversed with a credit note. Shall I issue it?",
   docIssued: "Issued with number",
   docIssuedNext: "Now download the XML — the button is at the top, beside the title — and send it: "
     + "from the revenue agency's portal, or through your accountant.",
@@ -2871,13 +2894,26 @@ const EN = {
     + "rejected.",
   docNoXml: "A quote and a delivery note stay here: you print them, and when the customer confirms "
     + "they become an invoice. The invoice is what produces the file.",
-  docIssueAskPreventivo: "Once issued, a quote takes a number and cannot be changed. If the "
-    + "customer asks for a variant, you write another one. Shall I issue it?",
-  docIssueAskTD04: "Once issued, the credit note takes a number and cannot be changed. Issue it?",
-  docIssueAskAutofattura: "Once issued, the self-billed invoice takes a number and cannot be changed: a mistake is corrected with another one. Issue it?",
-  docIssueAskIntegrazione: "Once issued, the integration takes a number and cannot be changed: a mistake is corrected with another integration, with positive or negative amounts. Issue it?",
-  docIssueAskDdt: "Once issued, a delivery note takes a number and cannot be changed. Shall I "
-    + "issue it?",
+  docIssueAskPreventivo: "Once issued, the quote takes its number. If the customer asks for a "
+    + "variant, it is best to issue another one. Shall I issue it?",
+  docIssueAskTD04: "Once issued, the credit note takes its number; after transmission it cannot be changed. Issue it?",
+  docIssueAskProforma: "Once issued, the pro-forma takes a number from its own series, which uses up no invoice numbers. The invoice is created when the customer pays or confirms, with «Create the invoice». Issue it?",
+  docIssueAskRiaperta: "The document goes back to issued with the same number, {numero}. Issue it?",
+  docModify: "Edit",
+  docModifyAsk: "Document {numero} becomes editable again and keeps its number. If it has already been sent to the revenue agency or to the San Marino tax office it must not be edited: a credit note is issued instead. Edit it?",
+  docModifyAskSent: "Warning: the XML of document {numero} has already been downloaded, or the document is marked as sent. If it was sent to the revenue agency or to the San Marino tax office it must not be edited: a credit note is issued and, if needed, a new invoice. Edit it anyway?",
+  docModifyAskPlain: "Document {numero} becomes editable again and keeps its number. Edit it?",
+  docModifyNote: "Document reopened for editing: it keeps number {numero}. To close it, issue it again.",
+  docModifyNoteSent: "Document reopened for editing: it keeps number {numero}. Its XML had already been downloaded: if the file was sent, the right correction is a credit note, not this edit. To close it, issue it again and download the XML again.",
+  docFromProforma: "From the pro-forma invoice",
+  docsActions: "Actions…",
+  docsActionOpen: "Open",
+  docsActionXml: "Download the XML",
+  docsActionDuplicate: "Duplicate",
+  docsDuplicated: "A draft like {numero} was created, dated today.",
+  docIssueAskAutofattura: "Once issued, the self-billed invoice takes its number; after transmission a mistake is corrected with another one. Issue it?",
+  docIssueAskIntegrazione: "Once issued, the integration takes its number; after transmission a mistake is corrected with another integration, with positive or negative amounts. Issue it?",
+  docIssueAskDdt: "Once issued, the delivery note takes its number. Shall I issue it?",
   printTo: "To",
   printSupplier: "Supplier (seller)",
   printPiva: "VAT no.",
@@ -2902,6 +2938,8 @@ const EN = {
     + "system. Produced with Invoice Scope.",
   printFooterSm: "Courtesy copy. The fiscal original is the XML file sent to the Ufficio Tributario of the "
     + "Republic of San Marino. Produced with Invoice Scope.",
+  printFooterCartaceo: "Original document, issued on paper or as PDF. Produced with Invoice Scope.",
+  printFooterProforma: "Pro-forma invoice. Not a fiscal document: the invoice will be issued on payment or on the customer's confirmation.",
   printFooterOriginale: "Original. For this destination there is no file to transmit: this sheet "
     + "is the fiscal document. Produced with Invoice Scope.",
   printFooterBozza: "Draft: not an issued document, and it has no number. For reading over before issuing.",
@@ -3410,6 +3448,10 @@ const EN = {
   liqLN: "Not in liquidation",
   liqLS: "In liquidation",
   f_cassaPredefinita: "the fund you belong to",
+  f_feInterna: "e-invoicing towards San Marino operators",
+  feInterna_auto: "From 1 January 2027, when it becomes compulsory",
+  feInterna_si: "Yes, the XML is already sent to the tax office",
+  feInterna_no: "No, the company is not subject to the obligation: the paper or PDF document applies",
   cassaNessuna: "None",
   companyCassaNote: "For professionals who belong to a fund: new invoices start with the contribution ticked, and it can be removed where it does not apply.",
   companyDefaultsNote: "What the app writes by itself on every new line: the rate, and at zero the "

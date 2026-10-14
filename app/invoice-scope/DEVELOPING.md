@@ -138,7 +138,7 @@ Passano dalla import map, mai da un import relativo, e hanno due licenze diverse
 
 ---
 
-## Le diciannove cose che non si rompono
+## Le venti cose che non si rompono
 
 1. **Nessun importo passa da un float.** `0.1 + 0.2` su una fattura non è una curiosità, è un numero
    sbagliato depositato all'Agenzia. Tutto passa da `decimal.js`, che sta a otto decimali perché il
@@ -147,7 +147,7 @@ Passano dalla import map, mai da un import relativo, e hanno due licenze diverse
    (sul riepilogo, mai per riga), documento. Cambiarlo significa un file che l'SdI rifiuta.
 3. **Il contatore è un record e sale soltanto.** `max() + 1` sembra equivalente e non lo è: si
    cancella l'ultima fattura di dicembre e la numerazione torna indietro. Un documento emesso non si
-   rinumera e non si dis-emette.
+   rinumera: si riapre (`modify`, punto 20) e torna fuori con lo stesso numero.
    **E il contatore è per sequenza, non per tipo** (`counterKey` in `db.js`, `sequenza` in
    `kinds.js`): una fattura differita è una fattura e sta nella stessa sequenza, una nota di credito
    ha la sua e lo dichiara con la sigla «NC». Con un contatore per tipo uscivano tutte e tre come
@@ -237,6 +237,21 @@ Passano dalla import map, mai da un import relativo, e hanno due licenze diverse
     del mese dopo (`terms.integrazione`, contato dalla data della fattura del fornitore), IVA nei
     due registri in `taxBalance` (il forfettario non detrae). La proposta nasce da `daIntegrare`
     in `costs.js` sugli acquisti con `inversione`; cancellare la bozza la ridà (`releasePurchase`).
+20. **Riaprire un emesso non tocca il contatore.** `modify` in `model.js` rimette il documento in
+    bozza **con il suo numero** e scrive in `riaperta` stato, esportato e la chiave del contatore
+    (`counterKey`); `issue` vede `riaperta` + `numero`, salta il contatore e rifiuta se la serie o
+    l'anno sono cambiati — per questo il tipo resta bloccato finché la bozza è riaperta. Una bozza con
+    numero non si scarta (`discard`) e non si cancella dall'elenco: si riemette. L'avviso cambia con
+    lo stato (`docModifyAskSent` dopo l'invio: lì la strada è la nota di credito). `duplicate` fa una
+    bozza nuova, senza numero, con righe, condizioni e rate (date vuote). La **proforma** è un tipo
+    in `kinds.js` (`fiscale:false`, serie «PF», sequenza sua, `converteIn:"TD01"`): non entra nel
+    fatturato né nello scadenzario, e «Crea la fattura» la converte come un preventivo. Le azioni di
+    ogni riga dell'elenco stanno in un `select` (`_rowActions`/`_rowAction` in `app.js`); «Scarica
+    l'XML» apre il documento e passa da `queueAction` di `doc.js`, così il file esce dalla stessa
+    strada dello schermo. Il piede della stampa e il termine di trasmissione leggono
+    `trasmissioneElettronica` di `fatturapa.js`: sul canale interno sammarinese dipende da
+    `company.feInterna` («auto» = obbligo dal `INTERNA_OBBLIGATORIA_DAL`, 1° gennaio 2027); senza
+    trasmissione il foglio è l'originale (`printFooterCartaceo`) e nessun termine compare.
 
 ---
 

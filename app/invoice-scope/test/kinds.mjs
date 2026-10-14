@@ -34,7 +34,7 @@ function test(name, fn) {
 // -----------------------------------------------------------------------------------------------------------------
 
 test("i cinque tipi sono quelli attesi, nell'ordine del lavoro", () => {
-  assert.deepEqual(TIPI, ["preventivo", "ddt", "TD01", "TD24", "TD02", "TD04", "TD05", "TD29",
+  assert.deepEqual(TIPI, ["preventivo", "proforma", "ddt", "TD01", "TD24", "TD02", "TD04", "TD05", "TD29",
     "TD16", "TD17", "TD18", "TD19"]);
   assert.deepEqual(TIPI_FISCALI, ["TD01", "TD24", "TD02", "TD04", "TD05", "TD29", "TD16", "TD17", "TD18", "TD19"]);
 });

@@ -17,7 +17,7 @@ import assert from "node:assert/strict";
 import { openDatabase, documentKey, fileNameKey } from "../run/db.js";
 import { numero as shownNumber } from "../run/kinds.js";
 import {
-  draft, editable, save, issue, reopen, setState, setType, creditNote, convert, convertMany,
+  draft, editable, save, issue, reopen, setState, setType, creditNote, convert, convertMany, modify, duplicate,
   discard, documents, invoicedBy, markExported, nextProgressivo, setCategory, NUMERAZIONI,
 } from "../run/model.js";
 import { put, get, list, reset, failOnWrite } from "./fake-store.mjs";
@@ -684,7 +684,7 @@ await test("un preventivo emesso diventa una bozza di fattura, col riferimento",
   assert.deepEqual(fattura.scontoDocumento, { percentuale: "10" });
   assert.deepEqual(fattura.pagamento.rate, [{ scadenza: "2026-10-31" }]);
   assert.deepEqual(fattura.daPreventivo, {
-    numero: "PR 2026/0001", data: "2026-09-03", id: preventivo.id,
+    numero: "PR 2026/0001", data: "2026-09-03", id: preventivo.id, tipo: "preventivo",
   });
   assert.equal(fattura.validoFino, undefined);
 });
@@ -819,6 +819,78 @@ await test("un preventivo non si storna con una nota di credito", async () => {
     tipo: "preventivo", validoFino: "2026-10-04",
   })), CONTEXT);
   assert.throws(() => creditNote(preventivo), /documento fiscale/);
+});
+
+// -----------------------------------------------------------------------------------------------------------------
+//  m o d i f i c a ,   d u p l i c a ,   p r o f o r m a
+// -----------------------------------------------------------------------------------------------------------------
+
+await test("un documento emesso si riapre e torna emesso con lo stesso numero", async () => {
+  const db = await openDatabase();
+  const prima = await issue(db, await save(db, newDoc()), CONTEXT);
+  const seconda = await issue(db, await save(db, newDoc()), CONTEXT);
+  const esportata = { ...prima, esportato: true, stato: "inviato" };
+  const aperta = await modify(db, esportata);
+  assert.equal(aperta.stato, "bozza");
+  assert.equal(aperta.numero, prima.numero);
+  assert.equal(aperta.esportato, false, "il file va rifatto dopo la correzione");
+  assert.deepEqual([aperta.riaperta.stato, aperta.riaperta.esportato], ["inviato", true]);
+  // Corrected and issued again: the same number, no counter moved.
+  const corretta = await issue(db, await save(db, { ...aperta, righe: [{ ...aperta.righe[0], quantita: "2" }] }), CONTEXT);
+  assert.equal(corretta.numero, prima.numero);
+  assert.equal(corretta.stato, "emesso");
+  assert.equal(corretta.riaperta, undefined);
+  assert.ok(corretta.modificato);
+  const terza = await issue(db, await save(db, newDoc()), CONTEXT);
+  assert.equal(terza.numero, "2026/0003", `dopo ${seconda.numero} viene la 3, non un numero riusato`);
+  // The correction cannot move the number to another year.
+  const ancora = await modify(db, corretta);
+  await assert.rejects(issue(db, await save(db, { ...ancora, data: "2027-01-10" }), { ...CONTEXT, oggi: "2027-01-10" }), /altro anno/);
+  // And a reopened document is not deleted: it owns its number.
+  await assert.rejects(discard(db, ancora), /numerato/);
+});
+
+await test("duplica: stesso cliente e stesse righe, data di oggi, niente numero né collegamenti", async () => {
+  const db = await openDatabase();
+  const fonte = await issue(db, await save(db, newDoc({
+    causale: "Canone", categoria: "Servizi", scontoDocumento: { percentuale: "5" },
+    pagamento: { condizioni: "TP02", modalita: "MP05", iban: "IT60X0542811101000000123456", rate: [{ scadenza: "2026-10-03" }] },
+  })), CONTEXT);
+  const copia = duplicate({ ...fonte, fattureCollegate: [{ numero: "X", data: "2026-01-01" }], esportato: true });
+  assert.equal(copia.tipo, fonte.tipo);
+  assert.equal(copia.partyId, fonte.partyId);
+  assert.equal(copia.stato, "bozza");
+  assert.equal(copia.numero, null);
+  assert.notEqual(copia.id, fonte.id);
+  assert.deepEqual(copia.righe, fonte.righe);
+  assert.notEqual(copia.righe[0], fonte.righe[0], "una copia delle righe, non le stesse");
+  assert.deepEqual(copia.scontoDocumento, { percentuale: "5" });
+  assert.equal(copia.causale, "Canone");
+  assert.equal(copia.pagamento.iban, fonte.pagamento.iban);
+  assert.deepEqual(copia.pagamento.rate, [], "le date delle scadenze non si copiano");
+  for (const campo of ["fattureCollegate", "totali", "cliente", "emittente", "esportato", "chiave"]) {
+    assert.ok(!copia[campo], `${campo} non passa`);
+  }
+  const salvata = await save(db, copia);
+  const emessa = await issue(db, salvata, CONTEXT);
+  assert.equal(emessa.numero, "2026/0002");
+});
+
+await test("la proforma non è fiscale, ha la sua serie, e diventa fattura con ritenuta e scadenze", async () => {
+  const db = await openDatabase();
+  const proforma = await issue(db, await save(db, newDoc({
+    tipo: "proforma", serie: undefined,
+    ritenuta: { tipo: "RT01", aliquota: "20", causale: "A" },
+    pagamento: { condizioni: "TP02", modalita: "MP05", rate: [{ scadenza: "2026-10-03" }] },
+  })), CONTEXT);
+  assert.equal(proforma.serie, "PF");
+  assert.equal(shownNumber(proforma), "PF 2026/0001");
+  const fattura = convert(proforma);
+  assert.equal(fattura.tipo, "TD01");
+  assert.deepEqual(fattura.ritenuta, proforma.ritenuta);
+  assert.deepEqual(fattura.daPreventivo.tipo, "proforma");
+  const emessa = await issue(db, await save(db, fattura), CONTEXT);
+  assert.equal(emessa.numero, "2026/0001", "la proforma non consuma numeri di fattura");
 });
 
 console.log(`model: ${passed} prove passate`);

@@ -698,6 +698,8 @@
          la riga ricostruita dal registro non spiega da sola perché è una sola. -->
     <p class="note" id="docImportedNote" hidden></p>
     <p class="note" id="docOriginNote" hidden></p>
+    <!-- A document reopened for a correction: it keeps its number, and is issued again to close. -->
+    <div class="panel warn" id="docModifyNote" hidden><p id="docModifyText"></p></div>
 
     <!-- Il comando sta sull'intestazione, come in Anagrafiche e negli incassi: questa era l'unica
          sezione dell'app che lo teneva in fondo, sotto la tabella — cioè più lontano proprio nel
@@ -988,6 +990,7 @@
       <button type="button" class="button ghost" id="docDelete" data-t="del"></button>
       <button type="button" class="button" id="docConvert" hidden></button>
       <button type="button" class="button ghost" id="docReopen" data-t="docReopen" hidden></button>
+      <button type="button" class="button ghost" id="docModify" data-t="docModify" hidden></button>
       <span class="ok" id="docSaved" data-t="docSaveFirst" hidden></span>
     </div>
   </section>
@@ -1434,6 +1437,15 @@
         <select name="regimeFiscale">
           <option value="RF01"></option>
           <option value="RF19"></option>
+        </select>
+      </label>
+      <!-- San Marino only: whether invoices to other San Marino operators are sent as XML. It decides
+           whether the printed sheet is a courtesy copy or the invoice itself. -->
+      <label class="wide" id="companyFeInternaRow" hidden><span data-t="f_feInterna"></span>
+        <select name="feInterna">
+          <option value="auto"></option>
+          <option value="si"></option>
+          <option value="no"></option>
         </select>
       </label>
 

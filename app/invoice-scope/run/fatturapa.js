@@ -82,6 +82,9 @@ export const MAX_BYTE = 5 * 1024 * 1024;
  */
 export const PAESI_CON_CAP = new Set(["IT", "SM"]);
 
+/** From this day the internal San Marino e-invoice is compulsory (`trasmissioneElettronica`). */
+export const INTERNA_OBBLIGATORIA_DAL = "2027-01-01";
+
 /** The member states of the European Union, by the code `IdPaese` uses: Greece is GR, not EL. */
 export const PAESI_UE = new Set([
   "AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "ES", "FI", "FR", "GR", "HR", "HU", "IE", "IT",
@@ -805,6 +808,24 @@ export function profileFor(company, party) {
   // An Italian company invoicing an Italian public administration: the PA format.
   if (da === "IT" && a === "IT" && party && party.pa) return IT_PA;
   return tavola[a] || tavola.estero;
+}
+
+/**
+ * Whether this company sends this document electronically, which decides what the printed sheet is.
+ *
+ * **Only the internal San Marino channel is a choice.** E-invoicing between San Marino operators is
+ * compulsory from 1 January 2027, and not every company falls under it: until then it is voluntary,
+ * and a company outside the obligation may never send it. `company.feInterna` says which: `si`,
+ * `no`, or `auto` (the default) — electronic for documents dated from 2027. Everywhere else the file
+ * is the fiscal document, as long as the channel has one.
+ */
+export function trasmissioneElettronica(company, profile, data = "") {
+  if (!profile || !profile.file) return false;
+  if (profile.id !== SM_INTERNA.id) return true;
+  const scelta = (company || {}).feInterna || "auto";
+  if (scelta === "si") return true;
+  if (scelta === "no") return false;
+  return String(data || "") >= INTERNA_OBBLIGATORIA_DAL;
 }
 
 /**

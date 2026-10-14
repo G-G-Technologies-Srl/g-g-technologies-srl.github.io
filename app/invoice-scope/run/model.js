@@ -231,12 +231,19 @@ export async function issue(db, doc, context) {
   // failure, a closed tab or a second window.
   const scrivi = _numerazione(context.company).scrivi;
 
+  // **A document reopened for a correction keeps its number** (`modify`): no counter is touched.
+  // The number belongs to a series and a year, so the correction cannot move it to another one.
+  const riaperta = doc.riaperta && doc.numero ? doc.riaperta : null;
+  if (riaperta && riaperta.contatore && riaperta.contatore !== key) {
+    throw new Error(`il numero ${doc.numero} appartiene a un'altra serie o a un altro anno: la modifica non può cambiarli`);
+  }
+
   return tx(db, ["counters", "docs"], async (scope) => {
-    const progressivo = await _next(scope, key, legacy);
+    const progressivo = riaperta ? null : await _next(scope, key, legacy);
     const issued = {
       ...doc,
       stato: "emesso",
-      numero: scrivi(progressivo, anno),
+      numero: riaperta ? doc.numero : scrivi(progressivo, anno),
       // Saved, not recomputed on read: an issued invoice has to show for ever the figures it had
       // when it was issued, even if a rate in the price list changes tomorrow.
       totali: {
@@ -251,6 +258,10 @@ export async function issue(db, doc, context) {
     // the printed sheet and the XML of this document must not change when the register does.
     if (context.party) issued.cliente = snapshot(context.party);
     if (context.company) issued.emittente = snapshot(context.company);
+    if (riaperta) {
+      delete issued.riaperta;
+      issued.modificato = now;
+    }
     issued.chiave = documentKey(issued);
     await scope.put("docs", issued);
     return issued;
@@ -411,6 +422,65 @@ export async function reopen(db, doc) {
 }
 
 /**
+ * Reopen an issued document for a correction, **keeping its number**.
+ *
+ * Wider than `reopen`, which frees the number and is allowed only on the last one not yet exported:
+ * this works on any issued document, and the screen warns before it — a document already sent to
+ * the SdI or to the Ufficio Tributario is not corrected but reversed with a credit note. What it was
+ * is kept in `riaperta` (state, whether the file had left, the counter it belongs to), so `issue`
+ * gives the same number back and refuses a correction that moves it to another series or year.
+ * The file has to be produced again after the correction: `esportato` goes back to false.
+ */
+export async function modify(db, doc) {
+  if (editable(doc)) return doc;
+  if (!doc.numero) throw new Error("solo un documento numerato si riapre per la modifica");
+  const now = _now();
+  const record = {
+    ...doc,
+    stato: "bozza",
+    riaperta: { stato: doc.stato, esportato: Boolean(doc.esportato), contatore: counterKey(doc), quando: now },
+    esportato: false,
+    totali: null,
+    chiave: undefined,
+    updated: now,
+  };
+  await put(db, "docs", record);
+  return record;
+}
+
+/**
+ * A new draft with the same customer and the same lines: «Duplica» in the list of documents.
+ *
+ * What makes the document repeatable comes across — kind, customer, lines, description, discount,
+ * withholding, contribution, exigibility, stamp duty, payment terms without their dates, category.
+ * What makes it this one stays behind: number, date (today), state, totals, the frozen customer and
+ * company, the links to other documents, the file, the instalment dates.
+ */
+export function duplicate(doc) {
+  const pagamento = doc.pagamento
+    ? { ...doc.pagamento, rate: (doc.pagamento.rate || []).map((quota) => ({ ...quota, scadenza: "" }))
+      .filter((quota) => quota.importo !== undefined && quota.importo !== null && quota.importo !== "") }
+    : null;
+  const copia = draft({
+    tipo: doc.tipo || "TD01",
+    ...(doc.partyId ? { partyId: doc.partyId } : {}),
+    causale: doc.causale || null,
+    categoria: doc.categoria || undefined,
+    righe: (doc.righe || []).map((line) => ({ ...line })),
+    ...(doc.scontoDocumento ? { scontoDocumento: { ...doc.scontoDocumento } } : {}),
+    ...(doc.ritenuta ? { ritenuta: { ...doc.ritenuta } } : {}),
+    ...("cassa" in doc ? { cassa: doc.cassa ? { ...doc.cassa } : null } : {}),
+    ...("esigibilita" in doc ? { esigibilita: doc.esigibilita || null } : {}),
+    ...(doc.bollo ? { bollo: doc.bollo } : {}),
+    ...(doc.tipoCessione ? { tipoCessione: doc.tipoCessione } : {}),
+    ...(doc.trasporto ? { trasporto: { ...doc.trasporto } } : {}),
+    pagamento,
+  });
+  if (doc.serie !== undefined && doc.serie !== kind(doc).serie) copia.serie = doc.serie;
+  return copia;
+}
+
+/**
  * The credit note that reverses a document.
  *
  * A draft, so it can still be adjusted before it is issued — a partial reversal is a normal thing
@@ -503,6 +573,13 @@ export function convertMany(docs) {
     causale: primo.causale || null,
     righe: lista.flatMap((doc) => (doc.righe || []).map((line) => ({ ...line }))),
     scontoDocumento: primo.scontoDocumento || null,
+    // A pro-forma already shows the invoice it announces: withholding, contribution, exigibility,
+    // order and stamp duty come across with it. A quote or a delivery note has none of them.
+    ...(primo.ritenuta ? { ritenuta: { ...primo.ritenuta } } : {}),
+    ...("cassa" in primo ? { cassa: primo.cassa ? { ...primo.cassa } : null } : {}),
+    ...("esigibilita" in primo ? { esigibilita: primo.esigibilita || null } : {}),
+    ...(primo.ordine ? { ordine: { ...primo.ordine } } : {}),
+    ...(primo.bollo ? { bollo: primo.bollo } : {}),
     // The instalments are copied by value: they are a proposal in a quote and an obligation in an
     // invoice, and sharing the array would let editing one rewrite the other.
     pagamento: primo.pagamento
@@ -526,7 +603,7 @@ export function convertMany(docs) {
       return ref;
     });
   } else {
-    fields.daPreventivo = { numero: shownNumber(primo), data: primo.data, id: primo.id };
+    fields.daPreventivo = { numero: shownNumber(primo), data: primo.data, id: primo.id, tipo: primo.tipo };
   }
 
   return draft(fields);
@@ -561,6 +638,8 @@ export function invoicedBy(docs) {
 /** Delete a draft. Anything issued is refused: it is stornato, never removed. */
 export async function discard(db, doc) {
   if (!editable(doc)) throw new Error("un documento emesso non si cancella: si storna");
+  // A document reopened for a correction still owns its number: deleting it would leave a hole.
+  if (doc.numero) throw new Error("un documento numerato non si cancella: si emette di nuovo o si storna");
   await remove(db, "docs", doc.id);
 }
 

@@ -21,12 +21,15 @@ import { get, put, list, persist } from "gg/store.js";
 
 import { t, tf, num, lang, otherLang, setLang, resolveLang } from "./i18n.js";
 import { ask, tell } from "./ask.js";
+import { snack } from "./snack.js";
 import { openDatabase, isDemo, NAME, VERSION, EXPORTED } from "./db.js";
 import { seed } from "./demo.js";
-import { documents, convertMany, save, invoicedBy, signedTotal, editable, NUMERAZIONI } from "./model.js";
+import {
+  documents, convertMany, save, invoicedBy, signedTotal, editable, NUMERAZIONI, duplicate, creditNote, modify, discard,
+} from "./model.js";
 import { TIPI, KINDS, kind, numero as shownNumber, convertibile } from "./kinds.js";
 import { label as statoLabel } from "./states.js";
-import { TRACCIATO, profileFor, TIPI_MERCE, CASSE } from "./fatturapa.js";
+import { TRACCIATO, profileFor, TIPI_MERCE, CASSE, trasmissioneElettronica } from "./fatturapa.js";
 import { stato as termState } from "./terms.js";
 import { NATURE } from "./validate.js";
 import { toString } from "./decimal.js";
@@ -39,7 +42,7 @@ import * as solleciti from "./reminders.js";
 import * as piani from "./plans.js";
 import * as customer from "./customer.js";
 import * as purchases from "./purchases.js";
-import { allCosts, allOutlays } from "./costs.js";
+import { allCosts, allOutlays, releasePurchase } from "./costs.js";
 import { allRecurring } from "./recurring.js";
 import * as home from "./home.js";
 import * as reset from "./reset.js";
@@ -115,7 +118,7 @@ const BANK_ROUTE = /^#\/anagrafiche\/banche\/([^?/]+)$/;
 // immediate value of the app here.
 const COMPANY_FIELDS = [
   "denominazione", "partitaIva", "codiceFiscale", "paese", "regimeFiscale",
-  "progressivoInvio", "formatoNumero",
+  "progressivoInvio", "formatoNumero", "feInterna",
   "aliquotaPredefinita", "naturaPredefinita", "tmPredefinito",
   "email", "telefono", "sito",
 ];
@@ -473,6 +476,83 @@ async function _converti(record, docs) {
   }
 }
 
+/**
+ * The menu of a row in the list of documents: only the actions that apply to that document.
+ *
+ * Open, download the XML (in the document, where the download has its rules), turn into an invoice,
+ * duplicate, credit note, edit (with the warning about documents already sent), delete a draft.
+ * The menu goes back to its title after each choice, so it reads the same on every row.
+ */
+function _rowActions(record, docs, { diventa = null, storico = false } = {}) {
+  const k = kind(record);
+  const chiuso = !editable(record) && Boolean(record.numero);
+  const voci = [["", t("docsActions")], ["apri", t("docsActionOpen")]];
+  if (k.fiscale && chiuso && !storico && !record.ricostruito) voci.push(["xml", t("docsActionXml")]);
+  if (diventa) voci.push(["converti", t(`convertTo${diventa}`)]);
+  voci.push(["duplica", t("docsActionDuplicate")]);
+  if (k.fiscale && k.ricavo && chiuso && record.tipo !== "TD04") voci.push(["nota", t("docCreditNote")]);
+  if (chiuso && !record.ricostruito) voci.push(["modifica", t("docModify")]);
+  if (editable(record) && !record.numero) voci.push(["elimina", t("del")]);
+
+  const menu = document.createElement("select");
+  menu.className = "row-actions";
+  menu.setAttribute("aria-label", `${t("docsActions")} — ${shownNumber(record) || t(k.label)}`);
+  for (const [value, testo] of voci) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = testo;
+    menu.append(option);
+  }
+  // The row opens the document on click: the menu must not.
+  for (const evento of ["click", "keydown"]) menu.addEventListener(evento, (event) => event.stopPropagation());
+  menu.addEventListener("change", async () => {
+    const scelta = menu.value;
+    menu.value = "";
+    if (!scelta) return;
+    try {
+      await _rowAction(scelta, record, docs);
+    } catch (error) {
+      await tell(error.message);
+    }
+  });
+  return menu;
+}
+
+/** One action from a row's menu. */
+async function _rowAction(scelta, record, docs) {
+  const vai = (id) => { location.hash = `#/documento/${id}`; };
+  if (scelta === "apri") return vai(record.id);
+  if (scelta === "xml") {
+    doc.queueAction(record.id, "xml");
+    return vai(record.id);
+  }
+  if (scelta === "converti") return _converti(record, docs);
+  if (scelta === "duplica") {
+    const copia = await save(db, duplicate(record));
+    snack(tf("docsDuplicated", { numero: shownNumber(record) || t(kind(record).label) }));
+    return vai(copia.id);
+  }
+  if (scelta === "nota") {
+    const nota = await save(db, creditNote(record));
+    return vai(nota.id);
+  }
+  if (scelta === "modifica") {
+    const inviata = kind(record).fiscale && (record.esportato || ["inviato", "accettato"].includes(record.stato));
+    const chiave = kind(record).fiscale ? (inviata ? "docModifyAskSent" : "docModifyAsk") : "docModifyAskPlain";
+    if (!(await ask(tf(chiave, { numero: shownNumber(record) }), { okLabel: t("docModify"), danger: inviata }))) return;
+    await modify(db, record);
+    return vai(record.id);
+  }
+  if (scelta === "elimina") {
+    if (!(await ask(t("docDeleteAsk"), { okLabel: t("del"), danger: true }))) return;
+    await discard(db, record);
+    // As from the document: the project forgets the draft, a purchase gets its proposal back.
+    progetti.forgetDoc(record.id);
+    await releasePurchase(db, record);
+    await _refresh();
+  }
+}
+
 // From this many documents the filters appear. Under it they would be three commands over a list
 // that fits on one screen, and a search box over six rows is a box that finds nothing to hide.
 const FILTRI_DA = 8;
@@ -651,57 +731,27 @@ async function _drawDocuments(docs) {
     if (soldi) cella.append(soldi);
     tr.append(cella);
 
-    // La conversione senza aprire il documento. Il comando c'è solo sulle righe che diventano
-    // qualcosa: una colonna di pulsanti su ogni riga trasformerebbe l'elenco in una pulsantiera.
+    // **Le azioni della riga, in un menù.** Prima erano pulsanti — «XML», «Crea la fattura» — e
+    // ogni azione nuova avrebbe allargato la colonna; un menù ne tiene quante servono, e mostra solo
+    // quelle che valgono per quel documento. Le note di stato restano scritte accanto.
     const azioni = document.createElement("td");
-    azioni.className = "right";
+    azioni.className = "right nowrap";
     const diventa = fatturati.has(record.id) ? null : convertibile(record);
-    // Un preventivo o un DDT già portato in fattura lo dice: prima perdeva soltanto il pulsante,
-    // e la riga sembrava una a cui mancava qualcosa invece di una che aveva finito.
     if (fatturati.has(record.id)) {
       const segno = document.createElement("span");
       segno.className = "meta nowrap";
       const fattura = fatturati.get(record.id);
       segno.textContent = `${t("docsInvoiced")} ${shownNumber(fattura) || t("stateBozza").toLowerCase()}`;
-      azioni.append(segno);
+      azioni.append(segno, " ");
     }
-    // Su una fattura emessa, «XML» sulla riga: porta al documento, dove il comando sta in testa,
-    // perché il download ha le sue regole — progressivo di invio, avviso al secondo scarico — e
-    // stanno in un posto solo. Chi non trovava il file lo cercava prima di tutto qui.
-    // Un documento importato e già trasmesso lo dice, invece di offrire «XML» come tutti gli
-    // altri: il file è uscito da un altro programma, e in un elenco fatto per lo più di righe
-    // così ogni riga sembrava una fattura ancora da mandare. Il pulsante resta dentro il
-    // documento, per il caso raro in cui davvero serva rifarne il file.
-    if (record.importato && record.esportato) {
+    const storico = Boolean(record.importato && record.esportato);
+    if (storico) {
       const segno = document.createElement("span");
       segno.className = "meta nowrap";
       segno.textContent = t("docsStorico");
-      azioni.append(segno);
-    } else if (kind(record).fiscale && !editable(record) && record.numero) {
-      const xml = document.createElement("button");
-      xml.type = "button";
-      xml.className = "ghost small row-action";
-      xml.textContent = t("docsXml");
-      xml.setAttribute("aria-label", `${t("docXml")} — ${shownNumber(record)}`);
-      xml.addEventListener("click", (event) => {
-        event.stopPropagation();
-        location.hash = `#/documento/${record.id}`;
-      });
-      azioni.append(xml);
+      azioni.append(segno, " ");
     }
-    if (diventa) {
-      const bottone = document.createElement("button");
-      bottone.type = "button";
-      bottone.className = "ghost small row-action";
-      bottone.textContent = t(`convertTo${diventa}`);
-      bottone.setAttribute("aria-label", `${t(`convertTo${diventa}`)} — ${shownNumber(record)}`);
-      // La riga intera apre il documento: senza questo, premere il pulsante farebbe le due cose.
-      bottone.addEventListener("click", async (event) => {
-        event.stopPropagation();
-        await _converti(record, docs);
-      });
-      azioni.append(bottone);
-    }
+    azioni.append(_rowActions(record, docs, { diventa, storico }));
     tr.append(azioni);
 
     body.append(tr);
@@ -806,6 +856,8 @@ async function _loadCompany() {
   _fillMerce(form.elements.tmPredefinito);
 
   for (const name of COMPANY_FIELDS) form.elements[name].value = company[name] || "";
+  for (const option of form.elements.feInterna.options) option.textContent = t(`feInterna_${option.value}`);
+  form.elements.feInterna.value = ["si", "no"].includes(company.feInterna) ? company.feInterna : "auto";
   form.elements.paese.value = company.paese || "IT";
   _companyCountryChanged();
   form.elements.regimeFiscale.value = company.regimeFiscale || "RF01";
@@ -950,6 +1002,8 @@ function _companyCountryChanged() {
   el("companyPivaLabel").textContent = t(paese === "SM" ? "f_coe" : "f_partitaIva");
   form.elements.provincia.placeholder = paese === "SM" ? t("companyProvinciaSm") : "";
   document.documentElement.classList.toggle("tm-profile", Boolean(profileFor({ paese }).datiGestionali));
+  // The internal e-invoice choice is a San Marino question.
+  el("companyFeInternaRow").hidden = paese !== "SM";
 }
 
 async function _saveCompany(event) {
@@ -1029,6 +1083,7 @@ function _drawTerms(company, docs, anagrafiche) {
   const oggi = currentDay();
   const stati = docs
     .filter((doc) => doc.stato && doc.stato !== "bozza" && doc.stato !== "annullato")
+    .filter((doc) => trasmissioneElettronica(company, profileFor(company, anagrafiche.get(doc.partyId)), doc.data))
     .map((doc) => termState(doc, profileFor(company, anagrafiche.get(doc.partyId)), { oggi }))
     .filter(Boolean);
   const scaduti = stati.filter((s) => s.key === "scaduto").length;

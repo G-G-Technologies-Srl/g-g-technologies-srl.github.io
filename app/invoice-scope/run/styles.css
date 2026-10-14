@@ -1584,3 +1584,6 @@ input[aria-invalid="true"] { border-color: var(--danger); box-shadow: 0 0 0 1px 
 /* The fund names are long: the menu takes the width it is given, never the width of its longest option. */
 #cassaTipo, #companyCassa { width: 100%; max-width: 100%; min-width: 0; text-overflow: ellipsis; }
 .form label:has(> #cassaTipo), .form label:has(> #companyCassa) { min-width: 0; }
+
+/* The actions of a row in the list of documents: a compact menu, the width of its longest entry. */
+.row-actions { width: auto; min-width: 0; padding: 4px 28px 4px 10px; font-size: 0.85rem; }

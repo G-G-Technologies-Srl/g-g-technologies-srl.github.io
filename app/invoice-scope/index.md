@@ -42,7 +42,8 @@ Invoice Scope svolge sul vostro computer la parte che richiede competenza — i 
 
 ### Cosa fa
 
-- Emette fatture, fatture differite, acconti, note di credito e di debito, con più aliquote sullo stesso documento. Tiene anche preventivi e documenti di trasporto, ciascuno con la sua numerazione, e li trasforma in fattura senza ridigitare righe, sconti e scadenze.
+- Emette fatture, fatture differite, acconti, note di credito e di debito, con più aliquote sullo stesso documento. Tiene anche preventivi, fatture proforma e documenti di trasporto, ciascuno con la sua numerazione, e li trasforma in fattura senza ridigitare righe, sconti e scadenze. Dall'elenco ogni documento si duplica per il cliente e le righe di sempre.
+- Riapre per la modifica un documento già emesso, che conserva il suo numero, con l'avviso che un documento già trasmesso non si corregge ma si storna con una nota di credito.
 - Scrive il file FatturaPA per ogni direzione: dall'Italia verso l'Italia, San Marino e l'estero; da San Marino verso l'Italia, l'estero e gli altri operatori sammarinesi, con la fattura interna obbligatoria dal 1° gennaio 2027. La direzione la ricava dal paese dell'azienda e da quello del cliente.
 - Controlla ogni documento prima dell'emissione e indica il campo, la regola e la correzione. Calcola l'IVA per aliquota come la ricalcola il Sistema di Interscambio, in aritmetica esatta.
 - Fattura alla pubblica amministrazione in formato FPA12, con il codice univoco dell'ufficio, CIG e CUP e la scissione dei pagamenti. Gestisce la ritenuta d'acconto, la cassa previdenziale dei professionisti, il bollo virtuale e il regime forfettario.
@@ -123,7 +124,7 @@ PolyForm Shield 1.0.0. Il codice è pubblico: si legge, si modifica e si usa anc
 
 Gratuita.
 
-**Versione** 0.70.0 · **Aggiornata il** 14 ottobre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
+**Versione** 0.71.0 · **Aggiornata il** 14 ottobre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
 
 *FAQ*
 
