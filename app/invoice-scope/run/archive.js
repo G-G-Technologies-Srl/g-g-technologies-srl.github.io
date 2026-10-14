@@ -44,6 +44,8 @@ export const GRUPPI = [
   ["tasks", "archiveTasks"],
   ["activities", "archiveActivities"],
   ["recurring", "archiveRecurring"],
+  // The recurring invoices were missing: a copy that differed only there read «in line».
+  ["recurringDocs", "archiveRecurringDocs"],
   ["company", "archiveCompany"],
   ["counters", "archiveCounters"],
   // Accanto al testo, non dentro: l'archivio le nomina e la cartella le tiene.

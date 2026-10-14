@@ -19,8 +19,8 @@
 //
 // No DOM in here: `node app/invoice-scope/test/fatturapa.mjs` runs it directly.
 
-import { from, sub, toString } from "./decimal.js";
-import { totals, rate, chiaveConTm, MONEY } from "./totals.js";
+import { from, sub, div, isZero, toString } from "./decimal.js";
+import { totals, rate, chiaveConTm, MONEY, BOLLO } from "./totals.js";
 import { kind, numero as shownNumber } from "./kinds.js";
 import * as xml from "./xml.js";
 import { fiscalCode } from "./parse.js";
@@ -82,6 +82,12 @@ export const MAX_BYTE = 5 * 1024 * 1024;
  */
 export const PAESI_CON_CAP = new Set(["IT", "SM"]);
 
+/** The member states of the European Union, by the code `IdPaese` uses: Greece is GR, not EL. */
+export const PAESI_UE = new Set([
+  "AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "ES", "FI", "FR", "GR", "HR", "HU", "IE", "IT",
+  "LT", "LU", "LV", "MT", "NL", "PL", "PT", "RO", "SE", "SI", "SK",
+]);
+
 /**
  * I cinque tipi merce del regime monofase, raccolti nei tre ambiti che la norma ammette.
  *
@@ -136,6 +142,37 @@ export const MERCE_CON_DDT = new Set(
 );
 
 /**
+ * The pension funds of the FatturaPA (TipoCassa), code and institution, in the order of the spec.
+ *
+ * A professional who belongs to one of them adds its contribution (the "rivalsa") to the fees, and
+ * the file declares it in DatiCassaPrevidenziale. INPS (TC22) is the 4% of the separate scheme.
+ */
+export const CASSE = [
+  ["TC01", "Cassa nazionale previdenza e assistenza avvocati e procuratori legali"],
+  ["TC02", "Cassa previdenza dottori commercialisti"],
+  ["TC03", "Cassa previdenza e assistenza geometri"],
+  ["TC04", "Cassa nazionale previdenza e assistenza ingegneri e architetti liberi professionisti"],
+  ["TC05", "Cassa nazionale del notariato"],
+  ["TC06", "Cassa nazionale previdenza e assistenza ragionieri e periti commerciali"],
+  ["TC07", "Ente nazionale assistenza agenti e rappresentanti di commercio (ENASARCO)"],
+  ["TC08", "Ente nazionale previdenza e assistenza consulenti del lavoro (ENPACL)"],
+  ["TC09", "Ente nazionale previdenza e assistenza medici (ENPAM)"],
+  ["TC10", "Ente nazionale previdenza e assistenza farmacisti (ENPAF)"],
+  ["TC11", "Ente nazionale previdenza e assistenza veterinari (ENPAV)"],
+  ["TC12", "Ente nazionale previdenza e assistenza impiegati dell'agricoltura (ENPAIA)"],
+  ["TC13", "Fondo previdenza impiegati imprese di spedizione e agenzie marittime"],
+  ["TC14", "Istituto nazionale previdenza giornalisti italiani (INPGI)"],
+  ["TC15", "Opera nazionale assistenza orfani sanitari italiani (ONAOSI)"],
+  ["TC16", "Cassa autonoma assistenza integrativa giornalisti italiani (CASAGIT)"],
+  ["TC17", "Ente previdenza periti industriali e periti industriali laureati (EPPI)"],
+  ["TC18", "Ente previdenza e assistenza pluricategoriale (EPAP)"],
+  ["TC19", "Ente nazionale previdenza e assistenza biologi (ENPAB)"],
+  ["TC20", "Ente nazionale previdenza e assistenza professione infermieristica (ENPAPI)"],
+  ["TC21", "Ente nazionale previdenza e assistenza psicologi (ENPAP)"],
+  ["TC22", "INPS"],
+];
+
+/**
  * The profile for the Italian SdI.
  *
  * `codiceDestinatarioEstero` and the San Marino code are here rather than in the walk because they
@@ -162,7 +199,7 @@ export const IT_SDI = {
   trasmittente: null,
   // I `TipoDocumento` che questo canale accetta. Erano una costante di `validate.js`, uguale per
   // tutti; sono invece la prima cosa che cambia fra un canale e l'altro.
-  tipi: ["TD01", "TD02", "TD04", "TD05", "TD24", "TD29"],
+  tipi: ["TD01", "TD02", "TD04", "TD05", "TD24", "TD29", "TD16", "TD17", "TD18", "TD19"],
   // Un tipo dell'app che sul filo diventa un altro codice. Vuoto qui: in Italia la fattura
   // differita è `TD24` e si scrive così.
   rimappa: {},
@@ -187,6 +224,21 @@ export const IT_SDI = {
   merceSenzaImposta: [],
   // I termini di trasmissione, in mesi, e da quale data si contano. `null` dove non li calcoliamo.
   termini: null,
+};
+
+/**
+ * Il canale verso una Pubblica Amministrazione italiana: lo stesso SdI, un altro formato.
+ *
+ * `FPA12` e non `FPR12`, e il codice destinatario è il **codice univoco dell'ufficio** — sei
+ * caratteri, quello che la PA pubblica sull'Indice delle PA — invece dei sette di un privato. Senza
+ * un codice non c'è un destinatario di ripiego: la PA riceve solo dall'ufficio che ha indicato.
+ */
+export const IT_PA = {
+  ...IT_SDI,
+  schema: "FPA12",
+  pa: true,
+  codiceDestinatarioAssente: "",
+  lunghezzaDestinatario: 6,
 };
 
 /**
@@ -323,6 +375,17 @@ function _amount(value) {
   return toString(value, MONEY);
 }
 
+/** The share capital as an amount, or `null` when it is blank or unreadable. */
+function _capitale(value) {
+  if (value === undefined || value === null || String(value).trim() === "") return null;
+  try {
+    const capitale = from(String(value));
+    return isZero(capitale) ? null : _amount(capitale);
+  } catch (ignored) {
+    return null;
+  }
+}
+
 /**
  * A quantity or a unit price, at up to eight decimals with the trailing zeros trimmed.
  *
@@ -337,6 +400,20 @@ function _quantity(value) {
   const full = toString(value, 8);
   const trimmed = full.replace(/(\.\d{2}\d*?)0+$/, "$1");
   return trimmed;
+}
+
+/** Whether a document carries an order reference worth writing. */
+function _ordine(doc) {
+  const o = doc.ordine;
+  return Boolean(o && (o.numero || o.cig || o.cup));
+}
+
+/** The per-unit share of a document discount on a line, as text, or `null` when there is none. */
+function _shareOf(line) {
+  if (!line.scontoRipartito || isZero(line.scontoRipartito)) return null;
+  const quantita = from(line.quantita ?? "1");
+  if (isZero(quantita)) return null;
+  return _quantity(div(line.scontoRipartito, quantita, 8));
 }
 
 /** A rate: two decimals, because `22` is not what the schema wants and `22.00` is. */
@@ -383,19 +460,27 @@ function _cedente(company, profile) {
         // Belt and braces: the screens strip the country on the way in, and this strips it again on
         // the way out, so a record written before that rule existed — or by an import that predates
         // it — still leaves as `29141` and not `SM29141`.
-        ["IdCodice", identificativo(company.partitaIva, paese)],
+        // A foreign supplier on an integration may have no VAT number the company knows of (a
+        // provider outside the EU): the element is required, and the conventional filler is eleven 9s.
+        ["IdCodice", identificativo(company.partitaIva, paese) || (PAESI_CON_CAP.has(paese) ? "" : "99999999999")],
       ]],
       ["CodiceFiscale", vietato(profile, "codiceFiscale")
         ? null
         : fiscalCode(company.codiceFiscale, paese)],
       ["Anagrafica", _anagrafica(company)],
-      ["RegimeFiscale", company.regimeFiscale || "RF01"],
+      // RF18 («altro») for a cedente outside Italy and San Marino: only on an integration, where the
+      // cedente is the foreign supplier and no Italian regime describes it.
+      ["RegimeFiscale", company.regimeFiscale || (PAESI_CON_CAP.has(paese) ? "RF01" : "RF18")],
     ]],
     ["Sede", _sede(company.sede || {}, paese, profile)],
     company.rea && !vietato(profile, "rea") ? ["IscrizioneREA", [
       ["Ufficio", company.rea.ufficio],
       ["NumeroREA", company.rea.numero],
-      ["StatoLiquidazione", company.rea.statoLiquidazione || "LN"],
+      // The share capital is for companies only, and the sole-shareholder flag for limited
+      // companies only: both are optional, and both leave the file when blank.
+      ["CapitaleSociale", _capitale(company.rea.capitaleSociale)],
+      ["SocioUnico", ["SU", "SM"].includes(company.rea.socioUnico) ? company.rea.socioUnico : null],
+      ["StatoLiquidazione", company.rea.statoLiquidazione === "LS" ? "LS" : "LN"],
     ]] : null,
   ];
 }
@@ -420,6 +505,22 @@ function _cessionario(party, profile) {
 /** The header block that says who is sending, to whom, and in what format. */
 function _trasmissione(doc, company, party, profile) {
   const chi = profile.trasmittente;
+  // **A self-billed invoice goes to nobody's channel.** The party on it is the supplier, and its
+  // recipient code is where the supplier receives its own purchases: the file would have been
+  // delivered to the supplier's software as if the supplier had bought. Both specifications say
+  // seven zeros and no PEC — the Agenzia for the Italian TD29, Documento B §2.2.2 for HUB-SM, where
+  // the channel already forces it — and the file lands in the issuer's own area.
+  if (kind(doc).autofattura) {
+    return [
+      ["IdTrasmittente", [
+        ["IdPaese", chi ? chi.paese : (company.paese || profile.paese)],
+        ["IdCodice", chi ? chi.codice : identificativo(company.partitaIva, company.paese || profile.paese)],
+      ]],
+      ["ProgressivoInvio", progressivo(doc.progressivo ?? 1)],
+      ["FormatoTrasmissione", profile.schema],
+      ["CodiceDestinatario", "0000000"],
+    ];
+  }
   return [
     ["IdTrasmittente", [
       ["IdPaese", chi ? chi.paese : (company.paese || profile.paese)],
@@ -428,7 +529,12 @@ function _trasmissione(doc, company, party, profile) {
     ["ProgressivoInvio", progressivo(doc.progressivo ?? 1)],
     ["FormatoTrasmissione", profile.schema],
     ["CodiceDestinatario", destinatario(party, profile)],
-    party.pec && !vietato(profile, "pec") ? ["PECDestinatario", party.pec] : null,
+    // **The PEC only with the code that says "no code".** The specifications fill PECDestinatario
+    // only when CodiceDestinatario is 0000000: a customer with both a channel code and a PEC on the
+    // sheet is delivered through the code, and the PEC beside it is an inconsistency in the file.
+    party.pec && !vietato(profile, "pec") && destinatario(party, profile) === "0000000"
+      ? ["PECDestinatario", party.pec]
+      : null,
   ];
 }
 
@@ -442,9 +548,26 @@ function _datiGenerali(doc, computed, profile) {
     ]]
     : null;
 
-  const bollo = doc.bollo
-    ? ["DatiBollo", [["BolloVirtuale", "SI"], ["ImportoBollo", _amount(computed.bollo)]]]
+  // **The duty is declared whenever it is due, whoever pays it.** `doc.bollo` says it is charged to
+  // the customer; a duty the issuer keeps for itself is still due, and the Agenzia works out the
+  // quarterly payment from the invoices that carry `BolloVirtuale` — leaving it out of the file
+  // meant leaving it out of that sum.
+  const bollo = doc.bollo || computed.bolloDovuto
+    ? ["DatiBollo", [["BolloVirtuale", "SI"], ["ImportoBollo", _amount(BOLLO)]]]
     : null;
+
+  // The pension contribution, after the stamp duty as the schema orders it: its type, rate,
+  // amount, the base it was worked out on, its VAT rate — and the withholding when it carries it.
+  const c = computed.cassa;
+  const cassa = c ? ["DatiCassaPrevidenziale", [
+    ["TipoCassa", c.tipo],
+    ["AlCassa", _rate(c.aliquota)],
+    ["ImportoContributoCassa", _amount(c.importo)],
+    ["ImponibileCassa", _amount(c.imponibile)],
+    ["AliquotaIVA", _rate(c.aliquotaIva)],
+    ["Ritenuta", c.ritenuta && doc.ritenuta ? "SI" : null],
+    ["Natura", c.natura],
+  ]] : null;
 
   return [
     ["DatiGeneraliDocumento", [
@@ -463,7 +586,8 @@ function _datiGenerali(doc, computed, profile) {
       ["Numero", shownNumber(doc)],
       ritenuta,
       bollo,
-      ["ImportoTotaleDocumento", _amount(computed.totale)],
+      cassa,
+      ["ImportoTotaleDocumento", _amount(computed.totaleDocumento)],
       // **Due `Causale`, e non una stringa cucita insieme.** Lo schema ne ammette un numero
       // qualsiasi (`maxOccurs="unbounded"`), quindi il codice del tipo cessione sta per conto suo e
       // la descrizione resta leggibile: infilarli nello stesso elemento vorrebbe dire che chi
@@ -476,6 +600,15 @@ function _datiGenerali(doc, computed, profile) {
       doc.variazioniContrattuali ? ["Causale", "VariazioniContrattuali"] : null,
       ["Causale", doc.causale],
     ]],
+    // **The order, or the contract, with its CIG and CUP.** A public administration pays only an
+    // invoice that carries the tender code (CIG) and, for a public works, the project code (CUP);
+    // they travel in DatiOrdineAcquisto, before the linked invoices as the schema orders it.
+    ...(_ordine(doc) ? [["DatiOrdineAcquisto", [
+      ["IdDocumento", doc.ordine.numero],
+      ["Data", doc.ordine.data || null],
+      ["CodiceCUP", doc.ordine.cup || null],
+      ["CodiceCIG", doc.ordine.cig || null],
+    ]]] : []),
     ...(doc.variazioniContrattuali ? [] : (doc.fattureCollegate || [])).map((ref) => ["DatiFattureCollegate", [
       ["IdDocumento", ref.numero],
       ["Data", ref.data],
@@ -500,8 +633,21 @@ function _beniServizi(doc, computed, profile) {
       ["Percentuale", line.sconto.percentuale === undefined ? null : _rate(line.sconto.percentuale)],
       ["Importo", line.sconto.importo === undefined ? null : _amount(from(line.sconto.importo))],
     ]]] : []),
+    // **The line's share of a document discount, written where the SdI looks for it.** totals.js
+    // takes the share off the line total, and control 00423 recomputes PrezzoTotale from the unit
+    // price and the discounts on the line: without this element a 10% document discount made a
+    // line of 10 × 80,00 total 720,00, and the file was rejected. The amount is per unit, as the
+    // formula wants — [PrezzoUnitario − Importo] × Quantita — at eight decimals, inside the cent
+    // the control tolerates.
+    ...(_shareOf(line) ? [["ScontoMaggiorazione", [
+      ["Tipo", "SC"],
+      ["Importo", _shareOf(line)],
+    ]]] : []),
     ["PrezzoTotale", _amount(line.prezzoTotale)],
     ["AliquotaIVA", _rate(line.aliquota)],
+    // Between the rate and the nature, as the schema orders them: the line the withholding is
+    // taken on (`soggettaRitenuta` in totals.js).
+    ["Ritenuta", line.ritenuta ? "SI" : null],
     ["Natura", line.natura],
     // Il codice dell'Ufficio Tributario, in coda alla riga come vuole lo schema, e solo per un
     // profilo che lo dichiara. Lo stesso codice torna davanti al `RiferimentoNormativo` del
@@ -532,7 +678,11 @@ function _beniServizi(doc, computed, profile) {
 
 function _pagamento(doc, computed) {
   if (!doc.pagamento) return null;
-  const quote = doc.pagamento.rate || [{}];
+  // **No due dates is one payment of the whole, not none.** The screen stores an empty list, and an
+  // empty list is truthy: `rate || [{}]` wrote a DatiPagamento with no DettaglioPagamento, which the
+  // schema requires at least once — a rejected file for every invoice paid "at sight".
+  const elenco = doc.pagamento.rate;
+  const quote = Array.isArray(elenco) && elenco.length ? elenco : [{}];
 
   // **An instalment with no amount is a share of the total, not the whole of it.** Two undated
   // instalments used to be written as the full amount twice, so a document of 1220,00 asked for
@@ -652,6 +802,8 @@ export function profileFor(company, party) {
   // parlerebbero di due clienti diversi. Chi fattura dentro San Marino ha comunque il paese in
   // anagrafica, perché senza non si scrive `IdCodice`.
   const a = String((party || {}).paese || "IT").toUpperCase();
+  // An Italian company invoicing an Italian public administration: the PA format.
+  if (da === "IT" && a === "IT" && party && party.pa) return IT_PA;
   return tavola[a] || tavola.estero;
 }
 
@@ -808,7 +960,11 @@ export function fileName(company, value, profile = IT_SDI) {
  * shows the amounts, and recomputing them somewhere else is how two numbers on the same screen
  * start to disagree.
  */
-export function build(doc, { company, party, profile = profileFor(company, party) } = {}) {
+export function build(doc, { company: aziendaOra, party: clienteOra, profile: dato = null } = {}) {
+  // **An issued document speaks with the details it was issued with** (`frozen`): the file
+  // downloaded again a year later names the customer as it was on the invoice.
+  const { company, party } = frozen(doc, { company: aziendaOra, party: clienteOra });
+  const profile = dato || profileFor(company, party);
   // **Refused loudly, and here.** A quote has no `TipoDocumento` the SdI would accept, so a file
   // built from one would carry the word `preventivo` where a code belongs and be rejected on
   // receipt — after the app had marked the quote as exported and moved its transmission counter,
@@ -861,4 +1017,33 @@ export function build(doc, { company, party, profile = profileFor(company, party
     totals: computed,
     byte: new TextEncoder().encode(text).length,
   };
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  p u b l i c   —   i   d a t i   c o n g e l a t i
+// -----------------------------------------------------------------------------------------------------------------
+
+/**
+ * Customer and company as they were when the document was issued.
+ *
+ * **An issued document does not change when the register does.** The sheet and the XML read the
+ * customer from the register: correcting an address in March rewrote the invoices of January,
+ * printed and downloaded again. `issue` now freezes both on the document (`snapshot`); a document
+ * issued before that has no copy and reads the register, as it always did. The company keeps its
+ * current logo and accounts, which are not in the file and are frozen elsewhere (the bank data on
+ * the payment).
+ */
+export function frozen(doc, { company = null, party = null } = {}) {
+  return {
+    company: doc && doc.emittente ? { ...(company || {}), ...doc.emittente } : company,
+    party: doc && doc.cliente ? { ...doc.cliente } : party,
+  };
+}
+
+/** The copy of a record that a document keeps: everything but what never reaches the document. */
+export function snapshot(record, { senza = [] } = {}) {
+  if (!record) return null;
+  const copia = JSON.parse(JSON.stringify(record));
+  for (const key of ["contatti", "logo", "conti", "created", "updated", "importato", ...senza]) delete copia[key];
+  return copia;
 }

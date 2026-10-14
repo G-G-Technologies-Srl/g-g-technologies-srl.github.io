@@ -17,7 +17,7 @@
 import assert from "node:assert/strict";
 
 import { from } from "../run/decimal.js";
-import { perCliente, testo, oggetto, destinatario, mailto } from "../run/reminders.js";
+import { perCliente, testo, oggetto, destinatario, mailto, scelte, chiaveRata, tonoProposto, vocePerDiario } from "../run/reminders.js";
 
 let passed = 0;
 function prova(nome, fn) {
@@ -106,6 +106,27 @@ prova("il destinatario è la prima email delle persone di riferimento, non la PE
   assert.ok(link.startsWith("mailto:chiara%40bitmakers.sm?subject="));
   assert.ok(decodeURIComponent(link).includes("2026/0001"));
   assert.ok(mailto(gruppi[0], { company: AZIENDA, party: {} }).startsWith("mailto:?subject="));
+});
+
+
+prova("le rate scelte rifanno il totale, e il secondo sollecito è più fermo", () => {
+  const gruppi = perCliente([rata("p1", "2026/0001", "2026-08-01", "100.00"), rata("p1", "2026/0002", "2026-08-15", "50.00")],
+    { today: "2026-09-10" });
+  const solo = scelte(gruppi[0], new Set([chiaveRata(gruppi[0].righe[1])]));
+  assert.equal(solo.righe.length, 1);
+  assert.equal(solo.totale, from("50.00"));
+  const fermo = testo(solo, { company: AZIENDA, party: { denominazione: "X" }, tono: 2 });
+  assert.match(fermo, /sette giorni|seven days/);
+  assert.ok(oggetto(AZIENDA, 2).length > oggetto(AZIENDA).length);
+});
+
+prova("dopo un sollecito annotato nel diario si propone il secondo", () => {
+  const gruppo = perCliente([rata("p1", "2026/0001", "2026-08-01", "100.00")], { today: "2026-09-10" })[0];
+  assert.equal(tonoProposto(gruppo, []), 1);
+  assert.equal(tonoProposto(gruppo, [{ partyId: "p1", data: "2026-08-20", sollecito: 1 }]), 2);
+  // A reminder older than the instalment was about other money.
+  assert.equal(tonoProposto(gruppo, [{ partyId: "p1", data: "2026-07-01", sollecito: 1 }]), 1);
+  assert.match(vocePerDiario(gruppo, 1), /2026\/0001/);
 });
 
 console.log(`reminders: ${passed} prove passate`);

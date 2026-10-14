@@ -29,10 +29,12 @@ export function current() {
 
 export function apply(theme) {
   const value = theme === "light" ? "light" : "dark";
-  // Only the light theme carries the attribute, exactly as the site does it: dark is the default,
-  // and `html:not([data-theme])` is what lets the OS preference through for a first visit.
-  if (value === "light") document.documentElement.setAttribute("data-theme", "light");
-  else document.documentElement.removeAttribute("data-theme");
+  // **Both themes carry the attribute once chosen.** Only the light one did, so choosing dark on a
+  // system set to light removed it — and `html:not([data-theme])` under `prefers-color-scheme:
+  // light` then turned the light palette back on, while the tokens an app themes on the attribute
+  // stayed dark: pink error text on white. The bare element is left for the first paint of a first
+  // visit, which is what the media query is there for.
+  document.documentElement.setAttribute("data-theme", value);
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute("content", value === "light" ? LIGHT_BAR : DARK_BAR);
   try {

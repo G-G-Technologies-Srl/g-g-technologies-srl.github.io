@@ -23,12 +23,13 @@ import { list, get, put, tx } from "gg/store.js";
 
 import { from, add, sub, cmp, sum, ZERO, toString, percent } from "./decimal.js";
 import { parseAmount, parseOptional } from "./parse.js";
-import { profileFor, completaRighe } from "./fatturapa.js";
-import { autofattura as terminiAutofattura } from "./terms.js";
+import { profileFor, completaRighe, PAESI_UE } from "./fatturapa.js";
+import { autofattura as terminiAutofattura, integrazione as terminiIntegrazione } from "./terms.js";
 import { draft } from "./model.js";
 import { forget as forgetReceipts } from "./attachments.js";
 import { tf } from "./i18n.js";
 import { date as shownDate } from "./format.js";
+import { currentDay } from "./day.js";
 
 /** Due decimali: l'imposta si arrotonda al centesimo, come nel riepilogo IVA. */
 const MONEY = 2;
@@ -160,6 +161,37 @@ export function costRecord(fields, { company = null } = {}) {
   // senza queste due righe correggere un importo farebbe ricomparire un'autofattura già fatta.
   if (fields.autofatturaId) record.autofatturaId = fields.autofatturaId;
   if (fields.autofatturaNonServe) record.autofatturaNonServe = true;
+  // **Reverse charge: the VAT the supplier did not charge, and the company owes.** The flag, what was
+  // bought (goods or services decide TD17 against TD18/TD19), and what was decided about the
+  // integration — kept like the autofattura's, for the same reason.
+  if (fields.inversione === true || fields.inversione === "on" || fields.inversione === "true") record.inversione = true;
+  if (["beni", "servizi"].includes(fields.beniServizi)) record.beniServizi = fields.beniServizi;
+  if (fields.integrazioneId) record.integrazioneId = fields.integrazioneId;
+  if (fields.integrazioneNonServe) record.integrazioneNonServe = true;
+  // **The withholding and the amount asked for**, from a received invoice: what is paid to the
+  // supplier is the total less the withholding (which the company pays to the revenue), or exactly
+  // the sum of the file's instalments when it states them. Kept only when there is something to keep.
+  // **The instalments, when the supplier set more than one.** One date for the whole amount put a
+  // three-instalment invoice entirely on the first date: overdue at once for money not yet due.
+  // Kept only with two or more, each with a date and an amount; the first date is the purchase's.
+  const rate = Array.isArray(fields.rate) ? fields.rate
+    .map((quota) => ({
+      scadenza: /^\d{4}-\d{2}-\d{2}$/.test(String(quota && quota.scadenza)) ? String(quota.scadenza) : "",
+      importo: quota && quota.importo !== undefined && quota.importo !== "" ? parseAmount(quota.importo) : null,
+    }))
+    .filter((quota) => quota.scadenza && quota.importo !== null)
+    .sort((a, b) => a.scadenza.localeCompare(b.scadenza)) : [];
+  if (rate.length >= 2) {
+    record.rate = rate;
+    if (!record.scadenza) record.scadenza = rate[0].scadenza;
+  }
+  // A supplier's credit note may name the invoice it reverses: then it comes off that invoice's
+  // amount owed, as a customer's note does on the sales side.
+  if (tipo === "nota" && fields.fatturaId) record.fatturaId = String(fields.fatturaId);
+  for (const key of ["ritenuta", "daPagare", "totaleDichiarato"]) {
+    const value = fields[key] !== undefined && fields[key] !== null && fields[key] !== "" ? parseAmount(fields[key]) : null;
+    if (value !== null && cmp(_amount(value), ZERO) !== 0) record[key] = value;
+  }
   // Un acquisto nato da una ricorrenza la ricorda, con il periodo che copre: è così che l'atteso
   // di quel periodo sparisce, e non compare due volte.
   if (fields.ricorrenzaId) {
@@ -200,41 +232,99 @@ export function problems(record) {
 //  p u b l i c   —   p a g a m e n t i   e   s t a t o
 // -----------------------------------------------------------------------------------------------------------------
 
+/**
+ * What the supplier is owed on a purchase, before any payment: the instalments the file stated,
+ * or the total less the withholding. For a purchase typed by hand, the total.
+ */
+export function dueOf(record, notes = []) {
+  const base = record.daPagare
+    ? _amount(record.daPagare)
+    : sub(_amount(record.totale), _amount(record.ritenuta || "0"));
+  // The supplier's credit notes that name this invoice come off it.
+  const stornato = sum((notes || []).filter((nota) => nota.tipo === "nota" && nota.fatturaId === record.id)
+    .map((nota) => _amount(nota.totale)));
+  const resto = sub(base, stornato);
+  return cmp(resto, ZERO) > 0 ? resto : ZERO;
+}
+
+/**
+ * The instalments of a purchase, each with what is still owed on it.
+ *
+ * The payments close the oldest instalment first — how a partial payment is meant, the same rule
+ * as the sales side. Without instalments the purchase is one, due on its date. The last instalment
+ * absorbs any difference between the file's instalments and what is owed (a credit note, a
+ * rounding), so the parts always add up to the whole.
+ */
+export function partsOf(record, outlays, notes = []) {
+  const dovuto = dueOf(record, notes);
+  const rate = Array.isArray(record.rate) && record.rate.length >= 2
+    ? record.rate.map((quota) => ({ scadenza: quota.scadenza, importo: _amount(quota.importo) }))
+    : [{ scadenza: record.scadenza || record.data, importo: dovuto }];
+  const dichiarato = sum(rate.map((quota) => quota.importo));
+  rate[rate.length - 1].importo = add(rate[rate.length - 1].importo, sub(dovuto, dichiarato));
+  let pagato = paidOf(outlays || []);
+  return rate.map((quota) => {
+    const coperto = cmp(pagato, quota.importo) >= 0 ? quota.importo : (cmp(pagato, ZERO) > 0 ? pagato : ZERO);
+    pagato = sub(pagato, coperto);
+    const resto = sub(quota.importo, coperto);
+    return { scadenza: quota.scadenza, importo: cmp(resto, ZERO) > 0 ? resto : ZERO };
+  });
+}
+
+/** The next instalment still owed, or the purchase's own date when nothing is: what the list shows. */
+export function nextDue(record, outlays, notes = []) {
+  const aperta = partsOf(record, outlays, notes).find((quota) => cmp(quota.importo, ZERO) > 0);
+  return aperta ? aperta.scadenza : (record.scadenza || record.data);
+}
+
+/** The credit notes among the purchases, for the functions above. */
+export function notesOf(costs) {
+  return (costs || []).filter((record) => record.tipo === "nota" && record.fatturaId);
+}
+
 /** Quanto è stato pagato di un acquisto, dai suoi pagamenti. */
 export function paidOf(outlays) {
   return sum(outlays.map((one) => _amount(one.importo)));
 }
 
 /** Quanto resta da pagare: mai sotto zero, un pagamento in più non è un credito. Una nota di credito non si paga. */
-export function owedOn(record, outlays) {
+export function owedOn(record, outlays, notes = []) {
   if (record.tipo === "nota") return ZERO;
-  const resto = sub(_amount(record.totale), paidOf(outlays));
+  const resto = sub(dueOf(record, notes), paidOf(outlays));
   return cmp(resto, ZERO) > 0 ? resto : ZERO;
 }
 
-/** `pagato`, `scaduto` o `aperto`. Senza scadenza un acquisto è a vista: scade il giorno stesso. */
-export function state(record, outlays, { today = new Date().toISOString().slice(0, 10) } = {}) {
-  if (cmp(owedOn(record, outlays), ZERO) === 0) return "pagato";
-  const quando = record.scadenza || record.data;
-  return quando && quando < today ? "scaduto" : "aperto";
+/**
+ * `pagato`, `scaduto` o `aperto`. Senza scadenza un acquisto è a vista: scade il giorno stesso.
+ * With instalments, overdue when an instalment still owed is past its date — not when the first
+ * date of the whole has passed.
+ */
+export function state(record, outlays, { today = currentDay(), notes = [] } = {}) {
+  if (cmp(owedOn(record, outlays, notes), ZERO) === 0) return "pagato";
+  const scaduta = partsOf(record, outlays, notes)
+    .some((quota) => cmp(quota.importo, ZERO) > 0 && quota.scadenza && quota.scadenza < today);
+  return scaduta ? "scaduto" : "aperto";
 }
 
 /**
  * Lo scadenzario passivo: una riga per acquisto non saldato, dalla scadenza più vicina.
  * Stessa forma delle righe dello scadenzario attivo, con `costId` al posto di `docId`.
  */
-export function payable(costs, outlays, { today = new Date().toISOString().slice(0, 10) } = {}) {
+export function payable(costs, outlays, { today = currentDay() } = {}) {
   const per = new Map();
   for (const one of outlays) {
     if (!per.has(one.costId)) per.set(one.costId, []);
     per.get(one.costId).push(one);
   }
+  // One row per instalment still owed, like the sales side: a three-instalment purchase shows three
+  // dates, not one total on the first.
+  const notes = notesOf(costs);
   return costs
-    .map((record) => {
-      const importo = owedOn(record, per.get(record.id) || []);
-      const scadenza = record.scadenza || record.data;
-      return { costId: record.id, partyId: record.partyId, scadenza, importo, scaduta: Boolean(scadenza) && scadenza < today };
-    })
+    .filter((record) => record.tipo !== "nota")
+    .flatMap((record) => partsOf(record, per.get(record.id) || [], notes).map((quota) => ({
+      costId: record.id, partyId: record.partyId, scadenza: quota.scadenza, importo: quota.importo,
+      scaduta: Boolean(quota.scadenza) && quota.scadenza < today,
+    })))
     .filter((row) => cmp(row.importo, ZERO) > 0)
     .sort((a, b) => String(a.scadenza).localeCompare(String(b.scadenza)));
 }
@@ -294,7 +384,7 @@ export function daAutofatturare(costs, { company, anagrafiche, oggi } = {}) {
  * `aliquotaFissa` a zero e natura `N4` — mentre sulla spesa può esserci l'imposta monofase, che è
  * una cosa diversa e si gestisce fuori dalla fattura. Copiarla qui sarebbe un file scartato.
  */
-export function autofatturaDa(record, { company, party, oggi = new Date().toISOString().slice(0, 10) } = {}) {
+export function autofatturaDa(record, { company, party, oggi = currentDay() } = {}) {
   const profile = profileFor(company, party);
   const descrizione = record.descrizione || record.categoria
     || tf("autofatturaLine", { fornitore: (party || {}).denominazione || "", data: shownDate(record.data) });
@@ -328,6 +418,124 @@ export function autofatturaDa(record, { company, party, oggi = new Date().toISOS
 }
 
 // -----------------------------------------------------------------------------------------------------------------
+//  p u b l i c   —   l e   i n t e g r a z i o n i   d e l l ' i n v e r s i o n e   c o n t a b i l e
+// -----------------------------------------------------------------------------------------------------------------
+
+/**
+ * Which integration a reverse-charge purchase owes: `TD16`…`TD19`, `?` while goods or services is
+ * not known, or `null`.
+ *
+ * **Italian companies only**, because the obligation is Italian: an Italian supplier's invoice under
+ * N6.x is integrated with TD16; from abroad, services are TD17, goods from another EU country TD18,
+ * goods from anywhere else TD19 — San Marino included, where the Agenzia's guide makes TD19
+ * compulsory for goods invoiced without VAT. Goods imported through customs pay VAT at the border
+ * and need nothing: that is what «Non serve» is for. A supplier's credit note under reverse charge
+ * gets the same document with negative amounts, which is how the guide says to correct one.
+ */
+export function tipoIntegrazione(record, party, company) {
+  if (!record || !record.inversione) return null;
+  if (String((company || {}).paese || "IT").toUpperCase() !== "IT") return null;
+  const paese = String((party || {}).paese || "IT").toUpperCase();
+  if (paese === "IT") return record.tipo === "spesa" ? null : "TD16";
+  if (record.beniServizi === "servizi") return "TD17";
+  if (record.beniServizi === "beni") return PAESI_UE.has(paese) ? "TD18" : "TD19";
+  return "?";
+}
+
+/**
+ * The reverse-charge purchases still waiting for their integration, the earliest deadline first.
+ *
+ * Out: those already integrated (`integrazioneId`) and those the company declared need none
+ * (`integrazioneNonServe`) — a service under 5.000 € not relevant in Italy, goods through customs.
+ */
+export function daIntegrare(costs, { company, anagrafiche, oggi = currentDay() } = {}) {
+  if (!company || String(company.paese || "IT").toUpperCase() !== "IT") return [];
+  const chi = anagrafiche instanceof Map ? anagrafiche : new Map();
+  return (costs || [])
+    .filter((record) => record.inversione && !record.integrazioneId && !record.integrazioneNonServe)
+    .map((record) => {
+      const party = chi.get(record.partyId) || null;
+      const tipo = tipoIntegrazione(record, party, company);
+      const termine = terminiIntegrazione(record, { oggi });
+      return tipo && termine ? { record, party, tipo, termine } : null;
+    })
+    .filter(Boolean)
+    .sort((a, b) => String(a.termine.al).localeCompare(String(b.termine.al)));
+}
+
+/**
+ * The integration of a purchase, as a draft, without saving it.
+ *
+ * **The amounts are the supplier's, the rate is the company's.** The supplier wrote no VAT, so the
+ * rate is the one the company applies — its default, to be checked on the draft. The lines of an
+ * imported invoice come across one by one at their net amount (for TD16 only those under N6.x);
+ * without lines, one line with the taxable amount.
+ *
+ * **The date.** For TD16, TD18 and services from the EU it is the date the invoice was received, or
+ * any date in that month: today when today is still that month, otherwise the invoice's date. For
+ * TD19 and services from outside the EU it is the date of the operation, the invoice's.
+ */
+export function integrazioneDa(record, { company, party, tipo, oggi = currentDay() } = {}) {
+  const aliquota = String((company || {}).aliquotaPredefinita || "22");
+  // A credit note is integrated with negative amounts: the correction the guide prescribes.
+  const nota = record.tipo === "nota";
+  const segno = (valore) => {
+    const testo = String(valore ?? "0");
+    if (!nota) return testo;
+    return testo.startsWith("-") ? testo.slice(1) : `-${testo}`;
+  };
+  const paese = String((party || {}).paese || "IT").toUpperCase();
+  const daRicezione = tipo === "TD16" || tipo === "TD18" || (tipo === "TD17" && PAESI_UE.has(paese));
+  const stessoMese = String(oggi).slice(0, 7) === String(record.data).slice(0, 7) && String(oggi) >= String(record.data);
+  const righe = (record.righe || [])
+    .filter((riga) => tipo !== "TD16" || /^N6/.test(String(riga.natura || "")))
+    .map((riga) => ({
+      descrizione: riga.descrizione || record.descrizione || "",
+      quantita: "1",
+      prezzoUnitario: segno(riga.imponibile ?? riga.prezzoUnitario ?? "0"),
+      aliquota,
+    }));
+  const doc = draft({
+    tipo,
+    data: daRicezione && stessoMese ? oggi : record.data,
+    partyId: record.partyId,
+    causale: tf(nota ? "integrazioneCausaleNota" : (record.numero ? "integrazioneCausale" : "integrazioneCausaleSpesa"), {
+      numero: record.numero || "",
+      fornitore: (party || {}).denominazione || "",
+      data: shownDate(record.data),
+    }),
+    righe: righe.length ? righe : [{
+      descrizione: record.descrizione || record.categoria || tf("integrazioneLine", {
+        fornitore: (party || {}).denominazione || "", data: shownDate(record.data),
+      }),
+      quantita: "1",
+      prezzoUnitario: segno(record.imponibile),
+      aliquota,
+    }],
+  });
+  // The supplier's invoice, which the guide asks to name: the file links the two.
+  if (record.numero) doc.fattureCollegate = [{ numero: record.numero, data: record.data }];
+  doc.daAcquisto = { costId: record.id, data: record.data, importo: record.totale };
+  return doc;
+}
+
+/**
+ * Untie a purchase from a draft that is being deleted: the autofattura or integration it was waiting
+ * for is again to be made. Only the link that points at this very draft is removed.
+ */
+export async function releasePurchase(db, doc) {
+  const costId = doc && doc.daAcquisto && doc.daAcquisto.costId;
+  if (!costId) return null;
+  const record = await get(db, "costs", costId);
+  if (!record) return null;
+  const libero = { ...record };
+  if (libero.autofatturaId === doc.id) delete libero.autofatturaId;
+  if (libero.integrazioneId === doc.id) delete libero.integrazioneId;
+  if (libero.autofatturaId === record.autofatturaId && libero.integrazioneId === record.integrazioneId) return record;
+  return saveCost(db, libero);
+}
+
+// -----------------------------------------------------------------------------------------------------------------
 //  p u b l i c   —   i   c o n t i   d e l   p e r i o d o
 // -----------------------------------------------------------------------------------------------------------------
 
@@ -354,8 +562,14 @@ export function periodTotals(costs, periodo) {
  * la nota di credito che toglie.
  */
 export function taxBalance(docs, costs, periodo, { company = null, kindOf = null } = {}) {
-  const emessi = docs.filter((doc) => doc.totali && String(doc.data).startsWith(periodo));
+  // Refused or cancelled documents carry their frozen totals still, and owe no VAT.
+  const emessi = docs.filter((doc) => doc.totali && String(doc.data).startsWith(periodo)
+    && doc.stato !== "scartato" && doc.stato !== "annullato");
   let debito = ZERO;
+  // **An integration is in both registers.** Its VAT is owed (sales) and, for whoever deducts,
+  // deductible (purchases): the balance does not move — except for the flat-rate scheme, which pays
+  // it and deducts nothing.
+  let integrata = ZERO;
   for (const doc of emessi) {
     const k = kindOf ? kindOf(doc) : { fiscale: true, storna: false };
     if (!k.fiscale) continue;
@@ -363,12 +577,14 @@ export function taxBalance(docs, costs, periodo, { company = null, kindOf = null
     let imposta = ZERO;
     try { imposta = BigInt(doc.totali.imposta || 0); } catch (ignored) { imposta = ZERO; }
     debito = k.storna ? sub(debito, imposta) : add(debito, imposta);
+    if (k.integrazione) integrata = add(integrata, imposta);
   }
   const acquisti = periodTotals(costs, periodo);
   if (taxKind(company) === "monofase") {
     return { tipo: "monofase", debito, credito: ZERO, saldo: debito, monofase: acquisti.monofase };
   }
-  return { tipo: "iva", debito, credito: acquisti.iva, saldo: sub(debito, acquisti.iva), monofase: ZERO };
+  const credito = (company || {}).regimeFiscale === "RF19" ? acquisti.iva : add(acquisti.iva, integrata);
+  return { tipo: "iva", debito, credito, saldo: sub(debito, credito), monofase: ZERO };
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -425,6 +641,8 @@ export async function recordOutlay(db, cost, { importo, data, conto = null, nota
     data,
     conto: conto ? { id: conto.id, etichetta: conto.etichetta || "", iban: conto.iban || "" } : null,
     nota: nota || null,
+    // When it was written down, for the backup reminder (see `recordPayment`).
+    created: new Date().toISOString(),
   };
   await put(db, "outlays", record);
   return record;

@@ -222,4 +222,20 @@ test("un mese che paga più di quanto incassa detta la scala", () => {
   assert.ok(g.bars[0].outH > g.bars[0].h);
 });
 
+
+test("una rata vecchia di due anni non toglie dal quadro oggi e il futuro", () => {
+  // Overdue since January 2025, two due this autumn: the window ends at the latest month, keeps
+  // today inside, and the old amount lands in the first column instead of pushing the rest out.
+  const g = geometry([
+    riga("2025-01-15", "100.00", true),
+    riga("2026-10-20", "200.00"),
+    riga("2026-11-20", "300.00"),
+  ], { today: "2026-10-13" });
+  const mesi = g.bars.map((b) => b.month);
+  assert.ok(mesi.includes("2026-10") && mesi.includes("2026-11"), "oggi e il mese dopo ci sono");
+  assert.ok(mesi.length <= 14);
+  const somma = g.bars.reduce((tot, b) => tot + b.total, 0n);
+  assert.equal(money(somma), "600.00", "nessun importo sparisce");
+});
+
 console.log(`timeline: ${passed} prove passate`);

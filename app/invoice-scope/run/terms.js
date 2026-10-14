@@ -175,6 +175,11 @@ export function primoGiornoNonFestivo(iso) {
  * trasporto, che è già un problema suo e lo dice `validate.js`.
  */
 export function termine(doc, profile) {
+  // The integrations have a deadline of their own, on the Italian channel that otherwise has none.
+  if (doc && kind(doc).integrazione) {
+    const calcolato = integrazione(doc, { oggi: doc.data });
+    return calcolato ? { data: calcolato.al, base: calcolato.base, ambito: "integrazione", mesi: null, bloccante: false } : null;
+  }
   if (!doc || !profile || !profile.termini) return null;
   if (!kind(doc).fiscale) return null;
   const tipo = doc.tipo || "TD01";
@@ -260,6 +265,30 @@ export function autofattura(acquisto, profile, { oggi, fatta = false } = {}) {
   if (aInizio > 0) return { ...calcolato, key: "presto", giorni: aInizio };
   if (aFine >= 0) return { ...calcolato, key: "aperto", giorni: aFine };
   return { ...calcolato, key: "scaduto", giorni: aFine };
+}
+
+/**
+ * The deadline of a reverse-charge integration, and how it stands today.
+ *
+ * **The fifteenth of the month after**: after receipt for an Italian supplier's invoice (TD16) and
+ * for purchases from the EU, after the operation for the others. The app does not record the day an
+ * invoice arrived, so it counts from the invoice's date — the earlier of the two, never a deadline
+ * later than the real one. Moved to Monday when it falls on a weekend.
+ *
+ * Accepts a purchase (`data`) or an integration already drafted (`daAcquisto.data`, the supplier
+ * invoice's date in `fattureCollegate`, or its own date). Three states: `aperto`, `scaduto`, `fatto`.
+ */
+export function integrazione(origine, { oggi, fatta = false } = {}) {
+  if (!origine) return null;
+  const base = String((origine.daAcquisto && origine.daAcquisto.data)
+    || ((origine.fattureCollegate || [])[0] || {}).data || origine.data || "");
+  const parts = _parts(base);
+  if (!parts) return null;
+  const al = primoGiornoNonFestivo(_iso(new Date(Date.UTC(parts.y, parts.m, 15))));
+  if (fatta) return { base, al, key: "fatto", giorni: null };
+  const giorni = giorniFra(oggi, al);
+  if (giorni === null) return null;
+  return { base, al, key: giorni < 0 ? "scaduto" : "aperto", giorni };
 }
 
 /** Quanti giorni ci sono fra due date ISO, o `null` se una delle due non è una data. */

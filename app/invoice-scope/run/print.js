@@ -23,9 +23,9 @@
 import { LOGO as BRAND_LOGO } from "./brand.js";
 import { t } from "./i18n.js";
 import { money, amount, rate as shownRate, date as shownDate } from "./format.js";
-import { from, ZERO, cmp, add } from "./decimal.js";
+import { from, ZERO, cmp, add, sub } from "./decimal.js";
 import { kind, numero as shownNumber } from "./kinds.js";
-import { profileFor, riferimentoNormativo } from "./fatturapa.js";
+import { profileFor, riferimentoNormativo, frozen } from "./fatturapa.js";
 import { addressLines, deliveryLine } from "./address.js";
 import { quote as instalments } from "./schedule.js";
 
@@ -78,9 +78,14 @@ function _sconto(line) {
   return "";
 }
 
+/** Whether a rate is zero however it is written: `0`, `0.0` and `0.00` are one rate. */
+function _isZeroRate(value) {
+  return value !== undefined && value !== null && value !== "" && Number(value) === 0;
+}
+
 /** The VAT cell of a line: the rate, or the nature when the rate is zero. */
 function _iva(line) {
-  if (String(line.aliquota) === "0" && line.natura) return line.natura;
+  if (_isZeroRate(line.aliquota) && line.natura) return line.natura;
   return shownRate(line.aliquota);
 }
 
@@ -95,11 +100,16 @@ function _iva(line) {
  * the screen cannot show two different totals for the same lines. `draft` marks a document that has
  * no number yet.
  */
-export function render(doc, { company, party, computed, draft = false }) {
+export function render(doc, { company: aziendaOra, party: clienteOra, computed, draft = false }) {
+  // The details the document was issued with, when it has them (`frozen` in fatturapa.js).
+  const { company, party } = frozen(doc, { company: aziendaOra, party: clienteOra });
   const sheet = el("printSheet");
   sheet.textContent = "";
   const profile = kind(doc);
-  const fileProfile = profileFor(company || {});
+  // The channel the file goes through depends on the customer too (a San Marino company invoicing
+  // inside San Marino writes `ESENTE` and the TM code): the sheet asks the same question the file
+  // does, or the two print different legal references for the same summary.
+  const fileProfile = profileFor(company || {}, party);
 
   // ---- head: issuer left, document right
   const head = _node("header", "ps-head");
@@ -134,7 +144,9 @@ export function render(doc, { company, party, computed, draft = false }) {
 
   // ---- recipient
   const to = _node("section", "ps-to");
-  to.append(_node("div", "ps-section-label", t("printTo")));
+  // On a self-billed invoice the other party is the supplier who sold, not somebody the document is
+  // sent to: the file names it CedentePrestatore, and the sheet now says the same thing.
+  to.append(_node("div", "ps-section-label", t(profile.autofattura ? "printSupplier" : "printTo")));
   if (party) {
     to.append(_node("div", "ps-to-name", party.denominazione || ""));
     for (const line of addressLines(party)) to.append(_node("div", "ps-to-line", line));
@@ -154,9 +166,22 @@ export function render(doc, { company, party, computed, draft = false }) {
   const collegate = doc.fattureCollegate || [];
   if (collegate.length) {
     const nota = _node("section", "ps-subject");
-    nota.append(_node("span", "ps-section-label", t("printLinked")),
+    nota.append(_node("span", "ps-section-label", t(profile.integrazione ? "printIntegrates" : "printLinked")),
       _node("span", null, collegate.map((ref) => `${ref.numero}${ref.data ? ` (${shownDate(ref.data)})` : ""}`).join(", ")));
     sheet.append(nota);
+  }
+
+  // The order or contract, with its tender and project codes: what a PA's office matches first.
+  const ordine = doc.ordine;
+  if (ordine && (ordine.numero || ordine.cig || ordine.cup)) {
+    const box = _node("section", "ps-subject");
+    const parti = [
+      ordine.numero ? `${ordine.numero}${ordine.data ? ` (${shownDate(ordine.data)})` : ""}` : "",
+      ordine.cig ? `CIG ${ordine.cig}` : "",
+      ordine.cup ? `CUP ${ordine.cup}` : "",
+    ].filter(Boolean);
+    box.append(_node("span", "ps-section-label", t("printOrder")), _node("span", null, parti.join(" · ")));
+    sheet.append(box);
   }
 
   // ---- transport, on a delivery note
@@ -231,6 +256,10 @@ export function render(doc, { company, party, computed, draft = false }) {
       if (norma) note.push(`${r.natura}: ${norma}`);
     }
     vat.append(vtable);
+    // The exigibility the summary carries, said in words: split payment is what tells the PA's
+    // accountant that the VAT is theirs to pay to the Treasury.
+    const esigibilita = new Set(computed.riepiloghi.map((r) => r.esigibilita).filter((e) => e === "S" || e === "D"));
+    for (const e of esigibilita) note.push(t(`printEsig${e}`));
     for (const line of note) vat.append(_node("div", "ps-vat-note", line));
     bottom.append(vat);
 
@@ -245,12 +274,20 @@ export function render(doc, { company, party, computed, draft = false }) {
       rows.push([t("printGrossLines"), amount(add(computed.imponibile, sconto))]);
       rows.push([pct ? `${t("printDocDiscount")} ${shownRate(pct)}` : t("printDocDiscount"), `-${amount(sconto)}`]);
     }
+    if (computed.cassa) {
+      const c = computed.cassa;
+      rows.push([t("printFees"), amount(sub(computed.imponibile, c.importo))]);
+      rows.push([`${t("sumCassa")} ${c.tipo} ${shownRate(c.aliquota)}`, amount(c.importo)]);
+    }
     rows.push([t("docImponibile"), amount(computed.imponibile)]);
     rows.push([t("docImposta"), amount(computed.imposta)]);
     if (computed.bollo && cmp(computed.bollo, ZERO) > 0) rows.push([t("printStamp"), amount(computed.bollo)]);
     if (computed.ritenuta && cmp(computed.ritenuta, ZERO) > 0) {
       rows.push([t("printGross"), amount(add(add(computed.imponibile, computed.imposta), computed.bollo))]);
       rows.push([t("ritTitle"), `-${amount(computed.ritenuta)}`]);
+    }
+    if (computed.impostaScissa && cmp(computed.impostaScissa, ZERO) > 0) {
+      rows.push([t("sumScissa"), `-${amount(computed.impostaScissa)}`]);
     }
     for (const [label, value] of rows) {
       const line = _node("div", "ps-total-line");

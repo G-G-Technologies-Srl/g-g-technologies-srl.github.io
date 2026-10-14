@@ -32,6 +32,7 @@ import { saveRecurring } from "./recurring.js";
 import { savePlan } from "./recurring-docs.js";
 import * as progetti from "./projects.js";
 import { toString } from "./decimal.js";
+import { isoDay } from "./day.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -109,6 +110,22 @@ const CLIENTI = [
     // CAP vero e provincia SM: San Marino usa i CAP del sistema italiano, e il tracciato li vuole.
     sede: { indirizzo: "Strada dei Censiti", numeroCivico: "21", cap: "47891", comune: "Serravalle", provincia: "SM" },
   },
+  // **Una pubblica amministrazione, inventata come gli altri.** Il codice fiscale numerico di un
+  // ente, con la cifra di controllo giusta e di nessuno; il codice univoco dell'ufficio, sei
+  // caratteri, al posto del codice destinatario; la scissione dei pagamenti. È il caso che la scheda
+  // promette per la PA — FPA12, CIG, l'IVA che va all'Erario — e il dimostrativo lo fa vedere.
+  {
+    id: "demo-pa", name: "comune di rocca marecchia", denominazione: "Comune di Rocca Marecchia",
+    codiceFiscale: "00345670129", codiceDestinatario: "UFD3M0", paese: "IT", pa: true, splitPayment: true,
+    sede: { indirizzo: "Piazza del Municipio", numeroCivico: "1", cap: "47867", comune: "Rocca Marecchia", provincia: "RN" },
+  },
+  // Un fornitore tedesco: i beni comprati senza IVA da un paese dell'Unione si integrano con il TD18,
+  // e negli Acquisti l'app lo propone con il suo termine.
+  {
+    id: "demo-f3", name: "werkzeug nord gmbh", denominazione: "Werkzeug Nord GmbH",
+    partitaIva: "123456789", codiceDestinatario: "", paese: "DE", ruolo: "fornitore",
+    sede: { indirizzo: "Hafenstraße", numeroCivico: "8", cap: "20457", comune: "Hamburg", provincia: "" },
+  },
 ];
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -119,7 +136,7 @@ const CLIENTI = [
 function _giorno(n) {
   const data = new Date();
   data.setDate(data.getDate() + n);
-  return data.toISOString().slice(0, 10);
+  return isoDay(data);
 }
 
 /** Una data ISO spostata di `giorni`: serve a far pagare i clienti del dimostrativo in giorni
@@ -135,7 +152,7 @@ function _mese(n) {
   const data = new Date();
   data.setDate(15);
   data.setMonth(data.getMonth() - n);
-  return data.toISOString().slice(0, 10);
+  return isoDay(data);
 }
 
 /** L'unità di ogni voce del listino, per nome: ore per il lavoro, pezzi per le cose. */
@@ -246,6 +263,31 @@ export async function seed(db) {
     nota: t("demoPaymentNote"),
   });
 
+  // La fattura alla PA: scissione dei pagamenti, la determina con il CIG, l'ufficio di sei caratteri.
+  // Lo scadenzario aspetta dal Comune il solo imponibile: l'IVA la versa lui all'Erario.
+  const pa = CLIENTI.find((cliente) => cliente.id === "demo-pa");
+  await _emetti(db, {
+    tipo: "TD01",
+    data: _giorno(-15),
+    partyId: pa.id,
+    causale: t("demoPaCausale"),
+    esigibilita: "S",
+    ordine: { numero: t("demoPaOrdine"), data: _giorno(-30), cig: "Z1A2B3C4D5", cup: null },
+    righe: [_riga(t("demoItemOfficina"), "16", "45.00"), _riga(t("demoItemCollaudo"), "1", "320.00")],
+    pagamento: { condizioni: "TP02", modalita: "MP05", iban, rate: [{ scadenza: _giorno(15) }] },
+  }, contesto(pa));
+
+  // In ordine di data, come vuole la numerazione: prima la PA (-15), poi San Marino (-12), poi le
+  // rate (-5).
+  // San Marino: aliquota zero e natura N3.3, che è la cessione verso San Marino.
+  await _emetti(db, {
+    tipo: "TD01",
+    data: _giorno(-12),
+    partyId: "demo-3",
+    righe: [_riga(t("demoItemTelaio"), "4", "250.00", { aliquota: "0", natura: "N3.3" })],
+    pagamento: { condizioni: "TP02", modalita: "MP05", iban, rate: [{ scadenza: _giorno(18) }] },
+  }, contesto(CLIENTI[2]));
+
   // A rate, perché due scadenze sullo stesso documento sono il caso che il tracciato scrive in un
   // modo solo e che si sbaglia più spesso.
   await _emetti(db, {
@@ -260,15 +302,6 @@ export async function seed(db) {
       rate: [{ scadenza: _giorno(25) }, { scadenza: _giorno(55) }],
     },
   }, contesto(CLIENTI[0]));
-
-  // San Marino: aliquota zero e natura N3.3, che è la cessione verso San Marino.
-  await _emetti(db, {
-    tipo: "TD01",
-    data: _giorno(-12),
-    partyId: "demo-3",
-    righe: [_riga(t("demoItemTelaio"), "4", "250.00", { aliquota: "0", natura: "N3.3" })],
-    pagamento: { condizioni: "TP02", modalita: "MP05", iban, rate: [{ scadenza: _giorno(18) }] },
-  }, contesto(CLIENTI[2]));
 
   // **Una nota di credito, perché altrimenti nessuno sa che ci sono.** Un telaio reso sulla fattura
   // appena vista: il documento stornato resta dov'è — una fattura emessa non si tocca — e quello
@@ -392,6 +425,13 @@ export async function seed(db) {
     imponibile: "1250.00", aliquota: "22", scadenza: _giorno(-10),
   });
   await recordOutlay(db, scaduta, { importo: "500.00", data: _giorno(-12), conto: AZIENDA.conti[0] });
+  // Beni da un fornitore dell'Unione, senza IVA: l'acquisto in inversione contabile che negli
+  // Acquisti fa comparire il TD18 da preparare.
+  await acquisto({
+    tipo: "fattura", partyId: "demo-f3", data: _giorno(-6), numero: "WN-4471",
+    categoria: t("demoCatMateriali"), descrizione: t("demoCostTools"),
+    imponibile: "620.00", aliquota: "0", scadenza: _giorno(24), inversione: true, beniServizi: "beni",
+  });
   await acquisto({
     tipo: "spesa", partyId: "demo-f2", data: _giorno(-2),
     categoria: t("demoCatMateriali"), descrizione: t("demoCostBolts"),

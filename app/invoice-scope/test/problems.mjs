@@ -124,6 +124,43 @@ const CASI = [
   [{ ...DOC, tipo: "preventivo", validoFino: "2026-01-01" }, ctx],
   [{ ...DOC, tipo: "ddt" }, ctx],
   [{ ...DOC, ritenuta: { tipo: "RT99", aliquota: "20" } }, ctx],
+  // The withholding with a blank rate, a reason outside the list, and only excluded lines under it.
+  [{ ...DOC, ritenuta: { tipo: "RT01", aliquota: "", causale: "Q9" } }, ctx],
+  [{ ...DOC, righe: [{ ...RIGA, aliquota: "0", natura: "N1" }], ritenuta: { tipo: "RT01", aliquota: "20" } }, ctx],
+  // A deferred invoice with no delivery note, on the Italian channel.
+  [{ ...DOC, tipo: "TD24" }, ctx],
+  // A document discount above 100%.
+  [{ ...DOC, scontoDocumento: { percentuale: "150" } }, ctx],
+  // A self-billed invoice to a supplier known only by its tax code.
+  [{ ...DOC, tipo: "TD29" }, { ...ctx, party: { ...PARTY, partitaIva: null, codiceFiscale: "RSSMRA85T10A562S" } }],
+  // The integrations: a TD16 to a foreign supplier, a TD17 to an Italian one, a TD18 from outside
+  // the EU, N6 left on a line, a TD16 naming nothing, and one dated before the invoice it integrates.
+  [{ ...DOC, tipo: "TD16", fattureCollegate: [{ numero: "F1", data: "2026-09-01" }] },
+    { ...ctx, party: { ...PARTY, paese: "DE", sede: { ...PARTY.sede, provincia: "" } } }],
+  [{ ...DOC, tipo: "TD17" }, ctx],
+  [{ ...DOC, tipo: "TD18" }, { ...ctx, party: { ...PARTY, paese: "US", sede: { ...PARTY.sede, provincia: "" } } }],
+  [{ ...DOC, tipo: "TD16", righe: [{ ...RIGA, aliquota: "0", natura: "N6.7" }] }, ctx],
+  [{ ...DOC, tipo: "TD16", fattureCollegate: [{ numero: "F1", data: "2026-09-10" }] }, ctx],
+  // A REA with the office and no number.
+  [DOC, { ...ctx, company: { ...COMPANY, rea: { ufficio: "RN", numero: "" } } }],
+  // A date after today, when issuing.
+  [{ ...DOC, data: "2099-01-01" }, { ...ctx, richiedeNumero: false, oggi: "2026-10-14" }],
+  // A public administration with a seven-character code.
+  [DOC, { ...ctx, party: { ...PARTY, pa: true } }],
+  // CIG and CUP without an order number, and both malformed.
+  [{ ...DOC, ordine: { cig: "123", cup: "ABC" } }, ctx],
+  // A pension contribution of an unknown fund, with a blank rate, and one without VAT and nature.
+  [{ ...DOC, cassa: { tipo: "TC99", aliquota: "" } }, ctx],
+  [{ ...DOC, cassa: { tipo: "TC22", aliquota: "4", aliquotaIva: "0" } }, ctx],
+  // Split payment with a withholding, and on a flat-rate issuer.
+  [{ ...DOC, esigibilita: "S", ritenuta: { tipo: "RT01", aliquota: "20", causale: "A" } }, ctx],
+  [{ ...DOC, esigibilita: "S", righe: [{ ...RIGA, aliquota: "0", natura: "N2.2" }] },
+    { ...ctx, company: { ...COMPANY, regimeFiscale: "RF19" } }],
+  // A flat-rate issuer with VAT on a line, and with the wrong nature.
+  [DOC, { ...ctx, company: { ...COMPANY, regimeFiscale: "RF19" } }],
+  [{ ...DOC, righe: [{ ...RIGA, aliquota: "0", natura: "N4" }] }, { ...ctx, company: { ...COMPANY, regimeFiscale: "RF19" } }],
+  // Split payment and the pension contribution off the Italian channel.
+  [{ ...DOC, esigibilita: "S", righe: [{ ...RIGA, aliquota: "0", natura: "N3.1", tm: "3" }] }, CTX_SM],
   [{ ...DOC, pagamento: { condizioni: "TP09", modalita: "MP99", iban: "non-un-iban" } }, ctx],
   [{ ...DOC, pagamento: { rate: [{ scadenza: "domani" }] } }, ctx],
   [{ ...DOC, pagamento: { rate: [{ importo: "1.00" }, { importo: "2.00" }] } }, ctx],

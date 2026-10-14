@@ -22,11 +22,11 @@ Categoria · [Gestionale](https://ggtechnologies.sm/app/?tag=gestionale)
 
 ## I dati dei clienti sono quelli da tenere in casa.
 
-Per emettere una fattura elettronica si passa quasi sempre da un servizio online: si caricano l'anagrafica dei clienti, i prezzi praticati e lo storico delle vendite, e da quel momento vivono sul server di qualcun altro.
+Per emettere una fattura elettronica si usa di solito un servizio online: l'anagrafica dei clienti, i prezzi praticati e lo storico delle vendite vengono caricati sui server di chi offre il servizio.
 
-Per molte aziende va benissimo. Per altre no, e non è una questione di diffidenza: è che l'elenco dei clienti con quanto paga ciascuno è il documento più delicato che una piccola impresa possiede.
+Per molte imprese è una soluzione adeguata. Per altre l'elenco dei clienti, con gli importi fatturati a ciascuno, è un'informazione riservata da tenere in azienda.
 
-Questa app fa la parte che pesa — i conti, il tracciato, i controlli — e la fa sul vostro computer. Il file esce pronto; la trasmissione resta a voi, con il canale che usate già.
+Invoice Scope svolge sul vostro computer la parte che richiede competenza — i calcoli, il tracciato FatturaPA, i controlli — e restituisce il file pronto per l'invio. La trasmissione resta sul canale che usate già.
 
 ![La Situazione: il fatturato, i crediti da incassare, il fatturato per mese, chi deve di più, i progetti in ritardo.](https://ggtechnologies.sm/assets/shot-invoice-scope-it.png)
 
@@ -42,102 +42,78 @@ Questa app fa la parte che pesa — i conti, il tracciato, i controlli — e la 
 
 ### Cosa fa
 
-- Apre su una situazione sola: il fatturato di quest'anno e il confronto con l'anno scorso, i crediti da incassare e da quanto tempo, il lavoro già svolto e non ancora fatturato. Sotto, il fatturato mese per mese, chi deve di più, i progetti in ritardo, i preventivi che aspettano una risposta, le bozze lasciate a metà.
-- Prepara fatture, note di credito e fatture differite, con più aliquote sullo stesso documento.
-- Tiene anche i preventivi e i documenti di trasporto, ciascuno con la sua numerazione e i suoi stati: un preventivo si accetta o si rifiuta, un documento di trasporto si consegna.
-- Trasforma un preventivo accettato in fattura, e i documenti di trasporto di un cliente in una sola fattura differita, portando righe, sconto e scadenze senza ridigitarli.
-- Tiene i progetti: un piano di fasi con le loro scadenze, le pagine di appunti che gli stanno intorno — in sotto-pagine, fino a quattro livelli, con dentro immagini e allegati — e i documenti collegati. Un progetto nasce anche da un preventivo accettato, con una fase per riga.
-- Una fase con un importo, quando è fatta, diventa una riga di fattura: accanto al progetto ci sono quotato, fatturato, incassato e quello che resta da fatturare.
-- Dà a ogni cliente una scheda sua: le persone di riferimento, con email e telefono, e un diario di telefonate, email e incontri. Accanto ci sono il fatturato, quello che resta da incassare e i suoi documenti.
-- Raccoglie nella voce CRM gli incontri con tutti i clienti: quelli in programma, quelli di cui manca l'esito e quelli conclusi, ognuno con ora, luogo e persone, e il file da aprire nel calendario.
-- Tiene i conti correnti bancari dell'azienda, in Anagrafiche › Banche, con banca, BIC e il controllo delle cifre dell'IBAN, e mette il predefinito nei documenti nuovi: l'IBAN si scrive una volta invece che su ogni fattura. Un cliente può avere la sua aliquota e il suo conto: si scrivono nella sua scheda, e i suoi documenti nascono già compilati.
-- Tiene lo scadenzario: le rate di ogni documento, quelle scadute e quanto resta da incassare, e gli incassi registrati con data, importo, conto e la ricevuta del bonifico. Ogni conto ha i suoi movimenti, incassi e pagamenti, con le ricevute accanto.
-- Importa da Fatture in Cloud clienti, listino e documenti, dai fogli dell'esportazione così come si scaricano — anche il .xls — con il dettaglio delle righe se si esporta anche quello, e le fatture intere dagli XML del backup. Prima di scrivere mostra cosa ha letto — quanti entrano, quali sono già lì, cosa ha lasciato fuori — e scrive solo dopo la conferma.
-- Conosce le sei direzioni che una fattura può prendere — dall'Italia verso l'Italia, verso San Marino e verso l'estero; da San Marino verso l'Italia, verso un altro sammarinese e verso l'estero — e per ciascuna scrive il file che quel canale accetta. La direzione la decidono il paese dell'azienda e quello del cliente, che sono già in anagrafica.
-- Fa le fatture interne fra operatori sammarinesi, obbligatorie dal 1° gennaio 2027: imposta monofase, codice destinatario a sette zeri, tipo merce su ogni riga, autofattura del cessionario, nota di debito e acconto.
-- Il tipo merce lo chiede una volta per documento — «questa fattura contiene: servizi, beni, lavorazione con materiale» — e dice lì che cosa comporta: se serve il documento di trasporto, e da quale data si conta il termine. Le righe lo prendono da lì, e i codici hanno le parole accanto. Il DDT fatto a mano o da un altro programma si scrive sulla fattura, con le righe che ha consegnato.
-- Calcola il termine entro cui il documento va trasmesso, che non è la scadenza dell'incasso: lo mostra sul documento e nella Situazione, con la conseguenza del ritardo, che nei due canali sammarinesi non è la stessa.
-- Verso un paese dove la fattura elettronica non è prevista non produce un file e spiega perché: quel documento si stampa, e fingere un adempimento sarebbe peggio che non averlo.
-- Calcola l'IVA sul riepilogo per aliquota, che è il modo in cui la ricalcola il Sistema di Interscambio.
-- Tiene i conti in aritmetica esatta, con otto decimali su quantità e prezzi unitari: l'energia, le lavorazioni a peso e i servizi al minuto li usano.
-- Propone il bollo da 2,00 € quando l'importo senza IVA supera i 77,47 €, e lascia decidere se addebitarlo.
-- Calcola la ritenuta d'acconto sull'imponibile, senza toccare l'IVA.
-- Scrive il file XML nel formato FatturaPA, con il nome che le regole richiedono.
-- Controlla il documento prima di consentirne l'esportazione, e dice quale campo, quale regola e cosa fare.
-- Tiene la numerazione per anno e per serie: le fatture hanno la loro, le note di credito la loro, i preventivi la loro. Due documenti non possono uscire con lo stesso numero, e i contatori di una numerazione cominciata altrove si riprendono da dove erano.
-- Esporta e reimporta tutto in un file JSON, che si apre e si legge senza questa app. Scelta una cartella, lo scrive lì da sola a ogni modifica, con una copia al giorno: dentro Dropbox o iCloud, il backup viaggia da sé. E se una cartella non c'è, lo segnala: senza server quella è l'unica copia che esiste, e un avviso che torna vale più di una spiegazione letta una volta.
-- Registra anche gli acquisti: le fatture ricevute — dal loro file XML, o a mano — e le spese senza fattura, con il fornitore, la categoria, l'imposta e la scadenza, e i pagamenti effettuati; una nota di credito ricevuta toglie da sola. Lo scadenzario prende i due versi, con il saldo in cima; la Situazione mostra il margine dell'anno, ricavi e costi mese per mese, i fornitori a cui si deve di più, e l'IVA del trimestre e dell'anno — sulle vendite, sugli acquisti, da versare — con finalità di controllo. Per un'azienda sammarinese l'imposta monofase sugli acquisti si registra come costo, con la sua aliquota.
-- Per un'azienda sammarinese, quando la fattura di un fornitore della Repubblica non arriva, l'app lo rileva dagli acquisti e propone l'autofattura elettronica con il termine entro cui va trasmessa: è l'adempimento che l'articolo 7 del Decreto Delegato 133/2026 mette in capo al cliente. La bozza nasce già con il fornitore, l'importo e la causale; il tipo merce lo chiede, perché una spesa non dice se si sono acquistati beni o servizi.
-- Conosce i costi che tornano: il canone, l'affitto o l'assicurazione si scrivono una volta, con la cadenza, e l'app li aspetta mese per mese fino a fine anno. La Situazione mostra i costi dell'anno come finiranno, lo scadenzario quello che uscirà; quando la fattura arriva, una conferma e la riga attesa sparisce. Una fattura dello stesso fornitore nello stesso mese si aggancia da sola all'importazione.
-- Le fatture che tornano ogni mese si scrivono una volta — il canone, il monte ore fisso, l'abbonamento — e in fondo ai Documenti compare quello che c'è da emettere, con il comando che ne prepara la bozza: cliente, riga, importi e scadenza già dentro. Bozza e non fattura, perché numerare è l'atto di emettere.
-- Prepara il testo del sollecito per le fatture scadute di un cliente — le fatture, i giorni di ritardo, il totale, le coordinate — da copiare in una email. Uno per cliente, non uno per fattura.
-- Mostra l'insoluto diviso per età — quanto deve ancora arrivare, quanto è fermo da trenta, sessanta, novanta giorni — il fatturato e l'incassato affiancati mese per mese, e la media dei giorni con cui ogni cliente salda. Con una categoria sui documenti, facoltativa e assegnabile anche a quelli già emessi, la Situazione dice da dove viene il fatturato dell'anno.
-- Esporta un CSV del periodo per chi tiene la contabilità: documenti emessi e acquisti nello stesso file, con una colonna che dice il verso.
-- Ricorda le scadenze, nei due versi: lo scadenzario esce come calendario .ics — e con il promemoria dentro, così a suonare è il vostro calendario, sul telefono, anche ad app chiusa — con un riepilogo alla riapertura dell'app, e con una notifica di sistema dove il browser la permette. Anticipo in giorni e orario si scelgono liberamente; installata, l'icona porta il numero di quelle in ritardo.
-- Stampa il documento su carta intestata, con il vostro logo e i vostri recapiti. Il piè di pagina dice che cos'è quel foglio: una copia di cortesia dove l'originale è il file trasmesso, l'originale stesso dove un file non è previsto.
-- Funziona anche senza connessione, e si installa come un'applicazione.
+- Emette fatture, fatture differite, acconti, note di credito e di debito, con più aliquote sullo stesso documento. Tiene anche preventivi e documenti di trasporto, ciascuno con la sua numerazione, e li trasforma in fattura senza ridigitare righe, sconti e scadenze.
+- Scrive il file FatturaPA per ogni direzione: dall'Italia verso l'Italia, San Marino e l'estero; da San Marino verso l'Italia, l'estero e gli altri operatori sammarinesi, con la fattura interna obbligatoria dal 1° gennaio 2027. La direzione la ricava dal paese dell'azienda e da quello del cliente.
+- Controlla ogni documento prima dell'emissione e indica il campo, la regola e la correzione. Calcola l'IVA per aliquota come la ricalcola il Sistema di Interscambio, in aritmetica esatta.
+- Fattura alla pubblica amministrazione in formato FPA12, con il codice univoco dell'ufficio, CIG e CUP e la scissione dei pagamenti. Gestisce la ritenuta d'acconto, la cassa previdenziale dei professionisti, il bollo virtuale e il regime forfettario.
+- Registra gli acquisti: le fatture ricevute dal file XML — anche firmato (.p7m) o raccolto nello zip dello SdI — o inserite a mano, le spese senza fattura, le note di credito dei fornitori, le rate e i pagamenti. I costi ricorrenti si inseriscono una volta e restano attesi fino a fine anno.
+- Riconosce gli acquisti in inversione contabile e prepara l'integrazione da trasmettere allo SdI — TD16, TD17, TD18 o TD19 — con il termine del 15 del mese successivo. Per un'azienda sammarinese propone l'autofattura dell'articolo 7 del Decreto Delegato 133/2026 quando la fattura del fornitore non arriva.
+- Tiene lo scadenzario in entrata e in uscita: rate, incassi con la ricevuta del bonifico, bonifici che saldano più fatture, l'estratto conto della banca letto da CSV. Prepara il testo dei solleciti e ricorda le scadenze con un calendario .ics e, dove il browser lo consente, con una notifica.
+- Apre su una situazione d'insieme: fatturato dell'anno confrontato con il precedente, crediti divisi per anzianità, margine, IVA del periodo a fini di controllo e documenti vicini al termine di trasmissione.
+- Dedica a ogni cliente una scheda con le persone di riferimento, il diario di telefonate, email e incontri e l'elenco dei suoi documenti.
+- Gestisce i progetti: fasi con scadenze e importi, pagine di appunti con immagini e allegati, e fasi completate che diventano righe di fattura. Il formato è lo stesso di Plan Scope.
+- Importa clienti, listino e documenti da Fatture in Cloud e dagli XML di un archivio, mostrando prima che cosa entrerà. Esporta un CSV del periodo per chi tiene la contabilità.
+- Stampa i documenti su carta intestata, con logo e recapiti, o li salva in PDF.
+- Salva l'archivio a ogni modifica in una cartella collegata, con una copia al giorno. Si installa come un'applicazione e funziona anche senza connessione.
 
 ### Cosa non fa
 
-- Non trasmette il file. Né al Sistema di Interscambio né all'HUB dell'Ufficio Tributario sammarinese: serve un canale accreditato, e questa app non ne ha uno.
-- Non fa la conservazione a norma, che è un obbligo separato con requisiti propri.
-- Non firma digitalmente, quindi non copre le fatture verso la pubblica amministrazione.
-- Non tiene la contabilità: registra quello che esce e quello che entra, ma non fa registri IVA, liquidazioni o prima nota. Quelli restano a chi tiene i conti, con il file che l'app gli prepara.
-- Non gestisce ancora l'inversione contabile né la scissione dei pagamenti: cambiano il calcolo, e arrivano quando saranno provate come il resto.
+- Non trasmette il file, né al Sistema di Interscambio né all'HUB dell'Ufficio Tributario sammarinese: la trasmissione richiede un canale accreditato.
+- Non svolge la conservazione a norma, che è un obbligo distinto con requisiti propri.
+- Non appone la firma digitale. Il file destinato alla pubblica amministrazione va firmato con il vostro dispositivo di firma (CAdES o XAdES) prima dell'invio.
+- Non tiene la contabilità: registri IVA, liquidazioni e prima nota restano a chi se ne occupa, che riceve dall'applicazione il file del periodo.
+- Non riporta nelle integrazioni l'identificativo SdI della fattura del fornitore, che la guida dell'Agenzia chiede quando è disponibile; numero e data sì.
+
+*Formati in ingresso e in uscita*
+
+I documenti escono nei formati ufficiali e in file aperti, leggibili anche senza questa applicazione.
+
+### Esce come
+
+- XML FatturaPA: FPR12 per imprese e privati, FPA12 per la pubblica amministrazione e il tracciato sammarinese per HUB-SM, con il nome di file previsto dalle regole.
+- PDF su carta intestata, dalla stampa del browser.
+- CSV del periodo per la contabilità, con documenti emessi e acquisti nello stesso file.
+- Calendario .ics delle scadenze, con il promemoria incluso.
+- Archivio completo in JSON, o in .zip con ricevute e immagini, per la copia di sicurezza o il cambio di computer.
+- Progetti nel formato di Plan Scope.
+
+### Entra da
+
+- XML FatturaPA ricevuti o emessi, anche firmati (.p7m) o raccolti nello zip dello SdI.
+- Esportazioni di Fatture in Cloud: anagrafiche, listino e documenti, in .xlsx, .xls o CSV.
+- Estratto conto della banca in CSV o in foglio di calcolo, per abbinare incassi e pagamenti.
+- Un archivio di Invoice Scope, per il ripristino o il cambio di computer.
+- Progetti di Plan Scope.
 
 *In breve*
 
+#### A chi serve
+
+Imprese, professionisti e studi che usano la fattura elettronica in Italia o da San Marino e preferiscono tenere i dati dei clienti sul proprio computer.
+
 #### Dati
 
-Restano sul vostro computer. Dopo il caricamento della pagina l'app non fa richieste di rete.
-
-#### Uscita
-
-Un file XML per documento, più una copia di cortesia su carta intestata, da stampare o salvare in PDF per il cliente.
-
-#### Figure
-
-Le immagini e gli allegati di una pagina stanno nel browser come tutto il resto, e viaggiano nel pacchetto del progetto. Nella cartella collegata escono come file veri, accanto all'archivio: dentro il JSON peserebbero cento volte tanto, e quel file si riscrive a ogni modifica.
-
-#### Copie
-
-Con una cartella collegata l'app ci scrive l'archivio a ogni modifica e ne tiene una copia al giorno, immagini comprese. La Situazione dice sempre come sta la copia — quando è stata fatta, che cosa contiene, se manca — e si può aprire la copia e vedere quanti documenti, clienti e immagini porta, confrontati con quello che c'è adesso. Dove il browser non consente di scrivere in una cartella resta l'esportazione a mano, e l'app ricorda di farla.
-
-#### Progetti
-
-Un progetto porta le sue fasi, le sue pagine e i suoi documenti, e mostra quanto è stato quotato, fatturato, incassato e quanto resta da fatturare. Un lavoro concluso si archivia, e i suoi importi contano ancora; quello che si elimina resta trenta giorni nel cestino. Si esporta e si riapre in Plan Scope, che usa lo stesso formato.
-
-#### Clienti
-
-Ogni cliente ha una scheda: le persone di riferimento, il diario di quello che vi siete detti, e i suoi documenti accanto ai due numeri che contano.
-
-#### Acquisti
-
-Le fatture ricevute e le spese, con i pagamenti. Un fornitore è un'anagrafica come un cliente, con un ruolo: se un giorno compra, è già lì.
+Restano nel browser del vostro computer, dall'inserimento all'archivio. L'applicazione si apre senza registrazione e, dopo il caricamento della pagina, lavora interamente in locale.
 
 #### Tracciato
 
-FatturaPA, specifiche 1.9.1, in vigore dal 15 maggio 2026. Per San Marino, lo schema VFPR12 1.2.3 pubblicato dall'Ufficio Tributario, che è lo stesso.
-
-#### Direzioni
-
-Sei, e cambiano il file: Italia verso Italia, San Marino o estero; San Marino verso Italia, San Marino o estero. L'ultima non ha una fattura elettronica, e l'app lo dice invece di produrne una.
-
-#### Conti
-
-Aritmetica esatta su interi, mai in virgola mobile: niente centesimi che compaiono da soli.
+FatturaPA, specifiche 1.9.1 in vigore dal 15 maggio 2026, e lo schema VFPR12 1.2.3 dell'Ufficio Tributario per San Marino. Ogni versione è provata su documenti di esempio validati con lo schema ufficiale.
 
 #### Trasmissione
 
-Resta a voi, dal portale «Fatture e Corrispettivi», da TribWeb per chi emette da San Marino, o tramite il vostro intermediario.
+Il file si carica sul portale «Fatture e Corrispettivi», su TribWeb per chi emette da San Marino, oppure si consegna al proprio intermediario.
 
-#### Senza connessione
+#### Copie di sicurezza
 
-Dopo la prima apertura funziona anche senza rete.
+Su Chrome ed Edge l'archivio si salva da sé in una cartella collegata, anche dentro Dropbox o iCloud, con una copia al giorno. Negli altri browser si esporta a mano, e l'applicazione lo ricorda.
+
+#### Requisiti
+
+Un browser aggiornato su computer, tablet o telefono. Installata, si apre come un'applicazione e funziona anche senza connessione.
 
 #### Aggiornamenti
 
-Automatici. Accanto al nome dell'app c'è la versione; quando ne è pronta una nuova, la scritta lo segnala e basta toccarla per passare. Per saperlo il browser rilegge un file dell'app dal nostro sito, https://ggtechnologies.sm/app/invoice-scope/run/sw.js: è l'unica richiesta dopo il caricamento, e non contiene dati vostri.
+Automatici: quando è disponibile una versione nuova, l'applicazione lo segnala accanto al nome. Per saperlo il browser rilegge https://ggtechnologies.sm/app/invoice-scope/run/sw.js, l'unica richiesta di rete dopo il caricamento, che non contiene dati vostri.
 
 #### Licenza
 
@@ -147,59 +123,63 @@ PolyForm Shield 1.0.0. Il codice è pubblico: si legge, si modifica e si usa anc
 
 Gratuita.
 
-**Versione** 0.69.0 · **Aggiornata il** 13 ottobre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
+**Versione** 0.70.0 · **Aggiornata il** 14 ottobre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
 
 *FAQ*
 
 ## Domande frequenti
 
-### Mi avvisa quando una scadenza si avvicina?
+### Posso trasmettere la fattura direttamente da qui?
 
-Sì, e conviene sapere come, perché i modi sono tre e non funzionano tutti dappertutto. Il primo vale sempre: lo scadenzario esce come calendario e il promemoria viaggia dentro il file, quindi a suonare è il vostro calendario — sul telefono, alle nove, anche se questa app resta chiusa per mesi. Il secondo vale sempre anche lui: alla riapertura dell'app, un pannello mostra cosa è maturato nel frattempo. Il terzo è la notifica di sistema, e quella dipende dal browser: con l'app installata su Chrome o Edge arriva anche a finestra chiusa, quando il browser sveglia l'app — non a un orario deciso da noi, perché senza un server l'app non può svegliarsi da sola. Su Safari, su iPhone e su Firefox restano i primi due. Anticipo in giorni e orario si scelgono nelle impostazioni.
+No. La trasmissione richiede un canale accreditato — il portale dell'Agenzia, una PEC o un intermediario — che un'applicazione senza server non può avere. Invoice Scope prepara il file corretto, che si carica dove già si caricano gli altri.
 
-### Posso mandare la fattura direttamente da qui?
+### Come verifico che i dati dei miei clienti restino sul computer?
 
-No, e questo è il confine dell'app. La trasmissione richiede un canale accreditato, una PEC o il portale dell'Agenzia: cose che un programma senza server non può avere. L'app prepara il file corretto, che si carica dove già si caricano gli altri.
+Aprite gli strumenti per sviluppatori del browser, scheda «Rete», e usate l'applicazione: dopo il caricamento della pagina compare una sola richiesta, di tanto in tanto, verso https://ggtechnologies.sm/app/invoice-scope/run/sw.js. È la lettura di un file dell'applicazione, per sapere se esiste una versione nuova, e non contiene dati vostri. Il codice è pubblico e si può leggere.
 
-### Come verifico che i dati dei miei clienti restino qui?
+### Posso importare l'archivio da un altro programma?
 
-Potete verificarlo direttamente. Aprite gli strumenti per sviluppatori del browser, scheda «Rete», e usate l'app: dopo il caricamento della pagina non compare nessuna richiesta — tranne una, di tanto in tanto: il browser rilegge https://ggtechnologies.sm/app/invoice-scope/run/sw.js, un file dell'app stessa, per sapere se c'è una versione nuova. È una lettura dal nostro sito, e non contiene dati vostri. Il codice è pubblico, quindi è possibile anche leggere cosa fa.
-
-### Posso usare il codice in un mio prodotto?
-
-Sì, per il vostro lavoro e per prodotti che svolgono un compito diverso. La licenza è la PolyForm Shield 1.0.0: il codice si legge, si modifica e si usa anche in un lavoro commerciale, a due condizioni. Ogni copia porta con sé la licenza e le righe «Required Notice», che nominano G&G Technologies come autore. Un prodotto che svolge lo stesso compito dell'app, venduto o gratuito, esteso o con un proprio server, richiede una licenza commerciale: si chiede a [info@ggtechnologies.sm](mailto:info@ggtechnologies.sm).
-
-### Che prove posso controllare prima di fidarmi dei conti?
-
-I calcoli hanno una serie di prove automatiche in cui i totali attesi sono scritti a mano, non prodotti dallo stesso codice che viene provato. Sono nel repository, si leggono e si rilanciano.
+Sì. Da Fatture in Cloud entrano clienti, listino e documenti, dai fogli dell'esportazione così come si scaricano; da qualunque programma entrano le fatture in formato XML, anche firmate o raccolte nello zip dello SdI. Prima di scrivere, l'applicazione mostra che cosa ha letto, che cosa è già presente e che cosa ha lasciato fuori, e procede solo dopo la conferma.
 
 ### Vale anche per le fatture con San Marino?
 
-Sì, in tutte e tre le direzioni che lo riguardano. Dall'Italia verso San Marino il codice destinatario è quello dell'Ufficio Tributario e la natura N3.3. Da San Marino verso l'Italia il trasmittente è l'HUB, il COE prende il posto della partita IVA, il CAP e la provincia sono quelli veri — San Marino non è «estero» per l'indirizzo — e il tipo merce sta sulla riga e in testa alla nota di esenzione. Da San Marino verso un altro sammarinese vale la fattura interna, obbligatoria dal 1° gennaio 2027: l'IVA non si espone, il codice destinatario è sette zeri e chi trasmette è l'azienda stessa. Sono tre file diversi, e l'app sceglie da sé guardando i due paesi.
+Sì, in tutte e tre le direzioni che lo riguardano. Dall'Italia verso San Marino il codice destinatario è quello dell'Ufficio Tributario e la natura N3.3. Da San Marino verso l'Italia il trasmittente è l'HUB, il COE prende il posto della partita IVA e il tipo merce sta su ogni riga. Fra operatori sammarinesi vale la fattura interna, obbligatoria dal 1° gennaio 2027: l'IVA non si espone e il codice destinatario è di sette zeri. L'applicazione sceglie il file giusto dai paesi dell'azienda e del cliente.
 
-### Faccio servizi: il tipo merce e il tipo cessione mi riguardano?
+### Posso fatturare a un comune, a una scuola, a un ente pubblico?
 
-Il tipo merce sì, ed è il 3: la legge che il suo nome richiama, la 131 del 1991, è quella sulla fatturazione delle prestazioni di servizi in generale. Il tipo cessione no: il rimborso monofase esiste per i tipi merce 1 e 2, quindi su una fattura di servizi quel codice non produrrebbe niente, e infatti l'app non lo chiede. C'è una cosa che conviene sapere e che non riguarda l'app: una fattura di soli servizi verso l'Italia si ferma all'Ufficio Tributario e non viene inoltrata al Sistema di Interscambio, perché l'accordo fra i due Stati riguarda i beni. Al cliente italiano la copia va inviata direttamente da voi.
+Sì. Nella scheda del cliente si indica «Pubblica amministrazione» e, se l'ente la applica, la scissione dei pagamenti; il codice destinatario è il codice univoco dell'ufficio, di sei caratteri, pubblicato sull'Indice delle PA. Il file esce in formato FPA12, con CIG e CUP quando previsti. Resta a voi la firma digitale, obbligatoria verso la pubblica amministrazione, che l'applicazione ricorda al momento dell'emissione.
+
+### Come gestisce gli acquisti in inversione contabile?
+
+L'acquisto da un fornitore italiano con natura N6, o da un fornitore estero senza IVA, viene riconosciuto all'importazione oppure indicato nel foglio dell'acquisto. Negli Acquisti compare il documento di integrazione da emettere — TD16, TD17, TD18 o TD19 — con il suo termine; la bozza riporta gli importi del fornitore all'aliquota predefinita dell'azienda, da verificare, e la fattura collegata.
+
+### Fornisco servizi da San Marino: il tipo merce e il tipo cessione mi riguardano?
+
+Il tipo merce sì, ed è il 3, quello delle prestazioni di servizi. Il tipo cessione no: il rimborso monofase riguarda i tipi merce 1 e 2, e infatti l'applicazione non lo chiede su una fattura di servizi. Da sapere: una fattura di soli servizi verso l'Italia si ferma all'Ufficio Tributario e non viene inoltrata al Sistema di Interscambio, perché l'accordo fra i due Stati riguarda i beni; al cliente italiano la copia va inviata direttamente.
+
+### Mi avvisa quando una scadenza si avvicina?
+
+Sì, in tre modi. Lo scadenzario si esporta come calendario .ics con il promemoria incluso, quindi l'avviso arriva dal vostro calendario anche ad applicazione chiusa. Alla riapertura, un riepilogo mostra le scadenze maturate. Con l'applicazione installata su Chrome o Edge arriva anche una notifica di sistema; su Safari, iPhone e Firefox restano i primi due. Anticipo e orario si scelgono nelle impostazioni.
+
+### Che cosa succede se cambio computer?
+
+Sul computer nuovo si collega la stessa cartella usata per le copie, per esempio in Dropbox o iCloud, e l'applicazione riporta dentro l'archivio, immagini comprese. Senza cartella si esporta l'archivio dal computer vecchio e lo si importa nel nuovo. Non esiste una copia su un server: per questo l'applicazione segnala finché una cartella non è collegata.
+
+### Che prove posso controllare prima di affidarmi ai calcoli?
+
+I calcoli hanno prove automatiche con i totali attesi scritti a mano, non prodotti dal codice che si sta provando, e i documenti di esempio sono validati con lo schema ufficiale dell'Agenzia. Le prove sono nel repository pubblico: si leggono e si rilanciano.
+
+### Posso usare il codice in un mio prodotto?
+
+Sì, per il vostro lavoro e per prodotti che svolgono un compito diverso. La licenza è la PolyForm Shield 1.0.0: il codice si legge, si modifica e si usa anche in un lavoro commerciale, a due condizioni. Ogni copia porta con sé la licenza e le righe «Required Notice», che nominano G&G Technologies come autore. Un prodotto che svolge lo stesso compito dell'applicazione, venduto o gratuito, richiede una licenza commerciale: si chiede a [info@ggtechnologies.sm](mailto:info@ggtechnologies.sm).
 
 ### Che differenza c'è fra i progetti qui e Plan Scope?
 
-Il modello è lo stesso file, quindi un progetto scritto qui si apre lì e viceversa. Cambia dove vive: un progetto sta dove sta il suo denaro. Se il lavoro ha un preventivo e delle fatture, conviene tenerlo qui, perché solo qui il piano può dire quanto è stato quotato, fatturato e incassato, e una fase fatta può diventare una riga di fattura. Se è un piano e basta — un evento, un libro, un trasloco — Plan Scope resta il posto giusto, ed è più leggero. Quello che conviene evitare è tenere lo stesso progetto aperto in tutt'e due: il passaggio è un file, non una sincronizzazione.
+Il formato è lo stesso, quindi un progetto passa dall'una all'altra applicazione come file. Conviene tenerlo qui quando il lavoro ha un preventivo e delle fatture, perché solo qui il piano mostra quanto è stato quotato, fatturato e incassato; un piano senza aspetti economici sta meglio in Plan Scope, che è più leggero.
 
-### Posso tenerci anche i contatti e le note delle conversazioni?
+### Come si aggiorna, e come si rimuove, l'applicazione installata?
 
-Sì, sulla scheda del cliente: le persone di riferimento, e un diario di telefonate, email e incontri, ognuna con la sua data. Sta dentro l'app che fattura e non in un programma a parte perché il browser dà a ogni app un archivio suo: un programma separato non vedrebbe questi clienti, e finirebbe per tenere un secondo elenco delle stesse aziende — quello che poi diverge. Le persone di riferimento restano sul vostro computer: la fattura elettronica non ha un campo per il nome di una persona, e l'app non ne inventa uno.
-
-### Che succede se cambio computer?
-
-Si collega la stessa cartella — quella di Dropbox o iCloud dove l'app scrive — e l'app ci trova l'archivio e lo riporta dentro, immagini comprese. È la stessa strada di un ripristino: la cartella non è solo un posto dove finiscono i file, è da dove si torna. Senza cartella restano l'esportazione e la reimportazione a mano, e senza nemmeno quella non c'è niente: non esiste un server con una copia dei vostri dati, ed è il motivo per cui l'app insiste finché una cartella non c'è.
-
-### Come si aggiorna l'app, una volta installata?
-
-Da sola, e lo segnala. Accanto al nome dell'app c'è la sua versione. Quando ne è pronta una nuova, la scritta mostra tutt'e due — quella installata e quella in arrivo — con un punto verde: toccandola, l'app si ricarica aggiornata e i vostri dati restano dove sono. Altrimenti la versione nuova entra comunque alla prossima apertura. Se l'app è stata installata prima che esistesse questo avviso, la prima volta va fatto a mano: si chiudono tutte le finestre dell'app e la si riapre; se accanto al nome la versione non compare ancora, si ricarica la pagina con Ctrl+F5, o ⌘⇧R su Mac. Da lì in poi provvede l'app.
-
-### E per toglierla?
-
-La rimozione la fa il sistema, non l'app: nessun sito può disinstallarsi da solo, ed è una buona regola. Dentro l'app installata, accanto al nome, c'è «Installata»: toccandolo, l'app indica dov'è il comando sul vostro sistema. Un punto da sapere: togliere l'app lascia i dati dove sono, e cancellare i dati lascia l'app dov'è. Se i dati non servono più, conviene esportare prima l'archivio.
+Si aggiorna da sola: quando è pronta una versione nuova, accanto al nome compare un punto verde, e toccandolo l'applicazione si ricarica con i dati intatti. La rimozione la esegue il sistema operativo: accanto al nome, «Installata» indica dove si trova il comando. Togliere l'applicazione non cancella i dati, e cancellare i dati non toglie l'applicazione: se l'archivio non serve più, conviene esportarlo prima.
 
 ## Vi serve la stessa cosa, su misura?
 

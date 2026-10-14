@@ -17,8 +17,9 @@
 import { get, list, put, tx } from "gg/store.js";
 
 import { from, add, sub, sum, cmp, round, toString, ZERO } from "./decimal.js";
-import { kind } from "./kinds.js";
+import { kind, numero as shownNumber } from "./kinds.js";
 import { forget as forgetReceipts } from "./attachments.js";
+import { currentDay } from "./day.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -138,18 +139,45 @@ function mulInt(value, n) {
  * show a due date for money nobody owes. It behaves exactly like money received, and is applied the
  * same way.
  */
+/**
+ * The document a credit note names.
+ *
+ * **By id first, then by the number as printed, then by the bare number on the same date.** The
+ * bare number alone was the only test, and it is not unique: with the series apart, a debit note
+ * «ND 2026/0001» and the invoice «2026/0001» share it, and the credit could land on either. A note
+ * made with «Storna» carries the id of the invoice; an imported one carries the number as the file
+ * wrote it, which is the printed one.
+ */
+function _target(all, linked) {
+  const candidates = all.filter(_conta);
+  if (linked.id) {
+    const byId = candidates.find((d) => d.id === linked.id);
+    if (byId) return byId;
+  }
+  return candidates.find((d) => shownNumber(d) === linked.numero)
+    || candidates.find((d) => d.numero === linked.numero && (!linked.data || d.data === linked.data))
+    || candidates.find((d) => d.numero === linked.numero)
+    || null;
+}
+
 function _credits(all, paid) {
   const credits = new Map();
   for (const doc of all.filter((d) => kind(d).storna)) {
     const totale = doc.totali ? BigInt(doc.totali.totale) : ZERO;
-    for (const linked of doc.fattureCollegate || []) {
-      const target = all.find((d) => d.numero === linked.numero && _conta(d));
-      const key = target ? target.id : `numero:${linked.numero}`;
-      credits.set(key, add(credits.get(key) || ZERO, totale));
-    }
-    // A credit note that names no invoice still reduces what is owed overall, so it is kept under
-    // a key of its own rather than dropped — it just has nothing to attach to.
-    if (!(doc.fattureCollegate || []).length) credits.set(`nc:${doc.id}`, totale);
+    // **A note naming several invoices is split among them, not credited in full to each.** Two
+    // invoices named by one note of 100,00 € were credited 100,00 € apiece, and the overall amount
+    // owed dropped by 200,00. Each takes up to its own total, in the order the note names them,
+    // and the last one found takes what is left.
+    const targets = (doc.fattureCollegate || []).map((linked) => _target(all, linked)).filter(Boolean);
+    let resto = totale;
+    targets.forEach((target, index) => {
+      const intero = target.totali ? BigInt(target.totali.totale) : ZERO;
+      const quota = index === targets.length - 1 || cmp(resto, intero) < 0 ? resto : intero;
+      credits.set(target.id, add(credits.get(target.id) || ZERO, quota));
+      resto = sub(resto, quota);
+    });
+    // A note that names no invoice the app knows is not attached to anything, and so it reduces no
+    // amount owed: the check before issuing asks for the reference, and an imported one keeps it.
   }
   for (const payment of paid) {
     let importo = ZERO;
@@ -171,7 +199,7 @@ function _credits(all, paid) {
  * `today` is a parameter and not `new Date()` inside: a function that reads the clock cannot be
  * tested, and "is this overdue" is exactly the kind of thing that has to be.
  */
-export async function schedule(db, { today = new Date().toISOString().slice(0, 10) } = {}) {
+export async function schedule(db, { today = currentDay() } = {}) {
   // Everything issued and not cancelled: the ones that owe and the ones that credit. Which is which
   // is the profile's business, asked twice below.
   const all = (await list(db, "docs")).filter((doc) => OWING.has(doc.stato));
@@ -199,6 +227,34 @@ export async function schedule(db, { today = new Date().toISOString().slice(0, 1
 }
 
 /**
+ * One transfer for several invoices of the same customer: how the excess is shared, oldest first.
+ *
+ * `rows` are the instalments still owed (`schedule`), `escludi` the document the transfer was
+ * recorded on, `importo` what is left over. Each other document of the customer takes up to what
+ * it still owes, in the order of its oldest instalment; whatever is still left is returned as
+ * `avanzo` — money that matches nothing, which the screen then says.
+ */
+export function spread(rows, { partyId, escludi = null, importo = ZERO } = {}) {
+  const perDoc = new Map();
+  for (const row of rows || []) {
+    if (row.partyId !== partyId || row.docId === escludi) continue;
+    const voce = perDoc.get(row.docId) || { docId: row.docId, numero: row.numero, prima: row.scadenza, dovuto: ZERO };
+    voce.dovuto = add(voce.dovuto, row.importo);
+    if (String(row.scadenza) < String(voce.prima)) voce.prima = row.scadenza;
+    perDoc.set(row.docId, voce);
+  }
+  let resto = importo;
+  const quote = [];
+  for (const voce of [...perDoc.values()].sort((a, b) => String(a.prima).localeCompare(String(b.prima)))) {
+    if (cmp(resto, ZERO) <= 0) break;
+    const quota = cmp(resto, voce.dovuto) < 0 ? resto : voce.dovuto;
+    quote.push({ docId: voce.docId, numero: voce.numero, importo: quota });
+    resto = sub(resto, quota);
+  }
+  return { quote, avanzo: resto };
+}
+
+/**
  * Quanto resta da incassare su un documento, e se è in ritardo.
  *
  * **Derivato, come tutto il resto di questo file.** Che una fattura sia saldata non è uno stato del
@@ -213,7 +269,7 @@ export async function schedule(db, { today = new Date().toISOString().slice(0, 1
  * `arrivato` è quello che è entrato — incassi e note di credito insieme — e chiude la rata più
  * vecchia per prima, che è come si intende un versamento parziale.
  */
-export function settlementOf(doc, arrivato = ZERO, today = new Date().toISOString().slice(0, 10)) {
+export function settlementOf(doc, arrivato = ZERO, today = currentDay()) {
   const totale = doc.totali ? BigInt(doc.totali.totale) : ZERO;
   const rate = (doc.pagamento || {}).rate || [];
 
@@ -254,7 +310,7 @@ export function settlementOf(doc, arrivato = ZERO, today = new Date().toISOStrin
  * funzioni dello scadenzario — note di credito comprese — perché due schermate che rispondono alla
  * stessa domanda con due conti diversi sono il difetto che questo file esiste per non avere.
  */
-export async function ledger(db, { today = new Date().toISOString().slice(0, 10) } = {}) {
+export async function ledger(db, { today = currentDay() } = {}) {
   const all = (await list(db, "docs")).filter((doc) => OWING.has(doc.stato));
   const credits = _credits(all, await list(db, "payments"));
   const out = new Map();
@@ -293,6 +349,9 @@ export async function recordPayment(db, doc, { importo, data, conto = null, nota
     scadenza: data,
     conto: conto ? { id: conto.id, etichetta: conto.etichetta || "", iban: conto.iban || "" } : null,
     nota: nota || null,
+    // When it was written down (not when it arrived, which is `data`): what the backup reminder
+    // compares with the last export, so a payment recorded after it brings the reminder back.
+    created: new Date().toISOString(),
   };
   await put(db, "payments", record);
   return record;

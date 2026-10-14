@@ -23,7 +23,9 @@
 
 import { tx } from "gg/store.js";
 import * as fic from "./fic.js";
-import { completaRighe } from "./fatturapa.js";
+import * as csv from "./csv.js";
+import * as statement from "./statement.js";
+import { completaRighe, ambitoDi } from "./fatturapa.js";
 import * as sheet from "./sheet.js";
 import * as xls from "./xls.js";
 import { read as readFattura } from "./reading.js";
@@ -31,7 +33,7 @@ import { documentKey, counterKey } from "./db.js";
 import { draft } from "./model.js";
 import { KINDS } from "./kinds.js";
 import { totals } from "./totals.js";
-import { from, cmp } from "./decimal.js";
+import { from, cmp, sub, abs, percent } from "./decimal.js";
 import { partyRecord, itemRecord } from "./parties.js";
 import { costRecord, taxKind } from "./costs.js";
 import { expected as expectedCosts, matching as matchingExpected } from "./recurring.js";
@@ -41,6 +43,7 @@ import { t, tf } from "./i18n.js";
 import { date as shownDate, money } from "./format.js";
 import { ask, tell } from "./ask.js";
 import { list } from "gg/store.js";
+import { forget as forgetReceipts } from "./attachments.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -52,7 +55,17 @@ const OLE = [0xd0, 0xcf, 0x11, 0xe0];                   // the binary .xls of 19
 
 // One level of nesting, and only one: a backup holds invoices in folders, and an invoice is not a
 // container. A reader that recurses without a limit is a reader that can be handed a ZIP of itself.
-const DENTRO = /\.xml$/i;
+// Signed invoices (`.xml.p7m`) count too: most invoices received through the SdI are signed, and a
+// backup from an accountant's portal is a folder of them.
+const DENTRO = /\.xml(\.p7m)?$/i;
+
+// The files the SdI writes beside an invoice: metadata (MT), delivery receipt (RC), rejection (NS),
+// failed delivery (MC), outcome (NE, EC, SE), expiry (DT), attestation (AT). Named by the
+// specification as <file of the invoice>_<code>_<progressive>.xml.
+const NOTIFICA_SDI = /_(MT|RC|NS|MC|NE|EC|SE|DT|AT)_\d+\.xml$/i;
+
+// The Italian VAT rates a register entry can be snapped to, the ordinary one first.
+const ALIQUOTE_LEGALI = ["22.00", "10.00", "5.00", "4.00"];
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
@@ -60,6 +73,102 @@ const DENTRO = /\.xml$/i;
 
 function _starts(bytes, signature) {
   return signature.every((byte, at) => bytes[at] === byte);
+}
+
+/**
+ * The XML inside a CAdES signature (`.p7m`), or `null` when the bytes are not one.
+ *
+ * **A signed invoice is the invoice wrapped in a CMS envelope**: DER, or BER with the content cut
+ * into chunks of a thousand bytes, and sometimes the whole thing again in base64 — which is how a
+ * PEC download often arrives. The walk reads tag and length and goes down into every constructed
+ * value; the content is the octet string that holds a FatturaElettronica, glued back together when
+ * it was cut. No signature is checked: the SdI did that when it accepted the file, and this reads
+ * what it accepted.
+ */
+function _p7m(bytes) {
+  let dati = bytes;
+  // Base64 text: decoded first.
+  const testa = String.fromCharCode(...bytes.slice(0, 64)).trim();
+  if (/^[A-Za-z0-9+/=\s]+$/.test(testa) && !testa.startsWith("<") && bytes[0] !== 0x30) {
+    try {
+      const testo = new TextDecoder("latin1").decode(bytes).replace(/[^A-Za-z0-9+/=]/g, "");
+      const binario = atob(testo);
+      dati = Uint8Array.from(binario, (c) => c.charCodeAt(0));
+    } catch (ignored) {
+      return null;
+    }
+  }
+  if (dati[0] !== 0x30) return null;
+
+  const trovati = [];
+  // One TLV at `at`: returns where it ends. Octet strings are collected, constructed ones joined.
+  const leggi = (at, fine, profondita) => {
+    if (profondita > 40 || at + 2 > fine) return fine;
+    const tag = dati[at];
+    let pos = at + 1;
+    if ((tag & 0x1f) === 0x1f) { while (pos < fine && dati[pos] & 0x80) pos += 1; pos += 1; }
+    let lunghezza = dati[pos];
+    pos += 1;
+    let indefinita = false;
+    if (lunghezza === 0x80) {
+      indefinita = true;
+    } else if (lunghezza & 0x80) {
+      const n = lunghezza & 0x7f;
+      if (n > 4) return fine;
+      lunghezza = 0;
+      for (let i = 0; i < n; i += 1) lunghezza = lunghezza * 256 + dati[pos + i];
+      pos += n;
+    }
+    const costruito = (tag & 0x20) !== 0;
+    if (!costruito) {
+      const end = Math.min(fine, pos + lunghezza);
+      if ((tag & 0x1f) === 0x04) trovati.push(dati.subarray(pos, end));
+      return end;
+    }
+    const pezzi = trovati.length;
+    let cursore = pos;
+    const limite = indefinita ? fine : Math.min(fine, pos + lunghezza);
+    while (cursore < limite) {
+      if (indefinita && dati[cursore] === 0 && dati[cursore + 1] === 0) { cursore += 2; break; }
+      const dopo = leggi(cursore, limite, profondita + 1);
+      if (dopo <= cursore) break;
+      cursore = dopo;
+    }
+    // A constructed octet string is one value cut in pieces: the pieces become one.
+    if ((tag & 0x1f) === 0x04 && trovati.length > pezzi) {
+      const parti = trovati.splice(pezzi);
+      const unito = new Uint8Array(parti.reduce((n, parte) => n + parte.length, 0));
+      let o = 0;
+      for (const parte of parti) { unito.set(parte, o); o += parte.length; }
+      trovati.push(unito);
+    }
+    return indefinita ? cursore : limite;
+  };
+  try {
+    leggi(0, dati.length, 0);
+  } catch (ignored) {
+    return null;
+  }
+  const marca = "FatturaElettronica";
+  for (const parte of trovati) {
+    const inizio = new TextDecoder("latin1").decode(parte.subarray(0, 4096));
+    if (inizio.includes(marca)) return parte;
+  }
+  return null;
+}
+
+/**
+ * The text of an XML file, in the encoding it declares.
+ *
+ * `TextDecoder()` alone reads UTF-8, and a file declared ISO-8859-1 or windows-1252 — the older
+ * programs still write them — came in as «Societ�». The declaration is read from the first bytes
+ * and the right decoder used; anything else is UTF-8, as the specifications prescribe.
+ */
+function _decodeXml(bytes) {
+  const testa = new TextDecoder("latin1").decode(bytes.subarray(0, 200));
+  const dichiarata = (/encoding=["']([^"']+)["']/i.exec(testa) || [])[1] || "";
+  const latina = /^(iso-?8859-1|latin-?1|windows-1252|cp1252)$/i.test(dichiarata.trim());
+  return new TextDecoder(latina ? "windows-1252" : "utf-8").decode(bytes);
 }
 
 /** Names compared the way a person would: case, accents and spacing set aside. */
@@ -97,6 +206,19 @@ function _aliquota(imponibile, iva) {
   const base = Number(imponibile);
   const tax = Number(iva);
   if (!Number.isFinite(base) || !Number.isFinite(tax) || base <= 0 || tax <= 0) return "0";
+  // **A rate the law has, when one gives back the stated VAT to the cent.** The ratio alone invents
+  // rates: 7,33 of VAT on 33,33 is 21,99%, and 0,24 on 1,10 is 21,82% — a document reconstructed
+  // at a rate that exists nowhere, and a summary the next export carries. The ratio stays only
+  // when no legal rate fits, which is the mixed-rate invoice; that one is a reconstruction anyway.
+  try {
+    const stated = from(String(iva));
+    for (const legale of ALIQUOTE_LEGALI) {
+      const calcolata = percent(from(String(imponibile)), from(legale), 2);
+      if (cmp(abs(sub(calcolata, stated)), from("0.01")) <= 0) return legale;
+    }
+  } catch (ignored) {
+    // An amount that is not a decimal falls through to the ratio, as before.
+  }
   return (Math.round((tax / base) * 10000) / 100).toFixed(2);
 }
 
@@ -177,17 +299,27 @@ function _withTotals(doc) {
  * a difference of zero is not a difference. Anything else is reported with both figures, so the
  * person can see the size of it: a cent is a rounding, a thousand euro is a file to look at.
  */
-function _scarto(dichiarato, ricalcolato) {
+function _scarto(dichiarato, doc) {
   if (dichiarato === undefined || dichiarato === null || dichiarato === "") return null;
   let atteso;
+  let conti;
   try {
     atteso = from(dichiarato);
+    conti = totals(doc);
   } catch (ignored) {
     return null;
   }
-  const nostro = BigInt(ricalcolato);
-  if (cmp(atteso, nostro) === 0) return null;
-  return { dichiarato: money(atteso), calcolato: money(nostro) };
+  // **ImportoTotaleDocumento is the document before the withholding**, and that is what it is
+  // compared with. The figure net of the withholding is accepted too: it is what this app wrote
+  // until October 2026, and what a few other programs still write — neither is a file to look at.
+  // Compared only with the net figure, every professional's invoice came in with a false warning.
+  if (cmp(atteso, conti.totaleDocumento) === 0 || cmp(atteso, conti.totale) === 0) return null;
+  return { dichiarato: money(atteso), calcolato: money(conti.totaleDocumento) };
+}
+
+/** An amount of a credit note, without its sign; any other document's, as it is. */
+function _positiva(tipo, valore) {
+  return tipo === "TD04" && valore < 0n ? -valore : valore;
 }
 
 /** Every file inside a ZIP that could be an invoice, one level down. */
@@ -203,6 +335,12 @@ async function _dentro(bytes) {
 function _foglio(name, sheets, contesto) {
   for (const foglio of sheets) {
     const { head, body } = sheet.table(foglio.rows);
+    // A bank statement before the exports of the invoicing program: its columns — date, amount,
+    // description — would otherwise be read as nothing, or as a register with no customer.
+    if (statement.guess(head)) {
+      const { movimenti, scartate } = statement.movements(head, body);
+      return { name, tipo: "estratto", movimenti, records: [], scartate, problems: [] };
+    }
     const quale = fic.guess(head);
     if (!quale) continue;
     if (quale === "clienti") return { ...fic.parties(head, body), name, tipo: "clienti" };
@@ -260,6 +398,7 @@ export async function plan(sorgenti, contesto = {}) {
   const documenti = [];
   const incassi = [];
   const costi = [];
+  const uscite = [];                                     // payments to suppliers, from a bank statement
   const promozioni = [];                                // customers that turn out to be suppliers too
 
   /** A customer already here, already queued, or new: always the same one for the same identifier. */
@@ -299,11 +438,31 @@ export async function plan(sorgenti, contesto = {}) {
         if (error.message !== "sheetNotXlsx" && error.message !== "sheetEmpty") throw error;
       }
       if (sheets) return [_foglio(name, sheets, contesto)];
-      const dentro = await _dentro(bytes).catch(() => []);
-      if (!dentro.length) return [{ name, tipo: "ignoto", records: [], scartate: [], problems: [] }];
+      const tutti = await _dentro(bytes).catch(() => []);
+      if (!tutti.length) return [{ name, tipo: "ignoto", records: [], scartate: [], problems: [] }];
+      // **The SdI's receipts and notices are not invoices, and are not a problem either.** A
+      // download from the Agenzia's portal holds, beside each invoice, its metadata file and its
+      // delivery receipt: each one was a row «XML, not an electronic invoice», so a folder of fifty
+      // invoices reported a hundred errors. They are counted in one quiet line.
+      const notifiche = tutti.filter((file) => NOTIFICA_SDI.test(file.name));
+      const dentro = tutti.filter((file) => !NOTIFICA_SDI.test(file.name));
       const fuori = [];
       for (const file of dentro) fuori.push(..._fatture(file));
+      if (notifiche.length) {
+        fuori.push({ name, tipo: "notifiche", records: [], scartate: [], problems: [],
+          avvisi: [{ chiave: "impSdiNotices", n: String(notifiche.length) }] });
+      }
       return fuori;
+    }
+
+    // A CSV: a bank statement, or an export of the invoicing program saved as text. Read into the
+    // same rows a workbook gives, and recognised by its header like one.
+    if (csv.isCsv(name, bytes)) {
+      try {
+        return [_foglio(name, [{ name, rows: csv.read(bytes) }], contesto)];
+      } catch (ignored) {
+        return [{ name, tipo: "ignoto", records: [], scartate: [], problems: [] }];
+      }
     }
 
     return _fatture(sorgente);
@@ -320,7 +479,9 @@ export async function plan(sorgenti, contesto = {}) {
   function _fatture({ name, bytes }) {
     let letto;
     try {
-      letto = readFattura(new TextDecoder().decode(bytes));
+      // A signed file is opened first; what is not a signature is read as it is.
+      const dentro = bytes[0] === 0x3c || bytes[0] === 0xef ? null : _p7m(bytes);
+      letto = readFattura(_decodeXml(dentro || bytes));
     } catch (error) {
       const chiave = error instanceof SyntaxError ? "impBrokenXml" : `imp${error.message}`;
       return [{ name, tipo: "ignoto", records: [], scartate: [], problems: [{ chiave }] }];
@@ -334,8 +495,12 @@ export async function plan(sorgenti, contesto = {}) {
     return [{ name, tipo: ricevuta ? "ricevuta" : "fattura", letto, records: [], scartate: [], problems: [] }];
   }
 
-  /** La chiave con cui un acquisto si riconosce: fornitore, numero e data. */
-  const costKey = (c) => [c.partyId, _key(c.numero), String(c.data || "").slice(0, 10)].join("|");
+  /**
+   * La chiave con cui un acquisto si riconosce: fornitore, numero, data — e tipo. Without the type a
+   * supplier's credit note «1» and its invoice «1» of the same day were one purchase, and the note
+   * was skipped as already present.
+   */
+  const costKey = (c) => [c.partyId, c.tipo === "nota" ? "nota" : "doc", _key(c.numero), String(c.data || "").slice(0, 10)].join("|");
   const costiEsistenti = new Set((contesto.costs || []).map(costKey));
   // Gli attesi delle ricorrenze: una fattura ricevuta dello stesso fornitore nello stesso mese
   // è quella, e si aggancia — così l'atteso sparisce senza che qualcuno lo confermi a mano.
@@ -354,15 +519,49 @@ export async function plan(sorgenti, contesto = {}) {
    * più, la scadenza dalla prima rata. L'imposta è quella del file — IVA — e si dice: per un'azienda
    * sammarinese la monofase non sta nel file, e va aggiunta a mano.
    */
-  const acquisto = (doc, chi, fonte) => {
+  const acquisto = (doc, chi, fonte, dichiarato) => {
+    const rate = (doc.pagamento || {}).rate || [];
     const conTotali = _withTotals(doc);
     const perAliquota = new Map();
-    const rigaImponibile = (riga) => mul(from(riga.prezzoUnitario || "0"), from(riga.quantita || "1"), 2);
+    // The line as the totals see it, its discount included: quantity × price alone showed a line
+    // of 1200 for one that was 1100 after its discount, and weighed the dominant rate wrongly.
+    const rigaImponibile = (riga) => {
+      try {
+        return totals({ righe: [riga] }).imponibile;
+      } catch (ignored) {
+        return mul(from(riga.prezzoUnitario || "0"), from(riga.quantita || "1"), 2);
+      }
+    };
+    // **What the supplier asks for, not what the invoice is worth.** With a withholding the payment
+    // is the total less the tax the company pays to the revenue itself; with a stamp charged on, it
+    // is a little more. The file says it in ImportoPagamento: when every instalment states it, that
+    // sum is what is owed. Otherwise the withholding comes off the total.
+    const ritenuta = BigInt(totals(doc).ritenuta);
+    const quote = rate.map((quota) => quota.importo).filter((importo) => importo !== undefined && importo !== "");
+    let daPagare = null;
+    if (quote.length && quote.length === rate.length) {
+      try {
+        daPagare = quote.reduce((somma, importo) => somma + from(importo), 0n);
+      } catch (ignored) {
+        daPagare = null;
+      }
+    }
     for (const riga of doc.righe) {
       perAliquota.set(riga.aliquota, (perAliquota.get(riga.aliquota) || 0n) + rigaImponibile(riga));
     }
     const aliquota = [...perAliquota.entries()].sort((a, b) => (b[1] > a[1] ? 1 : b[1] < a[1] ? -1 : 0))[0]?.[0] || "0";
-    const rate = (doc.pagamento || {}).rate || [];
+    // **Reverse charge, as far as the file can tell.** An Italian supplier's lines under N6.x say it
+    // outright; a foreign supplier who charged no VAT says it by omission (the company integrates).
+    // Only for an Italian company: the obligation is Italian. Goods or services is read from the San
+    // Marino TM code when the lines carry one; otherwise the purchases screen asks.
+    const italiana = String((contesto.company || {}).paese || "IT").toUpperCase() === "IT";
+    const paeseFornitore = String((chi.record || {}).paese || "IT").toUpperCase();
+    const imposta0 = BigInt(conTotali.totali.imposta) === 0n;
+    const inversione = italiana && (paeseFornitore === "IT"
+      ? doc.righe.some((riga) => /^N6/.test(String(riga.natura || "")))
+      : imposta0);
+    const ambiti = new Set(doc.righe.map((riga) => ambitoDi(riga.tm)).filter(Boolean));
+    const beniServizi = ambiti.size === 1 ? (ambiti.has("servizi") ? "servizi" : "beni") : undefined;
     const record = costRecord({
       // Una nota di credito ricevuta è una nota: i suoi importi restano positivi, come nel
       // file, e il segno lo mettono i conti.
@@ -372,10 +571,18 @@ export async function plan(sorgenti, contesto = {}) {
       numero: doc.numero,
       categoria: "",
       descrizione: doc.causale || (doc.righe[0] || {}).descrizione || "",
-      imponibile: decimalText(BigInt(conTotali.totali.imponibile), 2),
-      imposta: decimalText(BigInt(conTotali.totali.imposta), 2),
+      // A credit note written with negative amounts — some programs do — is still a credit note:
+      // the type says it reverses, and the sign is the accounts' business (`signOf`). Kept negative,
+      // it was flipped once more and added to the costs.
+      imponibile: decimalText(_positiva(doc.tipo, BigInt(conTotali.totali.imponibile)), 2),
+      imposta: decimalText(_positiva(doc.tipo, BigInt(conTotali.totali.imposta)), 2),
       impostaTipo: "iva",
       aliquota: String(aliquota),
+      ...(ritenuta > 0n ? { ritenuta: decimalText(ritenuta, 2) } : {}),
+      ...(daPagare !== null ? { daPagare: decimalText(daPagare, 2) } : {}),
+      // Every instalment the file states, when there are two or more (`costRecord` keeps them).
+      rate: rate.map((quota) => ({ scadenza: quota.scadenza, importo: quota.importo })),
+      ...(dichiarato !== undefined && dichiarato !== null && dichiarato !== "" ? { totaleDichiarato: dichiarato } : {}),
       scadenza: (rate[0] || {}).scadenza || null,
       ...(() => {
         const atteso = matchingExpected(attesi, { partyId: chi.id, data: doc.data });
@@ -386,8 +593,12 @@ export async function plan(sorgenti, contesto = {}) {
         quantita: riga.quantita,
         prezzoUnitario: riga.prezzoUnitario,
         aliquota: riga.aliquota,
+        // The nature, which is what tells an integration which lines it covers (N6.x for TD16).
+        ...(riga.natura ? { natura: riga.natura } : {}),
         imponibile: decimalText(rigaImponibile(riga), 2),
       })),
+      ...(inversione ? { inversione: true } : {}),
+      ...(inversione && beniServizi ? { beniServizi } : {}),
       origine: { xml: fonte },
     }, { company: contesto.company || null });
     record._fonte = fonte;
@@ -415,7 +626,7 @@ export async function plan(sorgenti, contesto = {}) {
         nomi: { nuovi: [], esistenti: [] },
         scartate: fonte.scartate || [],
         problemi: fonte.problems || [],
-        avvisi: [],
+        avvisi: [...(fonte.avvisi || [])],
       };
       const conta = (nuovo, nome) => {
         if (nuovo) report.nuovi += 1;
@@ -423,7 +634,27 @@ export async function plan(sorgenti, contesto = {}) {
         report.nomi[nuovo ? "nuovi" : "esistenti"].push(nome);
       };
 
-      if (fonte.tipo === "clienti") {
+      if (fonte.tipo === "estratto") {
+        // The movements against what is open now: proposals only, written by `apply` like
+        // everything else in the panel.
+        const esito = statement.match(fonte.movimenti, {
+          docs: [...(contesto.docs || []), ...documenti],
+          payments: [...(contesto.payments || []), ...incassi],
+          costs: [...(contesto.costs || []), ...costi],
+          outlays: [...(contesto.outlays || []), ...uscite],
+          parties: [...esistenti.parties, ...clienti],
+          ...(contesto.oggi ? { today: contesto.oggi } : {}),
+        });
+        for (const one of esito.incassi) {
+          incassi.push({ docId: one.docId, importo: one.importo, data: one.data, nota: one.nota, _fonte: fonte.name });
+          conta(true, `${one.data} · ${money(from(one.importo))} · ${one.numero || ""} ${one.chi || ""}`.trim());
+        }
+        for (const one of esito.uscite) {
+          uscite.push({ costId: one.costId, importo: one.importo, data: one.data, nota: one.nota, _fonte: fonte.name });
+          conta(true, `${one.data} · −${money(from(one.importo))} · ${one.numero || ""} ${one.chi || ""}`.trim());
+        }
+        if (esito.nonAbbinati.length) report.avvisi.push({ chiave: "impStatementUnmatched", n: String(esito.nonAbbinati.length) });
+      } else if (fonte.tipo === "clienti") {
         for (const record of fonte.records) {
           const { nuovo, nome } = cliente(record, fonte.name);
           conta(nuovo, nome);
@@ -540,7 +771,26 @@ export async function plan(sorgenti, contesto = {}) {
         const giaCliente = esistenti.parties.find((p) => p.id === chi.id);
         if (giaCliente && (giaCliente.ruolo || "cliente") === "cliente" && !promozioni.includes(chi.id)) promozioni.push(chi.id);
         for (const { doc, avvisi, dichiarato } of fonte.letto.documenti) {
-          const record = acquisto(doc, chi, fonte.name);
+          // **An integration is not a purchase.** TD16–TD19 are the self-invoices a company issues to
+          // add Italian VAT to a reverse-charge or foreign purchase: the supplier stands as cedente,
+          // so the file reads as received — and the purchase already recorded was counted twice,
+          // with a VAT credit and no debit beside it. They are named in the report and left out.
+          const integrazione = avvisi.find((a) => a.chiave === "readKind" && /^TD1[6-9]$/.test(String(a.valore)));
+          if (integrazione) {
+            report.avvisi.push({ chiave: "impIntegrazione", numero: doc.numero, valore: integrazione.valore });
+            continue;
+          }
+          const record = acquisto(doc, chi, fonte.name, dichiarato);
+          // A supplier's credit note names the invoice it reverses: found among the purchases
+          // already here or in this same import, it is linked, and comes off that invoice.
+          if (record.tipo === "nota" && (doc.fattureCollegate || []).length) {
+            const ref = doc.fattureCollegate[0];
+            const tutte = [...(contesto.costs || []), ...costi];
+            const fattura = tutte.find((c) => c.tipo === "fattura" && c.partyId === chi.id
+              && _key(c.numero) === _key(ref.numero) && (!ref.data || c.data === ref.data))
+              || tutte.find((c) => c.tipo === "fattura" && c.partyId === chi.id && _key(c.numero) === _key(ref.numero));
+            if (fattura) record.fatturaId = fattura.id;
+          }
           const chiave = costKey(record);
           const nuovo = !costiEsistenti.has(chiave);
           conta(nuovo, _titolo(doc, chi.nome));
@@ -548,7 +798,7 @@ export async function plan(sorgenti, contesto = {}) {
           costiEsistenti.add(chiave);
           costi.push(record);
           report.avvisi.push(...avvisi);
-          const scarto = _scarto(dichiarato, _withTotals(doc).totali.totale);
+          const scarto = _scarto(dichiarato, doc);
           if (scarto) report.avvisi.push({ chiave: "impTotalDiffers", numero: doc.numero, ...scarto });
         }
         if (fonte.letto.documenti.length && taxKind(contesto.company || null) === "monofase") {
@@ -593,7 +843,7 @@ export async function plan(sorgenti, contesto = {}) {
           // two apart on purpose; this is where they meet. A difference is either a rounding the
           // other program made differently, or a file somebody edited by hand — and in both cases
           // the person importing should hear it from the panel, not from the accountant.
-          const scarto = _scarto(dichiarato, conTotali.totali.totale);
+          const scarto = _scarto(dichiarato, doc);
           if (scarto) report.avvisi.push({ chiave: "impTotalDiffers", numero: doc.numero, ...scarto });
         }
       }
@@ -602,7 +852,7 @@ export async function plan(sorgenti, contesto = {}) {
     }
   }
 
-  return { fonti, clienti, listino, documenti, incassi, costi, promozioni };
+  return { fonti, clienti, listino, documenti, incassi, costi, uscite, promozioni };
 }
 
 /**
@@ -622,13 +872,13 @@ export async function plan(sorgenti, contesto = {}) {
  * them again and a document can say where it came from.
  */
 export async function apply(db, piano) {
-  const scritti = { clienti: 0, listino: 0, documenti: 0, incassi: 0, acquisti: 0 };
+  const scritti = { clienti: 0, listino: 0, documenti: 0, incassi: 0, acquisti: 0, pagamenti: 0 };
   const quando = new Date().toISOString();
   const lotto = globalThis.crypto?.randomUUID?.() || `lotto-${Date.now()}`;
   const marca = (fonte) => ({ lotto, fonte: fonte || "", quando });
   const nota = t("impPaidNote");
 
-  await tx(db, ["parties", "items", "docs", "payments", "counters", "costs"], async (scope) => {
+  await tx(db, ["parties", "items", "docs", "payments", "counters", "costs", "outlays"], async (scope) => {
     for (const record of piano.clienti) {
       const { _id, _riga, _fonte, ...fields } = record;
       await scope.put("parties", { ...partyRecord({ ...fields, id: _id }), importato: marca(_fonte) });
@@ -686,10 +936,25 @@ export async function apply(db, piano) {
         data: fields.data,
         scadenza: fields.data,
         conto: null,
-        nota,
+        // A movement of a bank statement carries its own description; a register's payment the
+        // generic note.
+        nota: fields.nota || nota,
         importato: marca(_fonte),
       });
       scritti.incassi += 1;
+    }
+    for (const uscita of piano.uscite || []) {
+      const { _fonte, ...fields } = uscita;
+      await scope.put("outlays", {
+        id: globalThis.crypto?.randomUUID?.() || `out-${Date.now()}-${scritti.pagamenti}`,
+        costId: fields.costId,
+        importo: String(fields.importo),
+        data: fields.data,
+        conto: null,
+        nota: fields.nota || nota,
+        importato: marca(_fonte),
+      });
+      scritti.pagamenti += 1;
     }
   });
 
@@ -709,6 +974,7 @@ export async function lastImport(db) {
     ...(await list(db, "items")).map((r) => ({ store: "items", r })),
     ...(await list(db, "payments")).map((r) => ({ store: "payments", r })),
     ...(await list(db, "costs")).map((r) => ({ store: "costs", r })),
+    ...(await list(db, "outlays")).map((r) => ({ store: "outlays", r })),
   ].filter(({ r }) => r.importato && r.importato.lotto);
   if (!tutti.length) return null;
 
@@ -725,6 +991,7 @@ export async function lastImport(db) {
     documenti: conta("docs"),
     incassi: conta("payments"),
     acquisti: conta("costs"),
+    pagamenti: conta("outlays"),
   };
 }
 
@@ -754,18 +1021,27 @@ export async function undoLast(db) {
   const altri = docs.filter((d) => !mio(d));
   const costs = await list(db, "costs");
   const altriCosti = costs.filter((c) => !mio(c));
-  const usati = new Set([...altri.map((d) => d.partyId), ...altriCosti.map((c) => c.partyId)].filter(Boolean));
+  // A customer stays when anything of the company's own names it — a document or a purchase, but
+  // also a diary entry, a recurring invoice or cost, a project. Counting only the first two deleted
+  // a customer and left its diary and its projects pointing at nobody.
+  const altrove = [];
+  for (const store of ["activities", "recurring", "recurringDocs", "projects"]) altrove.push(...await list(db, store));
+  const usati = new Set([...altri, ...altriCosti, ...altrove].map((r) => r && r.partyId).filter(Boolean));
   const clienti = await list(db, "parties");
   const miei = new Set(costs.filter(mio).map((c) => c.id));
+  // The documents that go for good (a completion is put back, and its payments stay valid on it).
+  const docTolti = new Set(docs.filter((d) => mio(d) && !d.precedente).map((d) => d.id));
   const daTogliere = {
-    payments: (await list(db, "payments")).filter(mio),
+    // Imported payments, and the ones recorded by hand on a document that goes: a payment with no
+    // document is a reference to nothing, exactly like the outlays below.
+    payments: (await list(db, "payments")).filter((p) => mio(p) || docTolti.has(p.docId)),
     docs: docs.filter(mio),
     parties: clienti.filter((c) => mio(c) && !usati.has(c.id)),
     items: (await list(db, "items")).filter(mio),
     costs: costs.filter(mio),
     // I pagamenti registrati a mano su un acquisto importato vanno via con lui: un pagamento senza
     // il suo acquisto è un riferimento a vuoto.
-    outlays: (await list(db, "outlays")).filter((o) => miei.has(o.costId)),
+    outlays: (await list(db, "outlays")).filter((o) => mio(o) || miei.has(o.costId)),
   };
   // The customers that stay lose the mark: from here on they are the company's own. Left marked,
   // `lastImport` would keep finding a batch of one customer, and the undo button would offer to
@@ -773,7 +1049,9 @@ export async function undoLast(db) {
   const daTenere = clienti.filter((c) => mio(c) && usati.has(c.id));
   const serie = new Set(daTogliere.docs.map(counterKey));
 
-  await tx(db, ["parties", "items", "docs", "payments", "counters", "costs", "outlays"], async (scope) => {
+  await tx(db, ["parties", "items", "docs", "payments", "counters", "costs", "outlays", "attachments"], async (scope) => {
+    // The receipts go with their payments, in the same transaction (rule 10 of DEVELOPING.md).
+    await forgetReceipts(scope, [...daTogliere.payments, ...daTogliere.outlays]);
     for (const [store, records] of Object.entries(daTogliere)) {
       for (const r of records) {
         // A completion is undone by putting the reconstruction back, not by removing the invoice.
@@ -798,6 +1076,7 @@ export async function undoLast(db) {
     documenti: daTogliere.docs.length,
     incassi: daTogliere.payments.length,
     acquisti: daTogliere.costs.length,
+    pagamenti: daTogliere.outlays.length,
   };
 }
 
@@ -817,6 +1096,8 @@ const ETICHETTE = {
   ricevuta: "impKindRicevuta",
   vecchio: "impKindVecchio",
   ignoto: "impKindIgnoto",
+  notifiche: "impKindNotifiche",
+  estratto: "impKindEstratto",
 };
 
 // Quanti nomi mostrare per elenco prima di dire «e altri N». Un backup ha centinaia di fatture, e
@@ -846,7 +1127,7 @@ function _riga(fonte) {
   nome.textContent = fonte.name;
   const cosa = document.createElement("td");
   cosa.textContent = t(ETICHETTE[fonte.tipo] || "impKindIgnoto");
-  const muto = fonte.tipo === "vecchio" || fonte.tipo === "ignoto";
+  const muto = fonte.tipo === "vecchio" || fonte.tipo === "ignoto" || fonte.tipo === "notifiche";
   const nuovi = document.createElement("td");
   nuovi.className = "right";
   // Completions — invoices the register had sketched, now with their real lines — are counted
@@ -911,8 +1192,10 @@ function _note(piano) {
 
 function _draw(piano) {
   corrente = piano;
-  const nuovi = piano.clienti.length + piano.listino.length + piano.documenti.length + (piano.costi || []).length;
-  const leggibili = piano.fonti.some((f) => f.tipo !== "ignoto" && f.tipo !== "vecchio");
+  // The payments a bank statement proves count as new too: a statement alone brings nothing else.
+  const nuovi = piano.clienti.length + piano.listino.length + piano.documenti.length + (piano.costi || []).length
+    + (piano.uscite || []).length + piano.fonti.filter((f) => f.tipo === "estratto").reduce((n, f) => n + f.nuovi, 0);
+  const leggibili = piano.fonti.some((f) => f.tipo !== "ignoto" && f.tipo !== "vecchio" && f.tipo !== "notifiche");
 
   el("impPanel").hidden = false;
   el("impEmpty").hidden = leggibili;
@@ -979,6 +1262,8 @@ async function _chosen(event) {
       docs: await list(database, "docs"),
       costs: await list(database, "costs"),
       recurring: await list(database, "recurring"),
+      payments: await list(database, "payments"),
+      outlays: await list(database, "outlays"),
     }));
   } catch (ignored) {
     await tell(t("impFailed"));
@@ -1001,7 +1286,8 @@ async function _go() {
     if (dopo) await dopo();
     // Si arriva dove sono finite le cose, non si resta sulle Impostazioni: ai documenti se ne
     // sono entrati, altrimenti alle anagrafiche. Restare qui lasciava la domanda «e adesso?».
-    location.hash = scritti.documenti ? "#/documenti" : scritti.acquisti ? "#/acquisti" : "#/anagrafiche";
+    location.hash = scritti.documenti ? "#/documenti" : scritti.acquisti ? "#/acquisti"
+      : (scritti.incassi || scritti.pagamenti) ? "#/scadenzario" : "#/anagrafiche";
   } catch (ignored) {
     await tell(t("impFailed"));
   }

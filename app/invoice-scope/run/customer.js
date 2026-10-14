@@ -43,6 +43,7 @@ import {
 import * as meetings from "./meetings.js";
 import { PAESI_CON_CAP } from "./fatturapa.js";
 import { allCosts, allOutlays, owedOn as costOwed, state as costState, signedTotal as costTotal } from "./costs.js";
+import { currentDay } from "./day.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  s t a t e
@@ -72,7 +73,7 @@ function el(id) {
 }
 
 function _today() {
-  return new Date().toISOString().slice(0, 10);
+  return currentDay();
 }
 
 /** L'etichetta di un tipo di voce. Un tipo che questa versione non conosce si legge come nota. */
@@ -409,7 +410,8 @@ async function _drawDiary() {
  */
 function _drawFigures(suoi, dovuto, daPagare) {
   const fatturato = suoi
-    .filter((doc) => kind(doc).fiscale && doc.totali)
+    // Revenue only: an autofattura or an integration names the supplier, and is not billed to it.
+    .filter((doc) => kind(doc).ricavo && doc.totali)
     .reduce((somma, doc) => somma + (signedTotal(doc) || 0n), 0n);
   el("custBilled").textContent = money(fatturato);
   el("custDue").textContent = money(dovuto);

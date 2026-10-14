@@ -168,8 +168,10 @@ export function bankFields(accounts, iban) {
 function _onAccount(conto, payment) {
   const where = payment && payment.conto;
   if (!where) return false;
-  if (where.id && conto.id) return where.id === conto.id;
-  return Boolean(where.iban) && cleanIban(where.iban) === cleanIban(conto.iban);
+  if (where.id && conto.id && where.id === conto.id) return true;
+  // By IBAN when the ids differ too: an account deleted and added again gets a new id, and its old
+  // payments — recorded with the old id and the same IBAN — vanished from its movements.
+  return Boolean(where.iban) && Boolean(conto.iban) && cleanIban(where.iban) === cleanIban(conto.iban);
 }
 
 function _amount(value) {
@@ -374,8 +376,15 @@ function _openSheet(record) {
 
 /** ABI and CAB under the IBAN while it is typed, or the line stays empty. */
 function _drawCodes() {
-  const codes = abiCab(el("bankForm").elements.iban.value);
-  el("bankCodes").textContent = codes ? `ABI ${codes.abi} · CAB ${codes.cab}` : "";
+  const field = el("bankForm").elements.iban;
+  const iban = cleanIban(field.value);
+  // The check digits as the IBAN is typed: the save already refused a wrong one, but only after
+  // the whole form had been filled. Judged once the IBAN is long enough to be whole.
+  const sbagliato = iban.length >= 15 && !ibanChecks(iban);
+  field.setAttribute("aria-invalid", sbagliato ? "true" : "false");
+  const codes = sbagliato ? null : abiCab(field.value);
+  el("bankCodes").textContent = sbagliato ? t("bankIbanWarn") : (codes ? `ABI ${codes.abi} · CAB ${codes.cab}` : "");
+  el("bankCodes").classList.toggle("field-warn", sbagliato);
 }
 
 async function _save() {

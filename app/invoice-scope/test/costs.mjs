@@ -10,8 +10,10 @@ import assert from "node:assert/strict";
 import { toString } from "../run/decimal.js";
 import {
   costRecord, problems, taxKind, defaultRate, taxOn, paidOf, owedOn, state, payable, periodTotals,
-  taxBalance, MONOFASE, costOf, signedTotal, daAutofatturare, autofatturaDa,
+  taxBalance, MONOFASE, costOf, signedTotal, daAutofatturare, autofatturaDa, partsOf, nextDue,
+  tipoIntegrazione, daIntegrare, integrazioneDa,
 } from "../run/costs.js";
+import { KINDS } from "../run/kinds.js";
 import { validate } from "../run/validate.js";
 
 let passed = 0;
@@ -217,6 +219,151 @@ prova("l'autofattura non si emette finché non si dice che cosa contiene", () =>
   // Once the contents are chosen — goods, here — the request goes away.
   doc.righe[0].tm = "4";
   assert.ok(!regole(doc).includes("vTmRequired"));
+});
+
+
+prova("un acquisto con la ritenuta si paga al netto, o quanto dicono le rate del file", () => {
+  // 1000 + 220 with a 20% withholding: 1020 to the supplier, 200 to the revenue.
+  const conRitenuta = costRecord({ tipo: "fattura", partyId: "s", data: "2026-09-01", numero: "1",
+    imponibile: "1000", aliquota: "22", ritenuta: "200.00" });
+  assert.equal(toString(owedOn(conRitenuta, []), 2), "1020.00");
+  // The instalments the file stated win: a stamp duty charged on, say.
+  const conRate = costRecord({ tipo: "fattura", partyId: "s", data: "2026-09-01", numero: "2",
+    imponibile: "1000", aliquota: "22", ritenuta: "200.00", daPagare: "1022.00" });
+  assert.equal(toString(owedOn(conRate, []), 2), "1022.00");
+  // The decision about the autofattura is kept by the record.
+  const deciso = costRecord({ tipo: "spesa", partyId: "s", data: "2026-09-01", imponibile: "10", aliquota: "0",
+    autofatturaId: "af1" });
+  assert.equal(deciso.autofatturaId, "af1");
+});
+
+
+prova("un acquisto a rate ha una riga per rata, e i pagamenti chiudono la più vecchia", () => {
+  const record = costRecord({ id: "c", tipo: "fattura", partyId: "s", data: "2026-09-01", numero: "9",
+    imponibile: "300", aliquota: "0", rate: [
+      { scadenza: "2026-10-01", importo: "100" }, { scadenza: "2026-11-01", importo: "100" }, { scadenza: "2026-12-01", importo: "100" }] });
+  const righe = payable([record], [{ costId: "c", importo: "150" }], { today: "2026-10-15" });
+  assert.deepEqual(righe.map((r) => [r.scadenza, toString(r.importo, 2), r.scaduta]), [
+    ["2026-11-01", "50.00", false], ["2026-12-01", "100.00", false]]);
+  // The first instalment is paid: the purchase is not overdue just because its first date passed.
+  assert.equal(state(record, [{ costId: "c", importo: "150" }], { today: "2026-10-15" }), "aperto");
+  assert.equal(state(record, [], { today: "2026-10-15" }), "scaduto");
+  assert.equal(nextDue(record, [{ costId: "c", importo: "150" }]), "2026-11-01");
+});
+
+prova("la nota di credito di un fornitore toglie dalla fattura che nomina", () => {
+  const fattura = costRecord({ id: "f", tipo: "fattura", partyId: "s", data: "2026-09-01", numero: "1", imponibile: "100", aliquota: "22" });
+  const nota = costRecord({ id: "n", tipo: "nota", partyId: "s", data: "2026-09-05", numero: "NC1", imponibile: "20", aliquota: "22", fatturaId: "f" });
+  assert.equal(toString(owedOn(fattura, [], [nota]), 2), "97.60");
+  const righe = payable([fattura, nota], []);
+  assert.equal(righe.length, 1);
+  assert.equal(toString(righe[0].importo, 2), "97.60");
+});
+
+// -----------------------------------------------------------------------------------------------------------------
+//  l e   i n t e g r a z i o n i   d e l l ' i n v e r s i o n e   c o n t a b i l e
+// -----------------------------------------------------------------------------------------------------------------
+
+const AZIENDA_IT = { ...IT, denominazione: "Esempio S.r.l.", partitaIva: "01234567897", regimeFiscale: "RF01",
+  sede: { indirizzo: "Via Prova", numeroCivico: "1", cap: "47899", comune: "Serravalle", provincia: "RN" } };
+const ITALIANO = { id: "it", denominazione: "Edilizia Rossi S.r.l.", partitaIva: "09876543217", paese: "IT",
+  sede: { indirizzo: "Via Muro", numeroCivico: "3", cap: "40100", comune: "Bologna", provincia: "BO" } };
+const FRANCESE = { id: "fr", denominazione: "Pièces SARL", partitaIva: "12345678901", paese: "FR",
+  sede: { indirizzo: "Rue Neuve", numeroCivico: "4", cap: "75001", comune: "Paris", provincia: "" } };
+const SAMMARINESE = { id: "sm", denominazione: "Titano S.r.l.", partitaIva: "12345", paese: "SM",
+  sede: { indirizzo: "Via del Titano", numeroCivico: "4", cap: "47890", comune: "San Marino", provincia: "SM" } };
+const AMERICANO = { id: "us", denominazione: "Cloud Inc.", paese: "US",
+  sede: { indirizzo: "Market Street", numeroCivico: "1", cap: "94105", comune: "San Francisco", provincia: "" } };
+
+prova("quale integrazione: TD16 per l'Italia, TD17 i servizi, TD18 i beni UE, TD19 gli altri beni", () => {
+  const acquisto = (extra) => costRecord({ tipo: "fattura", partyId: "x", numero: "7", data: "2026-09-03",
+    imponibile: "1000", aliquota: "0", inversione: true, ...extra }, { company: IT });
+  assert.equal(tipoIntegrazione(acquisto(), ITALIANO, IT), "TD16");
+  assert.equal(tipoIntegrazione(acquisto({ beniServizi: "servizi" }), FRANCESE, IT), "TD17");
+  assert.equal(tipoIntegrazione(acquisto({ beniServizi: "beni" }), FRANCESE, IT), "TD18");
+  assert.equal(tipoIntegrazione(acquisto({ beniServizi: "beni" }), SAMMARINESE, IT), "TD19", "beni da San Marino");
+  assert.equal(tipoIntegrazione(acquisto({ beniServizi: "servizi" }), AMERICANO, IT), "TD17");
+  assert.equal(tipoIntegrazione(acquisto(), FRANCESE, IT), "?", "beni o servizi si chiede");
+  // Not under reverse charge, a credit note, or a San Marino company: nothing.
+  assert.equal(tipoIntegrazione({ ...acquisto(), inversione: undefined }, ITALIANO, IT), null);
+  assert.equal(tipoIntegrazione({ ...acquisto(), tipo: "nota" }, ITALIANO, IT), "TD16", "la nota si integra in negativo");
+  assert.equal(tipoIntegrazione(acquisto(), ITALIANO, SM), null);
+  // An expense from an Italian supplier has no invoice to integrate.
+  assert.equal(tipoIntegrazione({ ...acquisto(), tipo: "spesa" }, ITALIANO, IT), null);
+});
+
+prova("le integrazioni dovute: il termine è il 15 del mese dopo, e le decise restano fuori", () => {
+  const anagrafiche = new Map([["it", ITALIANO], ["fr", FRANCESE]]);
+  const costs = [
+    costRecord({ id: "a", tipo: "fattura", partyId: "it", numero: "7", data: "2026-08-20", imponibile: "1000", aliquota: "0", inversione: true }, { company: IT }),
+    costRecord({ id: "b", tipo: "fattura", partyId: "fr", numero: "F-9", data: "2026-09-02", imponibile: "500", aliquota: "0", inversione: true, beniServizi: "beni" }, { company: IT }),
+    costRecord({ id: "c", tipo: "fattura", partyId: "it", numero: "8", data: "2026-09-01", imponibile: "300", aliquota: "0", inversione: true, integrazioneId: "d1" }, { company: IT }),
+    costRecord({ id: "d", tipo: "fattura", partyId: "it", numero: "9", data: "2026-09-01", imponibile: "300", aliquota: "0", inversione: true, integrazioneNonServe: true }, { company: IT }),
+    costRecord({ id: "e", tipo: "fattura", partyId: "it", numero: "10", data: "2026-09-01", imponibile: "300", aliquota: "22" }, { company: IT }),
+  ];
+  const dovute = daIntegrare(costs, { company: IT, anagrafiche, oggi: "2026-09-20" });
+  assert.deepEqual(dovute.map((d) => [d.record.id, d.tipo, d.termine.al, d.termine.key]), [
+    ["a", "TD16", "2026-09-15", "scaduto"],
+    ["b", "TD18", "2026-10-15", "aperto"],
+  ]);
+  assert.deepEqual(daIntegrare(costs, { company: SM, anagrafiche, oggi: "2026-09-20" }), []);
+});
+
+prova("la bozza dell'integrazione: le righe N6 all'aliquota dell'azienda, la fattura collegata, valida", () => {
+  const record = costRecord({ id: "a", tipo: "fattura", partyId: "it", numero: "7", data: "2026-09-03",
+    imponibile: "1050", aliquota: "0", inversione: true, righe: [
+      { descrizione: "Opere murarie", quantita: "1", prezzoUnitario: "1000", aliquota: "0", natura: "N6.7", imponibile: "1000.00" },
+      { descrizione: "Bollo", quantita: "1", prezzoUnitario: "50", aliquota: "0", natura: "N1", imponibile: "50.00" },
+    ] }, { company: IT });
+  const doc = integrazioneDa(record, { company: AZIENDA_IT, party: ITALIANO, tipo: "TD16", oggi: "2026-09-20" });
+  assert.equal(doc.tipo, "TD16");
+  assert.equal(doc.serie, KINDS.TD16.serie);
+  assert.equal(doc.data, "2026-09-20", "nel mese di ricezione: oggi");
+  assert.deepEqual(doc.righe.map((r) => [r.descrizione, r.prezzoUnitario, r.aliquota]), [["Opere murarie", "1000.00", "22"]]);
+  assert.deepEqual(doc.fattureCollegate, [{ numero: "7", data: "2026-09-03" }]);
+  assert.deepEqual(doc.daAcquisto, { costId: "a", data: "2026-09-03", importo: record.totale });
+  assert.deepEqual(validate({ ...doc, numero: "INT 2026/0001" }, { company: AZIENDA_IT, party: ITALIANO }), []);
+  // The month after receipt, the date stays in the month of receipt; a TD19 always takes the operation's.
+  assert.equal(integrazioneDa(record, { company: AZIENDA_IT, party: ITALIANO, tipo: "TD16", oggi: "2026-10-05" }).data, "2026-09-03");
+  const sm = costRecord({ id: "s", tipo: "fattura", partyId: "sm", numero: "12", data: "2026-09-03", imponibile: "800", aliquota: "0", inversione: true, beniServizi: "beni" }, { company: IT });
+  const td19 = integrazioneDa(sm, { company: AZIENDA_IT, party: SAMMARINESE, tipo: "TD19", oggi: "2026-09-20" });
+  assert.equal(td19.data, "2026-09-03");
+  assert.deepEqual(td19.righe.map((r) => r.prezzoUnitario), ["800"]);
+  assert.deepEqual(validate({ ...td19, numero: "INT 2026/0002" }, { company: AZIENDA_IT, party: SAMMARINESE }), []);
+  // A provider outside the EU with no VAT number known: allowed on an integration.
+  const us = costRecord({ id: "u", tipo: "spesa", partyId: "us", data: "2026-09-03", imponibile: "40", aliquota: "0", inversione: true, beniServizi: "servizi" }, { company: IT });
+  const td17 = integrazioneDa(us, { company: AZIENDA_IT, party: AMERICANO, tipo: "TD17", oggi: "2026-09-20" });
+  assert.equal(td17.fattureCollegate, undefined, "una spesa non ha un numero da collegare");
+  assert.deepEqual(validate({ ...td17, numero: "INT 2026/0003" }, { company: AZIENDA_IT, party: AMERICANO }), []);
+});
+
+prova("la nota di credito di un fornitore in inversione si integra con importi negativi", () => {
+  const nota = costRecord({ id: "n", tipo: "nota", partyId: "it", numero: "NC-3", data: "2026-09-10",
+    imponibile: "200", aliquota: "0", inversione: true }, { company: IT });
+  const doc = integrazioneDa(nota, { company: AZIENDA_IT, party: ITALIANO, tipo: "TD16", oggi: "2026-09-20" });
+  assert.deepEqual(doc.righe.map((r) => r.prezzoUnitario), ["-200"]);
+  assert.deepEqual(doc.fattureCollegate, [{ numero: "NC-3", data: "2026-09-10" }]);
+  assert.match(doc.causale, /NC-3/);
+  assert.deepEqual(validate({ ...doc, numero: "INT 2026/0009" }, { company: AZIENDA_IT, party: ITALIANO }), []);
+});
+
+prova("l'IVA di un'integrazione sta nei due registri, tranne per il forfettario", () => {
+  const docs = [{ data: "2026-09-20", tipo: "TD16", totali: { imposta: "220" + "0".repeat(8), totale: "0", imponibile: "0" } }];
+  const kindOf = (doc) => KINDS[doc.tipo];
+  const ordinario = taxBalance(docs, [], "2026-09", { company: IT, kindOf });
+  assert.equal(soldi(ordinario.debito), "220.00");
+  assert.equal(soldi(ordinario.credito), "220.00");
+  assert.equal(soldi(ordinario.saldo), "0.00");
+  const forfettario = taxBalance(docs, [], "2026-09", { company: { ...IT, regimeFiscale: "RF19" }, kindOf });
+  assert.equal(soldi(forfettario.saldo), "220.00", "il forfettario versa e non detrae");
+});
+
+prova("inversione e beni o servizi sopravvivono al foglio, e solo con valori ammessi", () => {
+  const r = costRecord({ tipo: "fattura", partyId: "x", data: "2026-09-03", imponibile: "10", inversione: "on", beniServizi: "beni" }, { company: IT });
+  assert.equal(r.inversione, true);
+  assert.equal(r.beniServizi, "beni");
+  const s = costRecord({ tipo: "fattura", partyId: "x", data: "2026-09-03", imponibile: "10", inversione: false, beniServizi: "boh" }, { company: IT });
+  assert.ok(!("inversione" in s) && !("beniServizi" in s));
 });
 
 console.log(`costs: ${passed} prove passate`);

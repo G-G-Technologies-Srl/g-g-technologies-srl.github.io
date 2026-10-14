@@ -210,15 +210,49 @@ export async function count(db, store) {
  * impossible to tell apart afterwards. Here a failure rolls the whole thing back.
  */
 export function replaceAll(db, store, records) {
+  return replaceStores(db, { [store]: records });
+}
+
+/**
+ * Replace the contents of several stores in one transaction: all of them, or none.
+ *
+ * **One transaction for the whole restore, not one per store.** Restoring store after store meant
+ * that a failure in the fourth — two documents with the same number hitting the unique index — left
+ * the first three already replaced by the archive and the rest as they were: an archive that was
+ * neither the old one nor the new one. And a record without its key makes `put` throw *at once*,
+ * before any request exists: the `clear()` queued just before it then committed, and the store was
+ * left empty. Here a throw aborts the transaction, and an abort rolls every store back.
+ */
+export function replaceStores(db, data) {
   if (!db) return Promise.resolve();
+  const names = Object.keys(data);
+  if (!names.length) return Promise.resolve();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(store, "readwrite");
-    const target = transaction.objectStore(store);
-    target.clear();
-    for (const record of records) target.put(record);
+    let transaction;
+    try {
+      transaction = db.transaction(names, "readwrite");
+    } catch (error) {
+      reject(error);
+      return;
+    }
+    let failure = null;
     transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error);
-    transaction.onabort = () => reject(transaction.error);
+    transaction.onerror = () => { failure = failure || transaction.error; };
+    transaction.onabort = () => reject(failure || transaction.error || new Error("transazione annullata"));
+    try {
+      for (const name of names) {
+        const target = transaction.objectStore(name);
+        target.clear();
+        for (const record of data[name]) target.put(record);
+      }
+    } catch (error) {
+      failure = error;
+      try {
+        transaction.abort();
+      } catch (ignored) {
+        // Already finished: `onabort` or `oncomplete` will settle the promise.
+      }
+    }
   });
 }
 

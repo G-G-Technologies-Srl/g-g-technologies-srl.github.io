@@ -978,7 +978,8 @@ export async function onDocument(db, doc) {
   const bottone = el("docProject");
   const link = el("docProjectLink");
   const suo = doc ? progetti.projectOfDoc(doc.id) : null;
-  bottone.hidden = !doc || Boolean(suo);
+  // A document about a purchase — an autofattura, an integration — is not work for a customer.
+  bottone.hidden = !doc || Boolean(suo) || Boolean(kind(doc).autofattura);
   link.hidden = !suo;
   if (suo) {
     link.textContent = tf("docInProject", { nome: suo.name || t("projectsUntitled") });

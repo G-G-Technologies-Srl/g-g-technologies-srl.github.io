@@ -297,6 +297,106 @@ const CASES = [
       },
     },
   },
+  {
+    // A public administration: FPA12 to a six-character office code, split payment on the summary,
+    // and the order with its CIG and CUP in DatiOrdineAcquisto.
+    name: "15-pa-scissione-cig",
+    party: { ...PARTY, partitaIva: null, codiceFiscale: "80012345678", pa: true, splitPayment: true, codiceDestinatario: "UFABCD" },
+    doc: {
+      ...BASE, numero: "2026/000015", esigibilita: "S",
+      ordine: { numero: "ORD-7", data: "2026-08-01", cig: "ZAB1234567", cup: "J11B22000000000" },
+      righe: [{ descrizione: "Manutenzione impianti", quantita: "1", prezzoUnitario: "1000.00", aliquota: "22" }],
+      pagamento: { condizioni: "TP02", modalita: "MP05", iban: "IT60X0542811101000000123456", rate: [{ scadenza: "2026-10-03" }] },
+    },
+  },
+  {
+    // A professional: pension contribution subject to withholding, withholding on fees and
+    // contribution, and the issuer's REA with share capital and sole shareholder.
+    name: "16-cassa-ritenuta-rea",
+    company: { ...COMPANY, rea: { ufficio: "RN", numero: "123456", capitaleSociale: "10000", socioUnico: "SU", statoLiquidazione: "LN" } },
+    doc: {
+      ...BASE, numero: "2026/000016",
+      cassa: { tipo: "TC04", aliquota: "4", aliquotaIva: "22", ritenuta: true },
+      ritenuta: { tipo: "RT01", aliquota: "20", causale: "A" },
+      righe: [{ descrizione: "Progettazione", quantita: "1", prezzoUnitario: "1000.00", aliquota: "22" }],
+      pagamento: { condizioni: "TP02", modalita: "MP05", iban: "IT60X0542811101000000123456", rate: [{ scadenza: "2026-10-03" }] },
+    },
+  },
+  {
+    // The credit note against sample 15, as `creditNote` builds it: split payment, the contribution
+    // and the order come across, and the note names the invoice it reverses.
+    name: "18-nota-pa-scissione-cassa",
+    party: { ...PARTY, partitaIva: null, codiceFiscale: "80012345678", pa: true, splitPayment: true, codiceDestinatario: "UFABCD" },
+    doc: {
+      ...BASE, tipo: "TD04", numero: "NC 2026/000001", data: "2026-09-10", esigibilita: "S",
+      cassa: { tipo: "TC04", aliquota: "4", aliquotaIva: "22", ritenuta: false },
+      ordine: { numero: "ORD-7", data: "2026-08-01", cig: "ZAB1234567", cup: "J11B22000000000" },
+      fattureCollegate: [{ numero: "2026/000015", data: "2026-09-03" }],
+      righe: [{ descrizione: "Manutenzione impianti", quantita: "1", prezzoUnitario: "1000.00", aliquota: "22" }],
+      pagamento: null,
+    },
+  },
+  {
+    // The four reverse-charge integrations: the supplier is the cedente, the file goes to seven
+    // zeros with SoggettoEmittente CC, and carries the VAT the company works out.
+    name: "19-integrazione-td16",
+    doc: {
+      ...BASE, tipo: "TD16", numero: "INT 2026/000001", data: "2026-09-20",
+      fattureCollegate: [{ numero: "7", data: "2026-09-03" }],
+      righe: [{ descrizione: "Opere murarie (inversione contabile)", quantita: "1", prezzoUnitario: "1000.00", aliquota: "22" }],
+      pagamento: null,
+    },
+  },
+  {
+    name: "20-integrazione-td17-extra-ue",
+    party: { denominazione: "Cloud Inc.", paese: "US",
+      sede: { indirizzo: "Market Street", numeroCivico: "1", cap: "94105", comune: "San Francisco", provincia: "" } },
+    doc: {
+      ...BASE, tipo: "TD17", numero: "INT 2026/000002", data: "2026-09-03",
+      righe: [{ descrizione: "Abbonamento software", quantita: "1", prezzoUnitario: "40.00", aliquota: "22" }],
+      pagamento: null,
+    },
+  },
+  {
+    name: "21-integrazione-td18",
+    party: { denominazione: "Pièces SARL", partitaIva: "12345678901", paese: "FR",
+      sede: { indirizzo: "Rue Neuve", numeroCivico: "4", cap: "75001", comune: "Paris", provincia: "" } },
+    doc: {
+      ...BASE, tipo: "TD18", numero: "INT 2026/000003", data: "2026-09-10",
+      fattureCollegate: [{ numero: "F-2026-118", data: "2026-09-02" }],
+      righe: [{ descrizione: "Ricambi", quantita: "10", prezzoUnitario: "50.00", aliquota: "22" }],
+      pagamento: null,
+    },
+  },
+  {
+    name: "22-integrazione-td19-san-marino",
+    party: SAN_MARINO,
+    doc: {
+      ...BASE, tipo: "TD19", numero: "INT 2026/000004", data: "2026-09-03",
+      fattureCollegate: [{ numero: "12", data: "2026-09-03" }],
+      righe: [{ descrizione: "Materiale da San Marino", quantita: "1", prezzoUnitario: "800.00", aliquota: "22" }],
+      pagamento: null,
+    },
+  },
+  {
+    // The correction of sample 19 for the supplier's credit note: the same TD16, negative amounts.
+    name: "23-integrazione-td16-negativa",
+    doc: {
+      ...BASE, tipo: "TD16", numero: "INT 2026/000005", data: "2026-09-25",
+      fattureCollegate: [{ numero: "NC-3", data: "2026-09-24" }],
+      righe: [{ descrizione: "Rettifica per nota di credito", quantita: "1", prezzoUnitario: "-200.00", aliquota: "22" }],
+      pagamento: null,
+    },
+  },
+  {
+    // No due dates, as the screen saves them: one DettaglioPagamento of the whole, not none.
+    name: "17-senza-scadenze",
+    doc: {
+      ...BASE, numero: "2026/000017",
+      righe: [{ descrizione: "Consulenza", quantita: "2", prezzoUnitario: "150.00", aliquota: "22" }],
+      pagamento: { condizioni: "TP02", modalita: "MP05", iban: "IT60X0542811101000000123456", rate: [] },
+    },
+  },
 ];
 
 // -----------------------------------------------------------------------------------------------------------------

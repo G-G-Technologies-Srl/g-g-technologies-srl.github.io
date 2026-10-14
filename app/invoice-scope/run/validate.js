@@ -24,11 +24,12 @@
 // No DOM in here, and no words either: `node app/invoice-scope/test/validate.mjs` runs it directly.
 
 import { from, add, cmp, sub, abs, toString } from "./decimal.js";
-import { totals, chiaveConTm, MONEY } from "./totals.js";
+import { totals, chiaveConTm, soggettaRitenuta, MONEY } from "./totals.js";
 import {
   destinatario, riferimentoNormativo, profileFor, tipoDocumento, vietato, PAESI_CON_CAP,
-  GRUPPI_MERCE, MERCE_CON_DDT, TIPI_CESSIONE, rimborsabile,
+  GRUPPI_MERCE, MERCE_CON_DDT, TIPI_CESSIONE, rimborsabile, frozen, CASSE, PAESI_UE,
 } from "./fatturapa.js";
+import { currentDay } from "./day.js";
 import { kind, TIPI, TIPI_FISCALI } from "./kinds.js";
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -78,7 +79,14 @@ const PROVINCIA = /^[A-Z]{2}$/;
 const DESTINATARIO = /^[A-Z0-9]{7}$/;
 const IBAN = /^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/;
 const PIVA_IT = /^\d{11}$/;
-const CF_IT = /^([A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z]|\d{11})$/;
+// The digit positions of a personal tax code may hold a letter instead (omocodia: L M N P Q R S T U V
+// stand for 0–9 when two people would otherwise share the code). Refusing them stopped a valid
+// customer from being invoiced at all.
+const CF_IT = /^([A-Z]{6}[\dLMNP-V]{2}[A-Z][\dLMNP-V]{2}[A-Z][\dLMNP-V]{3}[A-Z]|\d{11})$/;
+
+/** The withholding reasons the schema accepts (CausalePagamento). A typo is a file that fails it. */
+export const CAUSALI_RITENUTA = ["A", "B", "C", "D", "E", "G", "H", "I", "L", "M", "N", "O", "P", "Q",
+  "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "L1", "M1", "M2", "O1", "V1", "ZO"];
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
@@ -115,6 +123,103 @@ function _partitaIvaValida(value) {
     }
   }
   return sum % 10 === 0;
+}
+
+/**
+ * The checks of the fiscal features: order and tender codes, pension contribution, exigibility,
+ * the flat-rate scheme.
+ */
+function _fiscali(problems, doc, { company, profile, fiscale }) {
+  if (!fiscale) return;
+  const o = doc.ordine || {};
+  if ((o.cig || o.cup) && !String(o.numero || "").trim()) {
+    problems.push(_problem("ordine.numero", "vOrderNumber", "vOrderNumberFix"));
+  }
+  if (o.cig && !/^[A-Z0-9]{10}$/.test(String(o.cig).toUpperCase())) {
+    problems.push(_problem("ordine.cig", "vCigShape", "vCigShapeFix"));
+  }
+  if (o.cup && !/^[A-Z0-9]{15}$/.test(String(o.cup).toUpperCase())) {
+    problems.push(_problem("ordine.cup", "vCupShape", "vCupShapeFix"));
+  }
+
+  const c = doc.cassa;
+  if (c && c.tipo && profile && profile.canale !== "sdi") {
+    problems.push(_problem("cassa.tipo", "vItalyOnly", "vItalyOnlyFix"));
+  }
+  if (c && c.tipo) {
+    if (!CASSE.some(([codice]) => codice === c.tipo)) {
+      problems.push(_problem("cassa.tipo", "vOutsideSubset", "vCassaTipoFix", { valore: c.tipo, elenco: "TC01–TC22" }));
+    }
+    let aliquota = null;
+    try { aliquota = from(c.aliquota ?? ""); } catch (ignored) { aliquota = null; }
+    if (aliquota === null || cmp(aliquota, from("0")) <= 0 || cmp(aliquota, from("100")) > 0) {
+      problems.push(_problem("cassa.aliquotaCassa", "vCassaRate", "vCassaRateFix"));
+    }
+    if (Number(c.aliquotaIva) === 0 && !c.natura) {
+      problems.push(_problem("cassa.natura", "vCassaNature", "vCassaNatureFix"));
+    }
+  }
+
+  if (doc.esigibilita === "S") {
+    // Split payment is an Italian rule (art. 17-ter DPR 633/72): no other channel knows it.
+    if (profile && profile.canale !== "sdi") problems.push(_problem("esigibilita", "vItalyOnly", "vItalyOnlyFix"));
+    // Fees subject to withholding are outside split payment since DL 87/2018: the two never meet.
+    if (doc.ritenuta) problems.push(_problem("esigibilita", "vSplitRitenuta", "vSplitRitenutaFix"));
+    if ((company || {}).regimeFiscale === "RF19") problems.push(_problem("esigibilita", "vSplitForfettario", "vSplitForfettarioFix"));
+  }
+
+  // **The flat-rate scheme charges no VAT**, and the AdE wants its lines under N2.2. A taxed line on
+  // a forfettario's invoice is a file the recipient books wrongly.
+  if ((company || {}).regimeFiscale === "RF19" && (profile.regimi || []).includes("RF19") && !kind(doc).autofattura) {
+    const righe = doc.righe || [];
+    if (righe.some((line) => Number(line.aliquota) > 0)) {
+      problems.push(_problem("righe.aliquota", "vForfettarioIva", "vForfettarioIvaFix"));
+    } else if (righe.some((line) => line.natura && line.natura !== "N2.2")) {
+      problems.push(_problem("righe.natura", "vForfettarioNatura", "vForfettarioNaturaFix"));
+    }
+  }
+}
+
+/**
+ * The rules of the four reverse-charge integrations (TD16–TD19).
+ *
+ * Who the supplier can be is in the type: Italian for TD16, foreign for the other three, and from
+ * another EU country for TD18 — the SdI refuses the others. The lines carry the VAT the company works
+ * out, so N6.x (the supplier's «reverse charge» nature) has no place on them. TD16 names the invoice
+ * it integrates, and no integration is dated before the invoice it integrates.
+ */
+function _integrazione(problems, doc, party) {
+  const paese = String((party || {}).paese || "IT").toUpperCase();
+  const tipo = doc.tipo;
+  if (tipo === "TD16" && paese !== "IT") {
+    problems.push(_problem("cliente.paese", "vIntegrazioneItalia", "vIntegrazioneItaliaFix"));
+  } else if (tipo !== "TD16" && paese === "IT") {
+    problems.push(_problem("cliente.paese", "vIntegrazioneEstero", "vIntegrazioneEsteroFix", { tipo }));
+  } else if (tipo === "TD18" && !PAESI_UE.has(paese)) {
+    problems.push(_problem("cliente.paese", "vIntegrazioneUe", "vIntegrazioneUeFix"));
+  }
+  if ((doc.righe || []).some((line) => /^N6/.test(String(line.natura || "")))) {
+    problems.push(_problem("righe.natura", "vIntegrazioneN6", "vIntegrazioneN6Fix"));
+  }
+  const collegate = doc.fattureCollegate || [];
+  if (tipo === "TD16" && !collegate.length) {
+    problems.push(_problem("fattureCollegate", "vIntegrazioneCollegata", "vIntegrazioneCollegataFix"));
+  }
+  for (const [i, ref] of collegate.entries()) {
+    if (ref.data && DATE.test(String(ref.data)) && DATE.test(String(doc.data || "")) && String(doc.data) < String(ref.data)) {
+      problems.push(_problem(`fattureCollegate[${i + 1}].data`, "vIntegrazionePrima", "vIntegrazionePrimaFix", { data: ref.data }));
+    }
+  }
+}
+
+/** The VAT-number check, for the sheet that checks while it is typed. */
+export function partitaIvaValida(value) {
+  return _partitaIvaValida(String(value || "").replace(/\s/g, ""));
+}
+
+/** The tax-code shape (omocodia included), for the same sheet. */
+export function codiceFiscaleValido(value) {
+  return CF_IT.test(String(value || "").replace(/\s/g, "").toUpperCase());
 }
 
 /** A required text field, present and within its length. `cosaFare` is a key, like everything here. */
@@ -331,6 +436,12 @@ function _merce(problems, doc, profile) {
 function _ddt(problems, doc, profile) {
   const refs = doc.ddt || [];
   const quante = (doc.righe || []).length;
+  // **A deferred invoice names the delivery notes it bills**, on every channel. The San Marino
+  // check below asks for them by goods type; on the Italian channel nothing asked at all, and a TD24
+  // with no DatiDDT left without saying which goods it was deferred for.
+  if (doc.tipo === "TD24" && !refs.length && !profile.tmObbligatorio) {
+    problems.push(_problem("ddt", "vDdtRequired", "vDdtDeferredFix"));
+  }
   refs.forEach((ref, i) => {
     const campo = `ddt[${i + 1}]`;
     _text(problems, ref.numero, `${campo}.numero`, MAX.numero, "vDdtNumberFix");
@@ -402,9 +513,12 @@ function _totali(problems, doc, profile) {
 // Il profilo si deduce da chi emette, come in `build`: le due strade devono guardare lo stesso
 // tracciato, o il controllo direbbe di sì a un file che il portale rifiuta.
 export function validate(doc, {
-  company, party, profile = profileFor(company, party), richiedeNumero = true,
+  company: aziendaOra, party: clienteOra, profile: dato = null, richiedeNumero = true, oggi = currentDay(),
 } = {}) {
   const problems = [];
+  // An issued document is checked with the details it carries, as its file is written (`frozen`).
+  const { company, party } = frozen(doc, { company: aziendaOra, party: clienteOra });
+  const profile = dato || profileFor(company, party);
 
   // **How much of what follows applies depends on whether this document becomes a file.** A quote
   // and a delivery note stay here, so the rules that exist because the SdI enforces them do not
@@ -429,6 +543,10 @@ export function validate(doc, {
   }
   if (!DATE.test(String(doc.data || ""))) {
     problems.push(_problem("data", "vDateShape", "vDateFix", { esempio: "2026-09-03" }));
+  } else if (fiscale && !richiedeNumero && String(doc.data) > String(oggi)) {
+    // A date in the future is refused by the SdI (00403): an invoice cannot be dated after the day
+    // it reaches the exchange system. Checked when issuing, which is when the date is still a draft's.
+    problems.push(_problem("data", "vDateFuture", "vDateFutureFix"));
   }
   // The number is checked when a file is about to leave, and not when a document is about to be
   // issued — because issuing is what assigns it. Asking for it in both places was the first
@@ -448,8 +566,18 @@ export function validate(doc, {
   const vietataProvincia = fiscale && vietato(profile, "provincia");
   _party(problems, company, "azienda",
     { richiedeIdentificativo: fiscale, richiedeSede: fiscale, vietataProvincia });
+  // A foreign supplier on an integration may be known only by name and address (a provider outside
+  // the EU): the file writes the conventional filler, so the identifier is not asked for.
+  const integrazione = kind(doc).integrazione;
+  const fornitoreEstero = integrazione && party && String(party.paese || "IT").toUpperCase() !== "IT";
   _party(problems, party, "cliente",
-    { richiedeIdentificativo: fiscale, richiedeSede: fiscale, vietataProvincia });
+    { richiedeIdentificativo: fiscale && !fornitoreEstero, richiedeSede: fiscale, vietataProvincia });
+  // **On a self-billed invoice the supplier is the one who sells**, and in the file the seller is
+  // identified by its VAT number: CedentePrestatore has no place for a tax code alone, so a supplier
+  // with only a codice fiscale made a file that fails the schema.
+  if (fiscale && (doc.tipo === "TD29" || doc.tipo === "TD16") && party && !party.partitaIva) {
+    problems.push(_problem("cliente.partitaIva", "vSupplierNeedsVat", "vSupplierNeedsVatFix"));
+  }
 
   const regimi = profile.regimi || REGIMI;
   if (fiscale && company && !regimi.includes(company.regimeFiscale || "RF01")) {
@@ -457,9 +585,23 @@ export function validate(doc, {
       { valore: company.regimeFiscale, elenco: regimi.join(" e ") }));
   }
 
-  if (fiscale && party) {
+  // Half a REA block is a rejected file: the office (a province code) and the number go together.
+  const rea = company && company.rea;
+  if (fiscale && rea && !vietato(profile, "rea")
+    && (!/^[A-Z]{2}$/.test(String(rea.ufficio || "")) || !String(rea.numero || "").trim())) {
+    problems.push(_problem("azienda.rea", "vReaIncomplete", "vReaIncompleteFix"));
+  }
+
+  // A self-billed invoice is addressed with seven zeros whatever the supplier's sheet says
+  // (`_trasmissione` in fatturapa.js), so the supplier's code is not checked.
+  if (fiscale && party && !kind(doc).autofattura) {
     const codice = destinatario(party, profile);
-    if (!DESTINATARIO.test(codice)) {
+    if (profile.pa) {
+      // A public administration receives only through the office code it published: six characters.
+      if (!/^[A-Z0-9]{6}$/.test(String(codice || ""))) {
+        problems.push(_problem("cliente.codiceDestinatario", "vDestinatarioSix", "vDestinatarioSixFix"));
+      }
+    } else if (!DESTINATARIO.test(codice)) {
       problems.push(_problem("cliente.codiceDestinatario", "vDestinatarioSeven", "vDestinatarioFix"));
     }
   }
@@ -507,6 +649,8 @@ export function validate(doc, {
     }
   }
 
+  if (fiscale && integrazione) _integrazione(problems, doc, party);
+
   // A quote with no expiry date is a price you have promised for ever. It is the field a customer
   // looks for, and the one nobody remembers to fill in, so it is asked for rather than assumed.
   if (doc.tipo === "preventivo") {
@@ -529,6 +673,45 @@ export function validate(doc, {
     // `f_tipo` is «tipo di documento», and the message read as if the document type were wrong.
     problems.push(_problem("ritenuta.percipiente", "vOutsideSubset", "vRitenutaFix",
       { valore: doc.ritenuta.tipo, elenco: RITENUTE.join(", ") }));
+  }
+
+  // A document discount above 100% turns every line negative: a typo, never a commercial choice.
+  const sconto = doc.scontoDocumento && doc.scontoDocumento.percentuale;
+  if (sconto !== undefined && sconto !== null && sconto !== "") {
+    let valore = null;
+    try {
+      valore = from(sconto);
+    } catch (ignored) {
+      valore = null;
+    }
+    if (valore === null || cmp(valore, from("0")) < 0 || cmp(valore, from("100")) > 0) {
+      problems.push(_problem("sconto", "vDiscountRange", "vDiscountRangeFix"));
+    }
+  }
+
+  _fiscali(problems, doc, { company, profile, fiscale });
+
+  if (doc.ritenuta) {
+    // A blank or impossible rate is not a withholding: it would leave as 0,00 or as more than the fee.
+    let aliquota = null;
+    try {
+      aliquota = from(doc.ritenuta.aliquota ?? "");
+    } catch (ignored) {
+      aliquota = null;
+    }
+    if (aliquota === null || cmp(aliquota, from("0")) <= 0 || cmp(aliquota, from("100")) > 0) {
+      problems.push(_problem("ritenuta.aliquota", "vRitenutaRate", "vRitenutaRateFix"));
+    }
+    const causale = String(doc.ritenuta.causale || "A").toUpperCase();
+    if (!CAUSALI_RITENUTA.includes(causale)) {
+      problems.push(_problem("ritenuta.causale", "vOutsideSubset", "vRitenutaCausaleFix",
+        { valore: causale, elenco: CAUSALI_RITENUTA.join(", ") }));
+    }
+    // With DatiRitenuta the SdI wants at least one line carrying it (00411): an invoice made only of
+    // excluded expenses (N1) has nothing the withholding can be taken on.
+    if ((doc.righe || []).length && !(doc.righe || []).some(soggettaRitenuta)) {
+      problems.push(_problem("ritenuta", "vRitenutaBase", "vRitenutaBaseFix"));
+    }
   }
 
   if (doc.pagamento) {

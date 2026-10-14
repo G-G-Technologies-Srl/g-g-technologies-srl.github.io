@@ -19,16 +19,17 @@
 
 import * as plan from "biz/plan-model.js";
 
-import { t, tf } from "./i18n.js";
+import { t, tf, lang } from "./i18n.js";
 import { kind, numero as shownNumber } from "./kinds.js";
 import { label as statoLabel } from "./states.js";
 import { signedTotal, editable } from "./model.js";
-import { money, date as shownDate } from "./format.js";
+import { money, date as shownDate, days } from "./format.js";
 import * as progetti from "./projects.js";
 import { costOf, payable, taxBalance, signedTotal as costTotal } from "./costs.js";
 import { expected } from "./recurring.js";
 import { agenda } from "./crm.js";
 import { from } from "./decimal.js";
+import { currentDay } from "./day.js";
 
 /** Quante righe mostra ogni riquadro. Cinque è quello che si legge senza scorrere. */
 export const ROWS = 5;
@@ -52,6 +53,16 @@ function _svg(tag, attrs = {}) {
   return node;
 }
 
+/**
+ * A month's name for a tooltip. The axis keeps the single letters, where there is room for nothing
+ * else and the order tells them apart; a tooltip reads one month alone, and «G 2026» is January or
+ * June, «M» March or May, «A» April or August.
+ */
+function _monthName(mese) {
+  return new Date(Date.UTC(2026, mese - 1, 1))
+    .toLocaleDateString(lang() === "it" ? "it-IT" : "en-GB", { month: "long", timeZone: "UTC" });
+}
+
 /** Giorni interi fra due date ISO, positivi se `a` viene dopo `b`. */
 function _days(a, b) {
   const one = Date.UTC(...String(a).slice(0, 10).split("-").map((x, i) => Number(x) - (i === 1 ? 1 : 0)));
@@ -59,9 +70,18 @@ function _days(a, b) {
   return Math.round((one - two) / 86400000);
 }
 
+/**
+ * The states in which an issued fiscal document is no longer turnover: refused by the SdI (it is
+ * issued again, under the same number or a new one) or cancelled. `setState` keeps their frozen
+ * totals, so a refused invoice and its reissue were both counted.
+ */
+export const FUORI_FATTURATO = new Set(["scartato", "annullato"]);
+
 /** I documenti che contano nel fatturato: fiscali ed emessi. Le note di credito tolgono. */
 function _invoiced(docs) {
-  return docs.filter((doc) => doc.totali && kind(doc).fiscale);
+  // `ricavo` and not `fiscale`: an autofattura and the reverse-charge integrations are fiscal
+  // documents about purchases, and counted here they doubled as revenue what was a cost.
+  return docs.filter((doc) => doc.totali && kind(doc).ricavo && !FUORI_FATTURATO.has(doc.stato));
 }
 
 /**
@@ -108,7 +128,7 @@ function _row(cells, href) {
  * prima, non l'anno intero. A settembre, «−40% sull'anno scorso» contro dodici mesi sarebbe una
  * notizia falsa.
  */
-export function figures(docs, owed, { today = new Date().toISOString().slice(0, 10), costs = [], outlays = [], attesi = [] } = {}) {
+export function figures(docs, owed, { today = currentDay(), costs = [], outlays = [], attesi = [] } = {}) {
   const anno = today.slice(0, 4);
   const scorso = String(Number(anno) - 1);
   const giornoScorso = `${scorso}${today.slice(4)}`;
@@ -185,7 +205,7 @@ export function figures(docs, owed, { today = new Date().toISOString().slice(0, 
  * ricavi, costi }` dove `mese` è 1–12, `prima` è il valore dello stesso mese dell'anno precedente,
  * e `ricavi` e `costi` sono gli imponibili del mese — il margine è la loro differenza.
  */
-export function byMonth(docs, { today = new Date().toISOString().slice(0, 10), costs = [] } = {}) {
+export function byMonth(docs, { today = currentDay(), costs = [] } = {}) {
   const emesse = _invoiced(docs);
   const totali = new Map();
   const netti = new Map();
@@ -227,7 +247,7 @@ export function byMonth(docs, { today = new Date().toISOString().slice(0, 10), c
  * stata pagata sugli acquisti. `taxBalance` sa già tutto questo; qui si scelgono i due periodi.
  * Nessun numero che l'app inventa: è la somma di quello che c'è, e il commercialista fa il resto.
  */
-export function taxFigures(docs, costs, { today = new Date().toISOString().slice(0, 10), company = null } = {}) {
+export function taxFigures(docs, costs, { today = currentDay(), company = null } = {}) {
   const anno = today.slice(0, 4);
   const mese = Number(today.slice(5, 7));
   const primo = Math.floor((mese - 1) / 3) * 3 + 1;
@@ -253,7 +273,7 @@ export function taxFigures(docs, costs, { today = new Date().toISOString().slice
  * nei mesi a venire, i costi attesi dalle ricorrenze. È il grafico del previsionale: la finestra
  * degli ultimi dodici mesi va bene per «come sta andando», questa per «come finisce l'anno».
  */
-export function byYear(docs, costs, attesi, { today = new Date().toISOString().slice(0, 10) } = {}) {
+export function byYear(docs, costs, attesi, { today = currentDay() } = {}) {
   const anno = Number(today.slice(0, 4));
   const netti = new Map();
   for (const doc of _invoiced(docs)) {
@@ -295,7 +315,7 @@ export const FASCE = [
   { key: "oltre", da: 91, a: null },
 ];
 
-export function aging(owedRows, { today = new Date().toISOString().slice(0, 10) } = {}) {
+export function aging(owedRows, { today = currentDay() } = {}) {
   const per = new Map(FASCE.map((fascia) => [fascia.key, { key: fascia.key, importo: 0n, quante: 0 }]));
   for (const row of owedRows || []) {
     // Una rata senza scadenza è dovuta a vista: scade il giorno stesso, come nello scadenzario.
@@ -319,7 +339,7 @@ export function aging(owedRows, { today = new Date().toISOString().slice(0, 10) 
  * L'incasso conta nel mese in cui è arrivato, non in quello della fattura: è denaro, e il denaro
  * ha la data del giorno in cui si è mosso.
  */
-export function cashByMonth(docs, payments, { today = new Date().toISOString().slice(0, 10) } = {}) {
+export function cashByMonth(docs, payments, { today = currentDay() } = {}) {
   const fatturato = new Map();
   for (const doc of _invoiced(docs)) {
     const chiave = String(doc.data).slice(0, 7);
@@ -416,7 +436,7 @@ export function payers(docs, payments, { limit = ROWS, minimo = 2 } = {}) {
  * I documenti senza categoria stanno in fondo, in una fetta loro: nasconderli farebbe sembrare
  * completa una ripartizione che copre metà del fatturato.
  */
-export function mix(docs, { today = new Date().toISOString().slice(0, 10) } = {}) {
+export function mix(docs, { today = currentDay() } = {}) {
   const anno = today.slice(0, 4);
   const per = new Map();
   for (const doc of _invoiced(docs)) {
@@ -460,7 +480,7 @@ export function topParties(owedRows, { limit = ROWS } = {}) {
  * della fase più indietro. Senza ritardi, la prossima scadenza. Ordinati: prima chi è in ritardo,
  * di più; poi per prossima scadenza; poi chi non ne ha.
  */
-export function projectRows({ today = new Date().toISOString().slice(0, 10), limit = ROWS } = {}) {
+export function projectRows({ today = currentDay(), limit = ROWS } = {}) {
   // The projects on the shelf, and not the archived ones: an archived project is finished by the
   // person's own say, and listing it among the late ones would contradict them.
   const rows = plan.plainProjects().map((record) => {
@@ -494,7 +514,7 @@ export function projectRows({ today = new Date().toISOString().slice(0, 10), lim
  * I preventivi che aspettano una risposta: emessi o inviati, non ancora accettati né rifiutati.
  * Prima quelli che scadono prima. `giorni` è quanto manca alla scadenza, negativo se passata.
  */
-export function openQuotes(docs, { today = new Date().toISOString().slice(0, 10), limit = ROWS } = {}) {
+export function openQuotes(docs, { today = currentDay(), limit = ROWS } = {}) {
   return docs
     .filter((doc) => doc.tipo === "preventivo" && ["emesso", "inviato"].includes(doc.stato))
     .map((doc) => ({
@@ -518,7 +538,7 @@ export const MEETING_DAYS = 7;
  * screen is the one opened every morning, so this is where a meeting tomorrow, or one from last week
  * with nothing written, is said. The groups are `agenda`'s — the same rule as the CRM screen.
  */
-export function meetingRows(activities, { today = new Date().toISOString().slice(0, 10), days = MEETING_DAYS, limit = ROWS } = {}) {
+export function meetingRows(activities, { today = currentDay(), days = MEETING_DAYS, limit = ROWS } = {}) {
   const gruppi = agenda(activities || [], { oggi: today });
   const limite = new Date(Date.UTC(...today.split("-").map((x, i) => Number(x) - (i === 1 ? 1 : 0))) + days * 86400000)
     .toISOString().slice(0, 10);
@@ -583,8 +603,8 @@ export function drawMonths(container, mesi, { back = "prima", front = "valore", 
     // confronto fra anni né una differenza: fatturato e incassato si leggono affiancati, e
     // «incassato − fatturato» sarebbe una sottrazione che non significa niente.
     titolo.textContent = tooltip ? tooltip(m) : back === "prima"
-      ? `${lettere[m.mese - 1]} ${m.anno}: ${money(m.valore)} · ${m.anno - 1}: ${money(m.prima)}`
-      : `${lettere[m.mese - 1]} ${m.anno}: ${money(m[front])} − ${money(dietroDi(m))} = ${money(m[front] - dietroDi(m))}`
+      ? `${_monthName(m.mese)} ${m.anno}: ${money(m.valore)} · ${m.anno - 1}: ${money(m.prima)}`
+      : `${_monthName(m.mese)} ${m.anno}: ${money(m[front])} − ${money(dietroDi(m))} = ${money(m[front] - dietroDi(m))}`
         + (stack && m[stack] > 0n ? ` (${t("homeExpectedShort")} ${money(m[stack])})` : "");
     davanti.append(titolo);
     svg.append(dietro, davanti);
@@ -686,7 +706,7 @@ export function drawBuckets(container, rows) {
  * Disegna tutto. `docs` sono i documenti dal più recente, `owed` è `summary(db)`, `byParty` i
  * nomi dei clienti per id.
  */
-export function render({ docs, owed, byParty, payments = [], costs = [], outlays = [], recurring = [], activities = [], company = null, today = new Date().toISOString().slice(0, 10) }) {
+export function render({ docs, owed, byParty, payments = [], costs = [], outlays = [], recurring = [], activities = [], company = null, today = currentDay() }) {
   const attesi = expected(recurring, costs, { today, company });
   const n = figures(docs, owed, { today, costs, outlays, attesi });
 
@@ -705,7 +725,7 @@ export function render({ docs, owed, byParty, payments = [], costs = [], outlays
   el("figOverdue").previousElementSibling.textContent = n.scaduteQuante
     ? tf("homeOverdueCount", { quante: n.scaduteQuante })
     : t("homeOverdue");
-  el("figOverdueSub").textContent = n.scaduteQuante ? tf("homeOverdueSub", { giorni: n.ritardoMassimo }) : t("homeOverdueNone");
+  el("figOverdueSub").textContent = n.scaduteQuante ? tf("homeOverdueSub", { giorni: days(n.ritardoMassimo) }) : t("homeOverdueNone");
 
   el("figToBill").textContent = money(n.daFatturare);
   el("figToBillSub").textContent = n.fasiDaFatturare === 0 ? t("homeToBillNone")
@@ -831,12 +851,11 @@ export function render({ docs, owed, byParty, payments = [], costs = [], outlays
   const haIncassi = payments.some((one) => cassa.some((m) => String(one.data || "").slice(0, 7) === `${m.anno}-${String(m.mese).padStart(2, "0")}`));
   el("wCash").hidden = !haIncassi;
   if (haIncassi) {
-    const lettere = t("monthLetters").split(" ");
     drawMonths(el("chartCash"), cassa, {
       back: "fatturato", front: "incassato", backClass: "before", frontClass: "now",
       title: "homeCash", empty: "homeMonthsEmpty",
       tooltip: (m) => tf("homeCashTip", {
-        mese: lettere[m.mese - 1], anno: m.anno,
+        mese: _monthName(m.mese), anno: m.anno,
         fatturato: money(m.fatturato), incassato: money(m.incassato),
       }),
     });
@@ -884,7 +903,7 @@ export function render({ docs, owed, byParty, payments = [], costs = [], outlays
   projBody.textContent = "";
   for (const row of lavori) {
     const quando = row.ritardo
-      ? tf("homeProjectLate", { giorni: row.ritardo })
+      ? tf("homeProjectLate", { giorni: days(row.ritardo) })
       : row.prossima ? tf("homeProjectNext", { data: shownDate(row.prossima) }) : t("homeProjectNoDate");
     projBody.append(_row([
       [row.name || t("projectsUntitled"), null],
@@ -923,7 +942,8 @@ export function render({ docs, owed, byParty, payments = [], costs = [], outlays
   for (const { doc, giorni } of attesa) {
     const scadenza = giorni === null ? "—"
       : giorni < 0 ? t("homeQuoteExpired")
-        : giorni <= QUOTE_WARNING_DAYS ? tf("homeQuoteExpiring", { giorni })
+        : giorni === 0 ? t("homeQuoteToday")
+          : giorni <= QUOTE_WARNING_DAYS ? tf("homeQuoteExpiring", { giorni: days(giorni) })
           : tf("homeQuoteUntil", { data: shownDate(doc.validoFino) });
     const totale = signedTotal(doc);
     quoteBody.append(_row([
@@ -955,10 +975,12 @@ export function render({ docs, owed, byParty, payments = [], costs = [], outlays
   for (const record of docs.slice(0, ROWS)) {
     const totale = signedTotal(record);
     recentBody.append(_row([
-      [`${t(kind(record).label.replace(/^type/, "short"))} ${shownNumber(record) || ""}`.trim(), "nowrap"],
-      [byParty.get(record.partyId) || "—", "nowrap"],
+      // The document and the name wrap: four unbreakable cells were wider than the box, and the
+      // amount — the one number the row is for — was cut at the right edge.
+      [`${t(kind(record).label.replace(/^type/, "short"))} ${shownNumber(record) || ""}`.trim(), ""],
+      [byParty.get(record.partyId) || "—", ""],
       [statoLabel(record.stato), "nowrap"],
-      [totale === null ? "—" : money(totale), "right"],
+      [totale === null ? "—" : money(totale), "right nowrap"],
     ], `#/documento/${record.id}`));
   }
 }

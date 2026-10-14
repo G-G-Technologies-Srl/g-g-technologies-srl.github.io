@@ -35,6 +35,7 @@ import { kind } from "./kinds.js";
 import { paymentsOf } from "./schedule.js";
 import { totals } from "./totals.js";
 import { from, add, sub, sum, ZERO, cmp, toString } from "./decimal.js";
+import { currentDay } from "./day.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -479,7 +480,7 @@ export async function figures(db, projectId) {
     .filter((doc) => doc.tipo === "preventivo" && doc.stato !== "rifiutato")
     .map((doc) => signedTotal(doc) || ZERO));
   const fatturato = sum(suoi
-    .filter((doc) => kind(doc).fiscale && doc.totali)
+    .filter((doc) => kind(doc).ricavo && doc.totali)
     .map((doc) => signedTotal(doc) || ZERO));
 
   let incassato = ZERO;
@@ -553,7 +554,7 @@ export async function invoiceDone(db, projectId, { company = null, tipo = "TD01"
 
   const doc = await saveDoc(db, draft({
     tipo,
-    data: new Date().toISOString().slice(0, 10),
+    data: currentDay(),
     partyId: record.partyId || "",
     causale: record.name || "",
     righe,

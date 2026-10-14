@@ -15,6 +15,8 @@
 import assert from "node:assert/strict";
 import { build } from "../run/fatturapa.js";
 import { read } from "../run/reading.js";
+import { totals } from "../run/totals.js";
+import { from } from "../run/decimal.js";
 
 let passed = 0;
 function prova(nome, fn) {
@@ -200,8 +202,48 @@ prova("una maggiorazione non diventa uno sconto", () => {
   // Lo stesso elemento porta sconto e maggiorazione, distinti da `Tipo`. Leggere `MG` come `SC`
   // trasformerebbe un aumento in una riduzione della stessa misura: il massimo errore possibile
   // dalla minima confusione possibile.
+  // The surcharge is added to the price: 100,00 + 10% is a line of 110,00, kept as a discount of
+  // minus ten (the one discount a line of ours holds).
   const riga = `<ScontoMaggiorazione><Tipo>MG</Tipo><Percentuale>10.00</Percentuale></ScontoMaggiorazione>`;
-  assert.equal(read(fattura({ riga })).documenti[0].doc.righe[0].sconto, undefined);
+  const linea = read(fattura({ riga })).documenti[0].doc.righe[0];
+  assert.deepEqual(linea.sconto, { importo: "-10.00" });
+  assert.equal(totals({ righe: [linea] }).imponibile, from("110"));
+});
+
+prova("gli sconti in catena si applicano tutti, nell'ordine del file", () => {
+  // 100 − 10% = 90, − 5% = 85,50: the second element used to be dropped.
+  const riga = `<ScontoMaggiorazione><Tipo>SC</Tipo><Percentuale>10.00</Percentuale></ScontoMaggiorazione>` +
+               `<ScontoMaggiorazione><Tipo>SC</Tipo><Percentuale>5.00</Percentuale></ScontoMaggiorazione>`;
+  const linea = read(fattura({ riga })).documenti[0].doc.righe[0];
+  assert.equal(totals({ righe: [linea] }).imponibile, from("85.50"));
+});
+
+prova("con percentuale e importo vale l'importo, come dice il controllo 00423", () => {
+  const riga = `<ScontoMaggiorazione><Tipo>SC</Tipo><Percentuale>10.00</Percentuale><Importo>5.00</Importo></ScontoMaggiorazione>`;
+  assert.deepEqual(read(fattura({ riga })).documenti[0].doc.righe[0].sconto, { importo: "5.00" });
+});
+
+prova("il contributo della cassa previdenziale entra come riga, con la sua aliquota", () => {
+  // 100 + 4% cassa = 104 di imponibile, 22,88 di IVA: left out, the purchase came in at 100 and 22.
+  const cassa = `<DatiCassaPrevidenziale><TipoCassa>TC22</TipoCassa><AlCassa>4.00</AlCassa>` +
+    `<ImportoContributoCassa>4.00</ImportoContributoCassa><AliquotaIVA>22.00</AliquotaIVA></DatiCassaPrevidenziale>` +
+    `<ImportoTotaleDocumento>126.88</ImportoTotaleDocumento>`;
+  const xml = fattura().replace("<ImportoTotaleDocumento>122.00</ImportoTotaleDocumento>", cassa);
+  const { doc } = read(xml).documenti[0];
+  const conti = totals(doc);
+  assert.equal(conti.imponibile, from("104"));
+  assert.equal(conti.imposta, from("22.88"));
+});
+
+prova("il bollo dichiarato ma non addebitato non entra nel totale", () => {
+  // DatiBollo with a stated total of 122,00 on 100 + 22: the issuer kept the duty for itself.
+  const generali = "";
+  const xml = fattura({ generali }).replace("<ImportoTotaleDocumento>",
+    "<DatiBollo><BolloVirtuale>SI</BolloVirtuale><ImportoBollo>2.00</ImportoBollo></DatiBollo><ImportoTotaleDocumento>");
+  assert.equal(read(xml).documenti[0].doc.bollo, undefined);
+  // Charged on, the stated total carries it, and the document does too.
+  const addebitato = xml.replace("<ImportoTotaleDocumento>122.00", "<ImportoTotaleDocumento>124.00");
+  assert.ok(read(addebitato).documenti[0].doc.bollo);
 });
 
 prova("i DDT collegati tornano con i riferimenti di riga", () => {
@@ -212,9 +254,52 @@ prova("i DDT collegati tornano con i riferimenti di riga", () => {
 });
 
 prova("un ramo che non leggiamo viene dichiarato, non taciuto", () => {
-  const generali = `<DatiOrdineAcquisto><IdDocumento>ODA-9</IdDocumento></DatiOrdineAcquisto>`;
+  const generali = `<DatiContratto><IdDocumento>CTR-9</IdDocumento></DatiContratto>`;
   const { avvisi } = read(fattura({ generali })).documenti[0];
-  assert.deepEqual(avvisi, [{ chiave: "readOrder", valore: "1" }]);
+  assert.deepEqual(avvisi, [{ chiave: "readContract", valore: "1" }]);
+});
+
+prova("l'ordine si legge: il primo con CIG e CUP, gli altri dichiarati", () => {
+  const uno = `<DatiOrdineAcquisto><IdDocumento>ODA-9</IdDocumento><Data>2026-08-01</Data>`
+    + `<CodiceCUP>J11B22000000000</CodiceCUP><CodiceCIG>ZAB1234567</CodiceCIG></DatiOrdineAcquisto>`;
+  const { doc, avvisi } = read(fattura({ generali: uno })).documenti[0];
+  assert.deepEqual(doc.ordine, { numero: "ODA-9", data: "2026-08-01", cig: "ZAB1234567", cup: "J11B22000000000" });
+  assert.deepEqual(avvisi, []);
+  const due = uno + `<DatiOrdineAcquisto><IdDocumento>ODA-10</IdDocumento></DatiOrdineAcquisto>`;
+  assert.deepEqual(read(fattura({ generali: due })).documenti[0].avvisi, [{ chiave: "readOrder", valore: "1" }]);
+});
+
+prova("una fattura alla PA torna come è uscita: FPA12, scissione, cassa, ritenuta per riga", () => {
+  const pa = { ...PARTY, partitaIva: "", codiceFiscale: "80012345678", codiceDestinatario: "UFABCD", pa: true, splitPayment: true };
+  const uscita = build({
+    ...DOC, esigibilita: "S",
+    ordine: { numero: "ORD-7", data: "2026-08-01", cig: "ZAB1234567", cup: null },
+  }, { company: COMPANY, party: pa });
+  const { doc, cliente } = read(uscita.text).documenti[0];
+  assert.equal(doc.esigibilita, "S");
+  assert.equal(doc.ordine.cig, "ZAB1234567");
+  assert.equal(cliente.pa, true);
+  assert.equal(cliente.splitPayment, true);
+  assert.equal(cliente.codiceDestinatario, "UFABCD");
+  // What the customer owes is the taxable amount: the VAT goes to the Treasury.
+  const conti = totals(doc);
+  assert.equal(conti.totale.toString(), totals({ ...DOC, esigibilita: "S" }).totale.toString());
+
+  // A professional's invoice: the expense line (N1) is outside the withholding, the contribution in.
+  const professionista = build({
+    ...DOC,
+    righe: [DOC.righe[0], { descrizione: "Spese", quantita: "1", prezzoUnitario: "50.00", aliquota: "0", natura: "N1" }],
+    cassa: { tipo: "TC04", aliquota: "4", aliquotaIva: "22", ritenuta: true },
+    ritenuta: { tipo: "RT01", aliquota: "20", causale: "A" },
+  }, { company: COMPANY, party: PARTY });
+  const letto = read(professionista.text).documenti[0].doc;
+  assert.deepEqual(letto.righe.map((r) => r.soggettaRitenuta), [true, false, true]);
+  assert.equal(totals(letto).ritenuta.toString(),
+    totals({ ...DOC, righe: [DOC.righe[0], { descrizione: "Spese", quantita: "1", prezzoUnitario: "50.00", aliquota: "0", natura: "N1" }],
+      cassa: { tipo: "TC04", aliquota: "4", aliquotaIva: "22", ritenuta: true },
+      ritenuta: { tipo: "RT01", aliquota: "20", causale: "A" } }).ritenuta.toString());
+  // A private customer's file says nothing of a PA.
+  assert.equal(read(emesso.text).documenti[0].cliente.pa, undefined);
 });
 
 prova("un tipo che non gestiamo diventa fattura e lo dice", () => {

@@ -34,8 +34,9 @@ function test(name, fn) {
 // -----------------------------------------------------------------------------------------------------------------
 
 test("i cinque tipi sono quelli attesi, nell'ordine del lavoro", () => {
-  assert.deepEqual(TIPI, ["preventivo", "ddt", "TD01", "TD24", "TD02", "TD04", "TD05", "TD29"]);
-  assert.deepEqual(TIPI_FISCALI, ["TD01", "TD24", "TD02", "TD04", "TD05", "TD29"]);
+  assert.deepEqual(TIPI, ["preventivo", "ddt", "TD01", "TD24", "TD02", "TD04", "TD05", "TD29",
+    "TD16", "TD17", "TD18", "TD19"]);
+  assert.deepEqual(TIPI_FISCALI, ["TD01", "TD24", "TD02", "TD04", "TD05", "TD29", "TD16", "TD17", "TD18", "TD19"]);
 });
 
 test("ogni stato dichiarato da un tipo esiste in STATES", () => {
@@ -80,8 +81,10 @@ test("le fatture non portano una sigla, tutto il resto sì", () => {
   assert.equal(KINDS.TD01.serie, "");
   assert.equal(KINDS.TD24.serie, "");
   assert.equal(KINDS.TD04.serie, "NC");
-  // Due tipi con la stessa sigla renderebbero indistinguibili due numeri letti al telefono.
-  const sigle = TIPI.map((tipo) => KINDS[tipo].serie).filter(Boolean);
+  // Due sequenze con la stessa sigla renderebbero indistinguibili due numeri letti al telefono. Le
+  // quattro integrazioni ne hanno una sola, e un contatore solo: «INT 2026/0003» è uno.
+  const perSequenza = new Map(TIPI.filter((tipo) => KINDS[tipo].serie).map((tipo) => [KINDS[tipo].sequenza, KINDS[tipo].serie]));
+  const sigle = [...perSequenza.values()];
   assert.equal(new Set(sigle).size, sigle.length);
 });
 
@@ -140,6 +143,25 @@ test("le sezioni della maschera seguono il tipo", () => {
   // perché il bollo è dovuto su un documento fiscale e il preventivo non lo è.
   assert.equal(has({ tipo: "preventivo" }, "pagamento"), true);
   assert.equal(has({ tipo: "preventivo" }, "bollo"), false);
+  // The pension contribution and the order references belong to the invoices and their notes; a
+  // self-billed invoice is the supplier's document, and it carries neither.
+  assert.equal(has({ tipo: "TD01" }, "cassa"), true);
+  assert.equal(has({ tipo: "TD04" }, "ordine"), true);
+  assert.equal(has({ tipo: "TD29" }, "cassa"), false);
+  assert.equal(has({ tipo: "preventivo" }, "ordine"), false);
+});
+
+test("le integrazioni e l'autofattura sono fiscali ma non ricavi", () => {
+  for (const tipo of ["TD16", "TD17", "TD18", "TD19", "TD29"]) {
+    assert.equal(KINDS[tipo].fiscale, true, tipo);
+    assert.equal(KINDS[tipo].ricavo, false, `${tipo} non è fatturato`);
+    assert.equal(KINDS[tipo].autofattura, true, `${tipo}: il cedente è il fornitore`);
+    assert.equal(KINDS[tipo].deve, false, `${tipo} non entra nello scadenzario`);
+  }
+  for (const tipo of ["TD01", "TD24", "TD02", "TD04", "TD05"]) assert.equal(KINDS[tipo].ricavo, true, tipo);
+  // One sequence and one series for the four integrations.
+  assert.deepEqual(new Set(["TD16", "TD17", "TD18", "TD19"].map((t) => KINDS[t].sequenza)), new Set(["integrazione"]));
+  assert.equal(KINDS.TD16.serie, "INT");
 });
 
 test("fiscale distingue chi produce un file da chi resta qui", () => {

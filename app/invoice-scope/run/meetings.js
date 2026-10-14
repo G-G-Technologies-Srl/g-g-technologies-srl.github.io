@@ -29,6 +29,7 @@ import {
 } from "./crm.js";
 import { SIGN } from "./alarms.js";
 import * as ics from "biz/ics.js";
+import { currentDay } from "./day.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  s t a t e
@@ -63,7 +64,7 @@ function el(id) {
 }
 
 function _today() {
-  return new Date().toISOString().slice(0, 10);
+  return currentDay();
 }
 
 function _open(dialog) {

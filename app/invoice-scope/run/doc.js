@@ -20,9 +20,9 @@ import { get } from "gg/store.js";
 
 import { t, tf } from "./i18n.js";
 import { ask, tell } from "./ask.js";
-import { toString, from } from "./decimal.js";
-import { totals } from "./totals.js";
-import { money, amount, rate as shownRate, date } from "./format.js";
+import { toString, from, cmp, ZERO } from "./decimal.js";
+import { totals, chiaveConTm, soggettaRitenuta } from "./totals.js";
+import { money, amount, rate as shownRate, date, days } from "./format.js";
 import { addressLines, deliveryLine } from "./address.js";
 import { quote as instalments, ledger } from "./schedule.js";
 import { parseAmount, parseOptional } from "./parse.js";
@@ -34,11 +34,11 @@ import {
   setType, setCategory, documents, invoicedBy,
 } from "./model.js";
 import { build, fileName, MAX_BYTE } from "./fatturapa.js";
-import { isCustomer, parties, items, party as getParty, openNewParty } from "./parties.js";
+import { isCustomer, isSupplier, parties, items, party as getParty, openNewParty } from "./parties.js";
 import { TIPI, KINDS, kind, has, numero as shownNumber, convertibile } from "./kinds.js";
 import {
   profileFor, ambitoDi, ambitoDoc, applicaAmbito, rimborsabile, AMBITI_MERCE, TIPI_CESSIONE,
-  MERCE_CON_DDT,
+  MERCE_CON_DDT, CASSE,
 } from "./fatturapa.js";
 import { stato as termState } from "./terms.js";
 import { control as statoControl } from "./states.js";
@@ -46,6 +46,8 @@ import { openSheet, render as renderPayments } from "./payments.js";
 import { bankFields } from "./banks.js";
 import { render as renderSheet } from "./print.js";
 import * as progetti from "./projects.js";
+import { currentDay } from "./day.js";
+import { releasePurchase } from "./costs.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -58,7 +60,8 @@ const RATES = ["22", "10", "5", "4", "0"];
 const NATURE = ["", ...ALL_NATURE];
 
 /** The short column headings, reused as the labels of a line drawn as a card on a phone. */
-const SHORT_HEAD = { quantita: "hQuantita", unitaMisura: "hUnita", prezzoUnitario: "hPrezzo", aliquota: "hIva", tm: "hTm" };
+const SHORT_HEAD = { quantita: "hQuantita", unitaMisura: "hUnita", prezzoUnitario: "hPrezzo", aliquota: "hIva", tm: "hTm",
+  soggettaRitenuta: "hRit" };
 
 /** Thirty days: the validity a quote gets when nobody says otherwise, and the brand book's default. */
 const GIORNI_VALIDITA = 30;
@@ -75,6 +78,8 @@ const SECTIONS = [
   ["docTrasportoSection", "trasporto"],
   ["docScontoSection", "sconto"],
   ["docRitenutaSection", "ritenuta"],
+  ["docCassaSection", "cassa"],
+  ["docOrdineSection", "ordine"],
   ["docPagamentoSection", "pagamento"],
 ];
 
@@ -97,6 +102,12 @@ const ISSUE_ASK = {
   ddt: "docIssueAskDdt",
   // A credit note asked «si storna con una nota di credito» about itself.
   TD04: "docIssueAskTD04",
+  // An autofattura or an integration is put right by another one, never by a credit note.
+  TD29: "docIssueAskAutofattura",
+  TD16: "docIssueAskIntegrazione",
+  TD17: "docIssueAskIntegrazione",
+  TD18: "docIssueAskIntegrazione",
+  TD19: "docIssueAskIntegrazione",
 };
 
 
@@ -147,6 +158,19 @@ function _usualIban() {
 async function _partyChanged() {
   party = current.partyId ? await getParty(database, current.partyId) : null;
   _drawParty();
+  // The channel depends on the customer — a San Marino company invoicing in Italy or inside San
+  // Marino — and with it the TM column, the goods type and the summary: redrawn with the customer.
+  // A public administration under split payment: the exigibility is proposed, not imposed — a
+  // fee subject to withholding is outside the rule, and the validator says so if both are set.
+  if (editable(current) && has(current, "ordine") && party && party.splitPayment && !current.esigibilita) {
+    current.esigibilita = "S";
+    el("docEsigibilita").value = "S";
+    _touch();
+  }
+  if (editable(current)) {
+    _drawLines();
+    _drawSummary();
+  }
   if (!editable(current) || !has(current, "pagamento")) return;
   const iban = _usualIban();
   if (!iban) return;
@@ -384,6 +408,37 @@ function _drawVariazioni() {
   spunta.disabled = !editable(current);
 }
 
+/**
+ * The invoice a note amends, as two fields on a draft note.
+ *
+ * Only the first reference is shown: that is the one a note made in the app carries, and the case
+ * of one note amending several invoices is the imported one, which is never a draft. A note for
+ * contractual variations names no invoice, so the fields go with the tick.
+ */
+function _drawLinked() {
+  // The notes name the invoice they correct; an integration names the supplier's invoice it
+  // integrates — the same two fields, the same DatiFattureCollegate in the file.
+  const nota = current.tipo === "TD04" || current.tipo === "TD05" || Boolean(kind(current).integrazione);
+  const show = nota && editable(current) && !current.variazioniContrattuali;
+  el("docLinkedNumeroField").hidden = !show;
+  el("docLinkedDataField").hidden = !show;
+  const ref = (current.fattureCollegate || [])[0] || {};
+  el("docLinkedNumero").value = ref.numero || "";
+  el("docLinkedData").value = ref.data || "";
+  el("docLinkedNote").hidden = show || !ref.numero;
+}
+
+/** The two fields read back into the reference. */
+function _readLinked() {
+  const ref = (current.fattureCollegate || [])[0] || {};
+  const numero = el("docLinkedNumero").value.trim();
+  const data = el("docLinkedData").value;
+  // A number typed by hand names no document of the app: the id of the reversed invoice stays only
+  // while the number is still the one «Storna» wrote.
+  const id = numero === ref.numero ? ref.id : undefined;
+  current.fattureCollegate = numero || data ? [{ ...(id ? { id } : {}), numero, data }] : undefined;
+}
+
 function _drawCessione() {
   const box = el("docTipoCessioneBox");
   const profile = profileFor(company, party);
@@ -405,8 +460,13 @@ function _drawCessione() {
   menu.disabled = !editable(current);
 }
 
+/** Whether a rate is zero however it is written: `0`, `0.0` and `0.00` are one rate. */
+function _isZeroRate(value) {
+  return value !== undefined && value !== null && value !== "" && Number(value) === 0;
+}
+
 function _applyDefaults(line) {
-  if (String(line.aliquota) !== "0") return line;
+  if (!_isZeroRate(line.aliquota)) return line;
   // La natura del cliente prima di quella dell'azienda: un cliente estero a zero ha la sua
   // ragione — N3.2 intracomunitaria, N3.3 San Marino — e non quella di chi emette.
   if (!line.natura && party && party.naturaPredefinita) line.natura = party.naturaPredefinita;
@@ -429,7 +489,7 @@ function _applyDefaults(line) {
  * cell next to the cursor was the one thing left stale.
  */
 function _cell(line, field, {
-  width = "", mode = "text", options = null, list = null, onEdit = null,
+  width = "", mode = "text", options = null, list = null, onEdit = null, checked = null,
 } = {}) {
   const td = document.createElement("td");
   let input;
@@ -449,7 +509,9 @@ function _cell(line, field, {
     input.inputMode = mode;
     if (list) input.setAttribute("list", list);
   }
-  if (mode === "check") input.checked = Boolean(line[field]);
+  // `checked` is the value a tick shows when the line has none of its own: then unticking stores
+  // `false`, which is a decision, instead of `undefined`, which is the default again.
+  if (mode === "check") input.checked = checked === null ? Boolean(line[field]) : Boolean(checked);
   else input.value = line[field] ?? "";
   if (options && input.value !== String(line[field] ?? "")) {
     // A stored `0.00` is the rate `0` the list offers: written differently, the same number. The
@@ -465,8 +527,18 @@ function _cell(line, field, {
   input.addEventListener(mode === "check" ? "change" : "input", () => {
     // A number is read as a person writes it — `1.250,50` as much as `1250.5` — and stored in the
     // one form the arithmetic accepts. The field keeps what was typed; only the line changes.
-    if (mode === "check") line[field] = input.checked || undefined;
-    else line[field] = mode === "decimal" ? (parseAmount(input.value) ?? "") : input.value;
+    if (mode === "check") line[field] = checked === null ? (input.checked || undefined) : input.checked;
+    else if (mode === "decimal") {
+      // **A number that cannot be read leaves the line as it was.** A cleared quantity, or a price
+      // with nine decimals, used to be stored as it came: the totals then threw on every redraw,
+      // autosave stopped, and a document saved that way could not be opened again. The field says
+      // it is wrong and keeps what was typed; the line keeps the last number that made sense.
+      const parsed = parseAmount(input.value);
+      const leggibile = parsed !== null && /^-?\d+(\.\d{1,8})?$/.test(parsed);
+      input.setAttribute("aria-invalid", leggibile ? "false" : "true");
+      if (!leggibile) return;
+      line[field] = parsed;
+    } else line[field] = input.value;
     if (onEdit) onEdit();
     _drawSummary();
     _touch();
@@ -544,6 +616,8 @@ function _drawLines() {
   el("docLinesTable").classList.toggle("no-tm", !conTm || ambitoDoc(current) !== "beni");
   el("docLinesTable").classList.toggle("no-rimb",
     !profileFor(company, party).cessioni || !rimborsabile(current));
+  // The «R» column only with a withholding: without one there is nothing for it to say.
+  el("docLinesTable").classList.toggle("no-rit", !current.ritenuta);
   _drawAmbito();
   _toggleNatura();
   // The two notes under the table only when they say something: a hint about `Invio` on the last
@@ -569,6 +643,10 @@ function _drawLines() {
         _textCell(shownRate(line.aliquota), "line-num", t("hIva")),
         _textCell(line.natura, "line-code cell-natura", t("f_natura")),
         _textCell(line.tm, "line-code col-tm", t("hTm")),
+        // The two narrow columns too, or the cells under «Totale» moved one place left whenever the
+        // header showed them.
+        _textCell(line.nonRimborsabile ? "✓" : "", "line-code col-nonrimb", t("hNonRimb")),
+        _textCell(current.ritenuta && soggettaRitenuta(line) ? "✓" : "", "line-code col-rit", t("hRit")),
         _textCell(_money(totals({ righe: [line] }).imponibile), "line-num cell-totale", t("docTotale")),
         document.createElement("td"),
       );
@@ -591,7 +669,7 @@ function _drawLines() {
       ["aliquota", { width: "tiny", options: RATES, onEdit: () => {
         // Dropping the rate to zero fills in the nature and the TM code from the company's defaults,
         // and redraws the row so the two menus show what was filled.
-        if (String(line.aliquota) === "0" && (!line.natura || !line.tm)) {
+        if (_isZeroRate(line.aliquota) && (!line.natura || !line.tm)) {
           _applyDefaults(line);
           _drawLines();
         }
@@ -614,6 +692,9 @@ function _drawLines() {
       // La riga che dal rimborso monofase resta fuori. Compare con il tipo cessione, e per la stessa
       // ragione: dove un rimborso non c'è, questo segno non lo legge nessuno.
       ["nonRimborsabile", { mode: "check", cell: "col-nonrimb" }],
+      // The line the withholding is taken on. Visible only with the withholding applied; ticked by
+      // default on everything but the excluded expenses (N1), and the person decides otherwise.
+      ["soggettaRitenuta", { mode: "check", cell: "col-rit", checked: soggettaRitenuta(line) }],
     ];
     for (const [field, options] of cells) {
       const also = options.onEdit;
@@ -654,8 +735,17 @@ function _drawLines() {
 }
 
 /** The summary, and the totals under it. Recomputed on every keystroke, which is the point. */
+/**
+ * The totals as the file will write them: on a channel that keys the summary on the TM code too, the
+ * screen and the printed sheet group the same way, or they would show summaries the file does not
+ * have (`chiaveConTm` says which channels).
+ */
+function _computed() {
+  return totals(current, { tm: chiaveConTm(profileFor(company, party)) });
+}
+
 function _drawSummary() {
-  const computed = totals(current);
+  const computed = _computed();
 
   const body = el("docSummaryBody");
   body.textContent = "";
@@ -664,7 +754,7 @@ function _drawSummary() {
   for (const r of computed.riepiloghi) {
     const tr = document.createElement("tr");
     for (const [value, classe] of [
-      [`${r.aliquota}%`, "nowrap"],
+      [shownRate(r.aliquota), "nowrap"],
       [r.natura || "—", "nowrap"],
       [_money(r.imponibile), "right"],
       [_money(r.imposta), "right"],
@@ -679,6 +769,16 @@ function _drawSummary() {
 
   el("sumImponibile").textContent = _money(computed.imponibile);
   el("sumImposta").textContent = _money(computed.imposta);
+  el("sumBolloRow").hidden = !cmp(computed.bollo, ZERO);
+  el("sumBollo").textContent = _money(computed.bollo);
+  el("sumRitenutaRow").hidden = !cmp(computed.ritenuta, ZERO);
+  el("sumRitenuta").textContent = `-${_money(computed.ritenuta)}`;
+  // The contribution is already inside the taxable amount above; shown on its own line because it
+  // is the figure a professional checks. The split VAT is the part the PA pays to the Treasury.
+  el("sumCassaRow").hidden = !computed.cassa;
+  el("sumCassa").textContent = computed.cassa ? _money(computed.cassa.importo) : "—";
+  el("sumScissaRow").hidden = !cmp(computed.impostaScissa, ZERO);
+  el("sumScissa").textContent = `-${_money(computed.impostaScissa)}`;
   el("sumTotale").textContent = _money(computed.totale);
 
   // The stamp duty is proposed, never imposed: the threshold is a rule, charging it on to the
@@ -703,7 +803,9 @@ function _drawSummary() {
 function _drawParty() {
   const box = el("docPartyDetail");
   box.textContent = "";
-  const righe = party ? [...addressLines(party), deliveryLine(party)].filter(Boolean) : [];
+  // An issued document shows the customer as it was issued to (`frozen`).
+  const chi = current && current.cliente ? current.cliente : party;
+  const righe = chi ? [...addressLines(chi), deliveryLine(chi)].filter(Boolean) : [];
   box.hidden = righe.length === 0;
   // `textContent` on every line: each of these strings is somebody's data.
   for (const riga of righe) {
@@ -820,6 +922,30 @@ function _readHeader() {
     }
     : null;
 
+  current.cassa = has(current, "cassa") && el("cassaApply").checked
+    ? {
+      tipo: el("cassaTipo").value,
+      aliquota: parseOptional(el("cassaRate").value) || "0",
+      aliquotaIva: parseOptional(el("cassaIva").value) || "0",
+      natura: el("cassaNatura").value || null,
+      ritenuta: el("cassaRit").checked,
+    }
+    : null;
+
+  if (has(current, "ordine")) {
+    const ordine = {
+      numero: el("ordNumero").value.trim() || null,
+      data: el("ordData").value || null,
+      cig: el("ordCig").value.replace(/\s/g, "").toUpperCase() || null,
+      cup: el("ordCup").value.replace(/\s/g, "").toUpperCase() || null,
+    };
+    current.ordine = Object.values(ordine).some(Boolean) ? ordine : null;
+    current.esigibilita = el("docEsigibilita").value || null;
+  } else {
+    current.ordine = null;
+    current.esigibilita = null;
+  }
+
   if (has(current, "pagamento")) {
     const rate = (current.pagamento || {}).rate || [];
     const iban = el("payIban").value.replace(/\s/g, "").toUpperCase() || null;
@@ -868,7 +994,8 @@ function _download(name, text, type) {
   anchor.href = url;
   anchor.download = name;
   anchor.click();
-  setTimeout(() => URL.revokeObjectURL(url), 0);
+  // A minute and not at once: Safari on iOS starts the download after the click returns.
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------
@@ -912,12 +1039,29 @@ async function _persist(doc) {
     const stored = await get(database, "docs", doc.id);
     if (stored && stored.stato !== "bozza") return;
     const saved = await save(database, doc);
-    if (current === doc) current = saved;
+    if (current === doc) {
+      current = saved;
+      _pinRoute(saved);
+    }
     if (onSaved) onSaved();
   } catch (ignored) {
     // A refused write is not worth a dialog in the middle of typing: the document is still in
     // memory, and the next explicit Save reports it properly.
   }
+}
+
+/**
+ * Put the saved draft's id in the address.
+ *
+ * A new document opens on `#/documento`, and it stayed there after its first save: a language
+ * switch, a reload or the back gesture ran the route again, found no id, and put an empty draft on
+ * the screen — the invoice was in the archive, but the person saw it gone. `replaceState` and not
+ * `location.hash`: the address changes, no navigation happens and no history entry is added.
+ */
+function _pinRoute(doc) {
+  if (typeof history === "undefined" || !doc || !doc.id) return;
+  if (!/^#\/documento(\?|$)/.test(location.hash)) return;
+  history.replaceState(null, "", `#/documento/${doc.id}`);
 }
 
 /**
@@ -952,6 +1096,26 @@ export async function flush() {
   await _persist(doc);
 }
 
+/** The fund and nature menus of the pension contribution, written once from the shared lists. */
+function _fillCassaMenus() {
+  const tipi = el("cassaTipo");
+  tipi.textContent = "";
+  for (const [codice, nome] of CASSE) {
+    const option = document.createElement("option");
+    option.value = codice;
+    option.textContent = `${codice} — ${nome}`;
+    tipi.append(option);
+  }
+  const nature = el("cassaNatura");
+  nature.textContent = "";
+  for (const codice of NATURE) {
+    const option = document.createElement("option");
+    option.value = codice;
+    option.textContent = codice || "—";
+    nature.append(option);
+  }
+}
+
 /**
  * The sections that belong to this kind, and the ones that do not.
  *
@@ -962,6 +1126,10 @@ export async function flush() {
 function _drawSections() {
   for (const [id, sezione] of SECTIONS) el(id).hidden = !has(current, sezione);
   el("docValiditaField").hidden = !has(current, "validita");
+  // A delivery note carries goods, not VAT: no summary and no totals under its lines. Here and not
+  // only on opening, so a new delivery note turned into an invoice gets its totals back.
+  el("docSummarySection").hidden = current.tipo === "ddt";
+  _drawLinked();
   // The stamp duty on a closed document: a line if it was charged, nothing if it was not. A greyed
   // checkbox reading «charge the stamp duty» on an issued invoice is an instruction nobody can follow.
   const canEdit = editable(current);
@@ -979,7 +1147,12 @@ function _drawSections() {
 async function _drawParties(db, scegli = null) {
   // Un fornitore puro non compare: il documento è emesso, e a lui non si emette niente. Chi era
   // già scelto resta, anche se nel frattempo è diventato fornitore: il documento non cambia da sé.
-  const people = (await parties(db)).filter((p) => isCustomer(p) || p.id === current.partyId);
+  // **On an autofattura or an integration the other party is the supplier**, so the menu offers
+  // suppliers: a pure supplier was not even selectable for a TD17 typed by hand.
+  const fornitore = Boolean(kind(current).autofattura);
+  const people = (await parties(db)).filter((p) => (fornitore ? isSupplier(p) : isCustomer(p)) || p.id === current.partyId);
+  const etichetta = el("docPartyLabel");
+  if (etichetta) etichetta.textContent = t(fornitore ? "docPartySupplier" : "docParty");
   const select = el("docPartySelect");
   select.textContent = "";
   const none = document.createElement("option");
@@ -1005,6 +1178,20 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
   // The type of a new document comes from the route, so that «Nuovo preventivo» opens a quote and
   // not an invoice somebody then has to change.
   if (!id || !current) current = draft(tipo && KINDS[tipo] ? { tipo } : {});
+  // A draft saved by an older version with a number left blank or unreadable: it opened on an
+  // exception and could not be fixed from the screen. The two numbers every line needs fall back to
+  // what a new line starts with, and the person sees the line and corrects it.
+  if (editable(current)) {
+    for (const line of current.righe || []) {
+      for (const [field, fallback] of [["quantita", "1"], ["prezzoUnitario", "0.00"]]) {
+        try {
+          from(line[field] ?? fallback);
+        } catch (ignored) {
+          line[field] = fallback;
+        }
+      }
+    }
+  }
 
   // Read once, at the top: the company decides the bank accounts on offer, the default one, and
   // what goes in the sender block of the printed sheet.
@@ -1042,7 +1229,11 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
   // where the list of kinds lives, and the one nobody would remember to extend.
   const types = el("docType");
   types.textContent = "";
-  for (const value of TIPI) {
+  // The kinds this company's channel accepts: an Italian company sees the reverse-charge
+  // integrations, a San Marino one does not — and the document's own kind always, even if older.
+  const canaleAzienda = profileFor(company);
+  for (const value of TIPI.filter((tipo) => !KINDS[tipo].fiscale || canaleAzienda.tipi.includes(tipo)
+    || (canaleAzienda.rimappa || {})[tipo] || tipo === current.tipo)) {
     const option = document.createElement("option");
     option.value = value;
     option.textContent = t(KINDS[value].label);
@@ -1051,6 +1242,10 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
   for (const option of el("payCondizioni").options) option.textContent = t(`pay${option.value}`);
   for (const option of el("payModalita").options) option.textContent = t(`pay${option.value}`);
   for (const option of el("ritType").options) option.textContent = t(`rit${option.value}`);
+  _fillCassaMenus();
+  for (const option of el("docEsigibilita").options) {
+    option.textContent = t(option.value ? `esig${option.value}` : "esigDefault");
+  }
   for (const option of el("trPorto").options) {
     option.textContent = t(`porto${option.value[0].toUpperCase()}${option.value.slice(1)}`);
   }
@@ -1076,6 +1271,42 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
   el("ritType").value = ritenuta?.tipo || "RT01";
   el("ritRate").value = ritenuta?.aliquota || "20";
   el("ritCausale").value = ritenuta?.causale || "A";
+
+  // A new invoice takes the company's usual fund: a professional who belongs to one adds it to
+  // every fee, and ticking it each time is the step that gets forgotten. «New» is a draft that never
+  // had the question asked (`undefined`; the screen saves `null` for «no»): that includes the invoice
+  // a quote or a delivery note has just become, which neither of them could carry.
+  const fresco = editable(current) && !current.numero;
+  if (fresco && has(current, "cassa") && current.cassa === undefined && company.cassa && company.cassa.tipo) {
+    current.cassa = {
+      tipo: company.cassa.tipo,
+      aliquota: company.cassa.aliquota || "4",
+      aliquotaIva: company.regimeFiscale === "RF19" ? "0" : (company.aliquotaPredefinita || "22"),
+      natura: company.regimeFiscale === "RF19" ? "N2.2" : null,
+      ritenuta: Boolean(company.cassa.ritenuta),
+    };
+  }
+  // Split payment proposed for a customer under it, on the same terms: a converted invoice never
+  // went through «choose the customer», which is where the proposal used to happen.
+  if (fresco && has(current, "ordine") && current.esigibilita === undefined && current.partyId) {
+    const chi = await getParty(db, current.partyId);
+    if (chi && chi.splitPayment) current.esigibilita = "S";
+  }
+  const cassa = current.cassa;
+  el("cassaApply").checked = Boolean(cassa);
+  el("cassaFields").hidden = !cassa;
+  el("cassaTipo").value = cassa?.tipo || (company.cassa && company.cassa.tipo) || "TC22";
+  el("cassaRate").value = cassa?.aliquota || "4";
+  el("cassaIva").value = cassa?.aliquotaIva ?? "22";
+  el("cassaNatura").value = cassa?.natura || "";
+  el("cassaRit").checked = Boolean(cassa?.ritenuta);
+
+  const ordine = current.ordine || {};
+  el("ordNumero").value = ordine.numero || "";
+  el("ordData").value = ordine.data || "";
+  el("ordCig").value = ordine.cig || "";
+  el("ordCup").value = ordine.cup || "";
+  el("docEsigibilita").value = current.esigibilita || "";
 
   // **Il conto predefinito entra da sé in un documento nuovo.** L'IBAN è il campo dove un carattere
   // sbagliato manda i soldi a uno sconosciuto, quindi si scrive una volta nell'anagrafica e da lì
@@ -1132,13 +1363,13 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
     "docType", "docDate", "docPartySelect", "docCausale", "docBollo", "docDiscount",
     "docValidoFino", "trCausale", "trAspetto", "trColli", "trPorto", "trVettore",
     "ritApply", "ritType", "ritRate", "ritCausale",
+    "cassaApply", "cassaTipo", "cassaRate", "cassaIva", "cassaNatura", "cassaRit",
+    "ordNumero", "ordData", "ordCig", "ordCup", "docEsigibilita",
     "payCondizioni", "payModalita", "payIban", "payConto",
   ]) {
     el(id_).disabled = !canEdit;
   }
   el("payAddDue").hidden = !canEdit;
-  // A delivery note carries goods, not VAT: no summary and no totals under its lines.
-  el("docSummarySection").hidden = current.tipo === "ddt";
   // On a closed document, an empty section is one line of text and not a form of greyed fields.
   // The payment terms of a closed document, in one line.
   el("docPagamentoFields").hidden = !canEdit;
@@ -1159,6 +1390,13 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
   el("ritApplyField").hidden = senzaRitenuta;
   el("docRitenutaNote").hidden = senzaRitenuta;
   el("docRitenutaNone").hidden = !senzaRitenuta;
+  const senzaCassa = !canEdit && !current.cassa;
+  el("cassaApplyField").hidden = senzaCassa;
+  el("docCassaNote").hidden = senzaCassa;
+  el("docCassaNone").hidden = !senzaCassa;
+  // The order section of a closed document with nothing in it says nothing: it goes.
+  if (!canEdit && !current.ordine && !current.esigibilita) el("docOrdineSection").hidden = true;
+  el("docOrdineNote").hidden = !canEdit;
   el("docPartyNew").hidden = !canEdit;
   el("docIssue").hidden = !canEdit;
   el("docSave").hidden = !canEdit;
@@ -1190,7 +1428,9 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
   el("docXml").hidden = canEdit || !profile.fiscale || senzaFile || Boolean(current.ricostruito);
   el("docNoFile").hidden = canEdit || !senzaFile || storico;
   el("docStorico").hidden = canEdit || !storico;
-  el("docCredit").hidden = canEdit || !profile.fiscale || current.tipo === "TD04";
+  // An autofattura or an integration is corrected by another one, with the amounts that put it
+  // right — not by a credit note, which would credit the supplier for a sale nobody made.
+  el("docCredit").hidden = canEdit || !profile.fiscale || current.tipo === "TD04" || Boolean(profile.autofattura);
   el("docReopen").hidden = canEdit || current.stato !== "emesso" || current.esportato;
 
   // **Un documento già fatturato non si fattura di nuovo**, e non è un divieto scritto su di lui:
@@ -1232,11 +1472,11 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
   const scadenza = canEdit
     ? null
     : termState(current, profileFor(company, party),
-      { oggi: new Date().toISOString().slice(0, 10) });
+      { oggi: currentDay() });
   term.hidden = !scadenza;
   term.className = "doc-term";
   if (scadenza) {
-    const quando = { data: date(scadenza.data), giorni: Math.abs(scadenza.giorni ?? 0) };
+    const quando = { data: date(scadenza.data), giorni: days(Math.abs(scadenza.giorni ?? 0)) };
     if (scadenza.key === "fatto") {
       term.textContent = tf("termDone", quando);
     } else if (scadenza.key === "scaduto") {
@@ -1274,8 +1514,8 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
   }
 
   const linked = (current.fattureCollegate || [])[0];
-  el("docLinkedNote").hidden = !linked;
   if (linked) el("docLinkedNote").textContent = `${t("docLinked")} ${linked.numero}`;
+  _drawLinked();
 
   // Where this document came from. A quote's reference stays inside the app; a delivery note's goes
   // into the XML as well, which is why the two are told apart here rather than merged into one line.
@@ -1292,7 +1532,7 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
         // Un'autofattura nasce da una spesa rimasta senza fattura, e da lì si torna al denaro
         // uscito: senza questa riga il documento non direbbe di quale operazione parla.
         : (current.daAcquisto
-          ? `${t("autofatturaFrom")} ${date(current.daAcquisto.data)}`
+          ? `${t(kind(current).integrazione ? "integrazioneFrom" : "autofatturaFrom")} ${date(current.daAcquisto.data)}`
           : "")));
   el("docOriginNote").hidden = !origine;
   el("docOriginNote").textContent = origine;
@@ -1329,7 +1569,7 @@ export async function open(db, id, { afterSave = null, tipo = null } = {}) {
 
 /** The printed sheet, from the same totals the screen shows. Cheap, so it is drawn on every open. */
 function _drawSheet() {
-  renderSheet(current, { company, party, computed: totals(current), draft: editable(current) });
+  renderSheet(current, { company, party, computed: _computed(), draft: editable(current) });
 }
 
 /** Wire the buttons. Called once, at start-up. */
@@ -1395,8 +1635,16 @@ export function connect(db) {
   el("docVariazioni").addEventListener("change", (event) => {
     current.variazioniContrattuali = event.target.checked || undefined;
     _drawAmbito();
+    _drawLinked();
     _touch();
   });
+
+  for (const id of ["docLinkedNumero", "docLinkedData"]) {
+    el(id).addEventListener("input", () => {
+      _readLinked();
+      _touch();
+    });
+  }
 
   el("docDdtAdd").addEventListener("click", () => {
     current.ddt = [...(current.ddt || []), { numero: "", data: "" }];
@@ -1429,11 +1677,34 @@ export function connect(db) {
   el("ritApply").addEventListener("change", (event) => {
     el("ritFields").hidden = !event.target.checked;
     _readHeader();
+    _drawLines();
     _drawSummary();
     _touch();
   });
 
-  for (const id of ["docDiscount", "ritRate"]) {
+  el("cassaApply").addEventListener("change", (event) => {
+    el("cassaFields").hidden = !event.target.checked;
+    _readHeader();
+    _drawSummary();
+    _touch();
+  });
+
+  for (const id of ["cassaTipo", "cassaNatura", "cassaRit", "docEsigibilita", "ordData"]) {
+    el(id).addEventListener("change", () => {
+      _readHeader();
+      _drawSummary();
+      _touch();
+    });
+  }
+
+  for (const id of ["ordNumero", "ordCig", "ordCup"]) {
+    el(id).addEventListener("input", () => {
+      _readHeader();
+      _touch();
+    });
+  }
+
+  for (const id of ["docDiscount", "ritRate", "cassaRate", "cassaIva"]) {
     el(id).addEventListener("input", () => {
       _readHeader();
       _drawSummary();
@@ -1461,9 +1732,13 @@ export function connect(db) {
     setType(current, el("docType").value);
     if (!current.numero) el("docTitle").textContent = tf("docNewTitle", { tipo: t(kind(current).label) });
     _drawSections();
-    _drawDdt();
+    // The goods type, the contractual-variation tick and the delivery notes all depend on the kind:
+    // `_drawAmbito` redraws the three (it calls `_drawDdt` itself).
+    _drawAmbito();
     _drawSummary();
     _touch();
+    // Customer or supplier, depending on the kind just chosen.
+    _drawParties(database);
   });
 
   // **La categoria si scrive anche su un documento emesso.** Non è un campo del tracciato — non
@@ -1507,6 +1782,7 @@ export function connect(db) {
   el("docSave").addEventListener("click", async () => {
     _readHeader();
     current = await save(database, current);
+    _pinRoute(current);
     const done = el("docSaved");
     done.hidden = false;
     setTimeout(() => { done.hidden = true; }, 2000);
@@ -1519,6 +1795,9 @@ export function connect(db) {
     await discard(database, current);
     // Le fasi che questa bozza fatturava tornano fatturabili, e il progetto smette di elencarla.
     progetti.forgetDoc(current.id);
+    // An autofattura or an integration drafted from a purchase: deleting the draft gives the purchase
+    // its proposal back, or nothing would ever propose it again.
+    await releasePurchase(database, current);
     location.hash = "#/documenti";
   });
 
@@ -1526,6 +1805,8 @@ export function connect(db) {
     _cancelPending();
     _readHeader();
     current = await save(database, current);
+    // A new document issued straight away: the address names it, so a reload reopens it.
+    _pinRoute(current);
 
     const company = await _context();
     const party = current.partyId ? await getParty(database, current.partyId) : null;
@@ -1560,7 +1841,8 @@ export function connect(db) {
     // Con il numero, il passo dopo: una fattura non è finita finché il file non è partito, e chi
     // emette la prima non sa che il pulsante sta in fondo alla pagina.
     const seguito = kind(current).fiscale
-      ? ` ${t(profileFor(company, party).paese === "SM" ? "docIssuedNextSm" : "docIssuedNext")}`
+      ? ` ${t(profileFor(company, party).pa ? "docIssuedNextPa"
+        : profileFor(company, party).paese === "SM" ? "docIssuedNextSm" : "docIssuedNext")}`
       : "";
     await tell(`${t("docIssued")} ${shownNumber(current)}.${seguito}`);
     if (onSaved) onSaved();
@@ -1630,7 +1912,7 @@ export function connect(db) {
     // Where the file goes next depends on who issued it: an Italian company uploads it to the
     // Agenzia's portal, a San Marino one to the Ufficio Tributario's. The wrong name here sends
     // somebody to a site that will not take their file.
-    await tell(t(profilo.paese === "SM" ? "docXmlDoneSm" : "docXmlDone"));
+    await tell(t(profilo.pa ? "docXmlDonePa" : profilo.paese === "SM" ? "docXmlDoneSm" : "docXmlDone"));
     await open(database, current.id, { afterSave: onSaved });
   });
 

@@ -170,9 +170,26 @@ export async function count(db, store) {
 }
 
 export async function replaceAll(db, store, records) {
-  const target = _store(db, store);
-  target.clear();
-  for (const record of records) target.set(_keyOf(store, record), { ...record });
+  return replaceStores(db, { [store]: records });
+}
+
+/** Several stores replaced as one: a record without its key, or a broken unique index, undoes all. */
+export async function replaceStores(db, data) {
+  if (!db) return;
+  const backup = new Map();
+  for (const name of Object.keys(data)) backup.set(name, new Map(_store(db, name)));
+  try {
+    for (const [name, records] of Object.entries(data)) {
+      _store(db, name).clear();
+      for (const record of records) {
+        if (!record || _keyOf(name, record) === undefined) throw new Error(`DataError: un record di ${name} senza chiave`);
+        _write(db, name, record);
+      }
+    }
+  } catch (error) {
+    for (const [name, snapshot] of backup) db.stores.set(name, snapshot);
+    throw error;
+  }
 }
 
 export async function persist() {

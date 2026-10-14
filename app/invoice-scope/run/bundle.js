@@ -27,6 +27,7 @@ import { write as writeZip, read as readZip } from "biz/zip.js";
 import { reference } from "biz/plan-pack.js";
 import { NAME, VERSION, EXPORTED } from "./db.js";
 import { RECEIPTS_DIR, pathOf as receiptPath } from "./attachments.js";
+import { isoDay } from "./day.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -105,7 +106,7 @@ export async function bundle(db, { now = new Date() } = {}) {
 
 /** The name the zip is downloaded under. */
 export function bundleName(now = new Date()) {
-  return `${NAME}-${now.toISOString().slice(0, 10)}.zip`;
+  return `${NAME}-${isoDay(now)}.zip`;
 }
 
 /** Whether these bytes are a zip: the four letters every zip starts with. */
@@ -153,6 +154,21 @@ export async function putFiles(db, payload, read) {
     ricevute += 1;
   }
   return { immagini, ricevute };
+}
+
+/**
+ * The archive's text from what was chosen to import: the JSON inside a zip, or the file itself.
+ * `null` when a zip holds no archive of ours. Read before asking, so the question can say what the
+ * file holds.
+ */
+export function archiveText(bytes) {
+  if (!isZip(bytes)) return new TextDecoder().decode(bytes);
+  try {
+    const found = readZip(bytes).find((entry) => entry.name === ARCHIVE_NAME);
+    return found ? new TextDecoder().decode(found.bytes) : null;
+  } catch (ignored) {
+    return null;
+  }
 }
 
 /**

@@ -31,8 +31,11 @@ import * as attesi from "./expected.js";
 import {
   TIPI, MONOFASE, IVA, CATEGORIE, taxKind, defaultRate, taxOn, costRecord, problems,
   paidOf, owedOn, state, allCosts, allOutlays, saveCost, removeCost, outlaysOf, recordOutlay,
-  removeOutlay, cost as getCost, signedTotal, daAutofatturare, autofatturaDa,
+  removeOutlay, cost as getCost, signedTotal, daAutofatturare, autofatturaDa, notesOf, nextDue, partsOf, dueOf,
+  daIntegrare, integrazioneDa,
 } from "./costs.js";
+import { categorie } from "./categories.js";
+import { currentDay } from "./day.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -48,6 +51,9 @@ const STATI = ["aperto", "scaduto", "pagato"];
 //  s t a t e
 // -----------------------------------------------------------------------------------------------------------------
 
+// What to do after a sheet opened from another screen is saved (`openProposal`), instead of redrawing
+// the purchases.
+let dopoSalvataggio = null;
 let database = null;
 let onChange = null;
 
@@ -69,6 +75,9 @@ let impostaManuale = false;
 /** I campi con cui il foglio è stato aperto da un atteso: il legame alla ricorrenza, da tenere. */
 let prefill = null;
 
+/** The suppliers on the sheet's menu, by id: the reverse-charge row asks for the chosen one's country. */
+const fornitori = new Map();
+
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
 // -----------------------------------------------------------------------------------------------------------------
@@ -78,7 +87,7 @@ function el(id) {
 }
 
 function _today() {
-  return new Date().toISOString().slice(0, 10);
+  return currentDay();
 }
 
 function _open(dialog) {
@@ -185,6 +194,7 @@ async function _paga(record, residuo, dopo) {
   return openMoney(database, {
     titolo: `${persone.get(record.partyId) || "—"} · ${_reference(record)} · ${t("costOwedLabel")} ${money(residuo)}`,
     etichetta: t("costPay"),
+    diPiu: "costOverpaid",
     residuo,
     save: (campi) => recordOutlay(database, record, campi),
     onDone: dopo,
@@ -201,7 +211,11 @@ async function _drawSuppliers(scegli = null) {
   const select = el("costForm").elements.partyId;
   select.textContent = "";
   select.append(_option("", t("costPartyChoose")));
-  for (const person of people) select.append(_option(person.id, person.denominazione));
+  fornitori.clear();
+  for (const person of people) {
+    select.append(_option(person.id, person.denominazione));
+    fornitori.set(person.id, person);
+  }
   select.value = scegli || (editing || {}).partyId || "";
   el("costPartyNone").hidden = people.length > 0;
 }
@@ -216,11 +230,47 @@ function _drawRates(scelta) {
   select.value = scelta;
 }
 
-/** I suggerimenti per la categoria: testo libero, ma dieci nomi già pronti non guastano. */
-function _drawCategories() {
+/**
+ * I suggerimenti per la categoria: quelle già usate prima, poi i dieci nomi pronti, nella lingua
+ * dell'app. The values were the Italian keys — «bancarie», «utenze» — even in English, and a
+ * category written once was never offered again, so the same spending ended up under two spellings.
+ */
+async function _drawCategories() {
   const lista = el("costCategories");
+  const usate = categorie(await allCosts(database));
+  const viste = new Set(usate.map((una) => una.toLowerCase()));
   lista.textContent = "";
-  for (const una of CATEGORIE) lista.append(_option(una, t(`costCat_${una}`)));
+  for (const una of usate) lista.append(_option(una, una));
+  for (const una of CATEGORIE) {
+    const nome = t(`costCat_${una}`);
+    if (!viste.has(nome.toLowerCase())) lista.append(_option(nome, nome));
+  }
+}
+
+/**
+ * The reverse-charge row: only for an Italian company (a credit note too: it is integrated with
+ * negative amounts); goods or services
+ * asked only when the supplier is foreign, because that is where the answer picks the document.
+ *
+ * Ticking it on a purchase that still carries VAT sets the rate to zero: the supplier charged none,
+ * and a purchase recorded with 22% on top would count VAT to deduct twice — here and on the
+ * integration.
+ */
+function _drawInversione({ spuntata = false } = {}) {
+  const form = el("costForm");
+  const italiana = taxKind(company) === "iva";
+  const riga = el("costInversioneRow");
+  riga.hidden = !italiana;
+  const attiva = !riga.hidden && form.elements.inversione.checked;
+  const fornitore = fornitori.get(form.elements.partyId.value);
+  const estero = Boolean(fornitore) && String(fornitore.paese || "IT").toUpperCase() !== "IT";
+  el("costBeniRow").hidden = !attiva || !estero;
+  el("costInversioneNote").hidden = !attiva;
+  if (spuntata && attiva && form.elements.aliquota.value !== "0") {
+    form.elements.aliquota.value = "0";
+    impostaManuale = false;
+    _ricalcola({ forza: true });
+  }
 }
 
 /** Il numero conta su una fattura e su una nota di credito: su una spesa la riga sparisce. */
@@ -228,6 +278,32 @@ function _tipoCambiato() {
   const form = el("costForm");
   el("costNumeroRow").hidden = form.elements.tipo.value === "spesa";
   el("costNotaHint").hidden = form.elements.tipo.value !== "nota";
+  el("costFatturaRow").hidden = form.elements.tipo.value !== "nota";
+  _drawInvoices();
+  _drawInversione();
+}
+
+/**
+ * The supplier's invoices a credit note can reverse, in the sheet's menu.
+ *
+ * Only the invoices of the supplier chosen, newest first; the note keeps the one it names even if
+ * it is no longer the newest. Empty is allowed: a note that names nothing reduces the purchases
+ * total and no particular invoice, as before.
+ */
+async function _drawInvoices() {
+  const form = el("costForm");
+  const select = form.elements.fatturaId;
+  const scelta = select.value || (editing || {}).fatturaId || "";
+  select.textContent = "";
+  select.append(_option("", t("costFatturaNone")));
+  if (form.elements.tipo.value !== "nota" || !form.elements.partyId.value) return;
+  const sue = (await allCosts(database))
+    .filter((one) => one.tipo === "fattura" && one.partyId === form.elements.partyId.value)
+    .sort((a, b) => String(b.data).localeCompare(String(a.data)));
+  for (const one of sue) {
+    select.append(_option(one.id, `${one.numero || "—"} · ${shownDate(one.data)} · ${money(_amount(one.totale))}`));
+  }
+  select.value = sue.some((one) => one.id === scelta) ? scelta : "";
 }
 
 /** Imposta e totale, dai campi. L'imposta scritta a mano si rispetta; il totale no, si calcola. */
@@ -262,9 +338,13 @@ function _openSheet(record, { proposta = null } = {}) {
   form.elements.imponibile.value = data.imponibile ? toString(_amount(data.imponibile), 2) : "";
   form.elements.imposta.value = data.imposta ? toString(_amount(data.imposta), 2) : "";
   form.elements.scadenza.value = data.scadenza || "";
+  form.elements.inversione.checked = Boolean(data.inversione);
+  form.elements.beniServizi.value = data.beniServizi || "";
   _drawRates(record || proposta ? String(data.aliquota ?? "0") : defaultRate(company));
   _drawCategories();
+  form.elements.fatturaId.value = "";
   _tipoCambiato();
+  _drawInversione();
   _ricalcola({ forza: !record });
 
   _open(el("costDialog"));
@@ -274,13 +354,34 @@ function _openSheet(record, { proposta = null } = {}) {
 async function _saveSheet() {
   const form = el("costForm");
   const campi = {};
-  for (const name of ["tipo", "partyId", "data", "numero", "categoria", "descrizione", "imponibile", "aliquota", "imposta", "scadenza"]) {
+  for (const name of ["tipo", "partyId", "data", "numero", "categoria", "descrizione", "imponibile", "aliquota", "imposta", "scadenza", "fatturaId", "beniServizi"]) {
     campi[name] = form.elements[name].value;
   }
+  campi.inversione = form.elements.inversione.checked && !el("costInversioneRow").hidden;
   const legame = editing ? { ricorrenzaId: editing.ricorrenzaId, periodo: editing.periodo } : (prefill || {});
-  const record = costRecord({ ...campi, id: (editing || {}).id, righe: (editing || {}).righe,
-    origine: (editing || {}).origine, importato: (editing || {}).importato, created: (editing || {}).created,
-    ricorrenzaId: legame.ricorrenzaId, periodo: legame.periodo },
+  const prima = editing || {};
+  // The amounts as they were, to tell whether what the file said about the payment still holds.
+  const stessiImporti = editing
+    && cmp(_typed(campi.imponibile), _amount(prima.imponibile)) === 0
+    && cmp(_typed(campi.imposta), _amount(prima.imposta)) === 0;
+  const record = costRecord({ ...campi, id: prima.id,
+    // The lines of an imported invoice describe the amounts the file had: with the amounts changed
+    // by hand they describe something else, and they go.
+    righe: stessiImporti ? prima.righe : null,
+    origine: prima.origine, importato: prima.importato, created: prima.created,
+    ricorrenzaId: legame.ricorrenzaId, periodo: legame.periodo,
+    // **What was decided about this purchase survives the sheet.** `costRecord` keeps only what it
+    // is given, and the autofattura already made — or declared unnecessary — was dropped by
+    // correcting an amount: the proposal came back and a second TD29 could be issued.
+    autofatturaId: prima.autofatturaId, autofatturaNonServe: prima.autofatturaNonServe,
+    integrazioneId: prima.integrazioneId, integrazioneNonServe: prima.integrazioneNonServe,
+    // The withholding stays with the invoice; the amount the file asked for only while the amounts
+    // are still the file's.
+    ritenuta: prima.ritenuta, daPagare: stessiImporti ? prima.daPagare : undefined,
+    // The instalments and the stated total of the file, like the lines: only while the amounts are
+    // the file's.
+    rate: stessiImporti ? prima.rate : undefined,
+    totaleDichiarato: stessiImporti ? prima.totaleDichiarato : undefined },
   { company });
 
   const mancanze = problems(record);
@@ -300,6 +401,12 @@ async function _saveSheet() {
   _close(el("costDialog"));
   editing = null;
   prefill = null;
+  if (dopoSalvataggio) {
+    const dopo = dopoSalvataggio;
+    dopoSalvataggio = null;
+    await dopo(record);
+    return;
+  }
   await _redraw();
   if (onChange) await onChange();
 }
@@ -355,7 +462,7 @@ async function _drawOutlays(record) {
     body.append(tr);
   }
   const pagato = paidOf(uscite);
-  const residuo = owedOn(record, uscite);
+  const residuo = owedOn(record, uscite, notesOf(await allCosts(database)));
   el("costOutlaysTotals").textContent = uscite.length
     ? `${t("costOutlaysTotal")}: ${money(pagato)} · ${t("costOwedLabel")}: ${money(residuo)}`
     : "";
@@ -447,6 +554,76 @@ async function _drawAutofatture(costs, anagrafiche) {
   }
 }
 
+/**
+ * The integrations due, at the top of the purchases: one row per reverse-charge purchase, with the
+ * document it needs and its deadline. Where goods or services is not known the row asks first —
+ * the answer is the difference between TD17 and TD18/TD19.
+ */
+async function _drawIntegrazioni(costs, anagrafiche) {
+  const pannello = el("integrazioniNote");
+  const elenco = el("integrazioniList");
+  elenco.textContent = "";
+  const dovute = daIntegrare(costs, { company, anagrafiche, oggi: _today() });
+  pannello.hidden = dovute.length === 0;
+  if (pannello.hidden) return;
+  el("integrazioniText").textContent = dovute.length === 1
+    ? t("integrazioniPanelOne")
+    : tf("integrazioniPanelMany", { n: dovute.length });
+
+  const bottone = (testo, azione) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "button ghost small";
+    b.textContent = testo;
+    b.addEventListener("click", azione);
+    return b;
+  };
+  const ridisegna = async () => {
+    await renderList(database, { afterChange: onChange });
+    if (onChange) onChange();
+  };
+
+  for (const { record, party, tipo, termine } of dovute) {
+    const riga = document.createElement("div");
+    riga.className = "dup-row";
+    const testo = document.createElement("span");
+    testo.textContent = tf(termine.key === "scaduto" ? "integrazioniRowLate" : "integrazioniRowOpen", {
+      fornitore: (party && party.denominazione) || "—",
+      importo: money(from(record.imponibile || "0")),
+      data: shownDate(record.data),
+      tipo: tipo === "?" ? t("integrazioniTipoDaScegliere") : tipo,
+      scadenza: shownDate(termine.al),
+    });
+    if (termine.key === "scaduto") testo.classList.add("overdue");
+    riga.append(testo);
+
+    if (tipo === "?") {
+      for (const scelta of ["servizi", "beni"]) {
+        riga.append(bottone(t(scelta === "beni" ? "integrazioniSonoBeni" : "integrazioniSonoServizi"), async () => {
+          await saveCost(database, { ...record, beniServizi: scelta }, { company });
+          await ridisegna();
+        }));
+      }
+    } else {
+      riga.append(bottone(tf("integrazioniMake", { tipo }), async () => {
+        const bozza = await saveDoc(database, integrazioneDa(record, { company, party, tipo, oggi: _today() }));
+        // The link is written on the purchase: it takes it off this list, and a deleted draft
+        // brings the proposal back.
+        await saveCost(database, { ...record, integrazioneId: bozza.id }, { company });
+        if (onChange) onChange();
+        await tell(t("integrazioniDone"));
+        location.hash = `#/documento/${bozza.id}`;
+      }));
+    }
+    riga.append(bottone(t("integrazioniSkip"), async () => {
+      if (!(await ask(t("integrazioniSkipAsk"), { okLabel: t("integrazioniSkip") }))) return;
+      await saveCost(database, { ...record, integrazioneNonServe: true }, { company });
+      await ridisegna();
+    }));
+    elenco.append(riga);
+  }
+}
+
 export async function renderList(db, { afterChange = null } = {}) {
   database = db;
   onChange = afterChange;
@@ -457,19 +634,24 @@ export async function renderList(db, { afterChange = null } = {}) {
   const anagrafiche = new Map((await parties(db)).map((p) => [p.id, p]));
   const persone = new Map([...anagrafiche].map(([id, p]) => [id, p.denominazione]));
   await _drawAutofatture(costs, anagrafiche);
+  await _drawIntegrazioni(costs, anagrafiche);
   const per = new Map();
   for (const one of outlays) {
     if (!per.has(one.costId)) per.set(one.costId, []);
     per.get(one.costId).push(one);
   }
   const oggi = _today();
+  const notes = notesOf(costs);
   const rows = costs.map((record) => {
     const suoi = per.get(record.id) || [];
     return {
       record,
       fornitore: persone.get(record.partyId) || "—",
-      residuo: owedOn(record, suoi),
-      stato: state(record, suoi, { today: oggi }),
+      residuo: owedOn(record, suoi, notes),
+      stato: state(record, suoi, { today: oggi, notes }),
+      // The date of the next instalment still owed: with instalments, the first date of the whole
+      // is not the one to watch once it is paid.
+      prossima: nextDue(record, suoi, notes),
     };
   });
 
@@ -503,7 +685,7 @@ export async function renderList(db, { afterChange = null } = {}) {
       }
     });
 
-    const quando = record.scadenza || record.data;
+    const quando = row.prossima;
     const scadenza = _td(quando ? shownDate(quando) : "—", "nowrap");
     if (row.stato === "scaduto") scadenza.classList.add("overdue");
 
@@ -566,14 +748,18 @@ export async function render(db, id, { afterChange = null } = {}) {
     record.tipo !== "spesa" && record.numero ? `${t("f_numero")} ${record.numero}` : null,
     record.data ? shownDate(record.data) : null,
     record.categoria || null,
-    record.scadenza ? `${t("f_scadenza")} ${shownDate(record.scadenza)}` : null,
+    Array.isArray(record.rate) && record.rate.length >= 2
+      ? tf("costRate", { n: record.rate.length, date: record.rate.map((quota) => shownDate(quota.scadenza)).join(", ") })
+      : (record.scadenza ? `${t("f_scadenza")} ${shownDate(record.scadenza)}` : null),
+    record.fatturaId ? await _linkedLabel(record.fatturaId) : null,
   ].filter(Boolean);
   el("costMeta").textContent = pezzi.join(" · ");
   el("costDescription").textContent = record.descrizione || "";
   el("costDescription").hidden = !record.descrizione;
 
   const { uscite, residuo } = await _drawOutlays(record);
-  const stato = state(record, uscite, { today: _today() });
+  const notes = notesOf(await allCosts(database));
+  const stato = state(record, uscite, { today: _today(), notes });
   el("costFigTotal").textContent = money(signedTotal(record));
   el("costFigTotalSub").textContent = cmp(_amount(record.imposta), ZERO) > 0
     ? `${money(_amount(record.imponibile))} + ${_taxLabel()} ${shownRate(record.aliquota)} ${money(_amount(record.imposta))}`
@@ -582,9 +768,36 @@ export async function render(db, id, { afterChange = null } = {}) {
   el("costFigOwedSub").textContent = _stateLabel(stato);
   el("costFigOwed").classList.toggle("bad", stato === "scaduto");
   el("costPay").hidden = stato === "pagato" || record.tipo === "nota";
+  _drawFileFigures(record, notes);
 
   _drawLines(record);
   return true;
+}
+
+/** «Storna la fattura N» for a supplier's credit note, or `null` when the invoice is gone. */
+async function _linkedLabel(fatturaId) {
+  const fattura = await getCost(database, fatturaId);
+  return fattura ? tf("costReverses", { numero: fattura.numero || "—", data: shownDate(fattura.data) }) : null;
+}
+
+/**
+ * What the file said beside what the app works out: the withholding, what the supplier asks for,
+ * the total the file states. One line under the figures, and only what there is to say — a
+ * purchase typed by hand has none of it.
+ */
+function _drawFileFigures(record, notes) {
+  const pezzi = [];
+  if (record.ritenuta) pezzi.push(tf("costRitenutaLine", { importo: money(_amount(record.ritenuta)) }));
+  if (record.ritenuta || record.daPagare) pezzi.push(tf("costDueLine", { importo: money(dueOf(record, notes)) }));
+  if (record.totaleDichiarato) {
+    const dichiarato = _amount(record.totaleDichiarato);
+    const calcolato = _amount(record.totale);
+    pezzi.push(cmp(dichiarato, calcolato) === 0
+      ? t("costDeclaredSame")
+      : tf("costDeclaredDiff", { dichiarato: money(dichiarato), calcolato: money(calcolato) }));
+  }
+  el("costFileLine").hidden = pezzi.length === 0;
+  el("costFileLine").textContent = pezzi.join(" · ");
 }
 
 /** Il foglio di un acquisto nuovo, da un'altra schermata. */
@@ -593,6 +806,19 @@ export async function openNew(db) {
   company = await get(db, "company", "company");
   _openSheet(null);
   await _drawSuppliers();
+}
+
+/**
+ * The sheet filled from an expected purchase, opened from another screen (the payment schedule's
+ * «Conferma»). Saved, it calls `afterSave` instead of drawing the purchases list, which is not the
+ * screen on view.
+ */
+export async function openProposal(db, campi, { afterSave = null } = {}) {
+  database = db;
+  company = await get(db, "company", "company");
+  dopoSalvataggio = afterSave;
+  _openSheet(null, { proposta: campi });
+  await _drawSuppliers(campi.partyId);
 }
 
 /** Arma i comandi. Una volta, all'avvio. */
@@ -616,6 +842,20 @@ export function connect(db, { afterChange = null } = {}) {
 
   const form = el("costForm");
   form.elements.tipo.addEventListener("change", _tipoCambiato);
+  form.elements.partyId.addEventListener("change", () => {
+    _drawInvoices();
+    // A foreign supplier on a new purchase, for an Italian company, is reverse charge until said
+    // otherwise: the VAT is the company's to integrate.
+    const fornitore = fornitori.get(form.elements.partyId.value);
+    if (!editing && fornitore && String(fornitore.paese || "IT").toUpperCase() !== "IT" && taxKind(company) === "iva"
+      && !form.elements.inversione.checked) {
+      form.elements.inversione.checked = true;
+      _drawInversione({ spuntata: true });
+    } else {
+      _drawInversione();
+    }
+  });
+  form.elements.inversione.addEventListener("change", () => _drawInversione({ spuntata: true }));
   form.elements.imponibile.addEventListener("input", () => _ricalcola());
   form.elements.aliquota.addEventListener("change", () => {
     // Un'aliquota nuova vale più di un'imposta scritta prima: si ricalcola.
@@ -641,7 +881,9 @@ export function connect(db, { afterChange = null } = {}) {
     _close(el("costDialog"));
     editing = null;
     prefill = null;
+    dopoSalvataggio = null;
   });
+  el("costDialog").addEventListener("cancel", () => { dopoSalvataggio = null; });
   attesi.connect(db);
 
   el("costEdit").addEventListener("click", async () => {
@@ -651,7 +893,7 @@ export function connect(db, { afterChange = null } = {}) {
   });
   el("costPay").addEventListener("click", async () => {
     if (!aperto) return;
-    const residuo = owedOn(aperto, await outlaysOf(database, aperto.id));
+    const residuo = owedOn(aperto, await outlaysOf(database, aperto.id), notesOf(await allCosts(database)));
     await _paga(aperto, residuo, async () => {
       await render(database, aperto.id, { afterChange: onChange });
       if (onChange) await onChange();

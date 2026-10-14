@@ -27,8 +27,9 @@ import { t, tf } from "./i18n.js";
 import { ask, tell } from "./ask.js";
 import { from, cmp, sub, toString, ZERO } from "./decimal.js";
 import { kind, numero as shownNumber } from "./kinds.js";
-import { recordPayment, removePayment, paymentsOf, received, owedOn } from "./schedule.js";
+import { recordPayment, removePayment, paymentsOf, received, owedOn, schedule, spread } from "./schedule.js";
 import { RECEIPT_ACCEPT, attach, blobOf, detach, refusal } from "./attachments.js";
+import { currentDay } from "./day.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
@@ -43,7 +44,7 @@ function _money(value) {
 }
 
 function _oggi() {
-  return new Date().toISOString().slice(0, 10);
+  return currentDay();
 }
 
 function _open(dialog) {
@@ -140,8 +141,42 @@ export async function openSheet(db, doc, { proposta = ZERO, onDone = null } = {}
     residuo,
     proposta,
     onDone,
-    save: (campi) => recordPayment(db, doc, campi),
+    save: (campi) => _recordSpread(db, doc, residuo, campi),
   });
+}
+
+/**
+ * The payment on this document, and — when it is more than the document still owes and the
+ * customer has other open invoices — the rest on those, oldest first, if the person says so.
+ *
+ * A customer who pays three invoices with one transfer is ordinary; recording the transfer three
+ * times by hand, splitting it in one's head, is where the mistakes come from. The receipt of the
+ * transfer goes on this document's payment, the one the person opened.
+ */
+async function _recordSpread(db, doc, residuo, campi) {
+  const importo = from(campi.importo);
+  if (cmp(residuo, ZERO) > 0 && cmp(importo, residuo) > 0) {
+    const { quote, avanzo } = spread((await schedule(db)), {
+      partyId: doc.partyId, escludi: doc.id, importo: sub(importo, residuo),
+    });
+    if (quote.length && await ask(tf("dueSpreadAsk", { di_piu: _money(sub(importo, residuo)) }), {
+      okLabel: t("dueSpreadYes"), cancelLabel: t("dueSpreadNo"),
+      lines: quote.map((quota) => tf("dueSpreadLine", { numero: quota.numero || "—", importo: _money(quota.importo) })),
+    })) {
+      const nota = campi.nota || t("dueSpreadNote");
+      const record = await recordPayment(db, doc, { ...campi, importo: toString(residuo, 2) });
+      for (const quota of quote) {
+        const altro = await get(db, "docs", quota.docId);
+        if (altro) await recordPayment(db, altro, { ...campi, importo: toString(quota.importo, 2), nota });
+      }
+      return {
+        record,
+        distribuito: true,
+        messaggio: cmp(avanzo, ZERO) > 0 ? tf("dueSpreadLeft", { avanzo: _money(avanzo) }) : null,
+      };
+    }
+  }
+  return recordPayment(db, doc, campi);
 }
 
 /**
@@ -152,7 +187,8 @@ export async function openSheet(db, doc, { proposta = ZERO, onDone = null } = {}
  * `save` riceve `{ importo, data, conto, nota }` e scrive dove deve; `titolo` è la riga sotto il
  * titolo; `etichetta` il verbo sul pulsante, «Registra un incasso» se manca.
  */
-export async function openMoney(db, { titolo, residuo = ZERO, proposta = ZERO, onDone = null, save, etichetta = null }) {
+export async function openMoney(db, { titolo, residuo = ZERO, proposta = ZERO, onDone = null, save, etichetta = null,
+  diPiu = "dueOverpaid" }) {
   const form = el("payForm");
   form.reset();
   el("paySave").textContent = etichetta || t("dueRecord");
@@ -195,13 +231,44 @@ export async function openMoney(db, { titolo, residuo = ZERO, proposta = ZERO, o
     const chiudi = (esito) => {
       el("paySave").onclick = null;
       el("payCancel").onclick = null;
+      el("payDialog").oncancel = null;
+      form.onkeydown = null;
+      ricevutaScelta = null;
       _close(el("payDialog"));
       resolve(esito);
     };
 
     el("payCancel").onclick = () => chiudi(false);
+    // Escape closes a <dialog> by itself: without this the promise never settled and the receipt
+    // chosen before Escape waited for the next sheet.
+    el("payDialog").oncancel = () => chiudi(false);
+    // **Invio registra**, as the comment above promises. The save button is not a submit button —
+    // the form is a dialog form, and a submit would close it before the checks — so the key is
+    // taken here, in the fields and not on the buttons.
+    form.onkeydown = (event) => {
+      if (event.key !== "Enter" || event.isComposing) return;
+      const tag = event.target && event.target.tagName;
+      if (tag !== "INPUT" && tag !== "SELECT") return;
+      event.preventDefault();
+      el("paySave").click();
+    };
 
+    // A second click while the first is still writing — a large receipt takes a moment — recorded
+    // the same payment twice. The button is off until the first click has finished.
+    let inCorso = false;
     el("paySave").onclick = async () => {
+      if (inCorso) return;
+      inCorso = true;
+      el("paySave").disabled = true;
+      try {
+        await _registra();
+      } finally {
+        inCorso = false;
+        el("paySave").disabled = false;
+      }
+    };
+
+    const _registra = async () => {
       let importo;
       try {
         importo = from(parseAmount(form.elements.importo.value) ?? "x");
@@ -222,12 +289,16 @@ export async function openMoney(db, { titolo, residuo = ZERO, proposta = ZERO, o
       }
 
       const conto = conti.find((uno) => uno.id === form.elements.conto.value) || null;
-      const record = await save({
+      // `save` answers the record, or `{ record, distribuito, messaggio }` when the transfer was
+      // shared among several documents (`_recordSpread`): then the overpayment is not one.
+      const esito = await save({
         importo: toString(importo, 2),
         data: form.elements.data.value || _oggi(),
         conto,
         nota: form.elements.nota.value.trim() || null,
       });
+      const record = esito && esito.record ? esito.record : esito;
+      const distribuito = Boolean(esito && esito.distribuito);
       // **The payment first, then its receipt.** If the file fails — the disk is full, the browser
       // refuses — the payment is recorded anyway, which is the part that changes the money, and the
       // receipt can be attached from the row afterwards. Saying so beats losing both.
@@ -251,8 +322,10 @@ export async function openMoney(db, { titolo, residuo = ZERO, proposta = ZERO, o
       // **Il di più si registra e si dice, non si rifiuta.** Un cliente che arrotonda per eccesso,
       // o che paga due fatture con un bonifico solo, esiste; rifiutare l'importo lascerebbe chi
       // registra davanti a una casella che non accetta quello che è successo davvero.
-      if (cmp(importo, residuo) > 0) {
-        await tell(tf("dueOverpaid", { di_piu: _money(sub(importo, residuo)) }));
+      if (distribuito) {
+        if (esito.messaggio) await tell(esito.messaggio);
+      } else if (cmp(importo, residuo) > 0) {
+        await tell(tf(diPiu, { di_piu: _money(sub(importo, residuo)) }));
       }
     };
   });

@@ -27,6 +27,7 @@ import { CADENZE, periodsOf } from "./recurring.js";
 import { draft } from "./model.js";
 import { completaRighe } from "./fatturapa.js";
 import { parseAmount, parseOptional } from "./parse.js";
+import { currentDay } from "./day.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -86,11 +87,13 @@ export function planRecord(fields) {
     giorno: Math.min(31, Math.max(1, Number(fields.giorno) || 1)),
     // `??` non basta: `Number(undefined)` è `NaN`, che non è né `null` né `undefined` e passerebbe
     // dritto fino a una data non valida. Il difetto si vedeva solo sulla scadenza della bozza.
-    giorniScadenza: Number.isFinite(Number(fields.giorniScadenza))
+    // A cleared field is no answer, not zero days: `Number("")` is 0, and the drafts fell due on
+    // the day they were dated.
+    giorniScadenza: String(fields.giorniScadenza ?? "").trim() !== "" && Number.isFinite(Number(fields.giorniScadenza))
       ? Math.max(0, Math.floor(Number(fields.giorniScadenza)))
       : GIORNI_SCADENZA,
     cadenza,
-    da: String(fields.da || new Date().toISOString()).slice(0, 7),
+    da: String(fields.da || currentDay()).slice(0, 7),
     a: fields.a ? String(fields.a).slice(0, 7) : null,
     created: fields.created || new Date().toISOString(),
     updated: new Date().toISOString(),
@@ -134,7 +137,7 @@ export function coperti(docs) {
  * reso. Si parte da tre mesi indietro, perché una ricorrenza scritta adesso non deve riempire
  * l'elenco con l'arretrato di un anno che è già stato fatturato altrove.
  */
-export function daEmettere(piani, docs, { today = new Date().toISOString().slice(0, 10) } = {}) {
+export function daEmettere(piani, docs, { today = currentDay() } = {}) {
   const fatti = coperti(docs);
   const mese = today.slice(0, 7);
   const [y, m] = mese.split("-").map(Number);

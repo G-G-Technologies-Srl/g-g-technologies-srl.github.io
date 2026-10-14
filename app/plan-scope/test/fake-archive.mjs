@@ -74,6 +74,12 @@ export function list(db, store) {
 }
 
 export function replaceAll(db, store, rows) {
-  db.stores.set(store, rows.map((row) => ({ ...row })));
+  return replaceStores(db, { [store]: rows });
+}
+
+/** Several stores at once, as `gg/io.js` now restores them: all of them, or none. */
+export function replaceStores(db, data) {
+  const copie = Object.entries(data).map(([store, rows]) => [store, rows.map((row) => ({ ...row }))]);
+  for (const [store, rows] of copie) db.stores.set(store, rows);
   return Promise.resolve();
 }

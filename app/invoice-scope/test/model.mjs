@@ -147,8 +147,9 @@ await test("serie e anno hanno contatori separati", async () => {
 
 await test("l'anno nuovo riparte da uno", async () => {
   const db = await openDatabase();
-  const a = await issue(db, await save(db, newDoc({ data: "2026-12-31" })), CONTEXT);
-  const b = await issue(db, await save(db, newDoc({ data: "2027-01-02" })), CONTEXT);
+  const a = await issue(db, await save(db, newDoc({ data: "2026-12-31" })), { ...CONTEXT, oggi: "2026-12-31" });
+  // Issued on 2 January: the date is not in the future on the day it is issued.
+  const b = await issue(db, await save(db, newDoc({ data: "2027-01-02" })), { ...CONTEXT, oggi: "2027-01-02" });
   assert.deepEqual([a.numero, b.numero], ["2026/0001", "2027/0001"]);
 });
 
@@ -363,10 +364,32 @@ await test("la nota di credito nasce bozza, collegata, e con importi positivi", 
   const nota = creditNote(issued);
   assert.equal(nota.tipo, "TD04");
   assert.equal(nota.stato, "bozza");
-  assert.deepEqual(nota.fattureCollegate, [{ numero: "2026/0001", data: "2026-09-03" }]);
+  // The id too, so the credit lands on this invoice and not on another sharing the bare number.
+  assert.deepEqual(nota.fattureCollegate, [{ id: issued.id, numero: "2026/0001", data: "2026-09-03" }]);
   // Positivi: TD04 dice da sé che cos'è, e importi negativi sono un file scartato.
   assert.equal(nota.righe[0].quantita, "10");
   assert.equal(nota.righe[0].prezzoUnitario, "80.00");
+});
+
+await test("la nota di credito porta cassa, esigibilità e ordine della fattura", async () => {
+  const db = await openDatabase();
+  const pa = await issue(db, await save(db, newDoc({
+    cassa: { tipo: "TC04", aliquota: "4", aliquotaIva: "22", ritenuta: false },
+    esigibilita: "S",
+    ordine: { numero: "ORD-7", data: "2026-08-01", cig: "ZAB1234567", cup: null },
+  })), CONTEXT);
+  const nota = creditNote(pa);
+  assert.deepEqual(nota.cassa, pa.cassa);
+  assert.notEqual(nota.cassa, pa.cassa, "una copia, non lo stesso oggetto");
+  assert.equal(nota.esigibilita, "S");
+  assert.equal(nota.ordine.cig, "ZAB1234567");
+  // «No contribution» and «immediate» come across as answers, so the screen does not fill them in.
+  const senza = creditNote({ ...pa, cassa: null, esigibilita: null });
+  assert.equal(senza.cassa, null);
+  assert.equal(senza.esigibilita, null);
+  // A document from before the question existed has no key, and the note has none either.
+  const vecchia = creditNote({ ...pa, cassa: undefined, esigibilita: undefined, ordine: undefined });
+  assert.ok(!("ordine" in vecchia));
 });
 
 await test("la nota di credito ha una serie sua, e si legge diversa da una fattura", async () => {

@@ -26,7 +26,7 @@
 //
 // No DOM in here: `node app/invoice-scope/test/totals.mjs` runs it directly.
 
-import { from, add, sub, mul, mulDiv, percent, round, sum, ZERO, cmp } from "./decimal.js";
+import { from, add, sub, mul, mulDiv, percent, round, sum, toString, ZERO, cmp } from "./decimal.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -91,8 +91,46 @@ export const RIFERIMENTI = {
  * is needed and none is pretended.
  */
 function _riepilogoKey(line, conTm) {
-  const base = `${line.aliquota}|${line.natura || ""}|${line.esigibilita || ""}`;
+  // The rate as a number and not as it was written: `22`, `22.0` and `22.00` are one rate, and a
+  // price-list item saved as `22.0` next to a typed `22` made two summaries both at 22,00 — which the
+  // SdI rejects (00422) and the screen showed as two rows.
+  const base = `${_rateKey(line.aliquota)}|${line.natura || ""}|${line.esigibilita || ""}`;
   return conTm ? `${base}|${line.tm || ""}` : base;
+}
+
+/** A rate in one spelling, for grouping. Unreadable text stays as it is, for validate.js to name. */
+function _rateKey(aliquota) {
+  try {
+    return toString(from(aliquota ?? "0"), MONEY);
+  } catch (ignored) {
+    return String(aliquota);
+  }
+}
+
+/**
+ * Whether a line carries the withholding.
+ *
+ * **Every line but an excluded one (N1).** N1 is where a professional's invoice puts the expenses
+ * paid in the customer's name (art. 15): they are not a fee, and the withholding is not taken on
+ * them. Everything else on the invoice is the fee. The flag is also what the file needs: with
+ * `DatiRitenuta` present the SdI wants at least one line marked `<Ritenuta>SI</Ritenuta>` (00411),
+ * and the base the tax is taken on is the sum of those lines and nothing else.
+ */
+export function soggettaRitenuta(line) {
+  // Said on the line when the person decided it (the «R» column of the document): an expense
+  // that is not N1, a fee booked at zero rate. Otherwise the rule above.
+  if (typeof line.soggettaRitenuta === "boolean") return line.soggettaRitenuta;
+  return line.natura !== "N1";
+}
+
+/**
+ * The natures on which the stamp duty is not due even above the threshold.
+ *
+ * Exports (N3.1), intra-EU supplies (N3.2) and reverse charge (N6.x) are exempt from the duty; a
+ * declaration of intent (N3.5), an out-of-scope service (N2.x) or an exempt one (N4) are not.
+ */
+function _senzaBollo(natura) {
+  return natura === "N3.1" || natura === "N3.2" || String(natura || "").startsWith("N6");
 }
 
 /**
@@ -171,6 +209,26 @@ export function totals(doc, { tm: conTm = false } = {}) {
     });
   }
 
+  // **L'esigibilità del documento scende sulle righe tassate.** Split payment (S) and deferred VAT
+  // (D) are said once, on the document; the summary key carries them, and only where there is a tax
+  // to make exigible — a line with a nature has none.
+  const esigibilitaDoc = ["I", "D", "S"].includes(doc.esigibilita) ? doc.esigibilita : null;
+  if (esigibilitaDoc) {
+    for (const line of righe) if (!line.natura && !line.esigibilita) line.esigibilita = esigibilitaDoc;
+  }
+
+  // **The pension contribution (cassa previdenziale)** is a percentage of the fees, and it is taxed:
+  // it joins the summary of its own rate, which is how control 00422 recomputes the taxable amount.
+  // The fees are the lines that are not excluded expenses (N1), after the document discount.
+  const cassa = _cassa(doc, righe);
+  if (cassa) {
+    righe.push({
+      _cassa: true, aliquota: cassa.aliquotaIva, natura: cassa.natura || undefined,
+      esigibilita: cassa.natura ? undefined : (esigibilitaDoc || undefined),
+      prezzoTotale: cassa.importo, tm: undefined,
+    });
+  }
+
   const grouped = new Map();
   for (const line of righe) {
     const key = _riepilogoKey(line, conTm);
@@ -196,6 +254,8 @@ export function totals(doc, { tm: conTm = false } = {}) {
   }
 
   const riepiloghi = [...grouped.values()];
+  // The contribution was a pseudo-line for the summary only: the document's lines are the real ones.
+  if (cassa) righe.pop();
 
   for (const r of riepiloghi) {
     r.imposta = percent(r.imponibile, from(r.aliquota), MONEY);
@@ -210,8 +270,17 @@ export function totals(doc, { tm: conTm = false } = {}) {
   const imposta = sum(riepiloghi.map((r) => r.imposta));
 
   const senzaImposta = sum(riepiloghi.filter((r) => r.natura).map((r) => r.imponibile));
+  // What counts towards the stamp-duty threshold: the untaxed amounts, less the exempt natures.
+  const soggettoBollo = sum(riepiloghi.filter((r) => r.natura && !_senzaBollo(r.natura)).map((r) => r.imponibile));
   const bollo = doc.bollo ? BOLLO : ZERO;
-  const ritenuta = _ritenuta(doc, imponibile);
+  if (doc.ritenuta) for (const line of righe) line.ritenuta = soggettaRitenuta(line);
+  // A contribution declared subject to the withholding (the INPS 4%, for instance) adds to its base.
+  const baseRitenuta = add(sum(righe.filter((line) => line.ritenuta).map((line) => line.prezzoTotale)),
+    cassa && cassa.ritenuta && doc.ritenuta ? cassa.importo : ZERO);
+  const ritenuta = _ritenuta(doc, baseRitenuta);
+  // **Split payment: the customer pays the VAT to the revenue, not to us.** What is owed — and the
+  // amount of the payment — leaves out the tax of the summaries in S; the document total does not.
+  const impostaScissa = sum(riepiloghi.filter((r) => r.esigibilita === "S").map((r) => r.imposta));
 
   return {
     righe,
@@ -222,10 +291,18 @@ export function totals(doc, { tm: conTm = false } = {}) {
     bollo,
     ritenuta: ritenuta.importo,
     scontoDocumento: documentDiscount,
-    // What the tracciato calls ImportoTotaleDocumento: what the customer owes, stamp included and
-    // withholding excluded, because the withholding is paid to the revenue and not to us.
-    totale: sub(add(add(imponibile, imposta), bollo), ritenuta.importo),
-    bolloDovuto: bolloDovuto(senzaImposta),
+    // What the customer owes: stamp included and withholding excluded, because the withholding is
+    // paid to the revenue and not to us. It is the amount of the payment (ImportoPagamento).
+    totale: sub(sub(add(add(imponibile, imposta), bollo), ritenuta.importo), impostaScissa),
+    impostaScissa,
+    cassa,
+    // What the tracciato calls ImportoTotaleDocumento: the document with its tax and its stamp,
+    // **before** the withholding. The withholding has its own block (DatiRitenuta) and comes off
+    // only the payment; a total already net of it is a figure the recipient's software then sees
+    // as different from the sum of the summaries.
+    totaleDocumento: add(add(imponibile, imposta), bollo),
+    baseRitenuta,
+    bolloDovuto: bolloDovuto(soggettoBollo),
   };
 }
 
@@ -238,11 +315,42 @@ export function totals(doc, { tm: conTm = false } = {}) {
 function _ritenuta(doc, imponibile) {
   if (!doc.ritenuta) return { importo: ZERO };
   const base = doc.ritenuta.imponibile !== undefined ? from(doc.ritenuta.imponibile) : imponibile;
-  return { importo: percent(base, from(doc.ritenuta.aliquota), MONEY) };
+  // A rate left blank is no withholding rather than a crash: validate.js names it before issuing.
+  let aliquota;
+  try {
+    aliquota = from(doc.ritenuta.aliquota ?? "0");
+  } catch (ignored) {
+    aliquota = ZERO;
+  }
+  return { importo: percent(base, aliquota, MONEY) };
+}
+
+/** The pension contribution of a document, or `null`: its base, its amount, its rate and nature. */
+function _cassa(doc, righe) {
+  const c = doc.cassa;
+  if (!c || !c.tipo) return null;
+  let aliquota;
+  try {
+    aliquota = from(c.aliquota ?? "0");
+  } catch (ignored) {
+    return null;
+  }
+  const imponibileCassa = sum(righe.filter((line) => line.natura !== "N1").map((line) => line.prezzoTotale));
+  return {
+    tipo: c.tipo,
+    aliquota: toString(aliquota, MONEY),
+    imponibile: imponibileCassa,
+    importo: percent(imponibileCassa, aliquota, MONEY),
+    aliquotaIva: String(c.aliquotaIva ?? "22"),
+    natura: c.natura || null,
+    ritenuta: Boolean(c.ritenuta),
+  };
 }
 
 /**
  * Whether the stamp duty is due: more than 77,47 € carrying no IVA.
+ *
+ * The amount passed in is already without the exempt natures (`_senzaBollo`).
  *
  * **Every kind of untaxed amount counts** — esenti, non imponibili, escluse, fuori campo — not
  * just the "non soggette". Reading the threshold as applying to N2 alone is a real mistake with a

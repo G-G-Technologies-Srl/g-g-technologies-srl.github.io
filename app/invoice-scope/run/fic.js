@@ -259,6 +259,12 @@ function _get(row, dove, campo) {
 
 /** A number written for a person, as a decimal string; `""` when there is nothing there. See `parse.js`. */
 function _numero(text) {
+  // **A spreadsheet number arrives in machine form**, a dot and no thousands: `sheet.js` and
+  // `xls.js` hand back the cell as the file stores it. Read through the Italian guess, a price of
+  // 12,345 € stored as `12.345` became twelve thousand — the guess takes three digits after a lone
+  // dot for thousands. What looks exactly like a stored number is read as one.
+  const raw = String(text == null ? "" : text).trim();
+  if (/^-?\d+\.\d{1,8}$/.test(raw)) return raw;
   return parseAmount(text) ?? "";
 }
 
@@ -273,13 +279,18 @@ function _data(text) {
   const raw = String(text == null ? "" : text).trim();
   if (!raw) return "";
   if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;      // already ours: sheet.js converted a serial
-  const parts = raw.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})$/);
+  // A time after the date — «27/07/2026 10:30», how some exports write a text cell — is dropped.
+  const parts = raw.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})(?:[ T]\d{1,2}:\d{2}(?::\d{2})?)?$/);
   if (!parts) return "";
   const [, g, m, y] = parts;
   const anno = y.length === 4 ? Number(y) : Number(y) + (Number(y) < 70 ? 2000 : 1900);
   const gg = String(Number(g)).padStart(2, "0");
   const mm = String(Number(m)).padStart(2, "0");
-  if (Number(mm) < 1 || Number(mm) > 12 || Number(gg) < 1 || Number(gg) > 31) return "";
+  if (Number(mm) < 1 || Number(mm) > 12 || Number(gg) < 1) return "";
+  // The days the month really has: 31/02 is not a date, and it used to become the 3rd of March
+  // somewhere downstream.
+  const ultimo = new Date(Date.UTC(anno, Number(mm), 0)).getUTCDate();
+  if (Number(gg) > ultimo) return "";
   return `${anno}-${mm}-${gg}`;
 }
 

@@ -15,7 +15,7 @@
 //  p r i v a t e
 // -----------------------------------------------------------------------------------------------------------------
 
-import { list, replaceAll } from "./store.js";
+import { list, replaceStores } from "./store.js";
 
 const FORMAT = 1;                       // the shape of the envelope, not of the app's records
 
@@ -107,10 +107,9 @@ export async function restore(db, text, { app, stores }) {
     return { ok: false, reason: "importNothing" };
   }
 
-  let restored = 0;
-  for (const [store, records] of Object.entries(arriving)) {
-    await replaceAll(db, store, records);
-    restored += records.length;
-  }
+  // Every store in one transaction: a failure halfway leaves the archive exactly as it was, instead
+  // of the stores before it replaced and the ones after it untouched.
+  await replaceStores(db, arriving);
+  const restored = Object.values(arriving).reduce((total, records) => total + records.length, 0);
   return { ok: true, restored };
 }

@@ -36,6 +36,15 @@
   --danger-text: #b4413c;
 }
 
+/* The first paint of a first visit on a light system, before a theme is chosen: the same light
+   values, or the faint fill and the error red stay the dark ones on a light page. */
+@media (prefers-color-scheme: light) {
+  html:not([data-theme]) {
+    --fill: rgba(13, 18, 32, 0.04);
+    --danger-text: #b4413c;
+  }
+}
+
 /* La striscia del dimostrativo, sopra tutto. Sobria di proposito: quello che deve dire lo dice il
    testo, e una fascia colorata sopra un'app di fatturazione somiglia a un avviso di errore. */
 .demo-note {
@@ -465,6 +474,7 @@ select:disabled { cursor: default; opacity: 1; color: var(--text); background-im
    JavaScript, e una colonna che sparisce da una sola delle due parti sposta tutte le altre. */
 .rows.no-tm .col-tm { display: none; }
 .rows.no-rimb .col-nonrimb { display: none; }
+.rows.no-rit .col-rit { display: none; }
 /* Stessa cosa per la natura: compare quando una riga va a zero, e prima no. */
 .rows.no-natura .col-natura, .rows.no-natura .cell-natura { display: none; }
 
@@ -546,9 +556,11 @@ select:disabled { cursor: default; opacity: 1; color: var(--text); background-im
 .rows select.tiny { max-width: 108px; }
 .rows input.small, .rows select.small { max-width: 120px; }
 
-/* An overdue date is marked in the accent *and* said in words next to it: colour never carries
-   the information on its own, and here the information is somebody's money. */
-.rows td.overdue { color: var(--accent-strong); }
+/* An overdue date is marked in colour *and* said in words next to it: colour never carries the
+   information on its own, and here the information is somebody's money. The colour is the red the
+   rest of the app gives what is late — the overdue bars, «Da pagare» — and not the accent green,
+   which everywhere else means done or chosen and read here as "all is well". */
+.rows td.overdue { color: var(--danger-text); }
 .rows td.actions-cell { display: flex; gap: 8px; justify-content: flex-end; align-items: center; white-space: nowrap; }
 .rows td.actions-cell select { max-width: 130px; }
 
@@ -868,6 +880,10 @@ dialog li::before {
 .widget .rows { font-size: 0.88rem; }
 .widget .rows td { padding-left: 8px; padding-right: 8px; }
 .widget .rows td:first-child { min-width: 12ch; }
+/* Inside a box the text cells wrap and only the amounts stay whole: between the phone layout and a
+   wide screen a row of unbreakable cells was wider than its box, and the amount at the end of it —
+   the number the row exists for — was cut at the edge. */
+.widget .rows td.nowrap:not(.right) { white-space: normal; max-width: none; }
 
 /* Sul telefono ogni riga di un riquadro diventa due righe: la prima cella con la cifra a destra,
    il resto sotto in tinta bassa. Una tabella a quattro colonne in 360 pixel scorreva di lato e
@@ -890,7 +906,7 @@ dialog li::before {
   /* L'a capo fra la prima riga e le celle secondarie, che poi stanno in fila. */
   .widget .rows tr::after { content: ""; order: 2; flex-basis: 100%; height: 0; }
   .widget .rows td:not(:first-child):not(.right) { order: 3; flex: 0 0 auto; color: var(--faint); font-size: 0.84rem; }
-  .widget .rows td.overdue, .widget .rows td.overdue:not(:first-child) { color: var(--accent-strong); }
+  .widget .rows td.overdue, .widget .rows td.overdue:not(:first-child) { color: var(--danger-text); }
 }
 .widget.wide { grid-column: 1 / -1; }
 .widget .section-head { margin: 0 0 8px; }
@@ -1006,6 +1022,7 @@ dialog li::before {
   #docLinesTable td input, #docLinesTable td select { width: 100%; max-width: none; }
   #docLinesTable.no-tm td.col-tm { display: none; }
   #docLinesTable.no-rimb td.col-nonrimb { display: none; }
+  #docLinesTable.no-rit td.col-rit { display: none; }
   #docLinesTable.no-natura td.cell-natura { display: none; }
 }
 
@@ -1366,7 +1383,7 @@ dialog li::before {
 
 /* La spunta «non rimborsabile» sta al centro della sua cella: è un segno, non un valore da
    leggere in fila con gli altri. */
-.rows td.col-nonrimb { text-align: center; }
+.rows td.col-nonrimb, .rows td.col-rit { text-align: center; }
 .ambito label.check { display: flex; align-items: center; gap: 0.5rem; }
 
 /* -----------------------------------------------------------------------------------------------
@@ -1535,3 +1552,35 @@ dialog li::before {
 /* The stamp duty is one box between the withholding and the summary: a little air says it is a
    section of its own and not the last line of the withholding. */
 #docBolloSection { margin-top: 18px; }
+
+/* A number on a line that cannot be read: the field says so, and the line keeps its last value. */
+input[aria-invalid="true"] { border-color: var(--danger); box-shadow: 0 0 0 1px var(--danger); }
+
+/* The legend of the payment-schedule chart: the same tints as the bars, in the same order. */
+.due-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 8px 0 0; }
+.due-legend i.due-in { background: var(--muted); opacity: 0.55; }
+.due-legend i.due-in-late { background: var(--accent); }
+.due-legend i.due-out { background: var(--danger); opacity: 0.35; }
+.due-legend i.due-out-late { background: var(--danger); opacity: 0.85; }
+.due-legend i.due-out-expected { background: transparent; border: 1.5px dashed var(--danger); box-sizing: border-box; }
+.due-legend #dueLegendOut i:not(:first-child) { margin-left: 8px; }
+
+/* The instalments of a reminder: one tick each, in a column, like the people of a meeting. */
+.dun-rows { flex: 1 1 100%; border: none; padding: 0; margin: 0; min-width: 0; }
+.dun-rows legend { color: var(--faint); font-size: 0.82rem; padding: 0; margin-bottom: 6px; }
+#dunRows { display: flex; flex-direction: column; gap: 4px; }
+
+/* A warning said while a field is typed: the error red, in the note's size. */
+.field-warn { color: var(--danger-text); }
+
+/* The tender and project codes are upper case: shown as they will be written. */
+#ordCig, #ordCup, [name=reaUfficio] { text-transform: uppercase; }
+
+/* Related checkboxes stacked together, without the gap of a form row between them. */
+.check-group { display: flex; flex-direction: column; gap: 2px; }
+.check-group .check { margin: 4px 0; flex: 0 0 auto; }
+.check-group .check input { flex: 0 0 auto; }
+
+/* The fund names are long: the menu takes the width it is given, never the width of its longest option. */
+#cassaTipo, #companyCassa { width: 100%; max-width: 100%; min-width: 0; text-overflow: ellipsis; }
+.form label:has(> #cassaTipo), .form label:has(> #companyCassa) { min-width: 0; }

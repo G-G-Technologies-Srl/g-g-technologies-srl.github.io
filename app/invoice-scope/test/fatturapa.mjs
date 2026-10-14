@@ -18,7 +18,7 @@ import * as xml from "../run/xml.js";
 import {
   build, progressivo, destinatario, fileName, profileFor, identificativo, tipoDocumento,
   ambitoDi, ambitoDoc, applicaAmbito, AMBITI_MERCE, GRUPPI_MERCE, MERCE_CON_DDT,
-  IT_SDI, SM_EXPORT, SM_INTERNA, SM_ESTERO, TRACCIATO, MAX_BYTE,
+  IT_SDI, IT_PA, SM_EXPORT, SM_INTERNA, SM_ESTERO, TRACCIATO, MAX_BYTE, CASSE, frozen, snapshot,
 } from "../run/fatturapa.js";
 
 let passed = 0;
@@ -754,6 +754,208 @@ test("una rata con un IBAN suo non prende la banca del documento", () => {
   assert.ok(blocchi[0].includes("<ABI>05428</ABI>"));
   assert.ok(!blocchi[1].includes("<ABI>"), "l'IBAN tedesco non ha la banca italiana accanto");
   assert.ok(!blocchi[1].includes("IstitutoFinanziario"));
+});
+
+
+// -----------------------------------------------------------------------------------------------------------------
+//  l a   r e v i e w   d e l   1 3   o t t o b r e
+// -----------------------------------------------------------------------------------------------------------------
+
+test("lo sconto sul documento scende sulle righe come ScontoMaggiorazione, e il controllo 00423 torna", () => {
+  // 10 × 80,00 with a 10% document discount: PrezzoTotale 720,00 must equal [80,00 − 8,00] × 10.
+  const out = build({ ...DOC, scontoDocumento: { percentuale: "10" } }, { company: COMPANY, party: PARTY });
+  const linea = out.text.split("<DettaglioLinee>")[1];
+  assert.ok(linea.includes("<ScontoMaggiorazione>"), "la quota dello sconto è sulla riga");
+  assert.ok(linea.includes("<Importo>8.00</Importo>"));
+  assert.ok(linea.includes("<PrezzoTotale>720.00</PrezzoTotale>"));
+});
+
+test("con la ritenuta le righe soggette dicono Ritenuta SI, e le spese escluse no", () => {
+  const out = build({
+    ...DOC,
+    righe: [
+      DOC.righe[0],
+      { descrizione: "Spese anticipate", quantita: "1", prezzoUnitario: "50.00", aliquota: "0", natura: "N1" },
+    ],
+    ritenuta: { tipo: "RT01", aliquota: "20", causale: "A" },
+  }, { company: COMPANY, party: PARTY });
+  const linee = out.text.split("<DettaglioLinee>").slice(1);
+  assert.ok(linee[0].includes("<Ritenuta>SI</Ritenuta>"));
+  assert.ok(!linee[1].includes("<Ritenuta>"), "N1 non è un compenso");
+  // 20% of the fee alone (800,00), not of the expenses.
+  assert.ok(out.text.includes("<ImportoRitenuta>160.00</ImportoRitenuta>"));
+  // ImportoTotaleDocumento before the withholding: 800 + 176 + 50.
+  assert.ok(out.text.includes("<ImportoTotaleDocumento>1026.00</ImportoTotaleDocumento>"));
+  assert.ok(out.text.includes("<ImportoPagamento>866.00</ImportoPagamento>"), "il pagamento è al netto");
+  // Ritenuta sits between AliquotaIVA and Natura.
+  const ordine = names(xml.parse(out.text).children).filter((n) => ["AliquotaIVA", "Ritenuta", "Natura"].includes(n));
+  assert.deepEqual(ordine.slice(0, 2), ["AliquotaIVA", "Ritenuta"]);
+});
+
+test("la PEC esce solo con il codice 0000000", () => {
+  const conCodice = build(DOC, { company: COMPANY, party: { ...PARTY, pec: "cliente@pec.it" } });
+  assert.ok(!conCodice.text.includes("PECDestinatario"), "con un codice vero la PEC non va");
+  const senzaCodice = build(DOC, { company: COMPANY, party: { ...PARTY, codiceDestinatario: "", pec: "cliente@pec.it" } });
+  assert.ok(senzaCodice.text.includes("<PECDestinatario>cliente@pec.it</PECDestinatario>"));
+});
+
+test("il bollo dovuto si dichiara anche quando non è addebitato al cliente", () => {
+  const esente = { ...DOC, righe: [{ descrizione: "Esente", quantita: "1", prezzoUnitario: "100.00", aliquota: "0", natura: "N4" }] };
+  const out = build(esente, { company: COMPANY, party: PARTY });
+  assert.ok(out.text.includes("<BolloVirtuale>SI</BolloVirtuale>"));
+  // Not charged: the total is the lines alone.
+  assert.ok(out.text.includes("<ImportoTotaleDocumento>100.00</ImportoTotaleDocumento>"));
+  // An export (N3.1) is exempt from the duty: nothing to declare.
+  const export_ = { ...DOC, righe: [{ ...esente.righe[0], natura: "N3.1" }] };
+  assert.ok(!build(export_, { company: COMPANY, party: PARTY }).text.includes("DatiBollo"));
+});
+
+test("la stessa aliquota scritta in due modi fa un riepilogo solo", () => {
+  const out = build({
+    ...DOC,
+    righe: [DOC.righe[0], { descrizione: "Dal listino", quantita: "1", prezzoUnitario: "10.00", aliquota: "22.0" }],
+  }, { company: COMPANY, party: PARTY });
+  assert.equal(out.text.split("<DatiRiepilogo>").length - 1, 1);
+});
+
+
+test("l'autofattura TD29 va a sette zeri e senza PEC, qualunque codice abbia il fornitore", () => {
+  // The Italian TD29 (Agenzia) and the San Marino one (Documento B §2.2.2) agree: CodiceDestinatario
+  // 0000000, no PECDestinatario. The supplier's code would deliver the file to the supplier.
+  const out = build({ ...DOC, tipo: "TD29" }, {
+    company: COMPANY, party: { ...PARTY, codiceDestinatario: "ABCDEFG", pec: "fornitore@pec.it" },
+  });
+  assert.ok(out.text.includes("<CodiceDestinatario>0000000</CodiceDestinatario>"));
+  assert.ok(!out.text.includes("PECDestinatario"));
+  assert.ok(out.text.includes("<SoggettoEmittente>CC</SoggettoEmittente>"));
+});
+
+// -----------------------------------------------------------------------------------------------------------------
+//  p u b b l i c a   a m m i n i s t r a z i o n e ,   c a s s a ,   R E A
+// -----------------------------------------------------------------------------------------------------------------
+
+const PA = { ...PARTY, pa: true, splitPayment: true, codiceDestinatario: "UFABCD" };
+
+test("una PA italiana riceve un FPA12, al codice ufficio di sei caratteri", () => {
+  assert.equal(profileFor(COMPANY, PA), IT_PA);
+  const out = build(DOC, { company: COMPANY, party: PA });
+  const doc = xml.parse(out.text);
+  assert.equal(doc.attributes.versione, "FPA12");
+  assert.ok(out.text.includes("<FormatoTrasmissione>FPA12</FormatoTrasmissione>"));
+  assert.ok(out.text.includes("<CodiceDestinatario>UFABCD</CodiceDestinatario>"));
+  // A PA flag on a foreign customer changes nothing: there is no foreign FPA12.
+  assert.notEqual(profileFor(COMPANY, { ...PA, paese: "DE" }), IT_PA);
+});
+
+test("ordine, CIG e CUP vanno in DatiOrdineAcquisto, prima delle fatture collegate", () => {
+  const out = build({
+    ...DOC, tipo: "TD04",
+    ordine: { numero: "ORD-7", data: "2026-08-01", cig: "ZAB1234567", cup: "J11B22000000000" },
+    fattureCollegate: [{ numero: "2026/0001", data: "2026-08-20" }],
+  }, { company: COMPANY, party: PA });
+  const generali = xml.find(xml.parse(out.text).children, "FatturaElettronicaBody", "DatiGenerali");
+  assert.deepEqual(generali.map(([name]) => name).slice(0, 3),
+    ["DatiGeneraliDocumento", "DatiOrdineAcquisto", "DatiFattureCollegate"]);
+  const ordine = xml.find(generali, "DatiOrdineAcquisto");
+  assert.deepEqual(ordine.map(([name]) => name), ["IdDocumento", "Data", "CodiceCUP", "CodiceCIG"]);
+});
+
+test("la scissione dei pagamenti: EsigibilitaIVA S, e il pagamento senza l'IVA", () => {
+  const out = build({ ...DOC, esigibilita: "S" }, { company: COMPANY, party: PA });
+  assert.ok(out.text.includes("<EsigibilitaIVA>S</EsigibilitaIVA>"));
+  // 800 + 176 of VAT: the document is worth 976, the PA pays 800 and the VAT to the Treasury.
+  assert.ok(out.text.includes("<ImportoTotaleDocumento>976.00</ImportoTotaleDocumento>"));
+  assert.ok(out.text.includes("<ImportoPagamento>800.00</ImportoPagamento>"));
+});
+
+test("la cassa previdenziale: DatiCassaPrevidenziale nell'ordine dello schema, e nel riepilogo", () => {
+  const out = build({
+    ...DOC,
+    cassa: { tipo: "TC22", aliquota: "4", aliquotaIva: "22", ritenuta: true },
+    ritenuta: { tipo: "RT01", aliquota: "20", causale: "A" },
+  }, { company: COMPANY, party: PARTY });
+  const generali = xml.find(xml.parse(out.text).children, "FatturaElettronicaBody", "DatiGenerali", "DatiGeneraliDocumento");
+  const nomi = generali.map(([name]) => name);
+  assert.ok(nomi.indexOf("DatiRitenuta") < nomi.indexOf("DatiCassaPrevidenziale"));
+  assert.ok(nomi.indexOf("DatiCassaPrevidenziale") < nomi.indexOf("ImportoTotaleDocumento"));
+  const cassa = xml.find(generali, "DatiCassaPrevidenziale");
+  assert.deepEqual(cassa.map(([name]) => name),
+    ["TipoCassa", "AlCassa", "ImportoContributoCassa", "ImponibileCassa", "AliquotaIVA", "Ritenuta"]);
+  assert.ok(out.text.includes("<ImportoContributoCassa>32.00</ImportoContributoCassa>"));
+  // 800 of fees + 32 of contribution, at 22%: one summary of 832.
+  assert.ok(out.text.includes("<ImponibileImporto>832.00</ImponibileImporto>"));
+  // The withholding is on 800 + 32, because the contribution carries it.
+  assert.ok(out.text.includes("<ImportoRitenuta>166.40</ImportoRitenuta>"));
+});
+
+test("le casse sono le ventidue del tracciato", () => {
+  assert.equal(CASSE.length, 22);
+  assert.equal(CASSE[0][0], "TC01");
+  assert.equal(CASSE[21][0], "TC22");
+});
+
+test("l'iscrizione REA porta capitale e socio unico, quando ci sono", () => {
+  const rea = { ufficio: "RN", numero: "123456", capitaleSociale: "10000", socioUnico: "SU", statoLiquidazione: "LN" };
+  const out = build(DOC, { company: { ...COMPANY, rea }, party: PARTY });
+  const blocco = xml.find(xml.parse(out.text).children, "FatturaElettronicaHeader", "CedentePrestatore", "IscrizioneREA");
+  assert.deepEqual(blocco.map(([name]) => name), ["Ufficio", "NumeroREA", "CapitaleSociale", "SocioUnico", "StatoLiquidazione"]);
+  assert.ok(out.text.includes("<CapitaleSociale>10000.00</CapitaleSociale>"));
+  const senza = build(DOC, { company: { ...COMPANY, rea: { ufficio: "RN", numero: "123456" } }, party: PARTY });
+  assert.ok(!senza.text.includes("CapitaleSociale") && !senza.text.includes("SocioUnico"));
+});
+
+test("un documento emesso legge il cliente e l'azienda com'erano", () => {
+  const cliente = snapshot({ ...PARTY, contatti: [{ nome: "X" }], created: "x" });
+  assert.equal(cliente.contatti, undefined);
+  assert.equal(cliente.created, undefined);
+  const emesso = { ...DOC, cliente, emittente: snapshot(COMPANY) };
+  const dopo = frozen(emesso, { company: { ...COMPANY, denominazione: "Nuovo nome S.r.l.", logo: "L" },
+    party: { ...PARTY, denominazione: "Cambiato" } });
+  assert.equal(dopo.party.denominazione, PARTY.denominazione);
+  assert.equal(dopo.company.denominazione, COMPANY.denominazione);
+  // The logo is not in the file and stays the current one.
+  assert.equal(dopo.company.logo, "L");
+  const out = build(emesso, { company: { ...COMPANY, denominazione: "Nuovo nome S.r.l." }, party: { ...PARTY, denominazione: "Cambiato" } });
+  assert.ok(out.text.includes("Cliente S.p.A.") && out.text.includes("Esempio S.r.l."));
+  // A document issued before the snapshot existed reads the register, as it always did.
+  assert.equal(frozen(DOC, { party: PARTY }).party, PARTY);
+});
+
+test("senza scadenze il pagamento è uno, del totale, e il DettaglioPagamento c'è", () => {
+  // The screen saves `rate: []` on every draft without due dates: an empty list is not «no payment».
+  const out = build({ ...DOC, pagamento: { condizioni: "TP02", modalita: "MP05", iban: DOC.pagamento.iban, rate: [] } },
+    { company: COMPANY, party: PARTY });
+  const pagamento = xml.find(xml.parse(out.text).children, "FatturaElettronicaBody", "DatiPagamento");
+  assert.deepEqual(pagamento.map(([name]) => name), ["CondizioniPagamento", "DettaglioPagamento"]);
+  assert.ok(out.text.includes("<ImportoPagamento>976.00</ImportoPagamento>"));
+});
+
+test("le integrazioni: il fornitore è il cedente, sette zeri, CC, nessun pagamento", () => {
+  const americano = { denominazione: "Cloud Inc.", paese: "US",
+    sede: { indirizzo: "Market Street", numeroCivico: "1", cap: "94105", comune: "San Francisco", provincia: "" } };
+  const out = build({
+    tipo: "TD17", data: "2026-09-03", numero: "INT 2026/0001", progressivo: 3,
+    righe: [{ descrizione: "Abbonamento software", quantita: "1", prezzoUnitario: "40.00", aliquota: "22" }],
+  }, { company: COMPANY, party: americano });
+  const doc = xml.parse(out.text);
+  const cedente = xml.find(doc.children, "FatturaElettronicaHeader", "CedentePrestatore");
+  assert.equal(xml.find(cedente, "DatiAnagrafici", "IdFiscaleIVA", "IdPaese"), "US");
+  assert.equal(xml.find(cedente, "DatiAnagrafici", "IdFiscaleIVA", "IdCodice"), "99999999999");
+  assert.equal(xml.find(cedente, "DatiAnagrafici", "RegimeFiscale"), "RF18");
+  assert.equal(xml.find(cedente, "Sede", "CAP"), "00000");
+  const cessionario = xml.find(doc.children, "FatturaElettronicaHeader", "CessionarioCommittente");
+  assert.equal(xml.find(cessionario, "DatiAnagrafici", "IdFiscaleIVA", "IdCodice"), COMPANY.partitaIva);
+  assert.ok(out.text.includes("<CodiceDestinatario>0000000</CodiceDestinatario>"));
+  assert.ok(out.text.includes("<SoggettoEmittente>CC</SoggettoEmittente>"));
+  assert.ok(out.text.includes("<TipoDocumento>TD17</TipoDocumento>"));
+  assert.ok(!out.text.includes("DatiPagamento"));
+  assert.ok(out.text.includes("<ImportoTotaleDocumento>48.80</ImportoTotaleDocumento>"));
+  // An Italian supplier keeps its own regime, and its VAT number.
+  const td16 = build({ tipo: "TD16", data: "2026-09-20", numero: "INT 2026/0002", progressivo: 4,
+    righe: [{ descrizione: "Opere murarie", quantita: "1", prezzoUnitario: "1000.00", aliquota: "22" }],
+    fattureCollegate: [{ numero: "7", data: "2026-09-03" }] }, { company: COMPANY, party: PARTY });
+  assert.ok(td16.text.includes("<RegimeFiscale>RF01</RegimeFiscale>"));
+  assert.ok(td16.text.includes("<IdDocumento>7</IdDocumento>"));
 });
 
 console.log(`fatturapa: ${passed} prove passate`);

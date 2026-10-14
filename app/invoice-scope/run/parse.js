@@ -38,7 +38,10 @@ export function parseAmount(text) {
     const coda = raw.slice(at + 1);
     const testa = raw.slice(0, at).replace(/^-/, "");
     const unoSolo = punto < 0 || virgola < 0;
-    const migliaia = unoSolo && coda.length === 3 && /^[1-9]\d{0,2}$/.test(testa);
+    // The same separator twice or more is a thousands separator, whatever follows: «1.000.000» is a
+    // million, and reading the last dot as a decimal point made it a thousand.
+    const ripetuto = unoSolo && raw.split(raw[at]).length > 2;
+    const migliaia = ripetuto || (unoSolo && coda.length === 3 && /^[1-9]\d{0,2}$/.test(testa));
     if (!migliaia) {
       intero = raw.slice(0, at);
       decimali = coda;
@@ -73,6 +76,10 @@ export function parseOptional(text) {
 export function fiscalCode(value, paese) {
   const pulito = String(value == null ? "" : value).replace(/[\s.]/g, "").toUpperCase();
   const prefisso = String(paese || "").toUpperCase();
+  // An Italian personal tax code is sixteen characters of a fixed shape and carries no country: one
+  // that happens to begin with the country's letters — «SMT…» for a Smith in San Marino — is a code,
+  // not a prefix, and cutting it left fourteen characters that identify nobody.
+  if (/^[A-Z]{6}[\dLMNP-V]{2}[A-Z][\dLMNP-V]{2}[A-Z][\dLMNP-V]{3}[A-Z]$/.test(pulito)) return pulito;
   if (prefisso.length === 2 && pulito.startsWith(prefisso) && pulito.length > 2) {
     return pulito.slice(2);
   }

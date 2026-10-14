@@ -24,14 +24,14 @@
 
 import { get, put, list, remove } from "gg/store.js";
 
-import { t, tf } from "./i18n.js";
+import { t, tf, num } from "./i18n.js";
 import { fiscalCode, parseAmount } from "./parse.js";
 import { money, rate, date as shownDate } from "./format.js";
-import { activities, contactsOf, contactRecord, lastContactByParty, removeParty } from "./crm.js";
+import { activities, contactsOf, contactRecord, lastContactByParty, removeParty, partyUses } from "./crm.js";
 import { ask, tell } from "./ask.js";
 import { from, toString } from "./decimal.js";
 import { PAESI_CON_CAP, profileFor, vietato } from "./fatturapa.js";
-import { NATURE } from "./validate.js";
+import { NATURE, partitaIvaValida, codiceFiscaleValido } from "./validate.js";
 import { conteggi, gruppi, principale, unisci } from "./duplicates.js";
 import { TIPI_MERCE } from "./fatturapa.js";
 
@@ -100,6 +100,11 @@ let ruoloNuovo = null;                                  // the role a screen pro
 //  p r i v a t e
 // -----------------------------------------------------------------------------------------------------------------
 
+/** A checkbox value as it arrives from a form, an import or a stored record. */
+function _flag(value) {
+  return value === true || value === "true" || value === "on" || value === "1";
+}
+
 function el(id) {
   return document.getElementById(id);
 }
@@ -144,6 +149,14 @@ function _read(form, fields) {
 }
 
 /** One row of a list: the whole row opens the sheet, and a delete button sits at the end. */
+/** Whether a customer can go: when something still names it, the person is told and nothing is deleted. */
+async function _deletable(db, partyId) {
+  const n = await partyUses(db, partyId);
+  if (!n) return true;
+  await tell(tf("partyInUse", { n: num(n, 0) }));
+  return false;
+}
+
 function _row(cells, { onOpen, onDelete, label }) {
   const tr = document.createElement("tr");
   tr.className = "clickable";
@@ -199,6 +212,8 @@ function _openParty(record) {
   for (const name of PARTY_FIELDS) form.elements[name].value = data[name] || "";
   for (const name of SEDE_FIELDS) form.elements[name].value = (data.sede || {})[name] || "";
   form.elements.ruolo.value = RUOLI.includes(data.ruolo) ? data.ruolo : (ruoloNuovo || "cliente");
+  form.elements.pa.checked = Boolean(data.pa);
+  form.elements.splitPayment.checked = Boolean(data.splitPayment);
 
   // Il menù mostra il nome; la sigla vera sta nel campo `paese`, che compare solo per «Altro».
   const sigla = (data.paese || "IT").toUpperCase();
@@ -207,6 +222,7 @@ function _openParty(record) {
   form.elements.paese.value = sigla;
   _paeseScelto();
   _paeseCambiato();
+  _fiscaleCambiato();
   _fillDefaults(form, data);
 
   _open(el("partyDialog"));
@@ -272,10 +288,34 @@ function _fillDefaults(form, data) {
   el("partyDefaults").open = Boolean((data.aliquotaPredefinita ?? "") !== "" || data.ibanPredefinito);
 }
 
+/**
+ * The VAT number and the tax code checked as they are typed, for an Italian party.
+ *
+ * Only once the field is long enough to be judged: a warning under the third digit is noise. The
+ * fields say it too (`aria-invalid`), and the save is never refused for it — the check before
+ * issuing is the gate, this is the early word.
+ */
+function _fiscaleCambiato() {
+  const form = el("partyForm");
+  const paese = (form.elements.paese.value || "IT").toUpperCase();
+  const piva = form.elements.partitaIva.value.replace(/\s/g, "").replace(/^IT/i, "");
+  const cf = form.elements.codiceFiscale.value.replace(/\s/g, "");
+  const avvisi = [];
+  const pivaMale = paese === "IT" && piva.length >= 11 && !partitaIvaValida(piva);
+  const cfMale = paese === "IT" && (cf.length >= 16 || (cf.length === 11 && /^\d+$/.test(cf))) && !codiceFiscaleValido(cf);
+  if (pivaMale) avvisi.push(t("partyVatWarn"));
+  if (cfMale) avvisi.push(t("partyTaxCodeWarn"));
+  form.elements.partitaIva.setAttribute("aria-invalid", pivaMale ? "true" : "false");
+  form.elements.codiceFiscale.setAttribute("aria-invalid", cfMale ? "true" : "false");
+  el("partyFiscalWarn").hidden = avvisi.length === 0;
+  el("partyFiscalWarn").textContent = avvisi.join(" ");
+}
+
 /** La natura serve solo a zero: a 22 il menù sarebbe una domanda senza senso. */
 function _aliquotaCambiata() {
   const form = el("partyForm");
-  const zero = String(parseAmount(form.elements.aliquotaPredefinita.value) ?? "") === "0";
+  const letta = parseAmount(form.elements.aliquotaPredefinita.value);
+  const zero = letta !== null && Number(letta) === 0;
   el("partyNaturaField").hidden = !zero;
 }
 
@@ -307,13 +347,19 @@ function _paeseCambiato() {
   const paese = (form.elements.paese.value || "IT").toUpperCase();
   const proprio = PAESI_CON_CAP.has(paese);
   el("partyEsteraNote").hidden = proprio;
+  // A San Marino operator has a COE, not a partita IVA: the label said «Partita IVA» for everybody,
+  // while the company's own sheet already switched.
+  el("partyPivaLabel").textContent = t(paese === "SM" ? "f_coe" : "f_partitaIva");
   form.elements.provincia.maxLength = proprio ? 2 : 40;
   form.elements.cap.maxLength = proprio ? 5 : 12;
 }
 
 async function _saveParty() {
   const form = el("partyForm");
-  const flat = { ..._read(form, PARTY_FIELDS), ..._read(form, SEDE_FIELDS) };
+  const flat = {
+    ..._read(form, PARTY_FIELDS), ..._read(form, SEDE_FIELDS),
+    pa: form.elements.pa.checked, splitPayment: form.elements.splitPayment.checked,
+  };
 
   if (!flat.denominazione) {
     _problems([t("partyNeedsName")]);
@@ -333,14 +379,15 @@ async function _saveParty() {
   // documento e dall'acquisto, dove l'elenco dei clienti non è mai stato disegnato.
   const azienda = await get(database, "company", "company");
   const mancanti = campiMancanti(record, azienda).map((chiave) => t(chiave));
+  // Taken before anything is awaited: the callback belongs to this save and to no later one.
+  const aspetta = dopoIlSalvataggio;
+  dopoIlSalvataggio = null;
   _close(el("partyDialog"));
   editing = null;
   await render(database, onChange);
   if (onChange) onChange();
   if (mancanti.length) await tell(t("partyWarnings"), { lines: mancanti });
 
-  const aspetta = dopoIlSalvataggio;
-  dopoIlSalvataggio = null;
   if (aspetta) await aspetta(record);
 }
 
@@ -373,7 +420,7 @@ function _openItem(record) {
   // code: the same defaults a new line gets, so that the list and the document agree.
   if (!record) {
     form.elements.aliquota.value = String(aliquotaNuova || "22");
-    if (String(aliquotaNuova) === "0") {
+    if (aliquotaNuova !== undefined && aliquotaNuova !== null && aliquotaNuova !== "" && Number(aliquotaNuova) === 0) {
       form.elements.natura.value = predefiniti.natura || "";
       form.elements.tm.value = predefiniti.tm || "";
     }
@@ -481,6 +528,11 @@ export function partyRecord(fields) {
   if (String(record.aliquotaPredefinita) !== "0") record.naturaPredefinita = "";
   record.ibanPredefinito = record.ibanPredefinito.replace(/\s/g, "").toUpperCase();
   record.ruolo = RUOLI.includes(record.ruolo) ? record.ruolo : "cliente";
+  // **A public administration is a flag, not a role.** It changes the file (FPA12, a six-character
+  // office code) and proposes split payment on its invoices; only an Italian customer can be one.
+  // Written only when true, so the records of everybody else do not grow two empty keys.
+  if (record.paese === "IT" && _flag(fields.pa)) record.pa = true;
+  if (record.paese === "IT" && _flag(fields.splitPayment)) record.splitPayment = true;
   record.name = record.denominazione;
   record.updated = new Date().toISOString();
   return record;
@@ -601,6 +653,7 @@ export async function render(db, afterChange = null) {
         // l'unica. Si modifica dal pulsante che sta dentro.
         onOpen: () => { location.hash = `#/cliente/${person.id}`; },
         onDelete: async () => {
+          if (!(await _deletable(db, person.id))) return;
           if (!(await ask(t("partyDeleteAsk"), { okLabel: t("del"), danger: true }))) return;
           await removeParty(db, person.id);
           await render(db, onChange);
@@ -689,10 +742,23 @@ export function connect(db, afterChange = null) {
   database = db;
   onChange = afterChange;
 
-  el("partyNew").addEventListener("click", () => _openParty(null));
+  el("partyNew").addEventListener("click", () => {
+    dopoIlSalvataggio = null;
+    _openParty(null);
+  });
+  // **Escape forgets what the sheet was opened for**, as «Lascia stare» does. Nothing listened for
+  // it, so the callback of a sheet opened from a draft stayed armed: the next customer saved from
+  // Anagrafiche then ran it, and the last draft opened took that customer as its own.
+  el("partyDialog").addEventListener("cancel", () => {
+    editing = null;
+    dopoIlSalvataggio = null;
+  });
   // Il paese decide se CAP e provincia finiscono nel file o solo sul foglio stampato, quindi la
   // scheda si adatta mentre lo si scrive e non al salvataggio.
   el("partyForm").elements.paese.addEventListener("input", _paeseCambiato);
+  for (const name of ["partitaIva", "codiceFiscale", "paese"]) {
+    el("partyForm").elements[name].addEventListener("input", _fiscaleCambiato);
+  }
   el("partyForm").elements.aliquotaPredefinita.addEventListener("input", _aliquotaCambiata);
   el("partyForm").elements.paeseScelto.addEventListener("change", () => {
     _paeseScelto();
@@ -707,6 +773,7 @@ export function connect(db, afterChange = null) {
   el("partyDelete").addEventListener("click", async () => {
     const record = editing;
     if (!record) return;
+    if (!(await _deletable(database, record.id))) return;
     if (!(await ask(t("partyDeleteAsk"), { okLabel: t("del"), danger: true }))) return;
     _close(el("partyDialog"));
     editing = null;

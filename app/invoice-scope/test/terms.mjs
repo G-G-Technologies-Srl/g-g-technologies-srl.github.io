@@ -7,7 +7,7 @@
 import assert from "node:assert/strict";
 
 import {
-  termine, stato, fineMese, primoGiornoNonFestivo, annoPiuUno, giorniFra, autofattura,
+  termine, stato, fineMese, primoGiornoNonFestivo, annoPiuUno, giorniFra, autofattura, integrazione,
 } from "../run/terms.js";
 import { IT_SDI, SM_EXPORT, SM_INTERNA } from "../run/fatturapa.js";
 
@@ -221,6 +221,19 @@ test("il mese in più non scavalca il mese: il 31 agosto più un mese è il 30 s
   assert.equal(daGennaio.termineFornitore, "2026-02-02");
   assert.equal(daGennaio.dal, "2026-04-02");
   assert.equal(daGennaio.al, "2026-05-02");
+});
+
+test("l'integrazione va trasmessa entro il 15 del mese dopo, il lunedì se cade nel fine settimana", () => {
+  assert.equal(integrazione({ data: "2026-09-03" }, { oggi: "2026-10-01" }).al, "2026-10-15");
+  // 15 August 2026 is a Saturday: the deadline moves to Monday the 17th.
+  assert.equal(integrazione({ data: "2026-07-31" }, { oggi: "2026-08-01" }).al, "2026-08-17");
+  assert.equal(integrazione({ data: "2026-12-10" }, { oggi: "2027-01-01" }).al, "2027-01-15", "a cavallo d'anno");
+  assert.equal(integrazione({ data: "2026-09-03" }, { oggi: "2026-10-16" }).key, "scaduto");
+  assert.equal(integrazione({ data: "2026-09-03" }, { oggi: "2026-10-16", fatta: true }).key, "fatto");
+  // A drafted integration counts from the purchase, and its deadline shows on the Italian channel too.
+  const doc = { tipo: "TD16", data: "2026-09-20", daAcquisto: { data: "2026-09-03" } };
+  assert.equal(termine(doc, IT_SDI).data, "2026-10-15");
+  assert.equal(stato(doc, IT_SDI, { oggi: "2026-10-20" }).key, "scaduto");
 });
 
 console.log(`terms: ${passed} prove passate`);

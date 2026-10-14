@@ -60,7 +60,9 @@ Si provano sotto Node, e sono il posto giusto per una regola.
 | `fatturapa.js` · `xml.js` | il documento come file FatturaPA | `xml.js` emette coppie ordinate, non oggetti |
 | `xmlread.js` · `reading.js` | l'XML **scritto da altri**, e i documenti che ne escono | prefissi ignorati, totali ricalcolati |
 | `sheet.js` · `xls.js` · `fic.js` · `parse.js` | i formati in ingresso: `.xlsx`, il `.xls` del 1997, le tre esportazioni di Fatture in Cloud | nessuno di loro scrive nel deposito |
-| `format.js` | numeri e date come una persona li legge e li scrive | l'unico posto che formatta, in tutta l'app |
+| `format.js` | numeri e date come una persona li legge e li scrive; `days(n)` per «1 giorno», «5 giorni» | l'unico posto che formatta, in tutta l'app |
+| `day.js` | **oggi**, sul calendario locale (`currentDay`, `isoDay`) | senza import: lo usano anche i moduli puri |
+| `csv.js` · `statement.js` | un CSV in righe (separatore e codifica indovinati), e l'estratto conto in movimenti abbinati alle fatture aperte | si abbina solo quando è sicuro: importo dovuto e fattura unica, o nominata dalla causale |
 | `safety.js` | se l'unica copia è al sicuro, e cosa dirne nella Situazione | conosce lo stato della cartella, non il DOM |
 | `archive.js` | cosa tiene una copia della cartella, e in che cosa differisce da adesso | conta i record, non li legge |
 | `bundle.js` | l'archivio con i suoi file: il JSON più `assets/` e `ricevute/`, in uno zip, e il ritorno | la forma è quella della cartella di backup, e `backup.js` prende da qui payload e manifest |
@@ -136,7 +138,7 @@ Passano dalla import map, mai da un import relativo, e hanno due licenze diverse
 
 ---
 
-## Le dodici cose che non si rompono
+## Le diciannove cose che non si rompono
 
 1. **Nessun importo passa da un float.** `0.1 + 0.2` su una fattura non è una curiosità, è un numero
    sbagliato depositato all'Agenzia. Tutto passa da `decimal.js`, che sta a otto decimali perché il
@@ -193,6 +195,48 @@ Passano dalla import map, mai da un import relativo, e hanno due licenze diverse
     l'imposta», «finché non la togli», «se lo addebiti», «Chi sei» no. Il 13 ottobre 2026 una
     revisione ha portato al voi una cinquantina di imperativi e la decisione ha detto di no: sono
     tornati com'erano. Prima di «correggere» un imperativo, rileggere quella sezione.
+13. **«Oggi» si chiede a `day.js`, mai a `toISOString()`.** `new Date().toISOString().slice(0, 10)`
+    è la data di Greenwich: fra mezzanotte e l'una (le due d'estate) in Italia è ancora ieri, e una
+    bozza aperta alle 00:30 del primo gennaio usciva datata e numerata nell'anno vecchio. La review
+    del 13 ottobre 2026 ne ha trovati quaranta; ne resta solo il calcolo sulle date già in UTC
+    (`Date.UTC(...)`), che è coerente con sé stesso. Un timestamp (`created`, `updated`) resta ISO.
+14. **Una riga del file deve tornare al controllo 00423.** `PrezzoTotale` = [`PrezzoUnitario` −
+    sconti della riga] × `Quantita`: per questo la quota dello sconto sul documento che `totals.js`
+    toglie da una riga esce su quella riga come `ScontoMaggiorazione` per unità (`_shareOf` in
+    `fatturapa.js`). Toglierla dal totale senza scriverla era un file scartato. Stessa famiglia: con
+    `DatiRitenuta` almeno una riga dice `<Ritenuta>SI</Ritenuta>` (00411) — quelle che non sono N1,
+    `soggettaRitenuta` in `totals.js` — e `ImportoTotaleDocumento` è **prima** della ritenuta
+    (`totaleDocumento`), che esce solo dall'`ImportoPagamento`.
+15. **Una nota nomina la fattura per id.** `creditNote` scrive `{ id, numero, data }` con il numero
+    per esteso; `schedule.js` cerca per id, poi per numero stampato, poi per numero e data. Una nota
+    che nomina più fatture si divide fra loro, ciascuna fino al suo totale. E un cliente nominato da
+    un documento non si elimina (`partyUses` in `crm.js`): il documento porta solo l'id.
+16. **Il ripristino è tutto o niente.** `gg/io.js` scrive tutti gli store in una transazione sola
+    (`replaceStores` in `gg/store.js`); dopo, `_afterRestore` in `app.js` ricarica i progetti,
+    spazza le ricevute orfane e rifà i promemoria — le stesse tre cose di `_reset`. Una via nuova per
+    rimettere un archivio passa da lì.
+17. **Un documento emesso legge il cliente e l'azienda com'erano.** `issue` scrive `cliente` ed
+    `emittente` (`snapshot` in `fatturapa.js`, senza contatti, logo, conti e date); `build`, la stampa,
+    la scheda e `validate` passano da `frozen(doc, { company, party })`. Un documento emesso prima
+    non ha la copia e rilegge l'anagrafica, com'è sempre stato: nessuna migrazione.
+18. **PA, cassa e scissione stanno nel tracciato, non accanto.** Il profilo `IT_PA` (FPA12, codice
+    ufficio di sei caratteri) si sceglie in `profileFor` da `party.pa`; la cassa è una pseudo-riga del
+    riepilogo in `totals.js` (tolta dalle righe dopo il calcolo) e `DatiCassaPrevidenziale` dopo
+    `DatiBollo`; l'esigibilità `S` toglie l'imposta da `totale` (`impostaScissa`) ma non da
+    `totaleDocumento`. E `DatiPagamento` ha sempre almeno un `DettaglioPagamento`: lo schermo salva
+    `rate: []`, e un elenco vuoto non è «nessun pagamento». Verso la PA il file va firmato fuori
+    dall'app: lo dicono i messaggi dopo l'emissione e dopo lo scarico (`docIssuedNextPa`,
+    `docXmlDonePa`). `creditNote` copia `cassa`, `esigibilita` e `ordine` anche quando sono `null`
+    (una risposta, non un vuoto); una bozza senza la chiave (`undefined`, come quella nata da una
+    conversione) prende in `open` la cassa dell'azienda e la scissione del cliente. `reading.js`
+    legge esigibilità, ordine, `<Ritenuta>SI</Ritenuta>` per riga e, da un FPA12, il cliente PA.
+19. **Autofattura e integrazioni non sono ricavi.** `kinds.js` ha `ricavo` accanto a `fiscale`: il
+    fatturato (Situazione, cliente, progetto) legge `ricavo`, il CSV del commercialista e i
+    controlli leggono `fiscale`. TD16–TD19 sono `autofattura` (ruoli invertiti in `fatturapa.js`) e
+    `integrazione`: serie e contatore «INT», solo sul canale italiano (`IT_SDI.tipi`), termine il 15
+    del mese dopo (`terms.integrazione`, contato dalla data della fattura del fornitore), IVA nei
+    due registri in `taxBalance` (il forfettario non detrae). La proposta nasce da `daIntegrare`
+    in `costs.js` sugli acquisti con `inversione`; cancellare la bozza la ridà (`releasePurchase`).
 
 ---
 

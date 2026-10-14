@@ -22,6 +22,7 @@ import { list, put, remove, get } from "gg/store.js";
 
 import { costRecord } from "./costs.js";
 import { parseAmount, parseOptional } from "./parse.js";
+import { currentDay } from "./day.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -77,7 +78,7 @@ export function recurringRecord(fields) {
     aliquota: (parseOptional(fields.aliquota) || "0").replace(/\.(\d*?)0+$/, ".$1").replace(/\.$/, ""),
     cadenza,
     giorno,
-    da: String(fields.da || new Date().toISOString()).slice(0, 7),
+    da: String(fields.da || currentDay()).slice(0, 7),
     a: fields.a ? String(fields.a).slice(0, 7) : null,
     created: fields.created || new Date().toISOString(),
     updated: new Date().toISOString(),
@@ -125,7 +126,7 @@ export function periodsOf(record, from, to) {
  * ricorrenza scritta a gennaio non deve riempire l'elenco di otto mesi «in ritardo» che in realtà
  * sono stati pagati prima che l'app li conoscesse.
  */
-export function expected(recurring, costs, { today = new Date().toISOString().slice(0, 10), company = null, until = null } = {}) {
+export function expected(recurring, costs, { today = currentDay(), company = null, until = null } = {}) {
   const from = _addMonths(today.slice(0, 7), -1);
   const to = until || `${today.slice(0, 4)}-12`;
   const coperti = new Set(costs.filter((c) => c.ricorrenzaId).map((c) => `${c.ricorrenzaId}|${c.periodo}`));

@@ -72,6 +72,21 @@ await prova("il confronto con l'anno scorso è a oggi, non sull'anno intero", as
   assert.equal(n.delta, 50);
 });
 
+await prova("autofatture e integrazioni non sono fatturato: riguardano acquisti", async () => {
+  const docs = [fattura("2026-03-10", 1000), fattura("2026-03-11", 500, { id: "int", tipo: "TD16" }),
+    fattura("2026-03-12", 200, { id: "af", tipo: "TD29" })];
+  const n = figures(docs, { rows: [], overdue: [], total: 0n }, { today: OGGI });
+  assert.equal(soldi(n.fatturato), "1000.00");
+});
+
+await prova("una fattura scartata o annullata non è fatturato", async () => {
+  // Refused by the SdI and reissued: only the reissue counts. Both used to.
+  const docs = [fattura("2026-03-10", 1000, { stato: "scartato" }), fattura("2026-03-11", 1000, { id: "rifatta" }),
+    fattura("2026-04-10", 300, { stato: "annullato" })];
+  const n = figures(docs, { rows: [], overdue: [], total: 0n }, { today: OGGI });
+  assert.equal(soldi(n.fatturato), "1000.00");
+});
+
 await prova("senza anno scorso il confronto non c'è, e una nota di credito toglie", async () => {
   const docs = [fattura("2026-03-10", 1000), fattura("2026-04-10", 200, { tipo: "TD04" })];
   const n = figures(docs, { rows: [], overdue: [], total: 0n }, { today: OGGI });

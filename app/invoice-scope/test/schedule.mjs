@@ -18,7 +18,7 @@ import assert from "node:assert/strict";
 import { from, sum, toString } from "../run/decimal.js";
 import {
   schedule, summary, recordPayment, removePayment, paymentsOf, received, owedOn, csv, quote,
-  settlementOf, ledger,
+  settlementOf, ledger, spread,
 } from "../run/schedule.js";
 import { openDatabase } from "../run/db.js";
 import { put, get, reset } from "./fake-store.mjs";
@@ -225,6 +225,33 @@ await test("uno storno parziale lascia dovuta la differenza", async () => {
     fattureCollegate: [{ numero: "2026/0001", data: "2026-08-01" }],
   }));
   assert.equal(money((await summary(db, { today: OGGI })).total), "732.00");
+});
+
+await test("una nota che nomina due fatture si divide fra le due, non le salda tutte e due", async () => {
+  // 100,00 € credited against A (60,00) and B (500,00): A is settled, B owes 460,00. Credited in
+  // full to each, the overall amount owed dropped by 200,00.
+  const db = await openDatabase();
+  await put(db, "docs", issued({ id: "a", numero: "2026/0001", totale: "60.00" }));
+  await put(db, "docs", issued({ id: "b", numero: "2026/0002", totale: "500.00" }));
+  await put(db, "docs", issued({
+    id: "nc", tipo: "TD04", numero: "2026/NC01", totale: "100.00",
+    fattureCollegate: [{ numero: "2026/0001", data: "2026-08-01" }, { numero: "2026/0002", data: "2026-08-01" }],
+  }));
+  assert.equal(money((await summary(db, { today: OGGI })).total), "460.00");
+});
+
+await test("la nota trova la sua fattura per id, anche se un'altra ha lo stesso numero", async () => {
+  // A debit note «ND 2026/0001» and the invoice «2026/0001» share the bare number: the credit must
+  // land on the invoice the note was made from.
+  const db = await openDatabase();
+  await put(db, "docs", { ...issued({ id: "nd", tipo: "TD05", numero: "2026/0001", totale: "100.00" }), serie: "ND" });
+  await put(db, "docs", issued({ id: "f", numero: "2026/0001", totale: "500.00" }));
+  await put(db, "docs", issued({
+    id: "nc", tipo: "TD04", numero: "2026/NC01", totale: "500.00",
+    fattureCollegate: [{ id: "f", numero: "2026/0001", data: "2026-08-01" }],
+  }));
+  const rows = await schedule(db, { today: OGGI });
+  assert.deepEqual(rows.map((r) => r.docId), ["nd"], "la fattura è stornata, la nota di debito resta dovuta");
 });
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -614,6 +641,20 @@ await test("una fattura a zero non si dichiara saldata", async () => {
   const conto = settlementOf({ data: "2026-09-01", totali: { totale: "0" } }, 0n, OGGI);
   assert.equal(conto.saldata, false);
   assert.equal(money(conto.residuo), "0.00");
+});
+
+
+await test("un bonifico in più si divide fra le altre fatture del cliente, dalla più vecchia", async () => {
+  const rows = [
+    { docId: "a", numero: "1", partyId: "p1", scadenza: "2026-08-01", importo: from("100.00") },
+    { docId: "b", numero: "2", partyId: "p1", scadenza: "2026-07-01", importo: from("50.00") },
+    { docId: "c", numero: "3", partyId: "p2", scadenza: "2026-06-01", importo: from("70.00") },
+    { docId: "x", numero: "9", partyId: "p1", scadenza: "2026-05-01", importo: from("10.00") },
+  ];
+  const { quote, avanzo } = spread(rows, { partyId: "p1", escludi: "x", importo: from("120.00") });
+  // b first (July), then a for the rest; the other customer's invoice is never touched.
+  assert.deepEqual(quote.map((q) => [q.docId, money(q.importo)]), [["b", "50.00"], ["a", "70.00"]]);
+  assert.equal(money(avanzo), "0.00");
 });
 
 console.log(`schedule: ${passed} prove passate`);

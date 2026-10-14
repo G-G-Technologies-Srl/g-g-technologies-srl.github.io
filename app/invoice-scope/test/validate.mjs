@@ -160,6 +160,16 @@ test("un privato con il solo codice fiscale va bene", () => {
   assert.deepEqual(check(DOC, { ...context, party: privato }), []);
 });
 
+test("un codice fiscale omocodico è valido", () => {
+  // Letters in the digit positions (omocodia): a real code, which used to block the invoice.
+  const privato = {
+    denominazione: null, nome: "Mario", cognome: "Rossi",
+    codiceFiscale: "RSSMRA80A01H50MU", codiceDestinatario: "0000000",
+    sede: { indirizzo: "Via Roma", numeroCivico: "1", cap: "00100", comune: "Roma", provincia: "RM" },
+  };
+  assert.deepEqual(check(DOC, { ...context, party: privato }), []);
+});
+
 test("una ragione sociale troppo lunga dice quanto è lunga", () => {
   const lungo = { ...PARTY, denominazione: "A".repeat(81) };
   const problemi = check(DOC, { ...context, party: lungo });
@@ -639,8 +649,12 @@ test("il regime fiscale sammarinese è uno solo", () => {
   const forfettario = { ...SM, regimeFiscale: "RF19" };
   assert.ok(validate(INTERNA, { company: forfettario, party: SM_CLIENTE })
     .map((p) => p.campo).includes("azienda.regimeFiscale"));
-  // In Italia il forfettario esiste, e passa.
-  assert.deepEqual(validate(DOC, { company: { ...COMPANY, regimeFiscale: "RF19" }, party: PARTY }), []);
+  // In Italia il forfettario esiste, e passa — con le righe senza IVA, sotto N2.2.
+  const senzaIva = { ...DOC, righe: DOC.righe.map((r) => ({ ...r, aliquota: "0", natura: "N2.2" })) };
+  assert.deepEqual(validate(senzaIva, { company: { ...COMPANY, regimeFiscale: "RF19" }, party: PARTY }), []);
+  // E con l'IVA sulle righe non passa: il forfettario non la applica.
+  assert.deepEqual(validate(DOC, { company: { ...COMPANY, regimeFiscale: "RF19" }, party: PARTY })
+    .map((p) => p.regola), ["vForfettarioIva"]);
 });
 
 test("un riepilogo che si annulla da solo non esce verso San Marino", () => {

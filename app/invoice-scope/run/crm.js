@@ -29,6 +29,7 @@
 // `node --import ./app/invoice-scope/test/loader.mjs app/invoice-scope/test/crm.mjs`.
 
 import { list, put, remove, tx } from "gg/store.js";
+import { currentDay } from "./day.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -67,7 +68,7 @@ function _text(value) {
 }
 
 function _today() {
-  return new Date().toISOString().slice(0, 10);
+  return currentDay();
 }
 
 /**
@@ -141,6 +142,9 @@ export function activityRecord(fields) {
     created: fields.created || now,
     updated: now,
   };
+  // A reminder sent from the payment schedule: 1 or 2, the tone it was written in. The next one
+  // reads it to propose the firmer text (`tonoProposto` in reminders.js).
+  if (fields.sollecito === 1 || fields.sollecito === 2) record.sollecito = fields.sollecito;
   if (record.tipo === MEETING) {
     // A time that is not one is dropped rather than kept: it is what the agenda sorts on within a
     // day, and «10.30» would sort after every «10:30» ever written.
@@ -211,6 +215,23 @@ export function lastContactByParty(all, { oggi = _today() } = {}) {
     if (!before || String(one.data) > before) out.set(one.partyId, String(one.data));
   }
   return out;
+}
+
+/**
+ * How many records still name a customer: documents, purchases, recurring invoices and costs,
+ * projects.
+ *
+ * **A customer named by a document is not deleted.** A document stores the id and nothing else,
+ * and the sheet and the XML read the customer back from the register: with the record gone, the
+ * XML of an issued invoice failed and its printed sheet had no customer at all. The person is told
+ * what still points at it; a duplicate is merged, not deleted.
+ */
+export async function partyUses(db, partyId) {
+  let n = 0;
+  for (const store of ["docs", "costs", "recurring", "recurringDocs", "projects"]) {
+    n += (await list(db, store)).filter((one) => one && one.partyId === partyId).length;
+  }
+  return n;
 }
 
 /**

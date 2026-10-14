@@ -368,4 +368,31 @@ test("un numero di rate senza senso è un errore", () => {
   assert.throws(() => rate(from("100"), 2.5), RangeError);
 });
 
+// -----------------------------------------------------------------------------------------------------------------
+//  c a s s a   e   s c i s s i o n e
+// -----------------------------------------------------------------------------------------------------------------
+
+test("il contributo cassa si calcola sui compensi, escluse le spese anticipate", () => {
+  const out = totals({
+    righe: [line("1", "1000", "22"), line("1", "50", "0", { natura: "N1" })],
+    cassa: { tipo: "TC04", aliquota: "4", aliquotaIva: "22" },
+  });
+  assert.equal(money(out.cassa.imponibile), "1000.00");
+  assert.equal(money(out.cassa.importo), "40.00");
+  // 1000 + 40 at 22% in one summary, the expense apart.
+  const al22 = out.riepiloghi.find((r) => r.aliquota === "22");
+  assert.equal(money(al22.imponibile), "1040.00");
+  assert.equal(money(out.totale), "1318.80");
+  // The pseudo-line does not stay among the lines.
+  assert.equal(out.righe.length, 2);
+});
+
+test("la scissione dei pagamenti toglie l'IVA dal totale da pagare, non dal documento", () => {
+  const out = totals({ righe: [line("1", "1000", "22")], esigibilita: "S" });
+  assert.equal(out.riepiloghi[0].esigibilita, "S");
+  assert.equal(money(out.impostaScissa), "220.00");
+  assert.equal(money(out.totaleDocumento), "1220.00");
+  assert.equal(money(out.totale), "1000.00");
+});
+
 console.log(`totals: ${passed} prove passate`);

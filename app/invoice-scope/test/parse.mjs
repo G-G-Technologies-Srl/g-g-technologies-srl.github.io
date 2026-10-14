@@ -55,4 +55,17 @@ prova("il codice fiscale perde il paese davanti, quando è quello", () => {
   assert.equal(fiscalCode(null, "IT"), "");
 });
 
+
+prova("lo stesso separatore ripetuto è delle migliaia", () => {
+  assert.equal(parseAmount("1.000.000"), "1000000");
+  assert.equal(parseAmount("12.345.678"), "12345678");
+  assert.equal(parseAmount("1,000,000"), "1000000");
+  assert.equal(parseAmount("1.000.000,50"), "1000000.50");
+});
+
+prova("un codice fiscale che comincia con la sigla del paese non perde le prime due lettere", () => {
+  assert.equal(fiscalCode("SMTJHN80A01H501Z", "SM"), "SMTJHN80A01H501Z");
+  assert.equal(fiscalCode("SM29141", "SM"), "29141");
+});
+
 console.log(`parse: ${passed} prove passate`);

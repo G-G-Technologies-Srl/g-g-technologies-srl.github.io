@@ -27,6 +27,7 @@ import { totals } from "./totals.js";
 import {
   planRecord, problems, daEmettere, bozzaDa, allPlans, savePlan, removePlan,
 } from "./recurring-docs.js";
+import { currentDay } from "./day.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  s t a t e
@@ -145,6 +146,10 @@ async function _drawDaEmettere(righe, persone) {
     crea.textContent = t("toIssueMake");
     crea.setAttribute("aria-label", `${t("toIssueMake")} — ${riga.piano.descrizione} ${shownDate(riga.data)}`);
     crea.addEventListener("click", async () => {
+      // One draft per click: a double click made two drafts for the same period, which is the
+      // double invoicing this list exists to prevent.
+      if (crea.disabled) return;
+      crea.disabled = true;
       const cliente = riga.piano.partyId ? await getParty(database, riga.piano.partyId) : null;
       const bozza = await saveDoc(database, bozzaDa(riga.piano, riga.periodo, { company, party: cliente }));
       if (onChange) await onChange();
@@ -218,7 +223,7 @@ async function _openSheet(record) {
   form.elements.cadenza.value = CADENZE[data.cadenza] ? data.cadenza : "mensile";
   form.elements.giorno.value = String(data.giorno || 1);
   form.elements.giorniScadenza.value = String(data.giorniScadenza ?? 30);
-  form.elements.da.value = data.da || new Date().toISOString().slice(0, 7);
+  form.elements.da.value = data.da || currentDay().slice(0, 7);
   form.elements.a.value = data.a || "";
 
   fillDatalist(el("planCategories"), await documents(database));

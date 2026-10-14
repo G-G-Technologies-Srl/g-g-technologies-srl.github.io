@@ -99,6 +99,19 @@ await prova("correggere i dati fiscali non cancella le persone", async () => {
   assert.ok(!("contatti" in partyRecord({ denominazione: "Senza nessuno" })));
 });
 
+await prova("la pubblica amministrazione è una spunta, e solo per un cliente italiano", async () => {
+  const pa = partyRecord({ denominazione: "Comune di Esempio", paese: "IT", pa: true, splitPayment: "on" });
+  assert.equal(pa.pa, true);
+  assert.equal(pa.splitPayment, true);
+  // Corrected later, the record passes through again and keeps both flags.
+  const corretto = partyRecord({ ...pa, ...pa.sede, cap: "40069" });
+  assert.equal(corretto.pa, true);
+  assert.equal(corretto.splitPayment, true);
+  // Unticked, the keys are not written at all; abroad, they do not exist.
+  assert.ok(!("pa" in partyRecord({ denominazione: "Privato", pa: false })));
+  assert.ok(!("pa" in partyRecord({ denominazione: "Stadt", paese: "DE", pa: true })));
+});
+
 await prova("l'IVA e il conto del cliente sopravvivono al record, nella forma giusta", async () => {
   // L'aliquota come la scrive una persona — «0», «22,0», vuota — e come la vogliono i conti; la
   // natura solo quando l'aliquota è zero, perché a 22 sarebbe un dato che il tracciato rifiuta.

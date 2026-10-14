@@ -27,7 +27,8 @@ import { draw } from "./timeline.js";
 import { control as statoControl } from "./states.js";
 import { openSheet, openMoney } from "./payments.js";
 import { allCosts, allOutlays, payable, recordOutlay, cost as getCost, signedTotal as costTotal } from "./costs.js";
-import { expected } from "./recurring.js";
+import { expected, confirmFields } from "./recurring.js";
+import { openProposal } from "./purchases.js";
 import { list } from "gg/store.js";
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -36,6 +37,8 @@ import { list } from "gg/store.js";
 
 let database = null;
 let onChange = null;
+// How many renders have started: one that a newer render has overtaken stops before drawing.
+let turni = 0;
 let soloScadute = false;
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -91,6 +94,7 @@ async function _paga(row, people) {
   await openMoney(database, {
     titolo: `${people.get(row.partyId) || "—"} · ${row.riferimento || "—"} · ${t("costOwedLabel")} ${_money(row.importo)}`,
     etichetta: t("costPay"),
+    diPiu: "costOverpaid",
     residuo: row.importo,
     save: (campi) => recordOutlay(database, record, campi),
     onDone: async () => {
@@ -143,7 +147,14 @@ function _drawOut(rows, people) {
       conferma.type = "button";
       conferma.className = "ghost small row-action";
       conferma.textContent = t("expectedConfirm");
-      conferma.addEventListener("click", () => { location.hash = "#/acquisti"; });
+      // The same sheet Acquisti opens, already filled from the recurring cost: going to the
+      // purchases screen and looking for the row again was two steps for nothing.
+      conferma.addEventListener("click", () => openProposal(database, confirmFields(row.atteso), {
+        afterSave: async () => {
+          await render(database, onChange);
+          if (onChange) onChange();
+        },
+      }));
       azioni.append(conferma);
     } else {
       const apri = document.createElement("button");
@@ -172,6 +183,8 @@ function _drawOut(rows, people) {
 export async function render(db, afterChange = null) {
   database = db;
   onChange = afterChange;
+  turni += 1;
+  const turno = turni;
 
   const { rows, total } = await summary(db);
   const visibili = soloScadute ? rows.filter((row) => row.scaduta) : rows;
@@ -191,12 +204,15 @@ export async function render(db, afterChange = null) {
   const company = await get(db, "company", "company");
   const attesi = expected(await list(db, "recurring"), costs, { company }).map((a) => ({
     costId: a.id, partyId: a.partyId, scadenza: a.data, importo: costTotal(a), scaduta: a.scaduta,
-    riferimento: a.descrizione || a.categoria || "", attesa: true,
+    riferimento: a.descrizione || a.categoria || "", attesa: true, atteso: a,
   }));
   const tutte = [...out, ...attesi].sort((a, b) => String(a.scadenza).localeCompare(String(b.scadenza)));
   const totalOut = out.reduce((sum, row) => sum + row.importo, 0n);
 
   el("dueEmpty").hidden = visibili.length > 0;
+  // With «only overdue» on and nothing overdue, «nothing to collect» was false: money is owed, just
+  // not late. The sentence says which of the two is true.
+  el("dueEmpty").textContent = soloScadute && rows.length ? t("dueNoneOverdue") : t("dueEmpty");
   el("dueTable").hidden = visibili.length === 0;
   // Con le uscite il totale diventa tre numeri: cosa entra, cosa esce, e la differenza — che è
   // l'unico dei tre che risponde alla domanda.
@@ -216,14 +232,24 @@ export async function render(db, afterChange = null) {
     title: t(tutte.length ? "dueChartTwoWay" : "dueChart"),
     out: tutte,
   });
+  // The legend follows the chart, and its lower half follows the lower half of the chart.
+  el("dueLegend").hidden = el("dueChart").hidden;
+  el("dueLegendOut").hidden = tutte.length === 0;
 
   const people = new Map((await parties(db)).map((p) => [p.id, p.denominazione]));
+  // **Everything is read before anything is cleared.** The rows used to be drawn one `await` at a
+  // time after the table was emptied, so two renders close together — a double click on the
+  // filter, a payment and its refresh — interleaved and drew every row twice. Now the last await
+  // is behind us when the table is touched, and a render overtaken by a newer one draws nothing.
+  const documenti = new Map();
+  for (const row of visibili) documenti.set(row.docId, await get(db, "docs", row.docId));
+  if (turno !== turni) return;
   _drawOut(tutte, people);
   const body = el("dueBody");
   body.textContent = "";
 
   for (const row of visibili) {
-    const doc = await get(db, "docs", row.docId);
+    const doc = documenti.get(row.docId);
     if (!doc) continue;
 
     const tr = document.createElement("tr");

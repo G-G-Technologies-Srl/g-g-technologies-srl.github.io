@@ -45,6 +45,12 @@ export function snack(text, { onUndo = null } = {}) {
     : null;
 
   strip.hidden = false;
+  // Emptied, then filled on the next turn: a region whose text is replaced by the same text in one
+  // go announces nothing, and two identical messages in a row are the usual case («Salvato.»).
+  const live = document.getElementById("snackLive");
+  live.textContent = "";
+  const annuncio = setTimeout(() => { live.textContent = text; }, 60);
+  if (annuncio && typeof annuncio.unref === "function") annuncio.unref();
   clearTimeout(timer);
   timer = setTimeout(hideSnack, SNACK_MS);
   // Under Node, in the screen tests, a pending timer would keep the process alive for eight seconds

@@ -151,7 +151,9 @@
   .ps-vat-table td { border-bottom: 1px solid #eef1f6; }
   .ps-vat-note { margin-top: 2mm; font-size: 8pt; color: #4a5266; max-width: 90mm; }
 
-  .ps-totals { flex: 0 0 70mm; font-size: 10pt; }
+  .ps-totals { flex: 0 0 84mm; font-size: 10pt; }
+  /* Amounts never break; the label beside them can. */
+  .ps-total-line .ps-num { white-space: nowrap; }
   .ps-total-line { display: flex; justify-content: space-between; gap: 6mm; padding: 1.2mm 0; }
   .ps-total-line span:first-child { color: #4a5266; }
   .ps-grand {

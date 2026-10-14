@@ -26,7 +26,7 @@ import { seed } from "./demo.js";
 import { documents, convertMany, save, invoicedBy, signedTotal, editable, NUMERAZIONI } from "./model.js";
 import { TIPI, KINDS, kind, numero as shownNumber, convertibile } from "./kinds.js";
 import { label as statoLabel } from "./states.js";
-import { TRACCIATO, profileFor, TIPI_MERCE } from "./fatturapa.js";
+import { TRACCIATO, profileFor, TIPI_MERCE, CASSE } from "./fatturapa.js";
 import { stato as termState } from "./terms.js";
 import { NATURE } from "./validate.js";
 import { toString } from "./decimal.js";
@@ -49,14 +49,16 @@ import * as doc from "./doc.js";
 import * as due from "./due.js";
 import { summary, csv, ledger } from "./schedule.js";
 import { fiscalCode, parseOptional } from "./parse.js";
-import { money, date as shownDate } from "./format.js";
+import { money, date as shownDate, days } from "./format.js";
 import { wire as wireImport, refresh as refreshImport } from "./importing.js";
 import { LOGO as BRAND_LOGO } from "./brand.js";
 import * as backup from "./backup.js";
-import { bundle, bundleName, hasFiles, isZip, restoreBundle } from "./bundle.js";
+import { bundle, bundleName, hasFiles, isZip, restoreBundle, archiveText } from "./bundle.js";
 import { advice, SOGLIA_DOCUMENTI } from "./safety.js";
 import { inventory, compare } from "./archive.js";
+import { sweep } from "./attachments.js";
 import * as alarms from "./alarms.js";
+import { currentDay } from "./day.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -141,6 +143,13 @@ let backupLinked = false;
 
 function el(id) {
   return document.getElementById(id);
+}
+
+/** A kind's short label for the list, or its full one when no short one is written. */
+function _shortLabel(label) {
+  const chiave = label.replace(/^type/, "short");
+  const corta = t(chiave);
+  return corta === chiave ? t(label) : corta;
 }
 
 /**
@@ -242,7 +251,9 @@ async function _route() {
     : person ? "#/anagrafiche"
       : lavoro ? "#/progetti"
         : acquisto ? "#/acquisti"
-          : banca ? "#/anagrafiche/banche" : hash;
+          : banca ? "#/anagrafiche/banche"
+            // An address the app does not know shows the Situazione, so it lights the Situazione.
+            : (ROUTES[hash] ? hash : "#/");
   // **Anagrafiche lights for its three screens**, and the sub-entry for its own: the parent says
   // which part of the app you are in, the sub-entry which register.
   const inParties = target === "#/anagrafiche" || target.startsWith("#/anagrafiche/");
@@ -325,7 +336,7 @@ async function _drawSteps(company, docs) {
     stepCompany: Boolean(company && company.denominazione),
     stepParty: db ? (await parties.parties(db)).length > 0 : false,
     stepDoc: docs.some((doc) => doc.numero),
-    stepBackup: backupLinked || Boolean(localStorage.getItem(BACKUP_KEY)),
+    stepBackup: backupLinked || Boolean(_lastExport()),
   };
   for (const [id, fatto] of Object.entries(fatti)) el(id).classList.toggle("done", fatto);
   el("setupNote").hidden = isDemo() || (fatti.stepCompany && fatti.stepDoc && fatti.stepBackup);
@@ -369,9 +380,17 @@ async function _demoView(db) {
   }
 }
 
+// The pending refresh of the reminders, gathered by `_refresh`.
+let promemoriaTimer = null;
+
 /** Redraw what the shell shows. Cheap enough to do on every route. */
 async function _refresh() {
   backup.touch();
+  // **The badge and the digest follow the money, not only the opening.** A payment recorded at ten
+  // left the icon counting that invoice as overdue until the tab was hidden. Every change comes
+  // through here; a short pause gathers a burst of them — an autosave per keystroke pause — into one.
+  clearTimeout(promemoriaTimer);
+  promemoriaTimer = setTimeout(() => { alarms.refresh(db); }, 1500);
   const company = db ? await get(db, "company", COMPANY_ID) : null;
   const docs = db ? await documents(db) : [];
   await _drawSteps(company, docs);
@@ -609,7 +628,7 @@ async function _drawDocuments(docs) {
     // triplo delle altre e l'elenco illeggibile. Sono tutte etichette, non testo: quando lo spazio
     // manca la tabella scorre, e in ultimo la cella taglia con i puntini.
     for (const [value, classe] of [
-      [t(kind(record).label.replace(/^type/, "short")), "nowrap"],
+      [_shortLabel(kind(record).label), "nowrap"],
       [shownNumber(record) || "—", "nowrap"],
       [record.data ? shownDate(record.data) : "—", "nowrap"],
       [byId.get(record.partyId) || "—", "nowrap"],
@@ -793,6 +812,28 @@ async function _loadCompany() {
   form.elements.formatoNumero.value = company.formatoNumero || "anno";
   for (const name of SEDE_FIELDS) form.elements[name].value = (company.sede || {})[name] || "";
 
+  // The REA and the usual pension fund: nested in the record, flat in the form.
+  for (const option of form.elements.reaSocio.options) option.textContent = t(`socio${option.value || "None"}`);
+  for (const option of form.elements.reaLiquidazione.options) option.textContent = t(`liq${option.value}`);
+  const rea = company.rea || {};
+  form.elements.reaUfficio.value = rea.ufficio || "";
+  form.elements.reaNumero.value = rea.numero || "";
+  form.elements.reaCapitale.value = rea.capitaleSociale || "";
+  form.elements.reaSocio.value = rea.socioUnico || "";
+  form.elements.reaLiquidazione.value = rea.statoLiquidazione || "LN";
+  const casse = form.elements.cassaTipo;
+  casse.textContent = "";
+  for (const [codice, nome] of [["", t("cassaNessuna")], ...CASSE]) {
+    const option = document.createElement("option");
+    option.value = codice;
+    option.textContent = codice ? `${codice} — ${nome}` : nome;
+    casse.append(option);
+  }
+  const cassa = company.cassa || {};
+  casse.value = cassa.tipo || "";
+  form.elements.cassaAliquota.value = cassa.aliquota || "";
+  form.elements.cassaRitenuta.checked = Boolean(cassa.ritenuta);
+
   // No `logo` key at all means the record predates the letterhead, or is new: the default logo.
   // `null` is a choice — «Togli il logo» — and stays one.
   logo = "logo" in company ? company.logo : BRAND_LOGO;
@@ -929,6 +970,24 @@ async function _saveCompany(event) {
   record.codiceFiscale = fiscalCode(record.codiceFiscale, record.paese);
   record.sede.provincia = record.sede.provincia.toUpperCase().replace(/^R\.?S\.?M\.?$/, "SM");
 
+  // The REA leaves the record when office and number are both blank: fatturapa.js writes the
+  // block whenever `rea` exists, and half a block is a rejected file.
+  const ufficio = form.elements.reaUfficio.value.trim().toUpperCase();
+  const numeroRea = form.elements.reaNumero.value.trim();
+  record.rea = ufficio || numeroRea ? {
+    ufficio,
+    numero: numeroRea,
+    capitaleSociale: parseOptional(form.elements.reaCapitale.value) || "",
+    socioUnico: form.elements.reaSocio.value,
+    statoLiquidazione: form.elements.reaLiquidazione.value || "LN",
+  } : null;
+  const tipoCassa = form.elements.cassaTipo.value;
+  record.cassa = tipoCassa ? {
+    tipo: tipoCassa,
+    aliquota: parseOptional(form.elements.cassaAliquota.value) || "4",
+    ritenuta: form.elements.cassaRitenuta.checked,
+  } : null;
+
   record.logo = logo || null;
   // **The accounts are kept as they are stored.** They are written by Anagrafiche › Banche now, and
   // this form no longer shows them: building the record from the form alone would wipe them at
@@ -967,7 +1026,7 @@ async function _saveCompany(event) {
  */
 function _drawTerms(company, docs, anagrafiche) {
   const pannello = el("termNote");
-  const oggi = new Date().toISOString().slice(0, 10);
+  const oggi = currentDay();
   const stati = docs
     .filter((doc) => doc.stato && doc.stato !== "bozza" && doc.stato !== "annullato")
     .map((doc) => termState(doc, profileFor(company, anagrafiche.get(doc.partyId)), { oggi }))
@@ -992,17 +1051,25 @@ async function _drawSafety(docs) {
   }
   // L'ultimo movimento dei documenti: è quello che l'ultimo archivio esportato deve coprire. Senza,
   // «ho esportato una volta» varrebbe per sempre, che è esattamente il difetto da cui viene questo.
-  const movimenti = docs.map((doc) => doc.updated).filter(Boolean).sort();
+  // Not the documents alone: a payment, a purchase or a customer written after the last export is
+  // work the export does not hold either.
+  const altri = [];
+  for (const store of ["payments", "costs", "outlays", "parties"]) altri.push(...await list(db, store));
+  const movimenti = [...docs, ...altri].map((r) => r.updated || r.created).filter(Boolean).sort();
   const detto = advice({
     stato: await backup.status(),
-    ultimoArchivio: localStorage.getItem(BACKUP_KEY),
+    ultimoArchivio: _lastExport(),
     ultimoMovimento: movimenti.length ? movimenti[movimenti.length - 1] : null,
     documenti: docs.length,
   });
   pannello.hidden = !detto;
   if (!detto) return;
 
-  el("backupNoteText").textContent = tf(detto.key, detto.values);
+  // The days since the last export, with their noun: «1 giorno fa», not «1 giorni fa».
+  const valori = detto.values && detto.values.giorni !== undefined
+    ? { ...detto.values, giorni: days(detto.values.giorni) }
+    : detto.values;
+  el("backupNoteText").textContent = tf(detto.key, valori);
   const vai = el("backupNoteGo");
   const esporta = el("backupNoteExport");
   vai.hidden = detto.action !== "settings";
@@ -1139,6 +1206,81 @@ async function _drawInside(nodo, name, adesso) {
  * quella che cancella. Così invece ogni no lascia le cose come stanno, e a sovrascrivere si arriva
  * solo dicendolo.
  */
+/**
+ * When the archive was last exported, or `null`. Storage can throw — a private window, blocked site
+ * data — and a throw here left the whole app blank before any message could be shown.
+ */
+function _lastExport() {
+  try {
+    return localStorage.getItem(BACKUP_KEY);
+  } catch (ignored) {
+    return null;
+  }
+}
+
+/** Remember the export just made, where storage allows it. */
+function _markExported() {
+  try {
+    localStorage.setItem(BACKUP_KEY, new Date().toISOString());
+  } catch (ignored) {
+    // Without storage the reminder simply keeps asking, which is the safe side to err on.
+  }
+}
+
+/**
+ * Before an archive is put back: the project edits still queued are written now, or they would be
+ * written afterwards over the restored records.
+ */
+async function _beforeRestore() {
+  await progetti.flush();
+}
+
+/**
+ * What every way of putting an archive back has to do afterwards — the same list `_reset` follows.
+ *
+ * The projects live in memory once loaded, and only `_reset` reloaded them: after an import the
+ * screen showed the projects from before, and the next edit wrote one of them back into an archive
+ * that no longer had it. The receipts no payment names any more are swept, and the reminders are
+ * rebuilt so the worker does not announce an invoice that is not there.
+ */
+async function _afterRestore() {
+  await progetti.setup(db);
+  await sweep(db);
+  await alarms.refresh(db);
+  await _loadCompany();
+  await _route();
+}
+
+/**
+ * What an archive holds against what is here, as lines for the question before replacing.
+ *
+ * «Replace everything with this file?» asked blind: the person could not see that the file was the
+ * one from March, with forty documents fewer. The same comparison the backup folder shows for each
+ * copy, put in the question itself. Empty when the text is not an archive — the restore says so.
+ */
+async function _archiveLines(text) {
+  if (!text) return [];
+  const dentro = inventory(text);
+  if (!dentro.ok) return [];
+  const adesso = {};
+  for (const store of [...EXPORTED, "assets", "attachments"]) adesso[store] = (await list(db, store)).length;
+  const esito = compare(dentro.counts, adesso);
+  const righe = esito.righe.map((voce) => tf("restoreLine", {
+    cosa: t(voce.label), dentro: num(voce.dentro, 0), adesso: num(voce.adesso, 0),
+  }));
+  if (dentro.exported) righe.push(tf("archiveWritten", { when: shownDate(dentro.exported.slice(0, 10)) }));
+  return righe;
+}
+
+/** A restore that throws — a store refused, the disk full — said nothing at all before. */
+async function _restoreSafely(name) {
+  try {
+    return await backup.restore(name);
+  } catch (ignored) {
+    return { ok: false, reason: "backupRestoreBad" };
+  }
+}
+
 async function _chooseForFolder(found) {
   const newest = found && found.length ? found[0] : null;
   // La copia più recente è quasi sempre l'archivio corrente, che non porta un giorno: la domanda
@@ -1148,7 +1290,8 @@ async function _chooseForFolder(found) {
     ? tf("backupFoundAsk", { n: num(found.length, 0), when: shownDate(newest.day) })
     : tf("backupFoundAskLatest", { n: num(found.length, 0) });
   if (await ask(domanda, { okLabel: t("backupFoundRestore") })) {
-    const esito = await backup.restore(newest ? newest.name : undefined);
+    await _beforeRestore();
+    const esito = await _restoreSafely(newest ? newest.name : undefined);
     if (!esito || !esito.ok) {
       const detto = ["backupNoFolder", "backupNoPermission", "backupCopyGone"].includes(esito && esito.reason);
       await tell(t(detto ? esito.reason : "backupRestoreBad"));
@@ -1156,8 +1299,7 @@ async function _chooseForFolder(found) {
     }
     await backup.release();
     await tell(tf("backupRestoreDone", { n: num(esito.restored, 0) }));
-    await _loadCompany();
-    await _route();
+    await _afterRestore();
     await _drawBackup();
     return;
   }
@@ -1176,21 +1318,23 @@ async function _chooseForFolder(found) {
  * replaces everything, and «Riporta» on its own does not say so.
  */
 async function _restoreCopy(name) {
-  if (!(await ask(t("backupRestoreAsk"), { okLabel: t("backupRestore") }))) return;
-  const esito = await backup.restore(name);
+  const letto = await backup.read(name).catch(() => null);
+  const righe = letto && letto.ok ? await _archiveLines(letto.text) : [];
+  if (!(await ask(t("backupRestoreAsk"), { okLabel: t("backupRestore"), lines: righe }))) return;
+  await _beforeRestore();
+  const esito = await _restoreSafely(name);
   if (!esito || !esito.ok) {
     const detto = ["backupNoFolder", "backupNoPermission", "backupCopyGone"].includes(esito && esito.reason);
     await tell(t(detto ? esito.reason : "backupRestoreBad"));
     return;
   }
   await tell(tf("backupRestoreDone", { n: num(esito.restored, 0) }));
-  await _loadCompany();
-  await _route();
+  await _afterRestore();
 }
 
 async function _export() {
   await download(db, { app: NAME, schema: VERSION, stores: EXPORTED });
-  localStorage.setItem(BACKUP_KEY, new Date().toISOString());
+  _markExported();
   await _refresh();
 }
 
@@ -1209,8 +1353,8 @@ async function _exportBundle() {
   anchor.click();
   anchor.remove();
   // Revoked on a later turn: revoking at once cancels the download in Safari.
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-  localStorage.setItem(BACKUP_KEY, new Date().toISOString());
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  _markExported();
   await _refresh();
 }
 
@@ -1264,7 +1408,9 @@ async function _import(event) {
   const file = event.target.files?.[0];
   event.target.value = "";
   if (!file) return;
-  if (!(await ask(t("settingsImportAsk"), { okLabel: t("settingsImport") }))) return;
+  const scelto = new Uint8Array(await file.arrayBuffer());
+  const righe = await _archiveLines(archiveText(scelto)).catch(() => []);
+  if (!(await ask(t("settingsImportAsk"), { okLabel: t("settingsImport"), lines: righe }))) return;
   try {
     // **`restore` non solleva niente: risponde.** Un file che arriva da fuori può non essere un
     // archivio, e per la libreria è un esito ordinario — quindi senza guardare `ok` l'app diceva
@@ -1272,7 +1418,8 @@ async function _import(event) {
     // dei dati che non erano stati scritti. Trovato rileggendo, non provando: è il tipo di difetto
     // che si vede solo sbagliando di proposito.
     // A zip is the archive with its files; anything else is read as the JSON it has always been.
-    const bytes = new Uint8Array(await file.arrayBuffer());
+    const bytes = scelto;
+    await _beforeRestore();
     const esito = isZip(bytes)
       ? await restoreBundle(db, bytes)
       : await restore(db, new TextDecoder().decode(bytes), { app: NAME, stores: EXPORTED });
@@ -1281,8 +1428,7 @@ async function _import(event) {
       return;
     }
     await tell(t("settingsImportDone"));
-    await _loadCompany();
-    await _route();
+    await _afterRestore();
   } catch (ignored) {
     await tell(t("settingsImportBad"));
   }
@@ -1393,7 +1539,12 @@ async function main() {
   });
   // L'archivio si esporta anche dal pannello della Situazione: dove la cartella non esiste è
   // l'unica copia che si può fare, e farla partire da lì toglie il viaggio fino alle impostazioni.
-  el("backupNoteExport").addEventListener("click", _export);
+  // The reminder's one-tap export takes the files too when there are any: it also silences the
+  // reminder, and a copy without the receipts is not the copy the reminder was asking for.
+  el("backupNoteExport").addEventListener("click", async () => {
+    if (await hasFiles(db)) await _exportBundle();
+    else await _export();
+  });
   el("exportBundle").addEventListener("click", _exportBundle);
   el("importAll").addEventListener("click", () => el("importFile").click());
   el("importFile").addEventListener("change", _import);
@@ -1418,9 +1569,11 @@ async function main() {
     const url = URL.createObjectURL(new Blob([text], { type: "text/csv;charset=utf-8" }));
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `invoice-scope-${new Date().toISOString().slice(0, 10)}.csv`;
+    anchor.download = `invoice-scope-${currentDay()}.csv`;
     anchor.click();
-    setTimeout(() => URL.revokeObjectURL(url), 0);
+    // A minute and not at once: Safari on iOS starts the download after the click returns, and a URL
+    // revoked at once is a download that never arrives.
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
   });
   // ---- i promemoria ----------------------------------------------------------------------------
   //
@@ -1494,9 +1647,11 @@ async function main() {
     const url = URL.createObjectURL(new Blob([text], { type: "text/calendar;charset=utf-8" }));
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `scadenzario-${new Date().toISOString().slice(0, 10)}.ics`;
+    anchor.download = `scadenzario-${currentDay()}.ics`;
     anchor.click();
-    setTimeout(() => URL.revokeObjectURL(url), 0);
+    // A minute and not at once: Safari on iOS starts the download after the click returns, and a URL
+    // revoked at once is a download that never arrives.
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
     const one = await alarms.settings(db);
     return one.on ? tell(t("dueIcsAlarm")) : undefined;
   });

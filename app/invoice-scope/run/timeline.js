@@ -21,6 +21,7 @@
 //     node --import ./test/loader.mjs test/timeline.mjs
 
 import { add, cmp, toString, ZERO } from "./decimal.js";
+import { currentDay } from "./day.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -57,6 +58,29 @@ function _next(month) {
   return m === 12 ? `${year + 1}-01` : `${year}-${String(m + 1).padStart(2, "0")}`;
 }
 
+/** A month moved by `n` months, forwards or back. */
+function _shift(month, n) {
+  const [year, m] = month.split("-").map(Number);
+  const total = year * 12 + (m - 1) + n;
+  return `${Math.floor(total / 12)}-${String((total % 12) + 1).padStart(2, "0")}`;
+}
+
+/** How many months from `a` to `b`, both included. */
+function _span(a, b) {
+  const [ya, ma] = a.split("-").map(Number);
+  const [yb, mb] = b.split("-").map(Number);
+  return (yb * 12 + mb) - (ya * 12 + ma) + 1;
+}
+
+/** The column an amount is drawn in: its own month, or the edge of the window it falls outside. */
+function _bucket(totals, months, iso) {
+  const month = _month(iso);
+  if (!month || !months.length) return undefined;
+  if (month < months[0]) return totals.get(months[0]);
+  if (month > months[months.length - 1]) return totals.get(months[months.length - 1]);
+  return totals.get(month);
+}
+
 /**
  * The months to draw, from the earliest instalment to the latest, with the gaps filled.
  *
@@ -69,8 +93,20 @@ function _months(rows, today) {
   // **The current month is always inside the picture**, at both ends. With only overdue
   // instalments the axis used to stop before today, so the chart showed a past that had no
   // present — and "where are we" is the first thing anybody asks of a timeline.
-  const start = dates.reduce((a, b) => (a < b ? a : b), _month(today));
-  const end = dates.reduce((a, b) => (a > b ? a : b), _month(today));
+  let start = dates.reduce((a, b) => (a < b ? a : b), _month(today));
+  let end = dates.reduce((a, b) => (a > b ? a : b), _month(today));
+  // **A long span is cut around today, not from the first instalment.** One overdue instalment of
+  // two years ago used to fill the fourteen columns with the past and drop today and everything
+  // after it. The window ends at the latest month and starts at most fourteen before it; if that
+  // still leaves today out, it starts at today. What falls outside lands in the edge column
+  // (`_bucket`), so no amount disappears from the picture.
+  if (_span(start, end) > MAX_MONTHS) {
+    start = _shift(end, -(MAX_MONTHS - 1));
+    if (_month(today) < start) {
+      start = _month(today);
+      end = _shift(start, MAX_MONTHS - 1);
+    }
+  }
 
   const out = [];
   let cursor = start;
@@ -88,7 +124,7 @@ function _months(rows, today) {
  * and two bars would let somebody read the total as the sum of them. Same reason the summary of a
  * document has one imponibile and not two.
  */
-export function geometry(rows, { today = new Date().toISOString().slice(0, 10), out = [] } = {}) {
+export function geometry(rows, { today = currentDay(), out = [] } = {}) {
   // Un'uscita `attesa` è una ricorrenza non ancora confermata: sta nella stessa barra, in coda,
   // tratteggiata — è denaro che uscirà, non che deve.
   const twoWay = out.length > 0;
@@ -98,13 +134,13 @@ export function geometry(rows, { today = new Date().toISOString().slice(0, 10), 
 
   const totals = new Map(months.map((month) => [month, { total: ZERO, overdue: ZERO, out: ZERO, outOverdue: ZERO, outExpected: ZERO }]));
   for (const row of rows) {
-    const bucket = totals.get(_month(row.scadenza));
+    const bucket = _bucket(totals, months, row.scadenza);
     if (!bucket) continue;
     bucket.total = add(bucket.total, row.importo);
     if (row.scaduta) bucket.overdue = add(bucket.overdue, row.importo);
   }
   for (const row of out) {
-    const bucket = totals.get(_month(row.scadenza));
+    const bucket = _bucket(totals, months, row.scadenza);
     if (!bucket) continue;
     bucket.out = add(bucket.out, row.importo);
     if (row.attesa) bucket.outExpected = add(bucket.outExpected, row.importo);

@@ -171,7 +171,10 @@ export function principale(records, pesi = new Map()) {
  */
 export function fusione(tenuto, scartato) {
   const out = { ...tenuto, sede: { ...(tenuto.sede || {}) } };
-  const suoi = new Set(["id", "sede", "contatti", "name", "updated", "ruolo"]);
+  // `importato` is the kept card's own business too: copied over from the discarded one, it marked
+  // the merged customer as imported, and the next «undo import» deleted it with its documents moved
+  // onto it.
+  const suoi = new Set(["id", "sede", "contatti", "name", "updated", "ruolo", "importato"]);
   for (const [key, value] of Object.entries(scartato || {})) {
     if (suoi.has(key)) continue;
     if (_vuoto(out[key]) && !_vuoto(value)) out[key] = value;

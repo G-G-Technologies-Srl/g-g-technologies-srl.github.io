@@ -22,6 +22,7 @@ import { MONOFASE, IVA, CATEGORIE, taxKind, defaultRate, allCosts, signedTotal }
 import {
   CADENZE, recurringRecord, problems, expected, confirmFields, allRecurring, saveRecurring, removeRecurring,
 } from "./recurring.js";
+import { currentDay } from "./day.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  s t a t e
@@ -178,7 +179,7 @@ async function _openSheet(record) {
   form.elements.imponibile.value = data.imponibile ? toString(_amount(data.imponibile), 2) : "";
   form.elements.cadenza.value = CADENZE[data.cadenza] ? data.cadenza : "mensile";
   form.elements.giorno.value = String(data.giorno || 1);
-  form.elements.da.value = data.da || new Date().toISOString().slice(0, 7);
+  form.elements.da.value = data.da || currentDay().slice(0, 7);
   form.elements.a.value = data.a || "";
 
   const aliquote = el("recurringForm").elements.aliquota;

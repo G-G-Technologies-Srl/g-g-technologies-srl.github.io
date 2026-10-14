@@ -22,7 +22,9 @@ import { get, put, list, remove, tx } from "gg/store.js";
 import { documentKey, counterKey, fileNameKey, legacyCounterKeys } from "./db.js";
 import { totals } from "./totals.js";
 import { validate } from "./validate.js";
+import { snapshot } from "./fatturapa.js";
 import { STATES, KINDS, kind, numero as shownNumber, convertibile } from "./kinds.js";
+import { currentDay } from "./day.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -143,7 +145,7 @@ export function draft(fields = {}) {
     tipo: "TD01",
     stato: "bozza",
     numero: null,
-    data: new Date().toISOString().slice(0, 10),
+    data: currentDay(),
     righe: [],
     esportato: false,
     creato: _now(),
@@ -245,6 +247,10 @@ export async function issue(db, doc, context) {
       emesso: now,
       updated: now,
     };
+    // **Customer and company frozen as they are now** (`frozen` in fatturapa.js reads them back):
+    // the printed sheet and the XML of this document must not change when the register does.
+    if (context.party) issued.cliente = snapshot(context.party);
+    if (context.company) issued.emittente = snapshot(context.company);
     issued.chiave = documentKey(issued);
     await scope.put("docs", issued);
     return issued;
@@ -425,7 +431,25 @@ export function creditNote(doc) {
     serie: KINDS.TD04.serie,
     partyId: doc.partyId,
     righe: (doc.righe || []).map((line) => ({ ...line })),
-    fattureCollegate: [{ numero: doc.numero, data: doc.data }],
+    // **Everything that makes the total, not only the lines.** A note copying the lines alone
+    // credited 1220,00 against an invoice of 1098,00 that carried a 10% discount; the same with the
+    // withholding and a stamp duty charged on. The payment terms stay behind: a note asks nobody
+    // for money.
+    ...(doc.scontoDocumento ? { scontoDocumento: { ...doc.scontoDocumento } } : {}),
+    ...(doc.ritenuta ? { ritenuta: { ...doc.ritenuta } } : {}),
+    ...(doc.bollo ? { bollo: doc.bollo } : {}),
+    // The same for what the 0.70 fiscal block added: a note against a PA invoice under split payment
+    // is under split payment too, the contribution it credits back is the same percentage, and the
+    // office matches the note to its contract by the same CIG.
+    // Copied even when empty: an invoice that said «no contribution» or «immediate» gives a note
+    // that says the same, rather than one the screen fills with the company's or customer's default.
+    ...("cassa" in doc ? { cassa: doc.cassa ? { ...doc.cassa } : null } : {}),
+    ...("esigibilita" in doc ? { esigibilita: doc.esigibilita || null } : {}),
+    ...(doc.ordine ? { ordine: { ...doc.ordine } } : {}),
+    // The number as printed — the series is part of it, and it is what the recipient finds on the
+    // invoice — and the id, so the credit lands on this document and not on another that happens
+    // to share the bare number.
+    fattureCollegate: [{ id: doc.id, numero: shownNumber(doc), data: doc.data }],
   });
 }
 
@@ -553,9 +577,16 @@ export async function discard(db, doc) {
  * credit note raises the very figure it was written to cancel.
  */
 export function signedTotal(doc) {
-  const valore = doc.totali
-    ? BigInt(doc.totali.totale)
-    : ((doc.righe || []).length ? totals(doc).totale : null);
+  let valore = null;
+  try {
+    valore = doc.totali
+      ? BigInt(doc.totali.totale)
+      : ((doc.righe || []).length ? totals(doc).totale : null);
+  } catch (ignored) {
+    // A draft with a number nobody can read (saved by an older version) shows no total in the list
+    // rather than taking the whole list down with it.
+    valore = null;
+  }
   if (valore === null) return null;
   return kind(doc).storna ? -valore : valore;
 }

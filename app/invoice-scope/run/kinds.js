@@ -48,6 +48,7 @@ const DOPO_EMISSIONE = ["inviato", "accettato", "scartato", "annullato"];
  * | campo | che cosa decide |
  * |---|---|
  * | `fiscale` | se il documento produce un XML e finisce nel CSV del commercialista |
+ * | `ricavo` | se il suo imponibile è fatturato: le autofatture e le integrazioni riguardano acquisti |
  * | `deve` | se il suo totale entra nello scadenzario |
  * | `storna` | se il suo totale è un credito contro un altro documento |
  * | `serie` | la sigla davanti al numero |
@@ -72,6 +73,7 @@ export const KINDS = {
     fiscale: false,
     deve: false,
     storna: false,
+    ricavo: false,
     serie: "PR",
     sequenza: "preventivo",
     label: "typePreventivo",
@@ -84,6 +86,7 @@ export const KINDS = {
     fiscale: false,
     deve: false,
     storna: false,
+    ricavo: false,
     serie: "DDT",
     sequenza: "ddt",
     label: "typeDdt",
@@ -102,18 +105,20 @@ export const KINDS = {
     fiscale: true,
     deve: true,
     storna: false,
+    ricavo: true,
     serie: "",
     sequenza: "fattura",
     label: "typeTD01",
     raggruppabile: false,
     stati: DOPO_EMISSIONE,
-    sezioni: ["sconto", "ritenuta", "bollo", "pagamento"],
+    sezioni: ["sconto", "ritenuta", "cassa", "ordine", "bollo", "pagamento"],
     converteIn: null,
   },
   TD24: {
     fiscale: true,
     deve: true,
     storna: false,
+    ricavo: true,
     serie: "",
     // La differita è una fattura: stesso contatore, o due fatture dello stesso anno portano lo
     // stesso numero.
@@ -123,13 +128,14 @@ export const KINDS = {
     stati: DOPO_EMISSIONE,
     // The deferred invoice is the one that carries `DatiDDT`, which is why the delivery notes it
     // was built from are shown on it and not only remembered.
-    sezioni: ["sconto", "ritenuta", "bollo", "pagamento", "ddtCollegati"],
+    sezioni: ["sconto", "ritenuta", "cassa", "ordine", "bollo", "pagamento", "ddtCollegati"],
     converteIn: null,
   },
   TD02: {
     fiscale: true,
     deve: true,
     storna: false,
+    ricavo: true,
     serie: "",
     // Un acconto è una fattura, e sta nella sequenza delle fatture: il saldo che arriva dopo porterà
     // il numero successivo, e i due si leggono in fila come sono stati emessi.
@@ -137,7 +143,7 @@ export const KINDS = {
     label: "typeTD02",
     raggruppabile: false,
     stati: DOPO_EMISSIONE,
-    sezioni: ["sconto", "ritenuta", "bollo", "pagamento"],
+    sezioni: ["sconto", "ritenuta", "cassa", "ordine", "bollo", "pagamento"],
     converteIn: null,
   },
   TD04: {
@@ -148,6 +154,7 @@ export const KINDS = {
     // schedule as an amount somebody expects to receive.
     deve: false,
     storna: true,
+    ricavo: true,
     // La sigla sta davanti al numero — «NC 2026/0001» — perché una nota di credito numerata come
     // una fattura si cita al telefono allo stesso modo, e al telefono non c'è il tipo scritto.
     serie: "NC",
@@ -155,7 +162,7 @@ export const KINDS = {
     label: "typeTD04",
     raggruppabile: false,
     stati: DOPO_EMISSIONE,
-    sezioni: ["sconto", "ritenuta", "bollo", "collegate"],
+    sezioni: ["sconto", "ritenuta", "cassa", "ordine", "bollo", "collegate"],
     converteIn: null,
   },
   TD05: {
@@ -164,6 +171,7 @@ export const KINDS = {
     // È il gemello opposto della nota di credito, e le due differiscono esattamente qui.
     deve: true,
     storna: false,
+    ricavo: true,
     serie: "ND",
     // Contatore suo, come la nota di credito: «NC 2026/0001» e «ND 2026/0001» sono due numeri
     // diversi perché la sigla fa parte del numero, e tenerle in fila nello stesso contatore
@@ -172,7 +180,7 @@ export const KINDS = {
     label: "typeTD05",
     raggruppabile: false,
     stati: DOPO_EMISSIONE,
-    sezioni: ["sconto", "ritenuta", "bollo", "pagamento", "collegate"],
+    sezioni: ["sconto", "ritenuta", "cassa", "ordine", "bollo", "pagamento", "collegate"],
     converteIn: null,
   },
   TD29: {
@@ -181,6 +189,7 @@ export const KINDS = {
     // nessuno: è la comunicazione che il fornitore non ha fatturato. Fuori dallo scadenzario.
     deve: false,
     storna: false,
+    ricavo: false,
     serie: "AF",
     sequenza: "autofattura",
     label: "typeTD29",
@@ -194,6 +203,28 @@ export const KINDS = {
     sezioni: ["collegate"],
     converteIn: null,
   },
+  // **The four integrations of a reverse-charge purchase**, Italian channel only. The supplier did
+  // not charge VAT, and the company works it out and sends it to the SdI, which delivers the file
+  // back to the company alone: TD16 for an Italian supplier's invoice under N6.x, TD17 for services
+  // from abroad (San Marino included), TD18 for goods from another EU country, TD19 for goods already
+  // in Italy from a non-resident (and always for goods from San Marino invoiced without VAT). The
+  // roles are those of TD29 — the supplier is the cedente — and so is the shape: no payment, out of
+  // the schedule, out of the revenue. One sequence for the four, with a series of their own.
+  ...Object.fromEntries(["TD16", "TD17", "TD18", "TD19"].map((tipo) => [tipo, {
+    fiscale: true,
+    deve: false,
+    storna: false,
+    ricavo: false,
+    serie: "INT",
+    sequenza: "integrazione",
+    label: `type${tipo}`,
+    raggruppabile: false,
+    autofattura: true,
+    integrazione: true,
+    stati: DOPO_EMISSIONE,
+    sezioni: ["collegate"],
+    converteIn: null,
+  }])),
 };
 
 /** The kinds in menu order. One list, so a screen never invents an order of its own. */

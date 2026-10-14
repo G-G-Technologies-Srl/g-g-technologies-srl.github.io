@@ -13,7 +13,9 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import * as zip from "../../_business/zip.js";
 import { plan, apply, lastImport, undoLast } from "../run/importing.js";
-import { draft, issue } from "../run/model.js";
+import { build as buildXml } from "../run/fatturapa.js";
+import { from } from "../run/decimal.js";
+import { draft, issue, save } from "../run/model.js";
 import { openDatabase } from "../run/db.js";
 // Il finto store, non `memory.js`: il loader manda già `gg/store.js` qui, quindi `openDatabase()`
 // apre questo. `memory.js` imita la maniglia di IndexedDB per il vero `store.js`, e in un test dove
@@ -612,7 +614,7 @@ await prova("apply scrive clienti, listino e documenti, e li lega", async () => 
   const scritti = await apply(db, piano);
   assert.ok(scritti.lotto, "il lotto identifica l'importazione");
   delete scritti.lotto;
-  assert.deepEqual(scritti, { clienti: 2, listino: 1, documenti: 1, incassi: 0, acquisti: 0 });
+  assert.deepEqual(scritti, { clienti: 2, listino: 1, documenti: 1, incassi: 0, acquisti: 0, pagamenti: 0 });
 
   const clienti = await list(db, "parties");
   const docs = await list(db, "docs");
@@ -647,7 +649,7 @@ await prova("un piano vuoto non scrive niente", async () => {
   const db = await openDatabase();
   const scritti = await apply(db, await plan([]));
   delete scritti.lotto;
-  assert.deepEqual(scritti, { clienti: 0, listino: 0, documenti: 0, incassi: 0, acquisti: 0 });
+  assert.deepEqual(scritti, { clienti: 0, listino: 0, documenti: 0, incassi: 0, acquisti: 0, pagamenti: 0 });
   assert.equal((await list(db, "parties")).length, 0);
 });
 
@@ -750,7 +752,7 @@ await prova("l'annullamento toglie tutto il lotto, e riporta il contatore", asyn
     file("r", await xlsx(HEAD_REGISTRO, [registro({ 5: "SI" })])),
   ]));
   const tolti = await undoLast(db);
-  assert.deepEqual(tolti, { clienti: 2, listino: 1, documenti: 1, incassi: 1, acquisti: 0 });
+  assert.deepEqual(tolti, { clienti: 2, listino: 1, documenti: 1, incassi: 1, acquisti: 0, pagamenti: 0 });
   for (const store of ["parties", "items", "docs", "payments"]) {
     assert.equal((await list(db, store)).length, 0, store);
   }
@@ -1014,6 +1016,123 @@ await prova("per un'azienda sammarinese il pannello dice che la monofase va aggi
   assert.equal(piano.costi[0].impostaTipo, "iva", "l'imposta è quella del file, non inventata");
   const it = await plan([xml("hc.xml", RICEVUTA)], { company: AZIENDA });
   assert.ok(!it.fonti[0].avvisi.some((a) => a.chiave === "impMonofaseByHand"));
+});
+
+
+// -----------------------------------------------------------------------------------------------------------------
+//  f i r m a t e   e   c o d i f i c h e
+// -----------------------------------------------------------------------------------------------------------------
+
+// The same received invoice signed twice with a throw-away certificate made for the test (openssl
+// cms -sign): once as DER, once streamed as BER with indefinite lengths — the two forms a .p7m takes.
+const P7M_BER = "MIAGCSqGSIb3DQEHAqCAMIACAQExDTALBglghkgBZQMEAgEwgAYJKoZIhvcNAQcBoIAkgASCBGk8P3htbCB2ZXJzaW9uPSIxLjAiIGVuY29kaW5nPSJVVEYtOCI/Pgo8cDpGYXR0dXJhRWxldHRyb25pY2EgdmVyc2lvbmU9IkZQUjEyIiB4bWxuczpwPSJodHRwOi8vaXZhc2Vydml6aS5hZ2VuemlhZW50cmF0ZS5nb3YuaXQvZG9jcy94c2QvZmF0dHVyZS92MS4yIj48RmF0dHVyYUVsZXR0cm9uaWNhSGVhZGVyPjxEYXRpVHJhc21pc3Npb25lPjxQcm9ncmVzc2l2b0ludmlvPjc8L1Byb2dyZXNzaXZvSW52aW8+PC9EYXRpVHJhc21pc3Npb25lPjxDZWRlbnRlUHJlc3RhdG9yZT48RGF0aUFuYWdyYWZpY2k+PElkRmlzY2FsZUlWQT48SWRQYWVzZT5JVDwvSWRQYWVzZT48SWRDb2RpY2U+MDk4NzY1NDMyMTc8L0lkQ29kaWNlPjwvSWRGaXNjYWxlSVZBPjxBbmFncmFmaWNhPjxEZW5vbWluYXppb25lPkZvcm5pdG9yZSBTb2NpZXTDoDwvRGVub21pbmF6aW9uZT48L0FuYWdyYWZpY2E+PC9EYXRpQW5hZ3JhZmljaT48L0NlZGVudGVQcmVzdGF0b3JlPjxDZXNzaW9uYXJpb0NvbW1pdHRlbnRlPjxEYXRpQW5hZ3JhZmljaT48QW5hZ3JhZmljYT48RGVub21pbmF6aW9uZT5Ob2k8L0Rlbm9taW5hemlvbmU+PC9BbmFncmFmaWNhPjwvRGF0aUFuYWdyYWZpY2k+PC9DZXNzaW9uYXJpb0NvbW1pdHRlbnRlPjwvRmF0dHVyYUVsZXR0cm9uaWNhSGVhZGVyPjxGYXR0dXJhRWxldHRyb25pY2FCb2R5PjxEYXRpR2VuZXJhbGk+PERhdGlHZW5lcmFsaURvY3VtZW50bz48VGlwb0RvY3VtZW50bz5URDAxPC9UaXBvRG9jdW1lbnRvPjxEaXZpc2E+RVVSPC9EaXZpc2E+PERhdGE+MjAyNi0wOS0wNDwvRGF0YT48TnVtZXJvPlA3PC9OdW1lcm8+PC9EYXRpR2VuZXJhbGlEb2N1bWVudG8+PC9EYXRpR2VuZXJhbGk+PERhdGlCZW5pU2Vydml6aT48RGV0dGFnbGlvTGluZWU+PE51bWVyb0xpbmVhPjE8L051bWVyb0xpbmVhPjxEZXNjcml6aW9uZT5GaXJtYXRhPC9EZXNjcml6aW9uZT48UHJlenpvVW5pdGFyaW8+MTAwLjAwPC9QcmV6em9Vbml0YXJpbz48UHJlenpvVG90YWxlPjEwMC4wMDwvUHJlenpvVG90YWxlPjxBbGlxdW90YUlWQT4yMi4wMDwvQWxpcXVvdGFJVkE+PC9EZXR0YWdsaW9MaW5lZT48L0RhdGlCZW5pU2Vydml6aT48L0ZhdHR1cmFFbGV0dHJvbmljYUJvZHk+PC9wOkZhdHR1cmFFbGV0dHJvbmljYT4KAAAAAAAAoIICADCCAfwwggFloAMCAQICFHGithC3BL5OqI7o27/Eq7TkZIlwMA0GCSqGSIb3DQEBCwUAMBAxDjAMBgNVBAMMBVByb3ZhMB4XDTI2MTAxMzE4MDkxMVoXDTM2MTAxMDE4MDkxMVowEDEOMAwGA1UEAwwFUHJvdmEwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBANMC/5afeEFKYGFL7pvqv9s6M04cwTat0bTG8B7L5f7yA5K63bV/J6cX5yojkbrbQ0dP3JZdbM06Q32NER7YCnjmYIWDb68Uvr3qlgW0HH8aivCbHwrUSEvDPKwCgWcrpGIY/rTBbcL/OzGpu958eYKCU3de0DXmvpsHkeLniJIpAgMBAAGjUzBRMB0GA1UdDgQWBBQj7plhu89FDmbJp0Go64KMx+RKujAfBgNVHSMEGDAWgBQj7plhu89FDmbJp0Go64KMx+RKujAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBCwUAA4GBAEgJGLKHuaMVFFdA5zuI4x95c3w9r/uCfwZySUvkbl1uBQFJ4GnC8c1Wa/k+/eIKROccN2sh4RyM0jWEszLJxgbV50NB6VhvPTL/53xVMOlm9zQ1/UTM7QY8QuvBX6o0qaM3C8T2G1rKxUS9xpEoyFKTSwsVbHBvuSDurAOwEbEJMYIBtzCCAbMCAQEwKDAQMQ4wDAYDVQQDDAVQcm92YQIUcaK2ELcEvk6ojujbv8SrtORkiXAwCwYJYIZIAWUDBAIBoIHkMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI2MTAxMzE4MDk0OVowLwYJKoZIhvcNAQkEMSIEIOXVXODNz0A5YEcMv38eNZX4QPV4APekQ/KzjvqiCICDMHkGCSqGSIb3DQEJDzFsMGowCwYJYIZIAWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwDgYIKoZIhvcNAwICAgCAMA0GCCqGSIb3DQMCAgFAMAcGBSsOAwIHMA0GCCqGSIb3DQMCAgEoMA0GCSqGSIb3DQEBAQUABIGAKlHfrq6hJPBRn5N7xGXo7hwfhHaAc1s8TYtcn13zPXsvNEHhBz1+ycT+v38k1Ddy84hpaqRu9k+7Y+VbghSEVIX5p7/VmEwD4RUHCue7anE+yG0BwzxsS2dfkb+wIJWsZZYglnW1Jd/eW2sekG2Y6tzOtUWdvD8b/lcmJyBIBNsAAAAAAAA=";
+const P7M_DER = "MIIIZAYJKoZIhvcNAQcCoIIIVTCCCFECAQExDTALBglghkgBZQMEAgEwggR8BgkqhkiG9w0BBwGgggRtBIIEaTw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04Ij8+CjxwOkZhdHR1cmFFbGV0dHJvbmljYSB2ZXJzaW9uZT0iRlBSMTIiIHhtbG5zOnA9Imh0dHA6Ly9pdmFzZXJ2aXppLmFnZW56aWFlbnRyYXRlLmdvdi5pdC9kb2NzL3hzZC9mYXR0dXJlL3YxLjIiPjxGYXR0dXJhRWxldHRyb25pY2FIZWFkZXI+PERhdGlUcmFzbWlzc2lvbmU+PFByb2dyZXNzaXZvSW52aW8+NzwvUHJvZ3Jlc3Npdm9JbnZpbz48L0RhdGlUcmFzbWlzc2lvbmU+PENlZGVudGVQcmVzdGF0b3JlPjxEYXRpQW5hZ3JhZmljaT48SWRGaXNjYWxlSVZBPjxJZFBhZXNlPklUPC9JZFBhZXNlPjxJZENvZGljZT4wOTg3NjU0MzIxNzwvSWRDb2RpY2U+PC9JZEZpc2NhbGVJVkE+PEFuYWdyYWZpY2E+PERlbm9taW5hemlvbmU+Rm9ybml0b3JlIFNvY2lldMOgPC9EZW5vbWluYXppb25lPjwvQW5hZ3JhZmljYT48L0RhdGlBbmFncmFmaWNpPjwvQ2VkZW50ZVByZXN0YXRvcmU+PENlc3Npb25hcmlvQ29tbWl0dGVudGU+PERhdGlBbmFncmFmaWNpPjxBbmFncmFmaWNhPjxEZW5vbWluYXppb25lPk5vaTwvRGVub21pbmF6aW9uZT48L0FuYWdyYWZpY2E+PC9EYXRpQW5hZ3JhZmljaT48L0Nlc3Npb25hcmlvQ29tbWl0dGVudGU+PC9GYXR0dXJhRWxldHRyb25pY2FIZWFkZXI+PEZhdHR1cmFFbGV0dHJvbmljYUJvZHk+PERhdGlHZW5lcmFsaT48RGF0aUdlbmVyYWxpRG9jdW1lbnRvPjxUaXBvRG9jdW1lbnRvPlREMDE8L1RpcG9Eb2N1bWVudG8+PERpdmlzYT5FVVI8L0RpdmlzYT48RGF0YT4yMDI2LTA5LTA0PC9EYXRhPjxOdW1lcm8+UDc8L051bWVybz48L0RhdGlHZW5lcmFsaURvY3VtZW50bz48L0RhdGlHZW5lcmFsaT48RGF0aUJlbmlTZXJ2aXppPjxEZXR0YWdsaW9MaW5lZT48TnVtZXJvTGluZWE+MTwvTnVtZXJvTGluZWE+PERlc2NyaXppb25lPkZpcm1hdGE8L0Rlc2NyaXppb25lPjxQcmV6em9Vbml0YXJpbz4xMDAuMDA8L1ByZXp6b1VuaXRhcmlvPjxQcmV6em9Ub3RhbGU+MTAwLjAwPC9QcmV6em9Ub3RhbGU+PEFsaXF1b3RhSVZBPjIyLjAwPC9BbGlxdW90YUlWQT48L0RldHRhZ2xpb0xpbmVlPjwvRGF0aUJlbmlTZXJ2aXppPjwvRmF0dHVyYUVsZXR0cm9uaWNhQm9keT48L3A6RmF0dHVyYUVsZXR0cm9uaWNhPgqgggIAMIIB/DCCAWWgAwIBAgIUcaK2ELcEvk6ojujbv8SrtORkiXAwDQYJKoZIhvcNAQELBQAwEDEOMAwGA1UEAwwFUHJvdmEwHhcNMjYxMDEzMTgwOTExWhcNMzYxMDEwMTgwOTExWjAQMQ4wDAYDVQQDDAVQcm92YTCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEA0wL/lp94QUpgYUvum+q/2zozThzBNq3RtMbwHsvl/vIDkrrdtX8npxfnKiORuttDR0/cll1szTpDfY0RHtgKeOZghYNvrxS+veqWBbQcfxqK8JsfCtRIS8M8rAKBZyukYhj+tMFtwv87Mam73nx5goJTd17QNea+mweR4ueIkikCAwEAAaNTMFEwHQYDVR0OBBYEFCPumWG7z0UOZsmnQajrgozH5Eq6MB8GA1UdIwQYMBaAFCPumWG7z0UOZsmnQajrgozH5Eq6MA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQELBQADgYEASAkYsoe5oxUUV0DnO4jjH3lzfD2v+4J/BnJJS+RuXW4FAUngacLxzVZr+T794gpE5xw3ayHhHIzSNYSzMsnGBtXnQ0HpWG89Mv/nfFUw6Wb3NDX9RMztBjxC68FfqjSpozcLxPYbWsrFRL3GkSjIUpNLCxVscG+5IO6sA7ARsQkxggG3MIIBswIBATAoMBAxDjAMBgNVBAMMBVByb3ZhAhRxorYQtwS+TqiO6Nu/xKu05GSJcDALBglghkgBZQMEAgGggeQwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMjYxMDEzMTgwOTQ5WjAvBgkqhkiG9w0BCQQxIgQg5dVc4M3PQDlgRwy/fx41lfhA9XgA96RD8rOO+qIIgIMweQYJKoZIhvcNAQkPMWwwajALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzAOBggqhkiG9w0DAgICAIAwDQYIKoZIhvcNAwICAUAwBwYFKw4DAgcwDQYIKoZIhvcNAwICASgwDQYJKoZIhvcNAQEBBQAEgYAqUd+urqEk8FGfk3vEZejuHB+EdoBzWzxNi1yfXfM9ey80QeEHPX7JxP6/fyTUN3LziGlqpG72T7tj5VuCFIRUhfmnv9WYTAPhFQcK57tqcT7IbQHDPGxLZ1+Rv7AglaxlliCWdbUl395bax6QbZjq3M61RZ28Pxv+VyYnIEgE2w==";
+
+await prova("una fattura firmata (.p7m) si legge come quella in chiaro, DER o BER, anche in base64", async () => {
+  const binario = (b64) => Uint8Array.from(Buffer.from(b64, "base64"));
+  for (const bytes of [binario(P7M_DER), binario(P7M_BER), encoder.encode(P7M_DER)]) {
+    const piano = await plan([file("IT09876543217_x.xml.p7m", bytes)], { company: AZIENDA });
+    assert.equal(piano.costi.length, 1, "l'acquisto firmato entra");
+    assert.equal(piano.costi[0].imponibile, "100.00");
+    // The accent survives: the envelope holds UTF-8 bytes and they are decoded as such.
+    assert.ok(piano.clienti.some((c) => c.denominazione === "Fornitore Società"));
+  }
+});
+
+await prova("un file che dichiara ISO-8859-1 si legge in quella codifica", async () => {
+  const testo = RICEVUTA.replace('encoding="UTF-8"', 'encoding="ISO-8859-1"')
+    .replace(/<Denominazione>[^<]*<\/Denominazione>/, "<Denominazione>Società Latina</Denominazione>");
+  const bytes = Uint8Array.from(testo, (c) => c.charCodeAt(0) & 0xff);
+  const piano = await plan([file("latina.xml", bytes)], { company: AZIENDA });
+  assert.ok(piano.clienti.some((c) => c.denominazione === "Società Latina"), "niente «Societ\ufffd»");
+});
+
+
+await prova("in uno zip le ricevute e le notifiche SdI si contano in silenzio", async () => {
+  const bytes = zip.write([
+    { name: "IT09876543217_00001.xml", bytes: encoder.encode(RICEVUTA) },
+    { name: "IT09876543217_00001_MT_001.xml", bytes: encoder.encode("<p:FileMetadati/>") },
+    { name: "IT09876543217_00001_RC_001.xml", bytes: encoder.encode("<p:RicevutaConsegna/>") },
+  ]);
+  const piano = await plan([file("portale.zip", bytes)], { company: AZIENDA });
+  assert.equal(piano.fonti.filter((f) => f.tipo === "ignoto").length, 0, "nessuna riga «non è una fattura»");
+  assert.ok(piano.fonti.some((f) => f.tipo === "notifiche" && f.avvisi.some((a) => a.chiave === "impSdiNotices" && a.n === "2")));
+});
+
+await prova("un estratto conto in CSV propone gli incassi, e apply li scrive", async () => {
+  const db = await openDatabase();
+  const bozza = await save(db, draft({ tipo: "TD01", data: "2026-09-01", partyId: "p1", righe: [
+    { descrizione: "Lavoro", quantita: "1", prezzoUnitario: "100.00", aliquota: "22" }] }));
+  await issue(db, bozza, {
+    company: AZIENDA, party: { id: "p1", denominazione: "Rossi Impianti S.r.l.", partitaIva: "09876543217",
+      codiceDestinatario: "0000000", sede: { indirizzo: "Via", numeroCivico: "1", cap: "40100", comune: "Bologna", provincia: "BO" } },
+  });
+  const docs = await list(db, "docs");
+  assert.equal(docs[0].stato, "emesso");
+  const csvText = `Data;Descrizione;Importo\n10/09/2026;BONIFICO ROSSI IMPIANTI FATT ${docs[0].numero};122,00\n11/09/2026;Commissioni;-1,50\n`;
+  const piano = await plan([file("movimenti.csv", encoder.encode(csvText))], {
+    company: AZIENDA, docs, parties: [{ id: "p1", denominazione: "Rossi Impianti S.r.l." }], payments: [], outlays: [], costs: [],
+  });
+  const fonte = piano.fonti[0];
+  assert.equal(fonte.tipo, "estratto");
+  assert.equal(piano.incassi.length, 1);
+  assert.ok(fonte.avvisi.some((a) => a.chiave === "impStatementUnmatched" && a.n === "1"), "le commissioni restano fuori");
+  const scritti = await apply(db, piano);
+  assert.equal(scritti.incassi, 1);
+  const pagati = await list(db, "payments");
+  assert.equal(pagati[0].data, "2026-09-10");
+  assert.match(pagati[0].nota, /BONIFICO/);
+});
+
+await prova("una fattura alla PA reimportata porta il cliente PA, il codice ufficio e la scissione", async () => {
+  reset();
+  const db = await openDatabase();
+  const azienda = { denominazione: "Esempio S.r.l.", partitaIva: "01234567897", paese: "IT", regimeFiscale: "RF01",
+    sede: { indirizzo: "Via Prova", numeroCivico: "1", cap: "47899", comune: "Serravalle", provincia: "RN" } };
+  const ente = { denominazione: "Comune di Esempio", codiceFiscale: "80012345678", codiceDestinatario: "UFABCD",
+    paese: "IT", pa: true, splitPayment: true,
+    sede: { indirizzo: "Piazza Grande", numeroCivico: "1", cap: "40100", comune: "Bologna", provincia: "BO" } };
+  const { text } = buildXml({
+    tipo: "TD01", data: "2026-09-03", numero: "2026/0050", progressivo: 50, esigibilita: "S",
+    righe: [{ descrizione: "Manutenzione", quantita: "1", prezzoUnitario: "1000.00", aliquota: "22" }],
+  }, { company: azienda, party: ente });
+  await apply(db, await plan([xml("pa.xml", text)]));
+  const [cliente] = await list(db, "parties");
+  assert.equal(cliente.pa, true);
+  assert.equal(cliente.splitPayment, true);
+  assert.equal(cliente.codiceDestinatario, "UFABCD");
+  const [doc] = await list(db, "docs");
+  assert.equal(doc.esigibilita, "S");
+  // The schedule waits for the taxable amount only: the VAT is the Treasury's.
+  assert.equal(doc.totali.totale, from("1000.00").toString());
+});
+
+await prova("un acquisto in inversione contabile si riconosce dal file: N6 dall'Italia, senza IVA dall'estero", async () => {
+  const noi = { ...AZIENDA, codiceDestinatario: "ABCDEFG" };
+  const edile = { denominazione: "Edilizia Rossi S.r.l.", partitaIva: "09876543217", paese: "IT", regimeFiscale: "RF01",
+    sede: { indirizzo: "Via Muro", numeroCivico: "3", cap: "40100", comune: "Bologna", provincia: "BO" } };
+  const td01 = (righe) => ({ tipo: "TD01", data: "2026-09-03", numero: "77", progressivo: 1, righe });
+  const italiana = buildXml(td01([{ descrizione: "Opere murarie", quantita: "1", prezzoUnitario: "1000.00", aliquota: "0", natura: "N6.7" }]),
+    { company: edile, party: noi }).text;
+  let piano = await plan([xml("rc.xml", italiana)], { company: AZIENDA });
+  assert.equal(piano.costi[0].inversione, true);
+  assert.equal(piano.costi[0].righe[0].natura, "N6.7", "la natura resta sulla riga: dice che cosa integrare");
+  // The same supplier with VAT charged: no integration.
+  const normale = buildXml(td01([{ descrizione: "Opere murarie", quantita: "1", prezzoUnitario: "1000.00", aliquota: "22" }]),
+    { company: edile, party: noi }).text;
+  piano = await plan([xml("n.xml", normale)], { company: AZIENDA });
+  assert.equal(piano.costi[0].inversione, undefined);
+  // A San Marino supplier selling goods without VAT: reverse charge, and the TM code says goods.
+  const titano = { denominazione: "Titano S.r.l.", partitaIva: "12345", paese: "SM", regimeFiscale: "RF01",
+    sede: { indirizzo: "Via del Titano", numeroCivico: "4", cap: "47890", comune: "San Marino", provincia: "SM" } };
+  const sm = buildXml(td01([{ descrizione: "Materiale", quantita: "1", prezzoUnitario: "800.00", aliquota: "0", natura: "N3.3", tm: "4" }]),
+    { company: titano, party: noi }).text;
+  piano = await plan([xml("sm.xml", sm)], { company: AZIENDA });
+  assert.equal(piano.costi[0].inversione, true);
+  assert.equal(piano.costi[0].beniServizi, "beni");
+  // A San Marino company buying: the obligation is Italian, nothing is marked.
+  piano = await plan([xml("rc2.xml", italiana)], { company: { ...AZIENDA, paese: "SM" } });
+  assert.equal((piano.costi[0] || {}).inversione, undefined);
 });
 
 console.log(`importing: ${passed} prove passate`);

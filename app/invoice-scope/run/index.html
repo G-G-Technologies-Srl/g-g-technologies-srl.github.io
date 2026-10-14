@@ -25,6 +25,9 @@
     if (light) {
       document.documentElement.setAttribute('data-theme', 'light');
       document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f6f8fc');
+    } else if (saved === 'dark') {
+      // A dark theme chosen on a light system: said explicitly, or the system's light wins.
+      document.documentElement.setAttribute('data-theme', 'dark');
     }
   } catch (ignored) {}
 </script>
@@ -421,6 +424,17 @@
     </div>
 
     <div class="chart" id="dueChart" hidden></div>
+    <!-- What the colours of the chart mean. The bars said it only in the aria-label, which nobody
+         looking at the picture reads: grey, green, red and dashed were four guesses. -->
+    <p class="legend due-legend" id="dueLegend" hidden>
+      <span><i class="due-in"></i><span data-t="dueLegendIn"></span></span>
+      <span><i class="due-in-late"></i><span data-t="dueLegendInLate"></span></span>
+      <span id="dueLegendOut" hidden>
+        <i class="due-out"></i><span data-t="dueLegendOut"></span>
+        <i class="due-out-late"></i><span data-t="dueLegendOutLate"></span>
+        <i class="due-out-expected"></i><span data-t="dueLegendExpected"></span>
+      </span>
+    </p>
 
     <!-- Il titolo della metà alta compare solo quando c'è anche la bassa: con una sola non c'è
          niente da distinguere. -->
@@ -467,6 +481,12 @@
     <div class="panel warn" id="autofattureNote" hidden>
       <p id="autofattureText"></p>
       <div id="autofattureList"></div>
+    </div>
+    <!-- The reverse-charge purchases an Italian company has to integrate (TD16–TD19): the VAT the
+         supplier did not charge, worked out and sent to the SdI by the 15th of the month after. -->
+    <div class="panel warn" id="integrazioniNote" hidden>
+      <p id="integrazioniText"></p>
+      <div id="integrazioniList"></div>
     </div>
     <p class="empty" id="purchasesEmpty" data-t="purchasesEmpty"></p>
     <div class="form docs-filters" id="purchasesFilters" hidden>
@@ -539,6 +559,8 @@
       <div class="figure"><span class="label" data-t="costTotalLabel"></span><span class="value" id="costFigTotal">—</span><span class="sub" id="costFigTotalSub"></span></div>
       <div class="figure"><span class="label" data-t="costOwedLabel"></span><span class="value" id="costFigOwed">—</span><span class="sub" id="costFigOwedSub"></span></div>
     </div>
+    <!-- What the file said beside what the app works out: withholding, amount asked, stated total. -->
+    <p class="note" id="costFileLine" hidden></p>
 
     <div id="costLinesSection" hidden>
       <div class="section-head">
@@ -626,7 +648,7 @@
       <label><span data-t="f_tipo"></span>
         <select id="docType"></select>
       </label>
-      <label class="required"><span data-t="docParty"></span>
+      <label class="required"><span data-t="docParty" id="docPartyLabel"></span>
         <select id="docPartySelect" required></select>
         <!-- **Il cliente si crea da qui, senza uscire dal documento.** Prima bisognava lasciare la
              fattura a metà, andare in Anagrafiche e tornare — e il documento a metà è esattamente
@@ -644,6 +666,15 @@
       <label class="date"><span data-t="f_data"></span><input type="date" id="docDate"></label>
       <label id="docValiditaField" class="required date" hidden><span data-t="f_validoFino"></span>
         <input type="date" id="docValidoFino" required>
+      </label>
+      <!-- The invoice a credit or debit note amends, typed in. A note made with «Storna» carries it
+           already; one chosen from the type menu had no field for it, and the check before issuing
+           asked for a reference nobody could write — a debit note could never leave. -->
+      <label id="docLinkedNumeroField" class="required date" hidden><span data-t="f_fatturaCollegata"></span>
+        <input id="docLinkedNumero" autocomplete="off" maxlength="20">
+      </label>
+      <label id="docLinkedDataField" class="required date" hidden><span data-t="f_dataCollegata"></span>
+        <input type="date" id="docLinkedData">
       </label>
       <label class="wide"><span data-t="f_causale"></span><input id="docCausale"></label>
       <!-- L'etichetta con cui l'azienda divide il proprio fatturato. Non entra nel file e non si
@@ -708,6 +739,8 @@
           <!-- «NR»: la riga resta fuori dal rimborso monofase. Colonna stretta e titolo corto,
                perché la parola intera farebbe la testata alta il doppio delle righe. -->
           <th class="col-nonrimb" data-t="hNonRimb"></th>
+          <!-- «R»: the line carries the withholding. Only with the withholding applied. -->
+          <th class="col-rit" data-t="hRit"></th>
           <th class="right" data-t="docTotale"></th><th></th>
         </tr></thead>
         <tbody id="docLinesBody"></tbody>
@@ -811,6 +844,45 @@
       <p class="note" id="docRitenutaNote" data-t="ritNote"></p>
     </div>
 
+    <!-- The pension contribution of a professional who belongs to a fund: a percentage of the fees,
+         taxed like them, declared in DatiCassaPrevidenziale. The fund list is drawn by doc.js from
+         CASSE in fatturapa.js, so the codes live in one place. -->
+    <div id="docCassaSection">
+      <h2 data-t="cassaTitle"></h2>
+      <p class="note" id="docCassaNone" data-t="cassaNone" hidden></p>
+      <label class="check" id="cassaApplyField"><input type="checkbox" id="cassaApply"><span data-t="cassaApply"></span></label>
+      <div class="form" id="cassaFields" hidden>
+        <label class="wide"><span data-t="cassaTipo"></span><select id="cassaTipo"></select></label>
+        <label class="narrow"><span data-t="f_aliquotaCassa"></span><input id="cassaRate" inputmode="decimal" value="4"></label>
+        <label class="narrow"><span data-t="f_aliquota"></span><input id="cassaIva" inputmode="decimal" value="22"></label>
+        <label class="narrow"><span data-t="f_natura"></span><select id="cassaNatura"></select></label>
+        <label class="check"><input type="checkbox" id="cassaRit"><span data-t="cassaRit"></span></label>
+      </div>
+      <p class="note" id="docCassaNote" data-t="cassaNote"></p>
+    </div>
+
+    <!-- What a public administration needs to pay: the order or contract with its CIG and CUP, and
+         VAT exigibility — split payment (S) is the PA's default, deferred (D) is for the cases the
+         law allows. Optional for a private customer, where the order number still helps. -->
+    <div id="docOrdineSection">
+      <h2 data-t="ordineTitle"></h2>
+      <div class="form" id="ordineFields">
+        <label><span data-t="ordineNumero"></span><input id="ordNumero" maxlength="20"></label>
+        <label class="narrow"><span data-t="ordineData"></span><input id="ordData" type="date"></label>
+        <label class="narrow"><span data-t="f_cig"></span><input id="ordCig" maxlength="15" autocapitalize="characters"></label>
+        <label class="narrow"><span data-t="f_cup"></span><input id="ordCup" maxlength="15" autocapitalize="characters"></label>
+        <label><span data-t="f_esigibilita"></span>
+          <select id="docEsigibilita">
+            <option value="" data-t="esigDefault"></option>
+            <option value="I" data-t="esigI"></option>
+            <option value="D" data-t="esigD"></option>
+            <option value="S" data-t="esigS"></option>
+          </select>
+        </label>
+      </div>
+      <p class="note" id="docOrdineNote" data-t="ordineNote"></p>
+    </div>
+
     <div id="docBolloSection">
       <p class="note" id="bolloNote" data-t="docBolloDue" hidden></p>
       <label class="check" id="docBolloField"><input type="checkbox" id="docBollo"><span data-t="docBollo"></span></label>
@@ -832,8 +904,14 @@
     </div>
 
     <div class="panel" id="docTotals">
+      <p class="figure-line" id="sumCassaRow" hidden><span data-t="sumCassa"></span><strong id="sumCassa">—</strong></p>
       <p class="figure-line"><span data-t="docImponibile"></span><strong id="sumImponibile">—</strong></p>
       <p class="figure-line"><span data-t="docImposta"></span><strong id="sumImposta">—</strong></p>
+      <!-- The stamp and the withholding are inside the total, so they are shown above it: without
+           them the three lines did not add up on any invoice that carried either. -->
+      <p class="figure-line" id="sumBolloRow" hidden><span data-t="printStamp"></span><strong id="sumBollo">—</strong></p>
+      <p class="figure-line" id="sumRitenutaRow" hidden><span data-t="ritTitle"></span><strong id="sumRitenuta">—</strong></p>
+      <p class="figure-line" id="sumScissaRow" hidden><span data-t="sumScissa"></span><strong id="sumScissa">—</strong></p>
       <p class="figure-line total"><span data-t="docTotale"></span><strong id="sumTotale">—</strong></p>
     </div>
     </div>
@@ -862,7 +940,7 @@
         </label>
         <!-- Il conto si sceglie, l'IBAN si legge. Il menù è una scorciatoia sui conti dell'azienda;
              il campo sotto resta la verità, perché è quello che finisce nel file. -->
-        <label id="payContoField"><span data-t="payConto"></span>
+        <label id="payContoField"><span data-t="payContoField"></span>
           <select id="payConto"></select>
         </label>
         <label class="wide"><span data-t="f_iban"></span><input id="payIban" autocomplete="off"></label>
@@ -1359,6 +1437,27 @@
         </select>
       </label>
 
+      <!-- The Register of Companies (REA): mandatory in the file for a company registered there, and
+           read by fatturapa.js as company.rea. Share capital and sole shareholder only for companies. -->
+      <h2 class="form-group" data-t="companyRea"></h2>
+      <p class="note wide" data-t="companyReaNote"></p>
+      <label class="narrow"><span data-t="f_reaUfficio"></span><input name="reaUfficio" maxlength="2" autocapitalize="characters"></label>
+      <label class="narrow"><span data-t="f_reaNumero"></span><input name="reaNumero" maxlength="20"></label>
+      <label class="narrow"><span data-t="f_capitaleSociale"></span><input name="reaCapitale" inputmode="decimal"></label>
+      <label><span data-t="f_socioUnico"></span>
+        <select name="reaSocio">
+          <option value=""></option>
+          <option value="SU"></option>
+          <option value="SM"></option>
+        </select>
+      </label>
+      <label><span data-t="f_statoLiquidazione"></span>
+        <select name="reaLiquidazione">
+          <option value="LN"></option>
+          <option value="LS"></option>
+        </select>
+      </label>
+
       <h2 class="form-group" data-t="companyWhere"></h2>
       <label class="wide"><span data-t="f_indirizzo"></span><input name="indirizzo"></label>
       <label class="narrow"><span data-t="f_numeroCivico"></span><input name="numeroCivico"></label>
@@ -1389,6 +1488,12 @@
       <label class="narrow"><span data-t="f_aliquotaPredefinita"></span><input name="aliquotaPredefinita" inputmode="decimal" placeholder="22"></label>
       <label class="narrow"><span data-t="f_naturaPredefinita"></span><select name="naturaPredefinita" id="companyNatura"></select></label>
       <label class="narrow tm-only"><span data-t="f_tmPredefinito"></span><select name="tmPredefinito"></select></label>
+      <!-- The fund a professional belongs to: new invoices start with its contribution ticked. -->
+      <h2 class="form-group" data-t="cassaTitle"></h2>
+      <p class="note wide" data-t="companyCassaNote"></p>
+      <label class="wide"><span data-t="f_cassaPredefinita"></span><select name="cassaTipo" id="companyCassa"></select></label>
+      <label class="narrow"><span data-t="f_aliquotaCassa"></span><input name="cassaAliquota" inputmode="decimal" placeholder="4"></label>
+      <label class="check wide"><input type="checkbox" name="cassaRitenuta"><span data-t="cassaRit"></span></label>
 
       <h2 class="form-group" data-t="companyNumbering"></h2>
       <!-- Serve a chi arriva da un altro programma con una numerazione già iniziata. Il contatore
@@ -1503,7 +1608,7 @@
       <span class="note" id="impReading" data-t="impReading" hidden></span>
       <!-- `.xls` è il formato in cui Fatture in Cloud esporta i documenti, e `xls.js` lo legge
            così com'è: nessun passaggio da Excel. -->
-      <input type="file" id="impFiles" accept=".xlsx,.xls,.xml,.zip" multiple hidden>
+      <input type="file" id="impFiles" accept=".xlsx,.xls,.xml,.p7m,.zip" multiple hidden>
     </div>
 
     <!-- Il fuoco arriva qui quando c'è un piano da leggere, e la regione annuncia i cambiamenti:
@@ -1639,8 +1744,11 @@
       </label>
       <!-- The identifiers after the country, which decides what they are called — a COE for San
            Marino, a VAT number for Italy — as on the company's own sheet. -->
-      <label><span data-t="f_partitaIva"></span><input name="partitaIva" inputmode="numeric"></label>
+      <label><span id="partyPivaLabel" data-t="f_partitaIva"></span><input name="partitaIva" inputmode="numeric"></label>
       <label><span data-t="f_codiceFiscale"></span><input name="codiceFiscale"></label>
+      <!-- Said while typing, not three days later from the SdI: a transposed pair of digits passes
+           any length check and fails the check digit. A warning, never a block — the save decides. -->
+      <p class="note wide field-warn" id="partyFiscalWarn" role="status" hidden></p>
       <label class="wide"><span data-t="f_indirizzo"></span><input name="indirizzo"></label>
       <label class="narrow"><span data-t="f_numeroCivico"></span><input name="numeroCivico"></label>
       <label class="narrow"><span data-t="f_cap"></span><input name="cap" inputmode="numeric" maxlength="5"></label>
@@ -1653,6 +1761,13 @@
       <!-- A chi non lo sa: sono i due modi in cui la fattura elettronica arriva al cliente, e ne
            basta uno. Senza questa riga i due campi sembrano burocrazia da riempire tutta. -->
       <p class="note wide" data-t="partyDeliveryNote"></p>
+      <!-- A public administration: the invoice leaves as FPA12 to the six-character office code,
+           and split payment is proposed on its documents. -->
+      <div class="wide check-group">
+        <label class="check"><input type="checkbox" name="pa"><span data-t="f_pa"></span></label>
+        <label class="check"><input type="checkbox" name="splitPayment"><span data-t="f_splitPayment"></span></label>
+      </div>
+      <p class="note wide" data-t="partyPaNote"></p>
 
       <!-- Quello che questo cliente porta nei suoi documenti: l'aliquota sulle righe nuove e il conto
            su cui paga. Vuoti, valgono quelli dell'azienda — il suggerimento nel campo lo dice.
@@ -1809,6 +1924,15 @@
     <p class="note" data-t="solleciteNote"></p>
     <div class="form">
       <label class="wide"><span data-t="solleciteWho"></span><select id="dunParty"></select></label>
+      <!-- Which instalments go into the text: all of them ticked, and the ones agreed by phone or
+           under discussion are taken out by hand. -->
+      <fieldset class="wide dun-rows"><legend data-t="solleciteRows"></legend><div id="dunRows"></div></fieldset>
+      <label><span data-t="solleciteTone"></span>
+        <select id="dunTone">
+          <option value="1" data-t="solleciteTone1"></option>
+          <option value="2" data-t="solleciteTone2"></option>
+        </select>
+      </label>
       <label class="wide"><span data-t="solleciteTo"></span><input id="dunTo" type="email" autocomplete="off"></label>
       <label class="wide"><span data-t="solleciteSubjectLabel"></span><input id="dunSubject" readonly></label>
       <label class="wide"><span data-t="solleciteText"></span><textarea id="dunText" rows="14"></textarea></label>
@@ -1873,6 +1997,9 @@
       </label>
       <p class="note wide" id="costPartyNone" data-t="costPartyNone" hidden></p>
       <p class="note wide" id="costNotaHint" data-t="costNotaHint" hidden></p>
+      <!-- The supplier's invoice a credit note reverses: named, it comes off that invoice's amount
+           owed instead of floating as a credit against nothing. -->
+      <label class="wide" id="costFatturaRow" hidden><span data-t="f_fatturaStornata"></span><select name="fatturaId"></select></label>
       <label class="narrow"><span data-t="f_data"></span><input name="data" type="date" required></label>
       <label class="narrow" id="costNumeroRow"><span data-t="f_numeroFornitore"></span><input name="numero" autocomplete="off"></label>
       <label class="narrow"><span data-t="f_categoria"></span><input name="categoria" list="costCategories" autocomplete="off"></label>
@@ -1883,6 +2010,19 @@
       <label class="narrow"><span id="costTaxLabel"></span><input name="imposta" inputmode="decimal"></label>
       <label class="narrow"><span data-t="f_totale"></span><output id="costTotale"></output></label>
       <p class="note wide" id="costTaxNote"></p>
+      <!-- Reverse charge: the supplier charged no VAT and the company integrates it. Goods or
+           services decide which document (TD17 against TD18/TD19) for a foreign supplier. -->
+      <div class="wide check-group" id="costInversioneRow">
+        <label class="check"><input type="checkbox" name="inversione"><span data-t="costInversione"></span></label>
+      </div>
+      <label id="costBeniRow" hidden><span data-t="costBeniServizi"></span>
+        <select name="beniServizi">
+          <option value="" data-t="costBeniNonSo"></option>
+          <option value="servizi" data-t="costServizi"></option>
+          <option value="beni" data-t="costBeni"></option>
+        </select>
+      </label>
+      <p class="note wide" id="costInversioneNote" data-t="costInversioneNote" hidden></p>
       <label class="narrow"><span data-t="f_scadenza"></span><input name="scadenza" type="date"></label>
       <p class="note wide" data-t="costScadenzaHint"></p>
     </div>
@@ -1982,7 +2122,7 @@
         <input name="importo" inputmode="decimal" required>
       </label>
       <label class="narrow"><span data-t="f_data"></span><input name="data" type="date" required></label>
-      <label id="payContoRow"><span data-t="payConto"></span><select name="conto"></select></label>
+      <label id="payContoRow"><span data-t="payContoField"></span><select name="conto"></select></label>
       <label class="wide"><span data-t="incassiNote"></span><input name="nota" autocomplete="off"></label>
       <!-- The receipt of the transfer: our button and our line, the system's picker behind them.
            The input stays hidden because its own face is the one control here that looks like
@@ -2037,9 +2177,9 @@
 
 <!-- La domanda con una risposta di testo: il nome di una pagina, l'indirizzo di un collegamento.
      Il `<dialog>` dell'app, non `prompt()` del browser. -->
-<dialog id="prompt">
+<dialog id="prompt" aria-labelledby="promptMessage">
   <p id="promptMessage"></p>
-  <input type="text" id="promptField" autocomplete="off">
+  <input type="text" id="promptField" autocomplete="off" aria-labelledby="promptMessage">
   <div class="actions">
     <button type="button" id="promptCancel" class="button ghost" data-t="cancel"></button>
     <span class="spacer"></span>
@@ -2057,12 +2197,15 @@
 </dialog>
 
 <!-- What just happened, and the way back: after something went to the bin or was archived. -->
-<div class="snack" id="snack" role="status" aria-live="polite" hidden>
+<!-- The announcement lives apart from the strip: a live region that appears and fills in the same
+     instant is often not read at all. This one is always in the page, and only its text changes. -->
+<div class="sr-only" id="snackLive" role="status" aria-live="polite"></div>
+<div class="snack" id="snack" hidden>
   <span id="snackText"></span>
   <button type="button" class="button ghost small" id="snackAction" data-t="undo"></button>
 </div>
 
-<dialog id="ask">
+<dialog id="ask" aria-labelledby="askText">
   <p id="askText"></p>
   <ul id="askList" hidden></ul>
   <div class="actions">

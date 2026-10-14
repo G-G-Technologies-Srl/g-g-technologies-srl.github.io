@@ -20,7 +20,7 @@
 // No DOM: `node --import ./app/invoice-scope/test/loader.mjs app/invoice-scope/test/format.mjs`.
 
 import { toString } from "./decimal.js";
-import { lang } from "./i18n.js";
+import { lang, tf } from "./i18n.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -85,4 +85,9 @@ export function rate(value) {
 export function date(iso) {
   const found = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ""));
   return found ? `${found[3]}/${found[2]}/${found[1]}` : String(iso || "");
+}
+
+/** A count of days with its noun — «1 giorno», «5 giorni» — and never «1 giorni». */
+export function days(n) {
+  return tf(Number(n) === 1 ? "nDayOne" : "nDays", { n });
 }
