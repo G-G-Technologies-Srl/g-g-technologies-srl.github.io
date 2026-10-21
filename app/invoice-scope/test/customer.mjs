@@ -443,6 +443,56 @@ await prova("dal diario si pianifica un incontro col cliente già scelto", async
   assert.match(dom.byId("custDiary").at(0).allText, /Incontro.*Offerta di rinnovo/s);
 });
 
+// The customer's meetings from the calendar's side, as on the CRM screen: on 21 October 2026 the
+// sheet showed them only as diary lines, mixed with calls and notes, and the meeting coming next
+// week was nowhere to be seen as such. The dates are far from today on purpose: 2099 is always
+// coming, 2020 has always happened — the test does not read the clock for anything else.
+await prova("la scheda mostra gli incontri in programma e quelli da annotare, e porta al CRM", async (db) => {
+  await saveParty(db, CLIENTE);
+  await saveParty(db, { id: "p2", denominazione: "Brandi & Figli S.n.c." });
+  await saveActivity(db, { id: "m1", partyId: "p1", tipo: "incontro", data: "2099-01-10", ora: "10:30",
+    luogo: "Officina", testo: "Collaudo della linea" });
+  await saveActivity(db, { id: "m2", partyId: "p1", tipo: "incontro", data: "2020-01-10",
+    testo: "Sopralluogo" });
+  await saveActivity(db, { id: "m3", partyId: "p1", tipo: "incontro", data: "2020-01-05",
+    testo: "Primo incontro", esito: "Preventivo da fare" });
+  await saveActivity(db, { id: "m4", partyId: "p2", tipo: "incontro", data: "2099-02-01", testo: "Di un altro" });
+  await customer.render(db, "p1");
+
+  assert.equal(dom.byId("custMeetingsEmpty").hidden, true);
+  assert.equal(dom.byId("custMeetingsUpcoming").hidden, false);
+  assert.equal(dom.count("custMeetingsUpcomingBody"), 1, "solo i suoi, e solo quelli che vengono");
+  assert.match(dom.byId("custMeetingsUpcomingBody").at(0).allText, /10:30.*Collaudo della linea.*Officina/s);
+  assert.equal(dom.byId("custMeetingsToWrite").hidden, false);
+  assert.equal(dom.count("custMeetingsToWriteBody"), 1, "il concluso sta nel diario, non qui");
+  assert.equal(dom.byId("custMeetingsCrmNote").hidden, false);
+
+  // «Aggiungi l'esito»: il foglio si apre, e scritto l'esito l'incontro esce dalla sezione.
+  const riga = dom.byId("custMeetingsToWriteBody").at(0);
+  await riga.at(riga.children.length - 1).at(0).fire("click");
+  assert.equal(dom.byId("meetingDialog").open, true);
+  dom.byId("meetingForm").elements.esito.value = "Misure prese";
+  await dom.byId("meetingSave").fire("click");
+  assert.equal(dom.byId("custMeetingsToWrite").hidden, true);
+  assert.match(dom.byId("custDiary").allText, /Esito: Misure prese/);
+
+  // Il collegamento apre il CRM già filtrato su questo cliente.
+  await dom.byId("custMeetingsCrm").fire("click");
+  await meetings.render(db);
+  assert.equal(dom.byId("crmParty").value, "p1");
+  assert.equal(dom.count("crmUpcomingBody"), 1);
+  meetings.showParty("");
+});
+
+await prova("un cliente senza incontri lo dice, e il collegamento al CRM non c'è", async (db) => {
+  await saveParty(db, CLIENTE);
+  await customer.render(db, "p1");
+  assert.equal(dom.byId("custMeetingsEmpty").hidden, false);
+  assert.equal(dom.byId("custMeetingsUpcoming").hidden, true);
+  assert.equal(dom.byId("custMeetingsToWrite").hidden, true);
+  assert.equal(dom.byId("custMeetingsCrmNote").hidden, true);
+});
+
 // The sheet of the fiscal data opens with every field it fills: moving a field in the markup — the
 // country before the VAT number, the delivery code after the address — must not lose one. On
 // 13 October 2026 a reorder put the delivery code into the company form instead, and the sheet

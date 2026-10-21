@@ -51,7 +51,7 @@ Invoice Scope does the part that takes expertise — the arithmetic, the Fattura
 - Recognises reverse-charge purchases and prepares the integration to send to the SdI — TD16, TD17, TD18 or TD19 — with the deadline of the 15th of the following month. For a San Marino company it proposes the self-billed invoice under article 7 of Decreto Delegato 133/2026 when the supplier's invoice does not arrive.
 - Keeps the payment schedule both ways: instalments, payments with the transfer receipt, transfers that settle several invoices, the bank statement read from CSV. Prepares reminder letters and announces due dates through an .ics calendar and, where the browser allows, a notification.
 - Opens on an overview: the year's revenue against the previous one, receivables by age, margin, the period's VAT for checking purposes, and documents close to their transmission deadline.
-- Gives every customer a record with the contact people, a diary of calls, emails and meetings, and the list of their documents.
+- Gives every customer a record with the contact people, the meetings coming up and those waiting for an outcome, a diary of calls, emails and meetings, and the list of their documents.
 - Manages projects: phases with dates and amounts, note pages with images and attachments, and completed phases that become invoice lines. The format is the same as Plan Scope's.
 - Imports customers, price list and documents from Fatture in Cloud and from the XML files of an archive, showing first what will come in. Exports a CSV of the period for whoever keeps the books.
 - Prints documents on your letterhead, with logo and contact details, or saves them as PDF.
@@ -124,7 +124,7 @@ PolyForm Shield 1.0.0. The code is public: it can be read, changed and used, com
 
 Free.
 
-**Version** 0.71.0 · **Updated** 14 October 2026 · **Licence** PolyForm-Shield-1.0.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
+**Version** 0.72.0 · **Updated** 14 October 2026 · **Licence** PolyForm-Shield-1.0.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
 
 *FAQ*
 

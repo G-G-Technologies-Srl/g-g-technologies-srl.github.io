@@ -1338,9 +1338,41 @@
       </table>
     </div>
 
+    <!-- The customer's meetings from the calendar's side, as on the CRM screen but for this
+         customer only: what is coming and what still waits for its outcome. The meetings already
+         written up are in the diary below, with their outcome, and in the CRM. -->
+    <div class="section-head">
+      <h2 data-t="custMeetingsTitle"></h2>
+      <button type="button" class="button ghost" id="custMeetingNew" data-t="meetingNew"></button>
+    </div>
+    <p class="empty" id="custMeetingsEmpty" data-t="custMeetingsEmpty"></p>
+    <div id="custMeetingsUpcoming" hidden>
+      <h3 data-t="crmUpcoming"></h3>
+      <div class="table-scroll">
+        <table class="rows">
+          <thead><tr>
+            <th data-t="docsDate"></th><th data-t="meetingTime"></th><th data-t="meetingSubject"></th>
+            <th data-t="meetingPlace"></th><th></th>
+          </tr></thead>
+          <tbody id="custMeetingsUpcomingBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="custMeetingsToWrite" hidden>
+      <h3 data-t="crmToWrite"></h3>
+      <div class="table-scroll">
+        <table class="rows">
+          <thead><tr>
+            <th data-t="docsDate"></th><th data-t="meetingSubject"></th><th></th>
+          </tr></thead>
+          <tbody id="custMeetingsToWriteBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <p class="note" id="custMeetingsCrmNote" hidden><a href="#/crm" id="custMeetingsCrm" data-t="custMeetingsCrm"></a></p>
+
     <div class="section-head">
       <h2 data-t="custDiaryTitle"></h2>
-      <button type="button" class="button ghost" id="custMeetingNew" data-t="meetingNew"></button>
     </div>
     <p class="note" data-t="custDiaryNote"></p>
     <!-- Si scrive dove si legge: la riga sta in cima all'elenco, aperta, con la data di oggi già

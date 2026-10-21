@@ -761,6 +761,10 @@ const IT = {
   custContactsNote: "Chi risponde al telefono e a chi si scrive. Restano qui, sul vostro computer: la "
     + "fattura elettronica non ha un campo per il nome di una persona, e l'app non ne inventa uno.",
   custContactsEmpty: "Qui compaiono le persone di riferimento del cliente.",
+  custMeetingsTitle: "Incontri",
+  custMeetingsEmpty: "Nessun incontro in programma o da annotare. Quelli conclusi restano nel diario, "
+    + "con il loro esito.",
+  custMeetingsCrm: "Tutti gli incontri con questo cliente nel CRM",
   custDiaryTitle: "Diario",
   custDiaryNote: "Una riga per telefonata, email o incontro. Vale la volta dopo, quando vi chiedono "
     + "che cosa vi eravate detti — e quando il preventivo arriva tre mesi più tardi.",
@@ -2515,6 +2519,10 @@ const EN = {
   custContactsNote: "Who answers the phone, and who you write to. They stay here, on your computer: "
     + "an electronic invoice has no field for a person's name, and the app does not invent one.",
   custContactsEmpty: "The people you add show up here.",
+  custMeetingsTitle: "Meetings",
+  custMeetingsEmpty: "No meetings coming up or waiting for an outcome. The ones held stay in the diary, "
+    + "with their outcome.",
+  custMeetingsCrm: "All meetings with this customer in the CRM",
   custDiaryTitle: "Diary",
   custDiaryNote: "One line per call, email or meeting. It pays off the next time somebody asks what "
     + "the two of you had agreed — and when the quote arrives three months later.",

@@ -327,7 +327,21 @@ async function _cancelEdit() {
   await _drawDiary();
 }
 
+/**
+ * The meetings still to come and those waiting for their outcome, above the diary.
+ *
+ * They are entries of the same diary, so whatever redraws the diary redraws them too: a meeting
+ * written from the composer, given an outcome or deleted moves between the two lists, and a
+ * section drawn on its own would keep showing it where it was. The link to the CRM appears once
+ * the customer has meetings at all, written up included, and opens it filtered on this customer.
+ */
+async function _drawMeetings() {
+  const tutti = await meetings.renderParty(database, cliente.id, { afterSave: _afterMeeting });
+  el("custMeetingsCrmNote").hidden = tutti === 0;
+}
+
 async function _drawDiary() {
+  await _drawMeetings();
   const voci = await activitiesOf(database, cliente.id);
   el("custDiaryEmpty").hidden = voci.length > 0;
   const list_ = el("custDiary");
@@ -630,6 +644,11 @@ export function connect(db, { afterChange = null } = {}) {
   el("custMeetingNew").addEventListener("click", async () => {
     if (!cliente) return;
     await meetings.openSheet(database, { partyId: cliente.id, afterSave: _afterMeeting });
+  });
+  // The CRM keeps its filter while the app is open: set before the route changes, it is the first
+  // thing the screen reads.
+  el("custMeetingsCrm").addEventListener("click", () => {
+    if (cliente) meetings.showParty(cliente.id);
   });
   el("contactSave").addEventListener("click", _saveContact);
   el("contactCancel").addEventListener("click", () => {

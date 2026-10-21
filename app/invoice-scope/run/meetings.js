@@ -140,6 +140,35 @@ function _short(text, max = 90) {
   return line.length > max ? `${line.slice(0, max - 1)}…` : line;
 }
 
+/**
+ * A meeting still to come: day, time, customer, subject, place, and the calendar file.
+ * `withParty` is false on the customer's sheet, where the customer is the page itself.
+ */
+function _upcomingRow(meeting, { withParty = true } = {}) {
+  const cells = [_td(shownDate(meeting.data), "nowrap"), _td(meeting.ora, "nowrap")];
+  if (withParty) cells.push(_td(_name(meeting.partyId)));
+  cells.push(_td(_short(meeting.testo)), _td(meeting.luogo, "meta"));
+  return _row(meeting, cells, [
+    _button(t("meetingCalendar"), () => _calendar(meeting), { aria: `${t("meetingCalendarLabel")} — ${_name(meeting.partyId)}` }),
+    _button(t("del"), async () => {
+      if (await _delete(meeting)) await _changed();
+    }, { aria: `${t("del")}: ${_name(meeting.partyId)} ${shownDate(meeting.data)}` }),
+  ]);
+}
+
+/** A meeting that took place with no outcome written, and the button that writes it. */
+function _toWriteRow(meeting, { withParty = true } = {}) {
+  const cells = [_td(shownDate(meeting.data), "nowrap")];
+  if (withParty) cells.push(_td(_name(meeting.partyId)));
+  cells.push(_td(_short(meeting.testo)));
+  return _row(meeting, cells, [
+    _button(t("meetingWrite"), () => _openSheet(meeting, { focus: "esito" }), {
+      className: "button ghost small",
+      aria: `${t("meetingWrite")} — ${_name(meeting.partyId)} ${shownDate(meeting.data)}`,
+    }),
+  ]);
+}
+
 /** Download a meeting as a calendar file. */
 function _calendar(meeting) {
   const party = byId.get(meeting.partyId);
@@ -329,36 +358,12 @@ export async function render(db, afterChange = null) {
   el("crmUpcoming").hidden = upcoming.length === 0;
   const up = el("crmUpcomingBody");
   up.textContent = "";
-  for (const meeting of upcoming) {
-    up.append(_row(meeting, [
-      _td(shownDate(meeting.data), "nowrap"),
-      _td(meeting.ora, "nowrap"),
-      _td(_name(meeting.partyId)),
-      _td(_short(meeting.testo)),
-      _td(meeting.luogo, "meta"),
-    ], [
-      _button(t("meetingCalendar"), () => _calendar(meeting), { aria: `${t("meetingCalendarLabel")} — ${_name(meeting.partyId)}` }),
-      _button(t("del"), async () => {
-        if (await _delete(meeting)) await _changed();
-      }, { aria: `${t("del")}: ${_name(meeting.partyId)} ${shownDate(meeting.data)}` }),
-    ]));
-  }
+  for (const meeting of upcoming) up.append(_upcomingRow(meeting));
 
   el("crmToWrite").hidden = toWrite.length === 0;
   const late = el("crmToWriteBody");
   late.textContent = "";
-  for (const meeting of toWrite) {
-    late.append(_row(meeting, [
-      _td(shownDate(meeting.data), "nowrap"),
-      _td(_name(meeting.partyId)),
-      _td(_short(meeting.testo)),
-    ], [
-      _button(t("meetingWrite"), () => _openSheet(meeting, { focus: "esito" }), {
-        className: "button ghost small",
-        aria: `${t("meetingWrite")} — ${_name(meeting.partyId)} ${shownDate(meeting.data)}`,
-      }),
-    ]));
-  }
+  for (const meeting of toWrite) late.append(_toWriteRow(meeting));
 
   el("crmDone").hidden = done.length === 0;
   const held = el("crmDoneBody");
@@ -375,6 +380,40 @@ export async function render(db, afterChange = null) {
       }, { aria: `${t("del")}: ${_name(meeting.partyId)} ${shownDate(meeting.data)}` }),
     ]));
   }
+}
+
+/**
+ * The meetings of one customer, on the customer's sheet: what is coming and what still waits for
+ * its outcome, in the rows of the CRM screen without the customer's column. The meetings written
+ * up are in the diary, with their outcome, so they are not repeated here. `afterSave` is called
+ * once the sheet, a deletion or an outcome changed something. Returns how many meetings the
+ * customer has in all, written up included.
+ */
+export async function renderParty(db, partyId, { afterSave = null } = {}) {
+  database = db;
+  afterSheet = afterSave;
+  byId = new Map((await parties(db)).map((p) => [p.id, p]));
+  const own = (await activities(db)).filter((one) => one.partyId === partyId);
+  const gruppi = agenda(own);
+
+  el("custMeetingsEmpty").hidden = gruppi.upcoming.length + gruppi.toWrite.length > 0;
+
+  el("custMeetingsUpcoming").hidden = gruppi.upcoming.length === 0;
+  const up = el("custMeetingsUpcomingBody");
+  up.textContent = "";
+  for (const meeting of gruppi.upcoming) up.append(_upcomingRow(meeting, { withParty: false }));
+
+  el("custMeetingsToWrite").hidden = gruppi.toWrite.length === 0;
+  const late = el("custMeetingsToWriteBody");
+  late.textContent = "";
+  for (const meeting of gruppi.toWrite) late.append(_toWriteRow(meeting, { withParty: false }));
+
+  return gruppi.upcoming.length + gruppi.toWrite.length + gruppi.done.length;
+}
+
+/** Filter the CRM screen on one customer, before going there from the customer's sheet. */
+export function showParty(partyId) {
+  filtro = partyId || "";
 }
 
 /**

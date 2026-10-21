@@ -91,7 +91,7 @@ c'è il tasto «indietro» del browser, e la via del ritorno deve stare nell'app
 | `due.js` · `payments.js` · `states.js` | scadenzario, incassi, il controllo che cambia stato |
 | `parties.js` · `customer.js` · `crm.js` | clienti (`render`) e listino (`renderItems`), la scheda cliente, le persone e il diario |
 | `banks.js` | Anagrafiche › Banche: i conti dell'azienda, che restano `conti` nel record `company` — sei file li leggono da lì; la schermata del conto con i suoi movimenti (`movements`, `#/anagrafiche/banche/<id>`); `bankFields`, i dati della banca che una bozza copia accanto all'IBAN |
-| `meetings.js` | il CRM: gli incontri di tutti i clienti, che sono voci del diario con `ora`, `luogo`, `persone`, `esito`; i gruppi li decide `agenda` in `crm.js` |
+| `meetings.js` | il CRM: gli incontri di tutti i clienti, che sono voci del diario con `ora`, `luogo`, `persone`, `esito`; i gruppi li decide `agenda` in `crm.js`. Le stesse righe, senza la colonna del cliente, nella sezione «Incontri» della scheda cliente (`renderParty`, ridisegnata da `_drawDiary`: sono le stesse voci); `showParty` filtra il CRM prima di andarci |
 | `alarms.js` | i promemoria: le scadenze dei due versi e gli incontri in programma, nel digest del service worker e nel file `.ics` |
 | `projects.js` · `project.js` | i progetti e le fasi, con il modello condiviso di Plan Scope |
 | `purchases.js` · `costs.js` · `expected.js` | gli acquisti, i loro conti, gli attesi |
