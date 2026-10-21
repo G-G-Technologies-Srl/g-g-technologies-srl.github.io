@@ -25,9 +25,9 @@ import { money, date as shownDate } from "./format.js";
 import { parseAmount } from "./parse.js";
 import { t, tf } from "./i18n.js";
 import { ask, tell } from "./ask.js";
-import { from, cmp, sub, toString, ZERO } from "./decimal.js";
+import { from, add, cmp, sub, toString, ZERO } from "./decimal.js";
 import { kind, numero as shownNumber } from "./kinds.js";
-import { recordPayment, removePayment, paymentsOf, received, owedOn, schedule, spread } from "./schedule.js";
+import { recordPayment, removePayment, updatePayment, paymentsOf, received, owedOn, schedule, spread } from "./schedule.js";
 import { RECEIPT_ACCEPT, attach, blobOf, detach, refusal } from "./attachments.js";
 import { currentDay } from "./day.js";
 
@@ -66,15 +66,27 @@ function _close(dialog) {
 /** The file chosen in the sheet, until the payment is saved. */
 let ricevutaScelta = null;
 
+/**
+ * The receipt the payment already has, when the sheet corrects one; and whether the person took it
+ * off with the cross. Nothing is removed until the sheet is saved: a cancel leaves it where it was.
+ */
+let ricevutaEsistente = null;
+let ricevutaTolta = false;
+
 /** Who is waiting for the file picker opened from a row: the record, and what to redraw. */
 let attesa = null;
 
-/** The chosen file under the button, or nothing; and the button says which of the two it does. */
+/**
+ * The file under the button: the one just chosen, or the one the payment already has, or nothing;
+ * and the button says which of the three it does. The cross takes off the chosen file first, and
+ * the existing receipt after it.
+ */
 function _drawChosen() {
-  el("payReceiptName").textContent = ricevutaScelta ? ricevutaScelta.name : "";
-  el("payReceiptClear").hidden = !ricevutaScelta;
-  el("payReceiptClear").setAttribute("aria-label", t("receiptClear"));
-  el("payReceiptPick").textContent = t(ricevutaScelta ? "receiptChange" : "receiptAttach");
+  const tenuta = ricevutaEsistente && !ricevutaTolta ? ricevutaEsistente : null;
+  el("payReceiptName").textContent = ricevutaScelta ? ricevutaScelta.name : tenuta ? tenuta.name || t("receiptLabel") : "";
+  el("payReceiptClear").hidden = !ricevutaScelta && !tenuta;
+  el("payReceiptClear").setAttribute("aria-label", t(ricevutaScelta ? "receiptClear" : "receiptRemove"));
+  el("payReceiptPick").textContent = t(ricevutaScelta || tenuta ? "receiptChange" : "receiptAttach");
 }
 
 /** A refusal said under the sheet, in the same list as a wrong amount. */
@@ -93,7 +105,7 @@ function _sheetProblem(key) {
  * A PDF and a picture open in a tab, which is where somebody looks at a receipt; a HEIC photo from
  * an iPhone does not open in most browsers, so it is downloaded under its own name instead.
  */
-async function _show(db, record) {
+async function _show(db, record, { download = false } = {}) {
   const blob = await blobOf(db, record);
   if (!blob) {
     await tell(t("receiptMissing"));
@@ -102,7 +114,7 @@ async function _show(db, record) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  if (/heic|heif/i.test(record.ricevuta.type || record.ricevuta.name || "")) {
+  if (download || /heic|heif/i.test(record.ricevuta.type || record.ricevuta.name || "")) {
     link.download = record.ricevuta.name || "ricevuta";
   } else {
     link.target = "_blank";
@@ -142,6 +154,36 @@ export async function openSheet(db, doc, { proposta = ZERO, onDone = null } = {}
     proposta,
     onDone,
     save: (campi) => _recordSpread(db, doc, residuo, campi),
+  });
+}
+
+/**
+ * The same sheet on a payment already recorded, to correct it: amount, day, account, note, and the
+ * receipt — replaced, taken off, or attached now if it was never there.
+ *
+ * The amount still owed it shows is the document's with this payment taken out, so the figure under
+ * the title is what the payment is being measured against, as when it was recorded. Resolves `true`
+ * when something was written.
+ */
+export async function editPayment(db, payment, { onDone = null } = {}) {
+  const doc = await get(db, "docs", payment.docId);
+  let importo = ZERO;
+  try {
+    importo = from(payment.importo || "0");
+  } catch (ignored) {
+    importo = ZERO;
+  }
+  const residuo = add(await owedOn(db, payment.docId), importo);
+  return openMoney(db, {
+    titolo: doc
+      ? `${t(kind(doc).label)} ${shownNumber(doc)} · ${t("dueLeft")} ${_money(residuo)}`
+      : t("incassiNoDoc"),
+    residuo,
+    onDone,
+    etichetta: t("incassiEdit"),
+    diPiu: "incassiOverpaid",
+    iniziale: payment,
+    save: (campi) => updatePayment(db, payment.id, campi),
   });
 }
 
@@ -188,10 +230,11 @@ async function _recordSpread(db, doc, residuo, campi) {
  * titolo; `etichetta` il verbo sul pulsante, «Registra un incasso» se manca.
  */
 export async function openMoney(db, { titolo, residuo = ZERO, proposta = ZERO, onDone = null, save, etichetta = null,
-  diPiu = "dueOverpaid" }) {
+  diPiu = "dueOverpaid", iniziale = null }) {
   const form = el("payForm");
   form.reset();
-  el("paySave").textContent = etichetta || t("dueRecord");
+  // A correction is saved, not recorded again: the title says what the sheet is, the button what it does.
+  el("paySave").textContent = iniziale ? t("save") : etichetta || t("dueRecord");
   el("payDialogTitle").textContent = etichetta || t("dueRecord");
 
   const conti = await _conti(db);
@@ -209,18 +252,37 @@ export async function openMoney(db, { titolo, residuo = ZERO, proposta = ZERO, o
       : conto.iban;
     scelta.append(option);
   }
+  // A payment being corrected keeps the account it was recorded on, even one taken out of the
+  // register since: it is offered as it was written, so saving without touching it changes nothing.
+  const fotografia = iniziale && iniziale.conto;
+  if (fotografia && !conti.some((conto) => conto.id === fotografia.id)) {
+    conti.push({ id: fotografia.id || "", etichetta: fotografia.etichetta, iban: fotografia.iban, opzione: "__fotografia" });
+    const option = document.createElement("option");
+    option.value = fotografia.id || "__fotografia";
+    option.textContent = fotografia.etichetta || fotografia.iban || "—";
+    scelta.append(option);
+  }
   // Senza conti registrati il menù non chiede niente e non offre niente: sparisce, e l'incasso si
   // registra lo stesso. L'anagrafica dei conti è comoda, non obbligatoria.
   el("payContoRow").hidden = conti.length === 0;
   const predefinito = conti.find((conto) => conto.predefinito) || conti[0];
-  scelta.value = predefinito ? predefinito.id : "";
+  if (iniziale) scelta.value = fotografia ? fotografia.id || "__fotografia" : "";
+  else scelta.value = predefinito ? predefinito.id : "";
 
-  form.elements.importo.value = cmp(proposta, ZERO) > 0 ? toString(proposta, 2) : toString(residuo, 2);
-  form.elements.data.value = _oggi();
+  if (iniziale) {
+    form.elements.importo.value = toString(from(iniziale.importo || "0"), 2);
+    form.elements.data.value = iniziale.data || _oggi();
+    form.elements.nota.value = iniziale.nota || "";
+  } else {
+    form.elements.importo.value = cmp(proposta, ZERO) > 0 ? toString(proposta, 2) : toString(residuo, 2);
+    form.elements.data.value = _oggi();
+  }
   el("payDialogDoc").textContent = titolo;
   el("payProblems").hidden = true;
   el("payProblems").textContent = "";
   ricevutaScelta = null;
+  ricevutaEsistente = iniziale && iniziale.ricevuta ? iniziale.ricevuta : null;
+  ricevutaTolta = false;
   _drawChosen();
 
   _open(el("payDialog"));
@@ -234,6 +296,8 @@ export async function openMoney(db, { titolo, residuo = ZERO, proposta = ZERO, o
       el("payDialog").oncancel = null;
       form.onkeydown = null;
       ricevutaScelta = null;
+      ricevutaEsistente = null;
+      ricevutaTolta = false;
       _close(el("payDialog"));
       resolve(esito);
     };
@@ -288,7 +352,7 @@ export async function openMoney(db, { titolo, residuo = ZERO, proposta = ZERO, o
         return;
       }
 
-      const conto = conti.find((uno) => uno.id === form.elements.conto.value) || null;
+      const conto = conti.find((uno) => (uno.opzione || uno.id) === form.elements.conto.value) || null;
       // `save` answers the record, or `{ record, distribuito, messaggio }` when the transfer was
       // shared among several documents (`_recordSpread`): then the overpayment is not one.
       const esito = await save({
@@ -309,6 +373,8 @@ export async function openMoney(db, { titolo, residuo = ZERO, proposta = ZERO, o
         } catch (ignored) {
           ricevutaPersa = true;
         }
+      } else if (ricevutaTolta && record && record.ricevuta) {
+        await detach(db, record);
       }
       ricevutaScelta = null;
 
@@ -334,8 +400,8 @@ export async function openMoney(db, { titolo, residuo = ZERO, proposta = ZERO, o
 /**
  * Gli incassi di un documento, disegnati dentro un contenitore.
  *
- * Sola lettura tranne il comando per toglierne uno: un incasso è il verbale di una cosa arrivata in
- * banca, e le cose che si correggono di un verbale sono «non è mai arrivato» e nient'altro.
+ * Un incasso è il verbale di una cosa arrivata in banca. Si toglie quando non è mai arrivato, e si
+ * corregge (`editPayment`) quando il verbale è sbagliato: il giorno, il conto, una cifra scritta male.
  */
 export async function render(db, doc, { onChange = null } = {}) {
   const incassi = await paymentsOf(db, doc.id);
@@ -373,7 +439,18 @@ export async function render(db, doc, { onChange = null } = {}) {
     });
 
     const azioni = document.createElement("td");
-    azioni.className = "right";
+    azioni.className = "right nowrap";
+    const correggi = document.createElement("button");
+    correggi.type = "button";
+    correggi.className = "ghost small";
+    correggi.textContent = t("edit");
+    correggi.setAttribute("aria-label", `${t("incassiEdit")} ${incasso.data}`);
+    correggi.addEventListener("click", () => editPayment(db, incasso, {
+      onDone: async () => {
+        await render(db, doc, { onChange });
+        if (onChange) await onChange();
+      },
+    }));
     const togli = document.createElement("button");
     togli.type = "button";
     togli.className = "ghost small";
@@ -385,7 +462,7 @@ export async function render(db, doc, { onChange = null } = {}) {
       await render(db, doc, { onChange });
       if (onChange) await onChange();
     });
-    azioni.append(togli);
+    azioni.append(correggi, togli);
 
     tr.append(quando, dove, nota, prova, quanto, azioni);
     body.append(tr);
@@ -415,6 +492,15 @@ export function receiptCell(db, record, { onChange = null } = {}) {
     apri.textContent = record.ricevuta.name || t("receiptLabel");
     apri.title = t("receiptOpen");
     apri.addEventListener("click", () => _show(db, record));
+    // Opening shows it; saving it is the other half of the question — the accountant wants the
+    // file, not a tab. The arrow stays small beside the name, which is the thing one reads.
+    const scarica = document.createElement("button");
+    scarica.type = "button";
+    scarica.className = "ghost small";
+    scarica.textContent = "↓";
+    scarica.title = t("receiptDownload");
+    scarica.setAttribute("aria-label", `${t("receiptDownload")} — ${record.ricevuta.name || ""}`);
+    scarica.addEventListener("click", () => _show(db, record, { download: true }));
     const togli = document.createElement("button");
     togli.type = "button";
     togli.className = "ghost small";
@@ -425,7 +511,7 @@ export function receiptCell(db, record, { onChange = null } = {}) {
       await detach(db, record);
       if (onChange) await onChange();
     });
-    td.append(apri, togli);
+    td.append(apri, scarica, togli);
     return td;
   }
   const allega = document.createElement("button");
@@ -463,7 +549,8 @@ export function connect() {
     _drawChosen();
   });
   el("payReceiptClear").addEventListener("click", () => {
-    ricevutaScelta = null;
+    if (ricevutaScelta) ricevutaScelta = null;
+    else if (ricevutaEsistente) ricevutaTolta = true;
     _drawChosen();
   });
   el("receiptPick").addEventListener("change", async () => {

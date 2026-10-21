@@ -88,7 +88,8 @@ c'è il tasto «indietro» del browser, e la via del ritorno deve stare nell'app
 |---|---|
 | `home.js` | la Situazione: i quattro numeri, le scadenze, il fatturato per mese, gli incontri della settimana (`meetingRows`), progetti e preventivi in attesa |
 | `doc.js` | il documento, le sue righe, il riepilogo IVA sempre in vista |
-| `due.js` · `payments.js` · `states.js` | scadenzario, incassi, il controllo che cambia stato |
+| `due.js` · `payments.js` · `states.js` | scadenzario, incassi, il controllo che cambia stato. `editPayment` riapre il foglio dell'incasso su uno registrato (importo, giorno, conto, nota, ricevuta sostituita o tolta); `receiptCell` è la cella della ricevuta di ogni elenco di pagamenti: nome che la apre, freccia che la scarica, croce che la toglie, «Allega» se manca |
+| `income.js` | Scadenzario › Incassi (`#/scadenzario/incassi`): tutti gli incassi, filtrati per anno, cliente e ricevuta sì/no; i conti li fa `incomeRows` in `schedule.js`, la correzione `updatePayment` |
 | `parties.js` · `customer.js` · `crm.js` | clienti (`render`) e listino (`renderItems`), la scheda cliente, le persone e il diario |
 | `banks.js` | Anagrafiche › Banche: i conti dell'azienda, che restano `conti` nel record `company` — sei file li leggono da lì; la schermata del conto con i suoi movimenti (`movements`, `#/anagrafiche/banche/<id>`); `bankFields`, i dati della banca che una bozza copia accanto all'IBAN |
 | `meetings.js` | il CRM: gli incontri di tutti i clienti, che sono voci del diario con `ora`, `luogo`, `persone`, `esito`; i gruppi li decide `agenda` in `crm.js`. Le stesse righe, senza la colonna del cliente, nella sezione «Incontri» della scheda cliente (`renderParty`, ridisegnata da `_drawDiary`: sono le stesse voci); `showParty` filtra il CRM prima di andarci |
@@ -286,6 +287,7 @@ node $I app/invoice-scope/test/safety.mjs    node $I app/invoice-scope/test/arch
 node $I app/invoice-scope/test/timeline.mjs    node $I app/invoice-scope/test/attachments.mjs
 node $I app/invoice-scope/test/banks.mjs       node $I app/invoice-scope/test/meetings.mjs
 node $I app/invoice-scope/test/bundle.mjs      node $I app/invoice-scope/test/alarms.mjs
+node $I app/invoice-scope/test/income.mjs
 ```
 
 **Una prova non legge l'orologio.** Se quello che prova dipende da oggi — gli attesi delle

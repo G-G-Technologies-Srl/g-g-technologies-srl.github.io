@@ -199,6 +199,8 @@ const IT = {
 
   // ---- scadenzario
   navDue: "Scadenzario",
+  navDueDates: "Scadenze",
+  navDueIncome: "Incassi",
   // I promemoria dello scadenzario. Le stesse parole di Plan Scope dove la cosa è la stessa: le due
   // app stanno sulla stessa scrivania, e due nomi per la stessa funzione sono due funzioni.
   remindTitle: "Promemoria",
@@ -273,6 +275,21 @@ const IT = {
   incassiTotal: "Incassato",
   incassiRemove: "Togli l'incasso",
   incassiRemoveAsk: "Tolgo questo incasso? Il documento torna da incassare per quell'importo.",
+  incassiEdit: "Modifica l'incasso",
+  incassiNoDoc: "Documento non più presente",
+  incassiOverpaid: "Incasso corretto. È {di_piu} più di quello che risultava da incassare sul "
+    + "documento.",
+  incomeTitle: "Incassi",
+  incomeNote: "Tutti gli incassi registrati, dal più recente. Qui si correggono, si allega la "
+    + "ricevuta anche in un secondo momento e si apre o si scarica quella già allegata.",
+  incomeEmpty: "Qui compaiono gli incassi registrati sui documenti, dallo scadenzario o dalla "
+    + "scheda del documento.",
+  incomeNoMatch: "Nessun incasso con questi filtri.",
+  incomeReceiptAll: "Con e senza ricevuta",
+  incomeReceiptWith: "Con ricevuta",
+  incomeReceiptWithout: "Senza ricevuta",
+  incomeCount: "{n} incassi",
+  incomeCountOne: "Un incasso",
   dueState: "Cambia stato",
   dueAll: "Tutte",
   dueOnlyOverdue: "Solo scadute",
@@ -846,6 +863,7 @@ const IT = {
   receiptOpen: "Apri la ricevuta",
   receiptRemove: "Togli la ricevuta",
   receiptRemoveAsk: "Tolgo la ricevuta da questo pagamento? Il pagamento resta registrato.",
+  receiptDownload: "Scarica la ricevuta",
   receiptMissing: "Il file della ricevuta non è in questo browser: l'archivio da cui provengono i dati "
     + "ne riportava solo il nome. Il ripristino dalla cartella della copia automatica, o dallo zip "
     + "«Esporta tutto, con ricevute e immagini», riporta anche le ricevute.",
@@ -1971,6 +1989,8 @@ const EN = {
   safetyManualGo: "Export an archive",
 
   navDue: "Payments",
+  navDueDates: "Due dates",
+  navDueIncome: "Received",
   remindTitle: "Reminders",
   remindLead: "When a deadline or a meeting comes close the app reminds you in three ways — and which one works "
     + "depends on where you are.",
@@ -2042,6 +2062,20 @@ const EN = {
   incassiTotal: "Received",
   incassiRemove: "Remove the payment",
   incassiRemoveAsk: "Remove this payment? The document goes back to being owed that amount.",
+  incassiEdit: "Edit the payment",
+  incassiNoDoc: "Document no longer here",
+  incassiOverpaid: "Payment corrected. It is {di_piu} more than the document was still owed.",
+  incomeTitle: "Payments received",
+  incomeNote: "Every payment recorded, newest first. Correct them here, attach the receipt later, "
+    + "and open or download the one already attached.",
+  incomeEmpty: "Payments recorded on your documents, from the schedule or from the document itself, "
+    + "show up here.",
+  incomeNoMatch: "No payments match these filters.",
+  incomeReceiptAll: "With or without receipt",
+  incomeReceiptWith: "With receipt",
+  incomeReceiptWithout: "Without receipt",
+  incomeCount: "{n} payments",
+  incomeCountOne: "One payment",
   dueState: "Change state",
   dueAll: "All",
   dueOnlyOverdue: "Overdue only",
@@ -2601,6 +2635,7 @@ const EN = {
   receiptOpen: "Open the receipt",
   receiptRemove: "Remove the receipt",
   receiptRemoveAsk: "Remove the receipt from this payment? The payment stays recorded.",
+  receiptDownload: "Download the receipt",
   receiptMissing: "The receipt file is not in this browser: the archive these data came from carried "
     + "only its name. Restoring from the automatic backup folder, or from the zip «Export everything, "
     + "with receipts and images», brings the receipts back too.",

@@ -50,6 +50,7 @@ import * as progetti from "./projects.js";
 import * as project from "./project.js";
 import * as doc from "./doc.js";
 import * as due from "./due.js";
+import * as income from "./income.js";
 import { summary, csv, ledger } from "./schedule.js";
 import { fiscalCode, parseOptional } from "./parse.js";
 import { money, date as shownDate, days } from "./format.js";
@@ -76,6 +77,7 @@ const ROUTES = {
   "#/documenti": "screenDocs",
   "#/progetti": "screenProjects",
   "#/scadenzario": "screenDue",
+  "#/scadenzario/incassi": "screenIncome",
   "#/anagrafiche": "screenParties",
   "#/anagrafiche/listino": "screenItems",
   "#/anagrafiche/banche": "screenBanks",
@@ -258,16 +260,19 @@ async function _route() {
             // An address the app does not know shows the Situazione, so it lights the Situazione.
             : (ROUTES[hash] ? hash : "#/");
   // **Anagrafiche lights for its three screens**, and the sub-entry for its own: the parent says
-  // which part of the app you are in, the sub-entry which register.
+  // which part of the app you are in, the sub-entry which register. Scadenzario does the same for
+  // its two: what is owed, and what has arrived.
   const inParties = target === "#/anagrafiche" || target.startsWith("#/anagrafiche/");
+  const inDue = target === "#/scadenzario" || target.startsWith("#/scadenzario/");
   for (const link of window.document.querySelectorAll("#navbar a")) {
     const href = link.getAttribute("href");
-    const here = link.id === "navParties" ? inParties : href === target;
+    const here = link.id === "navParties" ? inParties : link.id === "navDue" ? inDue : href === target;
     link.classList.toggle("here", here);
     if (here) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
   }
   el("navbar").classList.toggle("in-parties", inParties);
+  el("navbar").classList.toggle("in-due", inDue);
   // On a phone the menu is a strip that scrolls sideways: the entry just opened is brought into
   // view, or the sub-entries of Anagrafiche appear off the right edge where nobody sees them.
   const nav = el("navbar");
@@ -316,6 +321,7 @@ async function _route() {
   if (screen === "screenBanks") await banks.render(db, _refresh);
   if (screen === "screenCrm") await meetings.render(db, _refresh);
   if (screen === "screenDue") await due.render(db, _refresh);
+  if (screen === "screenIncome") await income.render(db, _refresh);
   // **La sezione della cartella si ridisegna entrando, non solo quando la si tocca.** Disegnata una
   // volta all'avvio, tornando qui mostrava il confronto di allora: una copia che nel frattempo era
   // cambiata sul disco continuava a dirsi in linea, che è la bugia che questa sezione esiste per non
@@ -1742,6 +1748,7 @@ async function main() {
   project.connect(db, { afterChange: _refresh });
   doc.connect(db);
   due.connect(db, _refresh);
+  income.connect(db, _refresh);
 
   window.addEventListener("hashchange", _route);
 

@@ -486,7 +486,9 @@ await prova("dalla riga si allega dopo, e si toglie", async (db) => {
   const dopo = dom.byId("costOutlaysBody").at(0).at(3);
   assert.match(dopo.allText, /arrivata-dopo\.pdf/);
 
-  await dicendoSi(() => dopo.at(1).fire("click"));
+  // Name to open it, arrow to download it, cross to take it off.
+  assert.equal(dopo.at(1).getAttribute("aria-label"), "Scarica la ricevuta — arrivata-dopo.pdf");
+  await dicendoSi(() => dopo.at(2).fire("click"));
   assert.equal((await outlaysOf(db, "a1"))[0].ricevuta, undefined, "tolta la ricevuta, il pagamento resta");
   assert.equal((await list(db, "attachments")).length, 0);
   assert.equal(dom.byId("costOutlaysBody").at(0).at(3).allText, "Allega");

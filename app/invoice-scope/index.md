@@ -49,7 +49,7 @@ Invoice Scope svolge sul vostro computer la parte che richiede competenza — i 
 - Fattura alla pubblica amministrazione in formato FPA12, con il codice univoco dell'ufficio, CIG e CUP e la scissione dei pagamenti. Gestisce la ritenuta d'acconto, la cassa previdenziale dei professionisti, il bollo virtuale e il regime forfettario.
 - Registra gli acquisti: le fatture ricevute dal file XML — anche firmato (.p7m) o raccolto nello zip dello SdI — o inserite a mano, le spese senza fattura, le note di credito dei fornitori, le rate e i pagamenti. I costi ricorrenti si inseriscono una volta e restano attesi fino a fine anno.
 - Riconosce gli acquisti in inversione contabile e prepara l'integrazione da trasmettere allo SdI — TD16, TD17, TD18 o TD19 — con il termine del 15 del mese successivo. Per un'azienda sammarinese propone l'autofattura dell'articolo 7 del Decreto Delegato 133/2026 quando la fattura del fornitore non arriva.
-- Tiene lo scadenzario in entrata e in uscita: rate, incassi con la ricevuta del bonifico, bonifici che saldano più fatture, l'estratto conto della banca letto da CSV. Prepara il testo dei solleciti e ricorda le scadenze con un calendario .ics e, dove il browser lo consente, con una notifica.
+- Tiene lo scadenzario in entrata e in uscita: rate, incassi con la ricevuta del bonifico, bonifici che saldano più fatture, l'estratto conto della banca letto da CSV. Gli incassi registrati hanno un elenco proprio, dove si correggono e dove la ricevuta si allega anche dopo, si apre o si scarica. Prepara il testo dei solleciti e ricorda le scadenze con un calendario .ics e, dove il browser lo consente, con una notifica.
 - Apre su una situazione d'insieme: fatturato dell'anno confrontato con il precedente, crediti divisi per anzianità, margine, IVA del periodo a fini di controllo e documenti vicini al termine di trasmissione.
 - Dedica a ogni cliente una scheda con le persone di riferimento, gli incontri in programma e quelli da annotare, il diario di telefonate, email e incontri e l'elenco dei suoi documenti.
 - Gestisce i progetti: fasi con scadenze e importi, pagine di appunti con immagini e allegati, e fasi completate che diventano righe di fattura. Il formato è lo stesso di Plan Scope.
@@ -124,7 +124,7 @@ PolyForm Shield 1.0.0. Il codice è pubblico: si legge, si modifica e si usa anc
 
 Gratuita.
 
-**Versione** 0.72.0 · **Aggiornata il** 14 ottobre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
+**Versione** 0.73.0 · **Aggiornata il** 14 ottobre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
 
 *FAQ*
 

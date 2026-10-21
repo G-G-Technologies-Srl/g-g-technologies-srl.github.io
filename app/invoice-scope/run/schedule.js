@@ -383,6 +383,90 @@ export async function removePayment(db, id) {
   });
 }
 
+/**
+ * Correct a recorded payment: amount, day, account, note. Resolves with the payment as stored, or
+ * `null` when it no longer exists.
+ *
+ * **What is corrected and what is kept.** A payment is a note of something that reached the bank,
+ * and the note can be wrong — the day typed as today when the transfer came on Friday, the account
+ * chosen by default, a figure with two digits swapped. Those four fields are rewritten; the id,
+ * the document it belongs to, the receipt and `created` stay, because they say which payment this
+ * is and not what it says. `scadenza` follows `data`, as `recordPayment` writes it.
+ *
+ * `updated` is when it was corrected: the backup reminder reads `updated || created` against the
+ * last export (`_drawSafety` in `app.js`), so a correction brings the reminder back like a new
+ * payment does.
+ */
+export async function updatePayment(db, id, { importo, data, conto = null, nota = null }) {
+  const before = await get(db, "payments", id);
+  if (!before) return null;
+  const after = {
+    ...before,
+    importo: String(importo),
+    data,
+    scadenza: data,
+    conto: conto ? { id: conto.id, etichetta: conto.etichetta || "", iban: conto.iban || "" } : null,
+    nota: nota || null,
+    updated: new Date().toISOString(),
+  };
+  await put(db, "payments", after);
+  return after;
+}
+
+/**
+ * Every payment received, for the screen that lists them all: newest first, with the document and
+ * the customer it came from, filtered on a year, a customer and the presence of a receipt.
+ *
+ * `ricevuta` is `"con"`, `"senza"` or empty for both: «which transfers have I not filed the proof
+ * of» is the question that screen is opened for at the end of a month. Answers the years and the
+ * customers that have payments too, for the menus — computed before the filters, so choosing a
+ * customer does not empty the menu of years — and how many of the rows shown have a receipt.
+ *
+ * A payment whose document is gone is still listed, with no reference: it happened, and the list
+ * of what reached the bank must add up to what reached the bank.
+ */
+export function incomeRows({ payments = [], docs = [], parties = [] } = {}, { anno = "", partyId = "", ricevuta = "" } = {}) {
+  const docById = new Map(docs.map((one) => [one.id, one]));
+  const nameOf = new Map(parties.map((one) => [one.id, one.denominazione || ""]));
+  const all = payments.map((record) => {
+    const doc = docById.get(record.docId) || null;
+    let importo = ZERO;
+    try {
+      importo = from(record.importo || "0");
+    } catch (ignored) {
+      importo = ZERO;
+    }
+    return {
+      record,
+      doc,
+      data: record.data || "",
+      importo,
+      riferimento: doc ? shownNumber(doc) || "" : "",
+      partyId: doc ? doc.partyId || "" : "",
+      party: doc ? nameOf.get(doc.partyId) || "" : "",
+    };
+  });
+  const anni = [...new Set(all.map((row) => String(row.data).slice(0, 4)).filter(Boolean))].sort().reverse();
+  const clienti = [...new Set(all.map((row) => row.partyId).filter(Boolean))]
+    .map((id) => ({ id, name: nameOf.get(id) || "" }))
+    .sort((a, b) => a.name.localeCompare(b.name, "it"));
+  const rows = all
+    .filter((row) => !anno || String(row.data).startsWith(anno))
+    .filter((row) => !partyId || row.partyId === partyId)
+    .filter((row) => !ricevuta || (ricevuta === "con") === Boolean(row.record.ricevuta))
+    .sort((a, b) => String(b.data).localeCompare(String(a.data))
+      || String(b.record.created || "").localeCompare(String(a.record.created || "")));
+  const conRicevuta = rows.filter((row) => row.record.ricevuta).length;
+  return {
+    rows,
+    totale: sum(rows.map((row) => row.importo)),
+    anni,
+    clienti,
+    conRicevuta,
+    senzaRicevuta: rows.length - conRicevuta,
+  };
+}
+
 /** Quanto è stato incassato in tutto su un documento. */
 export function received(payments) {
   return sum(payments.map((payment) => {

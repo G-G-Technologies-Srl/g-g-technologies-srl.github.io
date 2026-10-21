@@ -18,7 +18,7 @@ import assert from "node:assert/strict";
 import { from, sum, toString } from "../run/decimal.js";
 import {
   schedule, summary, recordPayment, removePayment, paymentsOf, received, owedOn, csv, quote,
-  settlementOf, ledger, spread,
+  settlementOf, ledger, spread, updatePayment, incomeRows,
 } from "../run/schedule.js";
 import { openDatabase } from "../run/db.js";
 import { put, get, reset } from "./fake-store.mjs";
@@ -655,6 +655,64 @@ await test("un bonifico in più si divide fra le altre fatture del cliente, dall
   // b first (July), then a for the rest; the other customer's invoice is never touched.
   assert.deepEqual(quote.map((q) => [q.docId, money(q.importo)]), [["b", "50.00"], ["a", "70.00"]]);
   assert.equal(money(avanzo), "0.00");
+});
+
+// -----------------------------------------------------------------------------------------------------------------
+//  c o r r e c t i n g   a   p a y m e n t ,   a n d   t h e   l i s t   o f   a l l
+// -----------------------------------------------------------------------------------------------------------------
+
+await test("un incasso si corregge: importo, giorno, conto e nota; il resto è quello di prima", async () => {
+  const db = await openDatabase();
+  const doc = issued({ totale: "1220.00" });
+  await put(db, "docs", doc);
+  const scritto = await recordPayment(db, doc, { importo: "1000.00", data: "2026-09-01", conto: CONTO });
+  await put(db, "payments", { ...scritto, ricevuta: { id: "r1", name: "contabile.pdf", type: "application/pdf", size: 10 } });
+
+  const corretto = await updatePayment(db, scritto.id, { importo: "1220.00", data: "2026-08-29", nota: "saldo" });
+  assert.equal(corretto.id, scritto.id);
+  assert.equal(corretto.docId, doc.id);
+  assert.equal(corretto.created, scritto.created);
+  assert.equal(corretto.ricevuta.name, "contabile.pdf", "the receipt stays with its payment");
+  assert.equal(corretto.data, "2026-08-29");
+  assert.equal(corretto.scadenza, "2026-08-29");
+  assert.equal(corretto.conto, null, "no account chosen is an answer, not a field left as it was");
+  assert.equal(corretto.nota, "saldo");
+  assert.ok(corretto.updated, "and the backup reminder sees it");
+  assert.equal(money(await owedOn(db, doc.id, { today: OGGI })), "0.00");
+  assert.equal((await paymentsOf(db, doc.id)).length, 1, "corrected, not added");
+  assert.equal(await updatePayment(db, "nessuno", { importo: "1.00", data: "2026-09-01" }), null);
+});
+
+await test("l'elenco degli incassi: dal più recente, con documento e cliente, e i tre filtri", async () => {
+  const docs = [
+    issued({ id: "a", numero: "2026/0001", partyId: "p1" }),
+    issued({ id: "b", numero: "2026/0002", partyId: "p2" }),
+  ];
+  const parties = [{ id: "p1", denominazione: "Rossi Impianti" }, { id: "p2", denominazione: "Brandi & Figli" }];
+  const payments = [
+    { id: "1", docId: "a", importo: "100.00", data: "2025-12-20" },
+    { id: "2", docId: "a", importo: "200.00", data: "2026-02-10", ricevuta: { id: "r", name: "x.pdf" } },
+    { id: "3", docId: "b", importo: "50.00", data: "2026-03-01" },
+    { id: "4", docId: "sparito", importo: "7.00", data: "2026-01-05" },
+  ];
+  const tutti = incomeRows({ payments, docs, parties });
+  assert.deepEqual(tutti.rows.map((r) => r.record.id), ["3", "2", "4", "1"]);
+  assert.equal(money(tutti.totale), "357.00");
+  assert.deepEqual(tutti.anni, ["2026", "2025"]);
+  assert.deepEqual(tutti.clienti.map((c) => c.name), ["Brandi & Figli", "Rossi Impianti"]);
+  assert.equal(tutti.rows[0].riferimento, "2026/0002");
+  assert.equal(tutti.rows[0].party, "Brandi & Figli");
+  assert.equal(tutti.rows[2].riferimento, "", "a payment whose document is gone is still money that arrived");
+  assert.equal(tutti.conRicevuta, 1);
+  assert.equal(tutti.senzaRicevuta, 3);
+
+  const anno = incomeRows({ payments, docs, parties }, { anno: "2026", partyId: "p1" });
+  assert.deepEqual(anno.rows.map((r) => r.record.id), ["2"]);
+  assert.deepEqual(anno.anni, ["2026", "2025"], "the menus are computed before the filters");
+  const senza = incomeRows({ payments, docs, parties }, { ricevuta: "senza" });
+  assert.deepEqual(senza.rows.map((r) => r.record.id), ["3", "4", "1"]);
+  const con = incomeRows({ payments, docs, parties }, { ricevuta: "con" });
+  assert.deepEqual(con.rows.map((r) => r.record.id), ["2"]);
 });
 
 console.log(`schedule: ${passed} prove passate`);

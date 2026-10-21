@@ -96,6 +96,12 @@
     <a href="#/acquisti" id="navPurchases"><svg aria-hidden="true"><use href="#ico-purchases"/></svg><span data-t="navPurchases"></span></a>
     <a href="#/progetti" id="navProjects"><svg aria-hidden="true"><use href="#ico-projects"/></svg><span data-t="navProjects"></span></a>
     <a href="#/scadenzario" id="navDue"><svg aria-hidden="true"><use href="#ico-due"/></svg><span data-t="navDue"></span></a>
+    <!-- The sub-entries of Scadenzario: what is still owed, and what has arrived. Same pattern as
+         Anagrafiche below — always in the column, in the strip only while one of the two is open. -->
+    <div class="nav-sub" id="navDueSub">
+      <a href="#/scadenzario" id="navDueDates" data-sub="1"><span data-t="navDueDates"></span></a>
+      <a href="#/scadenzario/incassi" id="navDueIncome" data-sub="1"><span data-t="navDueIncome"></span></a>
+    </div>
     <a href="#/crm" id="navCrm"><svg aria-hidden="true"><use href="#ico-crm"/></svg><span data-t="navCrm"></span></a>
     <a href="#/anagrafiche" id="navParties"><svg aria-hidden="true"><use href="#ico-parties"/></svg><span data-t="navParties"></span></a>
     <!-- The sub-entries of Anagrafiche. In the column they are always there, under their parent, so
@@ -465,6 +471,39 @@
         </table>
       </div>
     </div>
+  </section>
+
+  <!-- Scadenzario › Incassi: every payment received, across the documents, with its receipt. The
+       same records as the table inside each document and the movements of each account; here they
+       are corrected, given their receipt late, and looked for by month, customer, receipt or not. -->
+  <section id="screenIncome" class="screen wide" hidden>
+    <h1 class="titled"><span class="ico" aria-hidden="true"><svg><use href="#ico-due"/></svg></span><span data-t="incomeTitle"></span></h1>
+    <p class="note" data-t="incomeNote"></p>
+
+    <div class="form docs-filters" id="incomeFilters" hidden>
+      <label><span data-t="bankYearLabel"></span><select id="incomeYear"></select></label>
+      <label><span data-t="crmFilterParty"></span><select id="incomeParty"></select></label>
+      <label><span data-t="receiptLabel"></span><select id="incomeReceipt"></select></label>
+    </div>
+
+    <div class="figures" id="incomeFigures" hidden>
+      <div class="figure"><span class="label" data-t="incassiTotal"></span><span class="value" id="incomeTotal">—</span></div>
+      <div class="figure"><span class="label" data-t="incomeReceiptWith"></span><span class="value" id="incomeWith">—</span></div>
+      <div class="figure"><span class="label" data-t="incomeReceiptWithout"></span><span class="value" id="incomeWithout">—</span></div>
+    </div>
+
+    <p class="empty" id="incomeEmpty" data-t="incomeEmpty"></p>
+    <p class="empty" id="incomeNoMatch" data-t="incomeNoMatch" hidden></p>
+    <div class="table-scroll">
+      <table class="rows" id="incomeTable" hidden>
+        <thead><tr>
+          <th data-t="docsDate"></th><th data-t="dueDoc"></th><th data-t="payConto"></th>
+          <th data-t="incassiNote"></th><th data-t="receiptLabel"></th><th class="right" data-t="incassiAmount"></th><th></th>
+        </tr></thead>
+        <tbody id="incomeBody"></tbody>
+      </table>
+    </div>
+    <p class="note" id="incomeCount"></p>
   </section>
 
   <!-- Acquisti: fatture ricevute e spese. Il rovescio dei documenti, con la stessa forma. -->

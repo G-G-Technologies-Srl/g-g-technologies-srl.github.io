@@ -195,10 +195,10 @@
   /* In the strip the sub-entries join the row only inside Anagrafiche, right after their parent:
      three more tabs on every screen would push the rest of the menu off the edge. */
   .nav-sub { display: none; }
-  .navbar.in-parties .nav-sub { display: contents; }
+  .navbar.in-parties #navPartiesSub, .navbar.in-due #navDueSub { display: contents; }
   .navbar .nav-sub a { font-size: 0.86rem; padding: 9px 10px; border-radius: 0; }
   .navbar .nav-sub a.here { border-bottom: 2px solid var(--accent); border-radius: 0; }
-  .navbar.in-parties #navParties { border-bottom-color: transparent; color: var(--faint); }
+  .navbar.in-parties #navParties, .navbar.in-due #navDue { border-bottom-color: transparent; color: var(--faint); }
 }
 
 /* ----- the page grows with its content ----- */
