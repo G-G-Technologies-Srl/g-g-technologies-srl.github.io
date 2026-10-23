@@ -33,6 +33,42 @@ import { quote as instalments } from "./schedule.js";
 //  p r i v a t e
 // -----------------------------------------------------------------------------------------------------------------
 
+/**
+ * The sheet inside a one-cell table whose head and foot are empty spacers.
+ *
+ * **Why the margins are not the page's.** Chrome and Edge print their own header and footer — the
+ * date, the page title, the address of the page and the page number — in the page margin, unless
+ * the person unticks «Headers and footers» in the print dialog. A customer received an invoice
+ * with the app's web address at the bottom, and said so. With `@page { margin: 0 }` there is no
+ * margin to write in, and the browser writes nothing (`print.css`); but then the margin has to come
+ * from somewhere else, on every page and not only on the first and the last, which is what a
+ * padding on the sheet would give.
+ *
+ * A table's `thead` and `tfoot` are repeated by the browser on every printed page: an empty head as
+ * tall as the top margin and an empty foot as tall as the bottom one are the margins, page after
+ * page. The sides are a padding, which every page has anyway.
+ */
+function _frame(content) {
+  const table = _node("table", "ps-frame");
+  table.setAttribute("role", "presentation");
+  const head = _node("thead");
+  const headRow = _node("tr");
+  headRow.append(_node("td", "ps-frame-top"));
+  head.append(headRow);
+  const foot = _node("tfoot");
+  const footRow = _node("tr");
+  footRow.append(_node("td", "ps-frame-bottom"));
+  foot.append(footRow);
+  const body = _node("tbody");
+  const row = _node("tr");
+  const cell = _node("td", "ps-frame-cell");
+  cell.append(content);
+  row.append(cell);
+  body.append(row);
+  table.append(head, body, foot);
+  return table;
+}
+
 function el(id) {
   return document.getElementById(id);
 }
@@ -103,8 +139,10 @@ function _iva(line) {
 export function render(doc, { company: aziendaOra, party: clienteOra, computed, draft = false }) {
   // The details the document was issued with, when it has them (`frozen` in fatturapa.js).
   const { company, party } = frozen(doc, { company: aziendaOra, party: clienteOra });
-  const sheet = el("printSheet");
-  sheet.textContent = "";
+  const page = el("printSheet");
+  page.textContent = "";
+  // Everything is written into `sheet`, and `sheet` goes into the frame at the end (`_frame`).
+  const sheet = _node("div", "ps-body");
   const profile = kind(doc);
   // The channel the file goes through depends on the customer too (a San Marino company invoicing
   // inside San Marino writes `ESENTE` and the TM code): the sheet asks the same question the file
@@ -340,4 +378,6 @@ export function render(doc, { company: aziendaOra, party: clienteOra, computed, 
   const foot = _node("footer", "ps-foot");
   foot.append(_node("div", null, el("screenDoc").dataset.printFooter || ""));
   sheet.append(foot);
+
+  page.append(_frame(sheet));
 }

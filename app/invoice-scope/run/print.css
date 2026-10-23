@@ -31,10 +31,24 @@
 
   #printSheet { display: block !important; }
 
+  /* **No page margin, so nothing of the browser's is printed.** Chrome and Edge write the date, the
+     title, the page's address and the page number in the margin unless «Headers and footers» is
+     unticked in their dialog; with no margin there is no room, and they write nothing. The margins
+     the sheet needs are drawn by `print.js` instead: an empty table head and foot, which the
+     browser repeats on every page (top and bottom), and a padding (the sides). Same measures as
+     before: 16 mm at the top, 18 at the bottom, 15 at the sides. */
   @page {
     size: A4;
-    margin: 16mm 15mm 18mm;
+    margin: 0;
   }
+
+  #printSheet { padding: 0 15mm; }
+  .ps-frame { width: 100%; border-collapse: collapse; }
+  .ps-frame td { padding: 0; border: 0; vertical-align: top; }
+  .ps-frame thead { display: table-header-group; }
+  .ps-frame tfoot { display: table-footer-group; }
+  .ps-frame-top { height: 16mm; }
+  .ps-frame-bottom { height: 18mm; }
 
   /* ---- head: issuer left, document right ---- */
   .ps-head {
