@@ -18,7 +18,7 @@ import * as xml from "../run/xml.js";
 import {
   build, progressivo, destinatario, fileName, profileFor, identificativo, tipoDocumento,
   ambitoDi, ambitoDoc, applicaAmbito, AMBITI_MERCE, GRUPPI_MERCE, MERCE_CON_DDT,
-  IT_SDI, IT_PA, SM_EXPORT, SM_INTERNA, SM_ESTERO, TRACCIATO, MAX_BYTE, CASSE, frozen, snapshot, trasmissioneElettronica,
+  IT_SDI, IT_PA, SM_EXPORT, SM_INTERNA, SM_ESTERO, TRACCIATO, MAX_BYTE, CASSE, frozen, snapshot, trasmissioneElettronica, natureSuggerite, zonaIva, trasmittente,
 } from "../run/fatturapa.js";
 
 let passed = 0;
@@ -968,6 +968,31 @@ test("la fattura interna sammarinese è elettronica solo se l'azienda lo è: dal
   assert.equal(trasmissioneElettronica({ ...sm, feInterna: "no" }, SM_EXPORT, "2026-10-14"), true);
   assert.equal(trasmissioneElettronica(COMPANY, IT_SDI, "2026-10-14"), true);
   assert.equal(trasmissioneElettronica(sm, SM_ESTERO, "2027-05-01"), false);
+});
+
+test("le nature suggerite dipendono da chi emette e da chi riceve", () => {
+  assert.deepEqual(natureSuggerite("IT", "SM"), ["N3.3", "N2.1"], "goods art. 71, services out of scope");
+  assert.deepEqual(natureSuggerite("SM", "IT"), ["N3.1"], "the only nature San Marino → Italy accepts");
+  assert.deepEqual(natureSuggerite("SM", "SM"), ["N4"]);
+  assert.deepEqual(natureSuggerite("SM", "DE"), [], "no electronic file, nothing to suggest");
+  assert.deepEqual(natureSuggerite("IT", "DE"), ["N3.2", "N2.1"]);
+  assert.deepEqual(natureSuggerite("IT", "CH"), ["N3.1", "N3.4", "N2.1"]);
+  assert.ok(natureSuggerite("IT", "IT").includes("N6.7"), "domestic reverse charge");
+  assert.ok(!natureSuggerite("IT", "IT").includes("N3.3"));
+  assert.deepEqual(natureSuggerite("it", ""), natureSuggerite("IT", "IT"), "lower case, and Italy when empty");
+  assert.equal(zonaIva("GR"), "UE");
+  assert.equal(zonaIva("GB"), "EXTRA");
+});
+
+test("l'intermediario trasmette le interne sammarinesi, e solo quelle", () => {
+  const sm = { paese: "SM", partitaIva: "29141", coeIntermediario: "SM 1234" };
+  assert.deepEqual(trasmittente(sm, SM_INTERNA), { paese: "SM", codice: "01234" }, "five digits, no prefix");
+  assert.equal(fileName(sm, 7, SM_INTERNA), "SM01234_7.xml", "the name carries the transmitter's code");
+  assert.deepEqual(trasmittente(sm, SM_EXPORT), { paese: "SM", codice: "96428100588" }, "towards Italy: the Ufficio Tributario");
+  assert.equal(fileName(sm, 7, SM_EXPORT), "SM29141_7.xml", "and the company's COE in the name");
+  assert.deepEqual(trasmittente({ ...sm, coeIntermediario: "" }, SM_INTERNA), { paese: "SM", codice: "29141" });
+  assert.deepEqual(trasmittente({ paese: "IT", partitaIva: "01234567897", coeIntermediario: "1234" }, IT_SDI),
+    { paese: "IT", codice: "01234567897" }, "an Italian channel does not read the field");
 });
 
 console.log(`fatturapa: ${passed} prove passate`);

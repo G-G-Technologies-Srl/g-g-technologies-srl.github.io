@@ -46,6 +46,8 @@ setLang("it");
 // voce quattro volte. Il deposito su cui lavorano lo aggiorna `render`, a ogni prova.
 customer.connect(await openDatabase());
 meetings.connect(await openDatabase());
+// The party sheet's own controls — country, role — are wired by the parties' module.
+(await import("../run/parties.js")).connect(await openDatabase());
 
 let passed = 0;
 async function prova(nome, fn) {
@@ -506,6 +508,35 @@ await prova("«Modifica i dati» apre il foglio del cliente con tutti i suoi cam
   assert.equal(form.denominazione.value, "Rossi Impianti S.r.l.");
   assert.equal(form.codiceDestinatario.value, "M5UXCR1");
   assert.equal(form.partitaIva.value, "01335577993");
+  await dom.byId("partyCancel").fire("click");
+});
+
+// The default nature lists first the natures that fit the two countries, in the direction the
+// invoice goes; the rest stay below. 24 October 2026: a San Marino company registering an Italian
+// customer had to find N3.1 among twenty-one codes, most of which cannot be used there.
+await prova("la natura predefinita propone prima quelle adatte ai due paesi", async (db) => {
+  await put(db, "company", { id: "company", denominazione: "La Mia S.r.l.", paese: "SM" });
+  await saveParty(db, { ...CLIENTE, aliquotaPredefinita: "0" });
+  // The parties' module reads the company from the store it was given; in the app that is the one
+  // store of the page, here each test has its own, so the register screen hands it over first.
+  await (await import("../run/parties.js")).render(db);
+  await customer.render(db, "p1");
+  await dom.byId("custEdit").fire("click");
+  await new Promise((r) => setTimeout(r, 0));
+  const menu = dom.byId("partyForm").elements.naturaPredefinita;
+  const [, sopra, sotto] = menu.children;
+  assert.equal(sopra.tagName, "OPTGROUP");
+  assert.equal(sopra.label, "Adatte a San Marino → Italia");
+  assert.deepEqual(sopra.children.map((o) => o.value), ["N3.1"]);
+  assert.equal(sotto.label, "Le altre");
+  assert.ok(!sotto.children.some((o) => o.value === "N3.1"), "listed once");
+
+  // A supplier issues to the company: the direction turns.
+  const form = dom.byId("partyForm").elements;
+  form.ruolo.value = "fornitore";
+  await form.ruolo.fire("change");
+  assert.equal(menu.children[1].label, "Adatte a Italia → San Marino");
+  assert.deepEqual(menu.children[1].children.map((o) => o.value), ["N3.3", "N2.1"]);
   await dom.byId("partyCancel").fire("click");
 });
 

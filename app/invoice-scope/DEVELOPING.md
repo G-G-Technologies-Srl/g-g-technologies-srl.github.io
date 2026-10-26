@@ -89,8 +89,8 @@ c'è il tasto «indietro» del browser, e la via del ritorno deve stare nell'app
 | `home.js` | la Situazione: i quattro numeri, le scadenze, il fatturato per mese, gli incontri della settimana (`meetingRows`), progetti e preventivi in attesa |
 | `doc.js` | il documento, le sue righe, il riepilogo IVA sempre in vista |
 | `due.js` · `payments.js` · `states.js` | scadenzario, incassi, il controllo che cambia stato. `editPayment` riapre il foglio dell'incasso su uno registrato (importo, giorno, conto, nota, ricevuta sostituita o tolta); `receiptCell` è la cella della ricevuta di ogni elenco di pagamenti: nome che la apre, freccia che la scarica, croce che la toglie, «Allega» se manca |
-| `income.js` | Scadenzario › Incassi (`#/scadenzario/incassi`): tutti gli incassi, filtrati per anno, cliente e ricevuta sì/no; i conti li fa `incomeRows` in `schedule.js`, la correzione `updatePayment` |
-| `parties.js` · `customer.js` · `crm.js` | clienti (`render`) e listino (`renderItems`), la scheda cliente, le persone e il diario |
+| `income.js` | Scadenzario › Incassi (`#/scadenzario/incassi`) e › Pagamenti (`#/scadenzario/pagamenti`): una schermata, due versi (`VERSI`). Tutti gli incassi o tutti i pagamenti ai fornitori, filtrati per anno, soggetto e ricevuta sì/no; i conti li fanno `incomeRows` e `outlayRows` in `schedule.js`, la correzione `updatePayment` / `updateOutlay` (`costs.js`) dai fogli `editPayment` / `editOutlay` |
+| `parties.js` · `customer.js` · `crm.js` | clienti (`render`) e listino (`renderItems`), la scheda cliente, le persone e il diario; nel foglio del soggetto la natura predefinita con le adatte in cima (`_fillNatura`, regola 21) |
 | `banks.js` | Anagrafiche › Banche: i conti dell'azienda, che restano `conti` nel record `company` — sei file li leggono da lì; la schermata del conto con i suoi movimenti (`movements`, `#/anagrafiche/banche/<id>`); `bankFields`, i dati della banca che una bozza copia accanto all'IBAN |
 | `meetings.js` | il CRM: gli incontri di tutti i clienti, che sono voci del diario con `ora`, `luogo`, `persone`, `esito`; i gruppi li decide `agenda` in `crm.js`. Le stesse righe, senza la colonna del cliente, nella sezione «Incontri» della scheda cliente (`renderParty`, ridisegnata da `_drawDiary`: sono le stesse voci); `showParty` filtra il CRM prima di andarci |
 | `alarms.js` | i promemoria: le scadenze dei due versi e gli incontri in programma, nel digest del service worker e nel file `.ics` |
@@ -139,7 +139,7 @@ Passano dalla import map, mai da un import relativo, e hanno due licenze diverse
 
 ---
 
-## Le venti cose che non si rompono
+## Le ventidue cose che non si rompono
 
 1. **Nessun importo passa da un float.** `0.1 + 0.2` su una fattura non è una curiosità, è un numero
    sbagliato depositato all'Agenzia. Tutto passa da `decimal.js`, che sta a otto decimali perché il
@@ -253,6 +253,27 @@ Passano dalla import map, mai da un import relativo, e hanno due licenze diverse
     `trasmissioneElettronica` di `fatturapa.js`: sul canale interno sammarinese dipende da
     `company.feInterna` («auto» = obbligo dal `INTERNA_OBBLIGATORIA_DAL`, 1° gennaio 2027); senza
     trasmissione il foglio è l'originale (`printFooterCartaceo`) e nessun termine compare.
+21. **Le nature suggerite sono un suggerimento, in un posto solo.** `natureSuggerite(da, a)` in
+    `fatturapa.js` dice quali nature si addicono a due paesi (zone di `zonaIva`: IT, SM, UE, EXTRA)
+    nel verso della fattura; la usano il menù della natura predefinita nella scheda del soggetto
+    (`_fillNatura` in `parties.js`: un fornitore emette verso l'azienda, quindi il verso si gira) e
+    quello di ogni riga del documento (`_natureGroups` in `doc.js`, opzione `gruppi` di `_cell`:
+    sull'autofattura il verso è fornitore → azienda). Le adatte stanno in un `<optgroup>` in cima,
+    tutte le altre sotto: **non si tolgono**, perché la natura dipende anche dall'operazione. Un
+    colore sulle opzioni non si vede nei menù di sistema (Mac), un gruppo con il titolo sì. Le regole
+    vere — una natura sola per canale sammarinese — restano in `nature` dei profili e in
+    `validate.js`. E **un menù non è mai più largo del suo contenitore** (`select { max-width: 100% }`
+    in `styles.css`): un `<select>` prende la larghezza dell'opzione più lunga, e «Dal listino» con
+    una descrizione lunga usciva dalla finestra; i menù nelle intestazioni hanno il loro tetto
+    (`.head-tools select`).
+22. **Chi trasmette lo dice `trasmittente`, e il nome del file lo segue.** `trasmittente(company,
+    profile)` in `fatturapa.js` è l'unico posto che risponde: il trasmittente fisso del profilo
+    (l'Ufficio Tributario verso l'Italia, `96428100588`), oppure l'azienda — oppure, solo sul canale
+    interno sammarinese, l'intermediario (`company.coeIntermediario`, Documento A §2.1.1). `fileName`
+    usa lo stesso codice per l'interna con intermediario, perché il codice nel nome identifica il
+    trasmittente (§1.2.1); verso l'Italia il nome tiene il COE dell'azienda. Il progressivo resta
+    quello dell'azienda. `validate.js` rifiuta un COE dell'intermediario che non sia di cinque cifre
+    al massimo (`vCoeIntermediario`).
 
 ---
 
@@ -327,6 +348,8 @@ Tre pezzi di impalcatura, e vale la pena sapere che ci sono:
 | mostrare quanto resta da incassare | `ledger` in `schedule.js`, mai un conto nuovo nella schermata | elenco, documento e scadenzario devono dire lo stesso numero |
 | una serie o una numerazione | `kinds.js` (`serie`, `sequenza`) | e il numero per esteso esce anche nell'XML: `fatturapa.js` scrive `shownNumber`, non `doc.numero` |
 | una parola | `i18n.js`, **entrambe le lingue nella stessa modifica** | `check_apps.py` confronta le chiavi |
+| un menù di nature | `natureSuggerite` in `fatturapa.js` per le adatte, `<optgroup>` per mostrarle | regola 21: si suggerisce, non si toglie |
+| un segno nell'elenco documenti | una riga piccola sotto lo stato, come `_settleLine` e `_clipLine` in `app.js` (la graffetta delle ricevute), letta una volta per tutto l'elenco | non una colonna nuova: la tabella è già larga |
 | un file nuovo in `run/` | il file + l'elenco `ASSETS` in `sw.js` | e gira la versione |
 | un tipo di byte nuovo da conservare | uno store a parte, fuori da `EXPORTED` (`BINARY` in `db.js`) | e nel manifest di `bundle.js`: così lo portano la cartella e lo zip, e il ripristino lo rimette |
 | un promemoria nuovo | una riga in `_rows` di `alarms.js`, con `time` se ha un orario | `biz/remind.js` misura la sveglia da lì: `before` minuti prima, non il giorno prima |

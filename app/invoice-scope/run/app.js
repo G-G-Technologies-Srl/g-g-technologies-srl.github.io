@@ -78,6 +78,7 @@ const ROUTES = {
   "#/progetti": "screenProjects",
   "#/scadenzario": "screenDue",
   "#/scadenzario/incassi": "screenIncome",
+  "#/scadenzario/pagamenti": "screenIncome",
   "#/anagrafiche": "screenParties",
   "#/anagrafiche/listino": "screenItems",
   "#/anagrafiche/banche": "screenBanks",
@@ -120,7 +121,7 @@ const BANK_ROUTE = /^#\/anagrafiche\/banche\/([^?/]+)$/;
 // immediate value of the app here.
 const COMPANY_FIELDS = [
   "denominazione", "partitaIva", "codiceFiscale", "paese", "regimeFiscale",
-  "progressivoInvio", "formatoNumero", "feInterna",
+  "progressivoInvio", "formatoNumero", "feInterna", "coeIntermediario",
   "aliquotaPredefinita", "naturaPredefinita", "tmPredefinito",
   "email", "telefono", "sito",
 ];
@@ -321,7 +322,9 @@ async function _route() {
   if (screen === "screenBanks") await banks.render(db, _refresh);
   if (screen === "screenCrm") await meetings.render(db, _refresh);
   if (screen === "screenDue") await due.render(db, _refresh);
-  if (screen === "screenIncome") await income.render(db, _refresh);
+  if (screen === "screenIncome") {
+    await income.render(db, _refresh, { verso: hash === "#/scadenzario/pagamenti" ? "out" : "in" });
+  }
   // **La sezione della cartella si ridisegna entrando, non solo quando la si tocca.** Disegnata una
   // volta all'avvio, tornando qui mostrava il confronto di allora: una copia che nel frattempo era
   // cambiata sul disco continuava a dirsi in linea, che è la bugia che questa sezione esiste per non
@@ -636,6 +639,19 @@ function _node(tag, classe, text) {
  * `null` quando il documento non chiede soldi — un preventivo, un DDT, una nota di credito — perché
  * lì la domanda non si pone e una riga vuota sembrerebbe un dato mancante.
  */
+/** The paperclip line of a document whose payments have receipts: «ricevuta allegata», «2 ricevute». */
+function _clipLine(quante) {
+  const testo = quante === 1 ? t("docsReceiptOne") : tf("docsReceipts", { n: String(quante) });
+  const riga = _node("div", "settle settle-clip");
+  const svg = window.document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("aria-hidden", "true");
+  const use = window.document.createElementNS("http://www.w3.org/2000/svg", "use");
+  use.setAttribute("href", "#ico-clip");
+  svg.append(use);
+  riga.append(svg, _node("span", null, testo));
+  return riga;
+}
+
 function _settleLine(conto) {
   if (!conto) return null;
   if (conto.saldata) return _node("div", "settle settle-done", t("settleDone"));
@@ -681,6 +697,11 @@ async function _drawDocuments(docs) {
   // Una lettura sola per tutte le righe, e dalle stesse funzioni dello scadenzario: l'elenco e lo
   // scadenzario devono dire lo stesso numero sulla stessa fattura.
   const conti = db ? await ledger(db) : new Map();
+  // How many receipts each document has on its payments, read once for the whole list.
+  const ricevute = new Map();
+  for (const incasso of db ? await list(db, "payments") : []) {
+    if (incasso.ricevuta) ricevute.set(incasso.docId, (ricevute.get(incasso.docId) || 0) + 1);
+  }
 
   el("docsFilters").hidden = docs.length < FILTRI_DA;
   _drawFilterMenus(docs);
@@ -735,6 +756,11 @@ async function _drawDocuments(docs) {
     cella.append(_node("div", null, statoLabel(record.stato)));
     const soldi = _settleLine(conti.get(record.id));
     if (soldi) cella.append(soldi);
+    // **Whether the proof is filed**, under the money: the question «have I got the receipt of that
+    // transfer» was answered only by opening the document. Scadenzario › Incassi lists the ones
+    // without; here the list says which have one.
+    const quante = ricevute.get(record.id) || 0;
+    if (quante) cella.append(_clipLine(quante));
     tr.append(cella);
 
     // **Le azioni della riga, in un menù.** Prima erano pulsanti — «XML», «Crea la fattura» — e
@@ -1010,6 +1036,9 @@ function _companyCountryChanged() {
   document.documentElement.classList.toggle("tm-profile", Boolean(profileFor({ paese }).datiGestionali));
   // The internal e-invoice choice is a San Marino question.
   el("companyFeInternaRow").hidden = paese !== "SM";
+  // So is the intermediary who transmits on the company's behalf.
+  el("companyIntermediarioRow").hidden = paese !== "SM";
+  el("companyIntermediarioNote").hidden = paese !== "SM";
 }
 
 async function _saveCompany(event) {

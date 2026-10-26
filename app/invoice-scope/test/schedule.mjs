@@ -18,7 +18,7 @@ import assert from "node:assert/strict";
 import { from, sum, toString } from "../run/decimal.js";
 import {
   schedule, summary, recordPayment, removePayment, paymentsOf, received, owedOn, csv, quote,
-  settlementOf, ledger, spread, updatePayment, incomeRows,
+  settlementOf, ledger, spread, updatePayment, incomeRows, outlayRows,
 } from "../run/schedule.js";
 import { openDatabase } from "../run/db.js";
 import { put, get, reset } from "./fake-store.mjs";
@@ -713,6 +713,26 @@ await test("l'elenco degli incassi: dal più recente, con documento e cliente, e
   assert.deepEqual(senza.rows.map((r) => r.record.id), ["3", "4", "1"]);
   const con = incomeRows({ payments, docs, parties }, { ricevuta: "con" });
   assert.deepEqual(con.rows.map((r) => r.record.id), ["2"]);
+});
+
+await test("l'elenco dei pagamenti ai fornitori: stessa forma, con l'acquisto al posto del documento", async () => {
+  const costs = [
+    { id: "a1", tipo: "fattura", numero: "H-1", partyId: "f1" },
+    { id: "a2", tipo: "spesa", categoria: "software", partyId: "f2" },
+  ];
+  const parties = [{ id: "f1", denominazione: "Hosting Cloud" }, { id: "f2", denominazione: "Studio Bianchi" }];
+  const outlays = [
+    { id: "1", costId: "a1", importo: "60.00", data: "2026-01-20" },
+    { id: "2", costId: "a2", importo: "50.00", data: "2026-03-01", ricevuta: { id: "r", name: "x.pdf" } },
+  ];
+  const tutti = outlayRows({ outlays, costs, parties });
+  assert.deepEqual(tutti.rows.map((r) => r.record.id), ["2", "1"]);
+  assert.equal(tutti.rows[1].riferimento, "H-1");
+  assert.equal(tutti.rows[0].riferimento, "", "an expense has no number; the screen names it by its category");
+  assert.equal(tutti.rows[0].owner.id, "a2");
+  assert.equal(money(tutti.totale), "110.00");
+  assert.equal(outlayRows({ outlays, costs, parties }, { partyId: "f1" }).rows.length, 1);
+  assert.equal(outlayRows({ outlays, costs, parties }, { ricevuta: "con" }).rows[0].record.id, "2");
 });
 
 console.log(`schedule: ${passed} prove passate`);

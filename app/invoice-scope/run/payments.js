@@ -29,6 +29,7 @@ import { from, add, cmp, sub, toString, ZERO } from "./decimal.js";
 import { kind, numero as shownNumber } from "./kinds.js";
 import { recordPayment, removePayment, updatePayment, paymentsOf, received, owedOn, schedule, spread } from "./schedule.js";
 import { RECEIPT_ACCEPT, attach, blobOf, detach, refusal } from "./attachments.js";
+import { updateOutlay, outlaysOf, allCosts, owedOn as costOwedOn, notesOf } from "./costs.js";
 import { currentDay } from "./day.js";
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -184,6 +185,36 @@ export async function editPayment(db, payment, { onDone = null } = {}) {
     diPiu: "incassiOverpaid",
     iniziale: payment,
     save: (campi) => updatePayment(db, payment.id, campi),
+  });
+}
+
+/**
+ * The same correction for a payment made to a supplier: the sheet opens on it, and what the
+ * purchase still owes is measured with this payment taken out.
+ */
+export async function editOutlay(db, outlay, { onDone = null } = {}) {
+  const cost = await get(db, "costs", outlay.costId);
+  const party = cost && cost.partyId ? await get(db, "parties", cost.partyId) : null;
+  let importo = ZERO;
+  try {
+    importo = from(outlay.importo || "0");
+  } catch (ignored) {
+    importo = ZERO;
+  }
+  const residuo = cost
+    ? add(costOwedOn(cost, await outlaysOf(db, cost.id), notesOf(await allCosts(db))), importo)
+    : importo;
+  const riferimento = cost ? cost.numero || cost.categoria || "" : "";
+  return openMoney(db, {
+    titolo: cost
+      ? [party ? party.denominazione : "", riferimento, `${t("costOwedLabel")} ${_money(residuo)}`].filter(Boolean).join(" · ")
+      : t("outlaysNoCost"),
+    residuo,
+    onDone,
+    etichetta: t("outlaysEdit"),
+    diPiu: "outlaysOverpaid",
+    iniziale: outlay,
+    save: (campi) => updateOutlay(db, outlay.id, campi),
   });
 }
 

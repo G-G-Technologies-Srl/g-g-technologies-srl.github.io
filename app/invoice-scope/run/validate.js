@@ -592,6 +592,13 @@ export function validate(doc, {
     problems.push(_problem("azienda.rea", "vReaIncomplete", "vReaIncompleteFix"));
   }
 
+  // The intermediary's COE becomes IdTrasmittente and the code in the file name between San Marino
+  // operators (`trasmittente` in fatturapa.js): a code HUB-SM does not know rejects the file.
+  const intermediario = String((company || {}).coeIntermediario || "").trim().replace(/^SM/i, "");
+  if (fiscale && profile.id === "sm-interna" && intermediario && !/^\d{1,5}$/.test(intermediario)) {
+    problems.push(_problem("azienda.coeIntermediario", "vCoeIntermediario", "vCoeIntermediarioFix"));
+  }
+
   // A self-billed invoice is addressed with seven zeros whatever the supplier's sheet says
   // (`_trasmissione` in fatturapa.js), so the supplier's code is not checked.
   if (fiscale && party && !kind(doc).autofattura) {

@@ -25,6 +25,7 @@ const { put, get, list } = await import("gg/store.js");
 const { saveParty } = await import("../run/parties.js");
 const { recordPayment } = await import("../run/schedule.js");
 const { attach } = await import("../run/attachments.js");
+const { saveCost, recordOutlay } = await import("../run/costs.js");
 const income = await import("../run/income.js");
 const payments = await import("../run/payments.js");
 
@@ -190,6 +191,71 @@ await prova("la croce toglie l'incasso, dopo la domanda", async (db) => {
   assert.equal(dom.count("incomeBody"), 2);
   assert.equal((await list(db, "attachments")).length, 0);
   assert.equal(await get(db, "docs", "b") !== null, true, "the document stays");
+});
+
+// -----------------------------------------------------------------------------------------------------------------
+//  t h e   o t h e r   d i r e c t i o n :   S c a d e n z a r i o   ›   P a g a m e n t i
+// -----------------------------------------------------------------------------------------------------------------
+
+/** Two suppliers, an invoice paid in two goes and an expense paid at once. */
+async function popolaUscite(db) {
+  await put(db, "company", { id: "company", denominazione: "La Mia S.r.l.", conti: [CONTO], aliquotaPredefinita: "22" });
+  await saveParty(db, { id: "f1", denominazione: "Hosting Cloud S.p.A.", ruolo: "fornitore" });
+  await saveParty(db, { id: "f2", denominazione: "Studio Bianchi", ruolo: "fornitore" });
+  const fattura = await saveCost(db, { id: "a1", tipo: "fattura", partyId: "f1", data: "2026-01-10", numero: "H-1",
+    imponibile: "100", aliquota: "22", scadenza: "2026-02-10" });
+  const spesa = await saveCost(db, { id: "a2", tipo: "spesa", partyId: "f2", data: "2026-03-01", categoria: "software",
+    imponibile: "50", aliquota: "0", scadenza: "2026-03-01" });
+  await recordOutlay(db, fattura, { importo: "60.00", data: "2026-01-20", conto: CONTO });
+  await recordOutlay(db, fattura, { importo: "62.00", data: "2026-02-05", conto: CONTO });
+  await recordOutlay(db, spesa, { importo: "50.00", data: "2026-03-01" });
+}
+
+await prova("Pagamenti: le uscite ai fornitori, con le parole loro e il collegamento all'acquisto", async (db) => {
+  await popolaUscite(db);
+  await income.render(db, null, { verso: "out" });
+  assert.equal(dom.text("incomeTitleText"), "Pagamenti");
+  assert.equal(dom.text("incomePartyLabel"), "Fornitore");
+  assert.equal(dom.text("incomeTotalLabel"), "Pagato");
+  dom.byId("incomeYear").value = "";
+  await dom.byId("incomeYear").fire("change", { target: dom.byId("incomeYear") });
+  assert.equal(dom.count("incomeBody"), 3);
+  const prima = dom.byId("incomeBody").at(0);
+  assert.match(prima.at(1).allText, /software · Studio Bianchi/, "an expense is named by its category");
+  assert.equal(prima.at(1).at(0).href, "#/acquisto/a2");
+  assert.match(dom.byId("incomeBody").at(1).at(1).allText, /Fattura ricevuta H-1 · Hosting Cloud S\.p\.A\./);
+  assert.equal(dom.text("incomeCount"), "3 pagamenti");
+  assert.deepEqual(dom.byId("incomeParty").children.map((o) => o.textContent),
+    ["Tutti i fornitori", "Hosting Cloud S.p.A.", "Studio Bianchi"]);
+
+  // And back to Incassi: the words come back, and the filters of each direction are their own.
+  await income.render(db, null, { verso: "in" });
+  assert.equal(dom.text("incomeTitleText"), "Incassi");
+  assert.equal(dom.text("incomePartyLabel"), "Cliente");
+});
+
+await prova("Pagamenti: «Modifica» corregge l'uscita, la croce la toglie", async (db) => {
+  await popolaUscite(db);
+  await income.render(db, null, { verso: "out" });
+  dom.byId("incomeYear").value = "";
+  await dom.byId("incomeYear").fire("change", { target: dom.byId("incomeYear") });
+  const riga = dom.byId("incomeBody").at(1);
+  const done = riga.at(6).at(0).fire("click");
+  await new Promise((r) => setTimeout(r, 0));
+  const form = dom.byId("payForm").elements;
+  assert.equal(dom.text("payDialogTitle"), "Modifica il pagamento");
+  assert.equal(form.importo.value, "62.00");
+  assert.match(dom.text("payDialogDoc"), /Hosting Cloud S\.p\.A\. · H-1 · Da pagare 62,00/);
+  form.data.value = "2026-02-04";
+  await dom.byId("paySave").onclick();
+  await done;
+  const corretta = (await list(db, "outlays")).find((one) => one.importo === "62.00");
+  assert.equal(corretta.data, "2026-02-04");
+  assert.equal((await list(db, "outlays")).length, 3, "corrected, not added");
+
+  await dicendoSi(() => dom.byId("incomeBody").at(0).at(6).at(1).fire("click"));
+  assert.equal((await list(db, "outlays")).length, 2);
+  assert.equal(dom.count("incomeBody"), 2);
 });
 
 console.log(`income: ${passed} prove passate`);

@@ -201,6 +201,7 @@ const IT = {
   navDue: "Scadenzario",
   navDueDates: "Scadenze",
   navDueIncome: "Incassi",
+  navDueOutlays: "Pagamenti",
   // I promemoria dello scadenzario. Le stesse parole di Plan Scope dove la cosa è la stessa: le due
   // app stanno sulla stessa scrivania, e due nomi per la stessa funzione sono due funzioni.
   remindTitle: "Promemoria",
@@ -290,6 +291,19 @@ const IT = {
   incomeReceiptWithout: "Senza ricevuta",
   incomeCount: "{n} incassi",
   incomeCountOne: "Un incasso",
+  outlaysTitle: "Pagamenti",
+  outlaysNote: "Tutti i pagamenti ai fornitori, dal più recente. Qui si correggono, si allega la "
+    + "ricevuta anche in un secondo momento e si apre o si scarica quella già allegata.",
+  outlaysEmpty: "Qui compaiono i pagamenti registrati sugli acquisti, dallo scadenzario o dalla "
+    + "scheda dell'acquisto.",
+  outlaysParty: "Fornitore",
+  outlaysAllParties: "Tutti i fornitori",
+  outlaysCount: "{n} pagamenti",
+  outlaysCountOne: "Un pagamento",
+  outlaysEdit: "Modifica il pagamento",
+  outlaysNoCost: "Acquisto non più presente",
+  outlaysOverpaid: "Pagamento corretto. È {di_piu} più di quello che risultava da pagare "
+    + "sull'acquisto.",
   dueState: "Cambia stato",
   dueAll: "Tutte",
   dueOnlyOverdue: "Solo scadute",
@@ -1393,6 +1407,12 @@ const IT = {
   f_pec: "PEC",
   paeseIT: "Italia",
   paeseSM: "San Marino",
+  naturaGroupFit: "Adatte a {da} → {a}",
+  naturaGroupOther: "Le altre",
+  zonaIT: "Italia",
+  zonaSM: "San Marino",
+  zonaUE: "Unione europea",
+  zonaEXTRA: "fuori dall'UE",
   regimeRF01: "Ordinario",
   regimeRF19: "Forfettario",
   f_ritenuta: "ritenuta",
@@ -1503,6 +1523,8 @@ const IT = {
   vItalyOnlyFix: "Togli la scissione o il contributo cassa da questo documento.",
   vReaIncomplete: "l'iscrizione al REA vuole l'ufficio (sigla della provincia) e il numero",
   vReaIncompleteFix: "Completa i due campi nella scheda Azienda, o svuotali tutti e due.",
+  vCoeIntermediario: "il COE dell'intermediario è un numero di cinque cifre al massimo",
+  vCoeIntermediarioFix: "Correggilo nella scheda Azienda, o svuotalo se il file lo trasmettete voi.",
   vIntegrazioneItalia: "il TD16 integra la fattura di un fornitore italiano in inversione contabile",
   vIntegrazioneItaliaFix: "Per un fornitore estero scegli TD17, TD18 o TD19.",
   vIntegrazioneEstero: "il {tipo} integra un acquisto da un fornitore estero",
@@ -1751,6 +1773,11 @@ const IT = {
   liqLS: "In liquidazione",
   f_cassaPredefinita: "cassa a cui siete iscritti",
   f_feInterna: "fattura elettronica verso operatori sammarinesi",
+  f_coeIntermediario: "COE dell'intermediario che trasmette",
+  companyIntermediarioNote: "Solo se il file a HUB-SM lo invia un altro soggetto, per esempio il "
+    + "commercialista. Il suo codice diventa il trasmittente, e il prefisso del nome del file, nelle "
+    + "fatture verso operatori sammarinesi; verso l'Italia il trasmittente resta l'Ufficio Tributario. "
+    + "Il progressivo del file resta quello dell'azienda.",
   feInterna_auto: "Dal 1° gennaio 2027, quando diventa obbligatoria",
   feInterna_si: "Sì, l'XML si trasmette già all'Ufficio Tributario",
   feInterna_no: "No, l'azienda non è soggetta all'obbligo: vale il documento cartaceo o PDF",
@@ -1773,6 +1800,8 @@ const IT = {
   // Come sta l'incasso. Non è uno stato del documento: è la somma degli incassi, e si dice accanto
   // allo stato invece che dentro.
   settleDone: "saldata",
+  docsReceiptOne: "ricevuta allegata",
+  docsReceipts: "{n} ricevute allegate",
   settleLeft: "resta {importo}",
   settleOverdue: "in ritardo · resta {importo}",
   docsMoney: "incasso",
@@ -1991,6 +2020,7 @@ const EN = {
   navDue: "Payments",
   navDueDates: "Due dates",
   navDueIncome: "Received",
+  navDueOutlays: "Paid",
   remindTitle: "Reminders",
   remindLead: "When a deadline or a meeting comes close the app reminds you in three ways — and which one works "
     + "depends on where you are.",
@@ -2076,6 +2106,18 @@ const EN = {
   incomeReceiptWithout: "Without receipt",
   incomeCount: "{n} payments",
   incomeCountOne: "One payment",
+  outlaysTitle: "Payments made",
+  outlaysNote: "Every payment to a supplier, newest first. Correct them here, attach the receipt "
+    + "later, and open or download the one already attached.",
+  outlaysEmpty: "Payments recorded on your purchases, from the schedule or from the purchase "
+    + "itself, show up here.",
+  outlaysParty: "Supplier",
+  outlaysAllParties: "All suppliers",
+  outlaysCount: "{n} payments",
+  outlaysCountOne: "One payment",
+  outlaysEdit: "Edit the payment",
+  outlaysNoCost: "Purchase no longer here",
+  outlaysOverpaid: "Payment corrected. It is {di_piu} more than the purchase was still owed.",
   dueState: "Change state",
   dueAll: "All",
   dueOnlyOverdue: "Overdue only",
@@ -3151,6 +3193,12 @@ const EN = {
   f_pec: "certified email",
   paeseIT: "Italy",
   paeseSM: "San Marino",
+  naturaGroupFit: "Suited to {da} → {a}",
+  naturaGroupOther: "All the others",
+  zonaIT: "Italy",
+  zonaSM: "San Marino",
+  zonaUE: "European Union",
+  zonaEXTRA: "outside the EU",
   regimeRF01: "Standard",
   regimeRF19: "Flat rate",
   f_ritenuta: "withholding",
@@ -3257,6 +3305,8 @@ const EN = {
   vItalyOnlyFix: "Remove split payment or the pension contribution from this document.",
   vReaIncomplete: "the REA registration needs the office (province code) and the number",
   vReaIncompleteFix: "Fill in both fields on the Company screen, or empty both.",
+  vCoeIntermediario: "the intermediary's COE is a number of at most five digits",
+  vCoeIntermediarioFix: "Correct it on the Company screen, or empty it if you send the file yourselves.",
   vIntegrazioneItalia: "a TD16 integrates an Italian supplier's reverse-charge invoice",
   vIntegrazioneItaliaFix: "For a foreign supplier choose TD17, TD18 or TD19.",
   vIntegrazioneEstero: "a {tipo} integrates a purchase from a foreign supplier",
@@ -3492,6 +3542,11 @@ const EN = {
   liqLS: "In liquidation",
   f_cassaPredefinita: "the fund you belong to",
   f_feInterna: "e-invoicing towards San Marino operators",
+  f_coeIntermediario: "COE of the intermediary who transmits",
+  companyIntermediarioNote: "Only if somebody else sends the file to HUB-SM for you, the accountant "
+    + "for instance. Their code becomes the transmitter, and the prefix of the file name, on invoices "
+    + "to San Marino operators; towards Italy the transmitter stays the Ufficio Tributario. The file's "
+    + "progressive number stays the company's.",
   feInterna_auto: "From 1 January 2027, when it becomes compulsory",
   feInterna_si: "Yes, the XML is already sent to the tax office",
   feInterna_no: "No, the company is not subject to the obligation: the paper or PDF document applies",
@@ -3511,6 +3566,8 @@ const EN = {
   docsYear: "Year",
   docsAllYears: "All years",
   settleDone: "settled",
+  docsReceiptOne: "receipt attached",
+  docsReceipts: "{n} receipts attached",
   settleLeft: "{importo} still due",
   settleOverdue: "overdue · {importo} still due",
   docsMoney: "payment",

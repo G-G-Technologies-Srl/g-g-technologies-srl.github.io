@@ -91,6 +91,51 @@ export const PAESI_UE = new Set([
   "LT", "LU", "LV", "MT", "NL", "PL", "PT", "RO", "SE", "SI", "SK",
 ]);
 
+/** Where a country sits for VAT, seen from this app: Italy, San Marino, the rest of the EU, the rest. */
+export function zonaIva(paese) {
+  const sigla = String(paese || "IT").toUpperCase();
+  if (sigla === "IT" || sigla === "SM") return sigla;
+  return PAESI_UE.has(sigla) ? "UE" : "EXTRA";
+}
+
+/**
+ * The natures that fit an operation from one country to another, in the order they are usually
+ * needed: goods first, then services. Empty when this app has no answer to give.
+ *
+ * **A suggestion, not a rule.** The menus that use it put these first and keep every other code
+ * below them: a nature depends on the operation as well as on the two countries — a service tied to
+ * a building in Italy is not out of scope just because the customer is abroad — and the person who
+ * knows the operation chooses. What is a rule is enforced elsewhere: the two San Marino channels
+ * accept one nature each (`nature` in `SM_EXPORT` and `SM_INTERNA`), and `validate.js` says so.
+ *
+ *  - Italy → Italy: the domestic cases — excluded (N1), not subject for other reasons (N2.2),
+ *    declaration of intent (N3.5), other non-taxable (N3.6), exempt (N4), margin scheme (N5),
+ *    domestic reverse charge (N6.x).
+ *  - Italy → San Marino: N3.3 for goods (art. 71), N2.1 for services (art. 7-ter, out of scope).
+ *  - Italy → EU: N3.2 for goods (intra-community supply), N2.1 for services.
+ *  - Italy → outside the EU: N3.1 for goods (export), N3.4 for operations treated as exports,
+ *    N2.1 for services.
+ *  - San Marino → Italy: N3.1 only, goods and services alike (Allegato B, reg. 14/2021).
+ *  - San Marino → San Marino: N4 only (Documento B).
+ *  - San Marino → elsewhere: no electronic file exists, so nothing is suggested.
+ *
+ * `da` is the issuer's country, `a` the recipient's: for a supplier the two swap, and the caller
+ * swaps them.
+ */
+export function natureSuggerite(da, a) {
+  const chi = zonaIva(da);
+  const dove = zonaIva(a);
+  if (chi === "SM") return dove === "IT" ? ["N3.1"] : dove === "SM" ? ["N4"] : [];
+  if (chi !== "IT") return [];
+  switch (dove) {
+    case "IT": return ["N1", "N2.2", "N3.5", "N3.6", "N4", "N5",
+      "N6.1", "N6.2", "N6.3", "N6.4", "N6.5", "N6.6", "N6.7", "N6.8", "N6.9"];
+    case "SM": return ["N3.3", "N2.1"];
+    case "UE": return ["N3.2", "N2.1"];
+    default: return ["N3.1", "N3.4", "N2.1"];
+  }
+}
+
 /**
  * I cinque tipi merce del regime monofase, raccolti nei tre ambiti che la norma ammette.
  *
@@ -505,9 +550,29 @@ function _cessionario(party, profile) {
   ];
 }
 
+/**
+ * Who transmits the file: the fixed transmitter of a profile that has one (the Ufficio Tributario
+ * towards Italy), otherwise the company itself.
+ *
+ * **Or an intermediary, between San Marino operators.** Documento A §2.1.1: the transmitter is
+ * identified «con il codice operatore economico del Cedente/Prestatore oppure di un soggetto
+ * diverso» — the accountant or the service that sends the file to HUB-SM on the company's behalf.
+ * Its COE is a field of the company (`coeIntermediario`), read only on the internal channel: towards
+ * Italy the transmitter is fixed, and an Italian company's channel has no such field here.
+ */
+export function trasmittente(company, profile = IT_SDI) {
+  if (profile.trasmittente) return profile.trasmittente;
+  const paese = (company || {}).paese || profile.paese;
+  const intermediario = String((company || {}).coeIntermediario || "").trim();
+  if (profile.id === SM_INTERNA.id && intermediario) {
+    return { paese: "SM", codice: identificativo(intermediario, "SM") };
+  }
+  return { paese, codice: identificativo((company || {}).partitaIva, paese) };
+}
+
 /** The header block that says who is sending, to whom, and in what format. */
 function _trasmissione(doc, company, party, profile) {
-  const chi = profile.trasmittente;
+  const chi = trasmittente(company, profile);
   // **A self-billed invoice goes to nobody's channel.** The party on it is the supplier, and its
   // recipient code is where the supplier receives its own purchases: the file would have been
   // delivered to the supplier's software as if the supplier had bought. Both specifications say
@@ -516,8 +581,8 @@ function _trasmissione(doc, company, party, profile) {
   if (kind(doc).autofattura) {
     return [
       ["IdTrasmittente", [
-        ["IdPaese", chi ? chi.paese : (company.paese || profile.paese)],
-        ["IdCodice", chi ? chi.codice : identificativo(company.partitaIva, company.paese || profile.paese)],
+        ["IdPaese", chi.paese],
+        ["IdCodice", chi.codice],
       ]],
       ["ProgressivoInvio", progressivo(doc.progressivo ?? 1)],
       ["FormatoTrasmissione", profile.schema],
@@ -526,8 +591,8 @@ function _trasmissione(doc, company, party, profile) {
   }
   return [
     ["IdTrasmittente", [
-      ["IdPaese", chi ? chi.paese : (company.paese || profile.paese)],
-      ["IdCodice", chi ? chi.codice : identificativo(company.partitaIva, company.paese || profile.paese)],
+      ["IdPaese", chi.paese],
+      ["IdCodice", chi.codice],
     ]],
     ["ProgressivoInvio", progressivo(doc.progressivo ?? 1)],
     ["FormatoTrasmissione", profile.schema],
@@ -969,7 +1034,19 @@ export function completaRighe(doc, company, party, { tipoMerce = true } = {}) {
   return doc;
 }
 
+/**
+ * The name of the file: country and code, then the progressive.
+ *
+ * The code is the company's — and between San Marino operators with an intermediary, the
+ * intermediary's: Documento A §1.2.1 says the code in the name «permette di identificare il
+ * trasmittente del file». Towards Italy the transmitter is the Ufficio Tributario, and the name
+ * keeps the company's COE, as the Allegato B wants it.
+ */
 export function fileName(company, value, profile = IT_SDI) {
+  if (profile.id === SM_INTERNA.id && String((company || {}).coeIntermediario || "").trim()) {
+    const chi = trasmittente(company, profile);
+    return `${chi.paese}${chi.codice}_${progressivo(value)}.xml`;
+  }
   const paese = company.paese || profile.paese;
   return `${paese}${identificativo(company.partitaIva, paese)}_${progressivo(value)}.xml`;
 }

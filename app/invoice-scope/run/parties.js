@@ -33,7 +33,7 @@ import { from, toString } from "./decimal.js";
 import { PAESI_CON_CAP, profileFor, vietato } from "./fatturapa.js";
 import { NATURE, partitaIvaValida, codiceFiscaleValido } from "./validate.js";
 import { conteggi, gruppi, principale, unisci } from "./duplicates.js";
-import { TIPI_MERCE } from "./fatturapa.js";
+import { TIPI_MERCE, natureSuggerite, zonaIva } from "./fatturapa.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -85,6 +85,7 @@ let editing = null;
 let aliquotaNuova = "22";                               // the company's usual rate, for a new item
 let predefiniti = { natura: "", tm: "" };               // and its nature and TM code at a zero rate
 let conti = [];                                         // the company's bank accounts, for the party sheet
+let paeseAzienda = "IT";                                // the company's country, for the natures it suggests
 
 /**
  * Chi aspetta il cliente appena creato.
@@ -224,6 +225,7 @@ function _openParty(record) {
   _paeseCambiato();
   _fiscaleCambiato();
   _fillDefaults(form, data);
+  _refreshPaeseAzienda();
 
   _open(el("partyDialog"));
   form.elements.denominazione.focus();
@@ -254,19 +256,62 @@ function _menuTm(campo, scelto) {
   campo.value = scelto || "";
 }
 
+/**
+ * The menu of the default nature, with the natures that fit this party first.
+ *
+ * **Which natures fit depends on two countries**, the company's and the party's, and on which way
+ * the invoice goes: from the company to a customer, from a supplier to the company. The ones that
+ * fit are a group of their own at the top, named after the direction («Italia → San Marino»);
+ * every other code stays below, under «Le altre», because the operation decides as much as the
+ * countries do (`natureSuggerite` in fatturapa.js). An option cannot be coloured in a closed menu
+ * on every system — on a Mac the menu is the system's — but a group with a title is drawn
+ * everywhere, and read by a screen reader too.
+ *
+ * Redrawn when the country or the role changes, keeping the choice already made.
+ */
+function _fillNatura(form, scelta = null) {
+  const natura = form.elements.naturaPredefinita;
+  const valore = scelta === null ? natura.value : scelta;
+  const paese = (form.elements.paese.value || "IT").toUpperCase();
+  const fornitore = form.elements.ruolo.value === "fornitore";
+  const [da, a] = fornitore ? [paese, paeseAzienda] : [paeseAzienda, paese];
+  const adatte = natureSuggerite(da, a);
+  const opzione = (code) => {
+    const option = document.createElement("option");
+    option.value = code;
+    option.textContent = code ? `${code} — ${t(`natura${code}`)}` : "—";
+    return option;
+  };
+  natura.textContent = "";
+  natura.append(opzione(""));
+  if (adatte.length) {
+    const sopra = document.createElement("optgroup");
+    sopra.label = tf("naturaGroupFit", { da: t(`zona${zonaIva(da)}`), a: t(`zona${zonaIva(a)}`) });
+    for (const code of adatte) sopra.append(opzione(code));
+    const sotto = document.createElement("optgroup");
+    sotto.label = t("naturaGroupOther");
+    for (const code of NATURE.filter((one) => !adatte.includes(one))) sotto.append(opzione(code));
+    natura.append(sopra, sotto);
+  } else {
+    for (const code of NATURE) natura.append(opzione(code));
+  }
+  natura.value = valore;
+}
+
+/** The company's country, read again when a sheet opens: the sheet opens from other screens too. */
+async function _refreshPaeseAzienda() {
+  if (!database) return;
+  const company = await get(database, "company", "company");
+  const prima = paeseAzienda;
+  paeseAzienda = ((company || {}).paese || "IT").toUpperCase();
+  if (prima !== paeseAzienda) _fillNatura(el("partyForm"));
+}
+
 function _fillDefaults(form, data) {
   form.elements.aliquotaPredefinita.placeholder = aliquotaNuova;
   form.elements.aliquotaPredefinita.value = data.aliquotaPredefinita ?? "";
 
-  const natura = form.elements.naturaPredefinita;
-  natura.textContent = "";
-  for (const code of ["", ...NATURE]) {
-    const option = document.createElement("option");
-    option.value = code;
-    option.textContent = code ? `${code} — ${t(`natura${code}`)}` : "—";
-    natura.append(option);
-  }
-  natura.value = data.naturaPredefinita || "";
+  _fillNatura(form, data.naturaPredefinita || "");
   _aliquotaCambiata();
 
   const scelta = form.elements.ibanPredefinito;
@@ -619,6 +664,7 @@ async function _companyDefaults(db) {
   aliquotaNuova = (company && company.aliquotaPredefinita) || "22";
   predefiniti = { natura: (company || {}).naturaPredefinita || "", tm: (company || {}).tmPredefinito || "" };
   conti = ((company || {}).conti || []).filter((conto) => conto.iban);
+  paeseAzienda = ((company || {}).paese || "IT").toUpperCase();
 }
 
 /** Customers and suppliers: the first of the three registers under Anagrafiche. */
@@ -755,7 +801,10 @@ export function connect(db, afterChange = null) {
   });
   // Il paese decide se CAP e provincia finiscono nel file o solo sul foglio stampato, quindi la
   // scheda si adatta mentre lo si scrive e non al salvataggio.
-  el("partyForm").elements.paese.addEventListener("input", _paeseCambiato);
+  el("partyForm").elements.paese.addEventListener("input", () => {
+    _paeseCambiato();
+    _fillNatura(el("partyForm"));
+  });
   for (const name of ["partitaIva", "codiceFiscale", "paese"]) {
     el("partyForm").elements[name].addEventListener("input", _fiscaleCambiato);
   }
@@ -763,7 +812,10 @@ export function connect(db, afterChange = null) {
   el("partyForm").elements.paeseScelto.addEventListener("change", () => {
     _paeseScelto();
     _paeseCambiato();
+    _fillNatura(el("partyForm"));
   });
+  // The direction of the invoice turns with the role: a supplier issues to the company.
+  el("partyForm").elements.ruolo.addEventListener("change", () => _fillNatura(el("partyForm")));
   el("partySave").addEventListener("click", _saveParty);
   el("partyCancel").addEventListener("click", () => {
     _close(el("partyDialog"));

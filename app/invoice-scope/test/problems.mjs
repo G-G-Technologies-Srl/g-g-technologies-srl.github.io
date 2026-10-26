@@ -201,6 +201,9 @@ const CASI = [
   [{ ...DOC, righe: [{ ...RIGA, aliquota: "0", natura: "N4", tm: "4" }],
     ddt: [{ numero: "D1", data: "2026-08-01" }, { numero: "D2", data: "2026-08-02" }] }, CTX_INTERNA],
   [{ ...DOC, tipo: "TD29", righe: [{ ...RIGA, aliquota: "0", natura: "N3.1", tm: "3" }] }, CTX_SM],
+  // An intermediary's COE that is not a COE, on the internal channel where it is used.
+  [{ ...DOC, righe: [{ ...RIGA, aliquota: "0", natura: "N4", tm: "3" }] },
+    { ...CTX_INTERNA, company: { ...AZIENDA_SM, coeIntermediario: "studio rossi" } }],
   [{
     ...DOC,
     tipo: "TD04",

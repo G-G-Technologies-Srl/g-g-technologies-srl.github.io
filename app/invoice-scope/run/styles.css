@@ -264,7 +264,12 @@ main { padding: 0; flex: 1 1 auto; min-width: 0; }
 
 /* Due comandi sulla stessa intestazione stanno insieme, non ai due capi della riga: sono la stessa
    azione — aggiungere una riga — presa da due parti diverse. */
-.head-tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.head-tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; min-width: 0; max-width: 100%; }
+/* **A menu is as wide as its longest option**, and «Dal listino» lists the price list by its
+   descriptions: one item called «Consulenza specialistica su software LIS per laboratori…» made the
+   menu a thousand pixels wide, and on a laptop it ran past the edge of the window. Capped here, the
+   option that does not fit ends in an ellipsis on the closed menu, and is read in full when it opens. */
+.head-tools select { min-width: 0; max-width: min(100%, 320px); text-overflow: ellipsis; }
 
 /* The title of a document and the control that changes its state, on one line: the state is a
    property of the document, so it belongs next to its name rather than among the commands. */
@@ -448,6 +453,9 @@ select {
   color: var(--text);
   font: inherit;
   min-height: 40px;
+  /* Never wider than what holds it, whatever the options say: the safety net under the rules that
+     give each menu its own width. */
+  max-width: 100%;
   cursor: pointer;
 }
 
@@ -1352,6 +1360,19 @@ dialog li::before {
 .settle { font-size: 0.82rem; color: var(--faint); margin-top: 2px; }
 .settle-done { color: var(--accent-text); }
 .settle-late { color: var(--danger-text); }
+/* A receipt filed on one of the document's payments: a paperclip and two words, in the same small
+   line as the money, because it is about the money. */
+.settle-clip { display: flex; align-items: center; gap: 4px; }
+.settle-clip svg {
+  width: 13px;
+  height: 13px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 
 .doc-settle { font-size: 0.9rem; color: var(--faint); }
 .doc-settle.settle-done { color: var(--accent-text); }

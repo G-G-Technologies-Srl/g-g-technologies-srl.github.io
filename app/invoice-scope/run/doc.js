@@ -38,7 +38,7 @@ import { isCustomer, isSupplier, parties, items, party as getParty, openNewParty
 import { TIPI, KINDS, kind, has, numero as shownNumber, convertibile } from "./kinds.js";
 import {
   profileFor, ambitoDi, ambitoDoc, applicaAmbito, rimborsabile, AMBITI_MERCE, TIPI_CESSIONE,
-  MERCE_CON_DDT, CASSE, trasmissioneElettronica,
+  MERCE_CON_DDT, CASSE, trasmissioneElettronica, natureSuggerite, zonaIva,
 } from "./fatturapa.js";
 import { stato as termState } from "./terms.js";
 import { control as statoControl } from "./states.js";
@@ -463,6 +463,28 @@ function _drawCessione() {
   menu.disabled = !editable(current);
 }
 
+/**
+ * The natures that fit this document's two countries, first in the nature menu of every line.
+ *
+ * The same suggestion as the default nature on the party's sheet (`natureSuggerite` in
+ * fatturapa.js), in the direction the document goes: from the company to the customer, or from the
+ * supplier to the company on a self-billed invoice, where the lines describe what the supplier
+ * sold. Without a customer chosen there is no direction yet, and the menu is the plain list.
+ */
+function _natureGroups() {
+  if (!party) return null;
+  const azienda = (company && company.paese) || "IT";
+  const altro = party.paese || "IT";
+  const [da, a] = kind(current).autofattura ? [altro, azienda] : [azienda, altro];
+  const primi = natureSuggerite(da, a);
+  if (!primi.length) return null;
+  return {
+    primi,
+    titolo: tf("naturaGroupFit", { da: t(`zona${zonaIva(da)}`), a: t(`zona${zonaIva(a)}`) }),
+    altre: t("naturaGroupOther"),
+  };
+}
+
 /** Whether a rate is zero however it is written: `0`, `0.0` and `0.00` are one rate. */
 function _isZeroRate(value) {
   return value !== undefined && value !== null && value !== "" && Number(value) === 0;
@@ -492,7 +514,7 @@ function _applyDefaults(line) {
  * cell next to the cursor was the one thing left stale.
  */
 function _cell(line, field, {
-  width = "", mode = "text", options = null, list = null, onEdit = null, checked = null,
+  width = "", mode = "text", options = null, list = null, onEdit = null, checked = null, gruppi = null,
 } = {}) {
   const td = document.createElement("td");
   let input;
@@ -501,11 +523,26 @@ function _cell(line, field, {
     input.type = "checkbox";
   } else if (options) {
     input = document.createElement("select");
-    for (const value of options) {
+    const voce = (value) => {
       const option = document.createElement("option");
       option.value = value;
       option.textContent = _optionLabel(field, value);
-      input.append(option);
+      return option;
+    };
+    // `gruppi` puts some of the options first, under a title, and the rest below under another:
+    // the empty choice stays on top of both, outside any group.
+    const primi = gruppi ? gruppi.primi.filter((value) => options.includes(value)) : [];
+    if (primi.length) {
+      if (options.includes("")) input.append(voce(""));
+      const sopra = document.createElement("optgroup");
+      sopra.label = gruppi.titolo;
+      for (const value of primi) sopra.append(voce(value));
+      const sotto = document.createElement("optgroup");
+      sotto.label = gruppi.altre;
+      for (const value of options.filter((one) => one !== "" && !primi.includes(one))) sotto.append(voce(value));
+      input.append(sopra, sotto);
+    } else {
+      for (const value of options) input.append(voce(value));
     }
   } else {
     input = document.createElement("input");
@@ -678,7 +715,7 @@ function _drawLines() {
         }
         _toggleNatura();
       } }],
-      ["natura", { width: "small", options: NATURE }],
+      ["natura", { width: "small", options: NATURE, gruppi: _natureGroups() }],
       // Il codice dell'Ufficio Tributario. La colonna esiste sempre nel markup e la nasconde il
       // CSS quando chi emette non è sammarinese o quando l'ambito ne ammette uno solo: disegnarla a
       // volte sì e a volte no vorrebbe dire tenere allineate a mano le intestazioni, che stanno

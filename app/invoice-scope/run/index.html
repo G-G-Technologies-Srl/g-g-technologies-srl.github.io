@@ -84,6 +84,7 @@
   <symbol id="ico-parties" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="1.5"/><circle cx="9" cy="11" r="2.2"/><path d="M5.8 16.2c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14.5 10h3M14.5 13.5h3"/></symbol>
   <symbol id="ico-crm" viewBox="0 0 24 24"><circle cx="8.5" cy="8.5" r="3"/><circle cx="16.5" cy="9.5" r="2.5"/><path d="M3 19.5c.7-3 2.8-4.7 5.5-4.7s4.8 1.7 5.5 4.7"/><path d="M14.5 14.6c.6-.2 1.3-.3 2-.3 2.2 0 3.9 1.4 4.5 3.9"/></symbol>
   <symbol id="ico-company" viewBox="0 0 24 24"><path d="M4.5 20.5v-15l7.5-3 7.5 3v15"/><path d="M3 20.5h18"/><path d="M9 9.5h1.5M13.5 9.5H15M9 13h1.5M13.5 13H15M10.5 20.5v-4h3v4"/></symbol>
+  <symbol id="ico-clip" viewBox="0 0 24 24"><path d="M20 11.5 12.2 19.3a5 5 0 0 1-7.1-7.1l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7l-8.5 8.5a1.7 1.7 0 0 1-2.4-2.4l7.8-7.8"/></symbol>
   <symbol id="ico-settings" viewBox="0 0 24 24"><path d="M4 7h2.5M11.5 7H20M4 12h8.5M17.5 12H20M4 17h1.5M10.5 17H20"/><circle cx="9" cy="7" r="2.5"/><circle cx="15" cy="12" r="2.5"/><circle cx="8" cy="17" r="2.5"/></symbol>
 </svg>
 
@@ -101,6 +102,7 @@
     <div class="nav-sub" id="navDueSub">
       <a href="#/scadenzario" id="navDueDates" data-sub="1"><span data-t="navDueDates"></span></a>
       <a href="#/scadenzario/incassi" id="navDueIncome" data-sub="1"><span data-t="navDueIncome"></span></a>
+      <a href="#/scadenzario/pagamenti" id="navDueOutlays" data-sub="1"><span data-t="navDueOutlays"></span></a>
     </div>
     <a href="#/crm" id="navCrm"><svg aria-hidden="true"><use href="#ico-crm"/></svg><span data-t="navCrm"></span></a>
     <a href="#/anagrafiche" id="navParties"><svg aria-hidden="true"><use href="#ico-parties"/></svg><span data-t="navParties"></span></a>
@@ -473,26 +475,28 @@
     </div>
   </section>
 
-  <!-- Scadenzario › Incassi: every payment received, across the documents, with its receipt. The
-       same records as the table inside each document and the movements of each account; here they
-       are corrected, given their receipt late, and looked for by month, customer, receipt or not. -->
+  <!-- Scadenzario › Incassi and › Pagamenti: every payment received, or made to a supplier, with
+       its receipt. The same records as the tables inside each document or purchase and the movements
+       of each account; here they are corrected, given their receipt late, and looked for by year,
+       party, receipt or not. -->
   <section id="screenIncome" class="screen wide" hidden>
-    <h1 class="titled"><span class="ico" aria-hidden="true"><svg><use href="#ico-due"/></svg></span><span data-t="incomeTitle"></span></h1>
-    <p class="note" data-t="incomeNote"></p>
+    <!-- One screen for the two directions: the words are written by income.js, which knows which. -->
+    <h1 class="titled"><span class="ico" aria-hidden="true"><svg><use href="#ico-due"/></svg></span><span id="incomeTitleText"></span></h1>
+    <p class="note" id="incomeNoteText"></p>
 
     <div class="form docs-filters" id="incomeFilters" hidden>
       <label><span data-t="bankYearLabel"></span><select id="incomeYear"></select></label>
-      <label><span data-t="crmFilterParty"></span><select id="incomeParty"></select></label>
+      <label><span id="incomePartyLabel"></span><select id="incomeParty"></select></label>
       <label><span data-t="receiptLabel"></span><select id="incomeReceipt"></select></label>
     </div>
 
     <div class="figures" id="incomeFigures" hidden>
-      <div class="figure"><span class="label" data-t="incassiTotal"></span><span class="value" id="incomeTotal">—</span></div>
+      <div class="figure"><span class="label" id="incomeTotalLabel"></span><span class="value" id="incomeTotal">—</span></div>
       <div class="figure"><span class="label" data-t="incomeReceiptWith"></span><span class="value" id="incomeWith">—</span></div>
       <div class="figure"><span class="label" data-t="incomeReceiptWithout"></span><span class="value" id="incomeWithout">—</span></div>
     </div>
 
-    <p class="empty" id="incomeEmpty" data-t="incomeEmpty"></p>
+    <p class="empty" id="incomeEmpty"></p>
     <p class="empty" id="incomeNoMatch" data-t="incomeNoMatch" hidden></p>
     <div class="table-scroll">
       <table class="rows" id="incomeTable" hidden>
@@ -1519,6 +1523,13 @@
           <option value="no"></option>
         </select>
       </label>
+      <!-- San Marino only: who sends the file to HUB-SM when it is not the company itself — the
+           accountant, a service. Its COE becomes IdTrasmittente on the invoices between San Marino
+           operators; towards Italy the transmitter is always the Ufficio Tributario. -->
+      <label class="narrow" id="companyIntermediarioRow" hidden><span data-t="f_coeIntermediario"></span>
+        <input name="coeIntermediario" inputmode="numeric" autocomplete="off" maxlength="7">
+      </label>
+      <p class="note wide" id="companyIntermediarioNote" data-t="companyIntermediarioNote" hidden></p>
 
       <!-- The Register of Companies (REA): mandatory in the file for a company registered there, and
            read by fatturapa.js as company.rea. Share capital and sole shareholder only for companies. -->

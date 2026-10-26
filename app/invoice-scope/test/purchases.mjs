@@ -273,7 +273,9 @@ await prova("togliere un pagamento riapre l'acquisto", async (db) => {
   await popola(db);
   await purchases.render(db, "a1");
   assert.equal(dom.text("costFigOwedSub"), "Pagato");
-  const togli = dom.byId("costOutlaysBody").at(0).at(5).at(0);
+  // «Modifica» first, the cross after it.
+  assert.equal(dom.byId("costOutlaysBody").at(0).at(5).at(0).textContent, "Modifica");
+  const togli = dom.byId("costOutlaysBody").at(0).at(5).at(1);
   await dicendoSi(() => togli.fire("click"));
   assert.equal(dom.count("costOutlaysBody"), 0);
   assert.equal(leggibile(dom.text("costFigOwed")), "122,00 €");

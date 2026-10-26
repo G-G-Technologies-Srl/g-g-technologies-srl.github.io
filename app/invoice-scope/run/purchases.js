@@ -26,7 +26,7 @@ import { from, cmp, toString, ZERO } from "./decimal.js";
 import { parseAmount } from "./parse.js";
 import { parties, openNewParty, isSupplier } from "./parties.js";
 import { save as saveDoc } from "./model.js";
-import { openMoney, receiptCell } from "./payments.js";
+import { openMoney, receiptCell, editOutlay } from "./payments.js";
 import * as attesi from "./expected.js";
 import {
   TIPI, MONOFASE, IVA, CATEGORIE, taxKind, defaultRate, taxOn, costRecord, problems,
@@ -445,7 +445,19 @@ async function _drawOutlays(record) {
       _td(money(_amount(uscita.importo)), "right"),
     );
     const azioni = document.createElement("td");
-    azioni.className = "right";
+    azioni.className = "right nowrap";
+    // Corrected in its own sheet, as a payment received is (`editOutlay` in payments.js).
+    const correggi = document.createElement("button");
+    correggi.type = "button";
+    correggi.className = "ghost small";
+    correggi.textContent = t("edit");
+    correggi.setAttribute("aria-label", `${t("outlaysEdit")} ${uscita.data}`);
+    correggi.addEventListener("click", () => editOutlay(database, uscita, {
+      onDone: async () => {
+        await render(database, record.id, { afterChange: onChange });
+        if (onChange) await onChange();
+      },
+    }));
     const togli = document.createElement("button");
     togli.type = "button";
     togli.className = "ghost small";
@@ -457,7 +469,7 @@ async function _drawOutlays(record) {
       await render(database, record.id, { afterChange: onChange });
       if (onChange) await onChange();
     });
-    azioni.append(togli);
+    azioni.append(correggi, togli);
     tr.append(azioni);
     body.append(tr);
   }

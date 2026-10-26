@@ -648,6 +648,26 @@ export async function recordOutlay(db, cost, { importo, data, conto = null, nota
   return record;
 }
 
+/**
+ * Correct a payment made: amount, day, account, note. The id, the purchase, the receipt and
+ * `created` stay; `updated` says when (see `updatePayment` in schedule.js, the same rule for money
+ * received). Resolves with the record as stored, or `null` when it no longer exists.
+ */
+export async function updateOutlay(db, id, { importo, data, conto = null, nota = null }) {
+  const before = await get(db, "outlays", id);
+  if (!before) return null;
+  const after = {
+    ...before,
+    importo: String(importo),
+    data,
+    conto: conto ? { id: conto.id, etichetta: conto.etichetta || "", iban: conto.iban || "" } : null,
+    nota: nota || null,
+    updated: new Date().toISOString(),
+  };
+  await put(db, "outlays", after);
+  return after;
+}
+
 /** Togli un pagamento registrato per sbaglio: si cancella, non si storna, come un incasso. */
 export async function removeOutlay(db, id) {
   const record = await get(db, "outlays", id);

@@ -414,22 +414,23 @@ export async function updatePayment(db, id, { importo, data, conto = null, nota 
 }
 
 /**
- * Every payment received, for the screen that lists them all: newest first, with the document and
- * the customer it came from, filtered on a year, a customer and the presence of a receipt.
+ * A list of money moved — received or paid out — for the screens that list it all: newest first,
+ * with the record it belongs to and the party of that record, filtered on a year, a party and the
+ * presence of a receipt.
  *
  * `ricevuta` is `"con"`, `"senza"` or empty for both: «which transfers have I not filed the proof
- * of» is the question that screen is opened for at the end of a month. Answers the years and the
- * customers that have payments too, for the menus — computed before the filters, so choosing a
- * customer does not empty the menu of years — and how many of the rows shown have a receipt.
+ * of» is the question those screens are opened for at the end of a month. Answers the years and the
+ * parties that have money too, for the menus — computed before the filters, so choosing a party
+ * does not empty the menu of years — and how many of the rows shown have a receipt.
  *
- * A payment whose document is gone is still listed, with no reference: it happened, and the list
- * of what reached the bank must add up to what reached the bank.
+ * A payment whose owner is gone is still listed, with no reference: it happened, and the list of
+ * what went through the bank must add up to what went through the bank.
  */
-export function incomeRows({ payments = [], docs = [], parties = [] } = {}, { anno = "", partyId = "", ricevuta = "" } = {}) {
-  const docById = new Map(docs.map((one) => [one.id, one]));
+function _moneyRows(records, { owners, ownerKey, parties, referenceOf }, { anno = "", partyId = "", ricevuta = "" } = {}) {
+  const ownerById = new Map(owners.map((one) => [one.id, one]));
   const nameOf = new Map(parties.map((one) => [one.id, one.denominazione || ""]));
-  const all = payments.map((record) => {
-    const doc = docById.get(record.docId) || null;
+  const all = records.map((record) => {
+    const owner = ownerById.get(record[ownerKey]) || null;
     let importo = ZERO;
     try {
       importo = from(record.importo || "0");
@@ -438,16 +439,16 @@ export function incomeRows({ payments = [], docs = [], parties = [] } = {}, { an
     }
     return {
       record,
-      doc,
+      owner,
       data: record.data || "",
       importo,
-      riferimento: doc ? shownNumber(doc) || "" : "",
-      partyId: doc ? doc.partyId || "" : "",
-      party: doc ? nameOf.get(doc.partyId) || "" : "",
+      riferimento: owner ? referenceOf(owner) || "" : "",
+      partyId: owner ? owner.partyId || "" : "",
+      party: owner ? nameOf.get(owner.partyId) || "" : "",
     };
   });
   const anni = [...new Set(all.map((row) => String(row.data).slice(0, 4)).filter(Boolean))].sort().reverse();
-  const clienti = [...new Set(all.map((row) => row.partyId).filter(Boolean))]
+  const soggetti = [...new Set(all.map((row) => row.partyId).filter(Boolean))]
     .map((id) => ({ id, name: nameOf.get(id) || "" }))
     .sort((a, b) => a.name.localeCompare(b.name, "it"));
   const rows = all
@@ -461,10 +462,26 @@ export function incomeRows({ payments = [], docs = [], parties = [] } = {}, { an
     rows,
     totale: sum(rows.map((row) => row.importo)),
     anni,
-    clienti,
+    clienti: soggetti,
     conRicevuta,
     senzaRicevuta: rows.length - conRicevuta,
   };
+}
+
+/** Every payment received, with its document and customer: Scadenzario › Incassi. */
+export function incomeRows({ payments = [], docs = [], parties = [] } = {}, filtri = {}) {
+  const out = _moneyRows(payments, { owners: docs, ownerKey: "docId", parties, referenceOf: shownNumber }, filtri);
+  for (const row of out.rows) row.doc = row.owner;
+  return out;
+}
+
+/**
+ * Every payment made to a supplier, with its purchase and supplier: Scadenzario › Pagamenti. The
+ * reference is the supplier's invoice number; an expense without one has none, and the screen
+ * names it by its category.
+ */
+export function outlayRows({ outlays = [], costs = [], parties = [] } = {}, filtri = {}) {
+  return _moneyRows(outlays, { owners: costs, ownerKey: "costId", parties, referenceOf: (cost) => cost.numero || "" }, filtri);
 }
 
 /** Quanto è stato incassato in tutto su un documento. */
