@@ -1855,6 +1855,10 @@
       <!-- A chi non lo sa: sono i due modi in cui la fattura elettronica arriva al cliente, e ne
            basta uno. Senza questa riga i due campi sembrano burocrazia da riempire tutta. -->
       <p class="note wide" data-t="partyDeliveryNote"></p>
+      <!-- The ordinary mailbox, for everything that is not a formal act: right after the two ways the
+           invoice arrives, because it is mistaken for the PEC, and the label says which is which. -->
+      <label><span data-t="f_emailAziendale"></span><input name="email" type="email" autocomplete="email"></label>
+      <label><span data-t="f_telefonoAziendale"></span><input name="telefono" type="tel" autocomplete="tel"></label>
       <!-- A public administration: the invoice leaves as FPA12 to the six-character office code,
            and split payment is proposed on its documents. -->
       <div class="wide check-group">

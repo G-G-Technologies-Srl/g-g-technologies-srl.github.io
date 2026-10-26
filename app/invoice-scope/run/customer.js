@@ -104,7 +104,9 @@ function _oneLine(party) {
   // mancante travestita da etichetta.
   if (paese !== "IT") pezzi.push(paese === "SM" ? t("paeseSM") : paese);
   if (party.codiceDestinatario) pezzi.push(`SDI ${party.codiceDestinatario}`);
-  if (party.pec) pezzi.push(party.pec);
+  if (party.email) pezzi.push(party.email);
+  if (party.telefono) pezzi.push(party.telefono);
+  if (party.pec) pezzi.push(`${t("f_pec")} ${party.pec}`);
   // I suoi predefiniti, quando ne ha: si vedono qui perché è qui che si viene a controllare perché
   // una fattura nuova è uscita a zero, o su un altro conto.
   if (party.aliquotaPredefinita !== undefined && party.aliquotaPredefinita !== "") {

@@ -41,6 +41,11 @@ import { TIPI_MERCE, natureSuggerite, zonaIva } from "./fatturapa.js";
 
 const PARTY_FIELDS = [
   "denominazione", "partitaIva", "codiceFiscale", "codiceDestinatario", "pec", "paese",
+  // **The company's ordinary mailbox, beside the PEC and not instead of it.** The PEC is where the
+  // electronic invoice may arrive and where formal acts go; the everyday writing — a quote, a copy
+  // of the invoice, a reminder when no contact person has an address — goes to `info@`. And the
+  // switchboard number, for the same reason: the people have theirs, the company has one too.
+  "email", "telefono",
   // **Un fornitore è un cliente senza documenti emessi, non una seconda anagrafica.** Il ruolo dice
   // in quali menù compare: sul documento chi non è fornitore puro, sull'acquisto chi non è cliente
   // puro. Se un giorno un fornitore compra, è già qui: si cambia il ruolo, non si ricopia la scheda.

@@ -508,6 +508,8 @@ await prova("«Modifica i dati» apre il foglio del cliente con tutti i suoi cam
   assert.equal(form.denominazione.value, "Rossi Impianti S.r.l.");
   assert.equal(form.codiceDestinatario.value, "M5UXCR1");
   assert.equal(form.partitaIva.value, "01335577993");
+  assert.equal(form.email.value, "", "the ordinary mailbox has its field, empty when never written");
+  assert.equal(form.telefono.value, "", "and the switchboard number");
   await dom.byId("partyCancel").fire("click");
 });
 

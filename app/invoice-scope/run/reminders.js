@@ -114,12 +114,17 @@ export function testo(gruppo, { company = {}, party = {}, tono = 1 } = {}) {
  * pagamenti, non un atto. Mandarlo via PEC alza il tono di due gradi senza volerlo, e la prima
  * risposta arriva dall'amministrazione invece che da chi paga.
  *
+ * **Then the company's ordinary mailbox** (`email` in the party's sheet), when none of its people has
+ * an address: an `info@` reaches somebody who forwards it, the PEC reaches the archive.
+ *
  * Vuoto quando non c'è: il messaggio si apre lo stesso, con il destinatario da scrivere a mano, e
  * il foglio dice che in anagrafica quell'indirizzo manca.
  */
 export function destinatario(party = {}) {
   const persona = (party.contatti || []).find((one) => String(one.email || "").includes("@"));
-  return persona ? String(persona.email).trim() : "";
+  if (persona) return String(persona.email).trim();
+  const ufficio = String(party.email || "").trim();
+  return ufficio.includes("@") ? ufficio : "";
 }
 
 /** L'indirizzo `mailto:` con oggetto e testo già dentro. */

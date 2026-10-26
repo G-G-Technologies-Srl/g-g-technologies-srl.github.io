@@ -54,7 +54,7 @@ function clienteRow(over = {}) {
   const row = new Array(HEAD_CLIENTI.length).fill("");
   const v = {
     0: "Bianchi Componenti S.r.l.", 2: "Via Verdi 12", 3: "Bologna", 4: "40127", 5: "BO",
-    7: "Italia", 11: "01234567897", 14: "bianchi@pec.it", 16: "M5UXCR1", ...over,
+    7: "Italia", 8: "info@bianchi.it", 10: "051 123456", 11: "01234567897", 14: "bianchi@pec.it", 16: "M5UXCR1", ...over,
   };
   for (const [at, text] of Object.entries(v)) row[Number(at)] = text;
   return row;
@@ -94,6 +94,8 @@ prova("un cliente italiano, per intero", () => {
   assert.equal(c.denominazione, "Bianchi Componenti S.r.l.");
   assert.equal(c.partitaIva, "01234567897");
   assert.equal(c.pec, "bianchi@pec.it");
+  assert.equal(c.email, "info@bianchi.it", "the ordinary address, beside the PEC");
+  assert.equal(c.telefono, "051 123456");
   assert.equal(c.codiceDestinatario, "M5UXCR1");
   assert.equal(c.paese, "IT");
   assert.deepEqual(
@@ -104,7 +106,7 @@ prova("un cliente italiano, per intero", () => {
 });
 
 prova("le colonne che non abbiamo sono lasciate, non scartate in silenzio", () => {
-  // Telefono, referente, IBAN e fax esistono da loro e non da noi. La prova è che non finiscano
+  // Referente, IBAN e fax esistono da loro e non da noi. La prova è che non finiscano
   // nell'elenco delle colonne «non riconosciute», che vuol dire un'altra cosa: quello è il posto
   // dove compare una colonna che hanno rinominato, e va letto.
   const { scartate } = fic.parties(HEAD_CLIENTI, [clienteRow()]);

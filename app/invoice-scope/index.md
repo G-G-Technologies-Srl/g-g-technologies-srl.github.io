@@ -124,7 +124,7 @@ PolyForm Shield 1.0.0. Il codice è pubblico: si legge, si modifica e si usa anc
 
 Gratuita.
 
-**Versione** 0.75.0 · **Aggiornata il** 14 ottobre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
+**Versione** 0.76.0 · **Aggiornata il** 14 ottobre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
 
 *FAQ*
 

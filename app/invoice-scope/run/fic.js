@@ -79,7 +79,7 @@ const TIPI = {
 // would not appear on a document. Named so the report can say so.
 const IGNORATE = {
   clienti: [
-    "indirizzo e mail", "referente", "telefono", "fax", "note", "note indirizzo",
+    "referente", "fax", "note", "note indirizzo",
     "codice interno", "iban", "indirizzo spedizione", "termini di pagamento",
     "metodo di pagamento prefefinito", "metodo di pagamento predefinito",
     "sconto predefinito", "lettera d intento abilitata", "protocollo ricezione",
@@ -125,6 +125,9 @@ const COLONNE = {
     partitaIva: ["p iva tax id", "p iva", "partita iva", "piva"],
     codiceFiscale: ["codice fiscale", "cf"],
     pec: ["indirizzo pec", "pec"],
+    // The ordinary address, now that the party's sheet has a field for it.
+    email: ["indirizzo e mail", "e mail", "email"],
+    telefono: ["telefono", "tel"],
     codiceDestinatario: ["codice sdi", "codice destinatario", "sdi"],
   },
   listino: {
@@ -363,6 +366,8 @@ export function parties(head, body) {
       partitaIva: _get(row, dove, "partitaIva"),
       codiceFiscale: _get(row, dove, "codiceFiscale"),
       pec: _get(row, dove, "pec"),
+      email: _get(row, dove, "email"),
+      telefono: _get(row, dove, "telefono"),
       codiceDestinatario: _get(row, dove, "codiceDestinatario"),
       paese: iso || "IT",
       ..._sede(row, dove),

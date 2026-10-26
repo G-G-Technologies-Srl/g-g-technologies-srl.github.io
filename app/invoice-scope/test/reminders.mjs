@@ -97,6 +97,10 @@ prova("il destinatario è la prima email delle persone di riferimento, non la PE
   // La PEC è il canale degli atti: un sollecito mandato lì alza il tono di due gradi senza volerlo.
   assert.equal(destinatario(conPersone), "chiara@bitmakers.sm");
   assert.equal(destinatario({ denominazione: "Senza nessuno", pec: "x@pec.sm" }), "");
+  // Nobody with an address: the company's ordinary mailbox, still never the PEC.
+  assert.equal(destinatario({ pec: "x@pec.sm", email: " info@bitmakers.sm ", contatti: [{ nome: "Ivan", email: "" }] }),
+    "info@bitmakers.sm");
+  assert.equal(destinatario({ ...conPersone, email: "info@bitmakers.sm" }), "chiara@bitmakers.sm", "a person first");
   assert.equal(destinatario(), "");
 
   // L'indirizzo `mailto` porta oggetto e testo, e si apre anche senza destinatario: chi scrive lo
