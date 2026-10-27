@@ -2124,9 +2124,83 @@ test("cosa serve adesso: l'ordine è fisso, e ogni attività compare una volta s
   assert.equal(items[4].task.id, w.gadgets.id);
   assert.equal(items[5].meeting.page.id, w.withSara.id,
     "solo la call senza note e recente: quella di agosto è troppo lontana, quella di oggi ha le note");
-  assert.deepEqual(counts, { late: 1, today: 1, decide: 1, high: 1, blocked: 1, notes: 1 });
+  assert.deepEqual(counts, { late: 1, today: 1, decide: 1, high: 1, blocked: 1, stalled: 0, notes: 1 });
   // «Misure del tavolo» scade domani e non è né alta né bloccata: aspetta il suo giorno.
   assert.ok(!items.some((one) => one.task && one.task.id === w.table.id));
+});
+
+test("un'attività cominciata e silenziosa da dieci giorni è ferma; il diario la rimette in moto", () => {
+  const fiera = project();
+  const cols = model.project(fiera.id).columns;
+  const now = new Date();
+  const today = model.todayISO(now);
+  const begun = model.createTask(fiera.id, { title: "Preventivi", status: cols[1].id });
+  const waiting = model.createTask(fiera.id, { title: "Mai cominciata", status: cols[0].id });
+  // Twelve days without a word: the record's stamps are set straight, as a file would bring them.
+  const stale = `${model.addDays(today, -12)}T09:00:00.000Z`;
+  for (const one of [begun, waiting]) {
+    const record = model.task(one.id);
+    record.updated = stale;
+    record.created = stale;
+  }
+  let found = model.attentionOf(fiera.id, now);
+  assert.deepEqual(found.items.map((one) => [one.kind, one.task && one.task.title]), [["stalled", "Preventivi"]],
+    "quella nella prima colonna non è ferma: non è cominciata");
+  assert.equal(found.items[0].date, model.addDays(today, -12));
+  assert.equal(model.quietSince(model.task(begun.id)), model.addDays(today, -12));
+
+  // A line in the diary, even dated three days ago, says somebody is on it.
+  model.addDiaryEntry(begun.id, { text: "Sollecitato il fornitore", date: model.addDays(today, -3) });
+  found = model.attentionOf(fiera.id, now);
+  assert.equal(found.counts.stalled, 0);
+});
+
+test("il diario di un'attività legge gli incontri che l'hanno citata, e non quelli ancora da fare", () => {
+  const fiera = project();
+  const cols = model.project(fiera.id).columns;
+  const task = model.createTask(fiera.id, { title: "Stand", status: cols[1].id });
+  const now = new Date();
+  const today = model.todayISO(now);
+  const meet = (title, date, body) => {
+    const page = model.createPage(fiera.id, { title });
+    model.setMarkdown(page.id, `---\ntipo: incontro\ndata: ${date}\ncon: Marco\n---\n${body}`);
+    return page;
+  };
+  const past = meet("Incontro con Marco", model.addDays(today, -4), `- [ ] Chiedere le misure [[#${task.uid}]]\n`);
+  meet("Sopralluogo", model.addDays(today, 5), `- [ ] Portare il metro [[#${task.uid}]]\n`);
+  meet("Altro", model.addDays(today, -2), "Niente su questa attività.");
+  model.addDiaryEntry(task.id, { text: "Chiamato Marco", date: model.addDays(today, -4) });
+  model.addDiaryEntry(task.id, { text: "Misure arrivate", date: model.addDays(today, -1) });
+
+  assert.deepEqual(model.meetingsNamingTask(model.task(task.id), now).map((one) => one.page.id), [past.id],
+    "l'appuntamento futuro non è ancora successo");
+  assert.deepEqual(model.diaryTimeline(model.task(task.id), now).map((one) => one.kind === "entry" ? one.entry.text : one.meeting.page.title),
+    ["Misure arrivate", "Chiamato Marco", "Incontro con Marco"], "nello stesso giorno l'incontro viene dopo le voci");
+
+  // A task named in a meeting four days ago is not quiet, whatever its stamps say.
+  const quiet = model.createTask(fiera.id, { title: "Tavolo", status: cols[1].id });
+  const stale = `${model.addDays(today, -20)}T09:00:00.000Z`;
+  Object.assign(model.task(quiet.id), { updated: stale, created: stale });
+  assert.equal(model.attentionOf(fiera.id, now).counts.stalled, 1);
+  model.setMarkdown(past.id, `${model.page(past.id).markdown}- [ ] Il tavolo [[#${model.task(quiet.id).uid}]]\n`);
+  Object.assign(model.task(quiet.id), { updated: stale });
+  assert.equal(model.quietSince(model.task(quiet.id), now), model.addDays(today, -4));
+  assert.equal(model.attentionOf(fiera.id, now).counts.stalled, 0);
+});
+
+test("il diario del progetto: le voci di tutte le attività, la più recente in cima", () => {
+  const fiera = project();
+  const a = model.createTask(fiera.id, { title: "Stand" });
+  const b = model.createTask(fiera.id, { title: "Catering" });
+  model.addDiaryEntry(a.id, { text: "Uno", date: "2026-10-20" });
+  model.addDiaryEntry(b.id, { text: "Due", date: "2026-10-22" });
+  model.addDiaryEntry(a.id, { text: "Tre", date: "2026-10-22" });
+  const gone = model.createTask(fiera.id, { title: "Buttata" });
+  model.addDiaryEntry(gone.id, { text: "Nel cestino", date: "2026-10-23" });
+  model.trashTask(gone.id);
+  assert.deepEqual(model.projectDiary(fiera.id).map((one) => [one.task.title, one.entry.text]),
+    [["Stand", "Tre"], ["Catering", "Due"], ["Stand", "Uno"]]);
+  assert.equal(model.projectDiary(fiera.id, { limit: 2 }).length, 2);
 });
 
 test("cosa aspettiamo, la prossima milestone, il carico di una persona", () => {
@@ -2211,6 +2285,148 @@ test("le prossime cose di una scheda: ritardi, date, appuntamenti, poi il lavoro
     "senza date, prima quella più avanti sulla bacheca");
   assert.equal(all.more, 0);
   assert.deepEqual(model.nextThingsOf("nessuno"), { items: [], more: 0 });
+});
+
+// -----------------------------------------------------------------------------------------------------------------
+//  d i a r y
+// -----------------------------------------------------------------------------------------------------------------
+
+test("il diario: una voce per volta, la più recente in cima, il giorno scelto da chi scrive", () => {
+  const fiera = project();
+  const task = model.createTask(fiera.id, { title: "Stand" });
+  assert.deepEqual(model.task(task.id).diary, [], "un'attività nuova ha il diario vuoto");
+  assert.equal(model.addDiaryEntry(task.id, { text: "   " }), null, "parole vuote: niente");
+  const first = model.addDiaryEntry(task.id, { text: "Chiamato il fornitore", date: "2026-10-20", by: "Giulia" });
+  model.addDiaryEntry(task.id, { text: "Mandati i disegni", date: "2026-10-23" });
+  model.addDiaryEntry(task.id, { text: "Risposta: giovedì", date: "2026-10-20" });
+  const said = model.diaryOf(model.task(task.id)).map((entry) => entry.text);
+  assert.deepEqual(said, ["Mandati i disegni", "Risposta: giovedì", "Chiamato il fornitore"],
+    "per giorno, e a parità di giorno l'ultima scritta prima");
+  assert.equal(first.entry.by, "Giulia");
+  assert.equal(model.addDiaryEntry(task.id, { text: "Senza giorno", date: "ieri" }).entry.date,
+    model.todayISO(), "un giorno che non è un giorno diventa oggi");
+  assert.equal(model.lastDiaryEntry(model.task(task.id)).text, "Senza giorno");
+});
+
+test("il diario: correggere tiene l'autore, svuotare toglie, annulla rimette", () => {
+  const fiera = project();
+  const task = model.createTask(fiera.id, { title: "Stand" });
+  const { entry } = model.addDiaryEntry(task.id, { text: "Chiamto", date: "2026-10-20", by: "Marco" });
+  assert.equal(model.updateDiaryEntry(task.id, entry.id, { text: "Chiamto" }), null,
+    "nessun cambiamento, nessun passo di annulla");
+  model.updateDiaryEntry(task.id, entry.id, { text: "Chiamato", date: "2026-10-21" });
+  const fixed = model.diaryOf(model.task(task.id))[0];
+  assert.deepEqual([fixed.text, fixed.date, fixed.by], ["Chiamato", "2026-10-21", "Marco"]);
+  assert.ok(fixed.edited, "la correzione ha il suo timbro");
+
+  model.removeDiaryEntry(task.id, entry.id);
+  assert.deepEqual(model.diaryOf(model.task(task.id)), []);
+  const mark = model.task(task.id).diary[0];
+  assert.equal(mark.text, undefined, "la voce tolta non si porta dietro le parole");
+  assert.ok(mark.removed);
+  model.undo();
+  assert.equal(model.diaryOf(model.task(task.id))[0].text, "Chiamato", "annulla la rimette");
+
+  model.updateDiaryEntry(task.id, entry.id, { text: "  " });
+  assert.deepEqual(model.diaryOf(model.task(task.id)), [], "svuotata, è tolta");
+
+  // «Rimetti» puts back the entry alone: what changed on the card in between stays.
+  const gone = model.task(task.id).diary.find((one) => one.id === entry.id);
+  assert.ok(gone.removed);
+  model.updateTask(task.id, { title: "Stand B12" });
+  model.restoreDiaryEntry(task.id, { ...fixed, text: "Chiamato" });
+  assert.equal(model.task(task.id).title, "Stand B12");
+  const back = model.diaryOf(model.task(task.id))[0];
+  assert.deepEqual([back.text, back.by], ["Chiamato", "Marco"]);
+  assert.ok(back.edited > gone.removed, "rimessa dopo la rimozione: nella fusione vince lei");
+  assert.equal(model.restoreDiaryEntry(task.id, back), null, "una voce viva non si rimette due volte");
+});
+
+test("il diario non passa all'occorrenza successiva di un'attività che si ripete", () => {
+  const fiera = project();
+  const task = model.createTask(fiera.id, { title: "Report", end: "2026-10-19" });
+  model.updateTask(task.id, { repeat: "weekly" });
+  model.addDiaryEntry(task.id, { text: "Report mandato" });
+  const { next } = model.toggleDone(task.id);
+  assert.deepEqual(model.task(next.id).diary, []);
+  assert.equal(model.diaryOf(model.task(task.id)).length, 1, "resta su quella fatta");
+});
+
+test("la ricerca trova le parole del diario", () => {
+  const fiera = project();
+  const task = model.createTask(fiera.id, { title: "Stand" });
+  model.addDiaryEntry(task.id, { text: "Il fornitore promette i disegni per giovedì" });
+  const hit = model.search("disegni").find((one) => one.kind === "kindTask");
+  assert.ok(hit, "trovata");
+  assert.equal(hit.id, task.id);
+  assert.match(hit.snippet, /disegni/);
+});
+
+test("il diario si fonde voce per voce: le righe di tutti e due restano", () => {
+  const giulia = project({ name: "Fiera" });
+  const task = model.createTask(giulia.id, { title: "Stand" });
+  const shared = model.addDiaryEntry(task.id, { text: "Chiamato", by: "Giulia" }).entry;
+  const marcoId = model.adopt(fileOf(giulia.id, null)).projectId;
+  const theirs = model.tasksOf(marcoId)[0];
+
+  // Marco writes a line; Giulia, later, writes one and ticks something else on the card.
+  model.addDiaryEntry(theirs.id, { text: "Mandati i disegni", by: "Marco" });
+  model.addDiaryEntry(task.id, { text: "Sentito il catering", by: "Giulia" });
+  model.updateTask(task.id, { priority: "high" });
+  const now = model.task(task.id).updated;
+  const file = fileOf(marcoId, now);
+  file.tasks[0].updated = later(now, -10);
+  const outcome = model.merge(file, giulia.id);
+  assert.equal(outcome.updated, 1, "la carta cambia anche se la mia è la più recente");
+  assert.deepEqual(model.diaryOf(model.task(task.id)).map((entry) => entry.by).sort(),
+    ["Giulia", "Giulia", "Marco"]);
+  assert.equal(model.task(task.id).priority, "high", "il resto della carta resta il mio");
+  assert.equal(model.merge(file, giulia.id).updated, 0, "rileggere lo stesso file non cambia niente");
+
+  // Marco removes the shared line, later; Giulia's copy follows.
+  model.removeDiaryEntry(theirs.id, model.tasksOf(marcoId)[0].diary.find((one) => one.id === shared.id).id);
+  const file2 = fileOf(marcoId, later(now, 60));
+  file2.tasks[0].updated = later(now, 50);
+  file2.tasks[0].diary.find((one) => one.id === shared.id).removed = later(now, 50);
+  model.merge(file2, giulia.id);
+  assert.deepEqual(model.diaryOf(model.task(task.id)).map((entry) => entry.text).sort(),
+    ["Mandati i disegni", "Sentito il catering"],
+    "tolta di là, tolta anche qui; e la riga scritta solo qui resta anche se la loro carta è più recente");
+});
+
+test("il diario che arriva da un file si ricostruisce: entrano solo i campi di una voce", () => {
+  const giulia = project({ name: "Fiera" });
+  model.createTask(giulia.id, { title: "Stand" });
+  const file = fileOf(giulia.id, null);
+  file.tasks[0].diary = [
+    { id: "a", date: "2026-10-20", text: "Chiamato", by: "Marco", created: "2026-10-20T09:00:00.000Z",
+      email: "marco@studiorossi.it" },
+    { id: "b", text: "   " },
+    { text: "senza id" },
+    "una stringa",
+    { id: "c", created: "2026-10-19T09:00:00.000Z", removed: "2026-10-21T09:00:00.000Z", text: "tolta" },
+  ];
+  const marcoId = model.adopt(file).projectId;
+  const diary = model.tasksOf(marcoId)[0].diary;
+  const written = JSON.stringify(diary);
+  for (const word of ["marco@studiorossi.it", "senza id", "una stringa", "tolta"]) {
+    assert.ok(!written.includes(word), `«${word}» non entra`);
+  }
+  assert.deepEqual(diary.map((entry) => entry.id), ["a", "c"]);
+  assert.deepEqual(model.diaryOf(model.tasksOf(marcoId)[0]).map((entry) => entry.text), ["Chiamato"]);
+});
+
+test("un file di prima, senza diario, non svuota il diario di qui", () => {
+  const giulia = project({ name: "Fiera" });
+  const task = model.createTask(giulia.id, { title: "Stand" });
+  const marcoId = model.adopt(fileOf(giulia.id, null)).projectId;
+  model.addDiaryEntry(task.id, { text: "Chiamato" });
+  const now = model.task(task.id).updated;
+  const file = fileOf(marcoId, now);
+  delete file.tasks[0].diary;
+  file.tasks[0].updated = later(now, 30);
+  model.merge(file, giulia.id);
+  assert.equal(model.diaryOf(model.task(task.id)).length, 1);
 });
 
 console.log(`model: ${passed} prove passate`);

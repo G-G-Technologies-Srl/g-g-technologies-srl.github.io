@@ -178,6 +178,39 @@ test("la pagina del progetto: nessun pannello resta senza contenuto e senza fras
   assert.ok(byId("planLegend").children.length > 0, "la legenda del piano");
 });
 
+test("la pagina del progetto: il diario raccoglie le voci delle attività, e il titolo apre la scheda sul diario", () => {
+  const { fair } = _scene();
+  home.paintProject(fair.id);
+  assert.equal(byId("panelDiary").hidden, false, "il dimostrativo ha tre voci");
+  const rows = byId("diaryList").querySelectorAll("li");
+  assert.equal(rows.length, 3);
+  assert.equal(rows[0].querySelector(".diary-said").textContent, t("demoDiary3"), "la più recente in cima");
+  assert.equal(rows[0].querySelector(".when").textContent, t("diaryYesterday"));
+  assert.equal(byId("diaryCount").textContent, "3 voci");
+  rows[0].querySelector("button").click();
+  assert.equal(asked[0][0], "openTask");
+  assert.deepEqual(asked[0][2], { diary: true });
+
+  const empty = model.createProject({ name: "Vuoto" });
+  home.paintProject(empty.id);
+  assert.equal(byId("panelDiary").hidden, true, "senza voci il riquadro non c'è");
+});
+
+test("la pagina del progetto: un'attività cominciata e silenziosa compare come ferma, con il comando per il diario", () => {
+  const { other } = _scene();
+  const cols = model.project(other.id).columns;
+  const quiet = model.createTask(other.id, { title: "Preventivo del fotografo", status: cols[1].id });
+  const stale = `${model.addDays(model.todayISO(), -15)}T09:00:00.000Z`;
+  Object.assign(model.task(quiet.id), { updated: stale, created: stale });
+  home.paintProject(other.id);
+  const row = _row(byId("nowList"), "Preventivo del fotografo");
+  assert.match(row.querySelector(".now-when").textContent, /ferma, 15 giorni fa/);
+  assert.match(row.querySelector(".now-ctx").textContent, /senza notizie da allora/);
+  assert.ok(byId("nowSum").textContent.includes("1 ferma"));
+  row.querySelectorAll("button").find((one) => one.textContent === t("nowStalledWrite")).click();
+  assert.deepEqual(asked.at(-1), ["openTask", quiet.id, { diary: true }]);
+});
+
 test("un progetto vuoto offre i tre modi di cominciare, invece di pannelli vuoti", () => {
   _scene();
   const empty = model.createProject({ name: "Vuoto" });

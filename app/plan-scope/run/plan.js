@@ -23,7 +23,7 @@ import { SIGN } from "./sign.js";
 import * as pack from "biz/plan-pack.js";
 import * as csv from "./csv.js";
 import { t, tf, num } from "./i18n.js";
-import { el, node, button, fill, shortDate, locale, ask, tagHue } from "./ui.js";
+import { el, node, button, fill, shortDate, longDate, locale, ask, tagHue } from "./ui.js";
 import { tip } from "./tip.js";
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -42,11 +42,21 @@ let on = { change() {}, moved() {}, trashed() {}, ticked() {}, batched() {},
   openPage() {},
   // La scheda di un appuntamento sulla lavagna: cliccarla apre la maschera con cui si è preso, la
   // ✕ lo toglie. Tutte e due le cose le fa l'app, che ha la maschera e il cestino.
-  editMeeting() {}, trashMeeting() {} };
+  editMeeting() {}, trashMeeting() {},
+  // The name this copy signs the shared folder with, or empty while it is still the made-up one:
+  // a diary entry signed «user_k3p9zx» tells a colleague nothing.
+  who: () => "" };
 let dragging = null;
 let justDragged = false;                // swallows the click the browser sends after a drop
 let cardId = null;                      // the task the dialog is showing
 let extraOpen = false;
+let cardTab = "details";                // which half of the card is showing: "details" or "diary"
+let paneFor = null;                     // the task the folded lists below were set up for
+let subsOpen = false;                   // the empty sub-task list, unfolded by its button
+let checkOpen = false;                  // the empty checklist, unfolded by its button
+let diaryFor = null;                    // the task whose diary the line on top was set up for
+let diaryEditing = null;                // the entry that line is correcting, or null while writing
+let diaryGone = null;                   // `{ entry }` just removed, offered back until the card closes
 const selected = new Set();             // the cards picked with Shift-click
 
 const filters = { tags: new Set(), assignees: new Set() };
@@ -243,6 +253,9 @@ function _fillCard() {
     return row;
   }));
 
+  _paintDiary(task);
+  _paintTabs(task);
+
   // Il documento: il titolo se c'è, e allora si apre e si stacca; l'invito a farne uno se non c'è.
   // La spiegazione sta sotto finché non c'è, e sparisce quando il documento parla da sé.
   // Una sottoattività senza documento suo mostra quello dell'attività principale: è nata lì, o lì
@@ -290,8 +303,25 @@ function _fillCard() {
   el("cardParent").hidden = !parent;
   if (parent) el("cardParentText").textContent = tf("cardParentOf", { name: parent.title });
   const children = parent ? [] : model.subtasksOf(cardId);
-  el("cardSubtasksLabel").hidden = Boolean(parent);
-  el("cardSubtaskForm").hidden = Boolean(parent);
+  // The two lists unfold when they have something, or when their button asked for them. A new card
+  // is the second, a card of a sub-task never has the first.
+  if (paneFor !== cardId) {
+    paneFor = cardId;
+    subsOpen = false;
+    checkOpen = false;
+  }
+  const showSubs = !parent && (children.length > 0 || subsOpen);
+  const showCheck = (task.checklist || []).length > 0 || checkOpen;
+  el("cardSubtasksLabel").hidden = !showSubs;
+  el("cardListsHint").hidden = !showSubs;
+  el("cardSubtasks").hidden = !showSubs;
+  el("cardSubtaskForm").hidden = !showSubs;
+  el("cardSubtasksOpen").hidden = Boolean(parent) || showSubs;
+  el("cardChecklistLabel").hidden = !showCheck;
+  el("cardChecklist").hidden = !showCheck;
+  el("cardChecklistForm").hidden = !showCheck;
+  el("cardChecklistOpen").hidden = showCheck;
+  el("cardChecklistOpen").parentNode.hidden = el("cardSubtasksOpen").hidden && showCheck;
   fill(el("cardSubtasks"), children.map((child) => {
     const row = node("li", "row-item opens");
     const box = button(model.isDone(child) ? "tick on" : "tick", model.isDone(child) ? "✓" : "", () => {
@@ -315,6 +345,155 @@ function _fillCard() {
 
   el("cardExtra").hidden = !extraOpen;
   el("cardMore").textContent = extraOpen ? t("showLess") : t("showMore");
+}
+
+/** A diary day as people say it: today, yesterday, a date — with the year only when it is not this one. */
+function _diaryDay(iso) {
+  const today = model.todayISO();
+  if (iso === today) return t("diaryToday");
+  if (iso === model.addDays(today, -1)) return t("diaryYesterday");
+  return iso.slice(0, 4) === today.slice(0, 4) ? shortDate(iso) : longDate(iso);
+}
+
+/** The two tabs: which one is pressed, which pane shows, and how many entries the diary holds. */
+function _paintTabs(task) {
+  const n = model.diaryOf(task).length;
+  el("cardTabDiary").textContent = n ? tf("cardTabDiaryN", { n: num(n, 0) }) : t("cardDiary");
+  for (const [id, pane, key] of [["cardTabDetails", "cardDetailsPane", "details"], ["cardTabDiary", "cardDiaryPane", "diary"]]) {
+    const on = cardTab === key;
+    el(id).setAttribute("aria-selected", on ? "true" : "false");
+    el(id).tabIndex = on ? 0 : -1;
+    el(id).classList.toggle("on", on);
+    el(pane).hidden = !on;
+  }
+}
+
+/** Shows one half of the card. Whatever was typed in the other is written first. */
+function _showTab(which, { focus = false } = {}) {
+  if (!cardId || which === cardTab) return;
+  _saveCard();
+  cardTab = which;
+  _fillCard();
+  if (focus) el(which === "diary" ? "cardTabDiary" : "cardTabDetails").focus();
+}
+
+/** The line on top back to an empty entry dated today. */
+function _resetDiaryLine() {
+  diaryEditing = null;
+  el("cardDiaryField").value = "";
+  el("cardDiaryDate").value = model.todayISO();
+}
+
+/**
+ * The diary on the card: the line to write in, then the entries, newest first.
+ *
+ * A removed entry leaves a row saying so, with «Rimetti», until the card closes. The strip at the
+ * bottom of the window is where every other undo lives, but it sits behind this dialog: offered
+ * there, the way back would be out of sight exactly when it is wanted.
+ */
+function _paintDiary(task) {
+  if (diaryFor !== task.id) {
+    diaryFor = task.id;
+    diaryGone = null;
+    _resetDiaryLine();
+  }
+  const entries = model.diaryOf(task);
+  if (diaryEditing && !entries.some((entry) => entry.id === diaryEditing)) _resetDiaryLine();
+  const timeline = model.diaryTimeline(task);
+  el("cardDiaryDate").max = model.todayISO();
+  el("cardDiaryHint").hidden = timeline.length > 0;
+  el("cardDiaryAdd").textContent = diaryEditing ? t("diarySave") : t("diaryAdd");
+  el("cardDiaryCancel").hidden = !diaryEditing;
+
+  const rows = [];
+  if (diaryGone) {
+    const row = node("li", "row-item diary-gone");
+    row.append(node("span", "meta", t("diaryRemoved")));
+    row.append(node("span", "spacer"));
+    row.append(button("ghost small", t("diaryPutBack"), () => {
+      _saveCard();
+      model.restoreDiaryEntry(cardId, diaryGone.entry);
+      diaryGone = null;
+      _fillCard();
+      on.change();
+      paint();
+    }));
+    rows.push(row);
+  }
+  for (const item of timeline) {
+    // A meeting that named the task: its day, who it was with, and the way to its minutes. Not an
+    // entry — it is read from the page, so it has no pencil and no ✕; the page is where it changes.
+    if (item.kind === "meeting") {
+      const { meeting } = item;
+      const row = node("li", "row-item diary-entry diary-meeting");
+      const head = node("div", "diary-head");
+      head.append(node("span", "diary-day", _diaryDay(meeting.date)));
+      if (meeting.with) head.append(node("span", "diary-by", meeting.with));
+      row.append(head);
+      const said = node("p", "diary-text");
+      said.append(document.createTextNode(`${t("diaryMetIn")} `));
+      said.append(button("link", meeting.page.title || t("pageUntitled"), () => {
+        _saveCard();
+        el("taskCard").close();
+        on.openPage(meeting.page.id);
+      }, { label: t("cardFromOpen") }));
+      row.append(said);
+      rows.push(row);
+      continue;
+    }
+    const { entry } = item;
+    const row = node("li", entry.id === diaryEditing ? "row-item diary-entry is-editing" : "row-item diary-entry");
+    const head = node("div", "diary-head");
+    head.append(node("span", "diary-day", _diaryDay(entry.date)));
+    if (entry.by) head.append(node("span", "diary-by", entry.by));
+    head.append(node("span", "spacer"));
+    head.append(button("ghost small icon", "✎", () => {
+      // What is in the line is written first, as everywhere on this card: a sentence typed and
+      // then the pencil pressed on another entry would otherwise be replaced by that entry.
+      _saveCard();
+      diaryEditing = entry.id;
+      el("cardDiaryField").value = entry.text;
+      el("cardDiaryDate").value = entry.date;
+      _fillCard();
+      el("cardDiaryField").focus();
+    }, { label: t("diaryEdit") }));
+    head.append(button("ghost small icon", "✕", () => {
+      _saveCard();
+      if (diaryEditing === entry.id) _resetDiaryLine();
+      const step = model.removeDiaryEntry(cardId, entry.id);
+      diaryGone = step ? { entry: { ...entry } } : null;
+      _fillCard();
+      on.change();
+      paint();
+    }, { label: t("diaryRemove") }));
+    row.append(head);
+    row.append(node("p", "diary-text", entry.text));
+    rows.push(row);
+  }
+  fill(el("cardDiary"), rows);
+}
+
+/**
+ * What is in the diary line goes into the diary: a new entry, or the correction of the one being
+ * edited. Returns the step, or null when there was nothing to write.
+ *
+ * An emptied line while correcting is not a removal: clearing the box to start over, and then
+ * closing the card, would otherwise throw away an entry nobody asked to throw away. Removing is ✕.
+ */
+function _flushDiary() {
+  const text = el("cardDiaryField").value;
+  const date = el("cardDiaryDate").value || model.todayISO();
+  let step = null;
+  if (diaryEditing) {
+    if (text.trim()) step = model.updateDiaryEntry(cardId, diaryEditing, { text, date });
+  } else if (text.trim()) {
+    const made = model.addDiaryEntry(cardId, { text, date, by: on.who() });
+    step = made ? made.step : null;
+  } else {
+    return null;
+  }
+  _resetDiaryLine();
+  return step;
 }
 
 /**
@@ -365,6 +544,7 @@ function _saveCard() {
   if (!cardId) return;
   const task = model.task(cardId);
   if (!task) return;
+  const wrote = _flushDiary();
   const tags = el("cardTags").value.split(",").map((tag) => tag.trim()).filter(Boolean);
   const blocked = el("cardBlocked").value;
   const changes = {
@@ -390,19 +570,34 @@ function _saveCard() {
   // non è un campo come gli altri, ed è confrontato a parte per la stessa ragione.
   const wanted = el("cardAssignee").value.trim();
   const moved = wanted !== model.assigneeName(task);
-  if (same && !moved) return;
+  if (same && !moved) {
+    if (wrote) {
+      on.change();
+      paint();
+    }
+    return;
+  }
   if (!same) model.updateTask(cardId, changes);
   if (moved) model.assignByName(cardId, wanted);
   on.change();
   paint();
 }
 
-export function openCard(id) {
+export function openCard(id, { diary = false } = {}) {
   cardId = id;
   extraOpen = false;
+  diaryFor = null;
+  paneFor = null;
+  cardTab = diary ? "diary" : "details";
   _fillCard();
   el("taskCard").showModal();
-  el("cardTitleField").focus();
+  // From the diary mark on the board the card opens where that mark points: the line to write in.
+  if (diary) {
+    el("cardDiaryField").scrollIntoView({ block: "center" });
+    el("cardDiaryField").focus();
+  } else {
+    el("cardTitleField").focus();
+  }
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -507,6 +702,26 @@ function _taskCard(task, today) {
   if (checklist.length) {
     meta.append(node("span", "when",
       `${num(checklist.filter((one) => one.done).length, 0)}/${num(checklist.length, 0)}`));
+  }
+  // The diary says on the card when it was last written in: on a task that runs for weeks, «✎ 23
+  // ott» is the difference between "somebody is on it" and "nobody has touched it since September".
+  const last = model.lastDiaryEntry(task);
+  if (last) {
+    const mark = node("span", "when diary-mark", `✎ ${shortDate(last.date)}`);
+    mark.setAttribute("aria-label", tf("diaryLast", { date: shortDate(last.date) }));
+    meta.append(tip(mark, () => {
+      const now = model.task(task.id);
+      const newest = now ? model.lastDiaryEntry(now) : null;
+      if (!newest) return null;
+      const n = model.diaryOf(now).length;
+      const words = newest.text.length > 140 ? `${newest.text.slice(0, 139).trimEnd()}…` : newest.text;
+      return {
+        head: n === 1 ? t("tipDiaryOne") : tf("tipDiary", { n: num(n, 0) }),
+        detail: tf(newest.by ? "tipDiaryLastBy" : "tipDiaryLast",
+          { date: _diaryDay(newest.date), by: newest.by, text: words }),
+        action: { label: t("tipDiaryWrite"), run: () => openCard(task.id, { diary: true }) },
+      };
+    }));
   }
   const waits = (task.blockedBy || [])[0];
   const waiting = waits ? model.task(waits) : null;
@@ -1236,6 +1451,52 @@ export function connect(handlers) {
     extraOpen = false;
     _fillCard();
   });
+  el("cardTabDetails").addEventListener("click", () => _showTab("details"));
+  el("cardTabDiary").addEventListener("click", () => {
+    _showTab("diary");
+    el("cardDiaryField").focus();
+  });
+  // Arrows move between the tabs, as a tab list does everywhere else.
+  el("cardTabs").addEventListener("keydown", (event) => {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    _showTab(cardTab === "details" ? "diary" : "details", { focus: true });
+  });
+  el("cardSubtasksOpen").addEventListener("click", () => {
+    _saveCard();
+    subsOpen = true;
+    _fillCard();
+    el("cardSubtaskField").focus();
+  });
+  el("cardChecklistOpen").addEventListener("click", () => {
+    _saveCard();
+    checkOpen = true;
+    _fillCard();
+    el("cardChecklistField").focus();
+  });
+  el("cardDiaryForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!cardId) return;
+    // `_saveCard` writes the diary line together with the other fields: one path, the same one
+    // «Chiudi» takes.
+    _saveCard();
+    _fillCard();
+    el("cardDiaryField").focus();
+  });
+  el("cardDiaryField").addEventListener("keydown", (event) => {
+    // Enter is a new line: an entry can be a few lines long. Ctrl or Cmd with it writes the entry.
+    if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault();
+      el("cardDiaryForm").requestSubmit();
+    }
+  });
+  el("cardDiaryCancel").addEventListener("click", () => {
+    // The line is emptied first, so that the save that follows writes the other fields and leaves
+    // the entry being corrected as it was.
+    _resetDiaryLine();
+    _saveCard();
+    _fillCard();
+  });
   el("cardChecklistForm").addEventListener("submit", (event) => {
     event.preventDefault();
     const text = el("cardChecklistField").value.trim();
@@ -1275,6 +1536,9 @@ export function connect(handlers) {
     const id = cardId;
     if (cardId) _saveCard();
     cardId = null;
+    diaryFor = null;
+    diaryGone = null;
+    paneFor = null;
     // The board is redrawn by the save, so the card that had the focus is a detached node and the
     // dialog's own focus restore lands on the body. For somebody on a keyboard that meant starting
     // from the top of the page after every card.

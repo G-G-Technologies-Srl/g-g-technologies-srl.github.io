@@ -823,6 +823,8 @@ export function createTask(projectId, { title = "", status = null, end = null,
     pageUid: null,
     tags: [],
     checklist: [],
+    // What happened on it, day by day. See `diaryOf`.
+    diary: [],
     blockedBy: [],
     milestone,
     repeat: null,
@@ -969,6 +971,9 @@ function _nextOccurrence(task, status) {
     start: task.start ? addDays(task.start, shift) : null,
     end,
     checklist: (task.checklist || []).map((item) => ({ ...item, done: false })),
+    // The next occurrence starts with an empty diary: last Monday's phone call is a fact about last
+    // Monday's task, and copied forward it would read as done again.
+    diary: [],
     order: tasksOf(task.projectId).filter((one) => one.status === status).length,
     created: stamp,
     updated: stamp,
@@ -1318,6 +1323,215 @@ export function parentOf(taskRecord) {
 /** The tasks that are cards on the board: those without a live parent. */
 export function topTasksOf(projectId) {
   return tasksOf(projectId).filter((one) => !parentOf(one));
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  d i a r y
+// -----------------------------------------------------------------------------------------------------------------
+
+/**
+ * The diary of a task: what was done on it, day by day, in the words of whoever did it.
+ *
+ * **Why a list and not the notes.** The notes say what the task *is* — "call the supplier, ask for
+ * the B12 stand" — and they are rewritten as the task changes. The diary says what *happened*:
+ * "rang them, they will answer on Thursday", "sent the drawings". Written into the notes, the
+ * second kind of sentence pushes the first one out, and a week later nobody knows which line is the
+ * task and which one is a phone call. So each entry has its day, its words and, when the app knows
+ * it, the name of who wrote it — the name this copy signs the shared folder with.
+ *
+ * **The day is the person's, not the clock's.** It defaults to today and can be moved back: the
+ * call made on Friday and written down on Monday belongs to Friday. `created` is the clock's, and
+ * orders two entries of the same day.
+ *
+ * **What is not here**, on purpose: hours spent, a timer, automatic lines for every move on the
+ * board. A timer is a different tool, with a different pact; automatic lines bury the ones written
+ * by a person under the ones written by the program, and a diary nobody reads is worse than none.
+ *
+ * **Two people write in the same diary**, through the shared folder, and `merge` joins the two lists
+ * entry by entry instead of taking the newer task whole — otherwise the colleague's phone call would
+ * vanish because somebody else ticked a box on the same card. That is why a removed entry is not
+ * dropped from the list but left as a mark with no words (`removed`): a missing entry cannot tell
+ * "deleted here" from "not arrived yet", and guessing wrong either loses a line or brings back one
+ * that was thrown away.
+ */
+export const DIARY_MAX = 4000;          // characters in one entry: a long email, not a report
+
+const _ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/** The live entries of a task's diary, newest first: by day, then by the moment they were written. */
+export function diaryOf(taskRecord) {
+  const list = taskRecord && Array.isArray(taskRecord.diary) ? taskRecord.diary : [];
+  // The place in the list breaks the last tie: two entries written in the same millisecond — a
+  // paste, an import — are still in the order they arrived.
+  return list.map((entry, at) => ({ entry, at }))
+    .filter(({ entry }) => entry && !entry.removed && entry.text)
+    .sort((a, b) => String(b.entry.date).localeCompare(String(a.entry.date))
+      || String(b.entry.created).localeCompare(String(a.entry.created)) || b.at - a.at)
+    .map(({ entry }) => entry);
+}
+
+/**
+ * The meetings that took place and name this task with a "[[#uid]]" line in their notes.
+ *
+ * Read, not written: a meeting that discussed the task is a fact of the meeting's page, and a copy
+ * of it in the diary would be a second truth — the line deleted from the minutes would leave the
+ * diary saying the task was discussed. Appointments still ahead are left out: they have not
+ * happened yet, and a diary tells what has.
+ */
+export function meetingsNamingTask(taskRecord, now = new Date()) {
+  if (!taskRecord) return [];
+  const wanted = String(taskRecord.uid || taskRecord.id);
+  return meetingsOf(taskRecord.projectId).filter((meeting) => !meetingAhead(meeting, now)
+    && taskRefs(meeting.page.markdown || "").includes(wanted));
+}
+
+/**
+ * The diary as the card reads it: the entries written on the task and the meetings that named it,
+ * newest first. `{ kind: "entry", date, entry }` or `{ kind: "meeting", date, meeting }`. On the
+ * same day the meeting comes after the entries: what was written about it usually follows it.
+ */
+export function diaryTimeline(taskRecord, now = new Date()) {
+  const out = diaryOf(taskRecord).map((entry) => ({ kind: "entry", date: entry.date, entry }));
+  for (const meeting of meetingsNamingTask(taskRecord, now)) out.push({ kind: "meeting", date: meeting.date, meeting });
+  // Stable: the entries keep their own order, and a meeting slides behind those of its day.
+  return out.map((one, at) => ({ one, at }))
+    .sort((a, b) => String(b.one.date).localeCompare(String(a.one.date))
+      || (a.one.kind === b.one.kind ? a.at - b.at : a.one.kind === "entry" ? -1 : 1))
+    .map(({ one }) => one);
+}
+
+/** The newest entry, or null: what the card on the board says about the diary. */
+export function lastDiaryEntry(taskRecord) {
+  return diaryOf(taskRecord)[0] || null;
+}
+
+/**
+ * One more entry. Empty words write nothing; a day that is not a day becomes today.
+ * Returns `{ entry, step }`, or null when there was nothing to write.
+ */
+export function addDiaryEntry(taskId, { text = "", date = null, by = "" } = {}) {
+  const task = tasks.get(taskId);
+  const clean = _diaryText(text);
+  if (!task || !clean) return null;
+  const entry = {
+    id: _id(),
+    date: _diaryDay(date),
+    text: clean,
+    by: String(by || "").trim().slice(0, 80),
+    created: _now(),
+    edited: null,
+  };
+  const step = _updateTask(taskId, { diary: [...(task.diary || []), entry] });
+  return { entry, step };
+}
+
+/**
+ * New words or a new day for one entry. The author stays the one who wrote it: correcting a typo in
+ * a colleague's line does not make it yours. Emptying the words removes the entry.
+ */
+export function updateDiaryEntry(taskId, entryId, { text, date } = {}) {
+  const task = tasks.get(taskId);
+  const list = task && Array.isArray(task.diary) ? task.diary : [];
+  const at = list.findIndex((entry) => entry && entry.id === entryId && !entry.removed);
+  if (at < 0) return null;
+  const was = list[at];
+  const words = text === undefined ? was.text : _diaryText(text);
+  if (!words) return removeDiaryEntry(taskId, entryId);
+  const day = date === undefined ? was.date : _diaryDay(date);
+  if (words === was.text && day === was.date) return null;
+  const next = [...list];
+  next[at] = { ...was, text: words, date: day, edited: _now() };
+  return _updateTask(taskId, { diary: next });
+}
+
+/** The entry leaves the diary, and only a mark with its id stays behind. See `diaryOf`. */
+export function removeDiaryEntry(taskId, entryId) {
+  const task = tasks.get(taskId);
+  const list = task && Array.isArray(task.diary) ? task.diary : [];
+  const at = list.findIndex((entry) => entry && entry.id === entryId && !entry.removed);
+  if (at < 0) return null;
+  const next = [...list];
+  // The words go: a removed line that kept them would still travel in every copy of the project.
+  next[at] = { id: list[at].id, created: list[at].created, removed: _now() };
+  return _updateTask(taskId, { diary: next });
+}
+
+/**
+ * A removed entry back in its place, words, day and author as they were.
+ *
+ * Not an undo of the removal: the undo puts back the whole task as it was, and whatever was changed
+ * on the card since — a date, a title — would go with it. And the entry comes back with a fresh
+ * `edited`, so that it wins over the removal mark if that mark has already reached the shared
+ * folder: putting a line back is a later gesture than taking it away.
+ */
+export function restoreDiaryEntry(taskId, entry) {
+  const task = tasks.get(taskId);
+  const list = task && Array.isArray(task.diary) ? task.diary : [];
+  if (!entry || !entry.id || !_diaryText(entry.text)) return null;
+  const at = list.findIndex((one) => one && one.id === entry.id);
+  if (at >= 0 && !list[at].removed) return null;
+  // Strictly later than the removal, even within the same millisecond: an equal stamp would leave
+  // the merge to pick one of the two by the order it reads them.
+  const removed = at >= 0 ? String(list[at].removed || "") : "";
+  let stamp = _now();
+  if (removed && stamp <= removed) stamp = new Date(new Date(removed).getTime() + 1).toISOString();
+  const back = { ...entry, edited: stamp };
+  delete back.removed;
+  const next = at >= 0 ? list.map((one, i) => (i === at ? back : one)) : [...list, back];
+  return _updateTask(taskId, { diary: next });
+}
+
+/**
+ * Two diaries of the same task, joined entry by entry: what either side wrote stays, and for an
+ * entry both sides have, the later gesture wins — written, corrected or removed.
+ */
+export function mergeDiary(mine = [], theirs = []) {
+  const stampOf = (entry) => String(entry.removed || entry.edited || entry.created || "");
+  const byId = new Map();
+  for (const entry of [...cleanDiary(mine), ...cleanDiary(theirs)]) {
+    const known = byId.get(entry.id);
+    if (!known || stampOf(entry) > stampOf(known)) byId.set(entry.id, entry);
+  }
+  // In the order they were written, which is the order a list grows in: two copies that agree
+  // compare equal, and a merge that brought nothing does not look like a change.
+  return [...byId.values()].sort((a, b) => String(a.created || "").localeCompare(String(b.created || ""))
+    || String(a.id).localeCompare(String(b.id)));
+}
+
+/**
+ * A diary as it may arrive from a file — written by this app, by an older one, or by hand — rebuilt
+ * entry by entry with the fields an entry has, and nothing else. Built, not stripped: a field added
+ * to a file outside does not ride into the store on the back of a diary entry.
+ */
+export function cleanDiary(list) {
+  const out = [];
+  for (const entry of Array.isArray(list) ? list : []) {
+    if (!entry || typeof entry !== "object" || typeof entry.id !== "string" || !entry.id) continue;
+    const created = typeof entry.created === "string" ? entry.created : "";
+    if (entry.removed) {
+      out.push({ id: entry.id, created, removed: String(entry.removed) });
+      continue;
+    }
+    const text = _diaryText(entry.text);
+    if (!text) continue;
+    out.push({
+      id: entry.id,
+      date: _diaryDay(entry.date),
+      text,
+      by: String(entry.by || "").trim().slice(0, 80),
+      created,
+      edited: typeof entry.edited === "string" ? entry.edited : null,
+    });
+  }
+  return out;
+}
+
+function _diaryText(text) {
+  return String(text || "").replace(/\r\n?/g, "\n").trim().slice(0, DIARY_MAX);
+}
+
+function _diaryDay(date) {
+  return typeof date === "string" && _ISO_DAY.test(date) ? date : todayISO();
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -2168,6 +2382,10 @@ export const NOW_DAYS = 3;
 // How far back a meeting without notes is still worth a reminder. Past two weeks nobody remembers
 // what was said, and a reminder to write it down asks for something that can no longer be done.
 export const NOTES_DAYS = 14;
+// How long a task that has started can go without a word before it counts as stopped. Ten days is
+// two working weeks: less, and every task waiting for an answer would be on the list; more, and
+// the list says it when there is nothing left to save.
+export const STALE_DAYS = 10;
 
 /** Whether a task is held up by another one that is still open. */
 export function isBlocked(taskRecord) {
@@ -2215,11 +2433,40 @@ export function setDecision(pageId, index, choice, { day = todayISO(), keys } = 
 }
 
 /**
+ * The last day something happened on a task: its newest diary entry, the last meeting that named
+ * it, or the last change to the card, whichever is later. Null for a record with no stamp at all.
+ */
+export function quietSince(taskRecord, now = new Date()) {
+  if (!taskRecord) return null;
+  const last = lastDiaryEntry(taskRecord);
+  const touched = String(taskRecord.updated || taskRecord.created || "").slice(0, 10);
+  // A meeting that named it is news too: the task was talked about, whoever wrote the line.
+  const met = meetingsNamingTask(taskRecord, now).at(-1);
+  const days = [touched, last ? last.date : "", met ? met.date : ""].filter(Boolean).sort();
+  return days.at(-1) || null;
+}
+
+/**
+ * The diary of a whole project: the entries of every live task, newest first, each with its task.
+ * What the project page shows under «Diario», and the answer to "what happened this week".
+ */
+export function projectDiary(projectId, { limit = Infinity } = {}) {
+  const out = [];
+  for (const task of tasksOf(projectId)) {
+    for (const entry of diaryOf(task)) out.push({ task, entry });
+  }
+  out.sort((a, b) => String(b.entry.date).localeCompare(String(a.entry.date))
+    || String(b.entry.created).localeCompare(String(a.entry.created)));
+  return out.slice(0, limit);
+}
+
+/**
  * What needs doing now, in the order it needs doing.
  *
  * The order is fixed and it is the argument: what is late, what is due today, the decisions whose
  * day is close, the high-priority tasks of the next three days, the tasks held up by another one
- * within the week, and the meetings of the last two weeks whose notes are still empty. A task
+ * within the week, the tasks begun and silent for `STALE_DAYS` (see `quietSince`), and the meetings
+ * of the last two weeks whose notes are still empty. A task
  * appears once, under the first reason that applies, and carries the others as marks — a late task
  * that is also blocked is late, with a lock.
  *
@@ -2232,7 +2479,7 @@ export function attentionOf(projectId, now = new Date()) {
   const week = addDays(today, SOON_DAYS);
   const open = tasksOf(projectId).filter((one) => !isDone(one));
   const seen = new Set();
-  const groups = { late: [], today: [], decide: [], high: [], blocked: [], notes: [] };
+  const groups = { late: [], today: [], decide: [], high: [], blocked: [], stalled: [], notes: [] };
   const mark = (task) => ({ high: task.priority === "high", blocked: isBlocked(task) });
 
   const byEnd = (a, b) => String(a.end).localeCompare(String(b.end));
@@ -2259,6 +2506,23 @@ export function attentionOf(projectId, now = new Date()) {
     groups.blocked.push({ kind: "blocked", date: task.end, task, ...mark(task) });
     seen.add(task.id);
   }
+  // Started and gone quiet: in a column between the first and the finishing one — somebody moved
+  // it there, so somebody is on it — and nothing written in its diary, nor changed on the card, for
+  // `STALE_DAYS`. The quietest first. A task in the first column is not stopped, it is not begun.
+  const stale = addDays(today, -STALE_DAYS);
+  const columns = (projects.get(projectId) || {}).columns || [];
+  const first = columns[0] ? columns[0].id : null;
+  const quiet = [];
+  for (const task of open) {
+    if (seen.has(task.id) || task.status === first) continue;
+    const since = quietSince(task, now);
+    if (since && since < stale) quiet.push({ task, since });
+  }
+  for (const { task, since } of quiet.sort((a, b) => a.since.localeCompare(b.since))) {
+    groups.stalled.push({ kind: "stalled", date: since, task, ...mark(task) });
+    seen.add(task.id);
+  }
+
   const since = addDays(today, -NOTES_DAYS);
   for (const meeting of [...meetingsOf(projectId)].reverse()) {
     if (meeting.date < since || meetingAhead(meeting, now)) continue;
@@ -2503,14 +2767,17 @@ export function search(query) {
     for (const task of tasksOf(project.id)) {
       const titleAt = _plain(task.title).indexOf(needle);
       const notesAt = _plain(task.notes).indexOf(needle);
-      if (titleAt < 0 && notesAt < 0) continue;
+      // The diary counts as the notes do: «who was it that promised the drawings for Thursday?»
+      // is a search for a line written there.
+      const said = notesAt < 0 ? diaryOf(task).find((entry) => _plain(entry.text).includes(needle)) : null;
+      if (titleAt < 0 && notesAt < 0 && !said) continue;
       hits.push({
         kind: "kindTask",
         id: task.id,
         title: task.title,
         project,
         rank: titleAt >= 0 ? 1 : 3,
-        snippet: notesAt >= 0 ? _snippet(task.notes, needle) : "",
+        snippet: notesAt >= 0 ? _snippet(task.notes, needle) : said ? _snippet(said.text, needle) : "",
         done: isDone(task),
       });
     }
@@ -2693,6 +2960,7 @@ export function adopt({ project: incoming, pages: incomingPages = [], tasks: inc
       status: known.has(one.status) ? one.status : columns[0].id,
       assigneeUid: one.assigneeUid || _personFromName(projectId, assignee, { here: !fromOutside }),
       blockedBy: (one.blockedBy || []).map((old) => taskIds.get(old)).filter(Boolean),
+      diary: cleanDiary(one.diary),
       trashedAt: one.trashedAt || null,
     });
   }
@@ -2718,7 +2986,9 @@ export function adopt({ project: incoming, pages: incomingPages = [], tasks: inc
  *  - a record here and not in the file is **left alone** — the file may be older, or partial;
  *  - a record in both: for a **task** the newer `updated` wins, whole — the bin included, since
  *    binning moves `updated`. Tasks are small and the case «two people changed the same card in
- *    the same minute» is settled by looking at it;
+ *    the same minute» is settled by looking at it. **The diary is the exception**: it is joined
+ *    entry by entry (`mergeDiary`), because two people write in it and neither line is the other's
+ *    to throw away;
  *  - for a **page** the same, unless this copy was changed *after `exported`* and the two texts
  *    differ. Then nobody's paragraph is thrown away: this copy stays, with a fresh stamp so that
  *    it is the newer of the two everywhere, and the file's version comes in beside it, titled
@@ -2899,6 +3169,7 @@ export function merge({ project: incoming, pages: incomingPages = [], tasks: inc
         parentId,
         status,
         blockedBy,
+        diary: cleanDiary(one.diary),
         trashedAt: one.trashedAt || null,
         updated: one.updated || stamp,
       });
@@ -2906,7 +3177,17 @@ export function merge({ project: incoming, pages: incomingPages = [], tasks: inc
       counts.added += 1;
       continue;
     }
-    if (!newer(one, here)) continue;
+    // The diary is joined, never taken whole: two people write in it, and the newer card would
+    // otherwise throw away the other one's entries. See `diaryOf`.
+    const diary = mergeDiary(here.diary, one.diary);
+    if (!newer(one, here)) {
+      if (JSON.stringify(diary) === JSON.stringify(mergeDiary(here.diary))) continue;
+      before.tasks.push(_copy(here));
+      // A fresh stamp, so that the other side takes this card — with both diaries — back.
+      _put("task", { ...here, diary, updated: stamp });
+      counts.updated += 1;
+      continue;
+    }
     before.tasks.push(_copy(here));
     _put("task", {
       ...here,
@@ -2917,6 +3198,7 @@ export function merge({ project: incoming, pages: incomingPages = [], tasks: inc
       parentId,
       status,
       blockedBy,
+      diary,
       trashedAt: one.trashedAt || null,
     });
     counts.updated += 1;

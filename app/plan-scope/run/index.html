@@ -344,6 +344,20 @@
             <ul class="list met-list" id="metList"></ul>
             <p class="note" id="metEmpty" data-t="metEmpty" hidden></p>
           </section>
+
+          <!-- The project's diary: the entries of every task, newest first. Each task keeps its own
+               diary; this is where they are read together, as the answer to «what happened this
+               week». Hidden until there is an entry: an empty panel would be a form nobody asked to
+               fill. -->
+          <section class="card panel-diary" id="panelDiary" hidden>
+            <div class="panel-head">
+              <h2 data-t="diaryTitle"></h2>
+              <span class="spacer"></span>
+              <span class="meta" id="diaryCount"></span>
+            </div>
+            <ul class="list diary-list" id="diaryList"></ul>
+            <button type="button" id="diaryMore" class="link small" hidden></button>
+          </section>
         </div>
 
         <aside class="project-side">
@@ -983,6 +997,16 @@
   <label for="cardTitleField" id="cardTitleLabel"></label>
   <input type="text" id="cardTitleField" maxlength="160" autocomplete="off">
 
+  <!-- Two tabs under the title, which stays in sight on both: what the task is, and what has
+       happened on it. With the diary at the bottom of the details the card had grown to six screens
+       on a phone, and «Chiudi» sat under all of them. The diary tab carries its count, so a task
+       with a story says so before anyone opens it. -->
+  <div class="card-tabs" role="tablist" id="cardTabs">
+    <button type="button" role="tab" id="cardTabDetails" aria-controls="cardDetailsPane" data-t="cardTabDetails"></button>
+    <button type="button" role="tab" id="cardTabDiary" aria-controls="cardDiaryPane"></button>
+  </div>
+
+  <div id="cardDetailsPane" role="tabpanel" aria-labelledby="cardTabDetails">
   <label for="cardNotes" id="cardNotesLabel"></label>
   <textarea id="cardNotes" rows="3"></textarea>
 
@@ -1053,6 +1077,12 @@
 
   <!-- Le due liste, vicine e con scritta la differenza. Prima una era qui e l'altra dietro «Mostra
        altro», e due cose che si somigliano tanto, separate così, si sceglievano a caso. -->
+  <!-- An empty list is one button, not a heading, a sentence, a field and a button: two of them
+       were eight lines of a form on every card, most of which never get a sub-task. -->
+  <div class="row card-open-lists">
+    <button type="button" id="cardSubtasksOpen" class="ghost small" data-t="cardSubtasksOpen"></button>
+    <button type="button" id="cardChecklistOpen" class="ghost small" data-t="cardChecklistOpen"></button>
+  </div>
   <span class="field-label" id="cardSubtasksLabel" data-t="cardSubtasks"></span>
   <p class="note" id="cardListsHint" data-t="cardListsHint"></p>
   <ul class="list" id="cardSubtasks"></ul>
@@ -1068,6 +1098,7 @@
     <input type="text" id="cardChecklistField" maxlength="160" autocomplete="off">
     <button type="submit" id="cardChecklistAdd"></button>
   </form>
+
 
   <!-- Into a calendar, as a copy: a file every calendar opens, and a link that opens Google
        Calendar already filled in. Shown only when there is a date to put there. -->
@@ -1093,6 +1124,27 @@
 
     <label for="cardBlocked" id="cardBlockedLabel"></label>
     <select id="cardBlocked"></select>
+  </div>
+  </div>
+
+  <div id="cardDiaryPane" role="tabpanel" aria-labelledby="cardTabDiary" hidden>
+    <!-- The diary: what happened on this task, day by day. The notes say what the task is and get
+         rewritten; the diary says what was done, and grows. The line to write in sits on top of the
+         list, open and already dated today, because noting a phone call has to cost less than
+         putting it off. Ctrl/Cmd+Enter writes it; «Chiudi» writes it too, so nothing typed is lost.
+         Correcting an entry reuses the same line, which says which of the two it is doing. -->
+    <p class="note" id="cardDiaryHint" data-t="cardDiaryHint"></p>
+    <form class="card-diary-form" id="cardDiaryForm">
+      <textarea id="cardDiaryField" rows="2" maxlength="4000"
+                data-t-label="diaryPlaceholder" data-t-placeholder="diaryPlaceholder"></textarea>
+      <div class="row">
+        <input type="date" id="cardDiaryDate" data-t-label="diaryDate">
+        <span class="spacer"></span>
+        <button type="button" id="cardDiaryCancel" class="ghost small" data-t="diaryCancel" hidden></button>
+        <button type="submit" id="cardDiaryAdd"></button>
+      </div>
+    </form>
+    <ul class="list card-diary" id="cardDiary"></ul>
   </div>
 
   <div class="row card-foot">

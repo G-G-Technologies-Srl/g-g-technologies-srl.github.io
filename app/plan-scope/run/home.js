@@ -764,6 +764,8 @@ export function paintLog(entries) {
 // How many rows "Cosa serve adesso" shows before "and n more". Past five the panel becomes the plan
 // all over again, and on a project in trouble it would push everything else below the fold.
 const NOW_ROWS = 5;
+// The project's diary: six entries, then «Tutte le n voci». A week of a busy project fits.
+const DIARY_ROWS = 6;
 
 // The weeks panel. Four weeks where there is room; two on a narrow screen, where four would give a
 // day twelve pixels and every label would sit on its neighbour.
@@ -777,6 +779,8 @@ const WEEKS_HEAD = 30;                  // the row of week labels above them
 // project. Opening another project closes it again.
 let nowOpen = false;
 let nowFor = null;
+let diaryOpen = false;
+let diaryFor = null;
 let weeksFor = null;                    // the project the weeks panel was last drawn for
 
 /** A day with its weekday, the way a diary says it: "lun 29 set". */
@@ -968,6 +972,7 @@ function _nowRow(item, today, origins) {
   else if (item.kind === "today") when = t("dueToday");
   else if (item.kind === "decide") when = tf("byDay", { date: shortDate(item.date) });
   else if (item.kind === "notes") when = _distance(item.date, today);
+  else if (item.kind === "stalled") when = tf("nowStalledSince", { when: _distance(item.date, today) });
   else when = _dayName(item.date);
   const lateish = item.kind === "late" || (item.kind === "decide" && item.late);
   row.append(node("span", `now-when${lateish ? " late" : ""}${item.kind === "today" ? " today" : ""}`, when));
@@ -993,9 +998,15 @@ function _nowRow(item, today, origins) {
     const waits = (task.blockedBy || []).map((id) => model.task(id)).filter((one) => one && !model.isDone(one));
     const from = origins.get(task.uid);
     if (item.blocked && waits.length) row.append(node("span", "now-ctx", tf("nowWaits", { title: waits[0].title })));
+    else if (item.kind === "stalled") row.append(node("span", "now-ctx", _stalledContext(task)));
     else if (from) row.append(node("span", "now-ctx", tf("nowFrom", { title: from.title || t("pageUntitled") })));
     const who = model.assigneeName(task);
     if (who) row.append(_face(who));
+    // A stopped task is unstuck by a word, or by finding out why: the button opens the card on
+    // its diary, where either is written.
+    if (item.kind === "stalled") {
+      row.append(button("small", t("nowStalledWrite"), () => on.openTask(task.id, { diary: true })));
+    }
   } else if (item.kind === "decide") {
     row.append(node("span", "now-ctx", tf("nowFrom", { title: item.decision.page.title || t("pageUntitled") })));
     row.append(button("small", t("decideDo"), () => on.decide(item.decision)));
@@ -1020,6 +1031,7 @@ function _paintNow(id, today) {
     decide: () => tf("nowCountDecide", { n: num(counts.decide, 0) }),
     high: () => tf("nowCountHigh", { n: num(counts.high, 0) }),
     blocked: () => count(counts.blocked, "nowCountBlockedOne", "nowCountBlocked"),
+    stalled: () => count(counts.stalled, "nowCountStalledOne", "nowCountStalled"),
     notes: () => count(counts.notes, "nowCountNotesOne", "nowCountNotes"),
   };
   fill(el("nowSum"), Object.keys(words).filter((key) => counts[key]).map((key) => {
@@ -1448,6 +1460,67 @@ function _paintDocs(id) {
   el("pagesEmpty").hidden = docs.length > 0;
 }
 
+/** Where a stopped task stands: in which column, and the last thing its diary says. */
+function _stalledContext(task) {
+  const project = model.project(task.projectId);
+  const column = project ? project.columns.find((one) => one.id === task.status) : null;
+  const last = model.lastDiaryEntry(task);
+  if (last) return tf("nowStalledLast", { text: _excerpt(last.text, 60) });
+  return column ? tf("nowStalledIn", { column: column.name }) : "";
+}
+
+/** A diary entry cut to a length, on a word edge. */
+function _excerpt(text, max) {
+  const flat = String(text || "").replace(/\s+/g, " ").trim();
+  if (flat.length <= max) return flat;
+  const cut = flat.slice(0, max);
+  const edge = cut.lastIndexOf(" ");
+  return `${(edge > max * 0.6 ? cut.slice(0, edge) : cut).trimEnd()}…`;
+}
+
+/** A diary day as people say it: today, yesterday, a weekday and date. */
+function _diaryDay(iso, today) {
+  if (iso === today) return t("diaryToday");
+  if (iso === model.addDays(today, -1)) return t("diaryYesterday");
+  return iso.slice(0, 4) === today.slice(0, 4) ? _dayName(iso) : longDate(iso);
+}
+
+/**
+ * Diario: what was written on the project's tasks, newest first. The task's title opens its card on
+ * the diary, so that answering a line — or adding the next one — is one click away from reading it.
+ */
+function _paintDiary(id, today) {
+  if (diaryFor !== id) {
+    diaryFor = id;
+    diaryOpen = false;
+  }
+  const all = model.projectDiary(id);
+  el("panelDiary").hidden = all.length === 0;
+  if (!all.length) return;
+  el("diaryCount").textContent = count(all.length, "diaryCountOne", "diaryCount");
+  const shown = diaryOpen ? all : all.slice(0, DIARY_ROWS);
+  fill(el("diaryList"), shown.map(({ task, entry }) => {
+    const row = node("li", "row-item diary-row");
+    row.append(node("span", "when", _diaryDay(entry.date, today)));
+    const body = node("div", "diary-body");
+    const head = node("div", "diary-line");
+    head.append(button("link", task.title || t("taskUntitled"), () => on.openTask(task.id, { diary: true }),
+      { label: tf("diaryOpenTask", { title: task.title || t("taskUntitled") }) }));
+    if (entry.by) head.append(node("span", "meta", entry.by));
+    body.append(head);
+    body.append(node("p", "diary-said", entry.text));
+    row.append(body);
+    return row;
+  }));
+  const more = el("diaryMore");
+  more.hidden = all.length <= DIARY_ROWS;
+  more.textContent = diaryOpen ? t("diaryLess") : tf("diaryAll", { n: num(all.length, 0) });
+  more.onclick = () => {
+    diaryOpen = !diaryOpen;
+    _paintDiary(id, today);
+  };
+}
+
 /** Ultime modifiche: the stamps of the records, newest first. */
 function _paintChanges(id) {
   const project = model.project(id);
@@ -1725,6 +1798,7 @@ export function paintProject(id) {
   _paintPlan(id, today);
   _paintWeeks(id, today);
   _paintMet(id, today);
+  _paintDiary(id, today);
   _paintNext(id, today);
   _paintDecisions(id, today);
   _paintWaiting(id, today);

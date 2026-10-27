@@ -139,6 +139,16 @@ export function build({ t, model, columns }) {
     });
   }
 
+  // The same card has a diary: three entries over the last days, by two people, so that both the
+  // order and the signature show. Written in the past on purpose — a diary that starts today looks
+  // like a feature nobody has used yet.
+  if (invite) {
+    for (const [key, days, who] of [["demoDiary1", -6, "demoWho"], ["demoDiary2", -3, "demoWho2"],
+      ["demoDiary3", -1, "demoWho"]]) {
+      model.addDiaryEntry(invite.id, { text: t(key), date: model.addDays(today, days), by: t(who) });
+    }
+  }
+
   // Altre due carte con qualcosa sopra, perché una sola su sedici si legge come un caso. Una aspetta
   // un'altra — è la cosa che il modello chiama `blockedBy` e che sulla carta si legge «aspetta …» —
   // e una ha la priorità bassa, che esiste e non si vedeva da nessuna parte.

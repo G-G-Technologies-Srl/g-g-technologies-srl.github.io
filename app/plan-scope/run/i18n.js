@@ -429,6 +429,18 @@ const IT = {
   nowCountHigh: "{n} a priorità alta",
   nowCountBlockedOne: "1 bloccata",
   nowCountBlocked: "{n} bloccate",
+  nowCountStalledOne: "1 ferma",
+  nowCountStalled: "{n} ferme",
+  nowStalledSince: "ferma, {when}",
+  nowStalledIn: "In «{column}», senza notizie da allora",
+  nowStalledLast: "Ultima voce: «{text}»",
+  nowStalledWrite: "Aggiungi una voce",
+  diaryTitle: "Diario",
+  diaryCountOne: "una voce",
+  diaryCount: "{n} voci",
+  diaryOpenTask: "Apri il diario di «{title}»",
+  diaryAll: "Tutte le {n} voci",
+  diaryLess: "Mostra meno",
   nowCountNotesOne: "1 nota da scrivere",
   nowCountNotes: "{n} note da scrivere",
   nowMore: "Altre {n} ↓",
@@ -610,6 +622,33 @@ const IT = {
     + "compare sulla bacheca. Una voce di checklist resta qui dentro.",
   checklistAdd: "Aggiungi una voce",
   checklistPlaceholder: "Cosa manca?",
+  // Il diario di un'attività: che cosa è stato fatto, giorno per giorno. «Diario» qui ha un solo
+  // significato — l'agenda si chiama «Agenda» — e lo tiene in tutta l'app.
+  cardDiary: "Diario",
+  cardTabDetails: "Dettagli",
+  cardTabDiaryN: "Diario · {n}",
+  cardSubtasksOpen: "+ Sottoattività",
+  cardChecklistOpen: "+ Checklist",
+  cardDiaryHint: "Qui si annota quello che è stato fatto, giorno per giorno: una telefonata, un "
+    + "invio, una risposta. Le note descrivono l'attività; il diario racconta che cosa è successo.",
+  diaryPlaceholder: "Che cosa è stato fatto?",
+  diaryDate: "Giorno della voce",
+  diaryAdd: "Aggiungi al diario",
+  diarySave: "Salva la correzione",
+  diaryCancel: "Annulla la correzione",
+  diaryEdit: "Correggi la voce",
+  diaryRemove: "Togli la voce",
+  diaryRemoved: "La voce è stata tolta dal diario.",
+  diaryPutBack: "Rimetti",
+  diaryToday: "Oggi",
+  diaryYesterday: "Ieri",
+  diaryMetIn: "Citata nell'incontro",
+  diaryLast: "Ultima voce del diario: {date}",
+  tipDiary: "Diario: {n} voci",
+  tipDiaryOne: "Diario: una voce",
+  tipDiaryLast: "{date}: «{text}»",
+  tipDiaryLastBy: "{date}, {by}: «{text}»",
+  tipDiaryWrite: "Aggiungi una voce",
   showMore: "Mostra altro",
   showLess: "Mostra meno",
   priorityNone: "Nessuna",
@@ -929,6 +968,11 @@ const IT = {
     + "## Sottoattività e checklist\n\nNella scheda, «Sottoattività» sono attività vere — con "
     + "data e responsabile — appese a questa, e compaiono rientrate sotto la carta. La "
     + "**checklist** è per le cose piccole; una voce che cresce ha «Diventa attività».\n\n"
+    + "## Il diario\n\nNella linguetta «Diario» della scheda, il **diario** dell'attività raccoglie quello che è "
+    + "stato fatto: una voce per volta, con il suo giorno — oggi, o un giorno passato — e il nome "
+    + "di chi l'ha scritta, quando l'app lo conosce dalla cartella condivisa. Ctrl+Invio, o ⌘+Invio, "
+    + "aggiunge la voce. Sulla carta il segno ✎ riporta il giorno dell'ultima voce. Con la cartella "
+    + "condivisa le voci delle due persone si sommano, e nessuna sostituisce l'altra.\n\n"
     + "## Quello che si ripete\n\n«Si ripete», nella scheda sotto «Mostra altro», con un «Fino al» "
     + "facoltativo: spuntata una, nasce la prossima con la data avanzata. Sulla carta la riconosce "
     + "il segno ↻ accanto al titolo. Per smettere: «Chiudi la serie» nel messaggio che compare "
@@ -1223,6 +1267,9 @@ const IT = {
   demoWho: "Giulia",
   demoCheck1: "Ripulire l'elenco dei contatti",
   demoCheck2: "Scrivere il testo dell'invito",
+  demoDiary1: "Esportato l'elenco dei contatti dal gestionale: 412 indirizzi, 37 senza email.",
+  demoDiary2: "Il grafico ha mandato la bozza dell'invito. Manca il logo dello sponsor.",
+  demoDiary3: "Ricevuto il logo dallo sponsor e girato al grafico.",
   demoPage: "Come funziona questa app",
   demoBody: "Questo progetto è già pieno, per mostrare com'è fatto. **Quando non serve più, si "
     + "sposta nel cestino**: il comando è in fondo alla schermata del progetto.\n\n"
@@ -1668,6 +1715,18 @@ const EN = {
   nowCountHigh: "{n} high priority",
   nowCountBlockedOne: "1 blocked",
   nowCountBlocked: "{n} blocked",
+  nowCountStalledOne: "1 gone quiet",
+  nowCountStalled: "{n} gone quiet",
+  nowStalledSince: "quiet, {when}",
+  nowStalledIn: "In “{column}”, with no news since",
+  nowStalledLast: "Last entry: “{text}”",
+  nowStalledWrite: "Add an entry",
+  diaryTitle: "Log",
+  diaryCountOne: "one entry",
+  diaryCount: "{n} entries",
+  diaryOpenTask: "Open the log of “{title}”",
+  diaryAll: "All {n} entries",
+  diaryLess: "Show fewer",
   nowCountNotesOne: "1 note to write",
   nowCountNotes: "{n} notes to write",
   nowMore: "{n} more ↓",
@@ -1844,6 +1903,33 @@ const EN = {
     + "board. A checklist item stays in here.",
   checklistAdd: "Add an item",
   checklistPlaceholder: "What is left?",
+  // A task's log. Not «Diary»: in British English that word is already the agenda, and one word
+  // keeps one meaning across the app.
+  cardDiary: "Log",
+  cardTabDetails: "Details",
+  cardTabDiaryN: "Log · {n}",
+  cardSubtasksOpen: "+ Sub-task",
+  cardChecklistOpen: "+ Checklist",
+  cardDiaryHint: "This is where what has been done is written down, day by day: a call, a delivery, "
+    + "an answer. The notes describe the task; the log tells what has happened.",
+  diaryPlaceholder: "What has been done?",
+  diaryDate: "Day of the entry",
+  diaryAdd: "Add to the log",
+  diarySave: "Save the correction",
+  diaryCancel: "Cancel the correction",
+  diaryEdit: "Correct the entry",
+  diaryRemove: "Remove the entry",
+  diaryRemoved: "The entry has been removed from the log.",
+  diaryPutBack: "Put it back",
+  diaryToday: "Today",
+  diaryYesterday: "Yesterday",
+  diaryMetIn: "Mentioned in the meeting",
+  diaryLast: "Last log entry: {date}",
+  tipDiary: "Log: {n} entries",
+  tipDiaryOne: "Log: one entry",
+  tipDiaryLast: "{date}: “{text}”",
+  tipDiaryLastBy: "{date}, {by}: “{text}”",
+  tipDiaryWrite: "Add an entry",
   showMore: "Show more",
   showLess: "Show less",
   priorityNone: "None",
@@ -2160,6 +2246,11 @@ const EN = {
     + "## Sub-tasks and checklists\n\nOn the card, “Sub-tasks” are real tasks — with a date and an "
     + "owner — hanging from this one, and they show indented under the card. The **checklist** is for "
     + "the small things; an item that grows has “Make it a task”.\n\n"
+    + "## The log\n\nIn the card's “Log” tab, the task's **log** keeps what has been done: one entry at "
+    + "a time, with its day — today, or a day already past — and the name of whoever wrote it, when "
+    + "the app knows it from the shared folder. Ctrl+Enter, or ⌘+Enter, adds the entry. On the card "
+    + "the ✎ mark gives the day of the latest entry. With a shared folder the two people's entries "
+    + "add up, and neither replaces the other.\n\n"
     + "## What repeats\n\n“Repeats”, on the card under “Show more”, with an optional “Until”: tick "
     + "one, and the next is born with the date moved on. On the board it has the ↻ mark beside its "
     + "title. To stop it: “Close the series” in the message that appears after the tick, or “End the "
@@ -2448,6 +2539,9 @@ const EN = {
   demoWho: "Giulia",
   demoCheck1: "Tidy up the contact list",
   demoCheck2: "Write the wording of the invitation",
+  demoDiary1: "Exported the contact list from the management system: 412 addresses, 37 without an email.",
+  demoDiary2: "The designer sent the draft of the invitation. The sponsor's logo is missing.",
+  demoDiary3: "Received the logo from the sponsor and passed it on to the designer.",
   demoPage: "How this app works",
   demoBody: "This project is already full so you can see how it fits together. **When it is no "
     + "longer needed, it goes to the bin**: the command is at the bottom of the project "

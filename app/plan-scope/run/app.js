@@ -2529,14 +2529,14 @@ function _wire() {
     openProject: (id) => _openProject(id),
     openPage: (id) => _openPage(id),
     openPerson: (id) => _openPerson(id),
-    openTask: (id) => {
+    openTask: (id, options = {}) => {
       const task = model.task(id);
       if (!task) return;
       // The card opens over the task's project, so that closing it lands somewhere that makes
       // sense — and so that the dashboard behind it is the one the card repaints.
       if (view !== "plan" || projectId !== task.projectId) _openProject(task.projectId);
       plan.setProject(task.projectId);
-      plan.openCard(id);
+      plan.openCard(id, options);
     },
   });
 
@@ -2840,11 +2840,11 @@ function _wire() {
     openPage: (id) => _openPage(id),
     // Dal documento alla sua attività: la stessa scheda che apre la bacheca, perché è lì che
     // stanno la scadenza, chi se ne occupa e la colonna.
-    openTask: (id) => {
+    openTask: (id, options = {}) => {
       const task = model.task(id);
       if (!task) return;
       plan.setProject(task.projectId);
-      plan.openCard(id);
+      plan.openCard(id, options);
     },
     // Un nome nella testa della pagina porta alla sua scheda; se la scheda non c'è, alla rubrica.
     openPerson: (name) => {
@@ -3320,13 +3320,13 @@ function _connect() {
     },
     // A deadline on the dashboard opens its card, the same card the board opens: one place to
     // change a task, wherever it was seen. The card repaints the dashboard when it closes.
-    openTask: (id) => {
+    openTask: (id, options = {}) => {
       // The task's own project, not the one on screen: from the archive's «Oggi» list there is no
       // current project at all.
       const task = model.task(id);
       if (!task) return;
       plan.setProject(task.projectId);
-      plan.openCard(id);
+      plan.openCard(id, options);
     },
     restore: async (kind, id) => {
       if (kind === "kindProject") model.restoreProject(id);
@@ -3388,6 +3388,9 @@ function _connect() {
     // Un giorno del calendario scelto per un appuntamento: la maschera, con quel giorno già dentro.
     newMeeting: (target, day) => _askMeeting(target, "", { day }),
     trashMeeting: (meeting) => _trashMeeting(meeting),
+    // The signature of a diary entry: the name this copy uses in the shared folder, once it is a
+    // real one. The made-up «user_…» stays off the entries, where it would read as somebody else.
+    who: () => (sync.whoIsMadeUp() ? "" : sync.who() || ""),
     // The board writes the address bar and nothing else: what it changed is already in the model.
     // Unless the card was opened from somewhere else — the dashboard's deadlines — in which case
     // that screen is the one that has to catch up.

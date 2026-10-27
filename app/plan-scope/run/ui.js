@@ -115,9 +115,37 @@ export function snack(text, { action = null, onAction = null, second = null, onS
     button.onclick = null;
   }
 
+  _placeSnack(strip);
   strip.hidden = false;
   clearTimeout(snackTimer);
   snackTimer = setTimeout(hideSnack, SNACK_MS);
+}
+
+/**
+ * The strip goes where it can be pressed.
+ *
+ * A modal `<dialog>` makes the rest of the page inert: a strip left in the body showed «Annulla»
+ * behind the open card, where the eye could not see it and the mouse could not reach it — exactly
+ * after the gestures made *in* the card («Stacca» the document, «Termina la serie»). So while a
+ * modal is open the strip moves inside it, and comes back to the body when that dialog closes,
+ * with whatever time it had left.
+ */
+function _placeSnack(strip) {
+  let open = null;
+  try {
+    open = document.querySelector("dialog:modal");
+  } catch {
+    // A browser without `:modal`: the last open dialog is the one on top.
+    open = [...document.querySelectorAll("dialog[open]")].pop() || null;
+  }
+  const home = open || document.body;
+  if (strip.parentNode !== home) home.append(strip);
+  if (open && !open.dataset.snackHome) {
+    open.dataset.snackHome = "1";
+    open.addEventListener("close", () => {
+      if (strip.parentNode === open) document.body.append(strip);
+    });
+  }
 }
 
 export function hideSnack() {

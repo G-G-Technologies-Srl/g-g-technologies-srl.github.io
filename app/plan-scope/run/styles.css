@@ -1156,13 +1156,33 @@ html[data-theme="light"] { --high: #b42318; --decide: #6b3fb3; --wait: #3d5c99; 
   .panel-waiting { order: 5; }
   .panel-weeks { order: 6; }
   .panel-met { order: 7; }
-  .panel-people { order: 8; }
-  .panel-docs { order: 9; }
-  .panel-changes { order: 10; }
-  .panel-log { order: 11; }
+  .panel-diary { order: 8; }
+  .panel-people { order: 9; }
+  .panel-docs { order: 10; }
+  .panel-changes { order: 11; }
+  .panel-log { order: 12; }
 }
 
 .project-cols .panel-head .meta { color: var(--faint); font-size: 12.5px; }
+
+/* The project's diary: the day on the left, as in the other panels; the task and who wrote it on
+   one line, the words under them — three lines at most, the rest is on the card. */
+.diary-row { align-items: flex-start; flex-wrap: nowrap; }
+.diary-row > .when { min-width: 74px; padding-top: 2px; }
+.diary-body { flex: 1 1 auto; min-width: 0; }
+.diary-line { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.diary-said {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+#diaryMore { margin-top: 6px; }
 .project-cols .row-item .meta { margin-left: 0; text-align: left; }
 .project-cols .card h2 { margin-bottom: 10px; }
 
@@ -2036,9 +2056,50 @@ html[data-theme="light"] { --high: #b42318; --decide: #6b3fb3; --wait: #3d5c99; 
 
 #taskCard input[type="text"], #taskCard textarea, #taskCard select { width: 100%; }
 
+/* The card's two tabs, drawn as the view switch of the plan is: pills on one line, the pressed one
+   filled. Under the title, so that the task's name stays in sight on both. */
+.card-tabs { display: flex; gap: 6px; margin: 14px 0 2px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+.card-tabs button {
+  font: inherit;
+  font-size: 13.5px;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--muted);
+  padding: 5px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.card-tabs button:hover { color: var(--text); background: var(--panel-2); }
+.card-tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.card-tabs button.on { color: var(--accent-text); background: var(--accent-soft); border-color: var(--accent-soft); font-weight: 600; }
+.card-open-lists { gap: 8px; margin-top: 12px; }
+
+/* The diary: the line to write in, then the entries. Each entry is its day and author on one
+   line and its words under them, kept as they were typed — line breaks included — because a
+   diary entry is a short note and not a title. */
+.card-diary-form { display: grid; gap: 6px; }
+.card-diary-form .row { align-items: center; gap: 8px; flex-wrap: wrap; }
+.card-diary-form input[type="date"] { width: auto; flex: none; }
+.card-diary { margin-top: 6px; }
+.card-diary .diary-entry { display: block; padding: 6px 0; }
+.card-diary .diary-entry.is-editing { opacity: 0.55; }
+.diary-head { display: flex; align-items: center; gap: 8px; }
+.diary-day { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.diary-by { font-size: 12px; color: var(--faint); }
+.diary-text { margin: 2px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.45; }
+.diary-gone { color: var(--faint); }
+/* A meeting in the diary is read from its page, not written here: the same row, quieter, and its
+   title is the way to the minutes. */
+.diary-meeting .diary-text { color: var(--muted); }
+.diary-meeting .diary-text button.link { font: inherit; padding: 0; }
+
 .card-dates { display: flex; gap: 12px; }
 
-.card-dates > div { flex: 1 1 0; }
+.card-dates > div { flex: 1 1 0; min-width: 0; }
+
+/* A date field has an intrinsic width of its own — the browser's calendar button included — and on
+   a phone two of them side by side pushed the second past the card's edge. */
+.card-dates input { width: 100%; min-width: 0; }
 
 .check-line { display: flex !important; align-items: center; gap: 8px; }
 
