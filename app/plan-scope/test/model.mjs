@@ -2188,6 +2188,52 @@ test("il diario di un'attività legge gli incontri che l'hanno citata, e non que
   assert.equal(model.attentionOf(fiera.id, now).counts.stalled, 0);
 });
 
+test("cosa è successo: voci e modifiche insieme, e la voce non ritorna come modifica della carta", () => {
+  const fiera = project();
+  const task = model.createTask(fiera.id, { title: "Stand" });
+  const page = model.createPage(fiera.id, { title: "Brief" });
+  model.addDiaryEntry(task.id, { text: "Chiamato" });
+  const kinds = model.recentActivity(fiera.id).map((one) => [one.kind, one.kind === "entry" ? one.entry.text : one.record.title]);
+  assert.ok(kinds.some(([kind, what]) => kind === "entry" && what === "Chiamato"));
+  assert.ok(kinds.some(([kind, what]) => kind === "page" && what === "Brief"));
+  assert.ok(!kinds.some(([kind]) => kind === "task"), "la carta si è mossa per la voce: non è una modifica da dire");
+  // A real change to the card, later, is said.
+  const record = model.task(task.id);
+  record.updated = new Date(Date.parse(record.updated) + 60000).toISOString();
+  assert.ok(model.recentActivity(fiera.id).some((one) => one.kind === "task"));
+  assert.equal(model.recentActivity(fiera.id, { limit: 1 }).length, 1);
+  assert.ok(page);
+});
+
+test("le voci di un periodo, per attività: prima l'attività più recente, dentro in ordine di tempo", () => {
+  const fiera = project();
+  const a = model.createTask(fiera.id, { title: "Stand" });
+  const b = model.createTask(fiera.id, { title: "Catering" });
+  model.addDiaryEntry(a.id, { text: "Uno", date: "2026-10-20" });
+  model.addDiaryEntry(a.id, { text: "Due", date: "2026-10-22" });
+  model.addDiaryEntry(b.id, { text: "Tre", date: "2026-10-23" });
+  model.addDiaryEntry(b.id, { text: "Fuori", date: "2026-10-10" });
+  assert.deepEqual(model.diaryBetween(fiera.id, "2026-10-19", "2026-10-25")
+    .map((one) => [one.task.title, one.entries.map((entry) => entry.text)]),
+    [["Catering", ["Tre"]], ["Stand", ["Uno", "Due"]]]);
+});
+
+test("le voci che citano una persona con @, e il nome che cambia anche nel diario", () => {
+  const fiera = project();
+  const task = model.createTask(fiera.id, { title: "Stand" });
+  const marco = model.createContact({ name: "Marco" });
+  model.createContact({ name: "Marcolino" });
+  model.addDiaryEntry(task.id, { text: "Sentito @Marco per le misure", date: "2026-10-20" });
+  model.addDiaryEntry(task.id, { text: "Scritto a @Marcolino", date: "2026-10-21" });
+  model.addDiaryEntry(task.id, { text: "Marco senza chiocciola", date: "2026-10-22" });
+  assert.deepEqual(model.diaryAbout(marco.uid || marco.id).map((one) => one.entry.text), ["Sentito @Marco per le misure"],
+    "solo la menzione intera, non il nome che ne contiene un altro");
+  model.updateContact(marco.id, { name: "Marco Rossi" });
+  assert.deepEqual(model.diaryAbout(marco.uid || marco.id).map((one) => one.entry.text), ["Sentito @Marco Rossi per le misure"]);
+  model.undo();
+  assert.ok(model.diaryOf(model.task(task.id)).some((one) => one.text === "Sentito @Marco per le misure"), "annulla rimette anche il diario");
+});
+
 test("il diario del progetto: le voci di tutte le attività, la più recente in cima", () => {
   const fiera = project();
   const a = model.createTask(fiera.id, { title: "Stand" });

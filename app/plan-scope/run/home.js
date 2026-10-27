@@ -14,7 +14,7 @@ import * as model from "biz/plan-model.js";
 import { boxes } from "biz/plan-markdown.js";
 import { glance, glanceOf, colorDot, editProps, addProp, isColor } from "./pages.js";
 import { t, tf, num } from "./i18n.js";
-import { el, node, button, fill, shortDate, longDate, bytes, tagHue, count, locale } from "./ui.js";
+import { el, node, button, fill, shortDate, longDate, bytes, tagHue, count, locale, snack, linkedText } from "./ui.js";
 import { tip } from "./tip.js";
 
 /**
@@ -764,8 +764,9 @@ export function paintLog(entries) {
 // How many rows "Cosa serve adesso" shows before "and n more". Past five the panel becomes the plan
 // all over again, and on a project in trouble it would push everything else below the fold.
 const NOW_ROWS = 5;
-// The project's diary: six entries, then «Tutte le n voci». A week of a busy project fits.
-const DIARY_ROWS = 6;
+// «Cosa è successo»: eight lines, then everything. A week of a busy project fits.
+const DIARY_ROWS = 8;
+const DIARY_CHANGES = 3;
 
 // The weeks panel. Four weeks where there is room; two on a narrow screen, where four would give a
 // day twelve pixels and every label would sit on its neighbour.
@@ -1486,20 +1487,35 @@ function _diaryDay(iso, today) {
 }
 
 /**
- * Diario: what was written on the project's tasks, newest first. The task's title opens its card on
- * the diary, so that answering a line — or adding the next one — is one click away from reading it.
+ * Cosa è successo: the diary entries of the project's tasks and the changes to its pages and cards,
+ * newest first (`recentActivity`). An entry opens its task on the diary; a change opens what changed.
+ * Eight lines, then everything.
  */
 function _paintDiary(id, today) {
   if (diaryFor !== id) {
     diaryFor = id;
     diaryOpen = false;
   }
-  const all = model.projectDiary(id);
+  const project = model.project(id);
+  const all = model.recentActivity(id);
+  const entries = all.filter((one) => one.kind === "entry").length;
   el("panelDiary").hidden = all.length === 0;
   if (!all.length) return;
-  el("diaryCount").textContent = count(all.length, "diaryCountOne", "diaryCount");
-  const shown = diaryOpen ? all : all.slice(0, DIARY_ROWS);
-  fill(el("diaryList"), shown.map(({ task, entry }) => {
+  el("diaryCount").textContent = entries ? count(entries, "diaryCountOne", "diaryCount") : "";
+  el("diaryWeek").hidden = model.diaryBetween(id, model.addDays(today, -6), today).length === 0;
+  el("diaryWeek").onclick = () => _copyWeek(id, today);
+  // The entries are what people wrote, and they lead: in the first view the changes take three
+  // lines at most, however many there are — a morning of editing pages would otherwise push the
+  // whole diary below «Mostra tutto».
+  let changes = 0;
+  const shown = diaryOpen ? all : all.filter((one) => {
+    if (one.kind === "entry") return true;
+    changes += 1;
+    return changes <= DIARY_CHANGES;
+  }).slice(0, DIARY_ROWS);
+  fill(el("diaryList"), shown.map((one) => {
+    if (one.kind !== "entry") return _changeRow(one, project);
+    const { task, entry } = one;
     const row = node("li", "row-item diary-row");
     row.append(node("span", "when", _diaryDay(entry.date, today)));
     const body = node("div", "diary-body");
@@ -1508,39 +1524,94 @@ function _paintDiary(id, today) {
       { label: tf("diaryOpenTask", { title: task.title || t("taskUntitled") }) }));
     if (entry.by) head.append(node("span", "meta", entry.by));
     body.append(head);
-    body.append(node("p", "diary-said", entry.text));
+    const said = node("p", "diary-said");
+    said.append(...linkedText(entry.text, {
+      names: [...model.peopleOf(id).map((one) => one.name), ...model.liveContacts().map((one) => one.name)],
+      pageOf: (title) => model.pagesOf(id).find((one) => (one.title || "").trim().toLowerCase() === title.toLowerCase()) || null,
+      openPerson: (name) => {
+        const person = model.contactByName(name);
+        if (person) on.openPerson(person.id);
+      },
+      openPage: (page) => on.openPage(page.id),
+    }));
+    body.append(said);
     row.append(body);
     return row;
   }));
   const more = el("diaryMore");
-  more.hidden = all.length <= DIARY_ROWS;
-  more.textContent = diaryOpen ? t("diaryLess") : tf("diaryAll", { n: num(all.length, 0) });
+  more.hidden = !diaryOpen && shown.length === all.length;
+  more.textContent = diaryOpen ? t("diaryLess") : tf("diaryAll", { n: num(all.length - shown.length, 0) });
   more.onclick = () => {
     diaryOpen = !diaryOpen;
     _paintDiary(id, today);
   };
 }
 
-/** Ultime modifiche: the stamps of the records, newest first. */
-function _paintChanges(id) {
+/** A change to a page or a card, as a line of «Cosa è successo». */
+function _changeRow(one, project) {
+  const row = node("li", "row-item diary-row is-change");
+  row.append(node("span", "when", _ago(one.at)));
+  const body = node("div", "diary-body");
+  const line = node("div", "diary-line");
+  if (one.kind === "page") {
+    line.append(document.createTextNode(t(one.made ? "changePageNew" : "changePage")));
+    line.append(button("link", one.record.title || t("pageUntitled"), () => on.openPage(one.record.id)));
+  } else {
+    line.append(button("link", one.record.title || t("taskUntitled"), () => on.openTask(one.record.id)));
+    const column = project ? project.columns.find((c) => c.id === one.record.status) : null;
+    if (column) line.append(node("span", "meta", column.name));
+  }
+  body.append(line);
+  row.append(body);
+  return row;
+}
+
+/** An entry as an email reads it: «[[Brief]]» is «Brief», «@Sara» is «Sara». */
+function _plainText(text) {
+  return String(text || "")
+    .replace(/\[\[([^\]#][^\]]*)\]\]/g, "$1")
+    .replace(/(^|[\s(\[])@(?=[\p{L}\p{N}])/gu, "$1");
+}
+
+/**
+ * The last seven days of the diary as text, on the clipboard: the project and the period, then each
+ * task with its entries in the order they happened, then the meetings held. Plain text, because it
+ * goes into an email or a report, where Markdown marks would be noise.
+ */
+async function _copyWeek(id, today) {
   const project = model.project(id);
-  const changes = model.recentChanges(id, { limit: 5 });
-  el("panelChanges").hidden = changes.length === 0;
-  fill(el("changeList"), changes.map((one) => {
-    const row = node("li", "row-item change-row");
-    row.append(node("span", "when", _ago(one.at)));
-    const text = node("span", "grow");
-    if (one.kind === "page") {
-      text.append(document.createTextNode(`${t(one.made ? "changePageNew" : "changePage")} `));
-      text.append(button("link", one.record.title || t("pageUntitled"), () => on.openPage(one.record.id)));
-    } else {
-      const column = project.columns.find((c) => c.id === one.record.status);
-      text.append(button("link", one.record.title || t("taskUntitled"), () => on.openTask(one.record.id)));
-      if (column) text.append(document.createTextNode(` · ${column.name}`));
+  const from = model.addDays(today, -6);
+  const lines = [`${project ? project.name : ""} — ${tf("weekRange", { from: shortDate(from), to: shortDate(today) })}`, ""];
+  for (const { task, entries } of model.diaryBetween(id, from, today)) {
+    lines.push(task.title || t("taskUntitled"));
+    for (const entry of entries) {
+      const who = entry.by ? `, ${entry.by}` : "";
+      const [first, ...rest] = _plainText(entry.text).split("\n");
+      lines.push(`- ${shortDate(entry.date)}${who}: ${first}`);
+      for (const more of rest) lines.push(`  ${more}`);
     }
-    row.append(text);
-    return row;
-  }));
+    lines.push("");
+  }
+  const met = model.meetingsOf(id).filter((one) => one.date >= from && one.date <= today && !model.meetingAhead(one));
+  if (met.length) {
+    lines.push(t("weekMeetings"));
+    for (const one of met) {
+      // «Incontro con Marco (con Marco)» said the name twice: the title often carries it already.
+      const title = one.page.title || "";
+      const named = one.with && title.toLowerCase().includes(one.with.toLowerCase());
+      const withWhom = one.with && !named ? ` (${tf("weekWith", { name: one.with })})` : "";
+      lines.push(`- ${shortDate(one.date)}: ${one.page.title || t("pageUntitled")}${withWhom}`);
+    }
+    lines.push("");
+  }
+  const text = `${lines.join("\n").trimEnd()}\n`;
+  try {
+    await navigator.clipboard.writeText(text);
+    snack(t("weekCopied"));
+  } catch (ignored) {
+    snack(t("copyFailed"));
+  }
+  return text;
 }
 
 /** Only the weeks panel, again: its width decides how many days it holds. */
@@ -1803,7 +1874,6 @@ export function paintProject(id) {
   _paintDecisions(id, today);
   _paintWaiting(id, today);
   _paintDocs(id);
-  _paintChanges(id);
 
   // Said once per project and then never again: it is an invitation, and an invitation that
   // repeats is a nag. It goes quiet the moment the project has been exported once.

@@ -178,22 +178,81 @@ test("la pagina del progetto: nessun pannello resta senza contenuto e senza fras
   assert.ok(byId("planLegend").children.length > 0, "la legenda del piano");
 });
 
-test("la pagina del progetto: il diario raccoglie le voci delle attività, e il titolo apre la scheda sul diario", () => {
+test("la pagina del progetto: «Cosa è successo» unisce il diario e le modifiche, senza doppioni", () => {
   const { fair } = _scene();
   home.paintProject(fair.id);
-  assert.equal(byId("panelDiary").hidden, false, "il dimostrativo ha tre voci");
-  const rows = byId("diaryList").querySelectorAll("li");
-  assert.equal(rows.length, 3);
-  assert.equal(rows[0].querySelector(".diary-said").textContent, t("demoDiary3"), "la più recente in cima");
-  assert.equal(rows[0].querySelector(".when").textContent, t("diaryYesterday"));
-  assert.equal(byId("diaryCount").textContent, "3 voci");
-  rows[0].querySelector("button").click();
+  assert.equal(byId("panelDiary").hidden, false);
+  assert.equal(document.getElementById("panelChanges"), null, "«Ultime modifiche» non c'è più");
+  const entries = byId("diaryList").querySelectorAll("li").filter((one) => !one.classList.contains("is-change"));
+  // Writing an entry moves the task's stamp: that echo must not come back as a change of the card.
+  const echoes = byId("diaryList").querySelectorAll("li.is-change")
+    .filter((one) => one.textContent.includes(t("ev_invite")));
+  assert.equal(echoes.length, 0, "la carta delle voci non ricompare come modifica");
+  assert.ok(entries.length >= 1);
+  assert.equal(entries[0].querySelector(".diary-said").textContent, t("demoDiary3"), "la più recente in cima");
+  assert.equal(byId("diaryCount").textContent, "3 voci nel diario");
+  entries[0].querySelector("button").click();
   assert.equal(asked[0][0], "openTask");
   assert.deepEqual(asked[0][2], { diary: true });
 
   const empty = model.createProject({ name: "Vuoto" });
   home.paintProject(empty.id);
-  assert.equal(byId("panelDiary").hidden, true, "senza voci il riquadro non c'è");
+  assert.equal(byId("panelDiary").hidden, true, "un progetto vuoto non ha niente da raccontare");
+});
+
+test("nelle voci @persona e [[pagina]] sono collegamenti, e solo se esistono", () => {
+  const { fair } = _scene();
+  home.paintProject(fair.id);
+  diaryOpenAll();
+  const links = byId("diaryList").querySelectorAll("button.inline-link");
+  const sara = links.find((one) => one.textContent === "@Sara");
+  const brief = links.find((one) => one.textContent === t("ev_page_brief"));
+  assert.ok(sara, "@Sara è un collegamento");
+  assert.ok(brief, "[[Brief]] è un collegamento, senza parentesi");
+  sara.click();
+  assert.equal(asked.at(-1)[0], "openPerson");
+  assert.equal(asked.at(-1)[1], model.contactByName("Sara").id);
+  brief.click();
+  assert.equal(asked.at(-1)[0], "openPage");
+  // An unknown name and a page that does not exist stay as text.
+  const task = model.tasksOf(fair.id)[0];
+  model.addDiaryEntry(task.id, { text: "Scritto a @Nessuno, vedi [[Pagina che non c'è]]" });
+  home.paintProject(fair.id);
+  const row = byId("diaryList").querySelectorAll("li").find((one) => one.textContent.includes("@Nessuno"));
+  assert.ok(row);
+  assert.equal(row.querySelectorAll("button.inline-link").length, 0);
+  assert.ok(row.textContent.includes("[[Pagina che non c'è]]"));
+});
+
+/** «Mostra tutto», when the panel has more than it shows. */
+function diaryOpenAll() {
+  const more = byId("diaryMore");
+  if (!more.hidden && more.onclick) more.onclick();
+}
+
+test("«Copia la settimana» mette negli appunti le voci per attività e gli incontri avuti", async () => {
+  const { fair } = _scene();
+  let copied = null;
+  Object.defineProperty(globalThis.navigator, "clipboard", {
+    value: { writeText: async (text) => { copied = text; } }, configurable: true,
+  });
+  home.paintProject(fair.id);
+  const week = byId("diaryWeek");
+  assert.equal(week.hidden, false, "le voci del dimostrativo sono degli ultimi sette giorni");
+  await week.onclick();
+  assert.ok(copied, "il testo è stato copiato");
+  const lines = copied.split("\n");
+  assert.match(lines[0], /^Fiera|^.+ — cosa è stato fatto dal /);
+  const at = lines.indexOf(t("ev_invite"));
+  assert.ok(at > 0, "l'attività fa da titolo");
+  assert.match(lines[at + 1], new RegExp(`Giulia: ${t("demoDiary1").slice(0, 20)}`), "le voci in ordine di tempo");
+  assert.match(lines[at + 3], new RegExp(t("demoDiary3").slice(0, 20)));
+  assert.ok(lines.includes(t("weekMeetings")), "gli incontri della settimana");
+  assert.ok(!copied.includes("[["), "le parentesi delle pagine non vanno in una mail");
+  assert.ok(!copied.includes("@Sara"), "la chiocciola nemmeno");
+  assert.ok(copied.includes("Sara"));
+  assert.ok(!/con Marco \(con Marco\)/i.test(copied), "il nome già nel titolo non si ripete");
+  assert.equal(byId("snack").hidden, false);
 });
 
 test("la pagina del progetto: un'attività cominciata e silenziosa compare come ferma, con il comando per il diario", () => {

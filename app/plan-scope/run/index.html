@@ -18,12 +18,15 @@
   // Before the first paint, on purpose. Applied from a module it would run after the stylesheet,
   // and the app would flash dark and then jump to light at every start.
   try {
+    // A saved choice is written on the element whichever it is: dark too. Written only when it was
+    // light, choosing dark on a system set to light came back light at every start — the bare
+    // element falls to the media query, which is there for a first visit and nothing else.
     var saved = localStorage.getItem('gg-theme');
-    var light = saved ? saved === 'light'
-      : window.matchMedia('(prefers-color-scheme: light)').matches;
-    if (light) {
-      document.documentElement.setAttribute('data-theme', 'light');
-      document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f6f8fc');
+    var theme = saved === 'light' || saved === 'dark' ? saved
+      : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : null);
+    if (theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      document.querySelector('meta[name="theme-color"]').setAttribute('content', theme === 'light' ? '#f6f8fc' : '#0d1220');
     }
   } catch (ignored) {}
 </script>
@@ -345,18 +348,19 @@
             <p class="note" id="metEmpty" data-t="metEmpty" hidden></p>
           </section>
 
-          <!-- The project's diary: the entries of every task, newest first. Each task keeps its own
-               diary; this is where they are read together, as the answer to «what happened this
-               week». Hidden until there is an entry: an empty panel would be a form nobody asked to
-               fill. -->
+          <!-- What has happened: the diary entries of every task and, quieter, the changes to pages
+               and tasks, newest first — one panel where there were two («Diario» and «Ultime
+               modifiche») telling the same week twice. «Copia la settimana» puts the last seven
+               days of the diary on the clipboard, grouped by task, ready for an email or a report. -->
           <section class="card panel-diary" id="panelDiary" hidden>
             <div class="panel-head">
               <h2 data-t="diaryTitle"></h2>
-              <span class="spacer"></span>
               <span class="meta" id="diaryCount"></span>
+              <span class="spacer"></span>
+              <button type="button" id="diaryWeek" class="link small" data-t="weekCopy" hidden></button>
             </div>
             <ul class="list diary-list" id="diaryList"></ul>
-            <button type="button" id="diaryMore" class="link small" hidden></button>
+            <button type="button" id="diaryMore" class="link small now-more" hidden></button>
           </section>
         </div>
 
@@ -431,12 +435,6 @@
             </form>
           </section>
 
-          <section class="card panel-changes" id="panelChanges" hidden>
-            <div class="panel-head">
-              <h2 data-t="changesTitle"></h2>
-            </div>
-            <ul class="list" id="changeList"></ul>
-          </section>
 
           <!-- What the shared folder brought in, and when: the strip says it once and goes; whoever
                comes back after lunch reads it here. Only on a shared project, only once there is
@@ -814,6 +812,14 @@
         <ul class="list" id="personMeetings"></ul>
       </div>
 
+      <!-- The diary entries that name the person with «@»: «Sentito @Marco, misure entro giovedì»
+           is about Marco as much as a meeting is, and it was written on a task, where his card
+           could not see it. -->
+      <div class="card" id="personDiaryCard" hidden>
+        <h2 data-t="personDiaryTitle"></h2>
+        <ul class="list" id="personDiary"></ul>
+      </div>
+
       <div class="card">
         <h2 data-t="personTasksTitle"></h2>
         <p class="note" id="personTasksNone" data-t="personTasksNone" hidden></p>
@@ -991,11 +997,14 @@
 <!-- The card of one task. Six fields are visible; the rest — priority, tags, checklist, what it
      waits for — sit behind «Mostra altro», because a form with fourteen boxes is how a tool for
      planning becomes a thing people avoid opening. -->
-<dialog id="taskCard">
-  <h2 data-t="cardTitle"></h2>
-
-  <label for="cardTitleField" id="cardTitleLabel"></label>
-  <input type="text" id="cardTitleField" maxlength="160" autocomplete="off">
+<!-- The title is the heading: a heading «Attività» over a label «Titolo» over the field said the
+     same thing three times, and the card only said *which* task it was on the third line. The field
+     looks like a heading and becomes a field under the pointer or the focus; the label stays for a
+     screen reader, and the dialog keeps its name. -->
+<dialog id="taskCard" data-t-label="cardTitle">
+  <label for="cardTitleField" id="cardTitleLabel" class="sr-only"></label>
+  <input type="text" id="cardTitleField" class="card-heading" maxlength="160" autocomplete="off"
+         data-t-placeholder="cardTitlePlaceholder">
 
   <!-- Two tabs under the title, which stays in sight on both: what the task is, and what has
        happened on it. With the diary at the bottom of the details the card had grown to six screens

@@ -1020,6 +1020,25 @@ function _paintPerson() {
   el("personMeetingsNone").textContent = tf("personMeetingsNone", { name: person.name || "" });
   fill(el("personMeetings"), met.map(aboutRow));
 
+  const said = model.diaryAbout(uid);
+  el("personDiaryCard").hidden = said.length === 0;
+  fill(el("personDiary"), said.slice(0, 20).map(({ task, project, entry }) => {
+    const row = node("li", "row-item diary-row");
+    row.append(node("span", "when", shortDate(entry.date)));
+    const body = node("div", "diary-body");
+    const line = node("div", "diary-line");
+    line.append(button("link", task.title || t("taskUntitled"), () => {
+      plan.setProject(project.id);
+      _openPlan(project.id);
+      plan.openCard(task.id, { diary: true });
+    }));
+    line.append(node("span", "meta", [project.name || t("projectUntitled"), entry.by].filter(Boolean).join(" · ")));
+    body.append(line);
+    body.append(node("p", "diary-said", entry.text));
+    row.append(body);
+    return row;
+  }));
+
   const open = model.tasksOfContact(uid);
   el("personTasksNone").hidden = open.length > 0;
   fill(el("personTasks"), open.map(({ task, project }) => {
@@ -3280,6 +3299,8 @@ function _startingColumns() {
  */
 function _connect() {
   home.connect({
+    // A «@persona» in «Cosa è successo» opens the person's card.
+    openPerson: (id) => _openPerson(id),
     // Il filtro delle etichette cambia cosa si vede in «Progetti», e chi ha la stanza da mostrare
     // è l'app: la schermata chiede, e questa ridisegna.
     repaintHome: async () => home.paintHome(await db.room()),
@@ -3388,6 +3409,11 @@ function _connect() {
     // Un giorno del calendario scelto per un appuntamento: la maschera, con quel giorno già dentro.
     newMeeting: (target, day) => _askMeeting(target, "", { day }),
     trashMeeting: (meeting) => _trashMeeting(meeting),
+    // A «@persona» in a diary entry: the person's card, when the address book knows the name.
+    openPerson: (name) => {
+      const person = model.contactByName(name);
+      if (person) _openPerson(person.id);
+    },
     // The signature of a diary entry: the name this copy uses in the shared folder, once it is a
     // real one. The made-up «user_…» stays off the entries, where it would read as somebody else.
     who: () => (sync.whoIsMadeUp() ? "" : sync.who() || ""),

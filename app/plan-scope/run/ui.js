@@ -140,10 +140,21 @@ function _placeSnack(strip) {
   }
   const home = open || document.body;
   if (strip.parentNode !== home) home.append(strip);
+  // Inside a dialog the strip sits on the dialog's lower edge, above its foot — not on the window's,
+  // where it covered «Chiudi», the one button somebody reaches for after an undo.
+  strip.style.bottom = "";
+  if (open) {
+    const box = open.getBoundingClientRect();
+    const foot = open.querySelector(".card-foot");
+    const lift = (foot ? foot.getBoundingClientRect().height : 0) + 10;
+    strip.style.bottom = `${Math.max(12, Math.round(window.innerHeight - box.bottom + lift))}px`;
+  }
   if (open && !open.dataset.snackHome) {
     open.dataset.snackHome = "1";
     open.addEventListener("close", () => {
-      if (strip.parentNode === open) document.body.append(strip);
+      if (strip.parentNode !== open) return;
+      document.body.append(strip);
+      strip.style.bottom = "";
     });
   }
 }
@@ -299,6 +310,49 @@ export function longDate(iso) {
 }
 
 /** "1 pagina" / "3 pagine", and the same for tasks, images and days. */
+/**
+ * A line of text with its «@persona» and «[[pagina]]» made into links: the nodes to append.
+ *
+ * Only what exists becomes a link — a name among `names`, a title `pageOf` finds — and the rest
+ * stays as it was typed: an «@Luca» nobody knows is a word, not a promise that leads to an empty
+ * card. A page shows its title without the brackets, as the editor does; a person keeps the «@»,
+ * which is how the reader knows it was a mention and not a name in passing.
+ */
+export function linkedText(text, { names = [], pageOf = () => null, openPerson = null, openPage = null } = {}) {
+  const source = String(text || "");
+  const found = [];
+  if (openPage) {
+    for (const match of source.matchAll(/\[\[([^\]#][^\]]*)\]\]/g)) {
+      const page = pageOf(match[1].trim());
+      if (page) found.push({ at: match.index, end: match.index + match[0].length, label: match[1].trim(), run: () => openPage(page) });
+    }
+  }
+  const known = [...new Set(names.map((name) => String(name || "").trim()).filter(Boolean))]
+    .sort((a, b) => b.length - a.length);
+  if (openPerson && known.length) {
+    const escape = (word) => word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const pattern = new RegExp(`(^|[\\s(\\[])@(${known.map(escape).join("|")})(?![\\p{L}\\p{N}_])`, "giu");
+    for (const match of source.matchAll(pattern)) {
+      const at = match.index + match[1].length;
+      found.push({ at, end: at + 1 + match[2].length, label: `@${match[2]}`, run: () => openPerson(match[2]) });
+    }
+  }
+  found.sort((a, b) => a.at - b.at);
+  const out = [];
+  let cursor = 0;
+  for (const one of found) {
+    if (one.at < cursor) continue;
+    if (one.at > cursor) out.push(document.createTextNode(source.slice(cursor, one.at)));
+    out.push(button("link inline-link", one.label, (event) => {
+      event.stopPropagation();
+      one.run();
+    }));
+    cursor = one.end;
+  }
+  if (cursor < source.length) out.push(document.createTextNode(source.slice(cursor)));
+  return out;
+}
+
 export function count(n, one, many) {
   return n === 1 ? t(one) : tf(many, { n: num(n, 0) });
 }

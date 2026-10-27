@@ -229,6 +229,22 @@ function _renamePerson(person, wasCalled) {
       undo.push(_restoreTo("page", _copy(pageRecord)));
       _put("page", { ...pageRecord, markdown: next, updated: _now() });
     }
+    // And in the diaries: «Sentito @Marco» written last week is about the same person, and left
+    // with the old name it would stop showing on the card it belongs to.
+    for (const taskRecord of tasks.values()) {
+      const list = Array.isArray(taskRecord.diary) ? taskRecord.diary : [];
+      let changed = false;
+      const next = list.map((entry) => {
+        if (!entry || entry.removed || !entry.text) return entry;
+        const text = renameMention(entry.text, before, after);
+        if (text === entry.text) return entry;
+        changed = true;
+        return { ...entry, text, edited: _now() };
+      });
+      if (!changed) continue;
+      undo.push(_restoreTo("task", _copy(taskRecord)));
+      _put("task", { ...taskRecord, diary: next, updated: _now() });
+    }
   }
   return () => { for (const step of undo) step(); };
 }
@@ -1951,6 +1967,26 @@ export function lastContact(uid, now = new Date()) {
   return found ? found.date : "";
 }
 
+/**
+ * The diary entries that name a person with "@", across the live projects, newest first: what the
+ * person's card shows under the pages that name them. `{ task, project, entry }`.
+ */
+export function diaryAbout(uid) {
+  const person = contactByUid(uid);
+  const name = String(person ? person.name : "").trim();
+  if (!name) return [];
+  const out = [];
+  for (const one of liveProjects()) {
+    for (const task of tasksOf(one.id)) {
+      for (const entry of diaryOf(task)) {
+        if (mentions(entry.text, [name]).length) out.push({ task, project: one, entry });
+      }
+    }
+  }
+  return out.sort((a, b) => String(b.entry.date).localeCompare(String(a.entry.date))
+    || String(b.entry.created).localeCompare(String(a.entry.created)));
+}
+
 export function pagesAbout(uid) {
   const person = contactByUid(uid);
   const wanted = String(person ? person.name : "").trim().toLowerCase();
@@ -2680,6 +2716,62 @@ export function recentChanges(projectId, { limit = 5 } = {}) {
       made: one.record.updated === one.record.created }))
     .sort((a, b) => b.at.localeCompare(a.at))
     .slice(0, limit);
+}
+
+/**
+ * What has happened on a project, in one list: the diary entries, and the changes to pages and
+ * tasks, newest first. `{ kind: "entry", at, task, entry }` or `{ kind: "page" | "task", at, record,
+ * made }`.
+ *
+ * Two panels said the same thing twice — «Diario» from people, «Ultime modifiche» from the stamps —
+ * and the second repeated the first: writing an entry moves the task's own stamp, so every entry
+ * arrived again as «Stand · In corso, adesso». A task change that is the echo of a diary gesture
+ * (within two seconds of it) is left out; any later change to the card shows.
+ */
+export function recentActivity(projectId, { limit = Infinity } = {}) {
+  const out = projectDiary(projectId).map(({ task, entry }) => ({ kind: "entry", at: _entryMoment(entry), task, entry }));
+  for (const record of pagesOf(projectId)) {
+    out.push({ kind: "page", at: String(record.updated || record.created || ""), record, made: record.updated === record.created });
+  }
+  for (const record of tasksOf(projectId)) {
+    const at = String(record.updated || record.created || "");
+    if (_echoOfDiary(record, at)) continue;
+    out.push({ kind: "task", at, record, made: record.updated === record.created });
+  }
+  return out.filter((one) => one.at).sort((a, b) => b.at.localeCompare(a.at)).slice(0, limit);
+}
+
+/** When an entry happened, as a moment: the clock's, if it was written on its own day; noon of its day otherwise. */
+function _entryMoment(entry) {
+  const created = String(entry.created || "");
+  return created.slice(0, 10) === entry.date ? created : `${entry.date}T12:00:00.000Z`;
+}
+
+/** Whether a task's last stamp is the trace of a diary gesture rather than a change to the card. */
+function _echoOfDiary(taskRecord, at) {
+  const when = Date.parse(at);
+  if (!Number.isFinite(when)) return false;
+  for (const entry of Array.isArray(taskRecord.diary) ? taskRecord.diary : []) {
+    for (const stamp of [entry && entry.created, entry && entry.edited, entry && entry.removed]) {
+      const then = Date.parse(stamp || "");
+      if (Number.isFinite(then) && Math.abs(when - then) < 2000) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * The entries of a period, `from` to `to` included, grouped by task: the task with the newest entry
+ * first, and inside each task the entries in the order they happened — a report is read forwards.
+ */
+export function diaryBetween(projectId, from, to) {
+  const groups = new Map();
+  for (const { task, entry } of projectDiary(projectId)) {
+    if (entry.date < from || entry.date > to) continue;
+    if (!groups.has(task.id)) groups.set(task.id, { task, entries: [] });
+    groups.get(task.id).entries.push(entry);
+  }
+  return [...groups.values()].map((group) => ({ ...group, entries: group.entries.reverse() }));
 }
 
 // -----------------------------------------------------------------------------------------------------------------

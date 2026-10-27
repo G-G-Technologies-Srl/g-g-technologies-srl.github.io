@@ -1159,8 +1159,7 @@ html[data-theme="light"] { --high: #b42318; --decide: #6b3fb3; --wait: #3d5c99; 
   .panel-diary { order: 8; }
   .panel-people { order: 9; }
   .panel-docs { order: 10; }
-  .panel-changes { order: 11; }
-  .panel-log { order: 12; }
+  .panel-log { order: 11; }
 }
 
 .project-cols .panel-head .meta { color: var(--faint); font-size: 12.5px; }
@@ -1182,7 +1181,18 @@ html[data-theme="light"] { --high: #b42318; --decide: #6b3fb3; --wait: #3d5c99; 
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-#diaryMore { margin-top: 6px; }
+#diaryMore { margin-top: 6px; font-size: 13px; }
+.panel-diary .panel-head { flex-wrap: wrap; row-gap: 2px; }
+.panel-diary .panel-head h2, #diaryWeek { white-space: nowrap; }
+
+/* On a phone the head of the panel was three narrow columns, each on two lines. The count goes under
+   the title, where it reads as the title's subtitle, and the command keeps one line on the right. */
+@media (max-width: 560px) {
+  #diaryCount { order: 3; flex-basis: 100%; }
+}
+/* A change to a page or a card: a line, not an entry — the same column of days, in the faint voice. */
+.diary-row.is-change { color: var(--faint); font-size: 13px; }
+.diary-row.is-change .diary-line button.link { font-size: 13px; }
 .project-cols .row-item .meta { margin-left: 0; text-align: left; }
 .project-cols .card h2 { margin-bottom: 10px; }
 
@@ -1971,6 +1981,25 @@ html[data-theme="light"] { --high: #b42318; --decide: #6b3fb3; --wait: #3d5c99; 
 
 .tl-bar-name { pointer-events: none; }
 
+/* The diary under a bar: a dot for each day with an entry, on the thin strip between the bar and the
+   next row. Small, but a button: it says the day and the words, and opens the card on the diary. */
+.tl-diary {
+  position: absolute;
+  top: 26px;
+  width: 6px;
+  height: 6px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent-text);
+  opacity: 0.75;
+  cursor: pointer;
+}
+.tl-diary:hover { opacity: 1; transform: scale(1.4); }
+.tl-diary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; opacity: 1; }
+
 /* A bar of one day is twenty-six pixels: a name inside it is two letters and an ellipsis. Outside
    it reads, and being a child of the bar it follows the drag with nothing to keep in step. */
 .tl-bar.short { overflow: visible; padding: 0; }
@@ -2055,6 +2084,24 @@ html[data-theme="light"] { --high: #b42318; --decide: #6b3fb3; --wait: #3d5c99; 
 }
 
 #taskCard input[type="text"], #taskCard textarea, #taskCard select { width: 100%; }
+
+/* The title as the card's heading: the display face of the other dialogs' headings, no box until
+   the pointer or the focus asks for one — then the same field as the others, so that it is plain
+   it can be written in. */
+#taskCard input.card-heading {
+  font-family: var(--font-display);
+  font-size: 21px;
+  line-height: 1.25;
+  padding: 4px 8px;
+  margin: 0 0 0 -8px;
+  width: calc(100% + 8px);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+}
+#taskCard input.card-heading:hover { border-color: var(--border); }
+#taskCard input.card-heading:focus { background: var(--panel-2); border-color: var(--accent); outline: none; }
 
 /* The card's two tabs, drawn as the view switch of the plan is: pills on one line, the pressed one
    filled. Under the title, so that the task's name stays in sight on both. */

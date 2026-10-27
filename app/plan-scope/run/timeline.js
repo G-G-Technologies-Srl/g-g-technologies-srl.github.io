@@ -94,6 +94,11 @@ function _range(tasks) {
     if (meeting.date < first) first = meeting.date;
     if (meeting.date > last) last = meeting.date;
   }
+  // And back to the first diary entry: a task begun before its dates were set has its history
+  // there, and the dots that tell it would otherwise fall off the left edge.
+  for (const task of tasks) {
+    for (const entry of model.diaryOf(task)) if (entry.date < first) first = entry.date;
+  }
   return {
     first: model.addDays(first, -MARGIN_DAYS),
     last: model.addDays(last, MARGIN_DAYS),
@@ -251,6 +256,11 @@ function _row(task, range, today) {
   const track = node("div", "tl-track");
   track.style.width = `${_days(range.first, range.last) * DAY}px`;
 
+  // The diary under the bar: a dot on each day something was written. Where the dots stop, the
+  // work stopped — the same reading as «ferma» on the project page, but drawn, and along the
+  // whole span at once. Under the bar and not on it, so that dragging is never caught by a dot.
+  for (const dot of _diaryDots(task, range)) track.append(dot);
+
   const span = model.spanOf(task);
   if (!span) {
     track.append(node("span", "tl-nodate", t("tlNoDate")));
@@ -305,6 +315,31 @@ function _row(task, range, today) {
 
   row.append(track);
   return row;
+}
+
+/** One dot per day with diary entries, inside the range on screen; the click opens the card on the diary. */
+function _diaryDots(task, range) {
+  const byDay = new Map();
+  for (const entry of model.diaryOf(task)) {
+    if (entry.date < range.first || entry.date > range.last) continue;
+    if (!byDay.has(entry.date)) byDay.set(entry.date, []);
+    byDay.get(entry.date).push(entry);
+  }
+  return [...byDay].map(([day, entries]) => {
+    const dot = button("tl-diary", "", (event) => {
+      event.stopPropagation();
+      on.open(task.id, { diary: true });
+    });
+    dot.style.left = `${(model.daysBetween(range.first, day) || 0) * DAY + DAY / 2 - 3}px`;
+    const first = entries[entries.length - 1];
+    const words = first.text.length > 90 ? `${first.text.slice(0, 89).trimEnd()}…` : first.text;
+    const said = entries.length > 1
+      ? tf("tlDiaryMany", { date: shortDate(day), n: num(entries.length, 0), text: words })
+      : tf("tlDiaryOne", { date: shortDate(day), text: words });
+    dot.title = said;
+    dot.setAttribute("aria-label", said);
+    return dot;
+  });
 }
 
 /**

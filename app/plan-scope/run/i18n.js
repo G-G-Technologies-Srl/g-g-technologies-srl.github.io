@@ -435,12 +435,17 @@ const IT = {
   nowStalledIn: "In «{column}», senza notizie da allora",
   nowStalledLast: "Ultima voce: «{text}»",
   nowStalledWrite: "Aggiungi una voce",
-  diaryTitle: "Diario",
-  diaryCountOne: "una voce",
-  diaryCount: "{n} voci",
+  diaryTitle: "Cosa è successo",
+  diaryCountOne: "una voce nel diario",
+  diaryCount: "{n} voci nel diario",
   diaryOpenTask: "Apri il diario di «{title}»",
-  diaryAll: "Tutte le {n} voci",
-  diaryLess: "Mostra meno",
+  diaryAll: "Altre {n} ↓",
+  weekCopy: "Copia la settimana",
+  weekCopied: "Il riepilogo della settimana è negli appunti.",
+  weekRange: "cosa è stato fatto dal {from} al {to}",
+  weekMeetings: "Incontri",
+  weekWith: "con {name}",
+  diaryLess: "Solo le prime ↑",
   nowCountNotesOne: "1 nota da scrivere",
   nowCountNotes: "{n} note da scrivere",
   nowMore: "Altre {n} ↓",
@@ -494,7 +499,6 @@ const IT = {
   waitingTitle: "Aspettiamo",
   waitingHolds: "ferma {titles}",
   waitingDue: "prevista {date}",
-  changesTitle: "Ultime modifiche",
   changePage: "Pagina",
   changePageNew: "Nuova pagina",
   tickedDone: "«{name}» segnata come fatta",
@@ -602,6 +606,9 @@ const IT = {
   columnMoveOk: "Togli la colonna",
   taskMoved: "Attività spostata",
   cardTitle: "Attività",
+  cardTitlePlaceholder: "Titolo dell'attività",
+  countChecklist: "Checklist: spuntate {done} su {all}",
+  countSubtasks: "Sottoattività: completate {done} su {all}",
   fieldTitle: "Titolo",
   fieldNotes: "Note",
   fieldStart: "Comincia il",
@@ -643,6 +650,9 @@ const IT = {
   diaryToday: "Oggi",
   diaryYesterday: "Ieri",
   diaryMetIn: "Citata nell'incontro",
+  personDiaryTitle: "Citata nel diario",
+  tlDiaryOne: "Diario, {date}: «{text}»",
+  tlDiaryMany: "Diario, {date}: {n} voci, la prima «{text}»",
   diaryLast: "Ultima voce del diario: {date}",
   tipDiary: "Diario: {n} voci",
   tipDiaryOne: "Diario: una voce",
@@ -973,6 +983,14 @@ const IT = {
     + "di chi l'ha scritta, quando l'app lo conosce dalla cartella condivisa. Ctrl+Invio, o ⌘+Invio, "
     + "aggiunge la voce. Sulla carta il segno ✎ riporta il giorno dell'ultima voce. Con la cartella "
     + "condivisa le voci delle due persone si sommano, e nessuna sostituisce l'altra.\n\n"
+    + "In una voce «@Marco» porta alla scheda di Marco e «[[Brief]]» apre la pagina, se esistono; la "
+    + "scheda della persona raccoglie le voci che la citano. Nel diario compaiono anche gli incontri "
+    + "che hanno agganciato l'attività. Sulla linea del tempo ogni giorno con una voce è un puntino "
+    + "sotto la barra.\n\n"
+    + "Sulla pagina del progetto, «Cosa è successo» riunisce le voci di tutte le attività e le ultime "
+    + "modifiche; «Copia la settimana» mette negli appunti il riepilogo degli ultimi sette giorni, per "
+    + "attività, pronto per una mail. «Cosa serve adesso» segnala le attività cominciate e senza "
+    + "notizie da dieci giorni.\n\n"
     + "## Quello che si ripete\n\n«Si ripete», nella scheda sotto «Mostra altro», con un «Fino al» "
     + "facoltativo: spuntata una, nasce la prossima con la data avanzata. Sulla carta la riconosce "
     + "il segno ↻ accanto al titolo. Per smettere: «Chiudi la serie» nel messaggio che compare "
@@ -1267,8 +1285,8 @@ const IT = {
   demoWho: "Giulia",
   demoCheck1: "Ripulire l'elenco dei contatti",
   demoCheck2: "Scrivere il testo dell'invito",
-  demoDiary1: "Esportato l'elenco dei contatti dal gestionale: 412 indirizzi, 37 senza email.",
-  demoDiary2: "Il grafico ha mandato la bozza dell'invito. Manca il logo dello sponsor.",
+  demoDiary1: "Esportato l'elenco dei contatti dal gestionale: 412 indirizzi, 37 senza email. Le email mancanti le cerca @Sara.",
+  demoDiary2: "Il grafico ha mandato la bozza dell'invito, coerente con il [[Brief]]. Manca il logo dello sponsor.",
   demoDiary3: "Ricevuto il logo dallo sponsor e girato al grafico.",
   demoPage: "Come funziona questa app",
   demoBody: "Questo progetto è già pieno, per mostrare com'è fatto. **Quando non serve più, si "
@@ -1721,12 +1739,17 @@ const EN = {
   nowStalledIn: "In “{column}”, with no news since",
   nowStalledLast: "Last entry: “{text}”",
   nowStalledWrite: "Add an entry",
-  diaryTitle: "Log",
-  diaryCountOne: "one entry",
-  diaryCount: "{n} entries",
+  diaryTitle: "What has happened",
+  diaryCountOne: "one log entry",
+  diaryCount: "{n} log entries",
   diaryOpenTask: "Open the log of “{title}”",
-  diaryAll: "All {n} entries",
-  diaryLess: "Show fewer",
+  diaryAll: "{n} more ↓",
+  weekCopy: "Copy the week",
+  weekCopied: "The summary of the week is on the clipboard.",
+  weekRange: "what has been done from {from} to {to}",
+  weekMeetings: "Meetings",
+  weekWith: "with {name}",
+  diaryLess: "Only the first ones ↑",
   nowCountNotesOne: "1 note to write",
   nowCountNotes: "{n} notes to write",
   nowMore: "{n} more ↓",
@@ -1780,7 +1803,6 @@ const EN = {
   waitingTitle: "Waiting for",
   waitingHolds: "holds up {titles}",
   waitingDue: "expected {date}",
-  changesTitle: "Latest changes",
   changePage: "Page",
   changePageNew: "New page",
   tickedDone: "\"{name}\" marked as done",
@@ -1886,6 +1908,9 @@ const EN = {
   columnMoveOk: "Remove the column",
   taskMoved: "Task moved",
   cardTitle: "Task",
+  cardTitlePlaceholder: "Title of the task",
+  countChecklist: "Checklist: {done} of {all} items ticked",
+  countSubtasks: "Sub-tasks: {done} of {all} done",
   fieldTitle: "Title",
   fieldNotes: "Notes",
   fieldStart: "Starts on",
@@ -1924,6 +1949,9 @@ const EN = {
   diaryToday: "Today",
   diaryYesterday: "Yesterday",
   diaryMetIn: "Mentioned in the meeting",
+  personDiaryTitle: "Mentioned in the log",
+  tlDiaryOne: "Log, {date}: “{text}”",
+  tlDiaryMany: "Log, {date}: {n} entries, the first “{text}”",
   diaryLast: "Last log entry: {date}",
   tipDiary: "Log: {n} entries",
   tipDiaryOne: "Log: one entry",
@@ -2251,6 +2279,13 @@ const EN = {
     + "the app knows it from the shared folder. Ctrl+Enter, or ⌘+Enter, adds the entry. On the card "
     + "the ✎ mark gives the day of the latest entry. With a shared folder the two people's entries "
     + "add up, and neither replaces the other.\n\n"
+    + "In an entry, “@Marco” leads to Marco's card and “[[Brief]]” opens the page, when they exist; "
+    + "the person's card gathers the entries that mention them. The meetings that hooked the task "
+    + "show in the log too. On the timeline every day with an entry is a dot under the bar.\n\n"
+    + "On the project page, “What has happened” brings together the entries of every task and the "
+    + "latest changes; “Copy the week” puts the summary of the last seven days on the clipboard, by "
+    + "task, ready for an email. “What needs doing now” points out the tasks begun and silent for "
+    + "ten days.\n\n"
     + "## What repeats\n\n“Repeats”, on the card under “Show more”, with an optional “Until”: tick "
     + "one, and the next is born with the date moved on. On the board it has the ↻ mark beside its "
     + "title. To stop it: “Close the series” in the message that appears after the tick, or “End the "
@@ -2539,8 +2574,8 @@ const EN = {
   demoWho: "Giulia",
   demoCheck1: "Tidy up the contact list",
   demoCheck2: "Write the wording of the invitation",
-  demoDiary1: "Exported the contact list from the management system: 412 addresses, 37 without an email.",
-  demoDiary2: "The designer sent the draft of the invitation. The sponsor's logo is missing.",
+  demoDiary1: "Exported the contact list from the management system: 412 addresses, 37 without an email. @Sara is looking for the missing ones.",
+  demoDiary2: "The designer sent the draft of the invitation, in line with the [[Brief]]. The sponsor's logo is missing.",
   demoDiary3: "Received the logo from the sponsor and passed it on to the designer.",
   demoPage: "How this app works",
   demoBody: "This project is already full so you can see how it fits together. **When it is no "

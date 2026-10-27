@@ -23,7 +23,7 @@ import { SIGN } from "./sign.js";
 import * as pack from "biz/plan-pack.js";
 import * as csv from "./csv.js";
 import { t, tf, num } from "./i18n.js";
-import { el, node, button, fill, shortDate, longDate, locale, ask, tagHue } from "./ui.js";
+import { el, node, button, fill, shortDate, longDate, locale, ask, tagHue, linkedText } from "./ui.js";
 import { tip } from "./tip.js";
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -43,6 +43,8 @@ let on = { change() {}, moved() {}, trashed() {}, ticked() {}, batched() {},
   // La scheda di un appuntamento sulla lavagna: cliccarla apre la maschera con cui si è preso, la
   // ✕ lo toglie. Tutte e due le cose le fa l'app, che ha la maschera e il cestino.
   editMeeting() {}, trashMeeting() {},
+  // A «@persona» in a diary entry leads to the person's card, which the app draws.
+  openPerson() {},
   // The name this copy signs the shared folder with, or empty while it is still the made-up one:
   // a diary entry signed «user_k3p9zx» tells a colleague nothing.
   who: () => "" };
@@ -267,7 +269,11 @@ function _fillCard() {
   el("cardDocMake").hidden = Boolean(doc) && !inherited;
   el("cardDocMake").textContent = inherited ? t("cardDocOwn") : t("cardDocMake");
   el("cardDocMake").className = inherited ? "ghost small" : "accent";
-  el("cardDocHint").hidden = Boolean(doc) && !inherited;
+  // The sentence explaining what a document is, until the project has one: after that, whoever
+  // opens the card has seen one, and two lines on every card were two lines of habit. The sentence
+  // about an inherited document says something about *this* task, and stays.
+  const known = model.tasksOf(projectId).some((one) => model.pageOfTask(one));
+  el("cardDocHint").hidden = inherited ? false : Boolean(doc) || known;
   el("cardDocHint").textContent = inherited
     ? tf("cardDocInherited", { name: model.parentOf(task).title || t("taskUntitled") })
     : t("cardDocHint");
@@ -377,6 +383,28 @@ function _showTab(which, { focus = false } = {}) {
   if (focus) el(which === "diary" ? "cardTabDiary" : "cardTabDetails").focus();
 }
 
+/**
+ * What a diary entry may link to from this card: the people of the project and of the address book,
+ * the pages of the project by title. Following a link closes the card, having written it first.
+ */
+function _linkOptions() {
+  return {
+    names: [...model.peopleOf(projectId).map((one) => one.name), ...model.liveContacts().map((one) => one.name)],
+    pageOf: (title) => model.pagesOf(projectId)
+      .find((one) => (one.title || "").trim().toLowerCase() === title.toLowerCase()) || null,
+    openPerson: (name) => {
+      _saveCard();
+      el("taskCard").close();
+      on.openPerson(name);
+    },
+    openPage: (page) => {
+      _saveCard();
+      el("taskCard").close();
+      on.openPage(page.id);
+    },
+  };
+}
+
 /** The line on top back to an empty entry dated today. */
 function _resetDiaryLine() {
   diaryEditing = null;
@@ -467,7 +495,9 @@ function _paintDiary(task) {
       paint();
     }, { label: t("diaryRemove") }));
     row.append(head);
-    row.append(node("p", "diary-text", entry.text));
+    const said = node("p", "diary-text");
+    said.append(...linkedText(entry.text, _linkOptions()));
+    row.append(said);
     rows.push(row);
   }
   fill(el("cardDiary"), rows);
@@ -698,10 +728,12 @@ function _taskCard(task, today) {
   const who = model.assigneeName(task);
   if (who) meta.append(node("span", "who", who));
   for (const tag of task.tags || []) meta.append(node("span", `tag ${tagHue(tag)}`, tag));
+  // Two fractions side by side — the checklist's and the sub-tasks' — read the same: «1/2 1/3». Each
+  // carries its sign now, and says in full what it counts to the pointer and to a screen reader.
   const checklist = task.checklist || [];
   if (checklist.length) {
-    meta.append(node("span", "when",
-      `${num(checklist.filter((one) => one.done).length, 0)}/${num(checklist.length, 0)}`));
+    const ticked = checklist.filter((one) => one.done).length;
+    meta.append(_countMark("✓", ticked, checklist.length, "countChecklist", "when"));
   }
   // The diary says on the card when it was last written in: on a task that runs for weeks, «✎ 23
   // ott» is the difference between "somebody is on it" and "nobody has touched it since September".
@@ -729,8 +761,8 @@ function _taskCard(task, today) {
   const children = model.subtasksOf(task.id);
   if (children.length) {
     const finished = children.filter((one) => model.isDone(one)).length;
-    meta.append(node("span", finished === children.length ? "badge" : "when",
-      `${num(finished, 0)}/${num(children.length, 0)}`));
+    meta.append(_countMark("↳", finished, children.length, "countSubtasks",
+      finished === children.length ? "badge" : "when"));
   }
   if (meta.childNodes.length) card.append(meta);
 
@@ -816,6 +848,15 @@ function _whereNode(where) {
   link.textContent = said;
   link.addEventListener("click", (event) => event.stopPropagation());
   return link;
+}
+
+/** A count on a card: its sign, «done/all», and the sentence that says what is being counted. */
+function _countMark(sign, done, all, key, className) {
+  const mark = node("span", `${className} count-mark`, `${sign} ${num(done, 0)}/${num(all, 0)}`);
+  const said = tf(key, { done: num(done, 0), all: num(all, 0) });
+  mark.title = said;
+  mark.setAttribute("aria-label", said);
+  return mark;
 }
 
 function _meetingCard(meeting, today) {
@@ -1335,7 +1376,7 @@ export function connect(handlers) {
   timeline.connect({
     change: () => on.change(),
     moved: () => on.moved(),
-    open: (id) => openCard(id),
+    open: (id, options) => openCard(id, options),
     repaint: () => paint(),
   });
 
