@@ -34,9 +34,11 @@ Invoice Scope does the part that takes expertise — the arithmetic, the Fattura
 
 ![A project: phases with their amount, note pages, linked documents.](https://ggtechnologies.sm/assets/shot-invoice-scope-progetto-en.png)
 
-![A customer record: the people, the diary of calls, their documents.](https://ggtechnologies.sm/assets/shot-invoice-scope-cliente-en.png)
+![A customer record: the people to talk to, the meetings coming up, the diary and their documents.](https://ggtechnologies.sm/assets/shot-invoice-scope-cliente-en.png)
 
 ![The payment schedule: instalments, the overdue ones, and the payment to record.](https://ggtechnologies.sm/assets/shot-invoice-scope-scadenzario-en.png)
+
+![Payments received: filters by year, customer and receipt, and each payment can be corrected or given its receipt later.](https://ggtechnologies.sm/assets/shot-invoice-scope-incassi-en.png)
 
 ![Purchases: received invoices and expenses, with their state and what is left to pay.](https://ggtechnologies.sm/assets/shot-invoice-scope-acquisti-en.png)
 
@@ -124,7 +126,7 @@ PolyForm Shield 1.0.0. The code is public: it can be read, changed and used, com
 
 Free.
 
-**Version** 0.76.1 · **Updated** 26 October 2026 · **Licence** PolyForm-Shield-1.0.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
+**Version** 0.76.2 · **Updated** 26 October 2026 · **Licence** PolyForm-Shield-1.0.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
 
 *FAQ*
 

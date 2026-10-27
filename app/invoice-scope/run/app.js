@@ -369,6 +369,8 @@ async function _demoView(db) {
     case "documenti": return "#/documenti";
     case "scadenzario": return "#/scadenzario";
     case "acquisti": return "#/acquisti";
+    case "incassi": return "#/scadenzario/incassi";
+    case "pagamenti": return "#/scadenzario/pagamenti";
     case "anagrafiche": return "#/anagrafiche";
     case "listino": return "#/anagrafiche/listino";
     case "banche": return "#/anagrafiche/banche";

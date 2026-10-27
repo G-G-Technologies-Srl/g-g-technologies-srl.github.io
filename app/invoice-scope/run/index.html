@@ -92,6 +92,9 @@
   <!-- Il testo di ogni voce sta in uno `<span>` perché `data-t` riscrive il contenuto del nodo, e
        riscriverebbe via l'icona. -->
   <nav class="navbar" id="navbar" aria-label="Invoice Scope">
+    <!-- Azienda first: it is the first thing filled in, and the one the person comes back to when a
+         detail of the company changes (requested on 27 October 2026). -->
+    <a href="#/azienda" id="navCompany"><svg aria-hidden="true"><use href="#ico-company"/></svg><span data-t="navCompany"></span></a>
     <a href="#/" id="navHome"><svg aria-hidden="true"><use href="#ico-home"/></svg><span data-t="navHome"></span></a>
     <a href="#/documenti" id="navDocs"><svg aria-hidden="true"><use href="#ico-docs"/></svg><span data-t="navDocs"></span></a>
     <a href="#/acquisti" id="navPurchases"><svg aria-hidden="true"><use href="#ico-purchases"/></svg><span data-t="navPurchases"></span></a>
@@ -114,7 +117,6 @@
       <a href="#/anagrafiche/listino" id="navPartiesItems" data-sub="1"><span data-t="navPartiesItems"></span></a>
       <a href="#/anagrafiche/banche" id="navPartiesBanks" data-sub="1"><span data-t="navPartiesBanks"></span></a>
     </div>
-    <a href="#/azienda" id="navCompany"><svg aria-hidden="true"><use href="#ico-company"/></svg><span data-t="navCompany"></span></a>
     <a href="#/impostazioni" id="navSettings"><svg aria-hidden="true"><use href="#ico-settings"/></svg><span data-t="navSettings"></span></a>
   </nav>
 

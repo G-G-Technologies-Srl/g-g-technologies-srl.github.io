@@ -34,9 +34,11 @@ Invoice Scope svolge sul vostro computer la parte che richiede competenza — i 
 
 ![Un progetto: le fasi con l'importo, le pagine di appunti, i documenti collegati.](https://ggtechnologies.sm/assets/shot-invoice-scope-progetto-it.png)
 
-![La scheda di un cliente: le persone, il diario delle telefonate, i suoi documenti.](https://ggtechnologies.sm/assets/shot-invoice-scope-cliente-it.png)
+![La scheda di un cliente: le persone di riferimento, gli incontri in programma, il diario e i suoi documenti.](https://ggtechnologies.sm/assets/shot-invoice-scope-cliente-it.png)
 
 ![Lo scadenzario: le rate, quelle scadute, e l'incasso da registrare.](https://ggtechnologies.sm/assets/shot-invoice-scope-scadenzario-it.png)
+
+![Gli incassi registrati: filtri per anno, cliente e ricevuta, e ogni incasso si corregge o riceve la sua ricevuta anche dopo.](https://ggtechnologies.sm/assets/shot-invoice-scope-incassi-it.png)
 
 ![Gli acquisti: fatture ricevute e spese, con lo stato e quello che resta da pagare.](https://ggtechnologies.sm/assets/shot-invoice-scope-acquisti-it.png)
 
@@ -124,7 +126,7 @@ PolyForm Shield 1.0.0. Il codice è pubblico: si legge, si modifica e si usa anc
 
 Gratuita.
 
-**Versione** 0.76.1 · **Aggiornata il** 26 ottobre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
+**Versione** 0.76.2 · **Aggiornata il** 26 ottobre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
 
 *FAQ*
 
