@@ -17,12 +17,15 @@
   // Before the first paint, on purpose. Applied from a module it would run after the stylesheet,
   // and the app would flash dark and then jump to light on every launch.
   try {
+    // A saved choice is written on the element whichever it is: dark too. Written only when it was
+    // light, choosing dark on a system set to light came back light at every start — the bare
+    // element falls to the media query, which is there for a first visit and nothing else.
     var saved = localStorage.getItem('gg-theme');
-    var light = saved ? saved === 'light'
-      : window.matchMedia('(prefers-color-scheme: light)').matches;
-    if (light) {
-      document.documentElement.setAttribute('data-theme', 'light');
-      document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f6f8fc');
+    var theme = saved === 'light' || saved === 'dark' ? saved
+      : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : null);
+    if (theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      document.querySelector('meta[name="theme-color"]').setAttribute('content', theme === 'light' ? '#f6f8fc' : '#0d1220');
     }
   } catch (ignored) {}
 

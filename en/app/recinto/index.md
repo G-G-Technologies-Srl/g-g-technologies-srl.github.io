@@ -30,6 +30,8 @@ Then there is the bet. Cutting slowly is worth double the points and leaves you 
 
 The percentage you read at the top is not an estimate. A game of this kind usually keeps the field as an image and counts coloured pixels; here the field is a polygon on integer coordinates and the area comes out exact. So that number is the same on a phone and on a monitor, and two games can genuinely be compared — which is the only thing that makes a high score table more than a column of numbers. It is the principle of the rest of the catalogue, measure where the data is, applied to a game rather than to a file of readings.
 
+![The app running in the browser.](https://ggtechnologies.sm/assets/shot-recinto-en.png)
+
 ### What it does
 
 - You cut the field and keep the part the Thread did not stay in. Reach the quota — 70% on the first level, a little more on each one after — and the level is done.
@@ -72,7 +74,7 @@ Keyboard, mouse, touch. The same rules for all three.
 
 Apache-2.0: the code is what the browser downloads, with no build step in between.
 
-**Version** 0.15.5 · **Updated** 24 September 2026 · **Licence** Apache-2.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/recinto)
+**Version** 0.15.6 · **Updated** 27 October 2026 · **Licence** Apache-2.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/recinto)
 
 *FAQ*
 

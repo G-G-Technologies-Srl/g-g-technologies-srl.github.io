@@ -30,6 +30,8 @@ Poi c'è la scommessa. Tagliare piano vale il doppio dei punti e raddoppia il te
 
 La percentuale indicata in alto non è una stima. Un gioco di questo genere di solito tiene il campo come un'immagine e conta i pixel colorati; qui il campo è un poligono a coordinate intere e l'area si calcola esatta. Quel numero è quindi lo stesso su un telefono e su un monitor, e due partite si possono confrontare davvero — che è l'unica cosa che rende una classifica qualcosa di più di una fila di numeri. È il principio del resto del catalogo, la misura si fa dove stanno i dati, applicato a un gioco invece che a un file di misure.
 
+![L'interfaccia dell'app, in esecuzione nel browser.](https://ggtechnologies.sm/assets/shot-recinto-it.png)
+
 ### Cosa fa
 
 - Si taglia il campo e si tiene la parte in cui il Filo non è rimasto. Raggiunta la quota — il 70% al primo livello, un po' di più a ogni livello dopo — il livello è chiuso.
@@ -72,7 +74,7 @@ Tastiera, mouse, tocco. Le stesse regole per tutti e tre.
 
 Apache-2.0: il codice è quello che il browser scarica, senza passi di build in mezzo.
 
-**Versione** 0.15.5 · **Aggiornata il** 24 settembre 2026 · **Licenza** Apache-2.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/recinto)
+**Versione** 0.15.6 · **Aggiornata il** 27 ottobre 2026 · **Licenza** Apache-2.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/recinto)
 
 *FAQ*
 

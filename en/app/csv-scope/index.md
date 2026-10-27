@@ -87,7 +87,7 @@ Apache-2.0. The code is public and reusable, commercial work included.
 
 It is a file viewer. It is not a medical device and is not for diagnosis.
 
-**Version** 0.15.13 · **Updated** 24 September 2026 · **Licence** Apache-2.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/csv-scope)
+**Version** 0.15.14 · **Updated** 27 October 2026 · **Licence** Apache-2.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/csv-scope)
 
 *FAQ*
 

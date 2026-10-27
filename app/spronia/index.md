@@ -102,7 +102,7 @@ Italiano e inglese, seguono la lingua del browser.
 
 Apache-2.0. Il codice è pubblico e riusabile, anche in un lavoro commerciale.
 
-**Versione** 1.8.4 · **Aggiornata il** 23 settembre 2026 · **Licenza** Apache-2.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/spronia)
+**Versione** 1.8.5 · **Aggiornata il** 27 ottobre 2026 · **Licenza** Apache-2.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/spronia)
 
 *FAQ*
 

@@ -87,7 +87,7 @@ Apache-2.0. Il codice è pubblico e riusabile, anche in un lavoro commerciale.
 
 È un visualizzatore di file. Non è un dispositivo medico e non serve a fare diagnosi.
 
-**Versione** 0.15.13 · **Aggiornata il** 24 settembre 2026 · **Licenza** Apache-2.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/csv-scope)
+**Versione** 0.15.14 · **Aggiornata il** 27 ottobre 2026 · **Licenza** Apache-2.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/csv-scope)
 
 *FAQ*
 

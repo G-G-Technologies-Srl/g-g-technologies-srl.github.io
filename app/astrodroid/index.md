@@ -87,7 +87,7 @@ Italiano e inglese, seguono la lingua del browser.
 
 Apache-2.0. Il codice è pubblico e riusabile, anche in un lavoro commerciale.
 
-**Versione** 0.3.13 · **Aggiornata il** 23 settembre 2026 · **Licenza** Apache-2.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/astrodroid)
+**Versione** 0.3.14 · **Aggiornata il** 27 ottobre 2026 · **Licenza** Apache-2.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/astrodroid)
 
 *FAQ*
 

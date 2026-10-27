@@ -141,7 +141,7 @@ PolyForm Shield 1.0.0. Il codice è pubblico: si legge, si modifica e si usa anc
 
 In uso e aggiornata: il numero di versione qui sotto è quello vero, e si gira a ogni modifica. Dentro l'app c'è una Guida, come progetto da leggere nell'editor stesso, con la prova da fare in due prima di fidarsi.
 
-**Versione** 4.58.0 · **Aggiornata il** 26 ottobre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/plan-scope)
+**Versione** 4.58.0 · **Aggiornata il** 27 ottobre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/plan-scope)
 
 *FAQ*
 

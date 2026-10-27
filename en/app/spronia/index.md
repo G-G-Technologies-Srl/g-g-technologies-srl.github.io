@@ -102,7 +102,7 @@ Italian and English, following the browser's language.
 
 Apache-2.0. The code is public and reusable, including commercially.
 
-**Version** 1.8.4 · **Updated** 23 September 2026 · **Licence** Apache-2.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/spronia)
+**Version** 1.8.5 · **Updated** 27 October 2026 · **Licence** Apache-2.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/spronia)
 
 *FAQ*
 
