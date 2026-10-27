@@ -15,6 +15,14 @@ Scriviamo di quello che progettiamo e realizziamo: sensori, robot, intelligenza 
 
 Le fonti di ogni articolo sono elencate e verificabili in fondo alla pagina.
 
+*Dati · 27 ottobre 2026 · bozza*
+
+### [Dove stanno i dati di un'app nel browser](https://ggtechnologies.sm/insights/app-nel-browser-dati/)
+
+Dove conservano i dati le app che funzionano nel browser, che cosa può cancellarli, che cosa cambia installandole e come tenerne una seconda copia in una cartella.
+
+Automazione
+
 *Fatturazione · 6 ottobre 2026*
 
 ### [La fattura elettronica fra aziende sammarinesi](https://ggtechnologies.sm/insights/fattura-elettronica-san-marino/)

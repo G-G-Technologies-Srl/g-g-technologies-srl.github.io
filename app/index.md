@@ -15,6 +15,8 @@ Sono gratuite, hanno il codice pubblico e funzionano anche senza connessione dop
 
 Nessuna di queste app trasmette i vostri dati all'esterno. Girano interamente nel browser.
 
+Tutte si installano come applicazioni sul computer, sul telefono e sul tablet. [Guida all'installazione →](https://ggtechnologies.sm/app/installare/)
+
 *App gratuita, codice pubblico*
 
 ### [Survey Scope](https://ggtechnologies.sm/app/survey-scope/)

@@ -176,9 +176,12 @@ const IT = {
   removalAndroid: "Per toglierla: tenete premuta l'icona nella schermata Home e scegliete "
     + "«Disinstalla», oppure trascinatela sul cestino. I dati restano nel browser: se non "
     + "servono più, conviene esportarli e poi cancellare i dati del sito.",
-  removalIos: "Per toglierla: tenete premuta l'icona nella schermata Home, poi «Rimuovi app». I "
-    + "dati restano in Safari: se non servono più, conviene esportarli e poi cancellare i dati "
-    + "del sito dalle Impostazioni.",
+  removalIos: "Per toglierla: tenete premuta l'icona nella schermata Home, poi «Rimuovi app». "
+    + "L'app installata tiene dati propri, separati da quelli di Safari: rimuoverla può "
+    + "cancellarli, quindi conviene prima un «Backup di tutto».",
+  removalMac: "Per toglierla: nel Finder, trascinatela nel Cestino dalla cartella Applicazioni della "
+    + "vostra cartella personale. L'app aggiunta al Dock tiene dati propri, separati da quelli di "
+    + "Safari: rimuoverla può cancellarli, quindi conviene prima un «Backup di tutto».",
   versionLabel: "v{version}",
   versionNext: "v{current} → {next}",
   versionNextUnknown: "v{current} → nuova",
@@ -191,7 +194,37 @@ const IT = {
   searchTitle: "Cerca",
   searchEmpty: "Niente con queste parole.",
   searchHint: "Frecce per scegliere, Invio per aprire. Da ovunque: Ctrl+K",
-  installHint: "Si può installare: funziona anche senza connessione.",
+  installHint: "Per installarla: «Condividi» — in iOS 26 dal pulsante ⋯ accanto all'indirizzo — "
+    + "poi «Aggiungi alla schermata Home».",
+  installMac: "Per installarla: menu File di Safari, poi «Aggiungi al Dock…».",
+
+  // ---- Installation, from the ⋯ menu and the welcome: always reachable, because the invitation
+  // in the bar appears only when the browser offers it (27 October 2026).
+  installTitle: "Installazione",
+  installNow: "Installa l'app",
+  installGuide: "Guida all'installazione",
+  installGuideUrl: "/app/installare/",
+  folderGuideUrl: "/app/installare/#collegare-una-cartella",
+  installClose: "Chiudi",
+  installStateInstalled: "L'app è installata su questo dispositivo: si apre dalla sua icona, in una "
+    + "finestra propria, e funziona anche senza connessione.",
+  installStateReady: "L'app si può installare: si aprirà dalla sua icona, in una finestra propria, e "
+    + "funzionerà anche senza connessione.",
+  installStateChromium: "Per installarla: l'icona di installazione all'estremità destra della barra "
+    + "degli indirizzi oppure, nel menu del browser, la voce «Installa…».",
+  installStateSafariMac: "Per installarla: menu File di Safari, poi «Aggiungi al Dock…», da macOS "
+    + "Sonoma. L'app aggiunta al Dock tiene dati propri, separati da quelli di Safari: i progetti "
+    + "iniziati qui si portano nell'app con «Backup di tutto» e «Importa un progetto».",
+  installStateIos: "Per installarla: in Safari, «Condividi» (in iOS 26 dal pulsante ⋯), poi "
+    + "«Aggiungi alla schermata Home». L'app installata tiene dati propri, separati da quelli di "
+    + "Safari: i progetti iniziati qui si portano nell'app con «Backup di tutto» e «Importa un "
+    + "progetto».",
+  installStateAndroid: "Per installarla: menu ⋮ di Chrome, poi «Installa app» o «Aggiungi a schermata "
+    + "Home».",
+  installStateFirefox: "Firefox su computer non installa le applicazioni web. Con Chrome o Edge l'app "
+    + "si installa e tiene da sola una copia di tutto in una cartella.",
+  installStateOther: "Questo browser non indica come installare l'app: la guida descrive i passaggi "
+    + "per Chrome, Edge e Safari.",
   backToPage: "Torna alla scheda",
   sourceLabel: "Codice sorgente",
   errorTitle: "Qualcosa non ha funzionato",
@@ -274,7 +307,7 @@ const IT = {
   // ---- la cartella locale: la copia di tutto, scritta dall'app invece che da chi si ricorda
   backupTitle: "Copia automatica in una cartella",
   backupHint: "Scegli una cartella e l'app ci scrive da sola tutto quello che c'è qui: gli "
-    + "stessi dati di «Esporta tutto», più le immagini delle pagine. Da lì in poi si aggiorna a "
+    + "stessi dati di «Backup di tutto», più le immagini delle pagine. Da lì in poi si aggiorna a "
     + "ogni modifica, e non c'è niente da premere.",
   backupNote: "Tiene anche una copia al giorno degli ultimi trenta giorni, così una modifica sbagliata "
     + "si riprende da com'era ieri. Se la cartella sta dentro Dropbox, iCloud o OneDrive, la copia "
@@ -286,7 +319,7 @@ const IT = {
   backupUnlinkAsk: "L'app smette di scrivere nella cartella. I file che ci sono restano dove sono. "
     + "Vado avanti?",
   backupUnavailable: "Questo browser non consente di scrivere in una cartella: serve Chrome o "
-    + "Edge sul computer. Qui resta «Esporta tutto», che produce lo stesso file.",
+    + "Edge sul computer. Qui resta «Backup di tutto», nel menu ⋯, che produce lo stesso file.",
   backupNone: "Nessuna cartella collegata.",
   backupPrompt: "La cartella «{folder}» aspetta il vostro permesso: riprendila ricordando la scelta, "
     + "oppure installa l'app, e il browser non lo chiede più.",
@@ -1074,7 +1107,8 @@ const IT = {
   quickAdd: "Aggiungi",
   quickNone: "Prima serve un progetto.",
   quickDone: "«{name}» aggiunta a «{project}»",
-  exportNudge: "Sono più di due settimane senza un backup. Un file sul disco è la vostra copia.",
+  exportNudge: "Sono più di due settimane senza un backup. Un file sul disco è la vostra copia; con "
+    + "Chrome o Edge da computer, una cartella collegata la tiene aggiornata da sola.",
   exportNudgeOk: "Va bene",
   treeBacklinks: "Puntano qui",
   pageTagsPlaceholder: "Tag, separati da una virgola",
@@ -1230,7 +1264,10 @@ const IT = {
     + "settembre» è un esempio già compilato, per vedere come funziona: si può modificare "
     + "liberamente e, quando non serve più, spostare nel cestino.",
   welcomeNote: "Tutto quello che si scrive resta in questo browser: l'app non manda niente a "
-    + "nessuno. Per averne una copia sul disco c'è «Esporta».",
+    + "nessuno. Due passaggi la rendono più comoda e più sicura: installarla, dalla voce "
+    + "«Installazione» del menu ⋯, e — con Chrome o Edge da computer — collegare una cartella da "
+    + "«Cartelle e copie», dove l'app scrive da sola una copia di tutto.",
+  welcomeInstall: "Installazione",
   welcomeExample: "Guarda l'esempio",
   welcomeOwn: "Comincia dal vostro",
   welcomeGuide: "Leggi la Guida",
@@ -1482,8 +1519,11 @@ const EN = {
     + "or drag it to the bin. The data stays in the browser: if you no longer need it, export it "
     + "first and then clear the site's data.",
   removalIos: "To remove it: press and hold the icon on the Home screen, then «Remove App». The "
-    + "data stays in Safari: if you no longer need it, export it first and then clear the site's "
-    + "data from Settings.",
+    + "installed app keeps data of its own, separate from Safari's: removing it may delete them, so "
+    + "make a “Back up everything” first.",
+  removalMac: "To remove it: in the Finder, drag it to the Bin from the Applications folder inside "
+    + "your home folder. The app added to the Dock keeps data of its own, separate from Safari's: "
+    + "removing it may delete them, so make a “Back up everything” first.",
   versionLabel: "v{version}",
   versionNext: "v{current} → {next}",
   versionNextUnknown: "v{current} → new",
@@ -1496,7 +1536,33 @@ const EN = {
   searchTitle: "Search",
   searchEmpty: "Nothing with these words.",
   searchHint: "Arrows to choose, Enter to open. From anywhere: Ctrl+K",
-  installHint: "You can install it: it works without a connection too.",
+  installHint: "To install it: “Share” — in iOS 26 from the ⋯ button next to the address — then "
+    + "“Add to Home Screen”.",
+  installMac: "To install it: Safari's File menu, then “Add to Dock…”.",
+
+  installTitle: "Installation",
+  installNow: "Install the app",
+  installGuide: "Installation guide",
+  installGuideUrl: "/en/app/install/",
+  folderGuideUrl: "/en/app/install/#linking-a-folder",
+  installClose: "Close",
+  installStateInstalled: "The app is installed on this device: it opens from its own icon, in a window "
+    + "of its own, and works without a connection too.",
+  installStateReady: "The app can be installed: it will open from its own icon, in a window of its own, "
+    + "and work without a connection too.",
+  installStateChromium: "To install it: the install icon at the right-hand end of the address bar or, in "
+    + "the browser's menu, the entry “Install…”.",
+  installStateSafariMac: "To install it: Safari's File menu, then “Add to Dock…”, from macOS Sonoma. The "
+    + "app added to the Dock keeps data of its own, separate from Safari's: projects started here are "
+    + "carried into the app with “Back up everything” and “Import a project”.",
+  installStateIos: "To install it: in Safari, “Share” (in iOS 26 from the ⋯ button), then “Add to "
+    + "Home Screen”. The installed app keeps data of its own, separate from Safari's: projects started "
+    + "here are carried into the app with “Back up everything” and “Import a project”.",
+  installStateAndroid: "To install it: Chrome's ⋮ menu, then “Install app” or “Add to Home screen”.",
+  installStateFirefox: "Firefox on a computer does not install web applications. With Chrome or Edge the "
+    + "app installs and keeps a copy of everything in a folder by itself.",
+  installStateOther: "This browser does not say how to install the app: the guide describes the steps "
+    + "for Chrome, Edge and Safari.",
   backToPage: "Back to the app page",
   sourceLabel: "Source code",
   errorTitle: "Something did not work",
@@ -1578,19 +1644,19 @@ const EN = {
   // ---- the local folder: the copy of everything, written by the app rather than by whoever remembers
   backupTitle: "Automatic copy in a folder",
   backupHint: "Choose a folder and the app writes everything that is here into it by itself: "
-    + "the same data as “Export everything”, plus the images in the pages. From then on it "
+    + "the same data as “Back up everything”, plus the images in the pages. From then on it "
     + "updates at every change, and there is nothing to press.",
   backupNote: "It also keeps one copy a day for the last thirty days, so a change made wrongly is "
     + "taken back from how it was yesterday. If the folder is inside Dropbox, iCloud or OneDrive, "
     + "the copy reaches your other computers by itself. This one is your copy: for working as two "
     + "there is the shared folder, which is another thing.",
   backupPick: "Choose the folder…",
-  backupResume: "Take up the folder again",
+  backupResume: "Resume the folder",
   backupUnlink: "Unlink the folder",
   backupUnlinkAsk: "The app stops writing into the folder. The files there stay where they are. "
     + "Go ahead?",
   backupUnavailable: "This browser cannot write into a folder: that takes Chrome or Edge on a "
-    + "computer. Here there is “Export everything”, which makes the same file.",
+    + "computer. Here there is “Back up everything”, in the ⋯ menu, which makes the same file.",
   backupNone: "No folder linked.",
   backupPrompt: "The folder “{folder}” is waiting for your permission: take it up and let the "
     + "browser remember, or install the app, and it stops asking.",
@@ -2370,7 +2436,8 @@ const EN = {
   quickAdd: "Add",
   quickNone: "A project comes first.",
   quickDone: "“{name}” added to “{project}”",
-  exportNudge: "It has been over two weeks since your last backup. A file on disk is your copy.",
+  exportNudge: "It has been over two weeks since your last backup. A file on disk is your copy; with "
+    + "Chrome or Edge on a computer, a linked folder keeps it up to date by itself.",
   exportNudgeOk: "All right",
   treeBacklinks: "Point here",
   pageTagsPlaceholder: "Tags, separated by a comma",
@@ -2521,8 +2588,11 @@ const EN = {
   welcomeText: "Pages to write and deadlines to keep, in one place. “September trade fair” is "
     + "an example, already filled in, to see how it works: it can be changed freely and, once it "
     + "is no longer needed, moved to the bin.",
-  welcomeNote: "Everything you write stays in this browser: the app sends nothing to anybody. For a copy on "
-    + "disk there is “Export”.",
+  welcomeNote: "Everything you write stays in this browser: the app sends nothing to anybody. Two steps "
+    + "make it handier and safer: installing it, from “Installation” in the ⋯ menu, and — with Chrome "
+    + "or Edge on a computer — linking a folder from “Folders and copies”, where the app writes a "
+    + "copy of everything by itself.",
+  welcomeInstall: "Installation",
   welcomeExample: "See the example",
   welcomeOwn: "Start with yours",
   welcomeGuide: "Read the Guide",

@@ -21,6 +21,18 @@
 // one: what the browser offers, the refusal and the install are the app's, not the button's, so
 // every button appears and disappears together and each one is paired with the hint next to it.
 //
+// **The invitation is not the only door** (27 October 2026). Many people used the apps for weeks
+// in a tab without knowing they install: the button only appears when the browser offers, never on
+// Safari or Firefox, and a «No» closes it for good. So the module also answers the question from
+// anywhere the app chooses — a line in the settings, a step of the first-run panel: `canPrompt()`
+// says whether the browser's own question can be asked now, `promptInstall()` asks it, and
+// `browser()` says which instructions apply where it cannot — «chromium», «safari-mac», «ios»,
+// «android», «firefox» or «other». A refusal still closes the invitation in the bar, and only that:
+// the event is held anyway, so the door in the settings keeps working.
+//
+// Safari on a Mac installs too, since Sonoma, through File › Add to Dock, and sends no event either:
+// an app that passes `macText` gets that line in the bar, the way iPhones get `iosText`.
+//
 // Moving here cost this file its two ties to the app that hosted it: the preference key was
 // written out as `gg.csv-scope.install-dismissed`, and the iOS wording came from that app's
 // dictionary. Both now arrive as arguments. It was the smallest possible change and it is the
@@ -32,6 +44,11 @@
 // -----------------------------------------------------------------------------------------------------------------
 
 let deferred = null;
+
+/** The buttons of the bar, and what the app wants to hear about: kept for `promptInstall()`. */
+let shown = () => {};
+let key = null;
+let listener = null;
 
 /** One element or several, in the order the app wrote them: a button and the hint beside it. */
 function _list(value) {
@@ -79,6 +96,9 @@ function _system() {
   const ua = navigator.userAgent || "";
   if (_isIos()) return "ios";
   if (/Android/.test(ua)) return "android";
+  // An app added to the Dock is removed from the Finder, not from a menu: its own sentence. Apps
+  // that do not know the word fall back to «desktop», as before.
+  if (_isSafariMac()) return "safari-mac";
   return "desktop";
 }
 
@@ -86,6 +106,21 @@ function _isIos() {
   const ua = navigator.userAgent;
   // iPadOS reports itself as a Mac, so the touch points are what tells the two apart.
   return /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+}
+
+/**
+ * Safari on a Mac. Every other browser on a Mac names itself in the user agent as well — Chrome,
+ * Edge, Firefox, Opera — and an iPad says Macintosh but has touch points.
+ */
+function _isSafariMac() {
+  const ua = navigator.userAgent || "";
+  return /Macintosh/.test(ua) && /Safari\//.test(ua) && !/Chrome|Chromium|CriOS|Edg|Firefox|FxiOS|OPR/.test(ua)
+    && !(navigator.maxTouchPoints > 1);
+}
+
+/** Tell the app that what can be offered has changed. */
+function _changed() {
+  if (listener) listener();
 }
 
 function _isInstalled() {
@@ -109,13 +144,16 @@ function _isInstalled() {
  * An install prompt that reappears at every start is the reason people uninstall, and nothing here
  * is worth that.
  */
-export function setup(button, hint, { storageKey, iosText, removal = null }) {
+export function setup(button, hint, { storageKey, iosText, macText = null, removal = null, onChange = null }) {
   const buttons = _list(button);
   const hints = _list(hint);
+  key = storageKey;
+  listener = onChange;
   // Each button opens the hint written beside it — the one under the bar, or the one in the panel.
   // An app that offers two buttons and one hint gets that hint, which is better than nothing at all.
   const hintOf = (index) => hints[index] || hints[0] || null;
   const show = (visible) => { for (const one of buttons) one.hidden = !visible; };
+  shown = show;
 
   // Running installed: nothing to offer, and one thing to answer — «e come la tolgo?».
   if (_isInstalled()) {
@@ -134,11 +172,14 @@ export function setup(button, hint, { storageKey, iosText, removal = null }) {
     });
     return;
   }
-  if (_dismissed(storageKey)) return;
+  // Refused once: the bar says nothing more, and the event is still held for the other door.
+  const refused = _dismissed(storageKey);
 
-  if (_isIos()) {
+  const manual = _isIos() ? iosText : (_isSafariMac() ? macText : null);
+  if (manual) {
+    if (refused) return;
     for (const line of hints) {
-      line.textContent = iosText;
+      line.textContent = manual;
       line.hidden = false;
       // Answered once, answered everywhere: the same invitation shown twice is still one question.
       line.addEventListener("click", () => {
@@ -151,7 +192,8 @@ export function setup(button, hint, { storageKey, iosText, removal = null }) {
 
   const offer = (event) => {
     deferred = event;
-    show(true);
+    if (!refused) show(true);
+    _changed();
   };
 
   // The old `"1"` is cleared the moment the browser offers an install: it said neither of the two
@@ -178,24 +220,56 @@ export function setup(button, hint, { storageKey, iosText, removal = null }) {
   });
 
   for (const one of buttons) {
-    one.addEventListener("click", async () => {
-      if (!deferred) return;
-      show(false);                      // the browser is asking now: no second copy of the question
-      const prompt = deferred;
-      deferred = null;
-      window.__ggInstallPrompt = null;
-      prompt.prompt();
-      const choice = await prompt.userChoice;
-      // Accepted, and `appinstalled` follows with its own mark; refused, and the invitation is over.
-      if (!choice || choice.outcome !== "accepted") _dismiss(storageKey);
-    });
+    one.addEventListener("click", () => promptInstall());
   }
 
   window.addEventListener("appinstalled", () => {
     show(false);
+    deferred = null;
     window.__ggInstallPrompt = null;
     _installed(storageKey);
+    _changed();
   });
+}
+
+/** Whether the browser's own question can be asked now: Chrome, Edge, Android, when they offer. */
+export function canPrompt() {
+  return Boolean(deferred) && !_isInstalled();
+}
+
+/**
+ * Ask the browser's question, from the bar or from anywhere else. Resolves to «accepted»,
+ * «dismissed», or «unavailable» when there is nothing to ask.
+ *
+ * Accepted, and `appinstalled` follows with its own mark; refused, and the invitation in the bar
+ * is over — the same answer, wherever the question was asked.
+ */
+export async function promptInstall() {
+  if (!deferred) return "unavailable";
+  shown(false);                         // the browser is asking now: no second copy of the question
+  const prompt = deferred;
+  deferred = null;
+  window.__ggInstallPrompt = null;
+  prompt.prompt();
+  const choice = await prompt.userChoice;
+  const outcome = choice && choice.outcome === "accepted" ? "accepted" : "dismissed";
+  if (outcome !== "accepted" && key) _dismiss(key);
+  _changed();
+  return outcome;
+}
+
+/**
+ * Which instructions apply where the browser asks nothing: «chromium» (Chrome, Edge, Opera on a
+ * computer), «safari-mac», «ios», «android», «firefox» (on a computer) or «other».
+ */
+export function browser() {
+  const ua = navigator.userAgent || "";
+  if (_isIos()) return "ios";
+  if (/Android/.test(ua)) return "android";
+  if (_isSafariMac()) return "safari-mac";
+  if (/Firefox\//.test(ua)) return "firefox";
+  if (/Chrome|Chromium|Edg/.test(ua)) return "chromium";
+  return "other";
 }
 
 /**
@@ -210,7 +284,7 @@ export function isInstalled() {
 }
 
 /**
- * Which system's instructions apply — «ios», «android» or «desktop».
+ * Which system's instructions apply — «ios», «android», «safari-mac» or «desktop».
  *
  * Exported for the same reason as `isInstalled`: the sentences belong to the app, and the app has
  * to be able to write them again when the language changes with the line already open.

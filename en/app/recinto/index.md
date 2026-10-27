@@ -18,6 +18,8 @@ Category · [Games](https://ggtechnologies.sm/en/app/?tag=svago)
 - [Open the app](https://ggtechnologies.sm/app/recinto/run/)
 - [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/recinto)
 
+It installs as an application and works without a connection too. [Installation guide →](https://ggtechnologies.sm/en/app/install/)
+
 *What kind of game*
 
 ## The border is safe. And nothing is won there.
@@ -74,7 +76,7 @@ Keyboard, mouse, touch. The same rules for all three.
 
 Apache-2.0: the code is what the browser downloads, with no build step in between.
 
-**Version** 0.15.6 · **Updated** 27 October 2026 · **Licence** Apache-2.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/recinto)
+**Version** 0.15.7 · **Updated** 27 October 2026 · **Licence** Apache-2.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/recinto)
 
 *FAQ*
 

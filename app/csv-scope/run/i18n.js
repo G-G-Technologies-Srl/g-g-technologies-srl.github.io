@@ -106,9 +106,12 @@ const IT = {
   removalAndroid: "Per toglierla: tenete premuta l'icona nella schermata Home e scegliete "
     + "«Disinstalla», oppure trascinatela sul cestino. I dati restano nel browser: se non "
     + "servono più, conviene esportarli e poi cancellare i dati del sito.",
-  removalIos: "Per toglierla: tenete premuta l'icona nella schermata Home, poi «Rimuovi app». I "
-    + "dati restano in Safari: se non servono più, conviene esportarli e poi cancellare i dati "
-    + "del sito dalle Impostazioni.",
+  removalIos: "Per toglierla: tenete premuta l'icona nella schermata Home, poi «Rimuovi app». "
+    + "L'app installata tiene dati propri, separati da quelli di Safari: rimuoverla può "
+    + "cancellarli, quindi conviene prima esportarli.",
+  removalMac: "Per toglierla: nel Finder, trascinatela nel Cestino dalla cartella Applicazioni della "
+    + "vostra cartella personale. L'app aggiunta al Dock tiene dati propri, separati da quelli di "
+    + "Safari: rimuoverla può cancellarli, quindi conviene prima esportarli.",
   versionLabel: "v{version}",
   versionNext: "v{current} → {next}",
   versionNextUnknown: "v{current} → nuova",
@@ -117,7 +120,8 @@ const IT = {
   versionReload: "Aggiornata: ricarica",
   versionUpToDate: "v{version} · aggiornata",
   installButton: "Installa",
-  installIos: "Per installarla: Condividi, poi «Aggiungi alla schermata Home».",
+  installIos: "Per installarla: «Condividi» — in iOS 26 dal pulsante ⋯ accanto all'indirizzo — poi «Aggiungi alla schermata Home».",
+  installMac: "Per installarla: menu File di Safari, poi «Aggiungi al Dock…».",
   errorTitle: "Non è possibile leggere questo file",
   errorEmpty: "Il file è vuoto.",
   errorNoColumns: "Non risultano colonne separate. Controlla che sia un CSV o un TSV.",
@@ -219,8 +223,11 @@ const EN = {
     + "or drag it to the bin. The data stays in the browser: if you no longer need it, export it "
     + "first and then clear the site's data.",
   removalIos: "To remove it: press and hold the icon on the Home screen, then «Remove App». The "
-    + "data stays in Safari: if you no longer need it, export it first and then clear the site's "
-    + "data from Settings.",
+    + "installed app keeps data of its own, separate from Safari's: removing it may delete them, so "
+    + "export them first.",
+  removalMac: "To remove it: in the Finder, drag it to the Bin from the Applications folder inside "
+    + "your home folder. The app added to the Dock keeps data of its own, separate from Safari's: "
+    + "removing it may delete them, so export them first.",
   versionLabel: "v{version}",
   versionNext: "v{current} → {next}",
   versionNextUnknown: "v{current} → new",
@@ -229,7 +236,8 @@ const EN = {
   versionReload: "Updated: reload",
   versionUpToDate: "v{version} · up to date",
   installButton: "Install",
-  installIos: "To install: Share, then “Add to Home Screen”.",
+  installIos: "To install it: “Share” — in iOS 26 from the ⋯ button next to the address — then “Add to Home Screen”.",
+  installMac: "To install it: Safari's File menu, then “Add to Dock…”.",
   errorTitle: "This file cannot be read",
   errorEmpty: "The file is empty.",
   errorNoColumns: "No separated columns were found. Check that it is a CSV or a TSV.",

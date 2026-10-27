@@ -18,6 +18,8 @@ Categoria · [Gestionale](https://ggtechnologies.sm/app/?tag=gestionale)
 - [Aprite l'app](https://ggtechnologies.sm/app/invoice-scope/run/)
 - [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
 
+Si installa come un'applicazione e, su Chrome o Edge da computer, salva una copia dei dati in una vostra cartella. [Guida all'installazione →](https://ggtechnologies.sm/app/installare/)
+
 *Il punto di partenza*
 
 ## I dati dei clienti sono quelli da tenere in casa.
@@ -126,7 +128,7 @@ PolyForm Shield 1.0.0. Il codice è pubblico: si legge, si modifica e si usa anc
 
 Gratuita.
 
-**Versione** 0.76.2 · **Aggiornata il** 26 ottobre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
+**Versione** 0.77.0 · **Aggiornata il** 27 ottobre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
 
 *FAQ*
 
@@ -180,9 +182,13 @@ Sì, per il vostro lavoro e per prodotti che svolgono un compito diverso. La lic
 
 Il formato è lo stesso, quindi un progetto passa dall'una all'altra applicazione come file. Conviene tenerlo qui quando il lavoro ha un preventivo e delle fatture, perché solo qui il piano mostra quanto è stato quotato, fatturato e incassato; un piano senza aspetti economici sta meglio in Plan Scope, che è più leggero.
 
+### Come si installa, e dove si salva una copia dell'archivio?
+
+Con Chrome o Edge sul computer si preme l'icona di installazione nella barra degli indirizzi, oppure «Installa» in alto nell'app; su Mac con Safari si usa «Aggiungi al Dock», su iPhone e iPad «Aggiungi alla schermata Home». Poi, nelle Impostazioni, «Copia automatica in una cartella» collega una cartella del computer: l'app vi scrive l'archivio a ogni modifica, con una copia al giorno. La [guida all'installazione](https://ggtechnologies.sm/app/installare/) mostra ogni passaggio, sistema per sistema.
+
 ### Come si aggiorna, e come si rimuove, l'applicazione installata?
 
-Si aggiorna da sola: quando è pronta una versione nuova, accanto al nome compare un punto verde, e toccandolo l'applicazione si ricarica con i dati intatti. La rimozione la esegue il sistema operativo: accanto al nome, «Installata» indica dove si trova il comando. Togliere l'applicazione non cancella i dati, e cancellare i dati non toglie l'applicazione: se l'archivio non serve più, conviene esportarlo prima.
+Si aggiorna da sola: quando è pronta una versione nuova, accanto al nome compare un punto verde, e toccandolo l'applicazione si ricarica con i dati intatti. La rimozione la esegue il sistema operativo: accanto al nome, «Installata» indica dove si trova il comando. Con Chrome, Edge e Android togliere l'applicazione non cancella i dati, e cancellare i dati non toglie l'applicazione; con Safari l'applicazione installata tiene dati propri, e rimuoverla può cancellarli. Se l'archivio non serve più, conviene esportarlo prima.
 
 ## Vi serve la stessa cosa, su misura?
 

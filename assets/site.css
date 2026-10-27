@@ -1112,6 +1112,49 @@ section.tinted {
 }
 .article-shot figcaption { color: var(--faint); font-size: 0.82rem; margin-top: 10px; }
 
+/* The drawings of the installation guide: inline SVG, painted with the site's variables so they
+   follow the theme. Same box as a screenshot in an article, because they stand in for one. The
+   classes are those of _src/guide_art.py. */
+.guide-fig { margin: 34px 0; }
+.guide-fig svg {
+  display: block; width: 100%; height: auto;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg-soft);
+}
+.guide-fig figcaption { color: var(--faint); font-size: 0.82rem; margin-top: 10px; }
+.guide-fig .gf-win, .guide-fig .gf-menu { fill: var(--panel); stroke: var(--border-strong); stroke-width: 1; }
+.guide-fig .gf-bar { fill: var(--panel-2); }
+.guide-fig .gf-field { fill: var(--bg-soft); stroke: var(--border-strong); stroke-width: 1; }
+.guide-fig .gf-line, .guide-fig .gf-dot { fill: var(--border-strong); }
+.guide-fig .gf-ink { fill: var(--muted); }
+.guide-fig .gf-hl { fill: var(--accent); fill-opacity: 0.16; }
+.guide-fig .gf-acc, .guide-fig .gf-badge { fill: var(--accent); }
+.guide-fig .gf-t { fill: var(--muted); font-family: var(--font); font-size: 13px; }
+.guide-fig .gf-t-s { font-size: 11px; }
+.guide-fig .gf-t-xs { font-size: 10px; }
+.guide-fig .gf-t-b { fill: var(--text); font-weight: 600; }
+.guide-fig .gf-acc-t { fill: var(--btn-text); font-family: var(--font); font-size: 13px; font-weight: 600; }
+.guide-fig .gf-badge-t { fill: var(--btn-text); font-family: var(--font); font-size: 12px; font-weight: 700; }
+.guide-fig .gf-stroke, .guide-fig .gf-stroke-acc {
+  fill: none; stroke: var(--muted); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+}
+.guide-fig .gf-stroke-acc { stroke: var(--accent); stroke-width: 1.8; }
+.guide-fig .gf-ring { fill: none; stroke: var(--accent); stroke-width: 2.5; }
+.guide-fig .gf-arrow { fill: none; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 5 5; }
+.guide-fig .gf-ok { fill: none; stroke: var(--accent); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+/* On a phone the drawing keeps a legible size and scrolls sideways inside its own box: shrunk to
+   the width of the column, the labels would be five pixels high. */
+@media (max-width: 600px) {
+  .guide-fig { overflow-x: auto; }
+  .guide-fig svg { min-width: 560px; }
+}
+
+/* «It installs», under the buttons of an app's scheda and of the catalogue: a line of its own with
+   the link to the guide, because said in the middle of a sentence nobody noticed it. */
+.install-line { color: var(--muted); font-size: 0.95rem; margin: 0; }
+.install-line a { color: var(--accent-text); font-weight: 600; white-space: nowrap; }
+.page-hero .hero-note + .install-line { margin-top: 12px; }
+
 .diagram { margin: 40px 0 8px; }
 .diagram svg { width: 100%; height: auto; display: block; }
 

@@ -15,6 +15,8 @@ They are free, their source code is public, and they work without a connection a
 
 None of these apps sends your data anywhere. They run entirely in the browser.
 
+Every one of them installs as an application on a computer, a phone and a tablet. [Installation guide →](https://ggtechnologies.sm/en/app/install/)
+
 *Free app, public source code*
 
 ### [Survey Scope](https://ggtechnologies.sm/en/app/survey-scope/)

@@ -18,6 +18,8 @@ Category · [Business](https://ggtechnologies.sm/en/app/?tag=gestionale)
 - [Open the app](https://ggtechnologies.sm/app/invoice-scope/run/)
 - [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
 
+It installs as an application and, on Chrome or Edge on a computer, keeps a copy of the data in a folder of yours. [Installation guide →](https://ggtechnologies.sm/en/app/install/)
+
 *The starting point*
 
 ## Customer data is the part to keep in-house.
@@ -126,7 +128,7 @@ PolyForm Shield 1.0.0. The code is public: it can be read, changed and used, com
 
 Free.
 
-**Version** 0.76.2 · **Updated** 26 October 2026 · **Licence** PolyForm-Shield-1.0.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
+**Version** 0.77.0 · **Updated** 27 October 2026 · **Licence** PolyForm-Shield-1.0.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
 
 *FAQ*
 
@@ -180,9 +182,13 @@ Yes, for your own work and for products that do a different job. The licence is 
 
 The format is the same, so a project moves between the two applications as a file. It belongs here when the work has a quote and invoices, because only here does the plan show what was quoted, invoiced and collected; a plan without the money side fits better in Plan Scope, which is lighter.
 
+### How is it installed, and where is a copy of the archive kept?
+
+With Chrome or Edge on a computer, press the install icon in the address bar, or «Install» at the top of the app; on a Mac with Safari use «Add to Dock», on iPhone and iPad «Add to Home Screen». Then, in Settings, «Automatic copy in a folder» links a folder on the computer: the app writes the archive there at every change, with one copy a day. The [installation guide](https://ggtechnologies.sm/en/app/install/) shows every step, system by system.
+
 ### How is the installed application updated, and how is it removed?
 
-It updates itself: when a new version is ready, a green dot appears beside its name, and tapping it reloads the application with your data intact. Removal is done by the operating system: beside the name, «Installed» shows where the command is. Removing the application does not delete the data, and deleting the data does not remove the application: if the archive is no longer needed, export it first.
+It updates itself: when a new version is ready, a green dot appears beside its name, and tapping it reloads the application with your data intact. Removal is done by the operating system: beside the name, «Installed» shows where the command is. With Chrome, Edge and Android removing the application does not delete the data, and deleting the data does not remove the application; with Safari the installed application keeps data of its own, and removing it may delete them. If the archive is no longer needed, export it first.
 
 ## Need the same thing, built for you?
 

@@ -12,7 +12,7 @@
 // here is the shell, the company details and the settings, because splitting those out would mean
 // four files that each know about the header.
 
-import { setup as setupInstall, isInstalled, system } from "gg/install.js";
+import { setup as setupInstall, isInstalled, system, canPrompt, promptInstall, browser } from "gg/install.js";
 import * as update from "gg/update.js";
 import * as remind from "biz/remind.js";
 import { apply as applyTheme, initial as initialTheme, toggle as toggleTheme } from "gg/theme.js";
@@ -184,6 +184,7 @@ function _drawNewMenu() {
 /** Where the command to remove the app is, on the system in use. */
 function _removalText(kind) {
   if (kind === "ios") return t("removalIos");
+  if (kind === "safari-mac") return t("removalMac");
   if (kind === "android") return t("removalAndroid");
   return t("removalDesktop");
 }
@@ -201,8 +202,10 @@ function _translate() {
   // The line that explains is written when it appears, so the one on screen is written again here:
   // hidden, it gets its text from the module the next time it is needed.
   if (!el("installHint").hidden) {
-    el("installHint").textContent = installedNow ? _removalText(system()) : t("installIos");
+    el("installHint").textContent = installedNow ? _removalText(system())
+      : t(browser() === "safari-mac" ? "installMac" : "installIos");
   }
+  _drawInstall();
   _drawNewMenu();
   for (const select of [el("companyForm").elements.naturaPredefinita, el("itemNatura")]) _fillNature(select);
   _fillMerce(el("companyForm").elements.tmPredefinito);
@@ -343,6 +346,36 @@ async function _route() {
  * sa cos'è un browser non sa che i dati stanno lì dentro, e la cartella è la cosa più semplice
  * che possa fare per sé.
  */
+/**
+ * Installation, said in the settings and as the first of the first steps.
+ *
+ * Three answers: installed (and how to remove it), installable now (the browser's own question,
+ * one button away), or the way for the browser in use — Safari on a Mac, an iPhone, Firefox —
+ * where the browser asks nothing. `gg/install.js` knows which; the words are here.
+ */
+function _installWords() {
+  if (isInstalled()) return `${t("installStateInstalled")} ${_removalText(system())}`;
+  if (canPrompt()) return t("installStateReady");
+  const key = {
+    chromium: "installStateChromium", "safari-mac": "installStateSafariMac", ios: "installStateIos",
+    android: "installStateAndroid", firefox: "installStateFirefox",
+  }[browser()];
+  return t(key || "installStateOther");
+}
+
+function _drawInstall() {
+  el("installState").textContent = _installWords();
+  el("installNow").hidden = !canPrompt();
+  el("installGuide").href = t("installGuideUrl");
+  el("stepInstall").classList.toggle("done", isInstalled());
+}
+
+/** The browser's question, asked from the settings or from the first steps. */
+async function _askInstall() {
+  await promptInstall();
+  _drawInstall();
+}
+
 async function _drawSteps(company, docs) {
   const fatti = {
     stepCompany: Boolean(company && company.denominazione),
@@ -351,6 +384,9 @@ async function _drawSteps(company, docs) {
     stepBackup: backupLinked || Boolean(_lastExport()),
   };
   for (const [id, fatto] of Object.entries(fatti)) el(id).classList.toggle("done", fatto);
+  // Installed or not, it does not hold the panel open: where the browser cannot install, it would
+  // never close.
+  el("stepInstall").classList.toggle("done", isInstalled());
   el("setupNote").hidden = isDemo() || (fatti.stepCompany && fatti.stepDoc && fatti.stepBackup);
 }
 
@@ -1161,13 +1197,21 @@ async function _drawSafety(docs) {
   const valori = detto.values && detto.values.giorni !== undefined
     ? { ...detto.values, giorni: days(detto.values.giorni) }
     : detto.values;
-  el("backupNoteText").textContent = tf(detto.key, valori);
+  // The permission asked again at every opening is the problem installing solves: said here, where
+  // it is felt, and only to whoever has not installed yet.
+  const installa = detto.key === "safetyPrompt" && !isInstalled() ? ` ${t("promptInstallHint")}` : "";
+  el("backupNoteText").textContent = tf(detto.key, valori) + installa;
   const vai = el("backupNoteGo");
   const esporta = el("backupNoteExport");
   vai.hidden = detto.action !== "settings";
   esporta.hidden = detto.action !== "export";
   vai.textContent = detto.key === "safetyNoFolder" ? t("safetyNoFolderGo") : t("safetyGo");
   esporta.textContent = t("safetyManualGo");
+  // Where the browser cannot hold a folder, the guide says which one can.
+  const guida = el("backupNoteGuide");
+  guida.hidden = detto.action !== "export";
+  guida.textContent = t("safetyGuide");
+  guida.href = t("folderGuideUrl");
 }
 
 /**
@@ -1188,7 +1232,10 @@ async function _drawBackup() {
   const line = el("backupLine");
   if (stato.kind === "unavailable") line.textContent = t("backupUnavailable");
   else if (stato.kind === "none") line.textContent = t("backupNone");
-  else if (stato.kind === "prompt") line.textContent = tf("backupPrompt", { folder: stato.folder });
+  else if (stato.kind === "prompt") {
+    line.textContent = tf("backupPrompt", { folder: stato.folder })
+      + (isInstalled() ? "" : ` ${t("promptInstallHint")}`);
+  }
   else if (stato.kind === "held") line.textContent = tf("backupHeld", { folder: stato.folder });
   else if (stato.error) line.textContent = tf("backupError", { folder: stato.folder, error: stato.error });
   else if (stato.lastWrite) {
@@ -1554,9 +1601,20 @@ async function main() {
     setupInstall(el("install"), el("installHint"), {
       storageKey: "gg.invoice-scope.install-dismissed",
       iosText: t("installIos"),
+      macText: t("installMac"),
       removal: (kind) => (kind === "label" ? t("removalLabel") : _removalText(kind)),
+      onChange: _drawInstall,
     });
   }
+  _drawInstall();
+  el("installNow").addEventListener("click", _askInstall);
+  // The first step asks the browser directly when it can; otherwise it leads to the settings, where
+  // the way for this browser is written.
+  el("stepInstallGo").addEventListener("click", (event) => {
+    if (!canPrompt()) return;
+    event.preventDefault();
+    _askInstall();
+  });
 
   db = await openDatabase();
   // Il modello dei progetti si aggancia al deposito **prima** del dimostrativo: il seme scrive i

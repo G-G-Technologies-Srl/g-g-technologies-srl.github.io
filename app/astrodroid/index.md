@@ -18,6 +18,8 @@ Categoria · [Svago](https://ggtechnologies.sm/app/?tag=svago)
 - [Aprite l'app](https://ggtechnologies.sm/app/astrodroid/run/)
 - [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/astrodroid)
 
+Si installa come un'applicazione e funziona anche senza connessione. [Guida all'installazione →](https://ggtechnologies.sm/app/installare/)
+
 *Perché un gioco*
 
 ## Il vincolo è lo stesso; cambia chi lo guarda.
@@ -87,7 +89,7 @@ Italiano e inglese, seguono la lingua del browser.
 
 Apache-2.0. Il codice è pubblico e riusabile, anche in un lavoro commerciale.
 
-**Versione** 0.3.14 · **Aggiornata il** 27 ottobre 2026 · **Licenza** Apache-2.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/astrodroid)
+**Versione** 0.3.15 · **Aggiornata il** 27 ottobre 2026 · **Licenza** Apache-2.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/astrodroid)
 
 *FAQ*
 
@@ -115,7 +117,7 @@ Da sola, e lo segnala. Accanto al nome dell'app c'è la sua versione. Quando ne 
 
 ### E per toglierla?
 
-La rimozione la fa il sistema, non l'app: nessun sito può disinstallarsi da solo, ed è una buona regola. Dentro l'app installata, accanto al nome, c'è «Installata»: toccandolo, l'app indica dov'è il comando sul vostro sistema. Un punto da sapere: togliere l'app lascia i dati dove sono, e cancellare i dati lascia l'app dov'è. Se i dati non servono più, conviene esportare prima l'archivio.
+La rimozione la fa il sistema, non l'app: nessun sito può disinstallarsi da solo, ed è una buona regola. Dentro l'app installata, accanto al nome, c'è «Installata»: toccandolo, l'app indica dov'è il comando sul vostro sistema. Un punto da sapere: con Chrome, Edge e Android togliere l'app lascia i dati dove sono, e cancellare i dati lascia l'app dov'è; con Safari, su Mac, iPhone e iPad, l'app installata tiene dati propri, e rimuoverla può cancellarli. Se i dati non servono più, conviene esportare prima l'archivio.
 
 ## Vi serve qualcosa che giri in locale?
 

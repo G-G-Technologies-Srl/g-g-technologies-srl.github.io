@@ -22,7 +22,7 @@ import * as scores from "./scores.js";
 import { autopilot } from "./attract.js";
 import * as card from "./card.js";
 import * as theme from "gg/theme.js";
-import { setup as setupInstall, isInstalled, system } from "gg/install.js";
+import { setup as setupInstall, isInstalled, system, browser } from "gg/install.js";
 import * as update from "gg/update.js";
 import { download, restore } from "gg/io.js";
 
@@ -90,6 +90,7 @@ let demoRound = 0;
 /** Where the command to remove the app is, on the system in use. */
 function _removalText(kind) {
   if (kind === "ios") return t("removalIos");
+  if (kind === "safari-mac") return t("removalMac");
   if (kind === "android") return t("removalAndroid");
   return t("removalDesktop");
 }
@@ -116,7 +117,8 @@ function _applyText() {
   // The line that explains is written when it appears, so the one on screen is written again here:
   // hidden, it gets its text from the module the next time it is needed.
   if (!el("installHint").hidden) {
-    el("installHint").textContent = installedNow ? _removalText(system()) : t("installIos");
+    el("installHint").textContent = installedNow ? _removalText(system())
+      : t(browser() === "safari-mac" ? "installMac" : "installIos");
   }
   _paintHud();
   _paintScores();
@@ -528,7 +530,7 @@ async function main() {
 
   input.setup(document.body, _command);
   setupInstall(el("install"), el("installHint"),
-    { storageKey: "gg.astrodroid.install-dismissed", iosText: t("installIos"),
+    { storageKey: "gg.astrodroid.install-dismissed", iosText: t("installIos"), macText: t("installMac"),
       removal: (kind) => (kind === "label" ? t("removalLabel") : _removalText(kind)), });
 
   // A game left running in a background tab is a game being lost while nobody watches.

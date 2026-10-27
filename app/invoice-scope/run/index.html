@@ -135,6 +135,9 @@
     <div class="panel warn" id="setupNote" hidden>
       <p data-t="homeSetup"></p>
       <ul class="steps">
+        <!-- First, because on Safari the installed app keeps data of its own: what is written in a
+             tab before installing stays in the tab (27 October 2026). -->
+        <li id="stepInstall"><a href="#/impostazioni" id="stepInstallGo" data-t="homeStepInstall"></a></li>
         <li id="stepCompany"><a href="#/azienda" data-t="homeStepCompany"></a></li>
         <li id="stepParty"><a href="#/anagrafiche" data-t="homeStepParty"></a></li>
         <li id="stepDoc"><a href="#/documento" data-t="homeStepDoc"></a></li>
@@ -168,6 +171,7 @@
       <p id="backupNoteText"></p>
       <a class="button ghost" href="#/impostazioni" id="backupNoteGo"></a>
       <button type="button" class="button ghost" id="backupNoteExport" hidden></button>
+      <a class="button ghost" id="backupNoteGuide" href="/app/installare/" target="_blank" rel="noopener" hidden></a>
     </div>
 
     <!-- I quattro numeri: quanto ho fatturato, quanto mi devono, quanto è in ritardo, quanto ho
@@ -1623,6 +1627,19 @@
   <!-- Impostazioni -->
   <section id="screenSettings" class="screen" hidden>
     <h1 class="titled"><span class="ico" aria-hidden="true"><svg><use href="#ico-settings"/></svg></span><span data-t="settingsTitle"></span></h1>
+
+    <!-- Installation, always reachable (27 October 2026). The invitation in the bar appears only
+         when the browser offers it, never on Safari or Firefox, and a «No» closes it for good: many
+         people used the app in a tab without knowing it installs. Here the state, the browser's
+         question when it can be asked, and otherwise the way for the browser in use. -->
+    <div id="installSection">
+      <h2 data-t="installTitle"></h2>
+      <p class="note" id="installState" aria-live="polite"></p>
+      <div class="actions">
+        <button type="button" class="button" id="installNow" data-t="installNow" hidden></button>
+        <a class="button ghost" id="installGuide" href="/app/installare/" target="_blank" rel="noopener" data-t="installGuide"></a>
+      </div>
+    </div>
 
     <h2 data-t="settingsData"></h2>
     <p class="note" data-t="settingsDataNote"></p>

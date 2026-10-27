@@ -15,6 +15,14 @@ We write about what we design and build: sensors, robots, artificial intelligenc
 
 The sources for each article are listed and verifiable at the foot of its page.
 
+*Data · 27 October 2026 · draft*
+
+### [Where a browser app keeps its data](https://ggtechnologies.sm/en/insights/browser-apps-data/)
+
+Where apps that run in the browser keep their data, what can delete it, what installing them changes and how to keep a second copy of it in a folder.
+
+Automation
+
 *Invoicing · 6 October 2026*
 
 ### [E-invoicing between San Marino businesses](https://ggtechnologies.sm/en/insights/san-marino-e-invoicing/)

@@ -99,7 +99,7 @@ if ("serviceWorker" in navigator) {
 }
 
 setupInstall(el("installButton"), el("installHint"),
-  { storageKey: "gg.recinto.install-dismissed", iosText: t("installIos") });
+  { storageKey: "gg.recinto.install-dismissed", iosText: t("installIos"), macText: t("installMac") });
 
 el("coinButton").addEventListener("click", _coin);
 // Reading the high score table is not a move: opening it pauses, because otherwise you die while

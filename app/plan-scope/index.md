@@ -18,6 +18,8 @@ Categoria · [Gestionale](https://ggtechnologies.sm/app/?tag=gestionale)
 - [Aprite l'app](https://ggtechnologies.sm/app/plan-scope/run/)
 - [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/plan-scope)
 
+Si installa come un'applicazione e, su Chrome o Edge da computer, salva una copia dei dati in una vostra cartella. [Guida all'installazione →](https://ggtechnologies.sm/app/installare/)
+
 *Il punto di partenza*
 
 ## Chi organizza un evento tiene tutto in quattro posti diversi.
@@ -141,7 +143,7 @@ PolyForm Shield 1.0.0. Il codice è pubblico: si legge, si modifica e si usa anc
 
 In uso e aggiornata: il numero di versione qui sotto è quello vero, e si gira a ogni modifica. Dentro l'app c'è una Guida, come progetto da leggere nell'editor stesso, con la prova da fare in due prima di fidarsi.
 
-**Versione** 4.58.0 · **Aggiornata il** 27 ottobre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/plan-scope)
+**Versione** 4.59.0 · **Aggiornata il** 27 ottobre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/plan-scope)
 
 *FAQ*
 
@@ -183,13 +185,17 @@ In Markdown, sempre: dentro il file del progetto, come singola pagina .md, o com
 
 È lo stesso modo di costruire, su un caso piccolo. Elaborazione sulla macchina di chi usa il software e dati che restano dove sono già: sono le scelte che applichiamo nei progetti su misura, dove la posta in gioco è più alta.
 
+### Come si installa, e dove si salva una copia dei progetti?
+
+Con Chrome o Edge sul computer si preme l'icona di installazione nella barra degli indirizzi, oppure «Installa» in alto nell'app; su Mac con Safari si usa «Aggiungi al Dock», su iPhone e iPad «Aggiungi alla schermata Home». Poi, dal menu ⋯, «Cartelle e copie» collega una cartella del computer: l'app vi scrive tutto a ogni modifica, immagini comprese, con una copia al giorno. La [guida all'installazione](https://ggtechnologies.sm/app/installare/) mostra ogni passaggio, sistema per sistema.
+
 ### Come si aggiorna l'app, una volta installata?
 
 Da sola, e lo segnala. Accanto al nome dell'app c'è la sua versione. Quando ne è pronta una nuova, la scritta mostra tutt'e due — quella installata e quella in arrivo — con un punto verde: toccandola, l'app si ricarica aggiornata e i vostri dati restano dove sono. Altrimenti la versione nuova entra comunque alla prossima apertura. Se l'app è stata installata prima che esistesse questo avviso, la prima volta va fatto a mano: si chiudono tutte le finestre dell'app e la si riapre; se accanto al nome la versione non compare ancora, si ricarica la pagina con Ctrl+F5, o ⌘⇧R su Mac. Da lì in poi provvede l'app.
 
 ### E per toglierla?
 
-La rimozione la fa il sistema, non l'app: nessun sito può disinstallarsi da solo, ed è una buona regola. Dentro l'app installata, accanto al nome, c'è «Installata»: toccandolo, l'app indica dov'è il comando sul vostro sistema. Un punto da sapere: togliere l'app lascia i dati dove sono, e cancellare i dati lascia l'app dov'è. Se i dati non servono più, conviene esportare prima l'archivio.
+La rimozione la fa il sistema, non l'app: nessun sito può disinstallarsi da solo, ed è una buona regola. Dentro l'app installata, accanto al nome, c'è «Installata»: toccandolo, l'app indica dov'è il comando sul vostro sistema. Un punto da sapere: con Chrome, Edge e Android togliere l'app lascia i dati dove sono, e cancellare i dati lascia l'app dov'è; con Safari, su Mac, iPhone e iPad, l'app installata tiene dati propri, e rimuoverla può cancellarli. Se i dati non servono più, conviene esportare prima l'archivio.
 
 ## Vi serve la stessa cosa, su misura?
 

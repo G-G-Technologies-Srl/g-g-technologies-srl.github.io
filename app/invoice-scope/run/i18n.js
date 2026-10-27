@@ -38,6 +38,7 @@ const IT = {
   homeStepParty: "Il primo cliente",
   homeStepDoc: "La prima fattura, o un preventivo",
   homeStepBackup: "Una cartella dove l'app tiene una copia dei vostri dati",
+  homeStepInstall: "L'applicazione installata, che si apre dalla sua icona",
   homeNew: "Nuova fattura",
   homeYear: "Fatturato dell'anno",
   homeDue: "In scadenza",
@@ -191,11 +192,14 @@ const IT = {
   safetyNever: "La cartella «{folder}» è collegata, e non ha ancora ricevuto nessuna copia.",
   safetyGo: "Apri le impostazioni",
   safetyManualNever: "Questo browser non è in grado di conservare una copia autonomamente, e non "
-    + "è mai stato esportato un archivio: i dati dell'applicazione esistono in una copia sola.",
+    + "è mai stato esportato un archivio: i dati dell'applicazione esistono in una copia sola. Con "
+    + "Chrome o Edge da computer, l'applicazione tiene da sola una copia in una cartella.",
   safetyManualOld: "Questo browser non è in grado di conservare una copia autonomamente, e dall'ultimo "
     + "archivio esportato — {giorni} fa — il lavoro è andato avanti. Conviene esportarne uno "
-    + "adesso.",
+    + "adesso. Con Chrome o Edge da computer, la copia si aggiorna da sola in una cartella.",
   safetyManualGo: "Esporta un archivio",
+  safetyGuide: "Leggi la guida",
+  promptInstallHint: "Con l'applicazione installata, Chrome ed Edge in genere non lo chiedono più.",
 
   // ---- scadenzario
   navDue: "Scadenzario",
@@ -1327,9 +1331,12 @@ const IT = {
   removalAndroid: "Per toglierla: tenete premuta l'icona nella schermata Home e scegliete "
     + "«Disinstalla», oppure trascinatela sul cestino. I dati restano nel browser: se non "
     + "servono più, conviene esportarli e poi cancellare i dati del sito.",
-  removalIos: "Per toglierla: tenete premuta l'icona nella schermata Home, poi «Rimuovi app». I "
-    + "dati restano in Safari: se non servono più, conviene esportarli e poi cancellare i dati "
-    + "del sito dalle Impostazioni.",
+  removalIos: "Per toglierla: tenete premuta l'icona nella schermata Home, poi «Rimuovi app». "
+    + "L'app installata tiene dati propri, separati da quelli di Safari: rimuoverla può "
+    + "cancellarli, quindi conviene prima esportare un archivio.",
+  removalMac: "Per toglierla: nel Finder, trascinatela nel Cestino dalla cartella Applicazioni della "
+    + "vostra cartella personale. L'app aggiunta al Dock tiene dati propri, separati da quelli di "
+    + "Safari: rimuoverla può cancellarli, quindi conviene prima esportare un archivio.",
   versionLabel: "v{version}",
   versionNext: "v{current} → {next}",
   versionNextUnknown: "v{current} → nuova",
@@ -1337,7 +1344,35 @@ const IT = {
   versionUpdateUnknown: "Aggiorna alla versione nuova",
   versionReload: "Aggiornata: ricarica",
   versionUpToDate: "v{version} · aggiornata",
-  installIos: "Per installarla: tocca Condividi, poi «Aggiungi alla schermata Home».",
+  installIos: "Per installarla: «Condividi» — in iOS 26 dal pulsante ⋯ accanto all'indirizzo — "
+    + "poi «Aggiungi alla schermata Home».",
+  installMac: "Per installarla: menu File di Safari, poi «Aggiungi al Dock…».",
+
+  // ---- Installation, in the settings and among the first steps: always reachable, because the
+  // invitation in the bar appears only when the browser offers it (27 October 2026).
+  installTitle: "Installazione",
+  installNow: "Installa l'applicazione",
+  installGuide: "Guida all'installazione",
+  installGuideUrl: "/app/installare/",
+  folderGuideUrl: "/app/installare/#collegare-una-cartella",
+  installStateInstalled: "L'applicazione è installata su questo dispositivo: si apre dalla sua icona, "
+    + "in una finestra propria, e funziona anche senza connessione.",
+  installStateReady: "L'applicazione si può installare: si aprirà dalla sua icona, in una finestra "
+    + "propria, e funzionerà anche senza connessione.",
+  installStateChromium: "Per installarla: l'icona di installazione all'estremità destra della barra "
+    + "degli indirizzi oppure, nel menu del browser, la voce «Installa…».",
+  installStateSafariMac: "Per installarla: menu File di Safari, poi «Aggiungi al Dock…», da macOS "
+    + "Sonoma. L'app aggiunta al Dock tiene dati propri, separati da quelli di Safari: un archivio "
+    + "iniziato qui va esportato e poi importato nell'app.",
+  installStateIos: "Per installarla: in Safari, «Condividi» (in iOS 26 dal pulsante ⋯), poi "
+    + "«Aggiungi alla schermata Home». L'app installata tiene dati propri, separati da quelli di "
+    + "Safari: un archivio iniziato qui va esportato e poi importato nell'app.",
+  installStateAndroid: "Per installarla: menu ⋮ di Chrome, poi «Installa app» o «Aggiungi a schermata "
+    + "Home».",
+  installStateFirefox: "Firefox su computer non installa le applicazioni web. Con Chrome o Edge "
+    + "l'applicazione si installa e tiene da sola una copia dell'archivio in una cartella.",
+  installStateOther: "Questo browser non indica come installare l'applicazione: la guida descrive i "
+    + "passaggi per Chrome, Edge e Safari.",
 
   // ---- i campi, come li chiama chi compila
   f_azienda: "la vostra azienda",
@@ -1862,6 +1897,7 @@ const EN = {
   homeStepParty: "The first customer",
   homeStepDoc: "The first invoice, or a quote",
   homeStepBackup: "A folder where the app keeps a copy of your data",
+  homeStepInstall: "The app installed, opening from its own icon",
   homeNew: "New invoice",
   homeYear: "Invoiced this year",
   homeDue: "Falling due",
@@ -2014,10 +2050,14 @@ const EN = {
   safetyNever: "Folder «{folder}» is linked, and has not received a copy yet.",
   safetyGo: "Open settings",
   safetyManualNever: "This browser cannot keep a copy by itself, and no archive has ever been "
-    + "exported: the application's data exists in a single copy.",
+    + "exported: the application's data exists in a single copy. With Chrome or Edge on a computer, "
+    + "the application keeps a copy in a folder by itself.",
   safetyManualOld: "This browser cannot keep a copy by itself, and you have worked on since the last archive you "
-    + "exported — {giorni} ago. It is worth exporting one now.",
+    + "exported — {giorni} ago. It is worth exporting one now. With Chrome or Edge on a computer, the "
+    + "copy in a folder updates by itself.",
   safetyManualGo: "Export an archive",
+  safetyGuide: "Read the guide",
+  promptInstallHint: "With the application installed, Chrome and Edge usually stop asking.",
 
   navDue: "Payments",
   navDueDates: "Due dates",
@@ -3117,8 +3157,11 @@ const EN = {
     + "or drag it to the bin. The data stays in the browser: if you no longer need it, export it "
     + "first and then clear the site's data.",
   removalIos: "To remove it: press and hold the icon on the Home screen, then «Remove App». The "
-    + "data stays in Safari: if you no longer need it, export it first and then clear the site's "
-    + "data from Settings.",
+    + "installed app keeps data of its own, separate from Safari's: removing it may delete them, so "
+    + "export an archive first.",
+  removalMac: "To remove it: in the Finder, drag it to the Bin from the Applications folder inside "
+    + "your home folder. The app added to the Dock keeps data of its own, separate from Safari's: "
+    + "removing it may delete them, so export an archive first.",
   versionLabel: "v{version}",
   versionNext: "v{current} → {next}",
   versionNextUnknown: "v{current} → new",
@@ -3126,7 +3169,32 @@ const EN = {
   versionUpdateUnknown: "Update to the new version",
   versionReload: "Updated: reload",
   versionUpToDate: "v{version} · up to date",
-  installIos: "To install it: tap Share, then “Add to Home Screen”.",
+  installIos: "To install it: «Share» — in iOS 26 from the ⋯ button next to the address — then "
+    + "«Add to Home Screen».",
+  installMac: "To install it: Safari's File menu, then «Add to Dock…».",
+
+  installTitle: "Installation",
+  installNow: "Install the application",
+  installGuide: "Installation guide",
+  installGuideUrl: "/en/app/install/",
+  folderGuideUrl: "/en/app/install/#linking-a-folder",
+  installStateInstalled: "The application is installed on this device: it opens from its own icon, in "
+    + "a window of its own, and works without a connection too.",
+  installStateReady: "The application can be installed: it will open from its own icon, in a window of "
+    + "its own, and work without a connection too.",
+  installStateChromium: "To install it: the install icon at the right-hand end of the address bar or, in "
+    + "the browser's menu, the entry «Install…».",
+  installStateSafariMac: "To install it: Safari's File menu, then «Add to Dock…», from macOS Sonoma. The "
+    + "app added to the Dock keeps data of its own, separate from Safari's: an archive started here "
+    + "has to be exported and then imported into the app.",
+  installStateIos: "To install it: in Safari, «Share» (in iOS 26 from the ⋯ button), then «Add "
+    + "to Home Screen». The installed app keeps data of its own, separate from Safari's: an archive "
+    + "started here has to be exported and then imported into the app.",
+  installStateAndroid: "To install it: Chrome's ⋮ menu, then «Install app» or «Add to Home screen».",
+  installStateFirefox: "Firefox on a computer does not install web applications. With Chrome or Edge "
+    + "the application installs and keeps a copy of the archive in a folder by itself.",
+  installStateOther: "This browser does not say how to install the application: the guide describes "
+    + "the steps for Chrome, Edge and Safari.",
 
   f_azienda: "your company",
   f_cliente: "the customer",

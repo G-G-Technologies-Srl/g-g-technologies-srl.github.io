@@ -23,7 +23,7 @@ import { t, tf, lang, otherLang, setLang, resolveLang, missingKeys } from "./i18
 import { paint, relabel } from "./report.js";
 import { digest, downloadJson, downloadCsv, TOOL_VERSION } from "./export.js";
 import * as theme from "gg/theme.js";
-import { setup as setupInstall, isInstalled, system } from "gg/install.js";
+import { setup as setupInstall, isInstalled, system, browser, canPrompt, promptInstall } from "gg/install.js";
 import * as update from "gg/update.js";
 import * as store from "gg/store.js";
 import { download, restore, collect } from "gg/io.js";
@@ -415,6 +415,7 @@ function _say(node) {
 /** Where the command to remove the app is, on the system in use. */
 function _removalText(kind) {
   if (kind === "ios") return t("removalIos");
+  if (kind === "safari-mac") return t("removalMac");
   if (kind === "android") return t("removalAndroid");
   return t("removalDesktop");
 }
@@ -437,8 +438,10 @@ function _applyText() {
   // The line that explains is written when it appears, so the one on screen is written again here:
   // hidden, it gets its text from the module the next time it is needed.
   if (!el("installHint").hidden) {
-    el("installHint").textContent = installedNow ? _removalText(system()) : t("installHint");
+    el("installHint").textContent = installedNow ? _removalText(system())
+      : t(browser() === "safari-mac" ? "installMac" : "installHint");
   }
+  _paintInstall();
   el("backLink").textContent = t("backToPage");
   el("sourceLink").textContent = t("sourceLabel");
   el("errorTitle").textContent = t("errorTitle");
@@ -1406,8 +1409,30 @@ async function _importResult(payload) {
   return { ok: true, already };
 }
 
+/**
+ * Installation, said in the help: installed (and how to remove it), installable now (the browser's
+ * own question, one button away), or the way for the browser in use where the browser asks nothing.
+ */
+function _paintInstall() {
+  let words;
+  if (isInstalled()) words = `${t("installStateInstalled")} ${_removalText(system())}`;
+  else if (canPrompt()) words = t("installStateReady");
+  else {
+    words = t({
+      chromium: "installStateChromium", "safari-mac": "installStateSafariMac", ios: "installStateIos",
+      android: "installStateAndroid", firefox: "installStateFirefox",
+    }[browser()] || "installStateOther");
+  }
+  el("helpInstallTitle").textContent = t("installTitle");
+  el("helpInstallState").textContent = words;
+  el("helpInstallNow").textContent = t("installNow");
+  el("helpInstallNow").hidden = !canPrompt();
+  el("helpInstallGuide").textContent = t("installGuide");
+}
+
 /** L'aiuto, aperto dall'alto: il fuoco sul titolo, e la finestra riportata all'inizio. */
 function _openHelp() {
+  _paintInstall();
   const dialog = el("helpDialog");
   if (!dialog.open) dialog.showModal();
   dialog.scrollTop = 0;
@@ -1708,6 +1733,13 @@ function _wire() {
   // L'aiuto si apre da qualunque schermata, anche a metà questionario: chi organizza la rilevazione
   // spesso la prova compilandola, e la domanda «come lo mando agli altri?» arriva lì, non prima.
   el("help").addEventListener("click", _openHelp);
+  el("helpInstallNow").addEventListener("click", async () => {
+    await promptInstall();
+    _paintInstall();
+  });
+  el("helpInstallGuide").addEventListener("click", () => {
+    window.open(t("installGuideUrl"), "_blank", "noopener");
+  });
   el("helpClose").addEventListener("click", () => el("helpDialog").close());
   el("startAdminLink").addEventListener("click", _openHelp);
   el("startHelp").addEventListener("click", _openHelp);
@@ -1893,7 +1925,9 @@ async function _boot() {
   setupInstall(el("install"), el("installHint"), {
     storageKey: "gg.survey-scope.install",
     iosText: t("installHint"),
+    macText: t("installMac"),
     removal: (kind) => (kind === "label" ? t("removalLabel") : _removalText(kind)),
+    onChange: _paintInstall,
   });
 
   // The two key lists compared in the browser as well as before publishing. It costs nothing and

@@ -10,7 +10,7 @@ import { summarise } from "./stats.js";
 import { channelSvg, overlayHtml, indexAt } from "./chart.js";
 import * as theme from "gg/theme.js";
 import { mount as mountTable } from "./table.js";
-import { setup as setupInstall, isInstalled, system } from "gg/install.js";
+import { setup as setupInstall, isInstalled, system, browser } from "gg/install.js";
 import * as update from "gg/update.js";
 import * as history from "./history.js";
 import { download, restore } from "gg/io.js";
@@ -63,6 +63,7 @@ const SCREENS_PER = 5;
 /** Where the command to remove the app is, on the system in use. */
 function _removalText(kind) {
   if (kind === "ios") return t("removalIos");
+  if (kind === "safari-mac") return t("removalMac");
   if (kind === "android") return t("removalAndroid");
   return t("removalDesktop");
 }
@@ -92,7 +93,8 @@ function _applyText() {
   // The line that explains is written when it appears, so the one on screen is written again here:
   // hidden, it gets its text from the module the next time it is needed.
   if (!el("installHint").hidden) {
-    el("installHint").textContent = installedNow ? _removalText(system()) : t("installIos");
+    el("installHint").textContent = installedNow ? _removalText(system())
+      : t(browser() === "safari-mac" ? "installMac" : "installIos");
   }
   el("viewChart").textContent = t("viewChart");
   el("viewTable").textContent = t("viewTable");
@@ -1050,7 +1052,7 @@ function _start() {
   _scrubPointer();
   _keyboardZoom();
   setupInstall(el("install"), el("installHint"),
-    { storageKey: "gg.csv-scope.install-dismissed", iosText: t("installIos"),
+    { storageKey: "gg.csv-scope.install-dismissed", iosText: t("installIos"), macText: t("installMac"),
       removal: (kind) => (kind === "label" ? t("removalLabel") : _removalText(kind)), });
 
   if (new URLSearchParams(location.search).has("demo")) _demo();

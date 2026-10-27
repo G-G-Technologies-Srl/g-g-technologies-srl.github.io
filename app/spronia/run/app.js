@@ -22,7 +22,7 @@ import * as scores from "./scores.js";
 import * as audio from "./audio.js";
 import { autopilot } from "./attract.js";
 import * as theme from "gg/theme.js";
-import { setup as setupInstall, isInstalled, system } from "gg/install.js";
+import { setup as setupInstall, isInstalled, system, browser } from "gg/install.js";
 import * as update from "gg/update.js";
 import { download, restore } from "gg/io.js";
 
@@ -121,6 +121,7 @@ let bonusShown = -1;                    // l'istante del premio già annunciato
 /** Dove sta il comando per togliere l'app, sul sistema in uso. */
 function _removalText(kind) {
   if (kind === "ios") return t("removalIos");
+  if (kind === "safari-mac") return t("removalMac");
   if (kind === "android") return t("removalAndroid");
   return t("removalDesktop");
 }
@@ -162,7 +163,8 @@ function _applyText() {
   // sullo schermo: nascosta, il testo glielo darà `gg/install.js` la prossima volta che serve.
   for (const riga of [el("installBarHint"), el("installHint")]) {
     if (riga.hidden) continue;
-    riga.textContent = dentro ? _removalText(system()) : t("installIos");
+    riga.textContent = dentro ? _removalText(system())
+      : t(browser() === "safari-mac" ? "installMac" : "installIos");
   }
   el("full").setAttribute("aria-label",
     document.documentElement.dataset.full ? t("fullOff") : t("fullOn"));
@@ -877,6 +879,7 @@ async function main() {
   setupInstall([el("installBar"), el("install")], [el("installBarHint"), el("installHint")], {
     storageKey: "gg.spronia.install-dismissed",
     iosText: t("installIos"),
+    macText: t("installMac"),
     removal: (kind) => (kind === "label" ? t("removalLabel") : _removalText(kind)),
   });
 

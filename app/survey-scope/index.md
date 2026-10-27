@@ -18,6 +18,8 @@ Categoria · [Gestionale](https://ggtechnologies.sm/app/?tag=gestionale)
 - [Aprite l'app](https://ggtechnologies.sm/app/survey-scope/run/)
 - [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/survey-scope)
 
+Si installa come un'applicazione e, su Chrome o Edge da computer, salva una copia dei dati in una vostra cartella. [Guida all'installazione →](https://ggtechnologies.sm/app/installare/)
+
 *Il punto di partenza*
 
 ## Un'autovalutazione misura come l'azienda si racconta.
@@ -107,7 +109,7 @@ PolyForm Shield 1.0.0 per il codice: un prodotto concorrente richiede una licenz
 
 È un'autovalutazione. Non è una certificazione, non è un parere legale e non sostituisce i vostri consulenti.
 
-**Versione** 1.31.3 · **Aggiornata il** 27 ottobre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/survey-scope)
+**Versione** 1.32.0 · **Aggiornata il** 27 ottobre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/survey-scope)
 
 *FAQ*
 
@@ -151,7 +153,7 @@ Da sola, e lo segnala. Accanto al nome dell'app c'è la sua versione. Quando ne 
 
 ### E per toglierla?
 
-La rimozione la fa il sistema, non l'app: nessun sito può disinstallarsi da solo, ed è una buona regola. Dentro l'app installata, accanto al nome, c'è «Installata»: toccandolo, l'app indica dov'è il comando sul vostro sistema. Un punto da sapere: togliere l'app lascia i dati dove sono, e cancellare i dati lascia l'app dov'è. Se i dati non servono più, conviene esportare prima l'archivio.
+La rimozione la fa il sistema, non l'app: nessun sito può disinstallarsi da solo, ed è una buona regola. Dentro l'app installata, accanto al nome, c'è «Installata»: toccandolo, l'app indica dov'è il comando sul vostro sistema. Un punto da sapere: con Chrome, Edge e Android togliere l'app lascia i dati dove sono, e cancellare i dati lascia l'app dov'è; con Safari, su Mac, iPhone e iPad, l'app installata tiene dati propri, e rimuoverla può cancellarli. Se i dati non servono più, conviene esportare prima l'archivio.
 
 ## Una rilevazione su più unità
 

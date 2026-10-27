@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>App nel browser: dove stanno i dati e come proteggerli — G&amp;G</title>
+  <meta name="description" content="Dove conservano i dati le app che funzionano nel browser, che cosa può cancellarli, che cosa cambia installandole e come tenerne una seconda copia in una cartella.">
+  <meta name="author" content="Gian Angelo Geminiani">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0d1220">
+  <link rel="canonical" href="https://ggtechnologies.sm/insights/app-nel-browser-dati/">
+  <link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/app-nel-browser-dati/">
+  <link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/browser-apps-data/">
+  <link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/app-nel-browser-dati/">
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="G&amp;G Technologies">
+  <meta property="og:title" content="App nel browser: dove stanno i dati e come proteggerli — G&amp;G">
+  <meta property="og:description" content="Dove conservano i dati le app che funzionano nel browser, che cosa può cancellarli, che cosa cambia installandole e come tenerne una seconda copia in una cartella.">
+  <meta property="og:url" content="https://ggtechnologies.sm/insights/app-nel-browser-dati/">
+  <meta property="og:image" content="https://ggtechnologies.sm/assets/og-app-nel-browser-dati-it.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="App nel browser: dove stanno i dati e come proteggerli — G&amp;G">
+  <meta property="og:locale" content="it_IT">
+  <meta property="og:locale:alternate" content="en_GB">
+  <meta property="article:published_time" content="2026-10-27">
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="App nel browser: dove stanno i dati e come proteggerli — G&amp;G">
+  <meta name="twitter:description" content="Dove conservano i dati le app che funzionano nel browser, che cosa può cancellarli, che cosa cambia installandole e come tenerne una seconda copia in una cartella.">
+  <meta name="twitter:image" content="https://ggtechnologies.sm/assets/og-app-nel-browser-dati-it.jpg">
+  <meta name="twitter:image:alt" content="App nel browser: dove stanno i dati e come proteggerli — G&amp;G">
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../../assets/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../../assets/favicon-32.png">
+  <script>
+    (function () {
+      var theme = '';
+      try { theme = localStorage.getItem('gg-theme') || ''; } catch (ignored) { /* unavailable */ }
+      if (theme !== 'light' && theme !== 'dark') {
+        theme = (window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+      }
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.classList.add('js');
+    })();
+  </script>
+  <link rel="stylesheet" href="../../assets/site.css?v=023.bcdcb822">
+  <script type="application/ld+json">
+[
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://ggtechnologies.sm/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Insights",
+        "item": "https://ggtechnologies.sm/insights/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Dove stanno i dati di un'app nel browser",
+        "item": "https://ggtechnologies.sm/insights/app-nel-browser-dati/"
+      }
+    ]
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Un'app senza server conserva i dati in un posto solo.",
+    "name": "Dove stanno i dati di un'app nel browser",
+    "url": "https://ggtechnologies.sm/insights/app-nel-browser-dati/",
+    "description": "Dove conservano i dati le app che funzionano nel browser, che cosa può cancellarli, che cosa cambia installandole e come tenerne una seconda copia in una cartella.",
+    "inLanguage": "it",
+    "datePublished": "2026-10-27",
+    "dateModified": "2026-10-27",
+    "image": "https://ggtechnologies.sm/assets/og-app-nel-browser-dati-it.jpg",
+    "author": {
+      "@id": "https://ggtechnologies.sm/chi-siamo/#person",
+      "@type": "Person",
+      "name": "Gian Angelo Geminiani",
+      "url": "https://ggtechnologies.sm/chi-siamo/"
+    },
+    "publisher": {
+      "@id": "https://ggtechnologies.sm/#organization"
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://ggtechnologies.sm/insights/app-nel-browser-dati/"
+    }
+  }
+]
+  </script>
+</head>
+<body>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs><linearGradient id="icoGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#10b981"/></linearGradient></defs></svg>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs><linearGradient id="artEdge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent-strong)"/></linearGradient><linearGradient id="artPanel" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="var(--panel-2)"/><stop offset="0.6" stop-color="var(--panel)"/></linearGradient><radialGradient id="artGlow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="var(--glow-a)"/><stop offset="1" stop-color="var(--glow-a)" stop-opacity="0"/></radialGradient></defs></svg>
+  <a class="skip-link" href="#main">Contenuto principale</a>
+
+  <header class="site-header">
+    <nav class="nav" aria-label="Navigazione principale">
+      <a href="/" class="brand">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><defs><linearGradient id="ggMark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5eecab"/><stop offset="1" stop-color="#10b981"/></linearGradient><mask id="ggWire"><path d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="#fff" stroke-width="13"/><path d="M50 14 A36 36 0 1 0 86 50 H66" fill="none" stroke="#000" stroke-width="10"/></mask></defs><rect class="wire" width="100" height="100" mask="url(#ggWire)"/><path class="lit" d="M66 50 H86 A36 36 0 1 1 50 14" fill="none" stroke="url(#ggMark)" stroke-width="13" stroke-linecap="round"/><circle class="click" cx="50" cy="50" r="9" fill="none" stroke="#34d399" stroke-width="2"/><circle class="led" cx="50" cy="50" r="9"/></svg></span>
+        <span class="brand-text">
+          <span class="brand-name">G&amp;G Technologies</span>
+          <span class="brand-payoff">Accendiamo il futuro</span>
+        </span>
+      </a>
+
+      <div class="nav-links" id="navLinks">
+        <a href="/servizi/">Servizi</a>
+        <a href="/formazione/">Formazione</a>
+        <a href="/podz-ai/">Podz.AI</a>
+        <a href="/insights/">Insights</a>
+        <a href="/app/">App</a>
+        <a href="/chi-siamo/">Chi siamo</a>
+        <a href="/#contact">Contatti</a>
+      </div>
+
+      <div class="nav-actions">
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Tema chiaro/scuro · Light/dark theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2"/>
+            <path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.2 14.5A8.3 8.3 0 0 1 9.5 3.8a8.3 8.3 0 1 0 10.7 10.7Z"/>
+          </svg>
+        </button>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <span class="current">IT</span>
+          <a href="https://ggtechnologies.sm/en/insights/browser-apps-data/" hreflang="en" lang="en">EN</a>
+        </div>
+        <a class="btn btn-primary nav-cta" href="mailto:info@ggtechnologies.sm?subject=Richiesta%20informazioni">Contattateci</a>
+        <button class="menu-toggle" id="menuToggle" aria-label="Menu" aria-expanded="false" aria-controls="navLinks"><span></span></button>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <!-- article-hero on top of the shared page-hero: on every other page the hero ends the
+         screen, here it is followed by the banner, and the two blocks have to read as one. -->
+    <section class="hero page-hero article-hero">
+      <div class="hero-bg" aria-hidden="true">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+      </div>
+
+      <div class="container">
+        <div class="prose">
+          <nav class="breadcrumb" aria-label="Percorso"><ol><li><a href="/">Home</a></li><li><a href="/insights/">Insights</a></li><li aria-current="page">Dove stanno i dati di un'app nel browser</li></ol></nav>
+          <div class="kicker">Dati · 27 ottobre 2026</div>
+          <h1>Un'app senza server conserva i dati <span class="grad-text">in un posto solo</span>.</h1>
+          <p class="hero-sub">Le app di G&amp;G funzionano nel browser e i dati restano sul vostro computer. Che cosa può cancellarli, che cosa cambia installando l'app e come tenere una seconda copia in una vostra cartella.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="article-body">
+      <div class="container">
+        <figure class="article-art reveal">
+          <svg viewBox="0 0 1000 340" role="img"
+               aria-labelledby="appnelbrowserdatiT appnelbrowserdatiD">
+            <title id="appnelbrowserdatiT">L'archivio e la sua seconda copia</title>
+            <desc id="appnelbrowserdatiD">A sinistra un riquadro con le righe di un archivio: è lo spazio del browser. A destra un secondo riquadro con le stesse righe: è la cartella collegata. Fra i due, tre file di frammenti portano le righe da una parte all'altra. Nel riquadro di destra una riga, nel colore di accento, è la copia più recente.</desc>
+            <ellipse cx="500" cy="170" rx="300" ry="170" fill="url(#artGlow)"/><rect x="40" y="53" width="340" height="233" rx="18" fill="url(#artPanel)" stroke="var(--border)"/><rect x="59.4" y="52.4" width="301.2" height="2.0" rx="1" fill="url(#artEdge)"/><rect x="70" y="94" width="218" height="8" rx="4" fill="var(--muted)" opacity="0.30"/><rect x="70" y="132" width="173" height="8" rx="4" fill="var(--muted)" opacity="0.36"/><rect x="70" y="169" width="235" height="8" rx="4" fill="var(--muted)" opacity="0.42"/><rect x="70" y="206" width="157" height="8" rx="4" fill="var(--muted)" opacity="0.30"/><rect x="70" y="243" width="196" height="8" rx="4" fill="var(--muted)" opacity="0.36"/><rect x="620" y="53" width="340" height="233" rx="18" fill="url(#artPanel)" stroke="var(--border)"/><rect x="639.4" y="52.4" width="301.2" height="2.0" rx="1" fill="url(#artEdge)"/><rect x="650" y="94" width="218" height="8" rx="4" fill="url(#artEdge)" opacity="0.95"/><rect x="650" y="132" width="173" height="8" rx="4" fill="var(--muted)" opacity="0.36"/><rect x="650" y="169" width="235" height="8" rx="4" fill="var(--muted)" opacity="0.42"/><rect x="650" y="206" width="157" height="8" rx="4" fill="var(--muted)" opacity="0.30"/><rect x="650" y="243" width="196" height="8" rx="4" fill="var(--muted)" opacity="0.36"/><rect x="400" y="133" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="423" y="133" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="446" y="133" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="469" y="133" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="492" y="133" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="515" y="133" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="538" y="133" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="561" y="133" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="584" y="133" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="411" y="171" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="434" y="171" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="457" y="171" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="480" y="171" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="503" y="171" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="527" y="171" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="550" y="171" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="573" y="171" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="596" y="171" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="400" y="208" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="423" y="208" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="446" y="208" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="469" y="208" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="492" y="208" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="515" y="208" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="538" y="208" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="561" y="208" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/><rect x="584" y="208" width="4.6" height="4.6" rx="2" fill="url(#artEdge)" opacity="0.55"/>
+          </svg>
+        </figure>
+      <p class="article-draft">Bozza. Questo articolo non è ancora stato licenziato per la pubblicazione: non è indicizzato e non compare nella sitemap.</p>
+        <p class="article-meta">
+          <strong><a href="/chi-siamo/">Gian Angelo Geminiani</a></strong> · 27 ottobre 2026 ·
+          3 minuti di lettura<br>
+          Per chi usa Invoice Scope, Plan Scope o Survey Scope, e per chi valuta un'applicazione che lavora senza server.<br>
+          Innovation Manager, certificato EITCA/AI, fra gli autori di due studi su «Sensors».
+        </p>
+        <p class="article-tags"><span class="tag-label">Argomenti</span><a class="tag" href="/insights/?tag=automazione">Automazione</a></p>
+        <!-- No .reveal here on purpose: this is the text the reader came for, and fading in a
+             whole article as one block means the page looks empty until it fills the screen.
+             The animation belongs to cards and to the banner, not to the body copy. -->
+        <div class="prose">
+          <h2>Perché le app di G&amp;G conservano i dati sul vostro computer</h2>
+          <p>Invoice Scope, Plan Scope e Survey Scope trattano informazioni che molte imprese preferiscono tenere in azienda: l'elenco dei clienti con gli importi fatturati, i progetti in corso, le risposte a un questionario interno. Per questo le app di G&amp;G funzionano interamente nel browser, e i dati restano sul dispositivo di chi le usa. Il codice è pubblico: chiunque può verificare dove vanno i dati.</p>
+          <p>La scelta ha una conseguenza pratica. Senza un server non esiste una copia remota: l'archivio sta in un solo posto, lo spazio che il browser riserva al sito, e la seconda copia deve prevederla chi usa l'app.</p>
+          <h2>Le cause più comuni di perdita dei dati nel browser</h2>
+          <ul><li><strong>La pulizia dei dati di navigazione.</strong> Cancellare cookie e dati dei siti, per esempio per risolvere un problema di accesso, rimuove anche l'archivio delle app.</li><li><strong>Lo spazio su disco.</strong> Quando lo spazio scarseggia, i browser possono rimuovere i dati dei siti che non hanno una conservazione permanente, a partire da quelli usati meno di recente.</li><li><strong>Il periodo senza utilizzo, in Safari.</strong> WebKit, il motore di Safari, può cancellare i dati di un sito che non viene aperto per un certo tempo, nell'ambito delle protezioni contro il tracciamento.</li><li><strong>Un guasto o il cambio di computer.</strong> L'archivio non segue la persona: resta sul disco del dispositivo su cui è stato creato.</li></ul>
+          <h2>Che cosa cambia installando l'app</h2>
+          <p>Un'app web installabile, detta in inglese <em>progressive web app</em>, si apre nel browser e può essere installata come un'applicazione. Compare nel Dock, nel menu Start o nella schermata Home, si apre in una finestra propria e funziona anche senza connessione. L'installazione non passa da un negozio di applicazioni e non richiede un account.</p>
+          <p>Installare l'app protegge anche i dati. Chrome concede da sé la conservazione permanente ai siti che giudica importanti, e fra i criteri indica proprio l'installazione. WebKit decide con criteri analoghi, fra cui l'apertura del sito come app della schermata Home. Con la conservazione permanente il browser non rimuove l'archivio per fare spazio.</p>
+          <p>In Safari va considerato un dettaglio: l'app aggiunta al Dock o alla schermata Home tiene dati propri, separati da quelli della scheda. Conviene quindi installarla prima di cominciare a lavorare, oppure esportare l'archivio dalla scheda e importarlo nell'app.</p>
+          <h2>La seconda copia in una cartella del computer</h2>
+          <p>Con Chrome ed Edge sul computer, un'app può ricevere il permesso di scrivere in una cartella scelta da chi la usa. Invoice Scope, Plan Scope e Survey Scope lo usano per tenere una seconda copia: a ogni modifica scrivono l'archivio nella cartella collegata. Invoice Scope e Plan Scope conservano inoltre una copia al giorno degli ultimi trenta giorni. Se la cartella si trova dentro Dropbox, iCloud Drive o OneDrive, la copia raggiunge anche quel servizio senza altri passaggi.</p>
+          <p>La funzione si basa su un'interfaccia che, per ora, mettono a disposizione solo i browser costruiti su Chromium, come Chrome ed Edge. Su Safari e su Firefox la seconda copia si ottiene esportando l'archivio a mano, e le app lo ricordano quando l'ultima esportazione è troppo vecchia.</p>
+          <h2>Le operazioni da fare il primo giorno</h2>
+          <ol><li>Aprire l'app con Chrome o Edge sul computer e installarla.</li><li>Collegare una cartella, preferibilmente dentro un servizio di sincronizzazione già in uso.</li><li>Verificare che sotto il riquadro della cartella compaia l'ora dell'ultima copia.</li><li>Su Safari, iPhone e iPad, installare l'app prima di inserire i dati ed esportare l'archivio con regolarità.</li></ol>
+          <p>La <a href="/app/installare/">guida all'installazione</a> mostra ogni passaggio, sistema per sistema, con i disegni delle finestre del browser.</p>
+          <h2>Fonti</h2>
+          <ul><li><a href="https://web.dev/articles/persistent-storage" rel="noopener">Persistent storage — web.dev</a></li><li><a href="https://webkit.org/blog/14403/updates-to-storage-policy/" rel="noopener">Updates to Storage Policy — WebKit</a></li><li><a href="https://support.google.com/chrome/answer/9658361?hl=it" rel="noopener">Utilizzare le app web — Guida di Google Chrome</a></li><li><a href="https://support.apple.com/it-it/104996" rel="noopener">Usare le app web di Safari sul Mac — Supporto Apple</a></li><li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/showDirectoryPicker" rel="noopener">Window: showDirectoryPicker() — MDN Web Docs</a></li></ul>
+        </div>
+        <div class="share">
+          <span class="share-label">Condivisione</span>
+          <a class="share-btn" href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fggtechnologies.sm%2Finsights%2Fapp-nel-browser-dati%2F" title="Condivisione su LinkedIn" aria-label="Condivisione su LinkedIn" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9h4v12H3zM10 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.77-1.95 4.03 0 4.78 2.5 4.78 5.75V21h-4v-5.6c0-1.34-.03-3.06-1.9-3.06-1.9 0-2.2 1.46-2.2 2.96V21h-4z"/></svg><span>LinkedIn</span></a><a class="share-btn" href="https://x.com/intent/post?url=https%3A%2F%2Fggtechnologies.sm%2Finsights%2Fapp-nel-browser-dati%2F&amp;text=App%20nel%20browser%3A%20dove%20stanno%20i%20dati%20e%20come%20proteggerli%20%E2%80%94%20G%26G" title="Condivisione su X" aria-label="Condivisione su X" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.3 3h3.1l-6.8 7.75L21.6 21h-6.3l-4.9-6.4L4.8 21H1.7l7.25-8.3L1.9 3h6.45l4.45 5.9Zm-1.1 16.1h1.7L7.9 4.8H6.05Z"/></svg><span>X</span></a><a class="share-btn" href="mailto:?subject=App%20nel%20browser%3A%20dove%20stanno%20i%20dati%20e%20come%20proteggerli%20%E2%80%94%20G%26G&amp;body=https%3A%2F%2Fggtechnologies.sm%2Finsights%2Fapp-nel-browser-dati%2F" title="Invio per email" aria-label="Invio per email"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm9 8.1L20 7.2V6.6L12 12 4 6.6v.6Z"/></svg><span>Email</span></a>
+          <button class="share-btn" type="button" data-share-copy="https://ggtechnologies.sm/insights/app-nel-browser-dati/"
+                  data-share-done="Link copiato"
+                  title="Copia del link" aria-label="Copia del link">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10.6 13.4a1 1 0 0 1 0-1.4l1.4-1.4a1 1 0 0 1 1.4 1.4l-1.4 1.4a1 1 0 0 1-1.4 0Zm-3.3 5.4a4.5 4.5 0 0 1 0-6.4l2.6-2.6 1.4 1.4-2.6 2.6a2.5 2.5 0 0 0 3.5 3.5l2.6-2.6 1.4 1.4-2.6 2.6a4.5 4.5 0 0 1-6.3 0Zm4-11.2 2.6-2.6a4.5 4.5 0 0 1 6.4 6.4l-2.6 2.6-1.4-1.4 2.6-2.6a2.5 2.5 0 0 0-3.5-3.5l-2.6 2.6Z"/></svg><span>Copia del link</span></button>
+        </div>
+        <p class="article-disclaimer">Questo articolo ha finalità informative. Il comportamento dei browser è quello documentato dai rispettivi produttori alla data di pubblicazione, e può cambiare con le versioni successive.</p>
+      </div>
+    </section>
+
+    <section class="tinted">
+      <div class="container">
+        <div class="reveal">
+          <h2>Per approfondire</h2>
+        </div>
+        <div class="related-grid">
+          <a class="related-card reveal" href="/servizi/ai-on-premise/">
+            <h3>AI on-premise</h3>
+            <p>Come si sceglie fra tutto in locale, ibrido e cloud, a partire dai vostri dati.</p>
+          </a>
+          <a class="related-card reveal" href="/servizi/intelligenza-artificiale/">
+            <h3>Intelligenza Artificiale</h3>
+            <p>Agenti che leggono documenti e interrogano i sistemi aziendali, con la misura decisa prima.</p>
+          </a>
+          <a class="related-card reveal" href="/formazione/">
+            <h3>Formazione</h3>
+            <p>Corsi pratici di quattro ore sull'intelligenza artificiale, per imprese e professionisti.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-band">
+      <div class="container reveal">
+        <h2>Vi serve un'applicazione che tenga i dati in azienda?</h2>
+        <p class="section-intro">Descriveteci il caso e i dati che deve trattare. Risponde una persona del team, non un form.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-primary" href="mailto:info@ggtechnologies.sm?subject=Richiesta%20informazioni">Contattateci</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a href="/" class="brand">
+            <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><rect class="wire" width="100" height="100" mask="url(#ggWire)"/><path class="lit" d="M66 50 H86 A36 36 0 1 1 50 14" fill="none" stroke="url(#ggMark)" stroke-width="13" stroke-linecap="round"/><circle class="click" cx="50" cy="50" r="9" fill="none" stroke="#34d399" stroke-width="2"/><circle class="led" cx="50" cy="50" r="9"/></svg></span>
+            G&amp;G Technologies
+          </a>
+          <p>Progettiamo e realizziamo tecnologia: wearable medicali, robotica e intelligenza artificiale. Sul nostro framework DigiSense® nasce Podz.AI.</p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Servizi</h4>
+          <ul>
+            <li><a href="/servizi/">Tutti i servizi</a></li>
+            <li><a href="/servizi/wearable-medicale/">Wearable medicali</a></li>
+            <li><a href="/servizi/robotica-automazione/">Robotica &amp; Automazione</a></li>
+            <li><a href="/servizi/intelligenza-artificiale/">Intelligenza Artificiale</a></li>
+            <li><a href="/servizi/ai-on-premise/">AI on-premise</a></li>
+            <li><a href="/servizi/ai-sicurezza/">AI per la sicurezza</a></li>
+            <li><a href="/servizi/ai-sviluppo-software/">AI per lo sviluppo del software</a></li>
+            <li><a href="/formazione/">Formazione</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Prodotti e ricerca</h4>
+          <ul>
+            <li><a href="/podz-ai/">Podz.AI</a></li>
+            <li><a href="/progetti/robot-assistenza-domiciliare/">Robot per l&#x27;assistenza domiciliare</a></li>
+            <li><a href="/digisense/">DigiSense®</a></li>
+            <li><a href="/insights/">Insights</a></li>
+            <li><a href="/app/">App gratuite</a></li>
+            <li><a href="/app/installare/">Installare le app</a></li>
+            <li><a href="https://ggtechnologies.sm/digisense-releases/" target="_blank" rel="noopener">Sito ufficiale Podz.AI</a></li>
+            <li><a href="https://ggtechnologies.sm/digisense-releases/download.html" target="_blank" rel="noopener">Scaricate Podz.AI</a></li>
+            <li><a href="https://github.com/G-G-Technologies-Srl/digisense-releases/releases" target="_blank" rel="noopener">Release Podz.AI</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contatti</h4>
+          <ul>
+            <li><a href="/chi-siamo/">Chi siamo</a></li>
+            <li><a href="mailto:info@ggtechnologies.sm">info@ggtechnologies.sm</a></li>
+            <li><a href="tel:+3780549900824">+378 0549 900824</a></li>
+            <li><a href="https://www.linkedin.com/company/gg-technologies-srl" target="_blank" rel="noopener">LinkedIn</a></li>
+            <li><a href="/privacy/">Informativa privacy</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-legal">
+        <span>© <span id="year">2026</span> G&amp;G Technologies Srl · Via Marino Moretti 23, 47899 Serravalle (RSM) · C.O.E./VAT SM29141</span>
+        <span>DigiSense® è un marchio registrato. Questo sito non usa cookie né tracker.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../../assets/site.js?v=001.e222d9a6" defer></script>
+</body>
+</html>

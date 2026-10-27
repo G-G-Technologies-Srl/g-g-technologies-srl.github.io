@@ -38,7 +38,7 @@ function asNavigator(value) {
 }
 
 /** The page's side: `window` with its listeners, `localStorage`, and «not installed, not iOS». */
-function browser({ stored = null, alreadyFired = null, installed = false, ios = false } = {}) {
+function browser({ stored = null, alreadyFired = null, installed = false, ios = false, ua = null } = {}) {
   const store = new Map(stored === null ? [] : [[KEY, stored]]);
   const listeners = {};
   globalThis.window = {
@@ -54,7 +54,7 @@ function browser({ stored = null, alreadyFired = null, installed = false, ios = 
   };
   asNavigator(ios
     ? { userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0)", maxTouchPoints: 5 }
-    : { userAgent: "Mozilla/5.0 (X11; Linux x86_64) Chrome/140", maxTouchPoints: 0 });
+    : { userAgent: ua || "Mozilla/5.0 (X11; Linux x86_64) Chrome/140", maxTouchPoints: 0 });
   return { button: pulsante(), hint: riga(), store };
 }
 
@@ -83,7 +83,7 @@ function prompt(outcome = "accepted") {
   };
 }
 
-const { setup } = await import("gg/install.js");
+const { setup, canPrompt, promptInstall, browser: whichBrowser } = await import("gg/install.js");
 const removal = (kind) => ({ label: "Installata", desktop: "menù ⋮ · Disinstalla — i dati restano",
                              android: "tieni premuta l'icona — i dati restano",
                              ios: "tieni premuta l'icona, Rimuovi app — i dati restano" }[kind]);
@@ -225,6 +225,67 @@ await prova("su iPhone la frase si chiude una volta sola, in tutt'e due i posti"
   assert.equal(b.hint.hidden, true, "toccata una, spariscono tutt'e due");
   assert.equal(secondaRiga.hidden, true);
   assert.equal(b.store.get(KEY), "no");
+});
+
+// ---- the other door: the settings line and the first-run step (27 October 2026)
+
+await prova("rifiutato l'invito nella barra, la domanda del browser resta disponibile altrove", async () => {
+  // Who said «No» once and later looks for the install in the settings must find it: the bar stays
+  // quiet, the event is held all the same.
+  const event = prompt();
+  const b = browser({ stored: "no", alreadyFired: event });
+  let changes = 0;
+  setup(b.button, b.hint, { storageKey: KEY, iosText: "Condividi…", removal, onChange: () => { changes += 1; } });
+  assert.equal(b.button.hidden, true, "la barra non lo ripropone");
+  assert.equal(canPrompt(), true, "ma dalle impostazioni si può chiedere");
+  assert.equal(changes, 1, "e l'app lo sa, per ridisegnare la sua riga");
+  assert.equal(await promptInstall(), "accepted");
+  assert.ok(event.prompted);
+  assert.equal(canPrompt(), false, "una domanda si fa una volta");
+  assert.equal(await promptInstall(), "unavailable");
+});
+
+await prova("chiesta da fuori, la domanda nasconde anche il pulsante della barra", async () => {
+  const b = browser({ alreadyFired: prompt("dismissed") });
+  wire(b);
+  assert.equal(b.button.hidden, false);
+  assert.equal(await promptInstall(), "dismissed");
+  assert.equal(b.button.hidden, true);
+  assert.equal(b.store.get(KEY), "no", "lo stesso rifiuto, dovunque sia stata fatta la domanda");
+});
+
+await prova("installata: niente da chiedere", async () => {
+  const b = browser({ installed: true, alreadyFired: prompt() });
+  wire(b);
+  assert.equal(canPrompt(), false);
+});
+
+await prova("Safari sul Mac ha la sua frase, se l'app la passa", async () => {
+  const safari = "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) "
+    + "Version/18.0 Safari/605.1.15";
+  const b = browser({ ua: safari });
+  setup(b.button, b.hint, { storageKey: KEY, iosText: "Condividi…", macText: "File › Aggiungi al Dock…", removal });
+  assert.equal(b.hint.hidden, false);
+  assert.equal(b.hint.textContent, "File › Aggiungi al Dock…");
+  const altra = browser({ ua: safari });
+  wire(altra);
+  assert.equal(altra.hint.hidden, true, "un'app che non la passa resta com'era");
+});
+
+await prova("quale browser, per le istruzioni", async () => {
+  const cases = [
+    ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Safari/537.36", "chromium"],
+    ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Safari/537.36 Edg/141.0", "chromium"],
+    ["Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15", "safari-mac"],
+    ["Mozilla/5.0 (Macintosh; Intel Mac OS X 14.5; rv:144.0) Gecko/20100101 Firefox/144.0", "firefox"],
+    ["Mozilla/5.0 (Linux; Android 15; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Mobile Safari/537.36", "android"],
+  ];
+  for (const [ua, atteso] of cases) {
+    browser({ ua });
+    assert.equal(whichBrowser(), atteso, ua);
+  }
+  browser({ ios: true });
+  assert.equal(whichBrowser(), "ios");
 });
 
 console.log(`install: ${passed} prove passate`);

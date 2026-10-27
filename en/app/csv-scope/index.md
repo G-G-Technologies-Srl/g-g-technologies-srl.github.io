@@ -18,6 +18,8 @@ Category · [Data](https://ggtechnologies.sm/en/app/?tag=dati)
 - [Open the app](https://ggtechnologies.sm/app/csv-scope/run/)
 - [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/csv-scope)
 
+It installs as an application and works without a connection too. [Installation guide →](https://ggtechnologies.sm/en/app/install/)
+
 *The starting point*
 
 ## A file of measurements is read where it already sits.
@@ -87,7 +89,7 @@ Apache-2.0. The code is public and reusable, commercial work included.
 
 It is a file viewer. It is not a medical device and is not for diagnosis.
 
-**Version** 0.15.14 · **Updated** 27 October 2026 · **Licence** Apache-2.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/csv-scope)
+**Version** 0.15.15 · **Updated** 27 October 2026 · **Licence** Apache-2.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/csv-scope)
 
 *FAQ*
 
@@ -115,7 +117,7 @@ On its own, and it tells you. Next to the app's name is its version. When a new 
 
 ### And to remove it?
 
-Removing it is the system's job, not the app's: no website can uninstall itself, and that is a good rule. Inside the installed app, next to its name, there is «Installed»: tap it and it tells you where the command is on your system. One point worth knowing: removing the app leaves the data where it is, and deleting the data leaves the app where it is. If you no longer need the data, export the archive first.
+Removing it is the system's job, not the app's: no website can uninstall itself, and that is a good rule. Inside the installed app, next to its name, there is «Installed»: tap it and it tells you where the command is on your system. One point worth knowing: with Chrome, Edge and Android removing the app leaves the data where it is, and deleting the data leaves the app where it is; with Safari, on Mac, iPhone and iPad, the installed app keeps data of its own, and removing it may delete them. If you no longer need the data, export the archive first.
 
 ## Need the same thing, built for you?
 

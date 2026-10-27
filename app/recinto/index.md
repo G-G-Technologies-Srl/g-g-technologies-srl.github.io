@@ -18,6 +18,8 @@ Categoria · [Svago](https://ggtechnologies.sm/app/?tag=svago)
 - [Aprite l'app](https://ggtechnologies.sm/app/recinto/run/)
 - [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/recinto)
 
+Si installa come un'applicazione e funziona anche senza connessione. [Guida all'installazione →](https://ggtechnologies.sm/app/installare/)
+
 *Che gioco è*
 
 ## Sul bordo si è al sicuro. Ed è lì che non si guadagna niente.
@@ -74,7 +76,7 @@ Tastiera, mouse, tocco. Le stesse regole per tutti e tre.
 
 Apache-2.0: il codice è quello che il browser scarica, senza passi di build in mezzo.
 
-**Versione** 0.15.6 · **Aggiornata il** 27 ottobre 2026 · **Licenza** Apache-2.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/recinto)
+**Versione** 0.15.7 · **Aggiornata il** 27 ottobre 2026 · **Licenza** Apache-2.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/recinto)
 
 *FAQ*
 

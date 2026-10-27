@@ -41,7 +41,7 @@ import * as folders from "./folders.js";
 import * as backup from "./backup.js";
 import * as theme from "gg/theme.js";
 import * as io from "gg/io.js";
-import { setup as setupInstall, isInstalled, system } from "gg/install.js";
+import { setup as setupInstall, isInstalled, system, canPrompt, promptInstall, browser } from "gg/install.js";
 import * as update from "gg/update.js";
 import * as remind from "biz/remind.js";
 import { t, tf, num, otherLang, setLang, resolveLang, missingKeys } from "./i18n.js";
@@ -1161,7 +1161,9 @@ async function _crumbTo(go) {
 /** The folders' line on the archive, and the switch on the project: from what `sync` says. */
 async function _paintFolder(error = null) {
   const state = await sync.status();
-  el("openPlaces").hidden = state.kind === "unavailable";
+  // Shown everywhere since 27 October 2026: hidden where the browser hands out no folder, the
+  // feature was a secret to whoever used Safari or Firefox. There the screen says what it takes.
+  el("openPlaces").hidden = false;
   // La spunta si vede appena il browser sa consegnare una cartella, e non solo quando ce n'è già
   // una: spuntarla è il gesto che porta a sceglierne una, e nasconderla lascerebbe senza strada.
   el("sharedLine").hidden = state.kind === "unavailable";
@@ -1385,12 +1387,19 @@ function _backupWords(state) {
 async function _paintBackupSection() {
   const state = await backup.status();
   el("backupStatus").textContent = _backupWords(state);
-  el("backupPick").hidden = state.kind === "unavailable";
+  const none = state.kind === "unavailable";
+  el("backupPick").hidden = none;
+  el("backupNow").hidden = !none;
+  el("backupGuide").hidden = !none;
+  // Nothing to name and nothing to share where no folder can be opened: those two cards wait.
+  el("whoCard").hidden = none;
+  el("foldersCard").hidden = none;
   el("backupPick").textContent = state.kind === "prompt" ? t("backupResume")
     : state.kind === "held" ? t("backupChoose") : t("backupPick");
   el("backupUnlink").hidden = state.kind === "none" || state.kind === "unavailable";
-  const copies = await backup.copies();
-  el("backupCopiesNone").hidden = copies.length > 0;
+  const copies = none ? [] : await backup.copies();
+  el("backupCopiesTitle").hidden = none;
+  el("backupCopiesNone").hidden = none || copies.length > 0;
   fill(el("backupCopyList"), copies.map((copy) => {
     const row = node("li", "row");
     row.append(node("span", "", copy.day ? longDate(copy.day) : t("backupCopyLatest")));
@@ -2418,8 +2427,34 @@ async function _backup() {
 /** Where the command to remove the app is, on the system in use. */
 function _removalText(kind) {
   if (kind === "ios") return t("removalIos");
+  if (kind === "safari-mac") return t("removalMac");
   if (kind === "android") return t("removalAndroid");
   return t("removalDesktop");
+}
+
+/**
+ * Installation, said in its own dialog: installed (and how to remove it), installable now (the
+ * browser's own question, one button away), or the way for the browser in use where the browser
+ * asks nothing. `gg/install.js` knows which; the words are here.
+ */
+function _installWords() {
+  if (isInstalled()) return `${t("installStateInstalled")} ${_removalText(system())}`;
+  if (canPrompt()) return t("installStateReady");
+  const key = {
+    chromium: "installStateChromium", "safari-mac": "installStateSafariMac", ios: "installStateIos",
+    android: "installStateAndroid", firefox: "installStateFirefox",
+  }[browser()];
+  return t(key || "installStateOther");
+}
+
+function _paintInstall() {
+  el("installState").textContent = _installWords();
+  el("installNow").hidden = !canPrompt();
+}
+
+function _openInstall() {
+  _paintInstall();
+  if (!el("installDialog").open) el("installDialog").showModal();
 }
 
 function _applyLanguage() {
@@ -2434,8 +2469,10 @@ function _applyLanguage() {
   // The line that explains is written when it appears, so the one on screen is written again here:
   // hidden, it gets its text from the module the next time it is needed.
   if (!el("installHint").hidden) {
-    el("installHint").textContent = installedNow ? _removalText(system()) : t("installHint");
+    el("installHint").textContent = installedNow ? _removalText(system())
+      : t(browser() === "safari-mac" ? "installMac" : "installHint");
   }
+  _paintInstall();
   home.refreshPlaceholders();
   el("tagline").textContent = t("tagline");
   el("lang").textContent = t("langSwitch");
@@ -2645,6 +2682,19 @@ function _wire() {
     await _welcomed();
     _openGuide();
   });
+  el("welcomeInstall").addEventListener("click", async () => {
+    await _welcomed();
+    _openInstall();
+  });
+  el("openInstall").addEventListener("click", () => _openInstall());
+  el("installNow").addEventListener("click", async () => {
+    await promptInstall();
+    _paintInstall();
+  });
+  el("installGuide").addEventListener("click", () => {
+    window.open(t("installGuideUrl"), "_blank", "noopener");
+  });
+  el("installClose").addEventListener("click", () => el("installDialog").close());
 
   el("importProject").addEventListener("click", () => el("importFile").click());
   el("importFile").addEventListener("change", async (event) => {
@@ -3005,6 +3055,10 @@ function _wire() {
   });
 
   el("openPlaces").addEventListener("click", () => _openPlaces());
+  el("backupNow").addEventListener("click", _backup);
+  el("backupGuide").addEventListener("click", () => {
+    window.open(t("folderGuideUrl"), "_blank", "noopener");
+  });
   // Le due righe di stato sull'archivio portano qui: «riprendi il permesso» è una cosa che si fa
   // una cartella alla volta, e questa è la schermata dove si vede quale.
   el("folderResume").addEventListener("click", () => _openPlaces());
@@ -3802,7 +3856,9 @@ async function _boot() {
   setupInstall(el("install"), el("installHint"), {
     storageKey: "gg.plan-scope.install",
     iosText: t("installHint"),
+    macText: t("installMac"),
     removal: (kind) => (kind === "label" ? t("removalLabel") : _removalText(kind)),
+    onChange: _paintInstall,
   });
 
   // The two key lists compared in the browser as well as before publishing. It costs nothing and

@@ -276,6 +276,15 @@
     <!-- Il limite in fondo, e detto per intero. È la stessa cosa che rende l'app distribuibile e
          che scarica su chi organizza il lavoro della raccolta: dirne una metà sola sarebbe una
          promessa in un caso e una sorpresa nell'altro. -->
+    <!-- Installation, always here (27 October 2026): the invitation in the bar appears only when the
+         browser offers it, never on Safari or Firefox, and a «No» closes it for good. -->
+    <h3 class="help-h" id="helpInstallTitle"></h3>
+    <p id="helpInstallState" aria-live="polite"></p>
+    <div class="row">
+      <button type="button" id="helpInstallNow" class="primary" hidden></button>
+      <button type="button" id="helpInstallGuide"></button>
+    </div>
+
     <h3 class="help-h" id="helpLimitTitle"></h3>
     <p id="helpLimit"></p>
 

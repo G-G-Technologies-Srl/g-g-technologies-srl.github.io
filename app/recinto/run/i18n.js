@@ -112,7 +112,9 @@ const IT = {
   versionReload: "Aggiornata: ricarica",
   versionUpToDate: "v{version} · aggiornata",
   installLabel: "Installa",
-  installIos: "Su iPhone e iPad si installa dal menu Condividi → «Aggiungi a Home».",
+  installIos: "Su iPhone e iPad si installa da «Condividi» — in iOS 26 dal pulsante ⋯ accanto "
+    + "all'indirizzo — poi «Aggiungi alla schermata Home».",
+  installMac: "Sul Mac si installa dal menu File di Safari, poi «Aggiungi al Dock…».",
 
   scoresTitle: "Classifica",
   scoresOf: "di questo computer",
@@ -243,7 +245,9 @@ const EN = {
   versionReload: "Updated: reload",
   versionUpToDate: "v{version} · up to date",
   installLabel: "Install",
-  installIos: "On iPhone and iPad, install it from the Share menu → «Add to Home Screen».",
+  installIos: "On iPhone and iPad, install it from «Share» — in iOS 26 from the ⋯ button next "
+    + "to the address — then «Add to Home Screen».",
+  installMac: "On a Mac, install it from Safari's File menu, then «Add to Dock…».",
 
   scoresTitle: "High scores",
   scoresOf: "on this computer",

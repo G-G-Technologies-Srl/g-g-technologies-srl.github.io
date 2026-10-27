@@ -115,6 +115,9 @@
         <!-- The guide is a project like the others; this makes it, once, and opens it. Chosen as a
              template it was found by the few who read template names. -->
         <button type="button" id="openGuide" data-t="openGuide"></button>
+        <!-- Installation, always here: the invitation in the bar appears only when the browser
+             offers it, and a «No» closes it for good (27 October 2026). -->
+        <button type="button" id="openInstall" data-t="installTitle"></button>
       </div>
     </div>
   </div>
@@ -856,14 +859,18 @@
         <p class="note" id="backupStatus" aria-live="polite"></p>
         <div class="row">
           <button type="button" id="backupPick" class="primary" data-t="backupPick"></button>
+          <!-- Where the browser hands out no folder: the file made by hand, and the guide that says
+               which browser can do it by itself. -->
+          <button type="button" id="backupNow" class="primary" data-t="backupAll" hidden></button>
+          <button type="button" id="backupGuide" data-t="installGuide" hidden></button>
           <button type="button" id="backupUnlink" class="ghost small danger" data-t="backupUnlink" hidden></button>
         </div>
-        <h3 data-t="backupCopies"></h3>
+        <h3 data-t="backupCopies" id="backupCopiesTitle"></h3>
         <p class="note" id="backupCopiesNone" data-t="backupCopiesNone" hidden></p>
         <ul class="list" id="backupCopyList"></ul>
       </div>
 
-      <div class="card">
+      <div class="card" id="foldersCard">
         <h2 data-t="folderTitle"></h2>
         <p data-t="folderHint"></p>
         <div class="row">
@@ -902,7 +909,21 @@
       <button type="button" id="welcomeExample" class="primary" data-t="welcomeExample"></button>
       <button type="button" id="welcomeOwn" data-t="welcomeOwn"></button>
       <span class="spacer"></span>
+      <button type="button" id="welcomeInstall" class="ghost small" data-t="welcomeInstall"></button>
       <button type="button" id="welcomeGuide" class="ghost small" data-t="welcomeGuide"></button>
+    </div>
+  </dialog>
+
+  <!-- Installation: the state, the browser's own question when it can be asked, and otherwise the
+       way for the browser in use — Safari on a Mac, an iPhone, Firefox — with the site's guide. -->
+  <dialog id="installDialog">
+    <h2 data-t="installTitle"></h2>
+    <p id="installState" aria-live="polite"></p>
+    <div class="row">
+      <button type="button" id="installNow" class="primary" data-t="installNow" hidden></button>
+      <button type="button" id="installGuide" data-t="installGuide"></button>
+      <span class="spacer"></span>
+      <button type="button" id="installClose" class="ghost small" data-t="installClose"></button>
     </div>
   </dialog>
 

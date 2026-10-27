@@ -35,9 +35,12 @@ const IT = {
   removalAndroid: "Per toglierla: tenete premuta l'icona nella schermata Home e scegliete "
     + "«Disinstalla», oppure trascinatela sul cestino. I dati restano nel browser: se non "
     + "servono più, conviene esportarli e poi cancellare i dati del sito.",
-  removalIos: "Per toglierla: tenete premuta l'icona nella schermata Home, poi «Rimuovi app». I "
-    + "dati restano in Safari: se non servono più, conviene esportarli e poi cancellare i dati "
-    + "del sito dalle Impostazioni.",
+  removalIos: "Per toglierla: tenete premuta l'icona nella schermata Home, poi «Rimuovi app». "
+    + "L'app installata tiene dati propri, separati da quelli di Safari: rimuoverla può "
+    + "cancellarli, quindi conviene prima esportarli.",
+  removalMac: "Per toglierla: nel Finder, trascinatela nel Cestino dalla cartella Applicazioni della "
+    + "vostra cartella personale. L'app aggiunta al Dock tiene dati propri, separati da quelli di "
+    + "Safari: rimuoverla può cancellarli, quindi conviene prima esportarli.",
   versionLabel: "v{version}",
   versionNext: "v{current} → {next}",
   versionNextUnknown: "v{current} → nuova",
@@ -46,7 +49,31 @@ const IT = {
   versionReload: "Aggiornata: ricarica",
   versionUpToDate: "v{version} · aggiornata",
   installButton: "Installa",
-  installHint: "Si può installare: funziona anche senza connessione.",
+  installHint: "Per installarla: «Condividi» — in iOS 26 dal pulsante ⋯ accanto all'indirizzo — poi «Aggiungi alla schermata Home».",
+  installMac: "Per installarla: menu File di Safari, poi «Aggiungi al Dock…».",
+  // ---- Installation, in the help: always reachable (27 October 2026).
+  installTitle: "Installazione",
+  installNow: "Installa l'app",
+  installGuide: "Guida all'installazione",
+  installGuideUrl: "/app/installare/",
+  installStateInstalled: "L'app è installata su questo dispositivo: si apre dalla sua icona, in una "
+    + "finestra propria, e funziona anche senza connessione.",
+  installStateReady: "L'app si può installare: si aprirà dalla sua icona, in una finestra propria, e "
+    + "funzionerà anche senza connessione.",
+  installStateChromium: "Per installarla: l'icona di installazione all'estremità destra della barra "
+    + "degli indirizzi oppure, nel menu del browser, la voce «Installa…».",
+  installStateSafariMac: "Per installarla: menu File di Safari, poi «Aggiungi al Dock…», da macOS "
+    + "Sonoma. L'app aggiunta al Dock tiene dati propri, separati da quelli di Safari: i risultati "
+    + "salvati qui si portano nell'app con «Esporta» e «Importa un file».",
+  installStateIos: "Per installarla: «Condividi» — in iOS 26 dal pulsante ⋯ accanto all'indirizzo — "
+    + "poi «Aggiungi alla schermata Home». L'app installata tiene dati propri, separati da quelli di "
+    + "Safari: i risultati salvati qui si portano nell'app con «Esporta» e «Importa un file».",
+  installStateAndroid: "Per installarla: menu ⋮ di Chrome, poi «Installa app» o «Aggiungi a schermata "
+    + "Home».",
+  installStateFirefox: "Firefox su computer non installa le applicazioni web. Con Chrome o Edge l'app "
+    + "si installa e tiene da sola una copia dei risultati in una cartella.",
+  installStateOther: "Questo browser non indica come installare l'app: la guida descrive i passaggi "
+    + "per Chrome, Edge e Safari.",
   backToPage: "Torna alla scheda",
   sourceLabel: "Codice sorgente",
   errorTitle: "Qualcosa non ha funzionato",
@@ -88,14 +115,14 @@ const IT = {
   backupUnlink: "Scollega la cartella",
   backupUnlinkAsk: "L'app smette di scrivere nella cartella. I file che ci sono restano dove "
     + "sono. Vado avanti?",
-  backupUnavailable: "Questo browser non sa aprire una cartella: funziona con Chrome o Edge sul "
+  backupUnavailable: "Questo browser non consente di aprire una cartella: funziona con Chrome o Edge sul "
     + "computer. Qui resta «Esporta».",
   backupNone: "Nessuna cartella collegata.",
   backupPrompt: "La cartella «{folder}» aspetta il vostro permesso: il browser lo chiede di nuovo a "
     + "ogni apertura.",
   backupLinked: "Cartella «{folder}» · ultima copia {when}.",
   backupNever: "Cartella «{folder}» · nessuna copia ancora.",
-  backupError: "Non riesco a scrivere nella cartella «{folder}» ({error}). Controlla che esista "
+  backupError: "Non è stato possibile scrivere nella cartella «{folder}» ({error}). Controlla che esista "
     + "ancora, o scegline un'altra.",
   savedImportedOne: "Importato un risultato.",
   savedImportedMany: "Importati {n} risultati.",
@@ -388,8 +415,11 @@ const EN = {
     + "or drag it to the bin. The data stays in the browser: if you no longer need it, export it "
     + "first and then clear the site's data.",
   removalIos: "To remove it: press and hold the icon on the Home screen, then «Remove App». The "
-    + "data stays in Safari: if you no longer need it, export it first and then clear the site's "
-    + "data from Settings.",
+    + "installed app keeps data of its own, separate from Safari's: removing it may delete them, so "
+    + "export them first.",
+  removalMac: "To remove it: in the Finder, drag it to the Bin from the Applications folder inside "
+    + "your home folder. The app added to the Dock keeps data of its own, separate from Safari's: "
+    + "removing it may delete them, so export them first.",
   versionLabel: "v{version}",
   versionNext: "v{current} → {next}",
   versionNextUnknown: "v{current} → new",
@@ -398,7 +428,29 @@ const EN = {
   versionReload: "Updated: reload",
   versionUpToDate: "v{version} · up to date",
   installButton: "Install",
-  installHint: "You can install it: it works without a connection.",
+  installHint: "To install it: “Share” — in iOS 26 from the ⋯ button next to the address — then “Add to Home Screen”.",
+  installMac: "To install it: Safari's File menu, then “Add to Dock…”.",
+  installTitle: "Installation",
+  installNow: "Install the app",
+  installGuide: "Installation guide",
+  installGuideUrl: "/en/app/install/",
+  installStateInstalled: "The app is installed on this device: it opens from its own icon, in a window "
+    + "of its own, and works without a connection too.",
+  installStateReady: "The app can be installed: it will open from its own icon, in a window of its own, "
+    + "and work without a connection too.",
+  installStateChromium: "To install it: the install icon at the right-hand end of the address bar or, in "
+    + "the browser's menu, the entry “Install…”.",
+  installStateSafariMac: "To install it: Safari's File menu, then “Add to Dock…”, from macOS Sonoma. The "
+    + "app added to the Dock keeps data of its own, separate from Safari's: results saved here are "
+    + "carried into the app with “Export” and “Import a file”.",
+  installStateIos: "To install it: “Share” — in iOS 26 from the ⋯ button next to the address — then "
+    + "“Add to Home Screen”. The installed app keeps data of its own, separate from Safari's: results "
+    + "saved here are carried into the app with “Export” and “Import a file”.",
+  installStateAndroid: "To install it: Chrome's ⋮ menu, then “Install app” or “Add to Home screen”.",
+  installStateFirefox: "Firefox on a computer does not install web applications. With Chrome or Edge the "
+    + "app installs and keeps a copy of the results in a folder by itself.",
+  installStateOther: "This browser does not say how to install the app: the guide describes the steps "
+    + "for Chrome, Edge and Safari.",
   backToPage: "Back to the page",
   sourceLabel: "Source code",
   errorTitle: "Something did not work",

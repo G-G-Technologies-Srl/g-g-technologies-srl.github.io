@@ -416,6 +416,24 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://ggtechnologies.sm/app/installare/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/app/installare/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/app/install/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/app/installare/"/>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/en/app/install/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/app/installare/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/app/install/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/app/installare/"/>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://ggtechnologies.sm/app/plan-scope/</loc>
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/app/plan-scope/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/app/plan-scope/"/>
@@ -546,7 +564,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/ai-act-dati-clienti/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/ai-act-client-data/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/ai-act-dati-clienti/"/>
-    <lastmod>2026-10-06</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -555,7 +573,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/ai-act-dati-clienti/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/ai-act-client-data/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/ai-act-dati-clienti/"/>
-    <lastmod>2026-10-06</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -564,7 +582,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/durabilita-per-progetto/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/durability-by-design/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/durabilita-per-progetto/"/>
-    <lastmod>2026-10-06</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -573,7 +591,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/durabilita-per-progetto/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/durability-by-design/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/durabilita-per-progetto/"/>
-    <lastmod>2026-10-06</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -582,7 +600,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/telefono-come-sensore/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/phone-as-a-sensor/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/telefono-come-sensore/"/>
-    <lastmod>2026-10-06</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -591,7 +609,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/telefono-come-sensore/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/phone-as-a-sensor/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/telefono-come-sensore/"/>
-    <lastmod>2026-10-06</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -600,7 +618,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/agenti-autonomi-perimetro/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/autonomous-agents-boundaries/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/agenti-autonomi-perimetro/"/>
-    <lastmod>2026-10-06</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -609,7 +627,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/agenti-autonomi-perimetro/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/autonomous-agents-boundaries/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/agenti-autonomi-perimetro/"/>
-    <lastmod>2026-10-06</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -618,7 +636,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/documentazione-che-non-invecchia/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/documentation-that-ages-well/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/documentazione-che-non-invecchia/"/>
-    <lastmod>2026-10-06</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -627,7 +645,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/documentazione-che-non-invecchia/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/documentation-that-ages-well/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/documentazione-che-non-invecchia/"/>
-    <lastmod>2026-10-06</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -636,7 +654,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/numero-o-misura/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/number-or-measurement/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/numero-o-misura/"/>
-    <lastmod>2026-10-06</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -645,7 +663,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/numero-o-misura/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/number-or-measurement/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/numero-o-misura/"/>
-    <lastmod>2026-10-06</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -654,7 +672,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/pianificazione-progetti/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/project-planning/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/pianificazione-progetti/"/>
-    <lastmod>2026-10-06</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -663,7 +681,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/pianificazione-progetti/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/project-planning/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/pianificazione-progetti/"/>
-    <lastmod>2026-10-06</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -672,7 +690,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/fattura-elettronica-san-marino/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/san-marino-e-invoicing/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/fattura-elettronica-san-marino/"/>
-    <lastmod>2026-10-06</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -681,7 +699,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/fattura-elettronica-san-marino/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/san-marino-e-invoicing/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/fattura-elettronica-san-marino/"/>
-    <lastmod>2026-10-06</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

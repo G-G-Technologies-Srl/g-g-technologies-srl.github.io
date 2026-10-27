@@ -190,9 +190,12 @@ const IT = {
   removalAndroid: "Per toglierla: tenete premuta l'icona nella schermata Home e scegliete "
     + "«Disinstalla», oppure trascinatela sul cestino. I dati restano nel browser: se non "
     + "servono più, conviene esportarli e poi cancellare i dati del sito.",
-  removalIos: "Per toglierla: tenete premuta l'icona nella schermata Home, poi «Rimuovi app». I "
-    + "dati restano in Safari: se non servono più, conviene esportarli e poi cancellare i dati "
-    + "del sito dalle Impostazioni.",
+  removalIos: "Per toglierla: tenete premuta l'icona nella schermata Home, poi «Rimuovi app». "
+    + "L'app installata tiene dati propri, separati da quelli di Safari: rimuoverla può "
+    + "cancellarli, quindi conviene prima esportarli.",
+  removalMac: "Per toglierla: nel Finder, trascinatela nel Cestino dalla cartella Applicazioni della "
+    + "vostra cartella personale. L'app aggiunta al Dock tiene dati propri, separati da quelli di "
+    + "Safari: rimuoverla può cancellarli, quindi conviene prima esportarli.",
   versionLabel: "v{version}",
   versionNext: "v{current} → {next}",
   versionNextUnknown: "v{current} → nuova",
@@ -203,8 +206,10 @@ const IT = {
   installButton: "Installala sul telefono",
   // Nella barra, dove i pixel sono contati come per la lingua: IT · EN, e qui «Installa».
   installShort: "Installa",
-  installIos: "Per averla sul telefono: Condividi, poi «Aggiungi a Home». Tocca qui per non "
+  installIos: "Per averla sul telefono: «Condividi» — in iOS 26 dal pulsante ⋯ accanto all'indirizzo — poi «Aggiungi alla schermata Home». Tocca qui per non "
     + "rivederlo.",
+  installMac: "Per averla nel Dock: menu File di Safari, poi «Aggiungi al Dock…». Fai clic qui per "
+    + "non rivederlo.",
   backToPage: "Torna alla scheda",
   sourceLabel: "Codice sorgente",
 };
@@ -350,8 +355,11 @@ const EN = {
     + "or drag it to the bin. The data stays in the browser: if you no longer need it, export it "
     + "first and then clear the site's data.",
   removalIos: "To remove it: press and hold the icon on the Home screen, then «Remove App». The "
-    + "data stays in Safari: if you no longer need it, export it first and then clear the site's "
-    + "data from Settings.",
+    + "installed app keeps data of its own, separate from Safari's: removing it may delete them, so "
+    + "export them first.",
+  removalMac: "To remove it: in the Finder, drag it to the Bin from the Applications folder inside "
+    + "your home folder. The app added to the Dock keeps data of its own, separate from Safari's: "
+    + "removing it may delete them, so export them first.",
   versionLabel: "v{version}",
   versionNext: "v{current} → {next}",
   versionNextUnknown: "v{current} → new",
@@ -361,7 +369,9 @@ const EN = {
   versionUpToDate: "v{version} · up to date",
   installButton: "Put it on your phone",
   installShort: "Install",
-  installIos: "To keep it on your phone: Share, then “Add to Home Screen”. Tap here to stop "
+  installIos: "To keep it on your phone: “Share” — in iOS 26 from the ⋯ button next to the address — then “Add to Home Screen”. Tap here to stop "
+    + "seeing this.",
+  installMac: "To keep it in the Dock: Safari's File menu, then “Add to Dock…”. Click here to stop "
     + "seeing this.",
   backToPage: "Back to the app page",
   sourceLabel: "Source code",
