@@ -58,7 +58,7 @@ Contatti / Contact: info@ggtechnologies.sm
 ## Articoli (italiano)
 
 - [Insights: tecnologia, norme e software](https://ggtechnologies.sm/insights/index.md): Analisi tecniche su wearable medicali, robotica, intelligenza artificiale e software gestionale, dalla norma al codice, con fonti verificabili.
-- [Fatturazione elettronica interna a San Marino](https://ggtechnologies.sm/insights/fattura-elettronica-san-marino/index.md): Dal 2027 la fatturazione elettronica interna è obbligatoria a San Marino sopra i 100.000 € di ricavi: chi, come, entro quando, e cosa preparare.
+- [Fatturazione elettronica interna a San Marino dal 2027](https://ggtechnologies.sm/insights/fattura-elettronica-san-marino/index.md): Dal 2027 la fatturazione elettronica interna è obbligatoria a San Marino sopra i 100.000 € di ricavi: chi, come, entro quando, e cosa preparare.
 - [Pianificazione dei progetti: perché le stime slittano](https://ggtechnologies.sm/insights/pianificazione-progetti/index.md): Perché le stime di un progetto sono quasi sempre ottimiste, cosa ha misurato la ricerca, e sette abitudini di pianificazione per piccole aziende e studi.
 - [Un numero non è una misura: incertezza e schede tecniche](https://ggtechnologies.sm/insights/numero-o-misura/index.md): Che cosa distingue davvero un indicatore da una misura, perché anche il misuratore a bracciale stima, e cosa cercare in una scheda tecnica prima di firmare.
 - [Il manuale d'impianto invecchia prima della macchina](https://ggtechnologies.sm/insights/documentazione-che-non-invecchia/index.md): Perché un manuale d'impianto diventa falso in una riga sola, e come si monta un documento che regge: la procedura da una parte, i valori che scadono dall'altra.
@@ -115,7 +115,7 @@ Contatti / Contact: info@ggtechnologies.sm
 ## Articles (English)
 
 - [Insights: technology, regulation and software](https://ggtechnologies.sm/en/insights/index.md): Technical analysis on medical wearables, robotics, artificial intelligence and management software, from regulation to code, with verifiable sources.
-- [Domestic e-invoicing in San Marino](https://ggtechnologies.sm/en/insights/san-marino-e-invoicing/index.md): From 2027 domestic e-invoicing is mandatory in San Marino above €100,000 in revenue: who, how, by when, and what to prepare.
+- [Domestic e-invoicing in San Marino from 2027](https://ggtechnologies.sm/en/insights/san-marino-e-invoicing/index.md): From 2027 domestic e-invoicing is mandatory in San Marino above €100,000 in revenue: who, how, by when, and what to prepare.
 - [Project planning: why estimates slip](https://ggtechnologies.sm/en/insights/project-planning/index.md): Why project estimates are almost always optimistic, what research has measured, and seven planning habits for small companies and professional firms.
 - [A number is not a measurement: uncertainty and datasheets](https://ggtechnologies.sm/en/insights/number-or-measurement/index.md): What really separates an indicator from a measurement, why even a cuff monitor is estimating, and what to look for in a datasheet before you sign.
 - [A plant manual ages before the machine](https://ggtechnologies.sm/en/insights/documentation-that-ages-well/index.md): Why a plant manual goes wrong in a single line, and how to assemble one that holds: the procedure on one side, the values that expire on the other.

@@ -72,3 +72,13 @@ Games
 Cut the field to claim it, while three different things try to stop you. The table stays on this computer.
 
 Games
+
+*How they are made*
+
+## The same principle, in every app.
+
+Each app opens from a web page and runs entirely in the browser. The processing happens on your own computer, and the files you open stay there.
+
+The source code is public: anyone can read it and check what the app does with the data. Each app page states the licence, the version and the date of the last update.
+
+The free apps cover project and invoice management, questionnaires, reading data in CSV format and a few games. Each app page describes what the app does and what it does not do.

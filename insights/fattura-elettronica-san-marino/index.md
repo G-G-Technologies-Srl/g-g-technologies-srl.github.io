@@ -1,5 +1,5 @@
 ---
-title: "Fatturazione elettronica interna a San Marino — G&G"
+title: "Fatturazione elettronica interna a San Marino dal 2027 — G&G"
 description: "Dal 2027 la fatturazione elettronica interna è obbligatoria a San Marino sopra i 100.000 € di ricavi: chi, come, entro quando, e cosa preparare."
 author: "Gian Angelo Geminiani"
 publisher: "G&G Technologies"

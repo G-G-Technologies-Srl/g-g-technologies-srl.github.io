@@ -86,3 +86,13 @@ Wearables · Robotics
 What a firm using AI on client data actually risks, between the AI Act, the GDPR and Italian Law 132/2025, and what to do from Monday morning.
 
 AI
+
+*How they are written*
+
+## Each article starts from a real question.
+
+The articles come from our projects: medical wearables, robotics and automation, artificial intelligence, management software. Each one addresses a specific question a business asks before it decides.
+
+The method is the same for all of them. It starts from the text of the regulation or the technical documentation, works out what it means in practice and ends with what to do.
+
+The filter groups the technical analyses into four subjects: robotics, automation, wearables and artificial intelligence.

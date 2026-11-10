@@ -72,3 +72,13 @@ Svago
 Si taglia il campo per conquistarlo, mentre tre minacce diverse provano a impedirlo. La classifica resta qui.
 
 Svago
+
+*Come sono fatte*
+
+## Lo stesso principio, in ogni app.
+
+Ogni app si apre da una pagina web e lavora interamente nel browser. L'elaborazione avviene sul vostro computer, e i file aperti restano lì.
+
+Il codice è pubblico: chiunque può leggerlo e verificare che cosa fa l'app con i dati. Ogni scheda indica la licenza, la versione e la data dell'ultimo aggiornamento.
+
+Le app gratuite coprono la gestione di progetti e fatture, i questionari, la lettura dei dati in formato CSV e alcuni giochi. Ogni scheda descrive che cosa fa l'app e che cosa non fa.

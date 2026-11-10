@@ -86,3 +86,13 @@ Wearable · Robotica
 Cosa rischia davvero uno studio che usa l'AI sui dati dei clienti, fra AI Act, GDPR e legge 132/2025, e cosa può fare da lunedì mattina.
 
 IA
+
+*Come sono scritti*
+
+## Ogni articolo parte da una domanda reale.
+
+Gli articoli nascono dai progetti: wearable medicali, robotica e automazione, intelligenza artificiale, software gestionale. Ognuno affronta una domanda precisa che un'impresa si pone prima di decidere.
+
+Il metodo è lo stesso per tutti. Si parte dal testo della norma o dalla documentazione tecnica, si ricostruisce che cosa comporta nella pratica e si chiude con le cose da fare.
+
+Il filtro raccoglie le analisi tecniche in quattro argomenti: robotica, automazione, wearable e intelligenza artificiale.

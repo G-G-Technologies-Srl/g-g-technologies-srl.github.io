@@ -1,5 +1,5 @@
 ---
-title: "Domestic e-invoicing in San Marino — G&G Technologies"
+title: "Domestic e-invoicing in San Marino from 2027 — G&G Technologies"
 description: "From 2027 domestic e-invoicing is mandatory in San Marino above €100,000 in revenue: who, how, by when, and what to prepare."
 author: "Gian Angelo Geminiani"
 publisher: "G&G Technologies"
