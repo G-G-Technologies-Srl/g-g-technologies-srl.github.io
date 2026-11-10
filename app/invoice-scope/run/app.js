@@ -20,7 +20,7 @@ import { download, restore } from "gg/io.js";
 import { get, put, list, persist } from "gg/store.js";
 
 import { t, tf, num, lang, otherLang, setLang, resolveLang } from "./i18n.js";
-import { ask, tell } from "./ask.js";
+import { ask, askChoice, tell } from "./ask.js";
 import { snack } from "./snack.js";
 import { openDatabase, isDemo, NAME, VERSION, EXPORTED } from "./db.js";
 import { seed } from "./demo.js";
@@ -61,6 +61,7 @@ import { bundle, bundleName, hasFiles, isZip, restoreBundle, archiveText } from 
 import { advice, SOGLIA_DOCUMENTI } from "./safety.js";
 import { inventory, compare } from "./archive.js";
 import { sweep } from "./attachments.js";
+import { periods as packPeriods, accountantPackage } from "./package.js";
 import * as alarms from "./alarms.js";
 import { currentDay } from "./day.js";
 
@@ -1724,6 +1725,26 @@ async function main() {
     // A minute and not at once: Safari on iOS starts the download after the click returns, and a URL
     // revoked at once is a download that never arrives.
     setTimeout(() => URL.revokeObjectURL(url), 60000);
+  });
+  // The period for the accountant, in one zip: which period, then the file (`package.js`).
+  el("exportPack").addEventListener("click", async () => {
+    const scelte = packPeriods(currentDay());
+    const chiave = await askChoice(t("packAsk"), scelte.map((one) => ({
+      value: one.key,
+      label: t(`pack_${one.key}`),
+      note: tf("packRange", { dal: shownDate(one.from), al: shownDate(one.to) }),
+    })));
+    const periodo = scelte.find((one) => one.key === chiave);
+    if (!periodo) return;
+    const { name, bytes, counts } = await accountantPackage(db, { from: periodo.from, to: periodo.to });
+    const url = URL.createObjectURL(new Blob([bytes], { type: "application/zip" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = name;
+    anchor.click();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    await tell(tf("packDone", { emesse: counts.emesse, ricevute: counts.ricevute, bonifici: counts.ricevuteBonifici })
+      + (counts.mancanti ? ` ${tf("packMissing", { mancanti: counts.mancanti })}` : ""));
   });
   // ---- i promemoria ----------------------------------------------------------------------------
   //

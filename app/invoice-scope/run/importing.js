@@ -171,6 +171,16 @@ function _decodeXml(bytes) {
   return new TextDecoder(latina ? "windows-1252" : "utf-8").decode(bytes);
 }
 
+/**
+ * The text of an invoice file as it arrived: a signed `.p7m` opened first, then decoded in the
+ * encoding it declares. The same steps the import takes, for whoever wants to read a file kept on
+ * a purchase (`viewer.js`). Throws when the signature cannot be opened.
+ */
+export function xmlText(bytes) {
+  const dentro = bytes[0] === 0x3c || bytes[0] === 0xef ? null : _p7m(bytes);
+  return _decodeXml(dentro || bytes);
+}
+
 /** Names compared the way a person would: case, accents and spacing set aside. */
 function _key(text) {
   return String(text || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -331,6 +341,28 @@ async function _dentro(bytes) {
     .map((entry) => ({ name: entry.name, bytes: entry.bytes }));
 }
 
+/**
+ * The PDF a supplier put inside the XML, as a file to keep, or `null`.
+ *
+ * Only a PDF, and only the first: it is the readable copy of the invoice, which is what a purchase
+ * card needs. Other attachments (a delivery note as an image, a spreadsheet) are counted and named
+ * in the report, not kept — a purchase holds one copy of its invoice, not a folder.
+ */
+function _pdfDentro(allegati) {
+  const pdf = (allegati || []).find((one) => one.formato === "PDF" || /\.pdf$/i.test(one.nome));
+  if (!pdf || !pdf.dati) return null;
+  try {
+    const binario = atob(pdf.dati.replace(/\s+/g, ""));
+    const bytes = Uint8Array.from(binario, (c) => c.charCodeAt(0));
+    // `%PDF`: a name ending in .pdf is a promise, the first four bytes are the fact.
+    if (bytes.length < 5 || String.fromCharCode(...bytes.slice(0, 4)) !== "%PDF") return null;
+    const nome = /\.pdf$/i.test(pdf.nome) ? pdf.nome : `${pdf.nome || "fattura"}.pdf`;
+    return { name: nome.split(/[\\/]/).pop(), bytes };
+  } catch (ignored) {
+    return null;
+  }
+}
+
 /** One spreadsheet: which of the three exports it is, and what it holds. */
 function _foglio(name, sheets, contesto) {
   for (const foglio of sheets) {
@@ -414,6 +446,23 @@ export async function plan(sorgenti, contesto = {}) {
     return { id: _id, nuovo: true, nome: incoming.denominazione, record: incoming };
   };
 
+  // **The SdI's identifier of each invoice received, by file name** (10 November 2026). It is not in
+  // the invoice: the SdI writes it in the metadata file it delivers beside it (`_MT_`), and the
+  // guide asks for it in the integrations TD16–TD19. Read from the zip of the Agenzia's portal,
+  // where the two arrive together, and written on the purchase.
+  const idSdi = new Map();
+  const _metadati = (file) => {
+    if (!/_MT_\d+\.xml$/i.test(file.name)) return;
+    try {
+      const testo = _decodeXml(file.bytes);
+      const id = (/<IdentificativoSdI>\s*(\d{1,20})\s*</.exec(testo) || [])[1];
+      const nome = (/<NomeFile>\s*([^<\s]+)\s*</.exec(testo) || [])[1];
+      if (id && nome) idSdi.set(nome.split("/").pop().toLowerCase(), id);
+    } catch (ignored) {
+      // A metadata file that cannot be read leaves the purchase without the identifier, as before.
+    }
+  };
+
   const espandi = async (sorgente) => {
     const { name, bytes } = sorgente;
 
@@ -446,6 +495,7 @@ export async function plan(sorgenti, contesto = {}) {
       // invoices reported a hundred errors. They are counted in one quiet line.
       const notifiche = tutti.filter((file) => NOTIFICA_SDI.test(file.name));
       const dentro = tutti.filter((file) => !NOTIFICA_SDI.test(file.name));
+      for (const file of notifiche) _metadati(file);
       const fuori = [];
       for (const file of dentro) fuori.push(..._fatture(file));
       if (notifiche.length) {
@@ -503,6 +553,8 @@ export async function plan(sorgenti, contesto = {}) {
    */
   const costKey = (c) => [c.partyId, c.tipo === "nota" ? "nota" : "doc", _key(c.numero), String(c.data || "").slice(0, 10)].join("|");
   const costiEsistenti = new Set((contesto.costs || []).map(costKey));
+  // The purchases typed by hand that a file of this import completes: once each.
+  const completatiCosti = new Set();
   // Gli attesi delle ricorrenze: una fattura ricevuta dello stesso fornitore nello stesso mese
   // è quella, e si aggancia — così l'atteso sparisce senza che qualcuno lo confermi a mano.
   //
@@ -771,7 +823,7 @@ export async function plan(sorgenti, contesto = {}) {
         const chi = cliente(mittente, fonte.name);
         const giaCliente = esistenti.parties.find((p) => p.id === chi.id);
         if (giaCliente && (giaCliente.ruolo || "cliente") === "cliente" && !promozioni.includes(chi.id)) promozioni.push(chi.id);
-        for (const { doc, avvisi, dichiarato } of fonte.letto.documenti) {
+        for (const { doc, avvisi, dichiarato, allegati } of fonte.letto.documenti) {
           // **An integration is not a purchase.** TD16–TD19 are the self-invoices a company issues to
           // add Italian VAT to a reverse-charge or foreign purchase: the supplier stands as cedente,
           // so the file reads as received — and the purchase already recorded was counted twice,
@@ -788,6 +840,14 @@ export async function plan(sorgenti, contesto = {}) {
           if (fonte.bytes && fonte.letto.documenti.length === 1) {
             record._file = { name: String(fonte.name).split("/").pop(), bytes: fonte.bytes };
           }
+          // The SdI's identifier, when the metadata file came in the same zip.
+          const identificativo = idSdi.get(String(fonte.name).split("/").pop().toLowerCase());
+          if (identificativo) record.idSdi = identificativo;
+          // And the PDF the supplier put inside it, when there is one: the copy a person reads.
+          const pdf = _pdfDentro(allegati);
+          if (pdf) record._pdf = pdf;
+          const altri = (allegati || []).length - (pdf ? 1 : 0);
+          if (altri > 0) report.avvisi.push({ chiave: "readAttachment", valore: String(altri) });
           // A supplier's credit note names the invoice it reverses: found among the purchases
           // already here or in this same import, it is linked, and comes off that invoice.
           if (record.tipo === "nota" && (doc.fattureCollegate || []).length) {
@@ -799,6 +859,42 @@ export async function plan(sorgenti, contesto = {}) {
             if (fattura) record.fatturaId = fattura.id;
           }
           const chiave = costKey(record);
+          // **The XML completes a purchase typed by hand** (10 November 2026). The same supplier,
+          // number, date and type, entered before the file arrived: instead of «already here», it
+          // gets the lines, the instalments, the withholding and the file itself. What the person
+          // decided stays — category, description, the link to a recurring cost, the autofattura
+          // or the integration already made — and so do the payments recorded on it.
+          const aMano = (contesto.costs || []).find((c) => costKey(c) === chiave && !(c.origine && c.origine.xml));
+          if (aMano && !completatiCosti.has(aMano.id)) {
+            completatiCosti.add(aMano.id);
+            costiEsistenti.add(chiave);
+            const completo = {
+              ...record,
+              id: aMano.id,
+              created: aMano.created,
+              categoria: aMano.categoria || record.categoria,
+              descrizione: aMano.descrizione || record.descrizione,
+              _completa: true,
+            };
+            for (const campo of ["ricorrenzaId", "periodo", "autofatturaId", "autofatturaNonServe",
+              "integrazioneId", "integrazioneNonServe", "fatturaId", "documento", "copiaPdf"]) {
+              if (aMano[campo] !== undefined) completo[campo] = aMano[campo];
+            }
+            // The identifier typed by hand stays when the file brings none.
+            if (!completo.idSdi && aMano.idSdi) completo.idSdi = aMano.idSdi;
+            costi.push(completo);
+            report.completati = (report.completati || 0) + 1;
+            (report.nomi.completati ||= []).push(_titolo(doc, chi.nome));
+            report.avvisi.push(...avvisi);
+            if (cmp(from(aMano.imponibile || "0"), from(record.imponibile)) !== 0
+                || cmp(from(aMano.imposta || "0"), from(record.imposta)) !== 0) {
+              report.avvisi.push({
+                chiave: "impCostAmounts", numero: doc.numero,
+                prima: money(from(aMano.totale || "0")), dopo: money(from(record.totale)),
+              });
+            }
+            continue;
+          }
           const nuovo = !costiEsistenti.has(chiave);
           conta(nuovo, _titolo(doc, chi.nome));
           if (!nuovo) continue;
@@ -812,7 +908,9 @@ export async function plan(sorgenti, contesto = {}) {
           report.avvisi.push({ chiave: "impMonofaseByHand" });
         }
       } else if (fonte.tipo === "fattura") {
-        for (const { doc, cliente: incoming, avvisi, dichiarato } of fonte.letto.documenti) {
+        for (const { doc, cliente: incoming, avvisi, dichiarato, allegati } of fonte.letto.documenti) {
+          // On an invoice of ours the attachments are not kept: said, as before.
+          if ((allegati || []).length) report.avvisi.push({ chiave: "readAttachment", valore: String(allegati.length) });
           const chi = cliente(incoming, fonte.name);
           doc.partyId = chi.id;
           completaRighe(doc, contesto.company, chi.record);
@@ -888,17 +986,25 @@ export async function apply(db, piano) {
   // The invoices kept with their purchases: the Blobs are made before the transaction opens, because
   // an IndexedDB transaction closes at the first await that is not one of its own requests.
   const allegati = new Map();
+  const blob = (file, type, n) => ({
+    meta: {
+      id: globalThis.crypto?.randomUUID?.() || `doc-${Date.now()}-${n}`,
+      name: file.name, type, size: file.bytes.length,
+    },
+    blob: new Blob([file.bytes], { type }),
+  });
   for (const record of piano.costi || []) {
-    if (!record._file || !record._file.bytes || !record._file.bytes.length) continue;
-    const firmato = /\.p7m$/i.test(record._file.name);
-    const type = firmato ? "application/pkcs7-mime" : "application/xml";
-    allegati.set(record.id, {
-      meta: {
-        id: globalThis.crypto?.randomUUID?.() || `doc-${Date.now()}-${allegati.size}`,
-        name: record._file.name, type, size: record._file.bytes.length,
-      },
-      blob: new Blob([record._file.bytes], { type }),
-    });
+    const suoi = {};
+    // The file the purchase came from — only where the purchase has none yet: a completed one keeps
+    // the PDF its owner attached by hand.
+    if (record._file && record._file.bytes && record._file.bytes.length && !record.documento) {
+      const firmato = /\.p7m$/i.test(record._file.name);
+      suoi.documento = blob(record._file, firmato ? "application/pkcs7-mime" : "application/xml", allegati.size);
+    }
+    if (record._pdf && record._pdf.bytes && record._pdf.bytes.length && !record.copiaPdf) {
+      suoi.copiaPdf = blob(record._pdf, "application/pdf", allegati.size + 1);
+    }
+    if (Object.keys(suoi).length) allegati.set(record.id, suoi);
   }
 
   await tx(db, ["parties", "items", "docs", "payments", "counters", "costs", "outlays", "attachments"], async (scope) => {
@@ -914,13 +1020,21 @@ export async function apply(db, piano) {
       if (record) await scope.put("parties", { ...record, ruolo: "entrambi" });
     }
     for (const record of piano.costi || []) {
-      const { _fonte, _file, ...fields } = record;
-      const allegato = allegati.get(fields.id);
-      if (allegato) {
+      const { _fonte, _file, _pdf, _completa, ...fields } = record;
+      // A completion keeps the purchase as it was typed, so «Annulla l'ultima importazione» can put
+      // it back — the same rule as an invoice completed from its XML.
+      if (_completa) {
+        const precedente = await scope.get("costs", fields.id);
+        if (precedente) {
+          const { precedente: ignored, ...stub } = precedente;
+          fields.precedente = stub;
+        }
+      }
+      for (const [campo, allegato] of Object.entries(allegati.get(fields.id) || {})) {
         await scope.put("attachments", {
           ...allegato.meta, ownerId: fields.id, store: "costs", blob: allegato.blob, created: quando,
         });
-        fields.documento = allegato.meta;
+        fields[campo] = allegato.meta;
       }
       await scope.put("costs", { ...fields, importato: marca(_fonte) });
       scritti.acquisti += 1;
@@ -1058,7 +1172,8 @@ export async function undoLast(db) {
   for (const store of ["activities", "recurring", "recurringDocs", "projects"]) altrove.push(...await list(db, store));
   const usati = new Set([...altri, ...altriCosti, ...altrove].map((r) => r && r.partyId).filter(Boolean));
   const clienti = await list(db, "parties");
-  const miei = new Set(costs.filter(mio).map((c) => c.id));
+  // The purchases that go for good: a completed one is put back, and its payments stay on it.
+  const miei = new Set(costs.filter((c) => mio(c) && !c.precedente).map((c) => c.id));
   // The documents that go for good (a completion is put back, and its payments stay valid on it).
   const docTolti = new Set(docs.filter((d) => mio(d) && !d.precedente).map((d) => d.id));
   const daTogliere = {
@@ -1081,12 +1196,21 @@ export async function undoLast(db) {
 
   await tx(db, ["parties", "items", "docs", "payments", "counters", "costs", "outlays", "attachments"], async (scope) => {
     // The receipts go with their payments, in the same transaction (rule 10 of DEVELOPING.md).
-    // And the supplier's invoices kept with the purchases that go.
-    await forgetReceipts(scope, [...daTogliere.payments, ...daTogliere.outlays, ...daTogliere.costs]);
+    // And the supplier's invoices kept with the purchases that go — for a completed one, only the
+    // files the import added, not the PDF its owner had attached by hand.
+    const fileAggiunti = daTogliere.costs.map((c) => {
+      if (!c.precedente) return c;
+      const nuovi = {};
+      for (const campo of ["documento", "copiaPdf"]) {
+        if (c[campo] && (!c.precedente[campo] || c.precedente[campo].id !== c[campo].id)) nuovi[campo] = c[campo];
+      }
+      return nuovi;
+    });
+    await forgetReceipts(scope, [...daTogliere.payments, ...daTogliere.outlays, ...fileAggiunti]);
     for (const [store, records] of Object.entries(daTogliere)) {
       for (const r of records) {
         // A completion is undone by putting the reconstruction back, not by removing the invoice.
-        if (store === "docs" && r.precedente) await scope.put("docs", r.precedente);
+        if ((store === "docs" || store === "costs") && r.precedente) await scope.put(store, r.precedente);
         else await scope.remove(store, r.id);
       }
     }

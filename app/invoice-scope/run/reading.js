@@ -19,7 +19,12 @@
 //    from the lines, so reading it back would be reading our own arithmetic in; `Natura` and the
 //    Ufficio Tributario's `TM` are read from `DettaglioLinee`, where they are stated once per line.
 //
-// **What is deliberately not read.** The signature, the attachments, the relatives of
+// **The attachments are read, and handed back apart** (10 November 2026): many suppliers put a PDF of
+// the invoice inside the XML, and on a purchase that copy is the readable one. They come back as
+// `allegati` beside the document — name, format, the base64 text — and the caller decides what to
+// keep; the document itself does not change.
+//
+// **What is deliberately not read.** The signature, the relatives of
 // `DatiOrdineAcquisto` (contract, agreement, receipt, SAL) and the whole `DatiVeicoli` branch: none
 // of them has a field in this app, and a
 // reader that half-fills a structure is worse than one that says it left it alone. They are counted
@@ -45,7 +50,6 @@ const NON_LETTI = [
   ["DatiRicezione", "readReceipt"],
   ["DatiSAL", "readSal"],
   ["DatiVeicoli", "readVehicles"],
-  ["Allegati", "readAttachment"],
 ];
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -362,9 +366,18 @@ export function read(source) {
       if (esigibilita === "S") cliente.splitPayment = true;
     }
 
+    // The files inside the invoice, as they are written: the base64 is decoded by whoever keeps them.
+    const allegati = x.all(body, "Allegati").map((node) => ({
+      nome: x.value(node, "NomeAttachment") || "",
+      formato: (x.value(node, "FormatoAttachment") || "").toUpperCase(),
+      descrizione: x.value(node, "DescrizioneAttachment") || "",
+      dati: x.value(node, "Attachment") || "",
+    }));
+
     documenti.push({
       doc,
       cliente,
+      allegati,
       // What the file says the total is. Kept apart from the document on purpose: the document's
       // total is what its lines add up to, and these two meeting is a check, not an assignment.
       dichiarato: _num(generali, "ImportoTotaleDocumento"),

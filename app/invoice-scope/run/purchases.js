@@ -27,7 +27,8 @@ import { get } from "gg/store.js";
 import { t, tf } from "./i18n.js";
 import { ask, askChoice, tell } from "./ask.js";
 import { money, rate as shownRate, date as shownDate } from "./format.js";
-import { from, cmp, toString, ZERO } from "./decimal.js";
+import { from, cmp, sub, toString, ZERO } from "./decimal.js";
+import { spread } from "./schedule.js";
 import { parseAmount } from "./parse.js";
 import { parties, openNewParty, isSupplier } from "./parties.js";
 import { save as saveDoc } from "./model.js";
@@ -37,12 +38,13 @@ import {
   TIPI, MONOFASE, IVA, CATEGORIE, taxKind, defaultRate, taxOn, costRecord, problems,
   paidOf, owedOn, state, allCosts, allOutlays, saveCost, removeCost, outlaysOf, recordOutlay,
   removeOutlay, cost as getCost, signedTotal, daAutofatturare, autofatturaDa, notesOf, nextDue, partsOf, dueOf,
-  daIntegrare, integrazioneDa,
+  daIntegrare, integrazioneDa, payable, ritenuteDaVersare, segnaRitenuteVersate,
 } from "./costs.js";
 import { categorie } from "./categories.js";
 import { currentDay } from "./day.js";
 import { attachDocument, detachDocument, blobOf, refusal, isXml, DOCUMENT_ACCEPT } from "./attachments.js";
 import { pickFiles, planFiles } from "./importing.js";
+import { openReceived } from "./viewer.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -218,6 +220,39 @@ function _refCell(record) {
   return td;
 }
 
+/**
+ * One transfer for several purchases of the same supplier (10 November 2026): the excess over what
+ * this purchase still owes goes on the supplier's other open purchases, oldest first, if the person
+ * says so. The same rule, and the same `spread`, as money received on several invoices.
+ */
+async function _registraUscita(record, residuo, campi) {
+  const importo = from(campi.importo);
+  if (cmp(residuo, ZERO) > 0 && cmp(importo, residuo) > 0) {
+    const costs = await allCosts(database);
+    const perId = new Map(costs.map((one) => [one.id, one]));
+    const righe = payable(costs, await allOutlays(database))
+      .map((row) => ({ ...row, docId: row.costId, numero: _reference(perId.get(row.costId) || {}) }));
+    const { quote, avanzo } = spread(righe, { partyId: record.partyId, escludi: record.id, importo: sub(importo, residuo) });
+    if (quote.length && await ask(tf("outSpreadAsk", { di_piu: money(sub(importo, residuo)) }), {
+      okLabel: t("outSpreadYes"), cancelLabel: t("outSpreadNo"),
+      lines: quote.map((quota) => tf("outSpreadLine", { numero: quota.numero || "—", importo: money(quota.importo) })),
+    })) {
+      const nota = campi.nota || t("dueSpreadNote");
+      const uscita = await recordOutlay(database, record, { ...campi, importo: toString(residuo, 2) });
+      for (const quota of quote) {
+        const altro = perId.get(quota.docId);
+        if (altro) await recordOutlay(database, altro, { ...campi, importo: toString(quota.importo, 2), nota });
+      }
+      return {
+        record: uscita,
+        distribuito: true,
+        messaggio: cmp(avanzo, ZERO) > 0 ? tf("outSpreadLeft", { avanzo: money(avanzo) }) : null,
+      };
+    }
+  }
+  return recordOutlay(database, record, campi);
+}
+
 /** Il pagamento in uscita, dalla riga o dalla scheda: lo stesso foglio degli incassi. */
 async function _paga(record, residuo, dopo) {
   const persone = new Map((await parties(database)).map((p) => [p.id, p.denominazione]));
@@ -226,7 +261,7 @@ async function _paga(record, residuo, dopo) {
     etichetta: t("costPay"),
     diPiu: "costOverpaid",
     residuo,
-    save: (campi) => recordOutlay(database, record, campi),
+    save: (campi) => _registraUscita(record, residuo, campi),
     onDone: dopo,
   });
 }
@@ -307,6 +342,7 @@ function _drawInversione({ spuntata = false } = {}) {
 function _tipoCambiato() {
   const form = el("costForm");
   el("costNumeroRow").hidden = form.elements.tipo.value === "spesa";
+  el("costIdSdiRow").hidden = form.elements.tipo.value === "spesa";
   el("costNotaHint").hidden = form.elements.tipo.value !== "nota";
   el("costFatturaRow").hidden = form.elements.tipo.value !== "nota";
   _drawInvoices();
@@ -368,6 +404,10 @@ function _openSheet(record, { proposta = null } = {}) {
   form.elements.imponibile.value = data.imponibile ? toString(_amount(data.imponibile), 2) : "";
   form.elements.imposta.value = data.imposta ? toString(_amount(data.imposta), 2) : "";
   form.elements.scadenza.value = data.scadenza || "";
+  form.elements.ritenuta.value = data.ritenuta ? toString(_amount(data.ritenuta), 2) : "";
+  form.elements.idSdi.value = data.idSdi || "";
+  // The withholding is an Italian obligation of the payer: a San Marino company has no such field.
+  el("costRitenutaRow").hidden = taxKind(company) !== "iva";
   form.elements.inversione.checked = Boolean(data.inversione);
   form.elements.beniServizi.value = data.beniServizi || "";
   _drawRates(record || proposta ? String(data.aliquota ?? "0") : defaultRate(company));
@@ -387,7 +427,7 @@ function _openSheet(record, { proposta = null } = {}) {
 async function _saveSheet() {
   const form = el("costForm");
   const campi = {};
-  for (const name of ["tipo", "partyId", "data", "numero", "categoria", "descrizione", "imponibile", "aliquota", "imposta", "scadenza", "fatturaId", "beniServizi"]) {
+  for (const name of ["tipo", "partyId", "data", "numero", "categoria", "descrizione", "imponibile", "aliquota", "imposta", "scadenza", "fatturaId", "beniServizi", "ritenuta", "idSdi"]) {
     campi[name] = form.elements[name].value;
   }
   campi.inversione = form.elements.inversione.checked && !el("costInversioneRow").hidden;
@@ -410,13 +450,15 @@ async function _saveSheet() {
     integrazioneId: prima.integrazioneId, integrazioneNonServe: prima.integrazioneNonServe,
     // The withholding stays with the invoice; the amount the file asked for only while the amounts
     // are still the file's.
-    ritenuta: prima.ritenuta, daPagare: stessiImporti ? prima.daPagare : undefined,
+    ritenuta: el("costRitenutaRow").hidden ? prima.ritenuta : campi.ritenuta,
+    daPagare: stessiImporti ? prima.daPagare : undefined,
     // The instalments and the stated total of the file, like the lines: only while the amounts are
     // the file's.
     rate: stessiImporti ? prima.rate : undefined,
     totaleDichiarato: stessiImporti ? prima.totaleDichiarato : undefined,
-    // The label of the supplier's invoice already attached: the file itself is handled below.
-    documento: prima.documento },
+    // The label of the supplier's invoice already attached: the file itself is handled below. The
+    // PDF copy read from its XML, and how it was typed before an import completed it, the same.
+    documento: prima.documento, copiaPdf: prima.copiaPdf, precedente: prima.precedente },
   { company });
 
   const mancanze = problems(record);
@@ -512,8 +554,9 @@ async function _docChosen(file) {
 }
 
 /** Open the supplier's invoice in a tab, or save it: an XML is always saved, a browser shows it as code. */
-async function _showDoc(record, { download = false } = {}) {
-  const blob = await blobOf(database, record, { field: "documento" });
+async function _showDoc(record, { download = false, field = "documento" } = {}) {
+  const meta = record[field];
+  const blob = await blobOf(database, record, { field });
   if (!blob) {
     await tell(t("costDocMissing"));
     return;
@@ -521,8 +564,8 @@ async function _showDoc(record, { download = false } = {}) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  if (download || isXml(record.documento) || /heic|heif/i.test(record.documento.type || record.documento.name || "")) {
-    link.download = record.documento.name || "fattura";
+  if (download || isXml(meta) || /heic|heif/i.test(meta.type || meta.name || "")) {
+    link.download = meta.name || "fattura";
   } else {
     link.target = "_blank";
     link.rel = "noopener";
@@ -555,8 +598,9 @@ function _drawDocument(record) {
   apri.type = "button";
   apri.className = "link-button receipt-link";
   apri.textContent = doc.name || t("costDocLabel");
-  apri.title = t(isXml(doc) ? "costDocDownload" : "costDocOpen");
-  apri.addEventListener("click", () => _showDoc(record));
+  apri.title = t("costDocOpen");
+  // An XML opens as the invoice it is, laid out (`viewer.js`); the arrow beside it saves the file.
+  apri.addEventListener("click", () => (isXml(doc) ? openReceived(database, record) : _showDoc(record)));
   const scarica = document.createElement("button");
   scarica.type = "button";
   scarica.className = "ghost small";
@@ -584,6 +628,97 @@ function _drawDocument(record) {
     if (onChange) await onChange();
   });
   box.append(apri, scarica, cambia, togli);
+  // The PDF the supplier put inside the XML: the copy a person reads, beside the file of record.
+  if (record.copiaPdf) {
+    const copia = document.createElement("button");
+    copia.type = "button";
+    copia.className = "link-button receipt-link";
+    copia.textContent = t("costDocPdfCopy");
+    copia.title = record.copiaPdf.name || "";
+    copia.addEventListener("click", () => _showDoc(record, { field: "copiaPdf" }));
+    box.append(copia);
+  }
+}
+
+/**
+ * Files dropped on the purchases (10 November 2026): XML, signed XML and the SdI's zip go to the
+ * import, which shows what it would write; a PDF or a photo opens a new purchase with that file
+ * already chosen. The counter keeps the highlight steady while the pointer crosses the children.
+ */
+function _connectDrop() {
+  const zona = el("screenPurchases");
+  let dentro = 0;
+  const conFile = (event) => [...((event.dataTransfer && event.dataTransfer.types) || [])].includes("Files");
+  zona.addEventListener("dragenter", (event) => {
+    if (!conFile(event)) return;
+    dentro += 1;
+    zona.classList.add("dropping");
+  });
+  zona.addEventListener("dragover", (event) => {
+    if (conFile(event)) event.preventDefault();
+  });
+  zona.addEventListener("dragleave", () => {
+    dentro = Math.max(0, dentro - 1);
+    if (!dentro) zona.classList.remove("dropping");
+  });
+  zona.addEventListener("drop", async (event) => {
+    if (!conFile(event)) return;
+    event.preventDefault();
+    dentro = 0;
+    zona.classList.remove("dropping");
+    const files = [...event.dataTransfer.files];
+    if (!files.length) return;
+    const daLeggere = files.filter((file) => /\.(xml|p7m|zip)$/i.test(file.name));
+    if (daLeggere.length) {
+      await planFiles(daLeggere);
+      return;
+    }
+    await openNew(database);
+    await _docChosen(files[0]);
+  });
+}
+
+/** The month a set of payments belongs to, as a person says it: «ottobre 2026». */
+function _meseLabel(mese) {
+  const [anno, numero] = mese.split("-").map(Number);
+  return new Date(anno, numero - 1, 1).toLocaleDateString(document.documentElement.lang || "it",
+    { month: "long", year: "numeric" });
+}
+
+/** The withholding tax to pay with the F24, one row per month of payments, with its deadline. */
+function _drawRitenute(costs, outlays) {
+  const pannello = el("ritenuteNote");
+  const elenco = el("ritenuteList");
+  elenco.textContent = "";
+  const dovute = ritenuteDaVersare(costs, outlays, { company, today: _today() });
+  pannello.hidden = dovute.length === 0;
+  if (pannello.hidden) return;
+  el("ritenuteText").textContent = t("ritenutePanel");
+  for (const voce of dovute) {
+    const riga = document.createElement("div");
+    riga.className = "dup-row";
+    const testo = document.createElement("span");
+    testo.textContent = tf(voce.scaduta ? "ritenuteRowLate" : "ritenuteRow", {
+      mese: _meseLabel(voce.mese),
+      importo: money(voce.importo),
+      n: String(voce.pagamenti.length),
+      scadenza: shownDate(voce.scadenza),
+    });
+    if (voce.scaduta) testo.classList.add("overdue");
+    const fatto = document.createElement("button");
+    fatto.type = "button";
+    fatto.className = "button ghost small";
+    fatto.textContent = t("ritenuteDone");
+    fatto.addEventListener("click", async () => {
+      if (!(await ask(tf("ritenuteDoneAsk", { mese: _meseLabel(voce.mese), importo: money(voce.importo) }),
+        { okLabel: t("ritenuteDone") }))) return;
+      await segnaRitenuteVersate(database, voce.pagamenti.map((one) => one.outlayId), _today());
+      await renderList(database, { afterChange: onChange });
+      if (onChange) await onChange();
+    });
+    riga.append(testo, fatto);
+    elenco.append(riga);
+  }
 }
 
 /** Dopo un salvataggio: la scheda se è aperta su questo acquisto, l'elenco altrimenti. */
@@ -822,6 +957,7 @@ export async function renderList(db, { afterChange = null } = {}) {
   const persone = new Map([...anagrafiche].map(([id, p]) => [id, p.denominazione]));
   await _drawAutofatture(costs, anagrafiche);
   await _drawIntegrazioni(costs, anagrafiche);
+  _drawRitenute(costs, outlays);
   const per = new Map();
   for (const one of outlays) {
     if (!per.has(one.costId)) per.set(one.costId, []);
@@ -939,6 +1075,7 @@ export async function render(db, id, { afterChange = null } = {}) {
       ? tf("costRate", { n: record.rate.length, date: record.rate.map((quota) => shownDate(quota.scadenza)).join(", ") })
       : (record.scadenza ? `${t("f_scadenza")} ${shownDate(record.scadenza)}` : null),
     record.fatturaId ? await _linkedLabel(record.fatturaId) : null,
+    record.idSdi ? tf("costIdSdiLine", { id: record.idSdi }) : null,
   ].filter(Boolean);
   el("costMeta").textContent = pezzi.join(" · ");
   el("costDescription").textContent = record.descrizione || "";
@@ -1060,6 +1197,7 @@ export function connect(db, { afterChange = null } = {}) {
   el("purchasesNew").addEventListener("click", () => openNew(database));
   // The invoices received, read from their XML: the import's file chooser, opened from here.
   el("purchasesImport").addEventListener("click", () => pickFiles());
+  _connectDrop();
   el("costDocFile").accept = DOCUMENT_ACCEPT;
   el("costDocCardFile").accept = DOCUMENT_ACCEPT;
   el("costDocPick").addEventListener("click", () => {

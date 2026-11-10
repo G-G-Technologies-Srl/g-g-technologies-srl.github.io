@@ -942,6 +942,72 @@ await prova("la fattura ricevuta entra con il suo file, allegato all'acquisto", 
   assert.equal(file.size, new TextEncoder().encode(RICEVUTA).length, "i byte come sono arrivati");
 });
 
+await prova("l'XML completa l'acquisto inserito a mano, e l'annullamento lo rimette com'era", async () => {
+  const db = await openDatabase();
+  const { saveParty } = await import("../run/parties.js");
+  const { saveCost, recordOutlay } = await import("../run/costs.js");
+  const fornitore = await saveParty(db, { denominazione: "Hosting Cloud S.p.A.", partitaIva: "09876543210",
+    paese: "IT", ruolo: "fornitore" });
+  const aMano = await saveCost(db, { tipo: "fattura", partyId: fornitore.id, data: "2026-08-01", numero: "HC-118",
+    categoria: "Hosting", imponibile: "1200", aliquota: "22" });
+  await recordOutlay(db, aMano, { importo: "500.00", data: "2026-08-05" });
+
+  const piano = await plan([xml("hc.xml", RICEVUTA)], {
+    company: AZIENDA, parties: await list(db, "parties"), costs: await list(db, "costs"),
+  });
+  assert.equal(piano.costi.length, 1);
+  assert.equal(piano.costi[0].id, aMano.id, "lo stesso acquisto, non uno nuovo");
+  assert.equal(piano.fonti[0].completati, 1);
+  assert.ok(piano.fonti[0].avvisi.some((a) => a.chiave === "impCostAmounts"), "l'importo cambiato si dice");
+
+  await apply(db, piano);
+  const [dopo] = await list(db, "costs");
+  assert.equal(dopo.id, aMano.id);
+  assert.equal(dopo.righe.length, 2, "le righe del file");
+  assert.equal(dopo.imponibile, "1250.00", "gli importi del file");
+  assert.equal(dopo.categoria, "Hosting", "la categoria scelta resta");
+  assert.ok(dopo.documento, "il file allegato");
+  assert.equal((await list(db, "outlays")).length, 1, "il pagamento registrato resta");
+
+  await undoLast(db);
+  const [rimesso] = await list(db, "costs");
+  assert.equal(rimesso.imponibile, aMano.imponibile, "com'era stato scritto");
+  assert.equal(rimesso.documento, undefined);
+  assert.equal((await list(db, "attachments")).length, 0, "il file aggiunto se ne va");
+  assert.equal((await list(db, "outlays")).length, 1, "e il pagamento resta");
+  assert.equal((await list(db, "parties")).length, 1);
+});
+
+await prova("il PDF dentro l'XML diventa la copia leggibile dell'acquisto", async () => {
+  const db = await openDatabase();
+  const pdf = Buffer.from("%PDF-1.4 fattura del fornitore").toString("base64");
+  const conPdf = RICEVUTA.replace("</FatturaElettronicaBody>",
+    `<Allegati><NomeAttachment>HC-118.pdf</NomeAttachment><FormatoAttachment>PDF</FormatoAttachment><Attachment>${pdf}</Attachment></Allegati></FatturaElettronicaBody>`);
+  await apply(db, await plan([xml("hc.xml", conPdf)], { company: AZIENDA }));
+  const [c] = await list(db, "costs");
+  assert.equal(c.copiaPdf.name, "HC-118.pdf");
+  assert.equal(c.copiaPdf.type, "application/pdf");
+  assert.equal((await list(db, "attachments")).length, 2, "l'XML e la sua copia in PDF");
+  await undoLast(db);
+  assert.equal((await list(db, "attachments")).length, 0);
+});
+
+await prova("dallo zip dello SdI l'identificativo della fattura, letto dal file di metadati", async () => {
+  const enc = new TextEncoder();
+  const mt = `<?xml version="1.0"?><ns3:FileMetadati xmlns:ns3="http://ivaservizi.agenziaentrate.gov.it/docs/xsd/fatture/v1.0">
+    <IdentificativoSdI>11223344556</IdentificativoSdI><NomeFile>IT09876543210_00042.xml</NomeFile></ns3:FileMetadati>`;
+  const pacco = await zip.write([
+    { name: "fatture/IT09876543210_00042.xml", bytes: enc.encode(RICEVUTA) },
+    { name: "fatture/IT09876543210_00042_MT_001.xml", bytes: enc.encode(mt) },
+  ]);
+  const piano = await plan([file("sdi.zip", pacco)], { company: AZIENDA });
+  assert.equal(piano.costi.length, 1);
+  assert.equal(piano.costi[0].idSdi, "11223344556");
+  const { integrazioneDa } = await import("../run/costs.js");
+  const bozza = integrazioneDa({ ...piano.costi[0], inversione: true }, { company: AZIENDA, party: {}, tipo: "TD16", oggi: "2026-08-10" });
+  assert.deepEqual(bozza.fattureCollegate.map((one) => one.numero), ["HC-118", "11223344556"]);
+});
+
 await prova("la stessa fattura ricevuta due volte entra una volta sola", async () => {
   const db = await openDatabase();
   await apply(db, await plan([xml("hc.xml", RICEVUTA)], { company: AZIENDA }));

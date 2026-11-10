@@ -1553,6 +1553,11 @@ dialog li::before {
 .cost-doc input[type="file"][hidden] { display: none; }
 .cost-doc .receipt-cell { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 
+/* Files held over the purchases: the page says it will take them. */
+#screenPurchases.dropping { outline: 2px dashed var(--accent); outline-offset: 6px; border-radius: 12px; }
+.drop-hint { font-size: 0.85rem; }
+@media (hover: none) { .drop-hint { display: none; } }
+
 /* The paperclip beside a purchase's number, when its invoice is attached. */
 .row-clip {
   width: 13px;

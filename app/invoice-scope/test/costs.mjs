@@ -11,7 +11,7 @@ import { toString } from "../run/decimal.js";
 import {
   costRecord, problems, taxKind, defaultRate, taxOn, paidOf, owedOn, state, payable, periodTotals,
   taxBalance, MONOFASE, costOf, signedTotal, daAutofatturare, autofatturaDa, partsOf, nextDue,
-  tipoIntegrazione, daIntegrare, integrazioneDa,
+  tipoIntegrazione, daIntegrare, integrazioneDa, ritenuteDaVersare, sedici,
 } from "../run/costs.js";
 import { KINDS } from "../run/kinds.js";
 import { validate } from "../run/validate.js";
@@ -364,6 +364,32 @@ prova("inversione e beni o servizi sopravvivono al foglio, e solo con valori amm
   assert.equal(r.beniServizi, "beni");
   const s = costRecord({ tipo: "fattura", partyId: "x", data: "2026-09-03", imponibile: "10", inversione: false, beniServizi: "boh" }, { company: IT });
   assert.ok(!("inversione" in s) && !("beniServizi" in s));
+});
+
+// ---- the withholding tax to pay with the F24 (10 November 2026)
+
+prova("il 16 del mese dopo, spostato al lunedì se cade nel fine settimana", () => {
+  assert.equal(sedici("2026-10"), "2026-11-16", "lunedì");
+  assert.equal(sedici("2026-07"), "2026-08-17", "il 16 agosto 2026 è domenica");
+  assert.equal(sedici("2026-04"), "2026-05-18", "il 16 maggio 2026 è sabato");
+  assert.equal(sedici("2026-12"), "2027-01-18", "dicembre passa all'anno dopo");
+});
+
+prova("la ritenuta si versa quando si paga, in proporzione, e il mese versato esce", () => {
+  // A professional: 1000 + 22% VAT, 20% withholding = 200; the supplier is owed 1020.
+  const parcella = costRecord({ id: "p1", tipo: "fattura", partyId: "s", data: "2026-09-10", numero: "7",
+    imponibile: "1000", aliquota: "22", ritenuta: "200" }, { company: IT });
+  const meta = { id: "o1", costId: "p1", importo: "510.00", data: "2026-09-30" };
+  const resto = { id: "o2", costId: "p1", importo: "510.00", data: "2026-10-05" };
+  const dovute = ritenuteDaVersare([parcella], [meta, resto], { company: IT, today: "2026-10-20" });
+  assert.deepEqual(dovute.map((v) => [v.mese, soldi(v.importo), v.scadenza, v.scaduta]), [
+    ["2026-09", "100.00", "2026-10-16", true],
+    ["2026-10", "100.00", "2026-11-16", false],
+  ]);
+  const dopo = ritenuteDaVersare([parcella], [{ ...meta, ritenutaVersata: "2026-10-15" }, resto], { company: IT, today: "2026-10-20" });
+  assert.deepEqual(dopo.map((v) => v.mese), ["2026-10"]);
+  assert.deepEqual(ritenuteDaVersare([parcella], [meta], { company: SM }), [], "non per un'azienda sammarinese");
+  assert.deepEqual(ritenuteDaVersare([{ ...parcella, ritenuta: undefined }], [meta], { company: IT }), []);
 });
 
 console.log(`costs: ${passed} prove passate`);

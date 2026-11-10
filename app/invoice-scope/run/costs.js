@@ -21,7 +21,7 @@
 
 import { list, get, put, tx } from "gg/store.js";
 
-import { from, add, sub, cmp, sum, ZERO, toString, percent } from "./decimal.js";
+import { from, add, sub, cmp, sum, ZERO, toString, percent, mulDiv } from "./decimal.js";
 import { parseAmount, parseOptional } from "./parse.js";
 import { profileFor, completaRighe, PAESI_UE } from "./fatturapa.js";
 import { autofattura as terminiAutofattura, integrazione as terminiIntegrazione } from "./terms.js";
@@ -170,12 +170,18 @@ export function costRecord(fields, { company = null } = {}) {
   if (fields.integrazioneNonServe) record.integrazioneNonServe = true;
   // The supplier's invoice as a file (`attachments.js`): only its label lives here, and reopening
   // the sheet must not lose it — the file would stay in the store with nobody pointing at it.
-  if (fields.documento && fields.documento.id) {
-    record.documento = {
-      id: fields.documento.id, name: fields.documento.name || "", type: fields.documento.type || "",
-      size: fields.documento.size || 0,
-    };
+  for (const campo of ["documento", "copiaPdf"]) {
+    const meta = fields[campo];
+    if (meta && meta.id) {
+      record[campo] = { id: meta.id, name: meta.name || "", type: meta.type || "", size: meta.size || 0 };
+    }
   }
+  // The identifier the SdI gave the supplier's invoice: digits only, as the SdI writes it.
+  const idSdi = String(fields.idSdi || "").trim();
+  if (/^\d{1,20}$/.test(idSdi)) record.idSdi = idSdi;
+  // A purchase completed by an import keeps how it was typed, until that import is undone: lost
+  // here, «Annulla l'ultima importazione» would delete the purchase instead of putting it back.
+  if (fields.precedente && typeof fields.precedente === "object") record.precedente = fields.precedente;
   // **The withholding and the amount asked for**, from a received invoice: what is paid to the
   // supplier is the total less the withholding (which the company pays to the revenue), or exactly
   // the sum of the file's instalments when it states them. Kept only when there is something to keep.
@@ -521,8 +527,15 @@ export function integrazioneDa(record, { company, party, tipo, oggi = currentDay
       aliquota,
     }],
   });
-  // The supplier's invoice, which the guide asks to name: the file links the two.
-  if (record.numero) doc.fattureCollegate = [{ numero: record.numero, data: record.data }];
+  // The supplier's invoice, which the guide asks to name: the file links the two. **With the IdSdI**,
+  // which the guide asks for beside number and date in block 2.1.6 (compulsory for TD16, «when
+  // available» for TD17–TD19) without naming the element it goes in: the schema has none of its
+  // own, so it is a second reference whose `IdDocumento` is the identifier and whose date is the
+  // invoice's (10 November 2026 — to be checked against the Agenzia's next specification).
+  const collegate = [];
+  if (record.numero) collegate.push({ numero: record.numero, data: record.data });
+  if (record.idSdi) collegate.push({ numero: record.idSdi, data: record.data });
+  if (collegate.length) doc.fattureCollegate = collegate;
   doc.daAcquisto = { costId: record.id, data: record.data, importo: record.totale };
   return doc;
 }
@@ -685,6 +698,73 @@ export async function removeOutlay(db, id) {
     await scope.remove("outlays", id);
     if (record) await forgetReceipts(scope, [record]);
   });
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  p u b l i c   —   l e   r i t e n u t e   d a   v e r s a r e
+// -----------------------------------------------------------------------------------------------------------------
+
+/**
+ * The 16th of the month after `mese` ("YYYY-MM"), moved to Monday when it falls on a weekend.
+ * Public holidays are not known here: the panel says «or the first working day after».
+ */
+export function sedici(mese) {
+  const [anno, numero] = String(mese).split("-").map(Number);
+  const giorno = new Date(Date.UTC(anno, numero, 16));          // month index `numero` = the next one
+  const settimana = giorno.getUTCDay();
+  if (settimana === 6) giorno.setUTCDate(18);
+  if (settimana === 0) giorno.setUTCDate(17);
+  return giorno.toISOString().slice(0, 10);
+}
+
+/**
+ * The withholding tax still to be paid to the Treasury, month by month (10 November 2026).
+ *
+ * **Why.** An Italian company that pays a professional's invoice with a «ritenuta d'acconto» keeps
+ * that part of the fee and owes it to the Treasury with an F24, by the 16th of the month after the
+ * payment. The app read the withholding and wrote «da versare all'Erario» on the purchase, and kept
+ * no count of what was due when — the kind of deadline that is remembered after it has passed.
+ *
+ * **Due when paid, in proportion.** The withholding falls due with the fee: a payment of half of
+ * what the supplier is owed carries half of the withholding, in the month of that payment. Marked
+ * paid on the payments themselves (`ritenutaVersata`), so the mark travels in every export with
+ * them, and a month is open while any of its payments lacks it. Italian companies only.
+ */
+export function ritenuteDaVersare(costs, outlays, { company = null, today = currentDay() } = {}) {
+  if (taxKind(company) !== "iva") return [];
+  const notes = notesOf(costs);
+  const perId = new Map(costs.map((one) => [one.id, one]));
+  const mesi = new Map();
+  for (const uscita of outlays) {
+    const record = perId.get(uscita.costId);
+    if (!record || !record.ritenuta || record.tipo === "nota") continue;
+    const ritenuta = _amount(record.ritenuta);
+    const netto = dueOf(record, notes);
+    const mese = String(uscita.data || "").slice(0, 7);
+    if (cmp(ritenuta, ZERO) <= 0 || cmp(netto, ZERO) <= 0 || !/^\d{4}-\d{2}$/.test(mese)) continue;
+    let quota = mulDiv(ritenuta, _amount(uscita.importo), netto, 2);
+    if (cmp(quota, ritenuta) > 0) quota = ritenuta;
+    const voce = mesi.get(mese) || { mese, importo: ZERO, pagamenti: [], aperta: false };
+    voce.importo = add(voce.importo, quota);
+    voce.pagamenti.push({ outlayId: uscita.id, costId: record.id, importo: quota });
+    if (!uscita.ritenutaVersata) voce.aperta = true;
+    mesi.set(mese, voce);
+  }
+  return [...mesi.values()]
+    .filter((voce) => voce.aperta)
+    .map((voce) => {
+      const scadenza = sedici(voce.mese);
+      return { ...voce, scadenza, scaduta: scadenza < today };
+    })
+    .sort((a, b) => a.mese.localeCompare(b.mese));
+}
+
+/** Mark the withholding of these payments as paid with the F24, on the day given. */
+export async function segnaRitenuteVersate(db, outlayIds, data = currentDay()) {
+  for (const id of outlayIds) {
+    const record = await get(db, "outlays", id);
+    if (record) await put(db, "outlays", { ...record, ritenutaVersata: data });
+  }
 }
 
 /** Un acquisto per id, o `null`. */

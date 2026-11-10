@@ -671,6 +671,8 @@ const IT = {
   // ---- the supplier's invoice on a purchase, and the ways into a purchase (10 November 2026)
   purchasesImport: "Importa fatture ricevute (XML)",
   purchasesToOutlays: "Pagamenti ai fornitori",
+  purchasesDropHint: "I file si possono anche trascinare in questa pagina: gli XML delle fatture ricevute, "
+    + "anche nello zip dello SdI, oppure il PDF o la foto di un acquisto da registrare.",
   outlayPay: "Registra un pagamento",
   outlayNew: "Nuovo acquisto e pagamento",
   payOpenAsk: "Quale acquisto è stato pagato?",
@@ -701,6 +703,26 @@ const IT = {
   costDocTooBig: "Il file supera i 10 MB.",
   costDocBadType: "Il file deve essere un PDF, un'immagine o il file XML della fattura.",
   impDialogTitle: "Anteprima dell'importazione",
+  costDocPdfCopy: "copia in PDF",
+  ritenutePanel: "Le ritenute d'acconto trattenute sui compensi pagati si versano all'Erario con l'F24 "
+    + "entro il 16 del mese successivo al pagamento, o il primo giorno lavorativo dopo. Per i compensi "
+    + "di lavoro autonomo il codice tributo è di norma il 1040.",
+  ritenuteRow: "Pagamenti di {mese} ({n}) · {importo} · entro il {scadenza}",
+  ritenuteRowLate: "Pagamenti di {mese} ({n}) · {importo} · termine scaduto il {scadenza}",
+  ritenuteDone: "Versata con l'F24",
+  ritenuteDoneAsk: "Segno come versate le ritenute dei pagamenti di {mese}, {importo}?",
+  outSpreadAsk: "Sono {di_piu} in più di quello che resta su questo acquisto, e lo stesso fornitore ha "
+    + "altri acquisti da pagare. Li uso per quelli, dal più vecchio?",
+  outSpreadLine: "{numero}: {importo}",
+  outSpreadYes: "Dividi il pagamento",
+  outSpreadNo: "Solo su questo acquisto",
+  outSpreadLeft: "Pagamento diviso. Avanzano {avanzo} che non corrispondono a nessun acquisto aperto.",
+  viewTitle: "{tipo} {numero} — {fornitore}",
+  viewNote: "Copia leggibile del file XML ricevuto. Per salvarla in PDF si usa la stampa.",
+  viewFoot: "Copia leggibile della fattura elettronica ricevuta. Il documento fiscale è il file XML "
+    + "recapitato dal Sistema di Interscambio.",
+  viewUnreadable: "Il file allegato non si legge come fattura elettronica: si può comunque scaricare.",
+  impCostAmounts: "{numero}: l'importo inserito a mano ({prima}) è sostituito da quello del file ({dopo})",
   costTotalLabel: "Totale",
   costOwedLabel: "Da pagare",
   costLinesTitle: "Righe della fattura",
@@ -992,6 +1014,27 @@ const IT = {
   settingsImportDone: "Archivio importato.",
   settingsImportBad: "Questo file non è un archivio di Invoice Scope.",
   settingsCsv: "Esporta un CSV per il commercialista",
+  settingsPack: "Pacchetto per il commercialista",
+  settingsPackNote: "Il pacchetto raccoglie in un unico zip il CSV del periodo, i file XML delle fatture "
+    + "emesse, le fatture ricevute con le loro copie in PDF e le ricevute dei bonifici, con nomi che "
+    + "dicono data, controparte e numero.",
+  packAsk: "Quale periodo?",
+  pack_mese: "Mese scorso",
+  pack_trimestre: "Trimestre scorso",
+  pack_anno: "Anno in corso",
+  pack_annoScorso: "Anno scorso",
+  packRange: "dal {dal} al {al}",
+  packDone: "Pacchetto pronto: {emesse} fatture emesse, {ricevute} file di acquisti e {bonifici} "
+    + "ricevute di bonifici.",
+  packMissing: "{mancanti} file nominati nell'archivio non sono in questo browser e mancano dal pacchetto.",
+  packReadme: "Pacchetto per il commercialista — {azienda}\nPeriodo: dal {dal} al {al}\nPreparato il {oggi} "
+    + "con Invoice Scope.\n\nContenuto\n- documenti.csv: documenti emessi e acquisti del periodo, una riga "
+    + "ciascuno, separati da punto e virgola.\n- emesse/: i file XML delle fatture emesse ed esportate "
+    + "({emesse}). Sono ricostruiti dai dati dell'applicazione con il progressivo di invio di ciascuna: il "
+    + "documento fiscale è il file recapitato dal Sistema di Interscambio.\n- ricevute/: i file delle "
+    + "fatture ricevute e le loro copie in PDF ({ricevute}), con data, fornitore e numero nel nome.\n"
+    + "- incassi/ e pagamenti/: le ricevute dei bonifici ({bonifici}).\n\nFile nominati nell'archivio ma "
+    + "non presenti nel browser da cui è stato preparato il pacchetto: {mancanti}.\n",
   settingsSpace: "Spazio usato",
   settingsPersistYes: "Questo browser ha promesso di non svuotare da sé l'archivio dell'applicazione.",
   settingsPersistNo: "Questo browser non ha ancora promesso di conservare l'archivio: in caso di "
@@ -1496,6 +1539,9 @@ const IT = {
   f_esigibilita: "esigibilità IVA",
   f_aliquotaRitenuta: "aliquota della ritenuta",
   f_totale: "totale",
+  f_ritenutaAcquisto: "ritenuta d'acconto",
+  f_idSdi: "identificativo SdI",
+  costIdSdiLine: "SdI {id}",
 
   // ---- i controlli: che cosa dice la regola, e che cosa fare
   // Le chiavi arrivano da `validate.js`, che restituisce chiavi e non frasi. I `{segnaposto}` li
@@ -1785,7 +1831,7 @@ const IT = {
   readReceipt: "dati della ricezione ({valore}): non li leggo",
   readSal: "dati SAL ({valore}): non li leggo",
   readVehicles: "dati dei veicoli ({valore}): non li leggo",
-  readAttachment: "allegati ({valore}): non li leggo",
+  readAttachment: "allegati ({valore}): non importati",
 
   // ---- le nature IVA, con una parola accanto alla sigla
   //
@@ -2544,6 +2590,8 @@ const EN = {
   costBack: "All purchases",
   purchasesImport: "Import invoices received (XML)",
   purchasesToOutlays: "Payments to suppliers",
+  purchasesDropHint: "Files can also be dragged onto this page: the XML of invoices received, also in "
+    + "the SdI's zip, or the PDF or photo of a purchase to record.",
   outlayPay: "Record a payment",
   outlayNew: "New purchase and payment",
   payOpenAsk: "Which purchase was paid?",
@@ -2574,6 +2622,26 @@ const EN = {
   costDocTooBig: "The file is larger than 10 MB.",
   costDocBadType: "The file must be a PDF, a picture or the invoice's XML file.",
   impDialogTitle: "Import preview",
+  costDocPdfCopy: "PDF copy",
+  ritenutePanel: "The withholding tax kept on the fees paid goes to the Treasury with an F24 by the 16th "
+    + "of the month after the payment, or the first working day after. For self-employment fees the tax "
+    + "code is normally 1040.",
+  ritenuteRow: "Payments of {mese} ({n}) · {importo} · by {scadenza}",
+  ritenuteRowLate: "Payments of {mese} ({n}) · {importo} · deadline passed on {scadenza}",
+  ritenuteDone: "Paid with the F24",
+  ritenuteDoneAsk: "Mark as paid the withholding tax on the payments of {mese}, {importo}?",
+  outSpreadAsk: "That is {di_piu} more than this purchase still owes, and the same supplier has other "
+    + "purchases to pay. Use it for those, oldest first?",
+  outSpreadLine: "{numero}: {importo}",
+  outSpreadYes: "Split the payment",
+  outSpreadNo: "Only on this purchase",
+  outSpreadLeft: "Payment split. {avanzo} is left over that matches no open purchase.",
+  viewTitle: "{tipo} {numero} — {fornitore}",
+  viewNote: "Readable copy of the XML file received. To save it as PDF, use print.",
+  viewFoot: "Readable copy of the electronic invoice received. The fiscal document is the XML file "
+    + "delivered by the Exchange System (SdI).",
+  viewUnreadable: "The attached file cannot be read as an electronic invoice: it can still be downloaded.",
+  impCostAmounts: "{numero}: the amount typed by hand ({prima}) is replaced by the file's ({dopo})",
   costTotalLabel: "Total",
   costOwedLabel: "To pay",
   costLinesTitle: "Invoice lines",
@@ -2858,6 +2926,27 @@ const EN = {
   settingsImportDone: "Archive imported.",
   settingsImportBad: "This file is not an Invoice Scope archive.",
   settingsCsv: "Export a CSV for the accountant",
+  settingsPack: "Package for the accountant",
+  settingsPackNote: "The package gathers in one zip the CSV of the period, the XML files of the invoices "
+    + "issued, the invoices received with their PDF copies and the receipts of the transfers, with names "
+    + "that say date, counterpart and number.",
+  packAsk: "Which period?",
+  pack_mese: "Last month",
+  pack_trimestre: "Last quarter",
+  pack_anno: "This year",
+  pack_annoScorso: "Last year",
+  packRange: "from {dal} to {al}",
+  packDone: "Package ready: {emesse} invoices issued, {ricevute} purchase files and {bonifici} transfer "
+    + "receipts.",
+  packMissing: "{mancanti} files named in the archive are not in this browser and are missing from the package.",
+  packReadme: "Package for the accountant — {azienda}\nPeriod: from {dal} to {al}\nPrepared on {oggi} with "
+    + "Invoice Scope.\n\nContents\n- documenti.csv: documents issued and purchases of the period, one row "
+    + "each, separated by semicolons.\n- emesse/: the XML files of the invoices issued and exported "
+    + "({emesse}). They are rebuilt from the application's data with the transmission progressive of each: "
+    + "the fiscal document is the file delivered by the Exchange System (SdI).\n- ricevute/: the files of "
+    + "the invoices received and their PDF copies ({ricevute}), with date, supplier and number in the "
+    + "name.\n- incassi/ and pagamenti/: the receipts of the transfers ({bonifici}).\n\nFiles named in "
+    + "the archive but not in the browser the package was prepared from: {mancanti}.\n",
   settingsSpace: "Space used",
   settingsPersistYes: "This browser has promised not to clear the application's archive by itself.",
   settingsPersistNo: "This browser has not promised to keep the archive yet: it may remove it when "
@@ -3349,6 +3438,9 @@ const EN = {
   f_esigibilita: "VAT exigibility",
   f_aliquotaRitenuta: "withholding rate",
   f_totale: "total",
+  f_ritenutaAcquisto: "withholding tax",
+  f_idSdi: "SdI identifier",
+  costIdSdiLine: "SdI {id}",
 
   vRequired: "is a required field",
   vTooLong: "is over the {max} characters allowed",
@@ -3626,7 +3718,7 @@ const EN = {
   readReceipt: "receipt data ({valore}): not read",
   readSal: "SAL data ({valore}): not read",
   readVehicles: "vehicle data ({valore}): not read",
-  readAttachment: "attachments ({valore}): not read",
+  readAttachment: "attachments ({valore}): not imported",
 
   naturaN1: "Excluded (art. 15)",
   "naturaN2.1": "Out of scope (arts. 7-7-septies)",

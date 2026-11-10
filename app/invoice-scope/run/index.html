@@ -539,6 +539,7 @@
       <span class="meta" id="purchasesOwed"></span>
     </div>
     <p class="note" data-t="purchasesNote"></p>
+    <p class="note drop-hint" data-t="purchasesDropHint"></p>
     <!-- Le spese per cui la fattura del fornitore non è mai arrivata, e per cui l'articolo 7 del
          DD 133/2026 mette in capo al cliente l'autofattura. In cima perché è un adempimento con un
          termine, non una voce dell'elenco. -->
@@ -551,6 +552,12 @@
     <div class="panel warn" id="integrazioniNote" hidden>
       <p id="integrazioniText"></p>
       <div id="integrazioniList"></div>
+    </div>
+    <!-- The withholding tax kept on professionals' fees and owed to the Treasury with an F24 by the
+         16th of the month after the payment (10 November 2026). Italian companies only. -->
+    <div class="panel warn" id="ritenuteNote" hidden>
+      <p id="ritenuteText"></p>
+      <div id="ritenuteList"></div>
     </div>
     <p class="empty" id="purchasesEmpty" data-t="purchasesEmpty"></p>
     <div class="form docs-filters" id="purchasesFilters" hidden>
@@ -1667,9 +1674,12 @@
       <button type="button" class="button ghost" id="exportBundle" data-t="settingsExportBundle"></button>
       <button type="button" class="button ghost" id="importAll" data-t="settingsImport"></button>
       <button type="button" class="button ghost" id="exportCsv" data-t="settingsCsv"></button>
+      <!-- The whole period in one zip: CSV, invoices issued, purchase files, receipts. -->
+      <button type="button" class="button ghost" id="exportPack" data-t="settingsPack"></button>
       <input type="file" id="importFile" accept="application/json,.json,application/zip,.zip" hidden>
     </div>
     <p class="note" data-t="settingsExportBundleNote"></p>
+    <p class="note" data-t="settingsPackNote"></p>
     <p class="note"><span data-t="settingsSpace"></span>: <span id="space">—</span></p>
     <!-- Se il browser ha promesso di non svuotare da sé questo archivio. È una promessa che si
          chiede, non si impone, e senza la quale una pulizia dello spazio può portare via tutto:
@@ -2147,6 +2157,9 @@
       <label class="wide" id="costFatturaRow" hidden><span data-t="f_fatturaStornata"></span><select name="fatturaId"></select></label>
       <label class="narrow"><span data-t="f_data"></span><input name="data" type="date" required></label>
       <label class="narrow" id="costNumeroRow"><span data-t="f_numeroFornitore"></span><input name="numero" autocomplete="off"></label>
+      <!-- The SdI's identifier of the supplier's invoice: read from the metadata file of the SdI's zip,
+           or copied from the Agenzia's portal. The integrations TD16–TD19 name it. -->
+      <label class="narrow" id="costIdSdiRow"><span data-t="f_idSdi"></span><input name="idSdi" inputmode="numeric" autocomplete="off"></label>
       <label class="narrow"><span data-t="f_categoria"></span><input name="categoria" list="costCategories" autocomplete="off"></label>
       <datalist id="costCategories"></datalist>
       <label class="wide"><span data-t="f_descrizione"></span><input name="descrizione" autocomplete="off"></label>
@@ -2154,6 +2167,8 @@
       <label class="narrow"><span data-t="f_aliquotaAcquisto"></span><select name="aliquota"></select></label>
       <label class="narrow"><span id="costTaxLabel"></span><input name="imposta" inputmode="decimal"></label>
       <label class="narrow"><span data-t="f_totale"></span><output id="costTotale"></output></label>
+      <!-- A professional's invoice: the withholding the company keeps and pays to the Treasury. -->
+      <label class="narrow" id="costRitenutaRow"><span data-t="f_ritenutaAcquisto"></span><input name="ritenuta" inputmode="decimal"></label>
       <p class="note wide" id="costTaxNote"></p>
       <!-- Reverse charge: the supplier charged no VAT and the company integrates it. Goods or
            services decide which document (TD17 against TD18/TD19) for a foreign supplier. -->

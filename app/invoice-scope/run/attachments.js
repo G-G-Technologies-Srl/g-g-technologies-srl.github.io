@@ -45,7 +45,9 @@ import { get, list, remove, tx } from "gg/store.js";
 export const RECEIPT_MAX = 10 * 1024 * 1024;
 
 /** What a receipt can be: a PDF or a picture. What else a bank produces, nobody needs here. */
-export const RECEIPT_ACCEPT = "application/pdf,image/png,image/jpeg,image/webp,image/heic,image/heif,.pdf,.png,.jpg,.jpeg,.webp,.heic,.heif";
+// `image/*` too: on a phone it is what makes the chooser offer the camera, so a receipt can be
+// photographed where it is instead of photographed first and looked for afterwards.
+export const RECEIPT_ACCEPT = "application/pdf,image/*,image/png,image/jpeg,image/webp,image/heic,image/heif,.pdf,.png,.jpg,.jpeg,.webp,.heic,.heif";
 
 /** What a supplier's invoice can be: the same, plus the XML of the SdI, signed or not. */
 export const DOCUMENT_ACCEPT = `${RECEIPT_ACCEPT},application/xml,text/xml,.xml,.p7m`;
@@ -200,7 +202,7 @@ export async function blobOf(db, record, { field = "ricevuta" } = {}) {
  */
 export async function forget(scope, records) {
   for (const one of records) {
-    for (const field of ["ricevuta", "documento"]) {
+    for (const field of ["ricevuta", "documento", "copiaPdf"]) {
       if (one && one[field] && one[field].id) await scope.remove("attachments", one[field].id);
     }
   }
@@ -217,7 +219,10 @@ export async function sweep(db) {
   for (const store of ["payments", "outlays"]) {
     for (const one of await list(db, store)) if (one.ricevuta && one.ricevuta.id) named.add(one.ricevuta.id);
   }
-  for (const one of await list(db, "costs")) if (one.documento && one.documento.id) named.add(one.documento.id);
+  for (const one of await list(db, "costs")) {
+    // The invoice's file, and the PDF copy the supplier put inside its XML.
+    for (const field of ["documento", "copiaPdf"]) if (one[field] && one[field].id) named.add(one[field].id);
+  }
   let gone = 0;
   for (const one of await list(db, "attachments")) {
     if (named.has(one.id)) continue;
