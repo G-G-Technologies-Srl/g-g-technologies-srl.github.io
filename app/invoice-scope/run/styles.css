@@ -1546,6 +1546,24 @@ dialog li::before {
 
 /* The receipt in a row of payments: the name as a link, cut where the cell ends. */
 .receipt-cell { white-space: nowrap; }
+
+/* The supplier's invoice on the purchase card, under its name: a label, then the file and its
+   commands — or the button that attaches it. Same small buttons as the receipt of a payment. */
+.cost-doc { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 4px 0 18px; }
+.cost-doc input[type="file"][hidden] { display: none; }
+.cost-doc .receipt-cell { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+/* The paperclip beside a purchase's number, when its invoice is attached. */
+.row-clip {
+  width: 13px;
+  height: 13px;
+  vertical-align: -2px;
+  fill: none;
+  stroke: var(--faint);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .receipt-link {
   display: inline-block;
   max-width: 18ch;

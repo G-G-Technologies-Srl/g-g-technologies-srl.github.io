@@ -22,6 +22,12 @@
 // every backup keeps copying. `sweep` catches what a wholesale wipe leaves, because `clear()`
 // empties a store without asking who pointed at it.
 //
+// **And the supplier's invoice, on the purchase** (10 November 2026). A purchase recorded by hand
+// had nowhere to keep the document it came from: the PDF the supplier sent, the photo of a receipt,
+// the XML of the SdI. It rides the same store, under `documento` on the purchase instead of
+// `ricevuta` on a payment — the same label, the same backup folder, the same «whoever deletes the
+// owner deletes the file». An invoice imported from its XML keeps that XML here by itself.
+//
 // No DOM in here: `node --import ./app/invoice-scope/test/loader.mjs app/invoice-scope/test/attachments.mjs`.
 
 import { get, list, remove, tx } from "gg/store.js";
@@ -41,8 +47,13 @@ export const RECEIPT_MAX = 10 * 1024 * 1024;
 /** What a receipt can be: a PDF or a picture. What else a bank produces, nobody needs here. */
 export const RECEIPT_ACCEPT = "application/pdf,image/png,image/jpeg,image/webp,image/heic,image/heif,.pdf,.png,.jpg,.jpeg,.webp,.heic,.heif";
 
+/** What a supplier's invoice can be: the same, plus the XML of the SdI, signed or not. */
+export const DOCUMENT_ACCEPT = `${RECEIPT_ACCEPT},application/xml,text/xml,.xml,.p7m`;
+
 const TYPES = new Set(["application/pdf", "image/png", "image/jpeg", "image/webp", "image/heic", "image/heif"]);
 const EXTENSIONS = new Set(["pdf", "png", "jpg", "jpeg", "webp", "heic", "heif"]);
+const DOCUMENT_TYPES = new Set([...TYPES, "application/xml", "text/xml", "application/pkcs7-mime"]);
+const DOCUMENT_EXTENSIONS = new Set([...EXTENSIONS, "xml", "p7m"]);
 
 /** The folder of the backup the receipts are written into, beside the archive. */
 export const RECEIPTS_DIR = "ricevute";
@@ -78,14 +89,23 @@ export function ownerStore(record) {
  * The type is checked on the name too: a browser on Windows hands over a PDF with an empty `type`
  * more often than one would think, and refusing it would refuse the commonest receipt there is.
  */
-export function refusal(file) {
-  if (!file) return "receiptNone";
-  if (!file.size) return "receiptEmpty";
-  if (file.size > RECEIPT_MAX) return "receiptTooBig";
-  if (!TYPES.has(String(file.type || "").toLowerCase()) && !EXTENSIONS.has(_extension(file.name))) {
-    return "receiptBadType";
+export function refusal(file, { field = "ricevuta" } = {}) {
+  const documento = field === "documento";
+  if (!file) return documento ? "costDocNone" : "receiptNone";
+  if (!file.size) return documento ? "costDocEmpty" : "receiptEmpty";
+  if (file.size > RECEIPT_MAX) return documento ? "costDocTooBig" : "receiptTooBig";
+  const types = documento ? DOCUMENT_TYPES : TYPES;
+  const extensions = documento ? DOCUMENT_EXTENSIONS : EXTENSIONS;
+  if (!types.has(String(file.type || "").toLowerCase()) && !extensions.has(_extension(file.name))) {
+    return documento ? "costDocBadType" : "receiptBadType";
   }
   return null;
+}
+
+/** Whether a stored file is the XML of an invoice, signed or not: it is downloaded, not opened. */
+export function isXml(meta) {
+  const ext = _extension(meta && meta.name);
+  return ext === "xml" || ext === "p7m" || /xml|pkcs7/i.test(String((meta && meta.type) || ""));
 }
 
 /**
@@ -109,21 +129,20 @@ export function pathOf(meta) {
  * The Blob is made before the transaction opens: an IndexedDB transaction closes itself at the first
  * `await` that is not one of its own requests, and reading a file is not one.
  */
-export async function attach(db, record, file) {
-  const store = ownerStore(record);
+export async function attach(db, record, file, { store = ownerStore(record), field = "ricevuta" } = {}) {
   if (!store) throw new Error("receiptNoOwner");
-  const why = refusal(file);
+  const why = refusal(file, { field });
   if (why) throw new Error(why);
 
   const meta = {
     id: _id(),
-    name: String(file.name || "ricevuta"),
+    name: String(file.name || field),
     type: String(file.type || ""),
     size: file.size,
   };
   const blob = new Blob([file], { type: meta.type });
-  const before = record.ricevuta && record.ricevuta.id;
-  const after = { ...record, ricevuta: meta };
+  const before = record[field] && record[field].id;
+  const after = { ...record, [field]: meta };
 
   await tx(db, [store, "attachments"], async (scope) => {
     if (before) await scope.remove("attachments", before);
@@ -140,16 +159,25 @@ export async function attach(db, record, file) {
 }
 
 /** Take the receipt off a payment. The payment stays: it still happened. */
-export async function detach(db, record) {
-  const store = ownerStore(record);
-  if (!store || !record.ricevuta) return record;
+export async function detach(db, record, { store = ownerStore(record), field = "ricevuta" } = {}) {
+  if (!store || !record[field]) return record;
   const after = { ...record };
-  delete after.ricevuta;
+  delete after[field];
   await tx(db, [store, "attachments"], async (scope) => {
-    await scope.remove("attachments", record.ricevuta.id);
+    await scope.remove("attachments", record[field].id);
     await scope.put(store, after);
   });
   return after;
+}
+
+/** The supplier's invoice on a purchase: `attach` with the purchase's store and field. */
+export function attachDocument(db, cost, file) {
+  return attach(db, cost, file, { store: "costs", field: "documento" });
+}
+
+/** Take the supplier's invoice off a purchase. The purchase stays. */
+export function detachDocument(db, cost) {
+  return detach(db, cost, { store: "costs", field: "documento" });
 }
 
 /**
@@ -158,9 +186,9 @@ export async function detach(db, record) {
  * `null` is an ordinary answer: an archive brought in by hand carries the label and not the file,
  * and the screen says so instead of opening an empty tab.
  */
-export async function blobOf(db, record) {
-  if (!record || !record.ricevuta) return null;
-  const stored = await get(db, "attachments", record.ricevuta.id);
+export async function blobOf(db, record, { field = "ricevuta" } = {}) {
+  if (!record || !record[field]) return null;
+  const stored = await get(db, "attachments", record[field].id);
   return stored && stored.blob ? stored.blob : null;
 }
 
@@ -172,7 +200,9 @@ export async function blobOf(db, record) {
  */
 export async function forget(scope, records) {
   for (const one of records) {
-    if (one && one.ricevuta && one.ricevuta.id) await scope.remove("attachments", one.ricevuta.id);
+    for (const field of ["ricevuta", "documento"]) {
+      if (one && one[field] && one[field].id) await scope.remove("attachments", one[field].id);
+    }
   }
 }
 
@@ -187,6 +217,7 @@ export async function sweep(db) {
   for (const store of ["payments", "outlays"]) {
     for (const one of await list(db, store)) if (one.ricevuta && one.ricevuta.id) named.add(one.ricevuta.id);
   }
+  for (const one of await list(db, "costs")) if (one.documento && one.documento.id) named.add(one.documento.id);
   let gone = 0;
   for (const one of await list(db, "attachments")) {
     if (named.has(one.id)) continue;

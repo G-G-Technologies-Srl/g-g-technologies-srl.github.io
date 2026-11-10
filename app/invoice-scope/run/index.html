@@ -492,6 +492,13 @@
     <!-- One screen for the two directions: the words are written by income.js, which knows which. -->
     <h1 class="titled"><span class="ico" aria-hidden="true"><svg><use href="#ico-due"/></svg></span><span id="incomeTitleText"></span></h1>
     <p class="note" id="incomeNoteText"></p>
+    <!-- Only on «Pagamenti»: a payment to a supplier starts from a purchase, and the purchase may not
+         be written yet (10 November 2026). Three ways in, from where somebody looks for them. -->
+    <div class="actions" id="outlayActions" hidden>
+      <button type="button" class="button" id="outlayPay" data-t="outlayPay"></button>
+      <button type="button" class="button ghost" id="outlayNew" data-t="outlayNew"></button>
+      <button type="button" class="button ghost" id="outlayImport" data-t="purchasesImport"></button>
+    </div>
 
     <div class="form docs-filters" id="incomeFilters" hidden>
       <label><span data-t="bankYearLabel"></span><select id="incomeYear"></select></label>
@@ -522,8 +529,13 @@
   <!-- Acquisti: fatture ricevute e spese. Il rovescio dei documenti, con la stessa forma. -->
   <section id="screenPurchases" class="screen wide" hidden>
     <h1 class="titled"><span class="ico" aria-hidden="true"><svg><use href="#ico-purchases"/></svg></span><span data-t="purchasesTitle"></span></h1>
+    <!-- Two ways in, side by side (10 November 2026): typed by hand, or read from the XML the SdI
+         delivered — which until now was found only in the settings. And the way to the payments
+         made, which live under Scadenzario. -->
     <div class="actions">
       <button type="button" class="button" id="purchasesNew" data-t="purchasesNew"></button>
+      <button type="button" class="button ghost" id="purchasesImport" data-t="purchasesImport"></button>
+      <a class="button ghost" href="#/scadenzario/pagamenti" data-t="purchasesToOutlays"></a>
       <span class="meta" id="purchasesOwed"></span>
     </div>
     <p class="note" data-t="purchasesNote"></p>
@@ -606,6 +618,13 @@
     </div>
     <p class="note" id="costMeta"></p>
     <p id="costDescription" hidden></p>
+    <!-- The supplier's invoice, under the name of the purchase: open it, save it, replace it, or
+         attach it now if it was not attached when the purchase was written. -->
+    <div class="cost-doc" id="costDocBox">
+      <span class="meta" data-t="costDocLabel"></span>
+      <span class="receipt-cell" id="costDocCell"></span>
+      <input type="file" id="costDocCardFile" hidden>
+    </div>
 
     <div class="figures">
       <div class="figure"><span class="label" data-t="costTotalLabel"></span><span class="value" id="costFigTotal">—</span><span class="sub" id="costFigTotalSub"></span></div>
@@ -1727,29 +1746,6 @@
       <input type="file" id="impFiles" accept=".xlsx,.xls,.xml,.p7m,.zip" multiple hidden>
     </div>
 
-    <!-- Il fuoco arriva qui quando c'è un piano da leggere, e la regione annuncia i cambiamenti:
-         chi non vede lo schermo deve sapere che dopo la scelta dei file è comparso qualcosa. -->
-    <div id="impPanel" tabindex="-1" aria-live="polite" hidden>
-      <p class="empty" id="impEmpty" data-t="impEmpty" hidden></p>
-      <div class="table-scroll">
-        <table class="rows" id="impTable" hidden>
-          <thead><tr>
-            <th data-t="impFile"></th><th data-t="impWhat"></th>
-            <th class="right" data-t="impNew"></th><th class="right" data-t="impExisting"></th>
-          </tr></thead>
-          <tbody id="impBody"></tbody>
-        </table>
-      </div>
-      <!-- I nomi, per fonte, chiusi di default: i conteggi rispondono a «quanti», i nomi a
-           «quali», e la seconda domanda si fa solo quando la prima non torna. -->
-      <div id="impNames"></div>
-      <ul class="imp-notes" id="impNotes"></ul>
-      <div class="actions">
-        <button type="button" class="button" id="impGo" data-t="impGo"></button>
-        <button type="button" class="button ghost" id="impCancel" data-t="cancel"></button>
-      </div>
-    </div>
-
     <!-- La via di ritorno. Compare solo quando c'è un lotto da togliere, e toglie solo quello. -->
     <div id="impUndoBox" hidden>
       <p class="note" id="impUndoWhen"></p>
@@ -2100,6 +2096,35 @@
      pagamento arrivato: quanto, quando, dove, e perché era diverso dal previsto. -->
 <!-- Il foglio di un acquisto. L'imposta si calcola da imponibile e aliquota e resta scrivibile;
      il totale si legge e basta. Il numero conta solo su una fattura. -->
+<!-- What an import would write, before it is written: a sheet and not a block of the settings
+     (10 November 2026), because the files are chosen from the settings and from the purchases, and
+     the answer has to appear where the question was asked. -->
+<dialog id="impDialog" class="sheet">
+  <!-- Il fuoco arriva qui quando c'è un piano da leggere, e la regione annuncia i cambiamenti:
+       chi non vede lo schermo deve sapere che dopo la scelta dei file è comparso qualcosa. -->
+  <div id="impPanel" tabindex="-1" aria-live="polite" hidden>
+    <h2 data-t="impDialogTitle"></h2>
+    <p class="empty" id="impEmpty" data-t="impEmpty" hidden></p>
+    <div class="table-scroll">
+      <table class="rows" id="impTable" hidden>
+        <thead><tr>
+          <th data-t="impFile"></th><th data-t="impWhat"></th>
+          <th class="right" data-t="impNew"></th><th class="right" data-t="impExisting"></th>
+        </tr></thead>
+        <tbody id="impBody"></tbody>
+      </table>
+    </div>
+    <!-- I nomi, per fonte, chiusi di default: i conteggi rispondono a «quanti», i nomi a
+         «quali», e la seconda domanda si fa solo quando la prima non torna. -->
+    <div id="impNames"></div>
+    <ul class="imp-notes" id="impNotes"></ul>
+    <div class="actions">
+      <button type="button" class="button" id="impGo" data-t="impGo"></button>
+      <button type="button" class="button ghost" id="impCancel" data-t="cancel"></button>
+    </div>
+  </div>
+</dialog>
+
 <dialog id="costDialog" class="sheet">
   <form method="dialog" id="costForm">
     <h2 id="costDialogTitle"></h2>
@@ -2145,6 +2170,18 @@
       <p class="note wide" id="costInversioneNote" data-t="costInversioneNote" hidden></p>
       <label class="narrow"><span data-t="f_scadenza"></span><input name="scadenza" type="date"></label>
       <p class="note wide" data-t="costScadenzaHint"></p>
+      <!-- The supplier's invoice as a file: the PDF, a photo, or the XML of the SdI. Same row as the
+           receipt on a payment: our button and our line, the system's picker behind them. -->
+      <div class="wide receipt-row">
+        <span class="receipt-label" data-t="costDocLabel"></span>
+        <div class="receipt-pick">
+          <button type="button" class="button ghost small" id="costDocPick"></button>
+          <span class="meta" id="costDocName"></span>
+          <button type="button" class="ghost small" id="costDocClear" hidden>×</button>
+          <input type="file" id="costDocFile" hidden>
+        </div>
+        <p class="note" data-t="costDocHint"></p>
+      </div>
     </div>
     <ul class="sheet-problems" id="costProblems" hidden></ul>
     <div class="actions sheet-actions">

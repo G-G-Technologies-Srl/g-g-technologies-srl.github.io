@@ -168,6 +168,14 @@ export function costRecord(fields, { company = null } = {}) {
   if (["beni", "servizi"].includes(fields.beniServizi)) record.beniServizi = fields.beniServizi;
   if (fields.integrazioneId) record.integrazioneId = fields.integrazioneId;
   if (fields.integrazioneNonServe) record.integrazioneNonServe = true;
+  // The supplier's invoice as a file (`attachments.js`): only its label lives here, and reopening
+  // the sheet must not lose it — the file would stay in the store with nobody pointing at it.
+  if (fields.documento && fields.documento.id) {
+    record.documento = {
+      id: fields.documento.id, name: fields.documento.name || "", type: fields.documento.type || "",
+      size: fields.documento.size || 0,
+    };
+  }
   // **The withholding and the amount asked for**, from a received invoice: what is paid to the
   // supplier is the total less the withholding (which the company pays to the revenue), or exactly
   // the sum of the file's instalments when it states them. Kept only when there is something to keep.
@@ -617,11 +625,13 @@ export async function saveCost(db, fields, { company = null } = {}) {
  */
 export async function removeCost(db, id) {
   const suoi = await outlaysOf(db, id);
-  // The receipts of its payments go too: they prove payments that no longer exist.
+  const record = await get(db, "costs", id);
+  // The receipts of its payments go too: they prove payments that no longer exist. And the
+  // supplier's invoice attached to the purchase, for the same reason.
   await tx(db, ["costs", "outlays", "attachments"], async (scope) => {
     await scope.remove("costs", id);
     for (const one of suoi) await scope.remove("outlays", one.id);
-    await forgetReceipts(scope, suoi);
+    await forgetReceipts(scope, record ? [record, ...suoi] : suoi);
   });
 }
 

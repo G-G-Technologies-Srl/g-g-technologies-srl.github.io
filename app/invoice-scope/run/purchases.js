@@ -14,13 +14,18 @@
 // suo e un centesimo di differenza con il documento del fornitore è un centesimo che il
 // commercialista chiede di spiegare. Il totale invece non si scrive mai: è imponibile più imposta.
 //
+// **The supplier's invoice travels with the purchase** (10 November 2026): the sheet takes the file —
+// PDF, picture or the XML of the SdI — and the card shows it, opens it, replaces it. An XML chosen
+// for a new purchase is offered to the import instead, which reads supplier, number, amounts and
+// lines from it: typing what a file already says is the work the app exists to save.
+//
 // I conti — record, stato, residuo, scadenzario passivo — stanno in `costs.js`, provati in Node.
 // Qui c'è il disegno, e la sua prova gira sul DOM finto: `test/purchases.mjs`.
 
 import { get } from "gg/store.js";
 
 import { t, tf } from "./i18n.js";
-import { ask, tell } from "./ask.js";
+import { ask, askChoice, tell } from "./ask.js";
 import { money, rate as shownRate, date as shownDate } from "./format.js";
 import { from, cmp, toString, ZERO } from "./decimal.js";
 import { parseAmount } from "./parse.js";
@@ -36,6 +41,8 @@ import {
 } from "./costs.js";
 import { categorie } from "./categories.js";
 import { currentDay } from "./day.js";
+import { attachDocument, detachDocument, blobOf, refusal, isXml, DOCUMENT_ACCEPT } from "./attachments.js";
+import { pickFiles, planFiles } from "./importing.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -77,6 +84,13 @@ let prefill = null;
 
 /** The suppliers on the sheet's menu, by id: the reverse-charge row asks for the chosen one's country. */
 const fornitori = new Map();
+
+/** The supplier's invoice chosen on the sheet, not yet saved; and whether the one it had goes. */
+let documentoScelto = null;
+let documentoTolto = false;
+
+/** After saving a new purchase, open its payment at once: the purchase was entered from «Pagamenti». */
+let pagaDopo = false;
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
@@ -186,6 +200,22 @@ function _filtra(rows) {
     if (!cerca) return true;
     return norm([fornitore, record.numero, record.categoria, record.descrizione].join(" ")).includes(cerca);
   });
+}
+
+/** The reference cell of a row, with a paperclip when the supplier's invoice is attached. */
+function _refCell(record) {
+  const td = _td(_reference(record), "nowrap");
+  if (record.documento) {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "row-clip");
+    svg.setAttribute("aria-label", t("costDocAttached"));
+    svg.setAttribute("role", "img");
+    const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+    use.setAttribute("href", "#ico-clip");
+    svg.append(use);
+    td.append(" ", svg);
+  }
+  return td;
 }
 
 /** Il pagamento in uscita, dalla riga o dalla scheda: lo stesso foglio degli incassi. */
@@ -346,6 +376,9 @@ function _openSheet(record, { proposta = null } = {}) {
   _tipoCambiato();
   _drawInversione();
   _ricalcola({ forza: !record });
+  documentoScelto = null;
+  documentoTolto = false;
+  _drawDocChosen();
 
   _open(el("costDialog"));
   form.elements.imponibile.focus();
@@ -381,7 +414,9 @@ async function _saveSheet() {
     // The instalments and the stated total of the file, like the lines: only while the amounts are
     // the file's.
     rate: stessiImporti ? prima.rate : undefined,
-    totaleDichiarato: stessiImporti ? prima.totaleDichiarato : undefined },
+    totaleDichiarato: stessiImporti ? prima.totaleDichiarato : undefined,
+    // The label of the supplier's invoice already attached: the file itself is handled below.
+    documento: prima.documento },
   { company });
 
   const mancanze = problems(record);
@@ -398,9 +433,31 @@ async function _saveSheet() {
   }
 
   await saveCost(database, record, { company });
+  // The file after the record: `attach` replaces the one the purchase had, `detach` takes it off.
+  let salvato = record;
+  try {
+    if (documentoScelto) salvato = await attachDocument(database, record, documentoScelto);
+    else if (documentoTolto && record.documento) salvato = await detachDocument(database, record);
+  } catch (error) {
+    await tell(t(String(error.message).startsWith("costDoc") ? error.message : "costDocFailed"));
+  }
+  documentoScelto = null;
+  documentoTolto = false;
   _close(el("costDialog"));
   editing = null;
   prefill = null;
+  // Entered from «Pagamenti»: the payment is the next thing to write, so its sheet opens now.
+  if (pagaDopo) {
+    pagaDopo = false;
+    const dopo = dopoSalvataggio;
+    dopoSalvataggio = null;
+    if (salvato.tipo !== "nota") {
+      const residuo = owedOn(salvato, [], notesOf(await allCosts(database)));
+      await _paga(salvato, residuo, async () => {});
+    }
+    if (dopo) await dopo(salvato);
+    return;
+  }
   if (dopoSalvataggio) {
     const dopo = dopoSalvataggio;
     dopoSalvataggio = null;
@@ -409,6 +466,124 @@ async function _saveSheet() {
   }
   await _redraw();
   if (onChange) await onChange();
+}
+
+/** The file line of the sheet: what is chosen, what is already there, and the two buttons. */
+function _drawDocChosen() {
+  const tenuto = editing && editing.documento && !documentoTolto ? editing.documento : null;
+  el("costDocName").textContent = documentoScelto ? documentoScelto.name : tenuto ? tenuto.name : "";
+  el("costDocClear").hidden = !documentoScelto && !tenuto;
+  el("costDocClear").setAttribute("aria-label", t(documentoScelto ? "costDocClear" : "costDocRemove"));
+  el("costDocPick").textContent = t(documentoScelto || tenuto ? "costDocChange" : "costDocAttach");
+}
+
+/** A refusal said under the sheet, in the same list as a missing amount. */
+function _docProblem(key) {
+  const lista = el("costProblems");
+  lista.hidden = false;
+  lista.textContent = "";
+  const riga = document.createElement("li");
+  riga.textContent = t(key);
+  lista.append(riga);
+}
+
+/**
+ * A file chosen on the sheet. An XML on a new purchase is offered to the import: it reads the
+ * supplier, the number, the amounts and the lines, and keeps the file as the purchase's document.
+ */
+async function _docChosen(file) {
+  const why = refusal(file, { field: "documento" });
+  if (why) {
+    _docProblem(why);
+    return;
+  }
+  el("costProblems").hidden = true;
+  if (!editing && isXml({ name: file.name, type: file.type })
+      && await ask(t("costDocReadAsk"), { okLabel: t("costDocRead"), cancelLabel: t("costDocKeep") })) {
+    _close(el("costDialog"));
+    prefill = null;
+    dopoSalvataggio = null;
+    pagaDopo = false;
+    await planFiles([file]);
+    return;
+  }
+  documentoScelto = file;
+  _drawDocChosen();
+}
+
+/** Open the supplier's invoice in a tab, or save it: an XML is always saved, a browser shows it as code. */
+async function _showDoc(record, { download = false } = {}) {
+  const blob = await blobOf(database, record, { field: "documento" });
+  if (!blob) {
+    await tell(t("costDocMissing"));
+    return;
+  }
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  if (download || isXml(record.documento) || /heic|heif/i.test(record.documento.type || record.documento.name || "")) {
+    link.download = record.documento.name || "fattura";
+  } else {
+    link.target = "_blank";
+    link.rel = "noopener";
+  }
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+/** The document line of the purchase card: the file and its three commands, or the button to add it. */
+function _drawDocument(record) {
+  const box = el("costDocCell");
+  box.textContent = "";
+  const doc = record.documento;
+  el("costDocBox").classList.toggle("empty-doc", !doc);
+  if (!doc) {
+    const allega = document.createElement("button");
+    allega.type = "button";
+    allega.className = "button ghost small";
+    allega.textContent = t(record.tipo === "spesa" ? "costDocAttachReceipt" : "costDocAttach");
+    allega.addEventListener("click", () => {
+      el("costDocCardFile").value = "";
+      el("costDocCardFile").click();
+    });
+    box.append(allega);
+    return;
+  }
+  const apri = document.createElement("button");
+  apri.type = "button";
+  apri.className = "link-button receipt-link";
+  apri.textContent = doc.name || t("costDocLabel");
+  apri.title = t(isXml(doc) ? "costDocDownload" : "costDocOpen");
+  apri.addEventListener("click", () => _showDoc(record));
+  const scarica = document.createElement("button");
+  scarica.type = "button";
+  scarica.className = "ghost small";
+  scarica.textContent = "↓";
+  scarica.title = t("costDocDownload");
+  scarica.setAttribute("aria-label", `${t("costDocDownload")} — ${doc.name || ""}`);
+  scarica.addEventListener("click", () => _showDoc(record, { download: true }));
+  const cambia = document.createElement("button");
+  cambia.type = "button";
+  cambia.className = "ghost small";
+  cambia.textContent = t("costDocChange");
+  cambia.addEventListener("click", () => {
+    el("costDocCardFile").value = "";
+    el("costDocCardFile").click();
+  });
+  const togli = document.createElement("button");
+  togli.type = "button";
+  togli.className = "ghost small";
+  togli.textContent = "×";
+  togli.setAttribute("aria-label", `${t("costDocRemove")} — ${doc.name || ""}`);
+  togli.addEventListener("click", async () => {
+    if (!(await ask(t("costDocRemoveAsk"), { okLabel: t("del"), danger: true }))) return;
+    await detachDocument(database, record);
+    await render(database, record.id, { afterChange: onChange });
+    if (onChange) await onChange();
+  });
+  box.append(apri, scarica, cambia, togli);
 }
 
 /** Dopo un salvataggio: la scheda se è aperta su questo acquisto, l'elenco altrimenti. */
@@ -704,7 +879,7 @@ export async function renderList(db, { afterChange = null } = {}) {
     tr.append(
       _td(record.data ? shownDate(record.data) : "—", "nowrap"),
       _td(row.fornitore, "nowrap"),
-      _td(_reference(record), "nowrap"),
+      _refCell(record),
       // Una nota di credito con il meno davanti: nella colonna degli acquisti è denaro che torna.
       _td(money(signedTotal(record)), "right"),
       scadenza,
@@ -783,6 +958,7 @@ export async function render(db, id, { afterChange = null } = {}) {
   _drawFileFigures(record, notes);
 
   _drawLines(record);
+  _drawDocument(record);
   return true;
 }
 
@@ -812,12 +988,55 @@ function _drawFileFigures(record, notes) {
   el("costFileLine").textContent = pezzi.join(" · ");
 }
 
-/** Il foglio di un acquisto nuovo, da un'altra schermata. */
-export async function openNew(db) {
+/**
+ * Il foglio di un acquisto nuovo, da un'altra schermata. From «Pagamenti» (`thenPay`) its payment
+ * opens as soon as it is saved, and `afterSave` redraws the screen that asked.
+ */
+export async function openNew(db, { thenPay = false, afterSave = null } = {}) {
   database = db;
   company = await get(db, "company", "company");
+  pagaDopo = thenPay;
+  dopoSalvataggio = afterSave;
   _openSheet(null);
   await _drawSuppliers();
+}
+
+/**
+ * A payment to a supplier from «Pagamenti»: which purchase, among those still to pay — the most
+ * urgent first — and then the same sheet as everywhere else. Resolves `false` when there is none.
+ */
+export async function payOpen(db, { afterSave = null } = {}) {
+  database = db;
+  company = await get(db, "company", "company");
+  const costs = await allCosts(db);
+  const outlays = await allOutlays(db);
+  const notes = notesOf(costs);
+  const persone = new Map((await parties(db)).map((p) => [p.id, p.denominazione]));
+  const oggi = _today();
+  const aperti = costs
+    .filter((record) => record.tipo !== "nota")
+    .map((record) => {
+      const suoi = outlays.filter((one) => one.costId === record.id);
+      return { record, residuo: owedOn(record, suoi, notes), quando: nextDue(record, suoi, notes),
+               stato: state(record, suoi, { today: oggi, notes }) };
+    })
+    .filter((row) => row.stato !== "pagato")
+    .sort((a, b) => String(a.quando || "9999").localeCompare(String(b.quando || "9999")));
+  if (!aperti.length) {
+    await tell(t("payOpenNone"));
+    return false;
+  }
+  const scelto = await askChoice(t("payOpenAsk"), aperti.slice(0, 12).map((row) => ({
+    value: row.record.id,
+    label: `${persone.get(row.record.partyId) || "—"} · ${_reference(row.record)}`,
+    note: [`${t("costOwedLabel")} ${money(row.residuo)}`,
+           row.quando ? `${t("f_scadenza")} ${shownDate(row.quando)}` : null,
+           row.stato === "scaduto" ? t("costStateScaduto") : null].filter(Boolean).join(" · "),
+  })));
+  const row = aperti.find((one) => one.record.id === scelto);
+  if (!row) return false;
+  await _paga(row.record, row.residuo, async () => { if (afterSave) await afterSave(row.record); });
+  return true;
 }
 
 /**
@@ -839,6 +1058,41 @@ export function connect(db, { afterChange = null } = {}) {
   onChange = afterChange;
 
   el("purchasesNew").addEventListener("click", () => openNew(database));
+  // The invoices received, read from their XML: the import's file chooser, opened from here.
+  el("purchasesImport").addEventListener("click", () => pickFiles());
+  el("costDocFile").accept = DOCUMENT_ACCEPT;
+  el("costDocCardFile").accept = DOCUMENT_ACCEPT;
+  el("costDocPick").addEventListener("click", () => {
+    el("costDocFile").value = "";
+    el("costDocFile").click();
+  });
+  el("costDocFile").addEventListener("change", async () => {
+    const file = el("costDocFile").files && el("costDocFile").files[0];
+    if (file) await _docChosen(file);
+  });
+  el("costDocClear").addEventListener("click", () => {
+    if (documentoScelto) documentoScelto = null;
+    else if (editing && editing.documento) documentoTolto = true;
+    _drawDocChosen();
+  });
+  // On the card: attached at once, no sheet in between — the purchase is already written.
+  el("costDocCardFile").addEventListener("change", async () => {
+    const file = el("costDocCardFile").files && el("costDocCardFile").files[0];
+    if (!file || !aperto) return;
+    const why = refusal(file, { field: "documento" });
+    if (why) {
+      await tell(t(why));
+      return;
+    }
+    try {
+      await attachDocument(database, aperto, file);
+    } catch (error) {
+      await tell(t("costDocFailed"));
+      return;
+    }
+    await render(database, aperto.id, { afterChange: onChange });
+    if (onChange) await onChange();
+  });
   el("purchasesSearch").addEventListener("input", async (event) => {
     filtri.cerca = event.target.value;
     await renderList(database, { afterChange: onChange });
@@ -894,8 +1148,14 @@ export function connect(db, { afterChange = null } = {}) {
     editing = null;
     prefill = null;
     dopoSalvataggio = null;
+    pagaDopo = false;
+    documentoScelto = null;
   });
-  el("costDialog").addEventListener("cancel", () => { dopoSalvataggio = null; });
+  el("costDialog").addEventListener("cancel", () => {
+    dopoSalvataggio = null;
+    pagaDopo = false;
+    documentoScelto = null;
+  });
   attesi.connect(db);
 
   el("costEdit").addEventListener("click", async () => {

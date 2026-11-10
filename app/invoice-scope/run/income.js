@@ -20,6 +20,11 @@
 // **A payment is corrected here, not only removed.** The sheet is the one that records it, opened on
 // the payment (`editPayment`, `editOutlay` in `payments.js`): amount, day, account, note, receipt.
 //
+// **On «Pagamenti» a payment can start here** (10 November 2026). It used to be reachable only from
+// its purchase, and a purchase only from Acquisti: whoever came here to write down a transfer
+// found a list and no way in. Three buttons now — pay a purchase still open, write a new purchase
+// and pay it, read invoices received from their XML — and the same sheets as everywhere else.
+//
 // **Nothing here computes.** `incomeRows` and `outlayRows` in `schedule.js` filter, sort and add up,
 // tried in Node; this file draws the rows and wires three menus.
 
@@ -32,6 +37,8 @@ import { kind } from "./kinds.js";
 import { incomeRows, outlayRows, removePayment } from "./schedule.js";
 import { removeOutlay } from "./costs.js";
 import { editPayment, editOutlay, receiptCell } from "./payments.js";
+import { openNew as newPurchase, payOpen } from "./purchases.js";
+import { pickFiles } from "./importing.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -165,6 +172,7 @@ export async function render(db, afterChange = null, { verso: scelto = verso } =
   el("incomeEmpty").textContent = t(v.vuoto);
   el("incomeTotalLabel").textContent = t(v.totale);
   el("incomePartyLabel").textContent = t(v.soggetto);
+  el("outlayActions").hidden = verso !== "out";
 
   const dati = await v.dati(db);
   const tutti = v.righe(dati);
@@ -227,6 +235,9 @@ export function connect(db, afterChange = null) {
     filtri[verso][chiave] = event.target.value;
     await render(database, onChange, { verso });
   };
+  el("outlayPay").addEventListener("click", () => payOpen(database, { afterSave: _redraw }));
+  el("outlayNew").addEventListener("click", () => newPurchase(database, { thenPay: true, afterSave: _redraw }));
+  el("outlayImport").addEventListener("click", () => pickFiles());
   el("incomeYear").addEventListener("change", cambia("anno"));
   el("incomeParty").addEventListener("change", cambia("soggetto"));
   el("incomeReceipt").addEventListener("change", cambia("ricevuta"));

@@ -17,6 +17,7 @@ import assert from "node:assert/strict";
 import { openDatabase, EXPORTED } from "../run/db.js";
 import {
   RECEIPT_MAX, attach, blobOf, detach, ownerStore, pathOf, refusal, sweep,
+  attachDocument, detachDocument, isXml,
 } from "../run/attachments.js";
 import { recordPayment, removePayment } from "../run/schedule.js";
 import { recordOutlay, removeOutlay, removeCost, saveCost } from "../run/costs.js";
@@ -179,6 +180,51 @@ await prova("la spazzata toglie solo quello che nessun pagamento nomina", async 
   assert.equal(await sweep(db), 1);
   const rimaste = await list(db, "attachments");
   assert.deepEqual(rimaste.map((one) => one.id), [record.ricevuta.id]);
+});
+
+// ---- the supplier's invoice on a purchase (10 November 2026)
+
+await prova("la fattura del fornitore: PDF, foto o XML, firmato o no", async () => {
+  assert.equal(refusal(file("fattura.pdf"), { field: "documento" }), null);
+  assert.equal(refusal(file("IT01234567890_abc.xml", "<x/>", ""), { field: "documento" }), null);
+  assert.equal(refusal(file("IT01234567890_abc.xml.p7m", "x", ""), { field: "documento" }), null);
+  assert.equal(refusal(file("fattura.xml", "<x/>", "text/xml")), "receiptBadType", "una ricevuta resta PDF o foto");
+  assert.equal(refusal(file("foglio.xlsx", "x", ""), { field: "documento" }), "costDocBadType");
+  assert.equal(refusal(file("vuoto.pdf", ""), { field: "documento" }), "costDocEmpty");
+  assert.ok(isXml({ name: "a.xml.p7m" }));
+  assert.ok(!isXml({ name: "a.pdf", type: "application/pdf" }));
+});
+
+await prova("allegata all'acquisto, resta riaprendo il foglio e si toglie con lui", async (db) => {
+  const acquisto = await saveCost(db, { id: "a1", tipo: "fattura", partyId: "f1", data: "2026-09-01",
+    numero: "H-1", imponibile: "100", aliquota: "22" });
+  const con = await attachDocument(db, acquisto, file("H-1.pdf"));
+  assert.equal(con.documento.name, "H-1.pdf");
+  assert.ok(await blobOf(db, con, { field: "documento" }));
+  const riga = await get(db, "attachments", con.documento.id);
+  assert.equal(riga.store, "costs");
+  assert.equal(riga.ownerId, "a1");
+
+  // The sheet saves the purchase again through `costRecord`: the label must survive it.
+  const corretto = await saveCost(db, { ...con, imponibile: "110" });
+  assert.equal(corretto.documento.id, con.documento.id, "il foglio non perde la fattura");
+
+  // Replaced: the old file goes in the same transaction.
+  const sostituita = await attachDocument(db, corretto, file("H-1-bis.pdf"));
+  assert.equal((await list(db, "attachments")).length, 1);
+  assert.equal(sostituita.documento.name, "H-1-bis.pdf");
+
+  // The sweep keeps what a purchase names.
+  assert.equal(await sweep(db), 0);
+
+  const senza = await detachDocument(db, sostituita);
+  assert.equal(senza.documento, undefined);
+  assert.equal((await list(db, "attachments")).length, 0);
+  assert.equal((await get(db, "costs", "a1")).documento, undefined);
+
+  await attachDocument(db, senza, file("H-1.pdf"));
+  await removeCost(db, "a1");
+  assert.equal((await list(db, "attachments")).length, 0, "l'acquisto tolto porta via la sua fattura");
 });
 
 console.log(`attachments: ${passed} prove passate`);

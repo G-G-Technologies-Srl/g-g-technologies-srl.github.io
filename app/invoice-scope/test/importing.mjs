@@ -929,6 +929,19 @@ await prova("un cliente che ci manda una fattura diventa «entrambi», e non ent
   assert.equal(dopo.importato, undefined, "non è del lotto: annullare non lo toglie");
 });
 
+await prova("la fattura ricevuta entra con il suo file, allegato all'acquisto", async () => {
+  const db = await openDatabase();
+  await apply(db, await plan([xml("IT09876543210_hc.xml", RICEVUTA)], { company: AZIENDA }));
+  const [c] = await list(db, "costs");
+  assert.equal(c.documento.name, "IT09876543210_hc.xml");
+  assert.equal(c.documento.type, "application/xml");
+  const [file] = await list(db, "attachments");
+  assert.equal(file.id, c.documento.id);
+  assert.equal(file.store, "costs");
+  assert.equal(file.ownerId, c.id);
+  assert.equal(file.size, new TextEncoder().encode(RICEVUTA).length, "i byte come sono arrivati");
+});
+
 await prova("la stessa fattura ricevuta due volte entra una volta sola", async () => {
   const db = await openDatabase();
   await apply(db, await plan([xml("hc.xml", RICEVUTA)], { company: AZIENDA }));
@@ -957,6 +970,7 @@ await prova("un acquisto importato porta la marca, si conta, e l'annullamento lo
   assert.equal(tolti.clienti, 1, "il fornitore nato con il lotto va via con lui");
   assert.equal((await list(db, "costs")).length, 0);
   assert.equal((await list(db, "outlays")).length, 0, "nessun pagamento orfano");
+  assert.equal((await list(db, "attachments")).length, 0, "e nessun file della fattura rimasto");
   assert.equal((await list(db, "parties")).length, 0);
 });
 

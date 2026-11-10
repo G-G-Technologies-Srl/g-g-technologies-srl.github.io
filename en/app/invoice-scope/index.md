@@ -51,7 +51,7 @@ Invoice Scope does the part that takes expertise — the arithmetic, the Fattura
 - Writes the FatturaPA file for every direction: from Italy to Italy, San Marino and abroad; from San Marino to Italy, abroad and other San Marino operators, with the domestic invoice compulsory from 1 January 2027. The direction follows from your country and the customer's.
 - Checks every document before it is issued and names the field, the rule and the fix. Works out VAT per rate the way the Italian exchange system recomputes it, in exact arithmetic.
 - Invoices public administrations in FPA12 format, with the office's unique code, CIG and CUP, and split payment. Handles withholding tax, professionals' pension contributions, virtual stamp duty and the flat-rate scheme.
-- Records purchases: invoices received as XML — signed (.p7m) or inside the SdI zip as well — or entered by hand, expenses without an invoice, suppliers' credit notes, instalments and payments. Recurring costs are entered once and expected until the end of the year.
+- Records purchases: invoices received as XML — signed (.p7m) or inside the SdI zip as well — or entered by hand, expenses without an invoice, suppliers' credit notes, instalments and payments. The supplier's invoice stays attached to the purchase: the imported XML file, or the PDF or photo added by hand. Recurring costs are entered once and expected until the end of the year.
 - Recognises reverse-charge purchases and prepares the integration to send to the SdI — TD16, TD17, TD18 or TD19 — with the deadline of the 15th of the following month. For a San Marino company it proposes the self-billed invoice under article 7 of Decreto Delegato 133/2026 when the supplier's invoice does not arrive.
 - Keeps the payment schedule both ways: instalments, payments with the transfer receipt, transfers that settle several invoices, the bank statement read from CSV. Payments received and payments to suppliers each have a list of their own, where they are corrected and the receipt is attached later, opened or downloaded. Prepares reminder letters and announces due dates through an .ics calendar and, where the browser allows, a notification.
 - Opens on an overview: the year's revenue against the previous one, receivables by age, margin, the period's VAT for checking purposes, and documents close to their transmission deadline.
@@ -128,7 +128,7 @@ PolyForm Shield 1.0.0. The code is public: it can be read, changed and used, com
 
 Free.
 
-**Version** 0.77.0 · **Updated** 27 October 2026 · **Licence** PolyForm-Shield-1.0.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
+**Version** 0.78.0 · **Updated** 10 November 2026 · **Licence** PolyForm-Shield-1.0.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
 
 *FAQ*
 

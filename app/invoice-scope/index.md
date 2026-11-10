@@ -51,7 +51,7 @@ Invoice Scope svolge sul vostro computer la parte che richiede competenza — i 
 - Scrive il file FatturaPA per ogni direzione: dall'Italia verso l'Italia, San Marino e l'estero; da San Marino verso l'Italia, l'estero e gli altri operatori sammarinesi, con la fattura interna obbligatoria dal 1° gennaio 2027. La direzione la ricava dal paese dell'azienda e da quello del cliente.
 - Controlla ogni documento prima dell'emissione e indica il campo, la regola e la correzione. Calcola l'IVA per aliquota come la ricalcola il Sistema di Interscambio, in aritmetica esatta.
 - Fattura alla pubblica amministrazione in formato FPA12, con il codice univoco dell'ufficio, CIG e CUP e la scissione dei pagamenti. Gestisce la ritenuta d'acconto, la cassa previdenziale dei professionisti, il bollo virtuale e il regime forfettario.
-- Registra gli acquisti: le fatture ricevute dal file XML — anche firmato (.p7m) o raccolto nello zip dello SdI — o inserite a mano, le spese senza fattura, le note di credito dei fornitori, le rate e i pagamenti. I costi ricorrenti si inseriscono una volta e restano attesi fino a fine anno.
+- Registra gli acquisti: le fatture ricevute dal file XML — anche firmato (.p7m) o raccolto nello zip dello SdI — o inserite a mano, le spese senza fattura, le note di credito dei fornitori, le rate e i pagamenti. La fattura del fornitore resta allegata all'acquisto: il file XML importato, oppure il PDF o la foto aggiunti a mano. I costi ricorrenti si inseriscono una volta e restano attesi fino a fine anno.
 - Riconosce gli acquisti in inversione contabile e prepara l'integrazione da trasmettere allo SdI — TD16, TD17, TD18 o TD19 — con il termine del 15 del mese successivo. Per un'azienda sammarinese propone l'autofattura dell'articolo 7 del Decreto Delegato 133/2026 quando la fattura del fornitore non arriva.
 - Tiene lo scadenzario in entrata e in uscita: rate, incassi con la ricevuta del bonifico, bonifici che saldano più fatture, l'estratto conto della banca letto da CSV. Incassi e pagamenti ai fornitori hanno ciascuno un elenco proprio, dove si correggono e dove la ricevuta si allega anche dopo, si apre o si scarica. Prepara il testo dei solleciti e ricorda le scadenze con un calendario .ics e, dove il browser lo consente, con una notifica.
 - Apre su una situazione d'insieme: fatturato dell'anno confrontato con il precedente, crediti divisi per anzianità, margine, IVA del periodo a fini di controllo e documenti vicini al termine di trasmissione.
@@ -128,7 +128,7 @@ PolyForm Shield 1.0.0. Il codice è pubblico: si legge, si modifica e si usa anc
 
 Gratuita.
 
-**Versione** 0.77.0 · **Aggiornata il** 27 ottobre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
+**Versione** 0.78.0 · **Aggiornata il** 10 novembre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
 
 *FAQ*
 

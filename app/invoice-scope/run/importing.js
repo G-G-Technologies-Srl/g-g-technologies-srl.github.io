@@ -492,7 +492,8 @@ export async function plan(sorgenti, contesto = {}) {
       { partitaIva: azienda.partitaIva || "", codiceFiscale: azienda.codiceFiscale || "", paese: azienda.paese || "IT", denominazione: azienda.denominazione || "" },
       letto.mittente,
     );
-    return [{ name, tipo: ricevuta ? "ricevuta" : "fattura", letto, records: [], scartate: [], problems: [] }];
+    // The bytes as they arrived, signature included: a purchase keeps its invoice (see `apply`).
+    return [{ name, tipo: ricevuta ? "ricevuta" : "fattura", letto, bytes, records: [], scartate: [], problems: [] }];
   }
 
   /**
@@ -781,6 +782,12 @@ export async function plan(sorgenti, contesto = {}) {
             continue;
           }
           const record = acquisto(doc, chi, fonte.name, dichiarato);
+          // **The invoice comes in with its purchase** (10 November 2026): the file read is kept as
+          // the purchase's document, so the original is one click away on the purchase card. Only
+          // for a file that holds one invoice — a batch would hand every purchase the whole batch.
+          if (fonte.bytes && fonte.letto.documenti.length === 1) {
+            record._file = { name: String(fonte.name).split("/").pop(), bytes: fonte.bytes };
+          }
           // A supplier's credit note names the invoice it reverses: found among the purchases
           // already here or in this same import, it is linked, and comes off that invoice.
           if (record.tipo === "nota" && (doc.fattureCollegate || []).length) {
@@ -878,7 +885,23 @@ export async function apply(db, piano) {
   const marca = (fonte) => ({ lotto, fonte: fonte || "", quando });
   const nota = t("impPaidNote");
 
-  await tx(db, ["parties", "items", "docs", "payments", "counters", "costs", "outlays"], async (scope) => {
+  // The invoices kept with their purchases: the Blobs are made before the transaction opens, because
+  // an IndexedDB transaction closes at the first await that is not one of its own requests.
+  const allegati = new Map();
+  for (const record of piano.costi || []) {
+    if (!record._file || !record._file.bytes || !record._file.bytes.length) continue;
+    const firmato = /\.p7m$/i.test(record._file.name);
+    const type = firmato ? "application/pkcs7-mime" : "application/xml";
+    allegati.set(record.id, {
+      meta: {
+        id: globalThis.crypto?.randomUUID?.() || `doc-${Date.now()}-${allegati.size}`,
+        name: record._file.name, type, size: record._file.bytes.length,
+      },
+      blob: new Blob([record._file.bytes], { type }),
+    });
+  }
+
+  await tx(db, ["parties", "items", "docs", "payments", "counters", "costs", "outlays", "attachments"], async (scope) => {
     for (const record of piano.clienti) {
       const { _id, _riga, _fonte, ...fields } = record;
       await scope.put("parties", { ...partyRecord({ ...fields, id: _id }), importato: marca(_fonte) });
@@ -891,7 +914,14 @@ export async function apply(db, piano) {
       if (record) await scope.put("parties", { ...record, ruolo: "entrambi" });
     }
     for (const record of piano.costi || []) {
-      const { _fonte, ...fields } = record;
+      const { _fonte, _file, ...fields } = record;
+      const allegato = allegati.get(fields.id);
+      if (allegato) {
+        await scope.put("attachments", {
+          ...allegato.meta, ownerId: fields.id, store: "costs", blob: allegato.blob, created: quando,
+        });
+        fields.documento = allegato.meta;
+      }
       await scope.put("costs", { ...fields, importato: marca(_fonte) });
       scritti.acquisti += 1;
     }
@@ -1051,7 +1081,8 @@ export async function undoLast(db) {
 
   await tx(db, ["parties", "items", "docs", "payments", "counters", "costs", "outlays", "attachments"], async (scope) => {
     // The receipts go with their payments, in the same transaction (rule 10 of DEVELOPING.md).
-    await forgetReceipts(scope, [...daTogliere.payments, ...daTogliere.outlays]);
+    // And the supplier's invoices kept with the purchases that go.
+    await forgetReceipts(scope, [...daTogliere.payments, ...daTogliere.outlays, ...daTogliere.costs]);
     for (const [store, records] of Object.entries(daTogliere)) {
       for (const r of records) {
         // A completion is undone by putting the reconstruction back, not by removing the invoice.
@@ -1234,6 +1265,8 @@ function _draw(piano) {
     note.append(li);
   }
 
+  // The plan in its own sheet, over whichever screen the files were chosen from.
+  if (!el("impDialog").open) el("impDialog").showModal();
   // Il fuoco va sul pannello: chi usa la tastiera o un lettore di schermo deve arrivare su quello
   // che è appena comparso, non restare sul pulsante che l'ha fatto comparire.
   el("impPanel").focus();
@@ -1243,11 +1276,26 @@ function _close() {
   corrente = null;
   el("impPanel").hidden = true;
   el("impFiles").value = "";
+  if (el("impDialog").open) el("impDialog").close();
 }
 
 /** I file scelti, letti in memoria e passati a `plan`. */
 async function _chosen(event) {
   const files = [...(event.target.files || [])];
+  try {
+    await planFiles(files);
+  } finally {
+    // Il campo si svuota comunque: senza, riscegliere lo stesso file non emette `change` e sembra
+    // che il pulsante non funzioni.
+    event.target.value = "";
+  }
+}
+
+/**
+ * Read these files and show what would be written: the same sheet whoever chose them — the
+ * settings, the purchases, or the purchase sheet handed an XML (10 November 2026).
+ */
+export async function planFiles(files) {
   if (!files.length) return;
   el("impReading").hidden = false;
   try {
@@ -1270,9 +1318,6 @@ async function _chosen(event) {
     _close();
   } finally {
     el("impReading").hidden = true;
-    // Il campo si svuota comunque: senza, riscegliere lo stesso file non emette `change` e sembra
-    // che il pulsante non funzioni.
-    event.target.value = "";
   }
 }
 
@@ -1317,6 +1362,14 @@ export async function refresh() {
   }
 }
 
+/**
+ * Open the file chooser of the import, from any screen — the purchases' «Importa fatture ricevute»
+ * as well as the settings. Called from inside a click: a file chooser opens only on a gesture.
+ */
+export function pickFiles() {
+  el("impFiles").click();
+}
+
 /** Collega i comandi. Chiamata una volta, all'avvio. */
 export function wire(db, { afterChange = null } = {}) {
   database = db;
@@ -1325,5 +1378,10 @@ export function wire(db, { afterChange = null } = {}) {
   el("impFiles").addEventListener("change", _chosen);
   el("impGo").addEventListener("click", _go);
   el("impCancel").addEventListener("click", _close);
+  // Esc closes the sheet: the plan goes with it, as with «Annulla».
+  el("impDialog").addEventListener("close", () => {
+    corrente = null;
+    el("impPanel").hidden = true;
+  });
   el("impUndo").addEventListener("click", _undo);
 }
