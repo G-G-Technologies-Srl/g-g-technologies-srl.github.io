@@ -206,6 +206,7 @@ const IT = {
   navDueDates: "Scadenze",
   navDueIncome: "Incassi",
   navDueOutlays: "Pagamenti",
+  navDueDuties: "Adempimenti",
   // I promemoria dello scadenzario. Le stesse parole di Plan Scope dove la cosa è la stessa: le due
   // app stanno sulla stessa scrivania, e due nomi per la stessa funzione sono due funzioni.
   remindTitle: "Promemoria",
@@ -325,6 +326,64 @@ const IT = {
   dueNet: "Saldo",
   dueOpen: "Apri",
   dueExpected: "atteso",
+
+  // ---- scadenzario › adempimenti (10 novembre 2026)
+  newsTitle: "Invoice Scope è aggiornato alla versione {version}. Le novità:",
+  dueDutiesOpen: "Apri gli adempimenti",
+  dueDuties: "{n} adempimenti fiscali nei prossimi 30 giorni, il primo entro il {data}.",
+  dueDutiesOne: "Un adempimento fiscale nei prossimi 30 giorni, entro il {data}.",
+  dueDutiesLate: "{n} adempimenti fiscali da fare, di cui {late} con il termine già scaduto.",
+  dueDutiesLateOne: "Un adempimento fiscale con il termine già scaduto.",
+  dutiesTitle: "Adempimenti fiscali",
+  dutiesNote: "Le scadenze fiscali che nascono da quello che è registrato qui: IVA, imposta di bollo sulle "
+    + "fatture elettroniche, ritenute d'acconto, integrazioni dell'inversione contabile. Gli importi sono "
+    + "la somma dei documenti emessi e degli acquisti registrati in Invoice Scope: il commercialista li "
+    + "verifica e aggiunge quello che qui non c'è.",
+  dutiesNoteSm: "Per un'azienda di San Marino qui compaiono le autofatture da emettere per le spese senza "
+    + "fattura elettronica. L'imposta monofase e gli altri versamenti seguono le regole della Repubblica e "
+    + "non sono calcolati.",
+  dutiesNoCompany: "Le scadenze dipendono dal paese e dal regime fiscale dell'azienda: compilare prima la "
+    + "scheda Azienda.",
+  dutiesIvaLabel: "Liquidazione IVA",
+  dutiesIvaAsk: "Per calcolare le scadenze dell'IVA serve sapere se l'azienda la liquida ogni mese o ogni "
+    + "trimestre: la scelta si fa qui sopra, una volta sola.",
+  dutiesIvaChoose: "Da scegliere",
+  dutiesIva_mensile: "Mensile",
+  dutiesIva_trimestrale: "Trimestrale, con l'1% di interessi",
+  dutiesEmpty: "Nessun adempimento aperto.",
+  dutiesWhat: "Adempimento",
+  dutiesAmount: "Importo",
+  dutiesDoneTitle: "Segnati come fatti",
+  dutiesDoneWhen: "Fatto",
+  dutiesFoot: "Le date che cadono di sabato, di domenica o in un giorno festivo nazionale sono spostate al "
+    + "primo giorno lavorativo, e i versamenti dal 1° al 20 agosto al 20 agosto; le feste dei santi patroni "
+    + "non sono considerate. Un saldo IVA sotto i 100 € passa al periodo successivo, e così un credito. "
+    + "L'acconto IVA di dicembre è calcolato con il metodo storico quando l'applicazione contiene tutto "
+    + "l'anno precedente; il commercialista può sceglierne un altro. Le scadenze di più di un anno fa non "
+    + "sono mostrate.",
+  dutyVatIntegrations: "IVA delle integrazioni di {mese}",
+  dutyVatBalance: "IVA, saldo dell'anno {anno}",
+  dutyVatAdvance: "Acconto IVA {anno}",
+  dutyAdvanceHow: "metodo storico: 88% del dicembre, o del saldo, dell'anno prima; si toglie dal dicembre o dal saldo",
+  dutyVatQuarter: "IVA del {n}° trimestre {anno}",
+  dutyVatMonth: "IVA di {mese}",
+  dutyStamp: "Imposta di bollo sulle fatture elettroniche, {n}° trimestre {anno} ({quante} fatture)",
+  dutyStampOne: "Imposta di bollo sulle fatture elettroniche, {n}° trimestre {anno} (1 fattura)",
+  dutyWithholding: "Ritenute d'acconto sui pagamenti di {mese} ({n})",
+  dutyIntegration: "Integrazione {tipo} della fattura di {fornitore} del {data}",
+  dutySelfInvoice: "Autofattura per la spesa da {fornitore} del {data}",
+  dutyCode: "F24, codice tributo {codice}",
+  dutyInterest: "comprende {importo} di interessi",
+  dutyDeferred: "rinviato: sotto i 5.000 € si versa con il trimestre successivo",
+  dutyRunning: "periodo in corso, importo fin qui",
+  dutyIntegrationHow: "il documento si prepara da Acquisti e si invia allo SdI",
+  dutySelfInvoiceHow: "il documento si prepara da Acquisti",
+  dutyOpenPurchases: "Apri gli acquisti",
+  dutyDone: "Segna come fatto",
+  dutyDoneAsk: "Segnare come fatto «{cosa}»? La riga passa fra quelli segnati, da cui il segno si può togliere.",
+  dutyLate: "scaduto il {data}",
+  dutyDoneOn: "il {data}",
+  dutyUndo: "Togli il segno",
 
   // ---- documenti
   docsTitle: "Documenti",
@@ -705,7 +764,7 @@ const IT = {
   impDialogTitle: "Anteprima dell'importazione",
   costDocPdfCopy: "copia in PDF",
   ritenutePanel: "Le ritenute d'acconto trattenute sui compensi pagati si versano all'Erario con l'F24 "
-    + "entro il 16 del mese successivo al pagamento, o il primo giorno lavorativo dopo. Per i compensi "
+    + "entro il 16 del mese successivo al pagamento (il 20 ad agosto), o il primo giorno lavorativo dopo. Per i compensi "
     + "di lavoro autonomo il codice tributo è di norma il 1040.",
   ritenuteRow: "Pagamenti di {mese} ({n}) · {importo} · entro il {scadenza}",
   ritenuteRowLate: "Pagamenti di {mese} ({n}) · {importo} · termine scaduto il {scadenza}",
@@ -1026,10 +1085,16 @@ const IT = {
   packRange: "dal {dal} al {al}",
   packDone: "Pacchetto pronto: {emesse} fatture emesse, {ricevute} file di acquisti e {bonifici} "
     + "ricevute di bonifici.",
+  packDutyOpen: "da fare",
+  packDutyLate: "scaduto",
+  packDutyRunning: "periodo in corso",
+  packDutyDone: "segnato come fatto",
   packMissing: "{mancanti} file nominati nell'archivio non sono in questo browser e mancano dal pacchetto.",
   packReadme: "Pacchetto per il commercialista — {azienda}\nPeriodo: dal {dal} al {al}\nPreparato il {oggi} "
     + "con Invoice Scope.\n\nContenuto\n- documenti.csv: documenti emessi e acquisti del periodo, una riga "
-    + "ciascuno, separati da punto e virgola.\n- emesse/: i file XML delle fatture emesse ed esportate "
+    + "ciascuno, separati da punto e virgola.\n- adempimenti.csv: le scadenze fiscali calcolate dall'applicazione "
+    + "dall'inizio del periodo a quattro mesi dopo la fine (IVA, imposta di bollo, ritenute, integrazioni), "
+    + "aperte o segnate come fatte: sono somme di quello che è registrato, da verificare.\n- emesse/: i file XML delle fatture emesse ed esportate "
     + "({emesse}). Sono ricostruiti dai dati dell'applicazione con il progressivo di invio di ciascuna: il "
     + "documento fiscale è il file recapitato dal Sistema di Interscambio.\n- ricevute/: i file delle "
     + "fatture ricevute e le loro copie in PDF ({ricevute}), con data, fornitore e numero nel nome.\n"
@@ -2142,6 +2207,7 @@ const EN = {
   navDueDates: "Due dates",
   navDueIncome: "Received",
   navDueOutlays: "Paid",
+  navDueDuties: "Tax deadlines",
   remindTitle: "Reminders",
   remindLead: "When a deadline or a meeting comes close the app reminds you in three ways — and which one works "
     + "depends on where you are.",
@@ -2255,6 +2321,61 @@ const EN = {
   dueNet: "Balance",
   dueOpen: "Open",
   dueExpected: "expected",
+
+  // ---- schedule › tax deadlines (10 November 2026)
+  newsTitle: "Invoice Scope has been updated to version {version}. What's new:",
+  dueDutiesOpen: "Open the tax deadlines",
+  dueDuties: "{n} tax deadlines in the next 30 days, the first by {data}.",
+  dueDutiesOne: "One tax deadline in the next 30 days, by {data}.",
+  dueDutiesLate: "{n} tax deadlines to meet, {late} of them already past.",
+  dueDutiesLateOne: "One tax deadline already past.",
+  dutiesTitle: "Tax deadlines",
+  dutiesNote: "The tax deadlines that come from what is recorded here: VAT, stamp duty on e-invoices, "
+    + "withholding tax, reverse-charge integrations. The amounts are the sum of the documents issued and "
+    + "the purchases recorded in Invoice Scope: the accountant checks them and adds what is not here.",
+  dutiesNoteSm: "For a San Marino company this lists the self-invoices to issue for expenses without an "
+    + "e-invoice. The single-stage tax and the other payments follow the Republic's rules and are not "
+    + "worked out.",
+  dutiesNoCompany: "The deadlines depend on the company's country and tax scheme: fill in the Company page first.",
+  dutiesIvaLabel: "VAT settlement",
+  dutiesIvaAsk: "To work out the VAT deadlines the app needs to know whether the company settles VAT every "
+    + "month or every quarter: choose above, once.",
+  dutiesIvaChoose: "To choose",
+  dutiesIva_mensile: "Monthly",
+  dutiesIva_trimestrale: "Quarterly, with 1% interest",
+  dutiesEmpty: "No open tax deadline.",
+  dutiesWhat: "Obligation",
+  dutiesAmount: "Amount",
+  dutiesDoneTitle: "Marked as done",
+  dutiesDoneWhen: "Done",
+  dutiesFoot: "Dates falling on a Saturday, a Sunday or a national public holiday move to the first working "
+    + "day, and payments due from 1 to 20 August move to 20 August; local patron saints' days are not "
+    + "considered. A VAT balance under €100 moves to the next period, and so does a credit. The December "
+    + "VAT advance is worked out with the historical method when the application holds the whole previous "
+    + "year; the accountant may choose another. Deadlines more than a year old are not shown.",
+  dutyVatIntegrations: "VAT on the integrations of {mese}",
+  dutyVatBalance: "VAT, balance for {anno}",
+  dutyVatAdvance: "VAT advance {anno}",
+  dutyAdvanceHow: "historical method: 88% of the previous year's December, or balance; it comes off December or the balance",
+  dutyVatQuarter: "VAT for Q{n} {anno}",
+  dutyVatMonth: "VAT for {mese}",
+  dutyStamp: "Stamp duty on e-invoices, Q{n} {anno} ({quante} invoices)",
+  dutyStampOne: "Stamp duty on e-invoices, Q{n} {anno} (1 invoice)",
+  dutyWithholding: "Withholding tax on the payments of {mese} ({n})",
+  dutyIntegration: "Integration {tipo} of the invoice from {fornitore} dated {data}",
+  dutySelfInvoice: "Self-invoice for the expense from {fornitore} dated {data}",
+  dutyCode: "F24, tax code {codice}",
+  dutyInterest: "includes {importo} of interest",
+  dutyDeferred: "deferred: under €5,000 it is paid with the next quarter",
+  dutyRunning: "period still running, amount so far",
+  dutyIntegrationHow: "the document is prepared from Purchases and sent to the SdI",
+  dutySelfInvoiceHow: "the document is prepared from Purchases",
+  dutyOpenPurchases: "Open purchases",
+  dutyDone: "Mark as done",
+  dutyDoneAsk: "Mark «{cosa}» as done? The row moves to those marked, where the mark can be taken back.",
+  dutyLate: "past on {data}",
+  dutyDoneOn: "on {data}",
+  dutyUndo: "Remove the mark",
 
   docsTitle: "Documents",
   docsEmpty: "There are no documents yet.",
@@ -2624,7 +2745,7 @@ const EN = {
   impDialogTitle: "Import preview",
   costDocPdfCopy: "PDF copy",
   ritenutePanel: "The withholding tax kept on the fees paid goes to the Treasury with an F24 by the 16th "
-    + "of the month after the payment, or the first working day after. For self-employment fees the tax "
+    + "of the month after the payment (the 20th in August), or the first working day after. For self-employment fees the tax "
     + "code is normally 1040.",
   ritenuteRow: "Payments of {mese} ({n}) · {importo} · by {scadenza}",
   ritenuteRowLate: "Payments of {mese} ({n}) · {importo} · deadline passed on {scadenza}",
@@ -2938,10 +3059,16 @@ const EN = {
   packRange: "from {dal} to {al}",
   packDone: "Package ready: {emesse} invoices issued, {ricevute} purchase files and {bonifici} transfer "
     + "receipts.",
+  packDutyOpen: "to do",
+  packDutyLate: "past due",
+  packDutyRunning: "period still running",
+  packDutyDone: "marked done",
   packMissing: "{mancanti} files named in the archive are not in this browser and are missing from the package.",
   packReadme: "Package for the accountant — {azienda}\nPeriod: from {dal} to {al}\nPrepared on {oggi} with "
     + "Invoice Scope.\n\nContents\n- documenti.csv: documents issued and purchases of the period, one row "
-    + "each, separated by semicolons.\n- emesse/: the XML files of the invoices issued and exported "
+    + "each, separated by semicolons.\n- adempimenti.csv: the tax deadlines worked out by the application "
+    + "from the start of the period to four months after its end (VAT, stamp duty, withholding tax, "
+    + "integrations), open or marked done: they are sums of what is recorded, to be checked.\n- emesse/: the XML files of the invoices issued and exported "
     + "({emesse}). They are rebuilt from the application's data with the transmission progressive of each: "
     + "the fiscal document is the file delivered by the Exchange System (SdI).\n- ricevute/: the files of "
     + "the invoices received and their PDF copies ({ricevute}), with date, supplier and number in the "

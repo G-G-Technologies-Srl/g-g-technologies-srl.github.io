@@ -370,7 +370,7 @@ prova("inversione e beni o servizi sopravvivono al foglio, e solo con valori amm
 
 prova("il 16 del mese dopo, spostato al lunedì se cade nel fine settimana", () => {
   assert.equal(sedici("2026-10"), "2026-11-16", "lunedì");
-  assert.equal(sedici("2026-07"), "2026-08-17", "il 16 agosto 2026 è domenica");
+  assert.equal(sedici("2026-07"), "2026-08-20", "dal 1° al 20 agosto i versamenti vanno al 20");
   assert.equal(sedici("2026-04"), "2026-05-18", "il 16 maggio 2026 è sabato");
   assert.equal(sedici("2026-12"), "2027-01-18", "dicembre passa all'anno dopo");
 });

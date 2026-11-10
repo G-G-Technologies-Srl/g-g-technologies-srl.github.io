@@ -109,6 +109,7 @@
       <a href="#/scadenzario" id="navDueDates" data-sub="1"><span data-t="navDueDates"></span></a>
       <a href="#/scadenzario/incassi" id="navDueIncome" data-sub="1"><span data-t="navDueIncome"></span></a>
       <a href="#/scadenzario/pagamenti" id="navDueOutlays" data-sub="1"><span data-t="navDueOutlays"></span></a>
+      <a href="#/scadenzario/adempimenti" id="navDueDuties" data-sub="1"><span data-t="navDueDuties"></span></a>
     </div>
     <a href="#/crm" id="navCrm"><svg aria-hidden="true"><use href="#ico-crm"/></svg><span data-t="navCrm"></span></a>
     <a href="#/anagrafiche" id="navParties"><svg aria-hidden="true"><use href="#ico-parties"/></svg><span data-t="navParties"></span></a>
@@ -440,6 +441,11 @@
       <span class="ok" id="dueTotal"></span>
     </div>
 
+    <!-- The tax deadlines of the next weeks, in one line with the way to their screen. -->
+    <div class="panel warn" id="dueDuties" hidden>
+      <p><span id="dueDutiesText"></span> <a href="#/scadenzario/adempimenti" data-t="dueDutiesOpen"></a></p>
+    </div>
+
     <div class="chart" id="dueChart" hidden></div>
     <!-- What the colours of the chart mean. The bars said it only in the aria-label, which nobody
          looking at the picture reads: grey, green, red and dashed were four guesses. -->
@@ -482,6 +488,38 @@
         </table>
       </div>
     </div>
+  </section>
+
+  <!-- Scadenzario › Adempimenti: VAT, stamp duty on e-invoices, withholding tax, integrations and
+       self-invoices, in one list by deadline (10 November 2026). Drawn by duties.js. -->
+  <section id="screenDuties" class="screen wide" hidden>
+    <h1 class="titled"><span class="ico" aria-hidden="true"><svg><use href="#ico-due"/></svg></span><span data-t="dutiesTitle"></span></h1>
+    <p class="note" id="dutiesNote"></p>
+    <div class="form docs-filters" id="dutiesIvaRow" hidden>
+      <label><span data-t="dutiesIvaLabel"></span><select id="dutiesIva"></select></label>
+    </div>
+    <div class="panel warn" id="dutiesAsk" hidden><p data-t="dutiesIvaAsk"></p></div>
+    <p class="empty" id="dutiesEmpty" data-t="dutiesEmpty"></p>
+    <div class="table-scroll">
+      <table class="rows" id="dutiesTable" hidden>
+        <thead><tr>
+          <th data-t="dueWhen"></th><th data-t="dutiesWhat"></th><th class="right" data-t="dutiesAmount"></th><th></th>
+        </tr></thead>
+        <tbody id="dutiesBody"></tbody>
+      </table>
+    </div>
+    <div id="dutiesDoneSection" hidden>
+      <div class="section-head"><h2 data-t="dutiesDoneTitle"></h2></div>
+      <div class="table-scroll">
+        <table class="rows" id="dutiesDoneTable">
+          <thead><tr>
+            <th data-t="dueWhen"></th><th data-t="dutiesWhat"></th><th data-t="dutiesDoneWhen"></th><th></th>
+          </tr></thead>
+          <tbody id="dutiesDoneBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <p class="note" data-t="dutiesFoot"></p>
   </section>
 
   <!-- Scadenzario › Incassi and › Pagamenti: every payment received, or made to a supplier, with

@@ -59,6 +59,7 @@ await prova("nel pacchetto: il CSV, il file dell'acquisto e la ricevuta del boni
   const nomi = readZip(bytes).map((one) => one.name).sort();
   assert.deepEqual(nomi, [
     "Noi-S.r.l._2026-10-01_2026-10-31/LEGGIMI.txt",
+    "Noi-S.r.l._2026-10-01_2026-10-31/adempimenti.csv",
     "Noi-S.r.l._2026-10-01_2026-10-31/documenti.csv",
     "Noi-S.r.l._2026-10-01_2026-10-31/pagamenti/2026-10-20_Hosting-Cloud-S.p.A._HC-118.pdf",
     "Noi-S.r.l._2026-10-01_2026-10-31/ricevute/2026-10-03_Hosting-Cloud-S.p.A._HC-118.xml",
@@ -66,6 +67,25 @@ await prova("nel pacchetto: il CSV, il file dell'acquisto e la ricevuta del boni
   assert.equal(counts.ricevute, 1);
   assert.equal(counts.ricevuteBonifici, 1);
   assert.equal(counts.mancanti, 0);
+});
+
+await prova("nel pacchetto anche le scadenze fiscali, dal periodo a quattro mesi dopo, con lo stato", async (db) => {
+  await put(db, "company", { id: "company", denominazione: "Noi S.r.l.", paese: "IT", regimeFiscale: "RF01",
+    adempimenti: { iva: "mensile", fatti: { "iva:2026-09": "2026-10-15" } } });
+  const scaled = (euro) => `${euro}${"0".repeat(8)}`;
+  for (const [id, data] of [["d9", "2026-09-10"], ["d10", "2026-10-10"]]) {
+    await put(db, "docs", { id, tipo: "TD01", stato: "emesso", numero: id, data, righe: [],
+      totali: { imponibile: scaled(1000), imposta: scaled(220), totale: scaled(1220) } });
+  }
+  const { bytes } = await accountantPackage(db, { from: "2026-10-01", to: "2026-10-31", now: new Date(2026, 10, 20) });
+  const voce = readZip(bytes).find((one) => one.name.endsWith("/adempimenti.csv"));
+  const testo = new TextDecoder().decode(voce.bytes || voce.data);
+  const righe = testo.replace(/^\ufeff/, "").trim().split("\r\n");
+  assert.equal(righe[0], "scadenza;adempimento;codice_tributo;importo;stato;segnato_il");
+  assert.deepEqual(righe.slice(1), [
+    "2026-10-16;IVA di settembre 2026;6009;220.00;segnato come fatto;2026-10-15",
+    "2026-11-16;IVA di ottobre 2026;6010;220.00;scaduto;",
+  ]);
 });
 
 console.log(`package: ${passed} prove passate`);

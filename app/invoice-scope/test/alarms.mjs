@@ -125,4 +125,19 @@ await test("gli incontri in programma entrano nel calendario alla loro ora, quel
   assert.match(text, /Fattura/);
 });
 
+await test("le scadenze fiscali entrano nel calendario, quella del periodo in corso no", async () => {
+  const db = await openDatabase();
+  // The month before this one: its VAT falls due around the 16th of this month.
+  const adesso = new Date(`${OGGI}T00:00:00Z`);
+  const prima = new Date(Date.UTC(adesso.getUTCFullYear(), adesso.getUTCMonth() - 1, 10)).toISOString().slice(0, 10);
+  await put(db, "company", { id: "company", paese: "IT", regimeFiscale: "RF01", adempimenti: { iva: "mensile" } });
+  await put(db, "docs", issued({ id: "d-prima", data: prima }));
+  await put(db, "docs", issued({ id: "d-ora", data: OGGI }));
+  const text = await calendar(db);
+  const eventi = text.split("BEGIN:VEVENT").filter((one) => one.includes("UID:duty:iva:"));
+  assert.equal(eventi.length, 1, "il mese chiuso sì, quello in corso no");
+  assert.match(eventi[0], /IVA di /);
+  assert.match(eventi[0], /220/);
+});
+
 console.log(`alarms: ${passed} prove passate`);

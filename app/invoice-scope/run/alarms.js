@@ -17,7 +17,7 @@
 // qualcuno per una bolletta che nessuno ha ancora mandato è il modo più veloce di far spegnere i
 // promemoria.
 
-import { get, put } from "gg/store.js";
+import { get, put, list } from "gg/store.js";
 import * as remind from "biz/remind.js";
 import * as ics from "biz/ics.js";
 
@@ -28,6 +28,7 @@ import { summary } from "./schedule.js";
 import { allCosts, allOutlays, payable } from "./costs.js";
 import { parties } from "./parties.js";
 import { activities, agenda } from "./crm.js";
+import { obligations, describe } from "./obligations.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -79,7 +80,8 @@ function _when(date, today) {
  */
 async function _rows(db) {
   const today = _today();
-  const who = new Map((await parties(db)).map((one) => [one.id, one.name || ""]));
+  const chi = await parties(db);
+  const who = new Map(chi.map((one) => [one.id, one.name || ""]));
   const out = [];
 
   const { rows } = await summary(db, { today });
@@ -95,8 +97,9 @@ async function _rows(db) {
   }
 
   const costs = await allCosts(db);
+  const outlays = await allOutlays(db);
   const byCost = new Map(costs.map((one) => [one.id, one]));
-  for (const row of payable(costs, await allOutlays(db))) {
+  for (const row of payable(costs, outlays)) {
     if (!row.scadenza) continue;
     const record = byCost.get(row.costId) || {};
     out.push({
@@ -106,6 +109,20 @@ async function _rows(db) {
       party: who.get(row.partyId) || "",
       amount: row.importo,
     });
+  }
+
+  // The tax deadlines of Scadenzario › Adempimenti (10 November 2026): VAT, stamp duty, withholding,
+  // integrations. The period still running stays out: its amount is not final yet, and the row
+  // comes in at the first reminder after the period closes.
+  const { aperti } = obligations({
+    docs: await list(db, "docs"), costs, outlays,
+    company: await get(db, "company", "company"),
+    anagrafiche: new Map(chi.map((one) => [one.id, one])),
+    today,
+  });
+  for (const row of aperti) {
+    if (row.inCorso) continue;
+    out.push({ id: `duty:${row.key}`, date: row.scadenza, title: describe(row), party: "", amount: row.importo });
   }
 
   for (const one of agenda(await activities(db), { oggi: today }).upcoming) {

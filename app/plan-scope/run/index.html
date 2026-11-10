@@ -929,6 +929,17 @@
 
   <!-- The app's own question, for what used to be the browser's `prompt`: a name, a choice, a yes
        or no. One dialog, three shapes; `ui.ask` fills it and reads it. -->
+  <!-- What is new, once after an update (10 November 2026): filled by app.js from news.js. -->
+  <dialog id="newsDialog" class="ask news">
+    <form method="dialog">
+      <h2 id="newsTitle"></h2>
+      <ul id="newsList"></ul>
+      <div class="row">
+        <button type="submit" class="primary" data-t="newsClose"></button>
+      </div>
+    </form>
+  </dialog>
+
   <dialog id="askDialog" class="ask">
     <form id="askForm">
       <p id="askText" tabindex="-1"></p>

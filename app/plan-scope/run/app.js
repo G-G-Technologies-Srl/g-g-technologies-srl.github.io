@@ -43,8 +43,10 @@ import * as theme from "gg/theme.js";
 import * as io from "gg/io.js";
 import { setup as setupInstall, isInstalled, system, canPrompt, promptInstall, browser } from "gg/install.js";
 import * as update from "gg/update.js";
+import { announce } from "gg/news.js";
+import { NEWS, SEEN_KEY as NEWS_KEY } from "./news.js";
 import * as remind from "biz/remind.js";
-import { t, tf, num, otherLang, setLang, resolveLang, missingKeys } from "./i18n.js";
+import { t, tf, num, lang, otherLang, setLang, resolveLang, missingKeys } from "./i18n.js";
 import { el, node, button, fill, applyText, snack, hideSnack, shortDate, longDate, bytes, ask, tagHue, count } from "./ui.js";
 
 // Ten megabytes. Not a technical limit — IndexedDB would take far more — but the point at which one
@@ -1624,6 +1626,30 @@ async function _welcomed() {
   if (db.available()) await db.setMeta("welcomed", true);
 }
 
+/**
+ * What is new in the running version, said once after an update (10 November 2026). The rules are
+ * in `gg/news.js`; «has data» is the welcome already given, because the example project makes the
+ * archive look full on the very first start.
+ */
+async function _whatsNew(version) {
+  if (newsHandled || demoMode) return;
+  newsHandled = true;
+  await announce({
+    key: NEWS_KEY,
+    version,
+    notes: NEWS,
+    lingua: lang(),
+    hasData: _alreadyWelcomed,
+    show: (lines) => new Promise((resolve) => {
+      const dialog = el("newsDialog");
+      el("newsTitle").textContent = tf("newsTitle", { version });
+      fill(el("newsList"), lines.map((line) => node("li", "", line)));
+      dialog.addEventListener("close", resolve, { once: true });
+      dialog.showModal();
+    }),
+  });
+}
+
 /** Whether this browser has been welcomed already. Without a database, nobody is welcomed twice. */
 async function _alreadyWelcomed() {
   try {
@@ -1883,6 +1909,8 @@ function _badge() {
 
 /** Il registro del worker, tenuto da parte: `periodicSync` si registra su quello. */
 let worker = null;
+// Whether the notes of this version were already handled on this start: `onVersion` can answer twice.
+let newsHandled = false;
 
 /**
  * Le impostazioni stanno nel `meta`, che **non** finisce nell'archivio: `DOCUMENT_STORES` non lo
@@ -3883,6 +3911,7 @@ async function _boot() {
 
       upToDate: (v) => t("versionUpToDate").replace("{version}", v),
     },
+    onVersion: _whatsNew,
   }).then((registration) => {
     worker = registration;
     // Il riepilogo dopo il registro, così la riga sullo stato sa già se questo browser sveglia

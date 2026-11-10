@@ -44,6 +44,8 @@ Invoice Scope does the part that takes expertise — the arithmetic, the Fattura
 
 ![Purchases: received invoices and expenses, with their state and what is left to pay.](https://ggtechnologies.sm/assets/shot-invoice-scope-acquisti-en.png)
 
+![Tax deadlines: VAT, stamp duty, withholding tax and integrations, with the due date, the amount and the tax code.](https://ggtechnologies.sm/assets/shot-invoice-scope-adempimenti-en.png)
+
 ### What it does
 
 - Issues invoices, deferred invoices, advance invoices, credit and debit notes, with several VAT rates on one document. It also keeps quotes, pro-forma invoices and delivery notes, each with its own numbering, and turns them into invoices without retyping lines, discounts and due dates. From the list, any document can be duplicated for the same customer and lines.
@@ -57,7 +59,8 @@ Invoice Scope does the part that takes expertise — the arithmetic, the Fattura
 - Opens on an overview: the year's revenue against the previous one, receivables by age, margin, the period's VAT for checking purposes, and documents close to their transmission deadline.
 - Gives every customer a record with the contact people, the meetings coming up and those waiting for an outcome, a diary of calls, emails and meetings, and the list of their documents.
 - Manages projects: phases with dates and amounts, note pages with images and attachments, and completed phases that become invoice lines. The format is the same as Plan Scope's.
-- Imports customers, price list and documents from Fatture in Cloud and from the XML files of an archive, showing first what will come in. For whoever keeps the books it prepares the period's package: the CSV, the XML of the invoices issued, the invoices received and the transfer receipts, in one zip. It keeps count of the withholding tax to pay with the F24.
+- Imports customers, price list and documents from Fatture in Cloud and from the XML files of an archive, showing first what will come in. For whoever keeps the books it prepares the period's package: the CSV, the XML of the invoices issued, the invoices received and the transfer receipts, in one zip.
+- Gathers the tax deadlines in one list by due date, with the amount and the tax code: monthly or quarterly VAT with the December advance, the quarterly stamp duty on e-invoices, the withholding tax to pay with the F24, integrations and self-invoices.
 - Prints documents on your letterhead, with logo and contact details, or saves them as PDF.
 - Saves the archive at every change to a linked folder, with one copy a day. Installs like an application and works without a connection.
 
@@ -128,7 +131,7 @@ PolyForm Shield 1.0.0. The code is public: it can be read, changed and used, com
 
 Free.
 
-**Version** 0.79.0 · **Updated** 10 November 2026 · **Licence** PolyForm-Shield-1.0.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
+**Version** 0.80.0 · **Updated** 10 November 2026 · **Licence** PolyForm-Shield-1.0.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
 
 *FAQ*
 
@@ -165,6 +168,14 @@ The goods type does, and it is 3, the one for services. The transfer type does n
 ### Does it remind me when a due date is close?
 
 Yes, in three ways. The schedule exports as an .ics calendar with the reminder included, so the alert comes from your own calendar even with the application closed. On reopening, a summary shows what has fallen due. With the application installed on Chrome or Edge a system notification arrives too; on Safari, iPhone and Firefox the first two remain. Advance notice and time are chosen in the settings.
+
+### Can I attach the supplier's invoice to a purchase?
+
+Yes. In the purchase form and on its record you attach the PDF, a photo or the XML file; an XML chosen for a new purchase is read, with supplier, number, amounts and lines. Invoices imported from the SdI stay attached on their own, with the PDF copy when the XML contains one, and the XML opens laid out like an invoice. Files can also be dropped on the Purchases page.
+
+### What can I hand to my accountant?
+
+From the settings you prepare the package of a period — the month, the quarter or the year — in one zip: the list of documents as CSV, the XML of the invoices issued, the invoices received and the receipts of payments in and out. Under Payments › Tax deadlines the same archive reads as deadlines: VAT, stamp duty, withholding tax and integrations, with the amount and the tax code. They are sums of what is recorded in the application, to be checked with whoever keeps the books.
 
 ### What happens if I change computer?
 

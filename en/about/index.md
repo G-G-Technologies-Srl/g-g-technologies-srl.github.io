@@ -91,7 +91,7 @@ We work alongside management on priorities, investments, the choice of suppliers
 
 *Published work*
 
-## Two studies, verifiable certificates, a product you can download, eight articles.
+## Two studies, verifiable certificates, a product you can download, nine articles.
 
 ### Two peer-reviewed studies
 
@@ -121,7 +121,7 @@ Podz.AI is our own personal AI workstation. It installs in a minute and runs for
 
 Where the boundary of an AI agent falls, what separates a number from a measurement, how long a device lasts when nobody updates it: the questions that come before the technology.
 
-- Eight articles, in Italian and English
+- Nine articles, in Italian and English
 - Sources at the foot of each one
 - [Read the articles](https://ggtechnologies.sm/en/insights/)
 

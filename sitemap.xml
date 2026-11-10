@@ -168,7 +168,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/chi-siamo/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/about/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/chi-siamo/"/>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-11-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -177,7 +177,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/chi-siamo/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/about/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/chi-siamo/"/>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-11-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -438,7 +438,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/app/plan-scope/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/app/plan-scope/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/app/plan-scope/"/>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-11-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -447,7 +447,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/app/plan-scope/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/app/plan-scope/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/app/plan-scope/"/>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-11-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -456,7 +456,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/app/survey-scope/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/app/survey-scope/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/app/survey-scope/"/>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-11-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -465,7 +465,7 @@
     <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/app/survey-scope/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/app/survey-scope/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/app/survey-scope/"/>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-11-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -664,6 +664,24 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/number-or-measurement/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/numero-o-misura/"/>
     <lastmod>2026-10-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/insights/app-nel-browser-dati/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/app-nel-browser-dati/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/browser-apps-data/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/app-nel-browser-dati/"/>
+    <lastmod>2026-11-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ggtechnologies.sm/en/insights/browser-apps-data/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://ggtechnologies.sm/insights/app-nel-browser-dati/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ggtechnologies.sm/en/insights/browser-apps-data/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ggtechnologies.sm/insights/app-nel-browser-dati/"/>
+    <lastmod>2026-11-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

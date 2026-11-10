@@ -44,6 +44,8 @@ Invoice Scope svolge sul vostro computer la parte che richiede competenza — i 
 
 ![Gli acquisti: fatture ricevute e spese, con lo stato e quello che resta da pagare.](https://ggtechnologies.sm/assets/shot-invoice-scope-acquisti-it.png)
 
+![Gli adempimenti fiscali: IVA, imposta di bollo, ritenute e integrazioni, con la scadenza, l'importo e il codice tributo.](https://ggtechnologies.sm/assets/shot-invoice-scope-adempimenti-it.png)
+
 ### Cosa fa
 
 - Emette fatture, fatture differite, acconti, note di credito e di debito, con più aliquote sullo stesso documento. Tiene anche preventivi, fatture proforma e documenti di trasporto, ciascuno con la sua numerazione, e li trasforma in fattura senza ridigitare righe, sconti e scadenze. Dall'elenco ogni documento si duplica per il cliente e le righe di sempre.
@@ -57,7 +59,8 @@ Invoice Scope svolge sul vostro computer la parte che richiede competenza — i 
 - Apre su una situazione d'insieme: fatturato dell'anno confrontato con il precedente, crediti divisi per anzianità, margine, IVA del periodo a fini di controllo e documenti vicini al termine di trasmissione.
 - Dedica a ogni cliente una scheda con le persone di riferimento, gli incontri in programma e quelli da annotare, il diario di telefonate, email e incontri e l'elenco dei suoi documenti.
 - Gestisce i progetti: fasi con scadenze e importi, pagine di appunti con immagini e allegati, e fasi completate che diventano righe di fattura. Il formato è lo stesso di Plan Scope.
-- Importa clienti, listino e documenti da Fatture in Cloud e dagli XML di un archivio, mostrando prima che cosa entrerà. Per chi tiene la contabilità prepara il pacchetto del periodo: il CSV, gli XML delle fatture emesse, le fatture ricevute e le ricevute dei bonifici, in un unico zip. Tiene il conto delle ritenute d'acconto da versare con l'F24.
+- Importa clienti, listino e documenti da Fatture in Cloud e dagli XML di un archivio, mostrando prima che cosa entrerà. Per chi tiene la contabilità prepara il pacchetto del periodo: il CSV, gli XML delle fatture emesse, le fatture ricevute e le ricevute dei bonifici, in un unico zip.
+- Raccoglie gli adempimenti fiscali in un elenco per scadenza, con l'importo e il codice tributo: la liquidazione IVA mensile o trimestrale con l'acconto di dicembre, l'imposta di bollo sulle fatture elettroniche per trimestre, le ritenute d'acconto da versare con l'F24, le integrazioni e le autofatture.
 - Stampa i documenti su carta intestata, con logo e recapiti, o li salva in PDF.
 - Salva l'archivio a ogni modifica in una cartella collegata, con una copia al giorno. Si installa come un'applicazione e funziona anche senza connessione.
 
@@ -128,7 +131,7 @@ PolyForm Shield 1.0.0. Il codice è pubblico: si legge, si modifica e si usa anc
 
 Gratuita.
 
-**Versione** 0.79.0 · **Aggiornata il** 10 novembre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
+**Versione** 0.80.0 · **Aggiornata il** 10 novembre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/invoice-scope)
 
 *FAQ*
 
@@ -165,6 +168,14 @@ Il tipo merce sì, ed è il 3, quello delle prestazioni di servizi. Il tipo cess
 ### Mi avvisa quando una scadenza si avvicina?
 
 Sì, in tre modi. Lo scadenzario si esporta come calendario .ics con il promemoria incluso, quindi l'avviso arriva dal vostro calendario anche ad applicazione chiusa. Alla riapertura, un riepilogo mostra le scadenze maturate. Con l'applicazione installata su Chrome o Edge arriva anche una notifica di sistema; su Safari, iPhone e Firefox restano i primi due. Anticipo e orario si scelgono nelle impostazioni.
+
+### Posso allegare la fattura del fornitore a un acquisto?
+
+Sì. Nel foglio dell'acquisto e nella sua scheda si allega il PDF, la foto o il file XML; un XML scelto per un acquisto nuovo viene letto, con fornitore, numero, importi e righe. Le fatture importate dallo SdI restano allegate da sole, con la copia in PDF quando l'XML la contiene, e l'XML si apre impaginato come una fattura. I file si possono anche trascinare sulla pagina degli Acquisti.
+
+### Che cosa posso dare al commercialista?
+
+Dalle Impostazioni si prepara il pacchetto di un periodo — il mese, il trimestre o l'anno — in un unico zip: l'elenco dei documenti in CSV, gli XML delle fatture emesse, le fatture ricevute e le ricevute di incassi e pagamenti. In Scadenzario › Adempimenti lo stesso archivio si legge come scadenze: IVA, imposta di bollo, ritenute d'acconto e integrazioni, con l'importo e il codice tributo. Sono somme di quello che è registrato nell'applicazione, da verificare con chi tiene la contabilità.
 
 ### Che cosa succede se cambio computer?
 

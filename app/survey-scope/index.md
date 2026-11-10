@@ -109,7 +109,7 @@ PolyForm Shield 1.0.0 per il codice: un prodotto concorrente richiede una licenz
 
 È un'autovalutazione. Non è una certificazione, non è un parere legale e non sostituisce i vostri consulenti.
 
-**Versione** 1.32.0 · **Aggiornata il** 27 ottobre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/survey-scope)
+**Versione** 1.33.0 · **Aggiornata il** 10 novembre 2026 · **Licenza** PolyForm-Shield-1.0.0 · [Codice sorgente](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/survey-scope)
 
 *FAQ*
 

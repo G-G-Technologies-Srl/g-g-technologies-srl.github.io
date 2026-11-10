@@ -15,7 +15,7 @@ We write about what we design and build: sensors, robots, artificial intelligenc
 
 The sources for each article are listed and verifiable at the foot of its page.
 
-*Data · 27 October 2026 · draft*
+*Data · 10 November 2026*
 
 ### [Where a browser app keeps its data](https://ggtechnologies.sm/en/insights/browser-apps-data/)
 

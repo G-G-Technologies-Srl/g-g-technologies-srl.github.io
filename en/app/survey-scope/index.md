@@ -109,7 +109,7 @@ PolyForm Shield 1.0.0 for the code: a competing product needs a commercial licen
 
 It is a self-assessment. It is not a certification, it is not legal advice, and it does not replace your advisers.
 
-**Version** 1.32.0 · **Updated** 27 October 2026 · **Licence** PolyForm-Shield-1.0.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/survey-scope)
+**Version** 1.33.0 · **Updated** 10 November 2026 · **Licence** PolyForm-Shield-1.0.0 · [Source code](https://github.com/G-G-Technologies-Srl/g-g-technologies-srl.github.io/tree/main/app/survey-scope)
 
 *FAQ*
 

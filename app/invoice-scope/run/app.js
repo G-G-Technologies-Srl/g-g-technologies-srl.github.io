@@ -63,6 +63,9 @@ import { inventory, compare } from "./archive.js";
 import { sweep } from "./attachments.js";
 import { periods as packPeriods, accountantPackage } from "./package.js";
 import * as alarms from "./alarms.js";
+import * as duties from "./duties.js";
+import { NEWS, SEEN_KEY } from "./news.js";
+import { announce } from "gg/news.js";
 import { currentDay } from "./day.js";
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -80,6 +83,7 @@ const ROUTES = {
   "#/scadenzario": "screenDue",
   "#/scadenzario/incassi": "screenIncome",
   "#/scadenzario/pagamenti": "screenIncome",
+  "#/scadenzario/adempimenti": "screenDuties",
   "#/anagrafiche": "screenParties",
   "#/anagrafiche/listino": "screenItems",
   "#/anagrafiche/banche": "screenBanks",
@@ -131,6 +135,8 @@ const SEDE_FIELDS = ["indirizzo", "numeroCivico", "cap", "comune", "provincia"];
 let db = null;
 /** Il registro del service worker: `periodicSync` si registra su quello. */
 let worker = null;
+// Whether the notes of this version were already handled on this start: `onVersion` can answer twice.
+let newsHandled = false;
 
 /**
  * The logo, while the company screen is open: a data URL, or `null`.
@@ -326,6 +332,7 @@ async function _route() {
   if (screen === "screenBanks") await banks.render(db, _refresh);
   if (screen === "screenCrm") await meetings.render(db, _refresh);
   if (screen === "screenDue") await due.render(db, _refresh);
+  if (screen === "screenDuties") await duties.render(db, _refresh);
   if (screen === "screenIncome") {
     await income.render(db, _refresh, { verso: hash === "#/scadenzario/pagamenti" ? "out" : "in" });
   }
@@ -408,6 +415,7 @@ async function _demoView(db) {
     case "acquisti": return "#/acquisti";
     case "incassi": return "#/scadenzario/incassi";
     case "pagamenti": return "#/scadenzario/pagamenti";
+    case "adempimenti": return "#/scadenzario/adempimenti";
     case "anagrafiche": return "#/anagrafiche";
     case "listino": return "#/anagrafiche/listino";
     case "banche": return "#/anagrafiche/banche";
@@ -1122,6 +1130,9 @@ async function _saveCompany(event) {
   // every «Salva» of the company.
   const stored = (await get(db, "company", COMPANY_ID)) || {};
   record.conti = Array.isArray(stored.conti) ? stored.conti : [];
+  // The same for the tax deadlines: the VAT choice and the marks «done» are written by Scadenzario ›
+  // Adempimenti, and a «Salva» here must not take them away.
+  if (stored.adempimenti) record.adempimenti = stored.adempimenti;
 
   await put(db, "company", record);
 
@@ -1910,6 +1921,7 @@ async function main() {
 
         upToDate: (v) => t("versionUpToDate").replace("{version}", v),
       },
+      onVersion: _whatsNew,
     }).then((registration) => {
       worker = registration;
       alarms.connect(registration);
@@ -1918,6 +1930,27 @@ async function main() {
       _remindOnOpen();
     });
   }
+}
+
+/**
+ * What is new in the running version, said once after an update (10 November 2026). The rules —
+ * when to speak, which notes — are in `news.js`; here the browser's memory and the dialog.
+ *
+ * **After any dialog already open.** The version answers a few milliseconds into the start, which
+ * is also when the app may be asking about the backup folder: the notes wait for that to close
+ * rather than replacing it.
+ */
+async function _whatsNew(version) {
+  if (newsHandled) return;
+  newsHandled = true;
+  await announce({
+    key: SEEN_KEY,
+    version,
+    notes: NEWS,
+    lingua: lang(),
+    hasData: async () => Boolean(db && (await get(db, "company", COMPANY_ID))),
+    show: (lines) => tell(tf("newsTitle", { version }), { lines }),
+  });
 }
 
 /** I campi del blocco Promemoria, letti insieme e rimessi nei limiti. `before` vale per gli incontri. */

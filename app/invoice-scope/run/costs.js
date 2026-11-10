@@ -29,7 +29,7 @@ import { draft } from "./model.js";
 import { forget as forgetReceipts } from "./attachments.js";
 import { tf } from "./i18n.js";
 import { date as shownDate } from "./format.js";
-import { currentDay } from "./day.js";
+import { currentDay, fiscalDay } from "./day.js";
 
 /** Due decimali: l'imposta si arrotonda al centesimo, come nel riepilogo IVA. */
 const MONEY = 2;
@@ -705,16 +705,13 @@ export async function removeOutlay(db, id) {
 // -----------------------------------------------------------------------------------------------------------------
 
 /**
- * The 16th of the month after `mese` ("YYYY-MM"), moved to Monday when it falls on a weekend.
- * Public holidays are not known here: the panel says «or the first working day after».
+ * The 16th of the month after `mese` ("YYYY-MM"), moved as `fiscalDay` moves it: to the 20th in
+ * August, and past weekends and national holidays to the first working day.
  */
 export function sedici(mese) {
   const [anno, numero] = String(mese).split("-").map(Number);
-  const giorno = new Date(Date.UTC(anno, numero, 16));          // month index `numero` = the next one
-  const settimana = giorno.getUTCDay();
-  if (settimana === 6) giorno.setUTCDate(18);
-  if (settimana === 0) giorno.setUTCDate(17);
-  return giorno.toISOString().slice(0, 10);
+  const dopo = numero === 12 ? `${anno + 1}-01` : `${anno}-${String(numero + 1).padStart(2, "0")}`;
+  return fiscalDay(`${dopo}-16`);
 }
 
 /**

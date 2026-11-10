@@ -510,6 +510,11 @@ select:disabled { cursor: default; opacity: 1; color: var(--text); background-im
 }
 .rows td.meta { color: var(--faint); }
 
+/* Scadenzario › Adempimenti: the F24 code and the notes under each line, and the button kept whole. */
+.duty-meta { color: var(--faint); font-size: 0.86em; margin-top: 2px; }
+.rows td.duty-action { text-align: right; white-space: nowrap; }
+#dutiesIvaRow label { max-width: 26rem; }
+
 /* A row that opens something says so on hover and under the keyboard, not only with the cursor. */
 .rows tr.clickable { cursor: pointer; }
 .rows tr.clickable:hover td { background: var(--fill); }

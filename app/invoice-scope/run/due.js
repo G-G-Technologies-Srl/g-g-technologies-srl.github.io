@@ -19,7 +19,7 @@
 import { get } from "gg/store.js";
 
 import { money, date as shownDate } from "./format.js";
-import { t, lang } from "./i18n.js";
+import { t, tf, lang } from "./i18n.js";
 import { toString } from "./decimal.js";
 import { summary } from "./schedule.js";
 import { parties } from "./parties.js";
@@ -30,6 +30,7 @@ import { allCosts, allOutlays, payable, recordOutlay, cost as getCost, signedTot
 import { expected, confirmFields } from "./recurring.js";
 import { openProposal } from "./purchases.js";
 import { list } from "gg/store.js";
+import { upcoming } from "./duties.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -220,6 +221,16 @@ export async function render(db, afterChange = null) {
     ? `${t("dueLeft")}: ${_money(total)} · ${t("costOwedLabel")}: ${_money(totalOut)} · ${t("dueNet")}: ${_money(total - totalOut)}`
     : rows.length ? `${t("dueTotal")}: ${_money(total)}` : "";
   el("dueInTitle").hidden = tutte.length === 0;
+
+  // The tax deadlines of the next weeks: one line, and the way to their screen.
+  const adempimenti = await upcoming(db);
+  if (turno !== turni) return;
+  el("dueDuties").hidden = !adempimenti;
+  if (adempimenti) {
+    el("dueDutiesText").textContent = adempimenti.scadute
+      ? tf(adempimenti.quante === 1 ? "dueDutiesLateOne" : "dueDutiesLate", { n: adempimenti.quante, late: adempimenti.scadute })
+      : tf(adempimenti.quante === 1 ? "dueDutiesOne" : "dueDuties", { n: adempimenti.quante, data: shownDate(adempimenti.prima) });
+  }
 
   el("dueFilter").textContent = soloScadute ? t("dueOnlyOverdue") : t("dueAll");
   el("dueFilter").setAttribute("aria-pressed", String(soloScadute));

@@ -1,8 +1,8 @@
 {
   "edition": 1,
   "status": "draft",
-  "verified_on": "2026-08-27",
-  "valid_until": "2026-11-25",
+  "verified_on": "2026-11-10",
+  "valid_until": "2026-12-01",
   "warn_days": 30,
   "note": "Compliance checklist, edition 1, rewritten after the adversarial review of 2026-08-27 which found two rows outright false. Rules: no row ever states whether the reader is compliant — it names the obligation, the date it starts and the source, and leaves the verb to whoever can answer; every row carries applies_from; a row with a known future change carries changes_on, and valid_until must not outlive the earliest of them. Field names and keys are English like everywhere else; only text under it/en is content. Sources: for the AI Act, the article pages of the Commission service desk and of artificialintelligenceact.eu, which quote the enacted text; for the GDPR, the consolidated text on EUR-Lex with the article named in the label, because EUR-Lex has no stable per-article anchor.",
   "scope": {
@@ -274,8 +274,8 @@
         "en": "Do you know whether the data going into your AI tools leaves the European Union, and under what cover?"
       },
       "obligation": {
-        "it": "Un trasferimento fuori dall'Unione ha bisogno di un titolo: una decisione di adeguatezza, oppure clausole contrattuali tipo accompagnate da una valutazione del paese di destinazione. Gli Stati Uniti hanno una decisione di adeguatezza in vigore dal luglio 2023, valida per i fornitori che aderiscono al Data Privacy Framework — quindi la verifica pratica è se il vostro fornitore vi aderisce davvero.",
-        "en": "A transfer outside the Union needs a legal ground: an adequacy decision, or standard contractual clauses accompanied by an assessment of the destination country. The United States has an adequacy decision in force since July 2023, valid for suppliers that join the Data Privacy Framework — so the practical check is whether your supplier actually joins it."
+        "it": "Un trasferimento fuori dall'Unione ha bisogno di un titolo: una decisione di adeguatezza, oppure clausole contrattuali tipo accompagnate da una valutazione del paese di destinazione. Gli Stati Uniti hanno una decisione di adeguatezza in vigore dal luglio 2023, valida per i fornitori che aderiscono al Data Privacy Framework — quindi la verifica pratica è se il vostro fornitore vi aderisce davvero. La decisione è contestata davanti alla Corte di giustizia (causa C-703/25 P), ma resta in vigore finché la Corte non decide.",
+        "en": "A transfer outside the Union needs a legal ground: an adequacy decision, or standard contractual clauses accompanied by an assessment of the destination country. The United States has an adequacy decision in force since July 2023, valid for suppliers that join the Data Privacy Framework — so the practical check is whether your supplier actually joins it. The decision is challenged before the Court of Justice (case C-703/25 P), but it stays in force until the Court rules."
       },
       "source": {
         "label": "GDPR, artt. 44-49; decisione di adeguatezza UE-USA",
@@ -294,8 +294,8 @@
         "en": "Is there a written list of the AI tools you use, of who uses them and on what data?"
       },
       "obligation": {
-        "it": "Il registro dei trattamenti dell'art. 30 è un obbligo, e l'esenzione sotto i 250 dipendenti quasi mai si applica, perché vale solo per trattamenti occasionali e senza dati particolari. Un elenco degli strumenti AI in uso non coincide con quel registro, ma è la cosa da cui si parte: senza, non si può classificare il rischio, né dire a un cliente cosa tocca i suoi dati, né accorgersi di uno strumento entrato per conto suo.",
-        "en": "The record of processing activities under Article 30 is an obligation, and the exemption below 250 employees almost never applies, because it holds only for occasional processing without special categories of data. A list of the AI tools in use is not the same as that record, but it is where you start: without it you cannot classify the risk, nor tell a customer what touches their data, nor notice a tool that came in on its own."
+        "it": "Il registro dei trattamenti dell'art. 30 è un obbligo, e l'esenzione sotto i 250 dipendenti quasi mai si applica, perché vale solo per trattamenti occasionali e senza dati particolari. Un elenco degli strumenti AI in uso non coincide con quel registro, ma è la cosa da cui si parte: senza, non si può classificare il rischio, né dire a un cliente cosa tocca i suoi dati, né accorgersi di uno strumento entrato per conto suo. Una riforma concordata nel giugno 2026 alzerebbe la soglia dell'esenzione a 1.000 dipendenti: finché non è approvata ed entrata in vigore, vale il testo attuale.",
+        "en": "The record of processing activities under Article 30 is an obligation, and the exemption below 250 employees almost never applies, because it holds only for occasional processing without special categories of data. A list of the AI tools in use is not the same as that record, but it is where you start: without it you cannot classify the risk, nor tell a customer what touches their data, nor notice a tool that came in on its own. A reform agreed in June 2026 would raise the exemption threshold to 1,000 employees: until it is adopted and in force, the current text applies."
       },
       "source": {
         "label": "GDPR, art. 30 (testo consolidato)",
@@ -328,8 +328,8 @@
     }
   ],
   "disclaimer": {
-    "it": "Questa non è una consulenza legale, e nessuna riga qui sopra dice se la vostra azienda sia in regola: dicono quale obbligo esiste, da quando, e dove leggerlo. Quello che compare accanto a ogni voce è la risposta che avete dato voi, non un giudizio nostro. Le norme sono state verificate il 27 agosto 2026; l'AI Act è in evoluzione e alcune date sono già cambiate una volta.",
-    "en": "This is not legal advice, and no row above says whether your company complies: they say which obligation exists, from when, and where to read it. What you see next to each row is the answer you gave, not a judgement of ours. The rules were verified on 27 August 2026; the AI Act is still moving, and some dates have already changed once."
+    "it": "Questa non è una consulenza legale, e nessuna riga qui sopra dice se la vostra azienda sia in regola: dicono quale obbligo esiste, da quando, e dove leggerlo. Quello che compare accanto a ogni voce è la risposta che avete dato voi, non un giudizio nostro. Le norme sono state verificate il 10 novembre 2026; l'AI Act è in evoluzione e alcune date sono già cambiate una volta.",
+    "en": "This is not legal advice, and no row above says whether your company complies: they say which obligation exists, from when, and where to read it. What you see next to each row is the answer you gave, not a judgement of ours. The rules were verified on 10 November 2026; the AI Act is still moving, and some dates have already changed once."
   },
   "disclaimer_for_distributors": {
     "it": "Chi distribuisce questo strumento alle imprese che segue tenga presente che le voci qui dentro hanno una data di verifica e una di scadenza, e che dopo quella data il report lo dichiara. Non sono un parere legale né una certificazione, e la rilettura periodica resta a chi le distribuisce, insieme a chi lo assiste.",

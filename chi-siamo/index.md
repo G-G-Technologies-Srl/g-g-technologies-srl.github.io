@@ -91,7 +91,7 @@ Affianchiamo la direzione nelle priorità, negli investimenti, nella scelta dei 
 
 *Il lavoro pubblico*
 
-## Due studi, certificati verificabili, un prodotto che si scarica, otto articoli.
+## Due studi, certificati verificabili, un prodotto che si scarica, nove articoli.
 
 ### Due studi con revisione paritaria
 
@@ -121,7 +121,7 @@ Podz.AI è la nostra workstation AI personale. Si installa in un minuto e si pro
 
 Dove passa il confine di un agente AI, cosa distingue un numero da una misura, quanto dura un dispositivo che nessuno aggiorna: le domande che vengono prima della tecnologia.
 
-- Otto articoli, in italiano e in inglese
+- Nove articoli, in italiano e in inglese
 - Le fonti in fondo a ciascuno
 - [Tutti gli articoli](https://ggtechnologies.sm/insights/)
 

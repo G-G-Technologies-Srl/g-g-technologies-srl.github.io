@@ -11,6 +11,7 @@
 //     <azienda>_<dal>_<al>/
 //       LEGGIMI.txt                  what is in here, and what it is not
 //       documenti.csv                the CSV of the settings, for the same period
+//       adempimenti.csv              the tax deadlines from the period to four months after it
 //       emesse/<file SdI>.xml        the invoices issued, rebuilt from their data (see below)
 //       ricevute/<data>_<fornitore>_<numero>.<ext>   the supplier's file, and its PDF copy
 //       incassi/  pagamenti/         the receipts of the transfers, by date and counterpart
@@ -27,7 +28,10 @@ import { write as writeZip } from "biz/zip.js";
 import { csv } from "./schedule.js";
 import { build } from "./fatturapa.js";
 import { kind } from "./kinds.js";
-import { tf } from "./i18n.js";
+import { t, tf } from "./i18n.js";
+import { obligations, describe } from "./obligations.js";
+import { toString } from "./decimal.js";
+import { currentDay } from "./day.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
@@ -66,6 +70,41 @@ async function _bytes(db, meta) {
   if (!meta || !meta.id) return null;
   const stored = await get(db, "attachments", meta.id);
   return stored && stored.blob ? new Uint8Array(await stored.blob.arrayBuffer()) : null;
+}
+
+/** One CSV field: quoted when it holds the separator, a quote or a line break. */
+function _field(value) {
+  const text = String(value ?? "");
+  return /[;"\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+/** `iso` plus `giorni` days. */
+function _after(iso, giorni) {
+  const at = new Date(`${iso}T00:00:00Z`);
+  at.setUTCDate(at.getUTCDate() + giorni);
+  return at.toISOString().slice(0, 10);
+}
+
+/** The tax deadlines as a CSV for the accountant, in the same shape as `documenti.csv`. */
+async function _dutiesCsv(db, { from, to, company, parties, today = currentDay() }) {
+  const fino = _after(to, 120);
+  const { aperti, fatti } = obligations({
+    docs: await list(db, "docs"), costs: await list(db, "costs"), outlays: await list(db, "outlays"),
+    company, anagrafiche: parties, today,
+  });
+  const righe = [...aperti, ...fatti]
+    .filter((row) => row.scadenza >= from && row.scadenza <= fino)
+    .sort((a, b) => a.scadenza.localeCompare(b.scadenza))
+    .map((row) => [
+      row.scadenza,
+      describe(row),
+      row.codice || "",
+      row.importo != null ? toString(row.importo, 2) : "",
+      row.fatto ? t("packDutyDone") : row.inCorso ? t("packDutyRunning") : row.scaduta ? t("packDutyLate") : t("packDutyOpen"),
+      row.fatto || "",
+    ]);
+  const intestazione = ["scadenza", "adempimento", "codice_tributo", "importo", "stato", "segnato_il"];
+  return `\ufeff${[intestazione, ...righe].map((r) => r.map(_field).join(";")).join("\r\n")}\r\n`;
 }
 
 function _iso(date) {
@@ -110,6 +149,11 @@ export async function accountantPackage(db, { from, to, now = new Date() }) {
   const aggiungi = (percorso, bytes) => entries.push({ name: _unico(usati, `${cartella}/${percorso}`), bytes });
 
   entries.push({ name: `${cartella}/documenti.csv`, bytes: new TextEncoder().encode(await csv(db, { from, to })) });
+
+  // The tax deadlines of Scadenzario › Adempimenti that fall from the start of the period to four
+  // months after its end — the window in which this period's VAT, stamp duty and withholding are
+  // paid — open or marked done, as they stand today.
+  aggiungi("adempimenti.csv", new TextEncoder().encode(await _dutiesCsv(db, { from, to, company, parties, today: _iso(now) })));
 
   // The invoices issued, exported, in the period: rebuilt from their data and progressive.
   const docs = (await list(db, "docs")).filter((doc) => doc.numero && doc.esportato && doc.progressivo

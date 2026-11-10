@@ -20,7 +20,7 @@
 // **Le date sono relative a oggi**, così «scaduta da dieci giorni» è vero il giorno in cui uno
 // arriva e non nel settembre 2026.
 
-import { put } from "gg/store.js";
+import { put, list } from "gg/store.js";
 import * as plan from "biz/plan-model.js";
 
 import { t } from "./i18n.js";
@@ -33,6 +33,7 @@ import { savePlan } from "./recurring-docs.js";
 import * as progetti from "./projects.js";
 import { toString } from "./decimal.js";
 import { isoDay } from "./day.js";
+import { obligations, mark } from "./obligations.js";
 
 // -----------------------------------------------------------------------------------------------------------------
 //  c o n s t a n t s
@@ -52,6 +53,8 @@ const AZIENDA = {
   partitaIva: "00224466888",
   paese: "IT",
   regimeFiscale: "RF01",
+  // Quarterly VAT, so that Scadenzario › Adempimenti opens on its rows rather than on its question.
+  adempimenti: { iva: "trimestrale" },
   sede: {
     indirizzo: "Via delle Fonderie", numeroCivico: "12", cap: "47923",
     comune: "Rimini", provincia: "RN",
@@ -468,4 +471,18 @@ export async function seed(db) {
     righe: [_riga(t("demoItemOfficina"), "8", "45.00")],
     pagamento: { condizioni: "TP02", modalita: "MP05", iban, rate: [{ scadenza: _giorno(30) }] },
   }));
+
+  // **The past VAT and stamp duty are marked paid**, each on its own deadline: a company a year into
+  // the app has paid them, and a demo opening Adempimenti on a page of red rows would be showing an
+  // archive nobody keeps, not the screen.
+  const oggi = _giorno(0);
+  const { aperti } = obligations({
+    docs: await list(db, "docs"), costs: await list(db, "costs"), outlays: await list(db, "outlays"),
+    company: AZIENDA, today: oggi,
+  });
+  let company = AZIENDA;
+  for (const row of aperti) {
+    if ((row.tipo === "iva" || row.tipo === "bollo") && row.scadenza < oggi) company = mark(company, row.key, row.scadenza);
+  }
+  await put(db, "company", company);
 }

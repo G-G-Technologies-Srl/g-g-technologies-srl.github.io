@@ -2410,6 +2410,10 @@ dialog > .row { margin-top: 20px; }
 /* The question: the sentence in the text colour, since it is the whole dialog; the field or the
    list under it, full width; the two buttons last. */
 dialog.ask { width: min(420px, calc(100vw - 32px)); }
+/* What is new after an update: a short list, in the text colour, with room between the lines. */
+dialog.news { width: min(480px, calc(100vw - 32px)); }
+dialog.news ul { margin: 8px 0 0; padding-left: 20px; font-size: 14.5px; line-height: 1.5; }
+dialog.news li { margin: 0 0 8px; }
 dialog.ask p { color: var(--text); font-size: 14.5px; line-height: 1.55; margin: 0 0 12px; }
 dialog.ask p:focus { outline: none; }
 dialog.ask input, dialog.ask select { width: 100%; margin-bottom: 14px; font-size: 15px; }
