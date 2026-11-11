@@ -182,6 +182,18 @@ export function exportIcs(projectId, { alarm = null } = {}) {
       description: [project.name || "", meeting.with].filter(Boolean).join("\n"),
     });
   }
+  // The days to check again go into the file too, as events of their own: the calendar on the phone
+  // is where a reminder to chase a quote is most likely to be seen.
+  for (const task of model.tasksOf(projectId)) {
+    if (!task.recheck) continue;
+    const people = model.taskContacts(task).map((one) => one.name).join(", ");
+    events.push({
+      uid: `${task.uid || task.id}~recheck`,
+      title: tf("icsRecheck", { title: task.title || t("taskUntitled") }),
+      date: task.recheck.date,
+      description: [project.name || "", people].filter(Boolean).join("\n"),
+    });
+  }
   events.sort((a, b) => String(a.date).localeCompare(String(b.date)));
   if (!events.length) return snack(t("icsNone"));
   const text = ics.calendar(events, { name: project.name || t("projectUntitled"), alarm, sign: SIGN });

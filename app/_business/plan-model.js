@@ -236,7 +236,7 @@ function _renamePerson(person, wasCalled) {
       const people = cleanTaskContacts(taskRecord.contacts);
       if (people.some((one) => one.uid === uid && one.name !== after)) {
         undo.push(_restoreTo("task", _copy(taskRecord)));
-        _put("task", { ...taskRecord, contacts: people.map((one) => (one.uid === uid ? { ...one, name: after } : one)), updated: _now() });
+        _put("task", { ...taskRecord, contacts: people.map((one) => (one.uid === uid ? { ...one, name: after, at: _now() } : one)), updated: _now() });
       }
     }
     for (const taskRecord of tasks.values()) {
@@ -1586,7 +1586,7 @@ function _diaryDay(date) {
  * When the card is here its current name wins over the one written on the task.
  */
 export function taskContacts(taskRecord) {
-  return cleanTaskContacts(taskRecord && taskRecord.contacts).map((one) => {
+  return cleanTaskContacts(taskRecord && taskRecord.contacts).filter((one) => !one.removed).map((one) => {
     const contact = contactByUid(one.uid);
     return { uid: one.uid, name: (contact && contact.name) || one.name, contact: contact || null };
   });
@@ -1604,16 +1604,36 @@ export function addTaskContact(taskId, name) {
   const person = contactByName(clean) || createContact({ name: clean });
   const uid = person.uid || person.id;
   const list = cleanTaskContacts(task.contacts);
-  if (list.some((one) => one.uid === uid)) return null;
-  return _updateTask(taskId, { contacts: [...list, { uid, name: person.name || clean }] });
+  const known = list.find((one) => one.uid === uid);
+  if (known && !known.removed) return null;
+  // `at` is when the gesture happened, and it is what the shared folder compares (`mergeContacts`).
+  const entry = { uid, name: person.name || clean, at: _now() };
+  return _updateTask(taskId, { contacts: known ? list.map((one) => (one.uid === uid ? entry : one)) : [...list, entry] });
 }
 
 /** A person off the task. The card stays in the address book: the task forgets them, nobody else does. */
 export function removeTaskContact(taskId, uid) {
   const task = tasks.get(taskId);
   const list = cleanTaskContacts(task && task.contacts);
-  if (!task || !list.some((one) => one.uid === uid)) return null;
-  return _updateTask(taskId, { contacts: list.filter((one) => one.uid !== uid) });
+  if (!task || !list.some((one) => one.uid === uid && !one.removed)) return null;
+  // Left as a mark, for the same reason as a diary entry: a contact missing from one copy cannot tell
+  // "taken off here" from "not added there yet".
+  return _updateTask(taskId, {
+    contacts: list.map((one) => (one.uid === uid ? { uid, name: one.name, at: _now(), removed: true } : one)),
+  });
+}
+
+/**
+ * Two lists of contacts of the same task, joined person by person: whoever either side added stays,
+ * and for a person both sides know the later gesture wins — added, renamed or taken off.
+ */
+export function mergeContacts(mine = [], theirs = []) {
+  const byUid = new Map();
+  for (const one of [...cleanTaskContacts(mine), ...cleanTaskContacts(theirs)]) {
+    const known = byUid.get(one.uid);
+    if (!known || String(one.at || "") > String(known.at || "")) byUid.set(one.uid, one);
+  }
+  return [...byUid.values()];
 }
 
 /** The contacts as they may arrive from a file, rebuilt: a uid and a name, once each, nothing else. */
@@ -1622,7 +1642,10 @@ export function cleanTaskContacts(list) {
   for (const one of Array.isArray(list) ? list : []) {
     if (!one || typeof one !== "object" || typeof one.uid !== "string" || !one.uid) continue;
     if (out.some((other) => other.uid === one.uid)) continue;
-    out.push({ uid: one.uid, name: String(one.name || "").trim().slice(0, 80) });
+    const clean = { uid: one.uid, name: String(one.name || "").trim().slice(0, 80) };
+    if (typeof one.at === "string" && one.at) clean.at = one.at;
+    if (one.removed === true) clean.removed = true;
+    out.push(clean);
   }
   return out;
 }
@@ -1636,7 +1659,7 @@ export function tasksAbout(uid) {
   const out = [];
   for (const one of liveProjects()) {
     for (const taskRecord of tasksOf(one.id)) {
-      if (cleanTaskContacts(taskRecord.contacts).some((contact) => contact.uid === uid)) {
+      if (cleanTaskContacts(taskRecord.contacts).some((contact) => contact.uid === uid && !contact.removed)) {
         out.push({ task: taskRecord, project: one });
       }
     }
@@ -1726,6 +1749,32 @@ export function rechecksAhead(projectId, { from = todayISO(), days = SOON_DAYS }
   return tasksOf(projectId)
     .filter((one) => one.recheck && one.recheck.date > from && one.recheck.date <= limit)
     .sort((a, b) => a.recheck.date.localeCompare(b.recheck.date));
+}
+
+/**
+ * What is waiting for an answer, across the projects given: every task with a day to check, the
+ * nearest first. «A chi devo ancora una risposta?» — or rather, who still owes one.
+ */
+export function awaitingAnswer(projectList = plainProjects()) {
+  const out = [];
+  for (const project of projectList) {
+    for (const task of tasksOf(project.id)) if (task.recheck) out.push({ task, project });
+  }
+  return out.sort((a, b) => a.task.recheck.date.localeCompare(b.task.recheck.date));
+}
+
+/**
+ * How the settled things ended since a day, across the projects given: `{ won, lost }`. The number
+ * a person who sends quotes wants to know, and that only a recorded outcome can give.
+ */
+export function outcomeStats(projectList = plainProjects(), { since = "" } = {}) {
+  const out = { won: 0, lost: 0 };
+  for (const project of projectList) {
+    for (const task of tasksOf(project.id)) {
+      if (task.outcome && task.outcome.date >= since && task.outcome.value in out) out[task.outcome.value] += 1;
+    }
+  }
+  return out;
 }
 
 function _cleanRecheck(value) {
@@ -2147,12 +2196,17 @@ export function updateMeeting(id, said = {}, keys = {}) {
 
 /**
  * The last day something happened with a person: the most recent meeting or note that names them,
- * up to today. An appointment next week is not a contact yet. The day, or `""`.
+ * or diary entry about them, up to today. An appointment next week is not a contact yet. The day, or `""`.
  */
 export function lastContact(uid, now = new Date()) {
   const today = todayISO(now);
   const found = pagesAbout(uid).find((one) => isDay(one.date) && one.date <= today);
-  return found ? found.date : "";
+  // The diary counts too: «Sentito @Rossi» names them, and on a task they are a contact of, a line
+  // like «Sollecitato» is a contact with them — the reason it was written.
+  const days = [found ? found.date : ""];
+  for (const { entry } of diaryAbout(uid)) days.push(entry.date);
+  for (const { task } of tasksAbout(uid)) days.push(...diaryOf(task).map((entry) => entry.date));
+  return days.filter((day) => isDay(day) && day <= today).sort().at(-1) || "";
 }
 
 /**
@@ -2364,7 +2418,7 @@ export function setPinned(id, pinned) {
  * project would have put the same sum in two places — the deadlines panel already does it.
  */
 export function calendarBetween(from, to) {
-  const out = { meetings: [], tasks: [] };
+  const out = { meetings: [], tasks: [], rechecks: [] };
   if (!isDay(from) || !isDay(to)) return out;
   for (const project of liveProjects()) {
     for (const meeting of meetingsOf(project.id)) {
@@ -2372,6 +2426,8 @@ export function calendarBetween(from, to) {
       out.meetings.push({ ...meeting, project });
     }
     for (const task of tasksOf(project.id)) {
+      // The day to check again is a day too, and a calendar is where days are read.
+      if (task.recheck && task.recheck.date >= from && task.recheck.date <= to) out.rechecks.push({ task, project });
       if (!task.end || task.end < from || task.end > to) continue;
       out.tasks.push({ task, project });
     }
@@ -3056,14 +3112,16 @@ export function search(query) {
       // The diary counts as the notes do: «who was it that promised the drawings for Thursday?»
       // is a search for a line written there.
       const said = notesAt < 0 ? diaryOf(task).find((entry) => _plain(entry.text).includes(needle)) : null;
-      if (titleAt < 0 && notesAt < 0 && !said) continue;
+      // And by the people it is about: «Rossi» finds the quote sent to Rossi.
+      const about = notesAt < 0 && !said ? taskContacts(task).find((one) => _plain(one.name).includes(needle)) : null;
+      if (titleAt < 0 && notesAt < 0 && !said && !about) continue;
       hits.push({
         kind: "kindTask",
         id: task.id,
         title: task.title,
         project,
         rank: titleAt >= 0 ? 1 : 3,
-        snippet: notesAt >= 0 ? _snippet(task.notes, needle) : said ? _snippet(said.text, needle) : "",
+        snippet: notesAt >= 0 ? _snippet(task.notes, needle) : said ? _snippet(said.text, needle) : about ? about.name : "",
         done: isDone(task),
       });
     }
@@ -3472,11 +3530,14 @@ export function merge({ project: incoming, pages: incomingPages = [], tasks: inc
     // The diary is joined, never taken whole: two people write in it, and the newer card would
     // otherwise throw away the other one's entries. See `diaryOf`.
     const diary = mergeDiary(here.diary, one.diary);
+    // The task's people are joined the same way: two people adding a customer each keep both.
+    const contacts = mergeContacts(here.contacts, one.contacts);
     if (!newer(one, here)) {
-      if (JSON.stringify(diary) === JSON.stringify(mergeDiary(here.diary))) continue;
+      if (JSON.stringify(diary) === JSON.stringify(mergeDiary(here.diary))
+        && JSON.stringify(contacts) === JSON.stringify(mergeContacts(here.contacts))) continue;
       before.tasks.push(_copy(here));
       // A fresh stamp, so that the other side takes this card — with both diaries — back.
-      _put("task", { ...here, diary, updated: stamp });
+      _put("task", { ...here, diary, contacts, updated: stamp });
       counts.updated += 1;
       continue;
     }
@@ -3491,7 +3552,7 @@ export function merge({ project: incoming, pages: incomingPages = [], tasks: inc
       status,
       blockedBy,
       diary,
-      contacts: cleanTaskContacts(one.contacts),
+      contacts,
       recheck: _cleanRecheck(one.recheck),
       outcome: _cleanOutcome(one.outcome),
       trashedAt: one.trashedAt || null,

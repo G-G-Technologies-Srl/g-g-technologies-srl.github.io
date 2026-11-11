@@ -590,7 +590,8 @@ const IT = {
   pasteOpen: "Incolla un elenco di attività",
   pasteTitle: "Incolla un elenco",
   pasteHint: "Una riga, un'attività. «@2026-09-20» è la scadenza, «@Giulia» chi se ne occupa, "
-    + "«#stampa» un tag, un «!» in fondo la priorità alta. I trattini e le caselle degli elenchi "
+    + "«#stampa» un tag, un «!» in fondo la priorità alta, «?7» il ricontrollo fra sette giorni e "
+    + "«+Rossi» un contatto della rubrica. I trattini e le caselle degli elenchi "
     + "vanno bene così.",
   pasteCount: "{n} attività pronte",
   pasteNone: "Nessuna riga da leggere.",
@@ -700,6 +701,11 @@ const IT = {
   recheckOff: "Togli la data",
   chaseDone: "Sollecitato",
   chaseWrite: "Scrivi a {name}",
+  chaseMailSubject: "{title}",
+  chaseMailBody: "Buongiorno,\n\nvi scriviamo in merito a «{title}». Restiamo a disposizione per "
+    + "eventuali chiarimenti e saremo lieti di ricevere un vostro riscontro.\n\nCordiali saluti",
+  chaseMailBodySigned: "Buongiorno,\n\nvi scriviamo in merito a «{title}». Restiamo a disposizione per "
+    + "eventuali chiarimenti e saremo lieti di ricevere un vostro riscontro.\n\nCordiali saluti\n{who}",
   chasedSaid: "Il sollecito è nel diario. Il prossimo ricontrollo è fra una settimana.",
   settleOpen: "Esito…",
   settleAsk: "Qual è l'esito?",
@@ -724,6 +730,11 @@ const IT = {
   dueRecheck: "da ricontrollare",
   dueRecheckWith: "da ricontrollare con {names}",
   remindRecheck: "{title}: da ricontrollare il {when}",
+  icsRecheck: "Ricontrollare: {title}",
+  awaitTitle: "In attesa di risposta",
+  filterContact: "Contatto",
+  awaitStats: "{won} accettati su {total} negli ultimi sei mesi",
+  awaitStatsOne: "1 accettato su {total} negli ultimi sei mesi",
   personDiaryTitle: "Citata nel diario",
   tlDiaryOne: "Diario, {date}: «{text}»",
   tlDiaryMany: "Diario, {date}: {n} voci, la prima «{text}»",
@@ -1073,7 +1084,13 @@ const IT = {
     + "**Ricontrolla il** fissa il giorno in cui riguardare un'attività, anche quando è già fatta: un "
     + "preventivo mandato è fatto, la risposta no. Quel giorno l'attività torna in «Cosa serve adesso», "
     + "fra le scadenze e nei promemoria. «Sollecitato» lo annota nel diario e sposta il ricontrollo di "
-    + "una settimana; «Esito…» registra se è stato accettato e chiude i ricontrolli.\n\n"
+    + "una settimana; «Scrivi a …» apre una bozza di sollecito già indirizzata; «Esito…» registra se è "
+    + "stato accettato e chiude i ricontrolli. I giorni di ricontrollo compaiono anche nel calendario e "
+    + "nel file .ics, e nella pagina iniziale «In attesa di risposta» li raccoglie tutti, con il conto "
+    + "degli esiti degli ultimi sei mesi.\n\n"
+    + "Nella scrittura veloce «?7» fissa il ricontrollo fra sette giorni e «+Rossi» aggiunge un "
+    + "contatto della rubrica; nella bacheca il filtro «Contatto» mostra le attività di un cliente, e la "
+    + "ricerca le trova anche dal suo nome.\n\n"
     + "## Quello che si ripete\n\n«Si ripete», nella scheda sotto «Mostra altro», con un «Fino al» "
     + "facoltativo: spuntata una, nasce la prossima con la data avanzata. Sulla carta la riconosce "
     + "il segno ↻ accanto al titolo. Per smettere: «Chiudi la serie» nel messaggio che compare "
@@ -1976,7 +1993,8 @@ const EN = {
   pasteOpen: "Paste a list of tasks",
   pasteTitle: "Paste a list",
   pasteHint: "One line, one task. \"@2026-09-20\" is the deadline, \"@Giulia\" who takes it, "
-    + "\"#print\" a tag, a trailing \"!\" a high priority. Dashes and list boxes are fine as they are.",
+    + "\"#print\" a tag, a trailing \"!\" a high priority, \"?7\" a check in seven days and \"+Rossi\" "
+    + "a contact from the address book. Dashes and list boxes are fine as they are.",
   pasteCount: "{n} tasks ready",
   pasteNone: "No lines to read.",
   pasteAdd: "Add to the board",
@@ -2082,6 +2100,11 @@ const EN = {
   recheckOff: "Remove the date",
   chaseDone: "Chased",
   chaseWrite: "Write to {name}",
+  chaseMailSubject: "{title}",
+  chaseMailBody: "Good morning,\n\nWe are writing about “{title}”. We remain available for any "
+    + "clarification and look forward to your reply.\n\nKind regards",
+  chaseMailBodySigned: "Good morning,\n\nWe are writing about “{title}”. We remain available for any "
+    + "clarification and look forward to your reply.\n\nKind regards\n{who}",
   chasedSaid: "The chase is in the log. The next check is in a week.",
   settleOpen: "Outcome…",
   settleAsk: "What is the outcome?",
@@ -2106,6 +2129,11 @@ const EN = {
   dueRecheck: "to check again",
   dueRecheckWith: "to check again with {names}",
   remindRecheck: "{title}: to check again on {when}",
+  icsRecheck: "Check again: {title}",
+  awaitTitle: "Waiting for an answer",
+  filterContact: "Contact",
+  awaitStats: "{won} accepted out of {total} in the last six months",
+  awaitStatsOne: "1 accepted out of {total} in the last six months",
   personDiaryTitle: "Mentioned in the log",
   tlDiaryOne: "Log, {date}: “{text}”",
   tlDiaryMany: "Log, {date}: {n} entries, the first “{text}”",
@@ -2451,7 +2479,13 @@ const EN = {
     + "**Check again on** sets the day to look at a task again, even once it is done: a quote sent is "
     + "done, the answer is not. On that day the task comes back in “What needs doing now”, among the "
     + "deadlines and in the reminders. “Chased” writes it in the log and moves the check a week on; "
-    + "“Outcome…” records whether it was accepted and ends the checks.\n\n"
+    + "“Write to …” opens a draft reminder already addressed; “Outcome…” records whether it was "
+    + "accepted and ends the checks. The days to check again also show on the calendar and in the .ics "
+    + "file, and on the home page “Waiting for an answer” gathers them all, with how the outcomes went "
+    + "over the last six months.\n\n"
+    + "In quick writing “?7” sets the check in seven days and “+Rossi” adds a contact from the address "
+    + "book; on the board the “Contact” filter shows one customer's tasks, and search finds them by "
+    + "their name too.\n\n"
     + "## What repeats\n\n“Repeats”, on the card under “Show more”, with an optional “Until”: tick "
     + "one, and the next is born with the date moved on. On the board it has the ↻ mark beside its "
     + "title. To stop it: “Close the series” in the message that appears after the tick, or “End the "

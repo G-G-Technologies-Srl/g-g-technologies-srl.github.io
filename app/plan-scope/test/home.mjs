@@ -300,6 +300,28 @@ test("fra le scadenze il giorno di ricontrollo ha il suo segno, e il titolo non 
   assert.ok(!row.querySelector(".tick"), "nessuna spunta che la riaprirebbe");
   assert.ok(!row.querySelector(".title").classList.contains("struck"));
   assert.match(row.textContent, /da ricontrollare/);
+  // One still ahead is only in «In attesa di risposta», not twice on the same screen.
+  model.setRecheck(quote.id, model.addDays(model.todayISO(), 2));
+  home.paintHome(null);
+  assert.ok(!byId("todayList").textContent.includes("Preventivo impianto"));
+  assert.ok(byId("awaitList").textContent.includes("Preventivo impianto"));
+});
+
+test("in home «In attesa di risposta» elenca i ricontrolli di tutti i progetti e conta gli esiti", () => {
+  const { fair, other } = _scene();
+  assert.equal((home.paintHome(null), byId("awaitPanel").hidden), true, "niente da aspettare, niente riquadro");
+  const a = model.createTask(other.id, { title: "Preventivo impianto" });
+  model.addTaskContact(a.id, "Rossi Impianti");
+  model.toggleDone(a.id);
+  model.setRecheck(a.id, model.addDays(model.todayISO(), 3));
+  const b = model.createTask(fair.id, { title: "Offerta stand" });
+  model.settleTask(b.id, "won", { text: "ok" });
+  home.paintHome(null);
+  assert.equal(byId("awaitPanel").hidden, false);
+  const row = _row(byId("awaitList"), "Preventivo impianto");
+  assert.match(row.textContent, /da ricontrollare con Rossi Impianti/);
+  assert.ok(row.querySelector(".recheck-sign"));
+  assert.equal(byId("awaitStats").textContent, "1 accettato su 1 negli ultimi sei mesi");
 });
 
 test("un progetto vuoto offre i tre modi di cominciare, invece di pannelli vuoti", () => {

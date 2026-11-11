@@ -61,7 +61,7 @@ let diaryEditing = null;                // the entry that line is correcting, or
 let diaryGone = null;                   // `{ entry }` just removed, offered back until the card closes
 const selected = new Set();             // the cards picked with Shift-click
 
-const filters = { tags: new Set(), assignees: new Set() };
+const filters = { tags: new Set(), assignees: new Set(), contacts: new Set() };
 
 // -----------------------------------------------------------------------------------------------------------------
 //  p r i v a t e
@@ -99,7 +99,7 @@ function _columns() {
  */
 function _filtered() {
   const tasks = model.tasksOf(projectId);
-  if (!filters.tags.size && !filters.assignees.size) return tasks;
+  if (!filters.tags.size && !filters.assignees.size && !filters.contacts.size) return tasks;
   return tasks.filter((task) => {
     const tags = task.tags || [];
     const tagOk = !filters.tags.size
@@ -109,7 +109,10 @@ function _filtered() {
     const whoOk = !filters.assignees.size
       || (filters.assignees.has("") && !who)
       || filters.assignees.has(who);
-    return tagOk && whoOk;
+    // «Per cliente»: the tasks one of the chosen people is a contact of.
+    const contactOk = !filters.contacts.size
+      || model.taskContacts(task).some((one) => filters.contacts.has(one.uid));
+    return tagOk && whoOk && contactOk;
   });
 }
 
@@ -497,7 +500,14 @@ function _paintRecheck(task) {
   const mail = el("cardChaseMail");
   mail.hidden = !date || !first;
   if (date && first) {
-    mail.href = `mailto:${first.contact.email.trim()}?subject=${encodeURIComponent(task.title || "")}`;
+    // A draft and not a blank page: a short, formal reminder to correct before sending. Without a
+    // date of sending — the app does not know when the task was done, and an invented date would be
+    // worse than none — and signed with the name of this copy, when it is a real one.
+    const who = on.who();
+    const body = tf(who ? "chaseMailBodySigned" : "chaseMailBody", { title: task.title || "", who })
+      .replace(/\n/g, "\r\n");
+    mail.href = `mailto:${first.contact.email.trim()}?subject=${encodeURIComponent(tf("chaseMailSubject", { title: task.title || "" }))}`
+      + `&body=${encodeURIComponent(body)}`;
     mail.textContent = tf("chaseWrite", { name: first.name });
   }
   el("cardOutcome").hidden = !task.outcome;
@@ -995,6 +1005,21 @@ function _whereNode(where) {
   return link;
 }
 
+/** The day a parsed «?7» or «?2026-11-20» means, today being today. */
+export function recheckDay(recheck) {
+  if (!recheck) return null;
+  return recheck.date || model.addDays(model.todayISO(), recheck.days);
+}
+
+/**
+ * What a written line carries beyond title, date, tags and owner: the day to check again and the
+ * people it is about. The same for the quick field and for a pasted list.
+ */
+export function applyExtras(taskId, one) {
+  if (one.recheck) model.setRecheck(taskId, recheckDay(one.recheck));
+  for (const name of one.contacts || []) model.addTaskContact(taskId, name);
+}
+
 /** A count on a card: its sign, «done/all», and the sentence that says what is being counted. */
 function _countMark(sign, done, all, key, className) {
   const mark = node("span", `${className} count-mark`, `${sign} ${num(done, 0)}/${num(all, 0)}`);
@@ -1119,6 +1144,8 @@ function _columnNode(column, tasks, today, meetings = []) {
     if (one && one.assignee) bits.push(`${t("fieldAssignee")} ${one.assignee}`);
     if (one && one.tags.length) bits.push(one.tags.map((tag) => `#${tag}`).join(" "));
     if (one && one.priority === "high") bits.push(t("priorityHigh"));
+    if (one && one.recheck) bits.push(`${t("fieldRecheck")} ${shortDate(recheckDay(one.recheck))}`);
+    if (one && one.contacts.length) bits.push(`${t("cardContacts")} ${one.contacts.join(", ")}`);
     echo.textContent = bits.join(" · ");
     echo.hidden = bits.length === 0;
   });
@@ -1138,6 +1165,7 @@ function _columnNode(column, tasks, today, meetings = []) {
     }
     // «@Giulia»: assegnata, e Giulia fra chi ci lavora — nasce in rubrica se non c'era.
     if (one && one.assignee) model.assignByName(made.id, one.assignee);
+    if (one) applyExtras(made.id, one);
     on.change();
     paint();
     // Three in a row is the normal way this gets used, so the field keeps the caret.
@@ -1191,7 +1219,7 @@ function _paintBoard() {
 
   // Gli appuntamenti, solo a lavagna piena: un filtro per etichetta o per persona chiede «le
   // attività di», e un appuntamento non ha né l'una né l'altra.
-  const meetings = (filters.tags.size || filters.assignees.size) ? []
+  const meetings = (filters.tags.size || filters.assignees.size || filters.contacts.size) ? []
     : model.meetingsOf(projectId).map((meeting) => ({ meeting, column: _meetingColumn(meeting, today) }))
       .filter((one) => one.column);
 
@@ -1382,6 +1410,9 @@ function _paintCalendar() {
     byDay.get(day).push(one);
   };
   for (const task of _filtered()) {
+    // The day to check again, as its own line: a quote to chase is on the calendar on that day,
+    // done or not. Not draggable — dragging a card moves its deadline, and this is not one.
+    if (task.recheck) put(task.recheck.date, { kind: "recheck", task });
     if (!task.end) continue;
     put(task.end, { kind: "task", task });
   }
@@ -1423,6 +1454,15 @@ function _paintCalendar() {
         entry.append(node("span", "", [meeting.time, meeting.page.title || t("pageUntitled")]
           .filter(Boolean).join(" ")));
         entry.addEventListener("click", () => on.openPage(meeting.page.id));
+        cell.append(entry);
+        continue;
+      }
+      if (one.kind === "recheck") {
+        const { task } = one;
+        const entry = node("div", `cal-entry is-recheck${task.recheck.date <= today ? " late" : ""}`);
+        entry.append(node("span", "", `◷ ${task.title || t("taskUntitled")}`));
+        entry.title = tf("tipRecheck", { date: shortDate(task.recheck.date) });
+        entry.addEventListener("click", () => openCard(task.id));
         cell.append(entry);
         continue;
       }
@@ -1499,9 +1539,22 @@ function _paintFilters() {
     () => _toggle(filters.assignees, "")));
   fill(el("assigneeFilters"), whoRow);
 
+  // The people the tasks are about, when there are any: the customers, the suppliers. A row only
+  // when it has something in it — a project of internal work has no contacts to filter on.
+  const contacts = new Map();
+  for (const task of model.tasksOf(projectId)) {
+    for (const one of model.taskContacts(task)) if (!contacts.has(one.uid)) contacts.set(one.uid, one.name);
+  }
+  const contactRow = [node("span", "filter-label", t("filterContact"))];
+  for (const [uid, name] of [...contacts].sort((a, b) => a[1].localeCompare(b[1]))) {
+    contactRow.push(_chip(name, filters.contacts.has(uid), () => _toggle(filters.contacts, uid)));
+  }
+  el("contactFilters").hidden = contacts.size === 0;
+  fill(el("contactFilters"), contacts.size ? contactRow : []);
+
   // Under two things to choose from a filter hides nothing: it looks like a command and behaves
   // like a label. Same rule the app index follows for its categories.
-  el("filters").hidden = el("filters").hidden || (tags.length + people.length === 0);
+  el("filters").hidden = el("filters").hidden || (tags.length + people.length + contacts.size === 0);
 }
 
 function _toggle(set, value) {
@@ -1542,6 +1595,7 @@ export function connect(handlers) {
   el("filtersClear").addEventListener("click", () => {
     filters.tags.clear();
     filters.assignees.clear();
+    filters.contacts.clear();
     on.change();
     paint();
   });
@@ -1812,13 +1866,14 @@ export function setView(wanted) {
   on.change();
 }
 
-export function open(id, { view: wanted = "kanban", tags = [], assignees = [] } = {}) {
+export function open(id, { view: wanted = "kanban", tags = [], assignees = [], contacts = [] } = {}) {
   projectId = id;
   view = VIEWS.includes(wanted) ? wanted : "kanban";
   timeline.open(id);
   month = _firstOfMonth(model.todayISO());
   filters.tags = new Set(tags);
   filters.assignees = new Set(assignees);
+  filters.contacts = new Set(contacts);
   paint();
 }
 
@@ -1828,6 +1883,7 @@ export function state() {
     view,
     tags: [...filters.tags],
     assignees: [...filters.assignees],
+    contacts: [...filters.contacts],
   };
 }
 

@@ -2135,6 +2135,8 @@ html[data-theme="light"] { --high: #b42318; --decide: #6b3fb3; --wait: #3d5c99; 
 
 /* On the board and in the lists: the clock of the day to check, and how it ended. */
 .recheck-sign { color: var(--accent-text); font-size: 13px; }
+/* A day to check is not a deadline: the same line with a thin edge and no fill. */
+.cal-entry.is-recheck { background: transparent; box-shadow: inset 0 0 0 1px var(--border-strong); }
 .badge.outcome-won { color: var(--accent-text); border-color: var(--accent-soft); }
 .badge.outcome-lost { color: var(--faint); }
 

@@ -63,6 +63,17 @@ function _entry(one, today) {
     return entry;
   }
   const { task, project } = one;
+  // The day to check a task again: its own line, with the clock, amber on its day.
+  if (one.recheck) {
+    const entry = node("div", `cal-entry is-recheck${task.recheck.date <= today ? " late" : ""}`);
+    entry.append(node("span", "", `◷ ${task.title || t("taskUntitled")}`));
+    entry.title = `${tf("tipRecheck", { date: shortDate(task.recheck.date) })} · ${project.name || t("projectUntitled")}`;
+    entry.addEventListener("click", (event) => {
+      event.stopPropagation();
+      on.openTask(task, project);
+    });
+    return entry;
+  }
   const entry = node("div", `cal-entry${model.isDone(task) ? " is-done" : ""}`
     + (!model.isDone(task) && task.end < today ? " late" : ""));
   entry.append(node("span", "", task.title || t("taskUntitled")));
@@ -104,7 +115,7 @@ export function paint() {
   const start = _gridStart(first);
   const from = model.todayISO(start);
   const to = model.todayISO(new Date(start.getFullYear(), start.getMonth(), start.getDate() + 41));
-  const { meetings, tasks } = model.calendarBetween(from, to);
+  const { meetings, tasks, rechecks } = model.calendarBetween(from, to);
 
   const byDay = new Map();
   const put = (day, one) => {
@@ -113,6 +124,7 @@ export function paint() {
   };
   for (const meeting of meetings) put(meeting.date, { meeting, project: meeting.project });
   for (const one of tasks) put(one.task.end, one);
+  for (const one of rechecks) put(one.task.recheck.date, { ...one, recheck: true });
   // Dentro un giorno: prima chi ha un'ora, in ordine d'orologio, poi il resto.
   for (const list of byDay.values()) {
     list.sort((a, b) => {

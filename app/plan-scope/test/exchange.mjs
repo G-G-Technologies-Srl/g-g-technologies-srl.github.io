@@ -343,4 +343,18 @@ test("il link di Google porta l'ora e il posto", () => {
   assert.ok(link.includes("location=Via+Roma+12"), link);
 });
 
+test("la scrittura breve: «?7» il ricontrollo, «+Nome» un contatto solo se è in rubrica", () => {
+  const [one] = csv.parseTaskList("Mandare il preventivo +Rossi Impianti ?7 @Giulia #offerte", { people: ["Rossi Impianti", "Giulia"] });
+  assert.equal(one.title, "Mandare il preventivo");
+  assert.deepEqual(one.recheck, { days: 7 });
+  assert.deepEqual(one.contacts, ["Rossi Impianti"]);
+  assert.equal(one.assignee, "Giulia");
+  assert.deepEqual(one.tags, ["offerte"]);
+  const [two] = csv.parseTaskList("Prezzo +20% + IVA ?2026-11-20", { people: ["Rossi"] });
+  assert.equal(two.title, "Prezzo +20% + IVA", "un «+» davanti a un nome sconosciuto resta testo");
+  assert.deepEqual(two.recheck, { date: "2026-11-20" });
+  assert.deepEqual(two.contacts, []);
+  assert.equal(csv.parseTaskList("Chi ha chiamato?")[0].recheck, null, "un punto di domanda resta una domanda");
+});
+
 console.log(`exchange: ${passed} prove passate`);

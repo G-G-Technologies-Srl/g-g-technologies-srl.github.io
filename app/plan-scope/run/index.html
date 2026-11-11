@@ -202,6 +202,18 @@
         <p class="note" id="todayEmpty" data-t="todayEmpty" hidden></p>
       </div>
 
+      <!-- What is waiting for an answer: every task with a day to check, across the projects, nearest
+           first, with who it is waiting on. Under the title, how the settled ones ended in the last
+           six months — the number somebody who sends quotes wants, and only a recorded outcome
+           gives. Hidden while there is nothing to wait for and nothing settled. -->
+      <div class="card today" id="awaitPanel" hidden>
+        <div class="today-head">
+          <h2 data-t="awaitTitle"></h2>
+          <span class="meta" id="awaitStats"></span>
+        </div>
+        <ul class="list" id="awaitList"></ul>
+      </div>
+
       <p class="empty" id="homeEmpty" data-t="homeEmpty" hidden></p>
       <!-- Le etichette accese, ognuna con la sua croce, e un modo di togliere tutto in un colpo.
            La stessa riga che ha la tabella delle pagine, perché è la stessa domanda: «fammi vedere
@@ -521,6 +533,7 @@
     <div class="filters" id="filters" hidden>
       <div class="filter-row" id="tagFilters"></div>
       <div class="filter-row" id="assigneeFilters"></div>
+      <div class="filter-row" id="contactFilters" hidden></div>
       <button type="button" id="filtersClear" class="ghost small" data-t="filtersClear"></button>
     </div>
 

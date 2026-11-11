@@ -156,7 +156,12 @@ export function openBoxes(text) {
 
 /**
  * Una riga, un'attività: «@2026-09-20» la scadenza, «@Giulia» chi se ne occupa, «#stampa» un tag,
- * «!» in fondo la priorità alta.
+ * «!» in fondo la priorità alta, «?7» o «?2026-11-20» il giorno di ricontrollo, «+Rossi Impianti»
+ * un contatto.
+ *
+ * Il contatto si prende solo se il nome è fra `people`: «+» si scrive anche in «+ IVA» o «+20%», e
+ * una riga che diventasse un contatto chiamato «IVA» sarebbe un errore che nessuno chiede. Il
+ * ricontrollo in giorni resta un numero (`recheck.days`): questo file non sa che giorno è oggi.
  *
  * La «@» dice due cose e si capisce da quello che segue: una data è una scadenza, tutto il resto è
  * una persona. `people` sono i nomi che si prendono interi, spazi compresi — «@Tizio Caio» — e
@@ -168,14 +173,25 @@ export function parseTaskList(text, { people = [] } = {}) {
     .sort((a, b) => b.length - a.length)
     .map((one) => one.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
   const person = new RegExp(`(^|\\s)@(${[...known, "[\\p{L}\\p{N}_][\\p{L}\\p{N}_-]*"].join("|")})(?![\\p{L}\\p{N}_])`, "u");
+  const contact = known.length ? new RegExp(`(^|\\s)\\+(${known.join("|")})(?![\\p{L}\\p{N}_])`, "giu") : null;
   for (const raw of String(text || "").split(/\r?\n/)) {
     let line = raw.trim();
     if (!line) continue;
     // The markers a list carries in Markdown, in Word, or in an assistant's answer.
     line = line.replace(/^(?:[-*+•]|\d+[.)])\s+/, "").replace(/^\[[ xX]\]\s*/, "").trim();
     if (!line) continue;
-    const found = { title: "", end: null, tags: [], priority: null, assignee: null };
+    const found = { title: "", end: null, tags: [], priority: null, assignee: null, recheck: null, contacts: [] };
     line = line.replace(/@(\d{4}-\d{2}-\d{2})\b/g, (whole, day) => { found.end = day; return " "; });
+    line = line.replace(/(^|\s)\?(\d{4}-\d{2}-\d{2}|\d{1,3})(?![\p{L}\p{N}_-])/u, (whole, lead, said) => {
+      found.recheck = said.includes("-") ? { date: said } : { days: Number(said) };
+      return lead;
+    });
+    if (contact) {
+      line = line.replace(contact, (whole, lead, name) => {
+        if (!found.contacts.includes(name)) found.contacts.push(name);
+        return lead;
+      });
+    }
     // Una persona sola: un'attività ha un assegnatario, non un elenco. La prima vince.
     line = line.replace(person, (whole, lead, name) => { found.assignee = found.assignee || name; return lead; });
     line = line.replace(/(?:^|\s)#([\p{L}\p{N}_-]+)/gu, (whole, tag) => { found.tags.push(tag); return " "; });

@@ -150,6 +150,7 @@ function _remember(push = false) {
     if (state.view !== "kanban") params.set("b", state.view);
     if (state.tags.length) params.set("t", state.tags.join("|"));
     if (state.assignees.length) params.set("a", state.assignees.join("|"));
+    if (state.contacts && state.contacts.length) params.set("k", state.contacts.join("|"));
   }
   const url = params.toString() ? `?${params}` : location.pathname;
   history[push ? "pushState" : "replaceState"]({ view, projectId, pageId }, "", url);
@@ -170,6 +171,7 @@ function _restoreFromUrl() {
       view: params.get("b") || "kanban",
       tags: (params.get("t") || "").split("|").filter((one) => one !== ""),
       assignees: (params.get("a") || "").split("|").filter((one) => one !== ""),
+      contacts: (params.get("k") || "").split("|").filter((one) => one !== ""),
     });
   }
   if (wanted === "project" && projectId) return _openProject(projectId);
@@ -2331,6 +2333,7 @@ function _pasteTasks() {
       model.updateTask(task.id, { tags: one.tags, priority: one.priority });
     }
     if (one.assignee) model.assignByName(task.id, one.assignee);
+    plan.applyExtras(task.id, one);
     made.push(task.id);
   }
   plan.paint();

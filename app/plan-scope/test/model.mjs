@@ -2511,8 +2511,11 @@ test("il nome di un contatto viaggia e si aggiorna, i recapiti no", () => {
   for (const reach of ["rossi@example.it", "0549 900100"]) assert.ok(!written.includes(reach), `«${reach}» non esce`);
   file.tasks[0].contacts.push({ uid: "x", name: "Ospite", email: "no@example.it" }, { name: "senza uid" }, "stringa");
   const other = model.adopt(file).projectId;
-  assert.deepEqual(model.tasksOf(other)[0].contacts.map((one) => Object.keys(one).join(",")), ["uid,name", "uid,name"],
-    "in ingresso entrano solo uid e nome");
+  const arrived = model.tasksOf(other)[0].contacts;
+  assert.equal(arrived.length, 2);
+  for (const one of arrived) {
+    assert.ok(Object.keys(one).every((key) => ["uid", "name", "at", "removed"].includes(key)), "in ingresso entrano solo i campi di un contatto");
+  }
 });
 
 test("ricontrollo: una data anche su un'attività fatta, e torna in «Cosa serve adesso» il suo giorno", () => {
@@ -2591,10 +2594,92 @@ test("dalla cartella condivisa contatti, ricontrollo ed esito arrivano con la ca
   file.tasks[0].outcome = { value: "lost", date: "2026-11-11", note: "troppo caro" };
   model.merge(file, giulia.id);
   const here = model.task(task.id);
-  assert.deepEqual(here.contacts.map((one) => one.name), ["Rossi Impianti", "Ospite"]);
+  assert.deepEqual(model.taskContacts(here).map((one) => one.name), ["Rossi Impianti", "Ospite"]);
   assert.ok(!JSON.stringify(here).includes("0549 1"), "un recapito non entra");
   assert.deepEqual(here.recheck, { date: "2026-11-20" });
   assert.deepEqual(here.outcome, { value: "lost", date: "2026-11-11" });
+});
+
+test("contatti dalla cartella condivisa: si sommano, e una rimozione arriva anche dall'altra parte", () => {
+  const giulia = project({ name: "Fiera" });
+  const task = model.createTask(giulia.id, { title: "Preventivo" });
+  model.addTaskContact(task.id, "Rossi Impianti");
+  const marcoId = model.adopt(fileOf(giulia.id, null)).projectId;
+  const theirs = model.tasksOf(marcoId)[0];
+  // Each side adds somebody; Giulia's card is the newer one.
+  model.addTaskContact(theirs.id, "Bianchi Srl");
+  model.addTaskContact(task.id, "Verdi");
+  const now = model.task(task.id).updated;
+  const file = fileOf(marcoId, now);
+  file.tasks[0].updated = later(now, -30);
+  model.merge(file, giulia.id);
+  assert.deepEqual(model.taskContacts(model.task(task.id)).map((one) => one.name).sort(), ["Bianchi Srl", "Rossi Impianti", "Verdi"],
+    "nessuno sparisce perché l'altra carta era più vecchia");
+  // Marco takes Rossi off, later: it goes here too.
+  const rossi = model.taskContacts(model.task(task.id)).find((one) => one.name === "Rossi Impianti");
+  model.removeTaskContact(theirs.id, rossi.uid);
+  const file2 = fileOf(marcoId, later(now, 60));
+  file2.tasks[0].contacts.find((one) => one.uid === rossi.uid).at = later(now, 60);
+  model.merge(file2, giulia.id);
+  assert.deepEqual(model.taskContacts(model.task(task.id)).map((one) => one.name).sort(), ["Bianchi Srl", "Verdi"]);
+  // And back on, here: a later gesture than the removal.
+  model.addTaskContact(task.id, "Rossi Impianti");
+  assert.equal(model.taskContacts(model.task(task.id)).length, 3);
+  assert.equal(model.tasksAbout(rossi.uid).length, 1);
+});
+
+test("l'ultimo contatto conta anche il diario: le voci che citano e quelle delle sue attività", () => {
+  const fiera = project();
+  const rossi = model.createContact({ name: "Rossi" });
+  const uid = rossi.uid || rossi.id;
+  const now = new Date();
+  const today = model.todayISO(now);
+  assert.equal(model.lastContact(uid, now), "");
+  const task = model.createTask(fiera.id, { title: "Preventivo" });
+  model.addDiaryEntry(task.id, { text: "Sentito @Rossi", date: model.addDays(today, -9) });
+  assert.equal(model.lastContact(uid, now), model.addDays(today, -9));
+  model.addTaskContact(task.id, "Rossi");
+  model.chaseTask(task.id, { text: "Sollecitato", today: model.addDays(today, -2) });
+  assert.equal(model.lastContact(uid, now), model.addDays(today, -2), "il sollecito sulla sua attività è un contatto");
+  model.addDiaryEntry(task.id, { text: "Da richiamare", date: model.addDays(today, 3) });
+  assert.equal(model.lastContact(uid, now), model.addDays(today, -2), "una data futura non è ancora un contatto");
+});
+
+test("il calendario d'insieme porta anche i giorni di ricontrollo", () => {
+  const fiera = project();
+  const task = model.createTask(fiera.id, { title: "Preventivo" });
+  model.toggleDone(task.id);
+  model.setRecheck(task.id, "2026-11-20");
+  const found = model.calendarBetween("2026-11-01", "2026-11-30");
+  assert.deepEqual(found.rechecks.map((one) => one.task.id), [task.id]);
+  assert.equal(found.tasks.length, 0, "fatta e senza scadenza: non è una scadenza");
+  assert.equal(model.calendarBetween("2026-12-01", "2026-12-31").rechecks.length, 0);
+});
+
+test("la ricerca trova un'attività dal nome di un suo contatto", () => {
+  const fiera = project();
+  const task = model.createTask(fiera.id, { title: "Preventivo impianto" });
+  model.addTaskContact(task.id, "Rossi Impianti");
+  const hit = model.search("rossi").find((one) => one.kind === "kindTask");
+  assert.ok(hit);
+  assert.equal(hit.id, task.id);
+  assert.equal(hit.snippet, "Rossi Impianti");
+});
+
+test("in attesa di risposta e il conto degli esiti, su tutti i progetti", () => {
+  const a = project({ name: "A" });
+  const b = project({ name: "B" });
+  const one = model.createTask(a.id, { title: "Uno" });
+  const two = model.createTask(b.id, { title: "Due" });
+  model.setRecheck(one.id, "2026-11-25");
+  model.setRecheck(two.id, "2026-11-15");
+  assert.deepEqual(model.awaitingAnswer().map((x) => x.task.title), ["Due", "Uno"]);
+  model.settleTask(two.id, "won", { text: "ok", today: "2026-11-11" });
+  const three = model.createTask(b.id, { title: "Tre" });
+  model.settleTask(three.id, "lost", { text: "no", today: "2026-03-01" });
+  assert.deepEqual(model.awaitingAnswer().map((x) => x.task.title), ["Uno"], "un esito chiude l'attesa");
+  assert.deepEqual(model.outcomeStats(undefined, { since: "2026-05-01" }), { won: 1, lost: 0 }, "solo dal giorno chiesto");
+  assert.deepEqual(model.outcomeStats(), { won: 1, lost: 1 });
 });
 
 console.log(`model: ${passed} prove passate`);

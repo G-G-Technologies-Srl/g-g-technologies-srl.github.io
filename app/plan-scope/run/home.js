@@ -1806,6 +1806,20 @@ function _paintDue(due, today) {
   }));
 }
 
+/** In attesa di risposta: the tasks with a day to check, and how the settled ones went. */
+function _paintAwaiting(projects, today) {
+  const waiting = model.awaitingAnswer(projects);
+  const stats = model.outcomeStats(projects, { since: model.addDays(today, -182) });
+  const total = stats.won + stats.lost;
+  el("awaitPanel").hidden = waiting.length === 0 && total === 0;
+  el("awaitStats").textContent = total
+    ? tf(stats.won === 1 ? "awaitStatsOne" : "awaitStats", { won: num(stats.won, 0), total: num(total, 0) }) : "";
+  // The project's name only when there is more than one to tell apart, as in the deadlines.
+  const several = projects.length > 1;
+  fill(el("awaitList"), waiting.map(({ task, project }) => _taskRow(task, today,
+    { project: several ? project : null, day: "date", recheck: true })));
+}
+
 export function paintHome(room) {
   const today = model.todayISO();
   // Le schede sono i progetti veri. L'agenda non è uno di loro — è il posto di quello che un
@@ -1848,14 +1862,16 @@ export function paintHome(room) {
       // scorsa non è «cosa mi aspetta», e prima stava qui lo stesso.
       ...model.meetingsAhead(project.id, new Date(), { days: model.SOON_DAYS })
         .map((meeting) => ({ when: meeting.date, meeting, project })),
-      // I giorni di ricontrollo: un preventivo mandato non scade, ma il giorno in cui va
-      // sollecitato è una cosa che aspetta, quanto una scadenza.
-      ...[...model.rechecksDue(project.id, today), ...model.rechecksAhead(project.id, { from: today })]
+      // I giorni di ricontrollo arrivati: un preventivo mandato non scade, ma il giorno in cui va
+      // sollecitato è una cosa da fare, quanto una scadenza. Quelli ancora davanti stanno in «In
+      // attesa di risposta», qui sotto: in tutti e due i riquadri la stessa riga si leggeva due volte.
+      ...model.rechecksDue(project.id, today)
         .map((task) => ({ when: task.recheck.date, task, project, recheck: true })),
     ])
     // A parità di giorno l'appuntamento viene prima: ha un'ora, quindi un posto nella giornata.
     .sort((a, b) => a.when.localeCompare(b.when) || (a.meeting ? -1 : 1) - (b.meeting ? -1 : 1));
   el("todayPanel").hidden = projects.length === 0 && !due.length;
+  _paintAwaiting(projects, today);
   // La pastiglia del progetto serve a distinguere, e con un progetto solo non c'è niente da
   // distinguere: era lo stesso nome ripetuto su ogni riga, e su un telefono mandava ogni riga a
   // capo per dire una cosa che il titolo della schermata aveva già detto.
