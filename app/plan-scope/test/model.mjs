@@ -2124,7 +2124,7 @@ test("cosa serve adesso: l'ordine è fisso, e ogni attività compare una volta s
   assert.equal(items[4].task.id, w.gadgets.id);
   assert.equal(items[5].meeting.page.id, w.withSara.id,
     "solo la call senza note e recente: quella di agosto è troppo lontana, quella di oggi ha le note");
-  assert.deepEqual(counts, { late: 1, today: 1, decide: 1, high: 1, blocked: 1, stalled: 0, notes: 1 });
+  assert.deepEqual(counts, { late: 1, today: 1, recheck: 0, decide: 1, high: 1, blocked: 1, stalled: 0, notes: 1 });
   // «Misure del tavolo» scade domani e non è né alta né bloccata: aspetta il suo giorno.
   assert.ok(!items.some((one) => one.task && one.task.id === w.table.id));
 });
@@ -2473,6 +2473,128 @@ test("un file di prima, senza diario, non svuota il diario di qui", () => {
   file.tasks[0].updated = later(now, 30);
   model.merge(file, giulia.id);
   assert.equal(model.diaryOf(model.task(task.id)).length, 1);
+});
+
+// -----------------------------------------------------------------------------------------------------------------
+//  c o n t a c t s   a n d   r e c h e c k
+// -----------------------------------------------------------------------------------------------------------------
+
+test("i contatti di un'attività: dalla rubrica o nuovi, una volta sola, e non fra chi ci lavora", () => {
+  const fiera = project();
+  const task = model.createTask(fiera.id, { title: "Preventivo impianto" });
+  const rossi = model.createContact({ name: "Rossi Impianti", email: "info@rossi.example" });
+  assert.ok(model.addTaskContact(task.id, "rossi impianti"), "trovato in rubrica senza badare alle maiuscole");
+  assert.equal(model.addTaskContact(task.id, "Rossi Impianti"), null, "non due volte");
+  model.addTaskContact(task.id, "Bianchi Srl");
+  const said = model.taskContacts(model.task(task.id));
+  assert.deepEqual(said.map((one) => one.name), ["Rossi Impianti", "Bianchi Srl"]);
+  assert.equal(said[0].uid, rossi.uid || rossi.id);
+  assert.ok(model.contactByName("Bianchi Srl"), "un nome nuovo nasce in rubrica");
+  assert.equal(model.peopleOf(fiera.id).length, 0, "un cliente non entra fra chi ci lavora");
+  assert.deepEqual(model.tasksAbout(rossi.uid || rossi.id).map((one) => one.task.id), [task.id]);
+  model.undo();
+  assert.equal(model.taskContacts(model.task(task.id)).length, 1, "annulla toglie l'ultimo");
+  model.removeTaskContact(task.id, rossi.uid || rossi.id);
+  assert.deepEqual(model.taskContacts(model.task(task.id)), []);
+  assert.ok(model.contactByName("Rossi Impianti"), "la scheda resta in rubrica");
+});
+
+test("il nome di un contatto viaggia e si aggiorna, i recapiti no", () => {
+  const fiera = project();
+  const task = model.createTask(fiera.id, { title: "Preventivo" });
+  const rossi = model.createContact({ name: "Rossi", email: "rossi@example.it", phone: "0549 900100" });
+  model.addTaskContact(task.id, "Rossi");
+  model.updateContact(rossi.id, { name: "Rossi Impianti" });
+  assert.equal(model.task(task.id).contacts[0].name, "Rossi Impianti", "il nome scritto sull'attività segue la rubrica");
+  const file = fileOf(fiera.id, null);
+  const written = JSON.stringify(file.tasks);
+  for (const reach of ["rossi@example.it", "0549 900100"]) assert.ok(!written.includes(reach), `«${reach}» non esce`);
+  file.tasks[0].contacts.push({ uid: "x", name: "Ospite", email: "no@example.it" }, { name: "senza uid" }, "stringa");
+  const other = model.adopt(file).projectId;
+  assert.deepEqual(model.tasksOf(other)[0].contacts.map((one) => Object.keys(one).join(",")), ["uid,name", "uid,name"],
+    "in ingresso entrano solo uid e nome");
+});
+
+test("ricontrollo: una data anche su un'attività fatta, e torna in «Cosa serve adesso» il suo giorno", () => {
+  const fiera = project();
+  const task = model.createTask(fiera.id, { title: "Mandare il preventivo" });
+  model.toggleDone(task.id);
+  const now = new Date();
+  const today = model.todayISO(now);
+  assert.equal(model.setRecheck(task.id, "domani"), null, "una data che non è una data non entra");
+  model.setRecheck(task.id, model.addDays(today, 3));
+  assert.equal(model.attentionOf(fiera.id, now).counts.recheck, 0, "prima del suo giorno no");
+  assert.equal(model.rechecksAhead(fiera.id, { from: today }).length, 1);
+  model.setRecheck(task.id, model.addDays(today, -2));
+  const found = model.attentionOf(fiera.id, now);
+  assert.equal(found.counts.recheck, 1);
+  assert.equal(found.items[0].kind, "recheck");
+  assert.equal(found.items[0].late, true);
+  assert.equal(model.isDone(model.task(task.id)), true, "la carta resta fatta");
+});
+
+test("sollecitato: una riga nel diario e il prossimo ricontrollo fra una settimana, in un passo", () => {
+  const fiera = project();
+  const task = model.createTask(fiera.id, { title: "Preventivo" });
+  model.setRecheck(task.id, "2026-11-10");
+  model.chaseTask(task.id, { text: "Sollecitato", by: "Giulia", today: "2026-11-11" });
+  assert.equal(model.task(task.id).recheck.date, "2026-11-18");
+  assert.deepEqual(model.diaryOf(model.task(task.id)).map((one) => [one.text, one.by, one.date]), [["Sollecitato", "Giulia", "2026-11-11"]]);
+  model.undo();
+  assert.equal(model.task(task.id).recheck.date, "2026-11-10", "annulla rimette la data");
+  assert.equal(model.diaryOf(model.task(task.id)).length, 0, "e toglie la riga");
+});
+
+test("esito: il valore, il giorno, la riga nel diario, niente più ricontrolli, e l'attività fatta", () => {
+  const fiera = project();
+  const task = model.createTask(fiera.id, { title: "Preventivo" });
+  model.setRecheck(task.id, "2026-11-10");
+  assert.equal(model.settleTask(task.id, "forse", { text: "?" }), null, "solo i due esiti");
+  model.settleTask(task.id, "won", { text: "Esito: accettato", today: "2026-11-11" });
+  const done = model.task(task.id);
+  assert.deepEqual(done.outcome, { value: "won", date: "2026-11-11" });
+  assert.equal(done.recheck, null);
+  assert.equal(model.isDone(done), true);
+  assert.equal(model.diaryOf(done)[0].text, "Esito: accettato");
+  model.undo();
+  const back = model.task(task.id);
+  assert.equal(back.outcome, null);
+  assert.equal(back.recheck.date, "2026-11-10");
+  assert.equal(model.isDone(back), false, "annulla in un passo solo");
+});
+
+test("un ricontrollo e un esito che arrivano da un file si ricostruiscono", () => {
+  const fiera = project();
+  model.createTask(fiera.id, { title: "Preventivo" });
+  const file = fileOf(fiera.id, null);
+  file.tasks[0].recheck = { date: "2026-11-20", alarm: "subito" };
+  file.tasks[0].outcome = { value: "won", date: "2026-11-11", amount: 999 };
+  let made = model.tasksOf(model.adopt(file).projectId)[0];
+  assert.deepEqual([made.recheck, made.outcome], [{ date: "2026-11-20" }, { value: "won", date: "2026-11-11" }]);
+  file.tasks[0].recheck = { date: "presto" };
+  file.tasks[0].outcome = { value: "boh", date: "2026-11-11" };
+  made = model.tasksOf(model.adopt(file).projectId)[0];
+  assert.deepEqual([made.recheck, made.outcome], [null, null]);
+});
+
+test("dalla cartella condivisa contatti, ricontrollo ed esito arrivano con la carta più recente, ricostruiti", () => {
+  const giulia = project({ name: "Fiera" });
+  const task = model.createTask(giulia.id, { title: "Preventivo" });
+  const marcoId = model.adopt(fileOf(giulia.id, null)).projectId;
+  const theirs = model.tasksOf(marcoId)[0];
+  model.addTaskContact(theirs.id, "Rossi Impianti");
+  model.setRecheck(theirs.id, "2026-11-20");
+  const now = model.task(task.id).updated;
+  const file = fileOf(marcoId, now);
+  file.tasks[0].updated = later(now, 30);
+  file.tasks[0].contacts.push({ uid: "z", name: "Ospite", phone: "0549 1" });
+  file.tasks[0].outcome = { value: "lost", date: "2026-11-11", note: "troppo caro" };
+  model.merge(file, giulia.id);
+  const here = model.task(task.id);
+  assert.deepEqual(here.contacts.map((one) => one.name), ["Rossi Impianti", "Ospite"]);
+  assert.ok(!JSON.stringify(here).includes("0549 1"), "un recapito non entra");
+  assert.deepEqual(here.recheck, { date: "2026-11-20" });
+  assert.deepEqual(here.outcome, { value: "lost", date: "2026-11-11" });
 });
 
 console.log(`model: ${passed} prove passate`);

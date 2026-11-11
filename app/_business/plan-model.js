@@ -232,6 +232,14 @@ function _renamePerson(person, wasCalled) {
     // And in the diaries: «Sentito @Marco» written last week is about the same person, and left
     // with the old name it would stop showing on the card it belongs to.
     for (const taskRecord of tasks.values()) {
+      // The name written beside the reference, which is what travels with the project.
+      const people = cleanTaskContacts(taskRecord.contacts);
+      if (people.some((one) => one.uid === uid && one.name !== after)) {
+        undo.push(_restoreTo("task", _copy(taskRecord)));
+        _put("task", { ...taskRecord, contacts: people.map((one) => (one.uid === uid ? { ...one, name: after } : one)), updated: _now() });
+      }
+    }
+    for (const taskRecord of tasks.values()) {
       const list = Array.isArray(taskRecord.diary) ? taskRecord.diary : [];
       let changed = false;
       const next = list.map((entry) => {
@@ -841,6 +849,14 @@ export function createTask(projectId, { title = "", status = null, end = null,
     checklist: [],
     // What happened on it, day by day. See `diaryOf`.
     diary: [],
+    // The people the task is about — the customer a quote goes to — as `{ uid, name }`. Not who does
+    // it: that is `assigneeUid`. See `taskContacts`.
+    contacts: [],
+    // The day to look at it again, done or not: "send the quote" is done, the answer is not. See
+    // `setRecheck`.
+    recheck: null,
+    // How it ended, when it is the kind of thing that ends one way or another: `{ value, date }`.
+    outcome: null,
     blockedBy: [],
     milestone,
     repeat: null,
@@ -988,8 +1004,11 @@ function _nextOccurrence(task, status) {
     end,
     checklist: (task.checklist || []).map((item) => ({ ...item, done: false })),
     // The next occurrence starts with an empty diary: last Monday's phone call is a fact about last
-    // Monday's task, and copied forward it would read as done again.
+    // Monday's task, and copied forward it would read as done again. Its own check and outcome too;
+    // the people it is about stay, because they are the same people.
     diary: [],
+    recheck: null,
+    outcome: null,
     order: tasksOf(task.projectId).filter((one) => one.status === status).length,
     created: stamp,
     updated: stamp,
@@ -1548,6 +1567,175 @@ function _diaryText(text) {
 
 function _diaryDay(date) {
   return typeof date === "string" && _ISO_DAY.test(date) ? date : todayISO();
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  c o n t a c t s   o f   a   t a s k
+// -----------------------------------------------------------------------------------------------------------------
+
+/**
+ * The people a task is about: the customer a quote goes to, the supplier to call back.
+ *
+ * **Not who does it.** That is `assigneeUid`, and it puts the person among those who work on the
+ * project. A customer is not on the team, and listing them there would put them in «Chi ci lavora»
+ * and in every list of the team's load.
+ *
+ * **A reference and a name**, `{ uid, name }`. The reference finds the card in the address book,
+ * where the email and the phone are; the name is what travels with the project, because the address
+ * book does not — a colleague who opens the file sees «Rossi Impianti», and never Rossi's number.
+ * When the card is here its current name wins over the one written on the task.
+ */
+export function taskContacts(taskRecord) {
+  return cleanTaskContacts(taskRecord && taskRecord.contacts).map((one) => {
+    const contact = contactByUid(one.uid);
+    return { uid: one.uid, name: (contact && contact.name) || one.name, contact: contact || null };
+  });
+}
+
+/**
+ * A person among the task's contacts, by name: found in the address book, or born there — the same
+ * gate as an assignee, so that a name typed in a hurry becomes a card to complete later. A person
+ * already there is not added twice. One undo step for the task.
+ */
+export function addTaskContact(taskId, name) {
+  const task = tasks.get(taskId);
+  const clean = String(name || "").trim().slice(0, 80);
+  if (!task || !clean) return null;
+  const person = contactByName(clean) || createContact({ name: clean });
+  const uid = person.uid || person.id;
+  const list = cleanTaskContacts(task.contacts);
+  if (list.some((one) => one.uid === uid)) return null;
+  return _updateTask(taskId, { contacts: [...list, { uid, name: person.name || clean }] });
+}
+
+/** A person off the task. The card stays in the address book: the task forgets them, nobody else does. */
+export function removeTaskContact(taskId, uid) {
+  const task = tasks.get(taskId);
+  const list = cleanTaskContacts(task && task.contacts);
+  if (!task || !list.some((one) => one.uid === uid)) return null;
+  return _updateTask(taskId, { contacts: list.filter((one) => one.uid !== uid) });
+}
+
+/** The contacts as they may arrive from a file, rebuilt: a uid and a name, once each, nothing else. */
+export function cleanTaskContacts(list) {
+  const out = [];
+  for (const one of Array.isArray(list) ? list : []) {
+    if (!one || typeof one !== "object" || typeof one.uid !== "string" || !one.uid) continue;
+    if (out.some((other) => other.uid === one.uid)) continue;
+    out.push({ uid: one.uid, name: String(one.name || "").trim().slice(0, 80) });
+  }
+  return out;
+}
+
+/**
+ * The tasks a person is a contact of, across the live projects: what the person's card shows under
+ * «Coinvolta in». The ones still to look at first — open, or with a day to check them again — then
+ * the settled ones, newest first.
+ */
+export function tasksAbout(uid) {
+  const out = [];
+  for (const one of liveProjects()) {
+    for (const taskRecord of tasksOf(one.id)) {
+      if (cleanTaskContacts(taskRecord.contacts).some((contact) => contact.uid === uid)) {
+        out.push({ task: taskRecord, project: one });
+      }
+    }
+  }
+  const pending = (task) => !isDone(task) || Boolean(task.recheck);
+  const day = (task) => String((task.recheck && task.recheck.date) || task.end || "9999");
+  return out.sort((a, b) => Number(pending(b.task)) - Number(pending(a.task))
+    || (pending(a.task) ? day(a.task).localeCompare(day(b.task))
+      : String(b.task.updated).localeCompare(String(a.task.updated))));
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+//  r e c h e c k   a n d   o u t c o m e
+// -----------------------------------------------------------------------------------------------------------------
+
+/**
+ * A day to look at a task again, done or not.
+ *
+ * **Why a date on the task and not a sub-task.** «Mandare il preventivo» is done the moment it
+ * leaves; what is not done is the answer. A sub-task would be born in the done column, under a card
+ * that is finished, and moved out of there it would leave its parent behind; and its story — sent,
+ * chased, accepted — would be split between two diaries. The check is a date on the same thing:
+ * the card stays in «Fatto», because the work is done, and on that day it comes back where the day's
+ * things are read — «Cosa serve adesso», the morning list, the reminders.
+ *
+ * Three gestures settle it, and each one writes its own line in the diary (`chaseTask`,
+ * `settleTask`, or a new date here). `null` takes the date away.
+ */
+export const CHASE_DAYS = 7;
+
+export function setRecheck(taskId, date) {
+  const task = tasks.get(taskId);
+  if (!task) return null;
+  const next = typeof date === "string" && _ISO_DAY.test(date) ? { date } : null;
+  if (JSON.stringify(next) === JSON.stringify(task.recheck || null)) return null;
+  return _updateTask(taskId, { recheck: next });
+}
+
+/**
+ * Chased: a line in the diary and the next check, a week on unless said otherwise. One step.
+ * `text` is the line, in the interface's words — the model has no language.
+ */
+export function chaseTask(taskId, { text, by = "", today = todayISO(), next = null } = {}) {
+  const task = tasks.get(taskId);
+  if (!task) return null;
+  return batch(() => {
+    addDiaryEntry(taskId, { text, date: today, by });
+    _updateTask(taskId, { recheck: { date: next && _ISO_DAY.test(next) ? next : addDays(today, CHASE_DAYS) } });
+  });
+}
+
+export const OUTCOMES = ["won", "lost"];
+
+/**
+ * Settled: how it ended, the day, a line in the diary, and no more checks. One step.
+ *
+ * Kept as a value and not only as words in the diary, so that one day the app can count how many
+ * quotes went through. The task is also marked done if it was not: a settled thing is finished.
+ */
+export function settleTask(taskId, value, { text, by = "", today = todayISO() } = {}) {
+  const task = tasks.get(taskId);
+  if (!task || !OUTCOMES.includes(value)) return null;
+  return batch(() => {
+    if (text) addDiaryEntry(taskId, { text, date: today, by });
+    _updateTask(taskId, { outcome: { value, date: today }, recheck: null });
+    if (!isDone(tasks.get(taskId))) toggleDone(taskId);
+  });
+}
+
+/** The outcome taken back: the task is as it was before it was settled, minus the diary line. */
+export function clearOutcome(taskId) {
+  const task = tasks.get(taskId);
+  if (!task || !task.outcome) return null;
+  return _updateTask(taskId, { outcome: null });
+}
+
+/** The tasks of a project whose day to check has come, done or not, the oldest first. */
+export function rechecksDue(projectId, today = todayISO()) {
+  return tasksOf(projectId)
+    .filter((one) => one.recheck && one.recheck.date <= today)
+    .sort((a, b) => a.recheck.date.localeCompare(b.recheck.date));
+}
+
+/** The checks falling within the next days, today excluded: what the morning list shows ahead. */
+export function rechecksAhead(projectId, { from = todayISO(), days = SOON_DAYS } = {}) {
+  const limit = addDays(from, days);
+  return tasksOf(projectId)
+    .filter((one) => one.recheck && one.recheck.date > from && one.recheck.date <= limit)
+    .sort((a, b) => a.recheck.date.localeCompare(b.recheck.date));
+}
+
+function _cleanRecheck(value) {
+  return value && typeof value === "object" && typeof value.date === "string" && _ISO_DAY.test(value.date)
+    ? { date: value.date } : null;
+}
+
+function _cleanOutcome(value) {
+  return value && typeof value === "object" && OUTCOMES.includes(value.value)
+    && typeof value.date === "string" && _ISO_DAY.test(value.date) ? { value: value.value, date: value.date } : null;
 }
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -2515,7 +2703,7 @@ export function attentionOf(projectId, now = new Date()) {
   const week = addDays(today, SOON_DAYS);
   const open = tasksOf(projectId).filter((one) => !isDone(one));
   const seen = new Set();
-  const groups = { late: [], today: [], decide: [], high: [], blocked: [], stalled: [], notes: [] };
+  const groups = { late: [], today: [], recheck: [], decide: [], high: [], blocked: [], stalled: [], notes: [] };
   const mark = (task) => ({ high: task.priority === "high", blocked: isBlocked(task) });
 
   const byEnd = (a, b) => String(a.end).localeCompare(String(b.end));
@@ -2525,6 +2713,12 @@ export function attentionOf(projectId, now = new Date()) {
   }
   for (const task of open.filter((one) => one.end === today)) {
     groups.today.push({ kind: "today", date: task.end, task, ...mark(task) });
+    seen.add(task.id);
+  }
+  // The day to look again, done or not: a quote sent is done, and on its day it is back here.
+  for (const task of rechecksDue(projectId, today)) {
+    if (seen.has(task.id)) continue;
+    groups.recheck.push({ kind: "recheck", date: task.recheck.date, task, late: task.recheck.date < today, ...mark(task) });
     seen.add(task.id);
   }
   for (const one of decisionsOf(projectId)) {
@@ -3053,6 +3247,9 @@ export function adopt({ project: incoming, pages: incomingPages = [], tasks: inc
       assigneeUid: one.assigneeUid || _personFromName(projectId, assignee, { here: !fromOutside }),
       blockedBy: (one.blockedBy || []).map((old) => taskIds.get(old)).filter(Boolean),
       diary: cleanDiary(one.diary),
+      contacts: cleanTaskContacts(one.contacts),
+      recheck: _cleanRecheck(one.recheck),
+      outcome: _cleanOutcome(one.outcome),
       trashedAt: one.trashedAt || null,
     });
   }
@@ -3262,6 +3459,9 @@ export function merge({ project: incoming, pages: incomingPages = [], tasks: inc
         status,
         blockedBy,
         diary: cleanDiary(one.diary),
+        contacts: cleanTaskContacts(one.contacts),
+        recheck: _cleanRecheck(one.recheck),
+        outcome: _cleanOutcome(one.outcome),
         trashedAt: one.trashedAt || null,
         updated: one.updated || stamp,
       });
@@ -3291,6 +3491,9 @@ export function merge({ project: incoming, pages: incomingPages = [], tasks: inc
       status,
       blockedBy,
       diary,
+      contacts: cleanTaskContacts(one.contacts),
+      recheck: _cleanRecheck(one.recheck),
+      outcome: _cleanOutcome(one.outcome),
       trashedAt: one.trashedAt || null,
     });
     counts.updated += 1;

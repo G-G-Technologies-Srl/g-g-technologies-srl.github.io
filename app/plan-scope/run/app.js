@@ -1041,6 +1041,25 @@ function _paintPerson() {
     return row;
   }));
 
+  // The tasks the person is a contact of — the quotes sent to them, the calls to return — with where
+  // each one stands: open in its column, waiting for its day to check, or settled.
+  const involved = model.tasksAbout(uid);
+  el("personAboutCard").hidden = involved.length === 0;
+  fill(el("personAbout"), involved.map(({ task, project }) => {
+    const row = node("li", "row-item");
+    row.append(button("link", task.title || t("taskUntitled"), () => {
+      plan.setProject(project.id);
+      _openPlan(project.id);
+      plan.openCard(task.id);
+    }));
+    const column = project.columns.find((one) => one.id === task.status);
+    const where = task.outcome ? t(`outcome_${task.outcome.value}`)
+      : task.recheck ? tf("tipRecheck", { date: shortDate(task.recheck.date) })
+        : column ? column.name : "";
+    row.append(node("span", "meta", [project.name || t("projectUntitled"), where].filter(Boolean).join(" · ")));
+    return row;
+  }));
+
   const open = model.tasksOfContact(uid);
   el("personTasksNone").hidden = open.length > 0;
   fill(el("personTasks"), open.map(({ task, project }) => {
@@ -1947,6 +1966,18 @@ async function _remindDigest() {
   const today = model.todayISO();
   const items = [];
   for (const project of model.liveProjects()) {
+    // The days to check again, done or not: a quote to chase is exactly the kind of thing that is
+    // forgotten, and the reason the date exists.
+    for (const task of model.tasksOf(project.id)) {
+      if (!task.recheck) continue;
+      const title = task.title || t("taskUntitled");
+      items.push({
+        id: `${task.uid || task.id}~recheck`,
+        date: task.recheck.date,
+        label: title,
+        text: tf("remindRecheck", { title, when: longDate(task.recheck.date) }),
+      });
+    }
     for (const task of model.tasksOf(project.id)) {
       if (!task.end || model.isDone(task)) continue;
       const title = task.title || t("taskUntitled");
@@ -3383,6 +3414,19 @@ function _connect() {
   home.connect({
     // A «@persona» in «Cosa è successo» opens the person's card.
     openPerson: (id) => _openPerson(id),
+    // The day to check a task, from «Cosa serve adesso»: chased, or settled, with the strip to take
+    // it back. The card's own buttons do the same through the same two functions.
+    chaseTask: async (id) => {
+      const step = plan.chase(id);
+      await _repaint();
+      _offerUndo(step, t("chasedSaid"));
+    },
+    settleTask: async (id) => {
+      const step = await plan.settle(id);
+      if (!step) return;
+      await _repaint();
+      _offerUndo(step, t(`settledSaid_${model.task(id).outcome.value}`));
+    },
     // Il filtro delle etichette cambia cosa si vede in «Progetti», e chi ha la stanza da mostrare
     // è l'app: la schermata chiede, e questa ridisegna.
     repaintHome: async () => home.paintHome(await db.room()),

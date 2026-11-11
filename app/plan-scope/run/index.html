@@ -823,6 +823,13 @@
         <ul class="list" id="personDiary"></ul>
       </div>
 
+      <!-- The tasks the person is a contact of: the quote sent to them, the call to return. Theirs as
+           the subject of the work, where «Le sue attività» below are theirs as the one doing it. -->
+      <div class="card" id="personAboutCard" hidden>
+        <h2 data-t="personAboutTitle"></h2>
+        <ul class="list" id="personAbout"></ul>
+      </div>
+
       <div class="card">
         <h2 data-t="personTasksTitle"></h2>
         <p class="note" id="personTasksNone" data-t="personTasksNone" hidden></p>
@@ -1088,6 +1095,29 @@
     <button type="button" id="cardSeriesEnd" class="ghost small" data-t="seriesEnd"></button>
   </p>
 
+  <!-- The day to look at the task again, done or not: a quote sent is done, the answer is not. On
+       that day the task comes back in «Cosa serve adesso», in the morning list and in the reminders,
+       while the card stays where the work put it. The gestures under it each write their line in
+       the diary: «Sollecitato» moves the check a week on, «Esito» settles it and ends the checks. -->
+  <div class="card-recheck" id="cardRecheckBox">
+    <label for="cardRecheck" id="cardRecheckLabel" data-t="fieldRecheck"></label>
+    <div class="row card-recheck-row">
+      <input type="date" id="cardRecheck">
+      <button type="button" id="cardRecheckWeek" class="ghost small" data-t="recheckInWeek"></button>
+      <button type="button" id="cardRecheckOff" class="ghost small" data-t="recheckOff" hidden></button>
+    </div>
+    <p class="note" id="cardRecheckHint" data-t="fieldRecheckHint"></p>
+    <div class="row card-recheck-actions" id="cardRecheckActions" hidden>
+      <button type="button" id="cardChase" class="small" data-t="chaseDone"></button>
+      <a id="cardChaseMail" class="button-link" href="#" hidden></a>
+      <button type="button" id="cardSettle" class="small" data-t="settleOpen"></button>
+    </div>
+    <p class="note card-outcome" id="cardOutcome" hidden>
+      <span id="cardOutcomeText"></span>
+      <button type="button" id="cardOutcomeClear" class="ghost small" data-t="outcomeClear"></button>
+    </p>
+  </div>
+
   <!-- Le etichette e chi ci lavora stanno qui, in chiaro e non dietro «Mostra altro»: sono le due
        cose che la bacheca già mostra sulla carta, e nasconderle nella maschera che le riempie
        voleva dire far cercare il modo di scrivere una cosa che si vede da fuori. -->
@@ -1098,6 +1128,19 @@
   <label for="cardAssignee" id="cardAssigneeLabel"></label>
   <input type="text" id="cardAssignee" maxlength="80" autocomplete="off" list="assigneeList">
   <datalist id="assigneeList"></datalist>
+
+  <!-- The people the task is about — the customer a quote goes to — beside who does it, and not the
+       same field: a customer is not on the team. Each one is a face and a name that opens the card
+       in the address book, with the two ways to reach them; the field under them finds a name in
+       the address book, or makes a new card to complete later. -->
+  <span class="field-label" id="cardContactsLabel" data-t="cardContacts"></span>
+  <ul class="card-contacts" id="cardContacts"></ul>
+  <form class="row" id="cardContactForm">
+    <input type="text" id="cardContactField" maxlength="80" autocomplete="off" list="contactList"
+           data-t-label="cardContactPlaceholder" data-t-placeholder="cardContactPlaceholder">
+    <button type="submit" id="cardContactAdd" data-t="cardContactAdd"></button>
+  </form>
+  <datalist id="contactList"></datalist>
 
   <label for="cardPriority" id="cardPriorityLabel"></label>
   <select id="cardPriority"></select>

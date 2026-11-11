@@ -668,16 +668,22 @@ function _meetingRow(meeting, today, { project = null, day = "label" } = {}) {
   return row;
 }
 
-function _taskRow(task, today, { project = null, day = "label" } = {}) {
+function _taskRow(task, today, { project = null, day = "label", recheck = false } = {}) {
   const row = node("li", "row-item row-two opens");
-  const done = model.isDone(task);
+  // A row for a day to check again is about the answer, not the work: the title is not struck even
+  // when the task is done, and in place of the tick — which would reopen it — there is the clock.
+  const done = model.isDone(task) && !recheck;
 
   // The box is a button and not a checkbox input on purpose: it carries its own tick, animates on
   // the way in, and stays 24px across on a phone, which a native box does not.
-  const box = button(done ? "tick on" : "tick", done ? "✓" : "", () => on.toggleTask(task.id),
-    { label: done ? t("taskUndone") : t("taskDone") });
-  box.setAttribute("aria-pressed", done ? "true" : "false");
-  row.append(box);
+  if (recheck) {
+    row.append(node("span", "tick-space recheck-sign", "◷"));
+  } else {
+    const box = button(done ? "tick on" : "tick", done ? "✓" : "", () => on.toggleTask(task.id),
+      { label: done ? t("taskUndone") : t("taskDone") });
+    box.setAttribute("aria-pressed", done ? "true" : "false");
+    row.append(box);
+  }
 
   // The title takes the width of its own text and no more: with `flex: 1` the struck line — a
   // background the width of the element — ran past the last letter and read as a rule across the
@@ -694,8 +700,10 @@ function _taskRow(task, today, { project = null, day = "label" } = {}) {
   // Where it is: the project on the lists that cross projects (on one project's own page it would
   // be the title repeated on every line), the task it is part of, the column it has reached.
   const parent = model.parentOf(task);
+  const people = model.taskContacts(task).map((one) => one.name).join(", ");
   const sub = _rowSub([project ? _projectTag(project) : null,
-    parent ? `↳ ${parent.title || t("taskUntitled")}` : "", _stage(task)]);
+    parent ? `↳ ${parent.title || t("taskUntitled")}` : "",
+    recheck ? (people ? tf("dueRecheckWith", { names: people }) : t("dueRecheck")) : _stage(task)]);
   if (sub) main.append(sub);
   row.append(main);
 
@@ -705,10 +713,11 @@ function _taskRow(task, today, { project = null, day = "label" } = {}) {
   // Il giorno, detto come distanza — «oggi», «domani» — oppure come data, oppure taciuto. Sotto un
   // titolo che dice già «Oggi», una riga che ripete «oggi» è una colonna di parole uguali; sotto
   // «In ritardo» la data serve eccome, perché dice **di quanto**.
-  if (task.end && day !== "none") {
-    const late = !done && task.end < today;
+  const date = recheck ? task.recheck.date : task.end;
+  if (date && day !== "none") {
+    const late = !done && date < today;
     row.append(node("span", late ? "when late" : "when",
-      day === "date" ? shortDate(task.end) : _dueLabel(task.end, today)));
+      day === "date" ? shortDate(date) : _dueLabel(date, today)));
   }
 
   // The row opens the task. What can be done to it — the date, the owner, the bin — is on its
@@ -960,7 +969,9 @@ function _origins(projectId) {
 function _nowRow(item, today, origins) {
   const row = node("li", `row-item now-row is-${item.kind}`);
   const task = item.task || null;
-  if (task) {
+  // A day to check is about the answer, and the task is often done already: a tick there would
+  // reopen it. The gestures for it are at the end of the row.
+  if (task && item.kind !== "recheck") {
     const box = button("tick", "", () => on.toggleTask(task.id), { label: t("taskDone") });
     box.setAttribute("aria-pressed", "false");
     row.append(box);
@@ -974,6 +985,7 @@ function _nowRow(item, today, origins) {
   else if (item.kind === "decide") when = tf("byDay", { date: shortDate(item.date) });
   else if (item.kind === "notes") when = _distance(item.date, today);
   else if (item.kind === "stalled") when = tf("nowStalledSince", { when: _distance(item.date, today) });
+  else if (item.kind === "recheck") when = tf("nowRecheckWhen", { when: _distance(item.date, today) });
   else when = _dayName(item.date);
   const lateish = item.kind === "late" || (item.kind === "decide" && item.late);
   row.append(node("span", `now-when${lateish ? " late" : ""}${item.kind === "today" ? " today" : ""}`, when));
@@ -985,6 +997,7 @@ function _nowRow(item, today, origins) {
   if (task && item.blocked) title.append(_lockMark(task));
   if (item.kind === "decide") title.append(_decideMark(item.decision));
   if (item.kind === "notes") title.append(_penMark(item.meeting, item.date));
+  if (item.kind === "recheck") title.append(node("span", "recheck-sign", "◷"));
   if (task) {
     title.append(button("link title", task.title || t("taskUntitled"), () => on.openTask(task.id)));
   } else if (item.kind === "decide") {
@@ -1000,6 +1013,13 @@ function _nowRow(item, today, origins) {
     const from = origins.get(task.uid);
     if (item.blocked && waits.length) row.append(node("span", "now-ctx", tf("nowWaits", { title: waits[0].title })));
     else if (item.kind === "stalled") row.append(node("span", "now-ctx", _stalledContext(task)));
+    else if (item.kind === "recheck") {
+      const people = model.taskContacts(task).map((one) => one.name).join(", ");
+      const last = model.lastDiaryEntry(task);
+      const said = people ? tf("dueRecheckWith", { names: people })
+        : last ? tf("nowStalledLast", { text: _excerpt(last.text, 60) }) : "";
+      if (said) row.append(node("span", "now-ctx", said));
+    }
     else if (from) row.append(node("span", "now-ctx", tf("nowFrom", { title: from.title || t("pageUntitled") })));
     const who = model.assigneeName(task);
     if (who) row.append(_face(who));
@@ -1007,6 +1027,11 @@ function _nowRow(item, today, origins) {
     // its diary, where either is written.
     if (item.kind === "stalled") {
       row.append(button("small", t("nowStalledWrite"), () => on.openTask(task.id, { diary: true })));
+    }
+    // The day to check: the two gestures that settle it for now, here, without opening the card.
+    if (item.kind === "recheck") {
+      row.append(button("small", t("chaseDone"), () => on.chaseTask(task.id)));
+      row.append(button("small", t("settleOpen"), () => on.settleTask(task.id)));
     }
   } else if (item.kind === "decide") {
     row.append(node("span", "now-ctx", tf("nowFrom", { title: item.decision.page.title || t("pageUntitled") })));
@@ -1029,6 +1054,7 @@ function _paintNow(id, today) {
   const words = {
     late: () => tf("nowCountLate", { n: num(counts.late, 0) }),
     today: () => tf("nowCountToday", { n: num(counts.today, 0) }),
+    recheck: () => count(counts.recheck, "nowCountRecheckOne", "nowCountRecheck"),
     decide: () => tf("nowCountDecide", { n: num(counts.decide, 0) }),
     high: () => tf("nowCountHigh", { n: num(counts.high, 0) }),
     blocked: () => count(counts.blocked, "nowCountBlockedOne", "nowCountBlocked"),
@@ -1774,7 +1800,7 @@ function _paintDue(due, today) {
     const list = node("ul", "list");
     fill(list, group.items.map((one) => (one.meeting
       ? _meetingRow(one.meeting, today, { project: one.project || null, day: group.day })
-      : _taskRow(one.task, today, { project: one.project || null, day: group.day }))));
+      : _taskRow(one.task, today, { project: one.project || null, day: group.day, recheck: Boolean(one.recheck) }))));
     box.append(list);
     return box;
   }));
@@ -1822,6 +1848,10 @@ export function paintHome(room) {
       // scorsa non è «cosa mi aspetta», e prima stava qui lo stesso.
       ...model.meetingsAhead(project.id, new Date(), { days: model.SOON_DAYS })
         .map((meeting) => ({ when: meeting.date, meeting, project })),
+      // I giorni di ricontrollo: un preventivo mandato non scade, ma il giorno in cui va
+      // sollecitato è una cosa che aspetta, quanto una scadenza.
+      ...[...model.rechecksDue(project.id, today), ...model.rechecksAhead(project.id, { from: today })]
+        .map((task) => ({ when: task.recheck.date, task, project, recheck: true })),
     ])
     // A parità di giorno l'appuntamento viene prima: ha un'ora, quindi un posto nella giornata.
     .sort((a, b) => a.when.localeCompare(b.when) || (a.meeting ? -1 : 1) - (b.meeting ? -1 : 1));

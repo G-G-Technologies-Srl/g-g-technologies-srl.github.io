@@ -270,6 +270,38 @@ test("la pagina del progetto: un'attività cominciata e silenziosa compare come 
   assert.deepEqual(asked.at(-1), ["openTask", quiet.id, { diary: true }]);
 });
 
+test("un'attività fatta con il giorno di ricontrollo torna in «Cosa serve adesso», con Sollecitato ed Esito", () => {
+  const { other } = _scene();
+  const quote = model.createTask(other.id, { title: "Preventivo impianto" });
+  model.addTaskContact(quote.id, "Rossi Impianti");
+  model.toggleDone(quote.id);
+  model.setRecheck(quote.id, model.addDays(model.todayISO(), -1));
+  home.paintProject(other.id);
+  const row = _row(byId("nowList"), "Preventivo impianto");
+  assert.match(row.querySelector(".now-when").textContent, /ricontrollo, ieri/);
+  assert.match(row.querySelector(".now-ctx").textContent, /con Rossi Impianti/);
+  assert.ok(byId("nowSum").textContent.includes("1 da ricontrollare"));
+  assert.ok(!row.querySelector(".tick"), "nessuna spunta: riaprirebbe un'attività già fatta");
+  const buttons = row.querySelectorAll("button");
+  buttons.find((one) => one.textContent === t("chaseDone")).click();
+  assert.deepEqual(asked.at(-1), ["chaseTask", quote.id]);
+  buttons.find((one) => one.textContent === t("settleOpen")).click();
+  assert.deepEqual(asked.at(-1), ["settleTask", quote.id]);
+});
+
+test("fra le scadenze il giorno di ricontrollo ha il suo segno, e il titolo non è barrato", () => {
+  const { other } = _scene();
+  const quote = model.createTask(other.id, { title: "Preventivo impianto" });
+  model.toggleDone(quote.id);
+  model.setRecheck(quote.id, model.todayISO());
+  home.paintHome(null);
+  const row = _row(byId("todayList"), "Preventivo impianto");
+  assert.ok(row.querySelector(".recheck-sign"), "l'orologio al posto della spunta");
+  assert.ok(!row.querySelector(".tick"), "nessuna spunta che la riaprirebbe");
+  assert.ok(!row.querySelector(".title").classList.contains("struck"));
+  assert.match(row.textContent, /da ricontrollare/);
+});
+
 test("un progetto vuoto offre i tre modi di cominciare, invece di pannelli vuoti", () => {
   _scene();
   const empty = model.createProject({ name: "Vuoto" });

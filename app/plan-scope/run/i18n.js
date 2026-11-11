@@ -683,6 +683,47 @@ const IT = {
   diaryToday: "Oggi",
   diaryYesterday: "Ieri",
   diaryMetIn: "Citata nell'incontro",
+  // I contatti di un'attività, distinti da chi se ne occupa: il cliente a cui va il preventivo.
+  cardContacts: "Contatti",
+  cardContactPlaceholder: "Un nome dalla rubrica, o uno nuovo",
+  cardContactAdd: "Aggiungi",
+  cardContactOpen: "Apri la scheda di {name}",
+  cardContactRemove: "Togli {name} da questa attività",
+  cardContactGone: "{name} non è più fra i contatti dell'attività. La scheda resta in rubrica.",
+  mentionMenu: "Persone",
+  personAboutTitle: "Attività in cui è coinvolta",
+  // Il giorno in cui riguardare un'attività, anche fatta, e come è finita.
+  fieldRecheck: "Ricontrolla il",
+  fieldRecheckHint: "Il giorno in cui riguardarla, anche quando è fatta: per esempio per sollecitare "
+    + "un preventivo. Quel giorno torna in «Cosa serve adesso», fra le scadenze e nei promemoria.",
+  recheckInWeek: "Fra una settimana",
+  recheckOff: "Togli la data",
+  chaseDone: "Sollecitato",
+  chaseWrite: "Scrivi a {name}",
+  chasedSaid: "Il sollecito è nel diario. Il prossimo ricontrollo è fra una settimana.",
+  settleOpen: "Esito…",
+  settleAsk: "Qual è l'esito?",
+  settleOk: "Registra l'esito",
+  outcome_won: "Accettato",
+  outcome_lost: "Non accettato",
+  outcomeSaid_won: "Esito: accettato il {date}",
+  outcomeSaid_lost: "Esito: non accettato il {date}",
+  outcomeClear: "Togli l'esito",
+  outcomeCleared: "L'esito è stato tolto.",
+  settledSaid_won: "Esito registrato: accettato. I ricontrolli sono finiti.",
+  settledSaid_lost: "Esito registrato: non accettato. I ricontrolli sono finiti.",
+  diaryChased: "Sollecitato.",
+  diaryOutcome_won: "Esito: accettato.",
+  diaryOutcome_lost: "Esito: non accettato.",
+  tipRecheck: "Da ricontrollare il {date}",
+  tipRecheckWith: "con {names}",
+  tipRecheckDetail: "Quel giorno torna fra le cose da fare.",
+  nowRecheckWhen: "ricontrollo, {when}",
+  nowCountRecheckOne: "1 da ricontrollare",
+  nowCountRecheck: "{n} da ricontrollare",
+  dueRecheck: "da ricontrollare",
+  dueRecheckWith: "da ricontrollare con {names}",
+  remindRecheck: "{title}: da ricontrollare il {when}",
   personDiaryTitle: "Citata nel diario",
   tlDiaryOne: "Diario, {date}: «{text}»",
   tlDiaryMany: "Diario, {date}: {n} voci, la prima «{text}»",
@@ -1026,6 +1067,13 @@ const IT = {
     + "modifiche; «Copia la settimana» mette negli appunti il riepilogo degli ultimi sette giorni, per "
     + "attività, pronto per una mail. «Cosa serve adesso» segnala le attività cominciate e senza "
     + "notizie da dieci giorni.\n\n"
+    + "## Contatti e ricontrolli\n\nI **contatti** di un'attività sono le persone a cui si riferisce — il "
+    + "cliente di un preventivo — e non chi la svolge: si scelgono dalla rubrica, e accanto al nome ci "
+    + "sono i comandi per scrivere e per chiamare. Nelle note e nel diario «@» apre l'elenco dei nomi.\n\n"
+    + "**Ricontrolla il** fissa il giorno in cui riguardare un'attività, anche quando è già fatta: un "
+    + "preventivo mandato è fatto, la risposta no. Quel giorno l'attività torna in «Cosa serve adesso», "
+    + "fra le scadenze e nei promemoria. «Sollecitato» lo annota nel diario e sposta il ricontrollo di "
+    + "una settimana; «Esito…» registra se è stato accettato e chiude i ricontrolli.\n\n"
     + "## Quello che si ripete\n\n«Si ripete», nella scheda sotto «Mostra altro», con un «Fino al» "
     + "facoltativo: spuntata una, nasce la prossima con la data avanzata. Sulla carta la riconosce "
     + "il segno ↻ accanto al titolo. Per smettere: «Chiudi la serie» nel messaggio che compare "
@@ -2017,6 +2065,47 @@ const EN = {
   diaryToday: "Today",
   diaryYesterday: "Yesterday",
   diaryMetIn: "Mentioned in the meeting",
+  // A task's contacts, apart from who is on it: the customer a quote goes to.
+  cardContacts: "Contacts",
+  cardContactPlaceholder: "A name from the address book, or a new one",
+  cardContactAdd: "Add",
+  cardContactOpen: "Open {name}'s card",
+  cardContactRemove: "Remove {name} from this task",
+  cardContactGone: "{name} is no longer among the task's contacts. The card stays in the address book.",
+  mentionMenu: "People",
+  personAboutTitle: "Tasks they are involved in",
+  // The day to look at a task again, even a done one, and how it ended.
+  fieldRecheck: "Check again on",
+  fieldRecheckHint: "The day to look at it again, even once it is done: to chase a quote, for "
+    + "instance. On that day it comes back in “What needs doing now”, among the deadlines and in the reminders.",
+  recheckInWeek: "In a week",
+  recheckOff: "Remove the date",
+  chaseDone: "Chased",
+  chaseWrite: "Write to {name}",
+  chasedSaid: "The chase is in the log. The next check is in a week.",
+  settleOpen: "Outcome…",
+  settleAsk: "What is the outcome?",
+  settleOk: "Record the outcome",
+  outcome_won: "Accepted",
+  outcome_lost: "Not accepted",
+  outcomeSaid_won: "Outcome: accepted on {date}",
+  outcomeSaid_lost: "Outcome: not accepted on {date}",
+  outcomeClear: "Remove the outcome",
+  outcomeCleared: "The outcome has been removed.",
+  settledSaid_won: "Outcome recorded: accepted. The checks are over.",
+  settledSaid_lost: "Outcome recorded: not accepted. The checks are over.",
+  diaryChased: "Chased.",
+  diaryOutcome_won: "Outcome: accepted.",
+  diaryOutcome_lost: "Outcome: not accepted.",
+  tipRecheck: "To check again on {date}",
+  tipRecheckWith: "with {names}",
+  tipRecheckDetail: "On that day it comes back among the things to do.",
+  nowRecheckWhen: "check, {when}",
+  nowCountRecheckOne: "1 to check again",
+  nowCountRecheck: "{n} to check again",
+  dueRecheck: "to check again",
+  dueRecheckWith: "to check again with {names}",
+  remindRecheck: "{title}: to check again on {when}",
   personDiaryTitle: "Mentioned in the log",
   tlDiaryOne: "Log, {date}: “{text}”",
   tlDiaryMany: "Log, {date}: {n} entries, the first “{text}”",
@@ -2356,6 +2445,13 @@ const EN = {
     + "latest changes; “Copy the week” puts the summary of the last seven days on the clipboard, by "
     + "task, ready for an email. “What needs doing now” points out the tasks begun and silent for "
     + "ten days.\n\n"
+    + "## Contacts and checks\n\nA task's **contacts** are the people it is about — the customer of a "
+    + "quote — not who does it: they come from the address book, and beside each name are the commands "
+    + "to write and to call. In the notes and the log, “@” opens the list of names.\n\n"
+    + "**Check again on** sets the day to look at a task again, even once it is done: a quote sent is "
+    + "done, the answer is not. On that day the task comes back in “What needs doing now”, among the "
+    + "deadlines and in the reminders. “Chased” writes it in the log and moves the check a week on; "
+    + "“Outcome…” records whether it was accepted and ends the checks.\n\n"
     + "## What repeats\n\n“Repeats”, on the card under “Show more”, with an optional “Until”: tick "
     + "one, and the next is born with the date moved on. On the board it has the ↻ mark beside its "
     + "title. To stop it: “Close the series” in the message that appears after the tick, or “End the "

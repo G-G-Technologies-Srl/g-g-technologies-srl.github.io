@@ -130,6 +130,18 @@ export function snack(text, { action = null, onAction = null, second = null, onS
  * modal is open the strip moves inside it, and comes back to the body when that dialog closes,
  * with whatever time it had left.
  */
+let snackWatch = null;
+
+/** The strip on the dialog's lower edge, above its foot. */
+function _liftSnack(strip, dialog) {
+  // The foot's own top edge, not its height: it is sticky with a negative offset, so it reaches
+  // below the dialog's visible edge, and a height counted up from that edge fell short of it.
+  const box = dialog.getBoundingClientRect();
+  const foot = dialog.querySelector(".card-foot");
+  const edge = foot ? Math.min(foot.getBoundingClientRect().top, box.bottom) : box.bottom;
+  strip.style.bottom = `${Math.max(12, Math.round(window.innerHeight - edge + 10))}px`;
+}
+
 function _placeSnack(strip) {
   let open = null;
   try {
@@ -144,15 +156,22 @@ function _placeSnack(strip) {
   // where it covered «Chiudi», the one button somebody reaches for after an undo.
   strip.style.bottom = "";
   if (open) {
-    const box = open.getBoundingClientRect();
-    const foot = open.querySelector(".card-foot");
-    const lift = (foot ? foot.getBoundingClientRect().height : 0) + 10;
-    strip.style.bottom = `${Math.max(12, Math.round(window.innerHeight - box.bottom + lift))}px`;
+    _liftSnack(strip, open);
+    // The dialog changes height while the strip is up — a tab of the card, a list unfolded — and a
+    // position taken once was left over the foot it was meant to clear. Watched while it is inside.
+    if (typeof ResizeObserver === "function") {
+      if (snackWatch) snackWatch.disconnect();
+      snackWatch = new ResizeObserver(() => {
+        if (strip.parentNode === open && !strip.hidden) _liftSnack(strip, open);
+      });
+      snackWatch.observe(open);
+    }
   }
   if (open && !open.dataset.snackHome) {
     open.dataset.snackHome = "1";
     open.addEventListener("close", () => {
       if (strip.parentNode !== open) return;
+      if (snackWatch) snackWatch.disconnect();
       document.body.append(strip);
       strip.style.bottom = "";
     });
@@ -351,6 +370,102 @@ export function linkedText(text, { names = [], pageOf = () => null, openPerson =
   }
   if (cursor < source.length) out.push(document.createTextNode(source.slice(cursor)));
   return out;
+}
+
+/**
+ * The «@» menu of a text field: writing «@ro» offers «Rossi Impianti» and the other names that fit,
+ * and choosing one writes «@Rossi Impianti » in its place.
+ *
+ * A mention was a link only when it was spelt exactly as the card says, and nothing said which
+ * spelling that was — so in the diary it never happened. The menu makes it right by construction.
+ * It sits under the field, in the flow of the form and not floating over it: inside a dialog that
+ * scrolls, a floating list is cut by the dialog's edge exactly when it is needed.
+ *
+ * Arrows move, Enter or Tab choose, Esc closes the menu and not the dialog around it. `names()` is
+ * asked each time, so a person added a moment ago is already there.
+ */
+export function mentionPicker(field, names, { label = "" } = {}) {
+  const menu = document.createElement("ul");
+  menu.className = "mention-menu";
+  menu.setAttribute("role", "listbox");
+  if (label) menu.setAttribute("aria-label", label);
+  menu.hidden = true;
+  field.insertAdjacentElement("afterend", menu);
+  let found = [];
+  let at = 0;
+  let start = -1;
+
+  const close = () => {
+    menu.hidden = true;
+    found = [];
+    start = -1;
+  };
+  const choose = (name) => {
+    const caret = field.selectionStart;
+    const before = field.value.slice(0, start);
+    const after = field.value.slice(caret);
+    const put = `@${name} `;
+    field.value = before + put + after.replace(/^ /, "");
+    const end = before.length + put.length;
+    field.setSelectionRange(end, end);
+    close();
+    field.dispatchEvent(new Event("input", { bubbles: true }));
+    field.focus();
+  };
+  const paint = () => {
+    menu.replaceChildren(...found.map((name, index) => {
+      const item = document.createElement("li");
+      item.className = index === at ? "on" : "";
+      item.setAttribute("role", "option");
+      item.setAttribute("aria-selected", index === at ? "true" : "false");
+      item.textContent = name;
+      // `mousedown`, not `click`: a click arrives after the field has lost the focus and the caret.
+      item.addEventListener("mousedown", (event) => {
+        event.preventDefault();
+        choose(name);
+      });
+      return item;
+    }));
+    menu.hidden = found.length === 0;
+  };
+  const read = () => {
+    const caret = field.selectionStart;
+    const before = field.value.slice(0, caret);
+    const match = before.match(/(^|[\s(\[])@([\p{L}\p{N}_.'’ -]{0,40})$/u);
+    if (!match) return close();
+    const typed = match[2].toLowerCase();
+    const known = [...new Set((names() || []).map((one) => String(one || "").trim()).filter(Boolean))];
+    found = known.filter((name) => {
+      const lower = name.toLowerCase();
+      return lower.startsWith(typed) || lower.split(/\s+/).some((word) => word.startsWith(typed));
+    }).sort((a, b) => a.localeCompare(b)).slice(0, 6);
+    // A name already written whole is not offered again: the menu would stay open after the choice.
+    if (found.length === 1 && found[0].toLowerCase() === typed.trimEnd()) found = [];
+    start = caret - match[2].length - 1;
+    at = 0;
+    paint();
+  };
+
+  field.addEventListener("input", read);
+  field.addEventListener("click", read);
+  field.addEventListener("blur", () => setTimeout(close, 120));
+  field.addEventListener("keydown", (event) => {
+    if (menu.hidden || !found.length) return;
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      at = (at + (event.key === "ArrowDown" ? 1 : found.length - 1)) % found.length;
+      paint();
+    } else if (event.key === "Enter" || event.key === "Tab") {
+      event.preventDefault();
+      event.stopPropagation();
+      choose(found[at]);
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+      close();
+    }
+  });
+  return { close };
 }
 
 export function count(n, one, many) {

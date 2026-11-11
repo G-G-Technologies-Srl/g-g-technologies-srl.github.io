@@ -23,7 +23,7 @@ import { SIGN } from "./sign.js";
 import * as pack from "biz/plan-pack.js";
 import * as csv from "./csv.js";
 import { t, tf, num } from "./i18n.js";
-import { el, node, button, fill, shortDate, longDate, locale, ask, tagHue, linkedText } from "./ui.js";
+import { el, node, button, fill, shortDate, longDate, locale, ask, tagHue, linkedText, mentionPicker } from "./ui.js";
 import { tip } from "./tip.js";
 
 // -----------------------------------------------------------------------------------------------------------------
@@ -257,6 +257,8 @@ function _fillCard() {
 
   _paintDiary(task);
   _paintTabs(task);
+  _paintContacts(task);
+  _paintRecheck(task);
 
   // Il documento: il titolo se c'è, e allora si apre e si stacca; l'invito a farne uno se non c'è.
   // La spiegazione sta sotto finché non c'è, e sparisce quando il documento parla da sé.
@@ -403,6 +405,125 @@ function _linkOptions() {
       on.openPage(page.id);
     },
   };
+}
+
+/** The two ways to reach a person, drawn as on the person's own card. */
+const REACH = {
+  mail: "M2.5 3.5h11a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1z M1.8 4.2L8 9l6.2-4.8",
+  call: "M4.2 1.8l2 2.6c.3.4.3 1-.1 1.3l-1 .9a8.5 8.5 0 0 0 4.3 4.3l.9-1c.3-.4.9-.4 1.3-.1l2.6 2c.4.3.5.9.1 1.3l-1.2 1.3c-.5.5-1.3.7-2 .4A12.5 12.5 0 0 1 1.8 5.4c-.3-.7-.1-1.5.4-2l1.3-1.2c.4-.4 1-.3 1.3.1z",
+};
+
+function _reachLink(kind, href, said) {
+  const link = document.createElement("a");
+  link.className = "icon-action small-action";
+  link.href = href;
+  link.title = said;
+  link.setAttribute("aria-label", said);
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 16 16");
+  svg.setAttribute("aria-hidden", "true");
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("d", REACH[kind]);
+  svg.append(path);
+  link.append(svg);
+  return link;
+}
+
+function _initials(name) {
+  const words = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return "?";
+  return (words[0][0] + (words.length > 1 ? words[words.length - 1][0] : "")).toUpperCase();
+}
+
+/** The names the «@» menu offers on this card: who works on the project, the task's people, the address book. */
+function _mentionNames() {
+  const task = model.task(cardId);
+  return [...model.peopleOf(projectId).map((one) => one.name),
+    ...(task ? model.taskContacts(task).map((one) => one.name) : []),
+    ...model.liveContacts().map((one) => one.name)];
+}
+
+/**
+ * The task's people: face, name that opens the card in the address book, the ways to reach them,
+ * and ✕ to take them off the task (never out of the address book).
+ */
+function _paintContacts(task) {
+  const people = model.taskContacts(task);
+  fill(el("cardContacts"), people.map((one) => {
+    const row = node("li", "card-contact");
+    const face = node("span", "face", _initials(one.name));
+    face.setAttribute("aria-hidden", "true");
+    row.append(face);
+    row.append(button("link card-contact-name", one.name, () => {
+      _saveCard();
+      el("taskCard").close();
+      on.openPerson(one.name);
+    }, { label: tf("cardContactOpen", { name: one.name }) }));
+    const email = one.contact ? String(one.contact.email || "").trim() : "";
+    const phone = one.contact ? String(one.contact.phone || "").trim() : "";
+    if (email) row.append(_reachLink("mail", `mailto:${email}`, tf("personWriteTo", { who: email })));
+    if (phone) row.append(_reachLink("call", `tel:${phone.replace(/[^+\d]/g, "")}`, tf("personCallTo", { who: phone })));
+    row.append(button("ghost small icon", "✕", () => {
+      _saveCard();
+      const step = model.removeTaskContact(cardId, one.uid);
+      _fillCard();
+      on.change();
+      paint();
+      if (step) on.batched(step, tf("cardContactGone", { name: one.name }));
+    }, { label: tf("cardContactRemove", { name: one.name }) }));
+    return row;
+  }));
+  const taken = new Set(people.map((one) => one.uid));
+  fill(el("contactList"), model.liveContacts().filter((one) => !taken.has(one.uid || one.id)).map((one) => {
+    const option = document.createElement("option");
+    option.value = one.name;
+    return option;
+  }));
+}
+
+/**
+ * The day to check again, and what can be done about it: chased, written to, settled. The outcome,
+ * once there is one, says how it ended and when.
+ */
+function _paintRecheck(task) {
+  const date = task.recheck ? task.recheck.date : "";
+  el("cardRecheck").value = date;
+  el("cardRecheckOff").hidden = !date;
+  el("cardRecheckHint").hidden = Boolean(date) || Boolean(task.outcome);
+  el("cardRecheckActions").hidden = !date;
+  // «Scrivi a …» to the first of the task's people with an address: the email already addressed,
+  // the subject the task's title — the sollecito starts where it is needed.
+  const first = model.taskContacts(task).find((one) => one.contact && String(one.contact.email || "").trim());
+  const mail = el("cardChaseMail");
+  mail.hidden = !date || !first;
+  if (date && first) {
+    mail.href = `mailto:${first.contact.email.trim()}?subject=${encodeURIComponent(task.title || "")}`;
+    mail.textContent = tf("chaseWrite", { name: first.name });
+  }
+  el("cardOutcome").hidden = !task.outcome;
+  if (task.outcome) {
+    el("cardOutcomeText").textContent = tf(`outcomeSaid_${task.outcome.value}`, { date: shortDate(task.outcome.date) });
+  }
+}
+
+/**
+ * Chased: a line in the diary, in the interface's words and signed, and the next check a week on.
+ * Returns the step, for the strip that offers to take it back.
+ */
+export function chase(id) {
+  if (!model.task(id)) return null;
+  return model.chaseTask(id, { text: t("diaryChased"), by: on.who() });
+}
+
+/** Settled: asked how it ended, written in the diary, the checks over. Null when the question was left. */
+export async function settle(id) {
+  if (!model.task(id)) return null;
+  const value = await ask(t("settleAsk"), {
+    options: model.OUTCOMES.map((one) => ({ value: one, label: t(`outcome_${one}`) })),
+    ok: t("settleOk"),
+  });
+  if (!value) return null;
+  return model.settleTask(id, value, { text: t(`diaryOutcome_${value}`), by: on.who() });
 }
 
 /** The line on top back to an empty entry dated today. */
@@ -589,6 +710,7 @@ function _saveCard() {
     repeatUntil: (el("cardRepeat").value && el("cardRepeatUntil").value) || null,
     tags,
     blockedBy: blocked ? [blocked] : [],
+    recheck: el("cardRecheck").value ? { date: el("cardRecheck").value } : null,
   };
   // Nothing written when nothing changed. Opening a card to look at it and closing it was costing
   // a step of undo — «Annullato», and nothing happening — and the step before it needed a second
@@ -755,6 +877,29 @@ function _taskCard(task, today) {
       };
     }));
   }
+  // The day to check again, and how it ended: on a card in «Fatto» these are the two things still
+  // worth reading from outside. The clock's colour turns amber on its day, as a deadline does.
+  if (task.recheck) {
+    const due = task.recheck.date <= today;
+    const mark = node("span", due ? "when late recheck-mark" : "when recheck-mark", `◷ ${shortDate(task.recheck.date)}`);
+    mark.setAttribute("aria-label", tf("tipRecheck", { date: shortDate(task.recheck.date) }));
+    meta.append(tip(mark, () => {
+      const now = model.task(task.id);
+      if (!now || !now.recheck) return null;
+      const people = model.taskContacts(now).map((one) => one.name).join(", ");
+      return {
+        head: tf("tipRecheck", { date: shortDate(now.recheck.date) }),
+        detail: people ? tf("tipRecheckWith", { names: people }) : t("tipRecheckDetail"),
+        action: { label: t("chaseDone"), run: () => {
+          const step = chase(now.id);
+          on.change();
+          paint();
+          if (step) on.batched(step, t("chasedSaid"));
+        } },
+      };
+    }));
+  }
+  if (task.outcome) meta.append(node("span", `badge outcome-${task.outcome.value}`, t(`outcome_${task.outcome.value}`)));
   const waits = (task.blockedBy || [])[0];
   const waiting = waits ? model.task(waits) : null;
   if (waiting) meta.append(node("span", "who", tf("blockedBy", { name: waiting.title })));
@@ -1491,6 +1636,62 @@ export function connect(handlers) {
     cardId = parent.id;
     extraOpen = false;
     _fillCard();
+  });
+  // The «@» menu where people are written about: the notes and the diary.
+  mentionPicker(el("cardNotes"), _mentionNames, { label: t("mentionMenu") });
+  mentionPicker(el("cardDiaryField"), _mentionNames, { label: t("mentionMenu") });
+
+  el("cardContactForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const name = el("cardContactField").value.trim();
+    if (!name || !cardId) return;
+    el("cardContactField").value = "";
+    _saveCard();
+    model.addTaskContact(cardId, name);
+    _fillCard();
+    on.change();
+    paint();
+    el("cardContactField").focus();
+  });
+  el("cardRecheck").addEventListener("change", () => {
+    _saveCard();
+    _fillCard();
+  });
+  el("cardRecheckWeek").addEventListener("click", () => {
+    el("cardRecheck").value = model.addDays(model.todayISO(), model.CHASE_DAYS);
+    _saveCard();
+    _fillCard();
+  });
+  el("cardRecheckOff").addEventListener("click", () => {
+    el("cardRecheck").value = "";
+    _saveCard();
+    _fillCard();
+  });
+  el("cardChase").addEventListener("click", () => {
+    _saveCard();
+    const step = chase(cardId);
+    _fillCard();
+    on.change();
+    paint();
+    if (step) on.batched(step, t("chasedSaid"));
+  });
+  el("cardSettle").addEventListener("click", async () => {
+    _saveCard();
+    const id = cardId;
+    const step = await settle(id);
+    if (!step || cardId !== id) return;
+    _fillCard();
+    on.change();
+    paint();
+    on.batched(step, t(`settledSaid_${model.task(id).outcome.value}`));
+  });
+  el("cardOutcomeClear").addEventListener("click", () => {
+    _saveCard();
+    const step = model.clearOutcome(cardId);
+    _fillCard();
+    on.change();
+    paint();
+    if (step) on.batched(step, t("outcomeCleared"));
   });
   el("cardTabDetails").addEventListener("click", () => _showTab("details"));
   el("cardTabDiary").addEventListener("click", () => {

@@ -2103,6 +2103,41 @@ html[data-theme="light"] { --high: #b42318; --decide: #6b3fb3; --wait: #3d5c99; 
 #taskCard input.card-heading:hover { border-color: var(--border); }
 #taskCard input.card-heading:focus { background: var(--panel-2); border-color: var(--accent); outline: none; }
 
+/* The task's people: one line each — face, name that opens the card, the ways to reach them, ✕. */
+.card-contacts { list-style: none; margin: 0 0 6px; padding: 0; display: grid; gap: 4px; }
+.card-contacts:empty { display: none; }
+.card-contact { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.card-contact .card-contact-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card-contact .ghost.icon { margin-left: auto; }
+.icon-action.small-action { width: 30px; height: 30px; }
+.icon-action.small-action svg { width: 15px; height: 15px; }
+
+/* The «@» menu, under its field and in the flow of the form: inside a dialog that scrolls, a
+   floating list is cut by the dialog's edge when it is needed. */
+.mention-menu {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  max-width: 320px;
+}
+.mention-menu[hidden] { display: none; }
+.mention-menu li { padding: 5px 8px; border-radius: var(--radius-sm); font-size: 13.5px; cursor: pointer; }
+.mention-menu li.on, .mention-menu li:hover { background: var(--accent-soft); color: var(--accent-text); }
+
+/* The day to check again: the field and its two shortcuts on one line, the gestures under it. */
+.card-recheck-row { align-items: center; gap: 8px; flex-wrap: wrap; }
+#taskCard .card-recheck-row input[type="date"] { width: auto; flex: none; }
+.card-recheck-actions { gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.card-outcome { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+
+/* On the board and in the lists: the clock of the day to check, and how it ended. */
+.recheck-sign { color: var(--accent-text); font-size: 13px; }
+.badge.outcome-won { color: var(--accent-text); border-color: var(--accent-soft); }
+.badge.outcome-lost { color: var(--faint); }
+
 /* The card's two tabs, drawn as the view switch of the plan is: pills on one line, the pressed one
    filled. Under the title, so that the task's name stays in sight on both. */
 .card-tabs { display: flex; gap: 6px; margin: 14px 0 2px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
